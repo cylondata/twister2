@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.internal.task.streaming;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -29,6 +30,7 @@ import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -39,6 +41,8 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 public class ReduceStreamingTask implements IWorker {
+  private static final Logger LOG = Logger.getLogger(ReduceStreamingTask.class.getName());
+
   @Override
   public void execute(Config config, int workerID, AllocatedResources resources,
                       IWorkerController workerController,
@@ -53,10 +57,13 @@ public class ReduceStreamingTask implements IWorker {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
     builder.connect("source", "sink", "reduce-edge",
-        OperationNames.REDUCE);
+        OperationNames.REDUCE, new IFunction() {
+          @Override
+          public Object onMessage(Object object1, Object object2) {
+            return object1;
+          }
+        });
     builder.operationMode(OperationMode.STREAMING);
-
-
     DataFlowTaskGraph graph = builder.build();
 
     TaskUtils.execute(config, resources, graph, workerController);
@@ -64,9 +71,17 @@ public class ReduceStreamingTask implements IWorker {
 
   private static class GeneratorTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
+    private int count;
     @Override
     public void execute() {
-      context.write("reduce-edge", "Hello");
+      boolean wrote = context.write("reduce-edge", "Hello");
+      if (wrote) {
+        count++;
+        if (count % 100 == 0) {
+          LOG.info(String.format("%d %d Reduce sent count : %d", context.getWorkerId(),
+              context.taskId(), count));
+        }
+      }
     }
   }
 
@@ -76,8 +91,8 @@ public class ReduceStreamingTask implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 10000 == 0) {
-        System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
+      if (count % 100 == 0) {
+        LOG.info("Reduce receive count : " + count);
       }
       count++;
       return true;

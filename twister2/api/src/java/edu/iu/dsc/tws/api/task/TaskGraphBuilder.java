@@ -31,8 +31,6 @@ import edu.iu.dsc.tws.task.graph.Vertex;
 public class TaskGraphBuilder {
   private static final Logger LOG = Logger.getLogger(TaskGraphBuilder.class.getName());
 
-  private Config config;
-
   private Map<String, Vertex> nodes = new HashMap<>();
 
   private List<ComputeConnection> computeConnections = new ArrayList<>();
@@ -44,7 +42,6 @@ public class TaskGraphBuilder {
   private OperationMode mode;
 
   public TaskGraphBuilder(Config cfg) {
-    this.config = cfg;
     this.defaultParallelism = TaskContext.getDefaultParallelism(cfg, 1);
   }
 
@@ -85,6 +82,7 @@ public class TaskGraphBuilder {
 
   public DataFlowTaskGraph build() {
     DataFlowTaskGraph graph = new DataFlowTaskGraph();
+    graph.setOperationMode(mode);
 
     for (Map.Entry<String, Vertex> e : nodes.entrySet()) {
       graph.addTaskVertex(e.getKey(), e.getValue());

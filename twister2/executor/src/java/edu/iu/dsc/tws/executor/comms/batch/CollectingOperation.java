@@ -29,7 +29,7 @@ public class CollectingOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
                       DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
-    this.edge = e;
+    this.edgeGenerator = e;
     communicationEdge = e.generate(edgeName);
   }
 

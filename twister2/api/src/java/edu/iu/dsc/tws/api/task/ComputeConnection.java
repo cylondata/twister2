@@ -141,6 +141,62 @@ public class ComputeConnection {
     return this;
   }
 
+  public ComputeConnection allreduce(String parent) {
+    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.ALLREDUCE);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  public ComputeConnection allreduce(String parent, DataType dataType) {
+    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.ALLREDUCE, dataType);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  public ComputeConnection allreduce(String parent, String name) {
+    Edge edge = new Edge(name, OperationNames.ALLREDUCE, DataType.OBJECT);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  public ComputeConnection allreduce(String parent, String name, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.ALLREDUCE, dataType);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  public ComputeConnection allgather(String parent) {
+    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.ALLGATHER);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  public ComputeConnection allgather(String parent, DataType dataType) {
+    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.ALLGATHER, dataType);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  public ComputeConnection allgather(String parent, String name) {
+    Edge edge = new Edge(name, OperationNames.ALLGATHER, DataType.OBJECT);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  public ComputeConnection allgather(String parent, String name, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.ALLGATHER, dataType);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
   void build(DataFlowTaskGraph graph) {
     for (Map.Entry<String, Edge> e : inputs.entrySet()) {
       Vertex v1 = graph.vertex(nodeName);

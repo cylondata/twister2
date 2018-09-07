@@ -38,7 +38,7 @@ ZKJobMasterRegistrar class is used to register the Job Master address with the Z
 ZKJobMasterFinder class is used to get the Job Master address from the ZooKeeper server. 
 
 **ZNode Creation**  
-When the Job Master is registered its address on the ZooKeeper server, 
+When the Job Master registers its address on the ZooKeeper server, 
 an ephemeral znode is created. The name of this znode will be:  
 
     /twister2/<job-name>-<job-master>  
@@ -52,7 +52,7 @@ Job Master IP address and the port number is put as the payload in this znode as
 **ZNode Deletion**  
 When the job completes, the ZKJobMasterRegistrar should delete the znode from the ZooKeeper server explicitly by calling its close method. 
 If the job master is prematurely shut down, the znode will be deleted automatically, since the znode is ephemeral.
-However, it takes 30 seconds for the ZooKeeper to delete ephemeral nodes in premeture shut downs. 
+However, it takes 30 seconds for the ZooKeeper to delete ephemeral nodes in premature shut downs. 
 If the user wants to submit another job during this time period with the same name, then the remaining znode 
 from the previous job needs to be deleted first.
 
@@ -97,7 +97,7 @@ After initializing, it can get the Job Master address by calling the method:
 
     getJobMasterIPandPort().
 
-If this method returns null, it means that the Job Master has  not registered yet. 
+If this method returns null, it means that the Job Master has not registered yet. 
 In that case, it can call the method 
 
     waitAndGetJobMasterIPandPort(long timeLimit)
@@ -107,8 +107,8 @@ This method will wait for the Job Master znode to be registered until the timeLi
 **Example Code**  
 A sample usage of ZKJobMasterRegistrar is provided in the example class:
 
-    edu.iu.dsc.tws.examples.ZKJobMasterRegistrarExample.java
+    edu.iu.dsc.tws.examples.internal.bootstrap.ZKJobMasterRegistrarExample.java
 
 Its corresponding sample usage of ZKJobMasterFinder is provided in the example class:
 
-    edu.iu.dsc.tws.examples.ZKJobMasterFinderExample.java
+    edu.iu.dsc.tws.examples.internal.bootstrap.ZKJobMasterFinderExample.java

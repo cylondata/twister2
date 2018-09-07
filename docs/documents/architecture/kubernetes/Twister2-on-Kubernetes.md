@@ -4,7 +4,7 @@ Ahmet Uyar
 This document explains the design, features and implementations for running Twister2 jobs 
 on Kubernetes clusters. We designed and developed components to run Twister2 workers and
 the Job Master in Kubernetes clusters. An overview of the mian components of Twister2 
-architecture can be found in [the document](../architecture/Main-Components.md).
+architecture can be found in [the document](../Main-Components.md).
 
 First, we provide a general overview of Kubernetes system. We discuss its features from 
 Twister2 implementation perspective. Then, we explain the design decisions that we have made 
@@ -15,7 +15,7 @@ and point out the future works.
 We discuss the following topics:
 * [Kubernetes Overview](#kubernetes-overview)
 * [Implementing Twister2 Jobs on Kubernetes](#implementing-twister2-jobs-on-kubernetes)
-* [Docker Container Design for Twister2](#docker-workerComputeResource-design-for-twister2)
+* [Docker Container Design for Twister2](#docker-container-design-for-twister2)
 * [Kubernetes Pod Design for Twister2](#kubernetes-pod-design-for-twister2)
 * [Packaging and Running Twister2 Jobs in Kubernetes](#packaging-and-running-twister2-jobs-in-kubernetes)
 * [Limitations and Future Works](#limitations-and-future-works)
@@ -41,7 +41,7 @@ Kubernetes provides two types of computing components:
 
 ### Pods
 Pods are like virtual machines. They run containers. The applications in containers perform 
-the actual computation. A pod without a workerComputeResource is useless.
+the actual computation. A pod without a container is useless.
  
 Pods have: 
 * a file system that can be shared by the running containers in the pod
@@ -138,6 +138,7 @@ They can communicate with other pods in the cluster by using this IP address.
 ## Implementing Twister2 Jobs on Kubernetes
 We decided to use StatefulSets for implementing Twister2 jobs on Kubernetes:
 * They provide unique IDs for all pods in a job
+* They restart the failed pods with the same id
 * They provide persistent storage support
 * They support services for external communications
 
@@ -153,34 +154,34 @@ Heron is implemented by using StatefulSets.
 
 ### Implementing Twister2 Workers in Kubernetes
 There are a number of choices when implementing Twister2 workers in Kubernetes:
-- **One worker one pod**: Exactly one worker runs in each pod. Each pod runs a single workerComputeResource. 
-- **One worker one workerComputeResource**: Exactly one worker runs in each workerComputeResource but multiple containers may run in a pod.
+- **One worker one pod**: Exactly one worker runs in each pod. Each pod runs a single container. 
+- **One worker one container**: Exactly one worker runs in each container but multiple containers may run in a pod.
 Therefore, multiple workers may run in a pod as separate containers.
-- **One worker one process**: Multiple workers can run in a workerComputeResource as separate processes.
+- **One worker one process**: Multiple workers can run in a container as separate processes.
 
 One worker one pod is the recommended solution for services/applications to run in Kubernetes. 
 However, initialization of a separate pod for each worker is slower. 
 
 Kubernetes does not provide any support (logging, monitoring) for multiple processes 
-in a workerComputeResource. We need to keep track of the lifecycle of processes in containers. 
+in a container. We need to keep track of the lifecycle of processes in containers. 
 Also no resource isolation is provided. 
 
 Second option seems to be the best option for our case. Each Twister2 worker runs 
-as a workerComputeResource. Multiple workers can run in a single pod. 
+as a container. Multiple workers can run in a single pod. 
 Users can set the number of workers in each pod using a configuration file. 
 This also covers the first option since users can request that each pod runs only one worker. 
 
 **When running OpenMPI**: When we execute OpenMPI jobs, then we go with the third option. 
-We start a single workerComputeResource in each pod, then OpenMPI starts MPI workers. 
-It can start more than one MPI worker in a workerComputeResource. 
+We start a single container in each pod, then OpenMPI starts MPI worker processes. 
+It can start more than one MPI worker in a container. 
 OpenMPI manages the processes in this case. 
 
-Heron runs one pod for each Heron workerComputeResource. They go with the first option. 
+Heron runs one pod for each Heron container. They go with the first option. 
 (Ref: https://github.com/twitter/heron/blob/master/website/content/docs/operators/deployment/schedulers/kubernetes.md)
 
 ### StatefulSet for Twister2 Workers
 We create Twister2 workers in a job by creating a StatefulSet in Kubernetes cluster. 
-For a non-MPI job, we create one workerComputeResource for each worker. 
+For a non-MPI job, we create one container for each worker. 
 The user specifies the number of containers (workers) in a pod through the configuration parameter:
 
     kubernetes.workers.per.pod
@@ -198,16 +199,16 @@ to get the number of pods in a job. The value of twister2.worker.instances must 
 by the value of kubernetes.workers.per.pod. Otherwise, we reject the job submission. 
 
 **Resources in OpenMPI**: When an OpenMPI enabled job is submitted, 
-one workerComputeResource is started in every pod.
-When more than one worker will run in each pod, then this one workerComputeResource 
+one container is started in every pod.
+When more than one worker will run in each pod, then this one container 
 has the resources of all workers in that pod. For example, if 3 workers will run
-in each pod and each worker requests 1 CPU, then this one workerComputeResource will have 3 CPUs.
-RAM is also similarly allocated to the single workerComputeResource in the pod. 
+in each pod and each worker requests 1 CPU, then this one container will have 3 CPUs.
+RAM is also similarly allocated to the single container in the pod. 
 
 mpirun command will start the workers in each pod. When mpirun is executed,
 we give the number of workers to start in each pod as a parameter. 
 Therefore, the requested number of workers will be started in each pod. 
-But, all workers will run in the same workerComputeResource in a pod when OpenMPI is used. 
+But, all workers will run in the same container in a pod when OpenMPI is used. 
 
 #### Pod Names and Pod IP Addresses
 We set job names as StatefulSet names. Kubernetes sets pod names as StatefulSet names
@@ -225,8 +226,8 @@ We query the localhost from inside the pod and get this IP address.
 
 #### Worker Ports in Non-MPI Jobs
 We assume that each Twister2 worker has at least one port number to talk to other workers in a job. 
-When we create non-MPI jobs, each worker runs in one workerComputeResource. 
-Therefore, when creating containers we set one port number for the worker in that workerComputeResource. 
+When we create non-MPI jobs, each worker runs in one container. 
+Therefore, when creating containers we set one port number for the worker in that container. 
 
 Since each pod is created solely for twister2 jobs, we can use whichever port we want 
 from that pod port space. The only limitation is that when there are multiple workers in a pod, 
@@ -241,12 +242,12 @@ Third worker in that pod uses the port (basePort +2).
 Likewise, we assign sequentially increasing port numbers to workers running on a pod.
 
 Container name suffix and the port number addition value to the base port is the same.
-For example, the third workerComputeResource name suffix in a pod is "-2" and the port number is basePort + 2. 
-We uses this parallelism between workerComputeResource names and port numbers 
-when discovering port numbers from workerComputeResource names.
+For example, the third container name suffix in a pod is "-2" and the port number is basePort + 2. 
+We uses this parallelism between container names and port numbers 
+when discovering port numbers from container names.
 
 #### Worker Ports in MPI Jobs
-When we create MPI enabled Twister2 jobs, each workerComputeResource may run multiple workers. 
+When we create MPI enabled Twister2 jobs, each container may run multiple workers. 
 Therefore, when creating containers we do not set port numbers for these containers. 
 
 MPI enabled Twister2 workers will use the port based on their MPI ranking. 
@@ -264,7 +265,7 @@ In addition, we do not transfer the job package to Job Master pod.
 We only transfer the necessary information as environment variables. 
 
 ## Docker Container Design for Twister2
-We designed a Docker workerComputeResource to run Twister2 jobs. 
+We designed a Docker container to run Twister2 jobs. 
 We installed the following software: 
 * based on ubuntu 16.04.
 * Java 8
@@ -273,7 +274,7 @@ We installed the following software:
 * Twister2 dependency library files
 * Twister2 scripts and library files 
 
-Twister2 Docker workerComputeResource will be pushed to a workerComputeResource hub such as Docker hub. 
+Twister2 Docker container will be pushed to a container hub such as Docker hub. 
 It will be downloaded from there to user clusters. 
 
 The working directory for the Twister2 jobs is set as:  
@@ -348,9 +349,9 @@ This directory is added to java CLASSPATH. All containers have their own /twiste
 This directory is not shared among the containers in a pod. 
   
 ## Packaging and Running Twister2 Jobs in Kubernetes
-We create a Docker workerComputeResource for the twister2 jobs. It will have all Twister2 library files 
+We create a Docker container for the twister2 jobs. It will have all Twister2 library files 
 and dependency library files. 
-This workerComputeResource will be downloaded from a workerComputeResource store such as the Docker hub. 
+This container will be downloaded from a container store such as the Docker hub. 
 Therefore, there is no need to transfer the Twister2 library packages to pods explicitly. 
 However, we need to transfer the job package to the pods explicitly when submitting a job. 
 
@@ -375,13 +376,13 @@ the job package to a server. We use any one of these uploaders to upload
 the job package to a web server directory. 
 
 **Downloading**: We developed a downloader script that runs inside of pods. 
-When a pod starts, the first workerComputeResource in the pod downloads the job package from the web server
+When a pod starts, the first container in the pod downloads the job package from the web server
 using wget utility. It unpacks the job package to the shared memory directory. 
 After unpacking it, it writes a flag file to let other containers to know that it has finished 
 downloading and unpacking the job package.  
 
-When containers others than the first workerComputeResource runs the downloader script. 
-They just wait for the first workerComputeResource to download and unpack the job package. 
+When containers others than the first container runs the downloader script. 
+They just wait for the first container to download and unpack the job package. 
 They periodically poll the existence of the flag file and sleep in between. 
 When they see that the flag file is generated, they set the classpath and start the worker. 
 
@@ -407,7 +408,7 @@ However, first we need to know that the pods are ready to accept the file transf
 After sending StatefulSet create request to Kubernetes master, 
 it takes some time to initialize the pods in the cluster. 
 We monitor the status of all pods in the job to start the file transfer. 
-Once the first workerComputeResource in a pod becomes “Started”, 
+Once the first container in a pod becomes “Started”, 
 we start the job package transfer to that pod. 
 
 Alternatively, we can start transferring the job package when the phase of the pod reaches 
@@ -415,7 +416,7 @@ to “Running” state. However, this takes longer than necessary.
 Because pod phase reaches to “Running” after all containers are started in a pod. 
 When there are 10 containers in a pod, it takes around 7 seconds to start all containers. 
 So the pod becomes Running after that much time. We decided to watch the events for a pod 
-and get the workerComputeResource “Started” events instead. After the first workerComputeResource is started in a pod, 
+and get the container “Started” events instead. After the first container is started in a pod, 
 we try to transfer the file. If it fails, we retry after waiting some milliseconds. 
 Usually it succeeds in the first try but sometimes it may fail and succeed in the second try. 
 Occasionally it may succeed in third or fourth tries. 
@@ -438,7 +439,7 @@ The value of this constant can be changed in the source code.
 #### Unpacking the Job Package
 The job package is transferred to the shared directory in each pod. 
 When there are multiple containers in a pod, only one of them needs to unpack it. 
-Always the worker in the first workerComputeResource unpacks the job package. 
+Always the worker in the first container unpacks the job package. 
 After unpacking, it writes a flag file to let other workers to know in the same pod. 
 Other workers in the same pods watches this flag file and proceed 
 after it is created by the first worker. 
@@ -514,7 +515,7 @@ Its capacity is the total persistent storage capacity of all workers and the Job
 
 ### Long Living Kubernetes Objects
 
-[**Role and RoleBinding objects**](install/twister2-auth.yaml): When Twister2 is installed in a cluster,
+[**Role and RoleBinding objects**](../../install/kubernetes/twister2-auth.yaml): When Twister2 is installed in a cluster,
 a Role and RoleBinding object need to be created for the namespaces that will execute 
 Twister2 jobs. This can be executed by the Kubernetes administrator once.
 First, the namespace field in that file needs to be changed. Then, 
@@ -526,4 +527,4 @@ the following command needs to be executed:
 When using OpenMPI communications in Twister2, pods need to have password-free SSH access 
 among them. This is accomplished by first generating an SSH key pair and 
 deploying them as a Kubernetes Secret object on the cluster. 
-Please check [the document](install/Twister2-Kubernetes-install.md) for deploying the Secret object.
+Please check [the document](../../install/kubernetes/Twister2-Kubernetes-install.md) for deploying the Secret object.
