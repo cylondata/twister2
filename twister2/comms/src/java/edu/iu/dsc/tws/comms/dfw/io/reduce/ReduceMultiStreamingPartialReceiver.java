@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KeyedReduceStreamingPartialReceiver;
 
 public class ReduceMultiStreamingPartialReceiver implements MultiMessageReceiver {
   private ReduceFunction reduceFunction;
