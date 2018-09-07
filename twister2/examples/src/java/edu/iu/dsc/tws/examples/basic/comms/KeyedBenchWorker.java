@@ -50,6 +50,8 @@ package edu.iu.dsc.tws.examples.basic.comms;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -74,6 +76,8 @@ public abstract class KeyedBenchWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(KeyedBenchWorker.class.getName());
 
   protected AllocatedResources resourcePlan;
+
+  private Lock lock = new ReentrantLock();
 
   protected int workerId;
 
@@ -170,6 +174,7 @@ public abstract class KeyedBenchWorker implements IWorker {
         sendMessages(task, key, data, flag);
       }
       LOG.info(String.format("%d Done sending", workerId));
+      lock.lock();
       finishedSources.put(task, true);
       boolean allDone = true;
       for (Map.Entry<Integer, Boolean> e : finishedSources.entrySet()) {
@@ -179,6 +184,7 @@ public abstract class KeyedBenchWorker implements IWorker {
       }
       finishCommunication(task);
       sourcesDone = allDone;
+      lock.unlock();
 //      LOG.info(String.format("%d Sources done %s, %b", id, finishedSources, sourcesDone));
     }
   }
