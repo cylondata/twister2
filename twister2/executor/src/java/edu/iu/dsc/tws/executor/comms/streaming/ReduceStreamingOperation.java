@@ -45,6 +45,7 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
   public ReduceStreamingOperation(Config config, Communicator network,
                                   TaskPlan tPlan, IFunction fnc) {
     super(config, network, tPlan);
+    this.function = fnc;
   }
 
   public void prepare(Set<Integer> sources, int dest, EdgeGenerator e,

@@ -131,6 +131,9 @@ public class SourceStreamingInstance implements INodeInstance {
         // if we successfully send remove message
         if (op.send(streamingTaskId, message, 0)) {
           outStreamingQueue.poll();
+        } else {
+          // we need to break
+          break;
         }
       }
     }
