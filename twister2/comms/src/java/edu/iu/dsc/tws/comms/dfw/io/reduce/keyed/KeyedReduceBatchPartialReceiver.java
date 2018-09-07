@@ -33,7 +33,8 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchReceiver;
 
 public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
-  private static final Logger LOG = Logger.getLogger(KeyedReduceBatchPartialReceiver.class.getName());
+  private static final Logger LOG = Logger.getLogger(
+      KeyedReduceBatchPartialReceiver.class.getName());
   private int partialSendCount;
 
   public KeyedReduceBatchPartialReceiver(int dst, ReduceFunction reduce) {

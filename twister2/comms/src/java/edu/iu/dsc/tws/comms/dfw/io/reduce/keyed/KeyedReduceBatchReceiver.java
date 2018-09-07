@@ -75,7 +75,8 @@ public abstract class KeyedReduceBatchReceiver implements MessageReceiver {
     this.reduceFunction = reduce;
   }
 
-  public KeyedReduceBatchReceiver(int dst, ReduceFunction reduce, int buffSize, boolean buffTillEnd) {
+  public KeyedReduceBatchReceiver(int dst, ReduceFunction reduce,
+                                  int buffSize, boolean buffTillEnd) {
     this.destination = dst;
     this.reduceFunction = reduce;
     this.bufferSize = buffSize;
