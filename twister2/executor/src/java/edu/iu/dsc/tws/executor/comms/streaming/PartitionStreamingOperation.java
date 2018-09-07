@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
@@ -52,7 +52,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
                       DataType dataType, String edgeName) {
     this.edgeGenerator = e;
     op = new SPartition(channel, taskPlan, srcs, dests, Utils.dataTypeToMessageType(dataType),
-        new PartitionReceiver(), new LoadBalanceDestinationSelector());
+        new PartitionReceiver(), new LoadBalanceSelector());
     communicationEdge = e.generate(edgeName);
   }
 

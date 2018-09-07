@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
-import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedPartitionSelector;
+import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.comms.op.stream.SKeyedReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
@@ -58,7 +58,7 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
     keyedReduce = new SKeyedReduce(communicator, taskPlan, sources, targets,
         new ReduceIdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()),
         MessageType.OBJECT,
-        new SimpleKeyBasedPartitionSelector());
+        new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);

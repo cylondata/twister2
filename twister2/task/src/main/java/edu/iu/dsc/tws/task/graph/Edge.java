@@ -11,16 +11,50 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.graph;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.task.api.IFunction;
 
+/**
+ * Represents a edge in the graph
+ */
 public class Edge {
+  /**
+   * Name of the edge
+   */
   private String name;
+
+  /**
+   * Optional function to apply for messages going through the edge
+   */
   private IFunction function;
+
+  /**
+   * The operation name of the edge
+   */
   private String operation;
+
+  /**
+   * The data type that is flowing through the edge
+   */
   private DataType dataType = DataType.OBJECT;
+
+  /**
+   * The key type flowing through the edge
+   */
   private DataType keyType = DataType.OBJECT;
+
+  /**
+   * Weather we are a keyed
+   */
   private boolean keyed = false;
+
+  /**
+   * Additional properties
+   */
+  private Map<String, Object> properties = new HashMap<>();
 
   public Edge(String te) {
     this.name = te;
@@ -95,5 +129,9 @@ public class Edge {
 
   public boolean isKeyed() {
     return keyed;
+  }
+
+  public void addProperties(String key, Object value) {
+    properties.put(key, value);
   }
 }

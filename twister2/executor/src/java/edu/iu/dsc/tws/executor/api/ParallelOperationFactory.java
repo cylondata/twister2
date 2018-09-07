@@ -37,6 +37,7 @@ import edu.iu.dsc.tws.executor.comms.batch.ReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.AllReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.BroadcastStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.GatherStreamingOperation;
+import edu.iu.dsc.tws.executor.comms.streaming.KeyedPartitionStreamOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.KeyedReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.PartitionStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.ReduceStreamingOperation;
@@ -163,11 +164,17 @@ public class ParallelOperationFactory {
           keyedReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName());
           return keyedReduceStreamingOperation;
+        } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
+          KeyedPartitionStreamOperation keyedReduceStreamingOperation
+              = new KeyedPartitionStreamOperation(config, channel, taskPlan, sources, dests,
+              edgeGenerator, edge.getDataType(), edge.getKeyType(),
+              edge.getName());
+          return keyedReduceStreamingOperation;
         }
       }
     }
 
-    return null;
+    throw new RuntimeException("Un-supported operation: " + operationMode);
   }
 
 
@@ -221,6 +228,7 @@ public class ParallelOperationFactory {
         return keyedReduceStreamingOperation;
       }
     }
-    return null;
+
+    throw new RuntimeException("Un-supported operation: " + edge.getOperation());
   }
 }

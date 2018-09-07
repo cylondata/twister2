@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.batch.BPartition;
-import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.api.EdgeGenerator;
@@ -51,7 +51,7 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
     //LOG.info("ParitionOperation Prepare 1");
     op = new BPartition(channel, taskPlan, srcs, dests,
         Utils.dataTypeToMessageType(dataType), new PartitionReceiver(),
-        new LoadBalanceDestinationSelector());
+        new LoadBalanceSelector());
     communicationEdge = e.generate(edgeName);
   }
 

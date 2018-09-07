@@ -41,11 +41,6 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
   }
 
   @Override
-  public boolean send(int source, IMessage message, int flags) {
-    return true;
-  }
-
-  @Override
   public void register(int targetTask, BlockingQueue<IMessage> queue) {
     if (outMessages.containsKey(targetTask)) {
       throw new RuntimeException("Existing queue for target task");
