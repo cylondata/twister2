@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.internal.task.streaming;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -25,6 +26,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -38,7 +40,8 @@ import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
-public class PartitionKeyedStreamingTask implements IWorker {
+public class KeyedPartitionStreamingTask implements IWorker {
+  private static final Logger LOG = Logger.getLogger(KeyedPartitionStreamingTask.class.getName());
   @Override
   public void execute(Config config, int workerID, AllocatedResources resources,
                       IWorkerController workerController,
@@ -53,7 +56,7 @@ public class PartitionKeyedStreamingTask implements IWorker {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "partition-keyed-edge",
-        OperationNames.PARTITION);
+        OperationNames.KEYED_PARTITION, DataType.OBJECT, DataType.OBJECT);
     builder.operationMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();
@@ -63,9 +66,18 @@ public class PartitionKeyedStreamingTask implements IWorker {
   private static class GeneratorTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
 
+    private int count = 0;
+
     @Override
     public void execute() {
-      context.write("partition-keyed-edge", "Hello");
+      boolean wrote = context.write("partition-keyed-edge", "key", "Hello");
+      if (wrote) {
+        count++;
+        if (count % 100 == 0) {
+          LOG.info(String.format("%d %d Message Partition sent count : %d", context.getWorkerId(),
+              context.taskId(), count));
+        }
+      }
     }
   }
 
@@ -75,11 +87,11 @@ public class PartitionKeyedStreamingTask implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 1000000 == 0) {
-        System.out.println("Message Partition Keyed:  : " + message.getContent()
-            + ", Count : " + count);
+      if (message.getContent() instanceof List) {
+        count += ((List) message.getContent()).size();
       }
-      count++;
+      LOG.info(String.format("%d %d Message Partition Received count: %d", context.getWorkerId(),
+          context.taskId(), count));
       return true;
     }
   }
@@ -108,7 +120,7 @@ public class PartitionKeyedStreamingTask implements IWorker {
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("partition-keyed-example");
-    jobBuilder.setWorkerClass(PartitionKeyedStreamingTask.class.getName());
+    jobBuilder.setWorkerClass(KeyedPartitionStreamingTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

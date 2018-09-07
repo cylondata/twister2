@@ -134,6 +134,20 @@ public class TaskContext {
   }
 
   /**
+   * Write a message with a key
+   * @param edge the edge
+   * @param key key
+   * @param message message
+   * @return true if the message is accepted
+   */
+  public boolean write(String edge, Object key, Object message) {
+    if (isDone.containsKey(edge) && isDone.get(edge)) {
+      throw new RuntimeException("Cannot send on a stream that ended");
+    }
+    return collection.collect(0, new TaskMessage(message, edge, taskId));
+  }
+
+  /**
    * Write a message to the destination
    * @param edge edge
    * @param message message
