@@ -33,10 +33,10 @@ public class ReduceMultiStreamingPartialReceiver implements MultiMessageReceiver
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      KeyedReduceStreamingPartialReceiver finalReceiver =
+      KeyedReduceStreamingPartialReceiver partialReceiver =
           new KeyedReduceStreamingPartialReceiver(e.getKey(), reduceFunction);
-      receiverMap.put(e.getKey(), finalReceiver);
-      finalReceiver.init(cfg, op, e.getValue());
+      receiverMap.put(e.getKey(), partialReceiver);
+      partialReceiver.init(cfg, op, e.getValue());
     }
   }
 
