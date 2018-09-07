@@ -66,7 +66,7 @@ Twister2 worker classes that is defined in configuration files.
 
 ## Worker ID Assignment
 In regular Twister2 jobs, we calculated the workerIDs based on their pod names and 
-workerComputeResource names as it is explianed in [the document](./Twister2-on-Kubernetes.md).    
+workerComputeResource names as it is explianed in [the document](Twister2-on-Kubernetes.md).    
 
 When using OpenMPI, since openMPI is assigning unique IDs to each worker, 
 we use the rank of OpenMPI as the workerID.

@@ -10,7 +10,7 @@ Kubernetes master. It provides the following services to workers in a Twister2 j
 This class does not implement the barriers for workers.
 
 The worker discoverer class is: 
-* [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerController](../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerController.java)
+* [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerController](../../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerController.java)
 
 It implements interface: 
 * [edu.iu.dsc.tws.common.discovery.IWorkerController](../../../twister2/common/src/java/edu/iu/dsc/tws/common/discovery/IWorkerDiscoverer.java)

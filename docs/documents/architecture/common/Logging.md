@@ -35,7 +35,7 @@ we add a FileHandler to the root logger of Java. The file is located in the pers
 So, Java logger directs the log messages to both the console and to this persistent log file. 
 
 We implemented the logger in the class:
-* [edu.iu.dsc.tws.common.logging.LoggingHelper](../../../twister2/common/src/java/edu/iu/dsc/tws/common/logging/LoggingHelper.java)
+* [edu.iu.dsc.tws.common.logging.LoggingHelper](../../../../twister2/common/src/java/edu/iu/dsc/tws/common/logging/LoggingHelper.java)
 
 ## Configuration Parameters
 Five configuration parameters are added for persistent logging. 
