@@ -68,7 +68,7 @@ public class BroadCastStreamingTask implements IWorker {
     private int count = 0;
     @Override
     public void execute() {
-      boolean wrote = context.write("partition-edge", "Hello");
+      boolean wrote = context.write("broadcast-edge", "Hello");
       if (wrote) {
         count++;
         if (count % 1000 == 0) {
