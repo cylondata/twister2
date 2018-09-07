@@ -101,7 +101,7 @@ public class TaskCheckpointExample implements IWorker {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
         new Communicator(config, channel));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, plan, channel);
+    Executor executor = new Executor(config, workerID, plan, channel);
     executor.execute();
   }
 

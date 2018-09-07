@@ -47,7 +47,8 @@ public final class TaskUtils {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
         new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, plan, network, OperationMode.BATCH);
+    Executor executor = new Executor(config, resources.getWorkerId(),
+        plan, network, OperationMode.BATCH);
     executor.execute();
   }
 
@@ -63,7 +64,7 @@ public final class TaskUtils {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
         new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, plan, network);
+    Executor executor = new Executor(config, resources.getWorkerId(), plan, network);
     executor.execute();
   }
 
