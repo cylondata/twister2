@@ -1,7 +1,7 @@
 # ZooKeeper based Worker Discovery
 Ahmet Uyar
 
-We designed a worker discovery, worker synchronization and ID assignment method
+We designed a worker discovery, synchronization and ID assignment system
 for multi-worker jobs in cluster environments that use a ZooKeeper server.
 
 We developed the following class:
@@ -146,16 +146,16 @@ Workers can wait multiple times on the barrier points during a job lifetime.
 
 ## Trying to Create a Job When Another Running
 When a Twister2 job is submitted by the client, 
-submitting client first must check whether there is a znode created for that job 
-on the ZooKeeper server. If there is a znode with the same jobName, 
+submitting client first must check whether there is a znode created for that job name
+on the ZooKeeper server. If there is a znode with the same job name, 
 there are two possibilities:
 * Another job with the same name may be running
 * Previously submitted and completed job is not cleaned properly
 
 If the job znode has some children, it can be assumed that 
 there is a job already running on the cluster with the same name. 
-Job submission must fail. The user can submit the job with another name, or 
-can wait the running job to complete.
+Job submission must fail. The user can resubmit the job with another name, or 
+can wait until the running job to complete.
 
 If the job znode does not have any children, it means that 
 a previously executed job is not cleaned properly from ZooKeeper server. 
@@ -202,19 +202,19 @@ workers required to acquire this lock before updating the job znode body.
 They release the lock after they updated it. 
 
 ## Usage
-When a worker starts, it first needs to create an instance of ZKDiscoverer class and 
+When a worker starts, it first needs to create an instance of ZKWorkerController class and 
 initialize it by calling its initialize method. Then, it can get its unique ID by calling
-getWorkerNetworkInfo() method of ZKDiscoverer object. 
+getWorkerNetworkInfo() method of ZKWorkerController object. 
 
-It can call getWorkerList() method of ZKDiscoverer object to get the list of currently
+It can call getWorkerList() method of ZKWorkerController object to get the list of currently
 joined workers immediately. Or, if it needs the full list of workers in the job. Then,
-it can call waitForAllWorkersToJoin(timeLimit) method of ZKDiscoverer object. 
+it can call waitForAllWorkersToJoin(timeLimit) method of ZKWorkerController object. 
 This method will wait until either getting the full list of workers in the job or 
 the time limit has been reached. 
 
 A sample usage can be found in the class:
 
-    edu.iu.dsc.tws.examples.ZKControllerExample.java
+    edu.iu.dsc.tws.examples.internal.bootstrap.ZKControllerExample.java
 
 Its usage in the following class can also be examined for real usage:
 
@@ -223,13 +223,13 @@ Its usage in the following class can also be examined for real usage:
 ### Configuration Parameters
 Following configuration parameters must be specified in the configuration files:
 
-    ZooKeeper server IP: twister2.zookeeper.server.ip
-    ZooKeeper server port number: twister2.zookeeper.server.port
+    List of ZooKeeper server IP:port value: twister2.zookeeper.server.addresses
+    Example value: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
 
 Following configuration parameters have default values and their default 
 values can be overridden in the configuration files:
 
-Twister2 root node name is by default: "/twister2" 
+Root znode name is by default: "/twister2" 
 It can be changed with the configuration parameter: 
 
     twister2.zookeeper.root.node.path
