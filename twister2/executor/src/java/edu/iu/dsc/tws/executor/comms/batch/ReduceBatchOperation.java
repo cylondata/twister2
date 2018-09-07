@@ -45,7 +45,7 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> sources, int dest, EdgeGenerator e,
                       DataType dataType, String edgeName) {
-    this.edge = e;
+    this.edgeGenerator = e;
     op = new DataFlowReduce(channel.getChannel(), sources, dest,
         new ReduceBatchFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
         new ReduceBatchPartialReceiver(dest, new IdentityFunction()));
@@ -104,7 +104,7 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
     @Override
     public boolean receive(int target, Object object) {
       TaskMessage msg = new TaskMessage(object,
-          edge.getStringMapping(communicationEdge), target);
+          edgeGenerator.getStringMapping(communicationEdge), target);
       outMessages.get(target).offer(msg);
       return true;
     }

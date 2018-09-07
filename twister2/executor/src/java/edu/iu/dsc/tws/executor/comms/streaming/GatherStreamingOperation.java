@@ -42,7 +42,7 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
                       DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
-    this.edge = e;
+    this.edgeGenerator = e;
     communicationEdge = e.generate(edgeName);
     op = new SGather(channel, taskPlan, srcs, dest, new GatherRcvr(),
         Utils.dataTypeToMessageType(dataType));
@@ -74,7 +74,7 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
       while (it.hasNext()) {
         Object object = it.next();
         TaskMessage msg = new TaskMessage(object,
-            edge.getStringMapping(communicationEdge), target);
+            edgeGenerator.getStringMapping(communicationEdge), target);
         BlockingQueue<IMessage> messages = outMessages.get(target);
         if (messages != null) {
           if (messages.offer(msg)) {

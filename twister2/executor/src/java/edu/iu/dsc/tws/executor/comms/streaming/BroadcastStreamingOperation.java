@@ -41,7 +41,7 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
 
   public void prepare(int srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
-    this.edge = e;
+    this.edgeGenerator = e;
     op = new SBroadCast(channel, taskPlan, srcs, dests,
         Utils.dataTypeToMessageType(dataType), new BcastReceiver());
     communicationEdge = e.generate(edgeName);
@@ -65,7 +65,8 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      TaskMessage msg = new TaskMessage(object, edge.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage(object,
+          edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         return messages.offer(msg);
