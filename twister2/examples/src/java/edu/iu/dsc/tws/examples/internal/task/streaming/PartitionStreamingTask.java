@@ -88,13 +88,11 @@ public class PartitionStreamingTask implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 100 == 0) {
-        if (message.getContent() instanceof List) {
-          count += ((List) message.getContent()).size();
-        }
-        LOG.info(String.format("%d %d Message Partition Received count: %d", context.getWorkerId(),
-            context.taskId(), count));
+      if (message.getContent() instanceof List) {
+        count += ((List) message.getContent()).size();
       }
+      LOG.info(String.format("%d %d Message Partition Received count: %d", context.getWorkerId(),
+          context.taskId(), count));
       return true;
     }
   }

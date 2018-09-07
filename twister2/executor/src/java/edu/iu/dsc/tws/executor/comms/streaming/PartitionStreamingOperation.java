@@ -85,15 +85,13 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
           }
         } else {
           if (object instanceof List) {
-            for (Object o : (List) object) {
-              TaskMessage msg = new TaskMessage(o,
-                  edgeGenerator.getStringMapping(communicationEdge), target);
-              BlockingQueue<IMessage> messages = outMessages.get(target);
-              if (messages != null) {
-                if (messages.offer(msg)) {
-                  return true;
-                }
-              }
+            TaskMessage msg = new TaskMessage(object,
+                edgeGenerator.getStringMapping(communicationEdge), target);
+            BlockingQueue<IMessage> messages = outMessages.get(target);
+            if (messages != null) {
+              return messages.offer(msg);
+            } else {
+              throw new RuntimeException("Un-expected target message: " + target);
             }
           }
         }
