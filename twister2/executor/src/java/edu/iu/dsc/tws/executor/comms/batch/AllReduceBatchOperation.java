@@ -41,7 +41,7 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
                       DataType dataType, String edgeName) {
-    this.edge = e;
+    this.edgeGenerator = e;
     op = new DataFlowAllReduce(channel.getChannel(), sources, dest, 0, new IndentityFunction(),
         new FinalReduceReceive(), 0, 0, true);
     communicationEdge = e.generate(edgeName);
@@ -84,7 +84,7 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
     @Override
     public boolean receive(int target, Object object) {
       TaskMessage msg = new TaskMessage(object,
-          edge.getStringMapping(communicationEdge), target);
+          edgeGenerator.getStringMapping(communicationEdge), target);
       outMessages.get(target).offer(msg);
       return true;
     }

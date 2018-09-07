@@ -47,7 +47,7 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
-    this.edge = e;
+    this.edgeGenerator = e;
     //LOG.info("ParitionOperation Prepare 1");
     op = new BPartition(channel, taskPlan, srcs, dests,
         Utils.dataTypeToMessageType(dataType), new PartitionReceiver(),
@@ -72,7 +72,7 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
     @Override
     public void receive(int target, Iterator<Object> it) {
       TaskMessage msg = new TaskMessage(it,
-          edge.getStringMapping(communicationEdge), target);
+          edgeGenerator.getStringMapping(communicationEdge), target);
       outMessages.get(target).offer(msg);
     }
   }

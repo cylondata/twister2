@@ -40,7 +40,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
                       DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
-    this.edge = e;
+    this.edgeGenerator = e;
     communicationEdge = e.generate(edgeName);
     op = new DataFlowGather(channel.getChannel(), srcs, dest, new FinalGatherReceiver(), 0, 0,
         config, Utils.dataTypeToMessageType(dataType), taskPlan, e.getIntegerMapping(edgeName));
@@ -79,7 +79,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
       if (object instanceof List) {
         for (Object o : (List) object) {
           TaskMessage msg = new TaskMessage(o,
-              edge.getStringMapping(communicationEdge), target);
+              edgeGenerator.getStringMapping(communicationEdge), target);
           outMessages.get(target).offer(msg);
           //    LOG.info("Source : " + source + ", Message : " + msg.getContent() + ", Target : "
           //        + target + ", Destination : " + destination);

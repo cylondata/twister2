@@ -41,7 +41,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
-    this.edge = e;
+    this.edgeGenerator = e;
     op = new DataFlowMultiReduce(channel.getChannel(), sources, dests, new FinalReduceReceive(),
         new PartialReduceWorker(), dests);
     communicationEdge = e.generate(edgeName);

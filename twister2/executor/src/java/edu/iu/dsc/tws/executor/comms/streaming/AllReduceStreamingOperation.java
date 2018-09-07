@@ -47,7 +47,7 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
                       DataType dataType, String edgeName) {
-    this.edge = e;
+    this.edgeGenerator = e;
     op = new SAllReduce(channel, taskPlan, sources, dest, new ReduceFnImpl(fn),
         new FinalReduceReceive(), Utils.dataTypeToMessageType(dataType));
     communicationEdge = e.generate(edgeName);
@@ -88,7 +88,7 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
     @Override
     public boolean receive(int target, Object object) {
       TaskMessage msg = new TaskMessage(object,
-          edge.getStringMapping(communicationEdge), target);
+          edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         if (messages.offer(msg)) {

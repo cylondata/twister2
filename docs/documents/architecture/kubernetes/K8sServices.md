@@ -43,7 +43,7 @@ NodePort supports only a single port on each pod. Therefore, when using NodePort
 number of workers per pod has to be 1. We can not run more than one worker on a pod. 
 Because, Kubernetes does not direct requests to more than one port on a pod.
   
-I tried assigning names to workerComputeResource ports and set the name as targetPort in NodePort service object, 
+I tried assigning names to container ports and set the name as targetPort in NodePort service object, 
 but that does not work. It seems that currently Kubernetes does not direct requests 
 to more than one port on a pod.
 

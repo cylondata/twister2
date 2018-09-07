@@ -45,11 +45,12 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
   public ReduceStreamingOperation(Config config, Communicator network,
                                   TaskPlan tPlan, IFunction fnc) {
     super(config, network, tPlan);
+    this.function = fnc;
   }
 
   public void prepare(Set<Integer> sources, int dest, EdgeGenerator e,
                       DataType dataType, String edgeName) {
-    this.edge = e;
+    this.edgeGenerator = e;
     op = new SReduce(channel, taskPlan, sources, dest,
         new ReduceFunctionImpl(function), new FinalReduceReceiver(),
         Utils.dataTypeToMessageType(dataType));
@@ -92,7 +93,7 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
     @Override
     public boolean receive(int target, Object object) {
       TaskMessage msg = new TaskMessage(object,
-          edge.getStringMapping(communicationEdge), target);
+          edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         if (messages.offer(msg)) {

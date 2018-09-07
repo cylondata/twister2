@@ -29,7 +29,7 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
 
   protected TaskPlan taskPlan;
 
-  protected EdgeGenerator edge;
+  protected EdgeGenerator edgeGenerator;
 
   protected int communicationEdge;
 

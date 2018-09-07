@@ -5,7 +5,7 @@ Logging in distributed environments is an important task.
 Cluster resource schedulers provide logging mechanisms. For example, 
 Kubernetes saves applications logs in files under /var/log directory in agent machines. 
 These log files are shown to users with a web based application. 
-It is called Dashboard in Kubernetes. Users can also download the logs of their applications 
+It is called Dashboard. Users can download the logs of their applications 
 to their local machines.
 
 Since there are many agent machines in a Kubernetes cluster, 
@@ -35,7 +35,7 @@ we add a FileHandler to the root logger of Java. The file is located in the pers
 So, Java logger directs the log messages to both the console and to this persistent log file. 
 
 We implemented the logger in the class:
-* [edu.iu.dsc.tws.common.logging.LoggingHelper](../../../twister2/common/src/java/edu/iu/dsc/tws/common/logging/LoggingHelper.java)
+* [edu.iu.dsc.tws.common.logging.LoggingHelper](../../../../twister2/common/src/java/edu/iu/dsc/tws/common/logging/LoggingHelper.java)
 
 ## Configuration Parameters
 Five configuration parameters are added for persistent logging. 
@@ -56,7 +56,7 @@ The second parameters determines the log level. By default, it is INFO.
 Valid logging levels: FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE
 
 The third parameter shows the maximum size of the log files. 
-When a log file size reaches to this size, it is moved to another file.  
+When a log file size reaches to this value, it is moved to another file.  
 Its default value is 100 MB. 
 
 The fourth parameter shows the maximum number of log files for a worker. 
@@ -65,12 +65,12 @@ The oldest ones will be deleted.
 
 The last parameter shows whether System.out and System.err streams should also be redirected 
 to persistent storage. It is a boolean value. By default, its value is false.
-If this is enabled, all regular system output en error messages will be directed to the log files. 
+If this is enabled, all regular system output and error messages will be directed to the log files. 
 Users will not be able to see log messages on the screen. 
 
 ## Sample Usage
 Kubernetes Twister2 workers initialize the worker loggers as the following. 
-This method needs to be called as early as possbile when the workers start. 
+This method needs to be called as early as possible when the workers start. 
 
     public static void initWorkerLogger(int workerID, K8sPersistentVolume pv, Config cnfg) {
 

@@ -50,7 +50,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
-    this.edge = e;
+    this.edgeGenerator = e;
     op = new SPartition(channel, taskPlan, srcs, dests, Utils.dataTypeToMessageType(dataType),
         new PartitionReceiver(), new LoadBalanceDestinationSelector());
     communicationEdge = e.generate(edgeName);
@@ -85,15 +85,13 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
           }
         } else {
           if (object instanceof List) {
-            for (Object o : (List) object) {
-              TaskMessage msg = new TaskMessage(o,
-                  edge.getStringMapping(communicationEdge), target);
-              BlockingQueue<IMessage> messages = outMessages.get(target);
-              if (messages != null) {
-                if (messages.offer(msg)) {
-                  return true;
-                }
-              }
+            TaskMessage msg = new TaskMessage(object,
+                edgeGenerator.getStringMapping(communicationEdge), target);
+            BlockingQueue<IMessage> messages = outMessages.get(target);
+            if (messages != null) {
+              return messages.offer(msg);
+            } else {
+              throw new RuntimeException("Un-expected target message: " + target);
             }
           }
         }
