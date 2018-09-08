@@ -159,17 +159,17 @@ public class ParallelOperationFactory {
         }
       } else {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
-          KeyedReduceStreamingOperation keyedReduceStreamingOperation
-              = new KeyedReduceStreamingOperation(config, channel, taskPlan);
-          keyedReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
-              edge.getName());
-          return keyedReduceStreamingOperation;
+          KeyedReduceStreamingOperation krop = new KeyedReduceStreamingOperation(
+              config, channel, taskPlan, sources, dests,
+              edgeGenerator, edge.getDataType(), edge.getKeyType(),
+              edge.getName(), edge.getFunction());
+          return krop;
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
-          KeyedPartitionStreamOperation keyedReduceStreamingOperation
+          KeyedPartitionStreamOperation kpop
               = new KeyedPartitionStreamOperation(config, channel, taskPlan, sources, dests,
               edgeGenerator, edge.getDataType(), edge.getKeyType(),
               edge.getName());
-          return keyedReduceStreamingOperation;
+          return kpop;
         }
       }
     }
@@ -212,20 +212,14 @@ public class ParallelOperationFactory {
         allReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
             edge.getName());
         return allReduceStreamingOperation;
-      } else if (Operations.KEYED_REDUCE.equals(edge.getOperation())) {
-        KeyedReduceStreamingOperation keyedReduceStreamingOperation
-            = new KeyedReduceStreamingOperation(config, channel, taskPlan);
-        keyedReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
-            edge.getName());
-        return keyedReduceStreamingOperation;
       }
     } else {
       if (Operations.KEYED_REDUCE.equals(edge.getOperation())) {
-        KeyedReduceStreamingOperation keyedReduceStreamingOperation
-            = new KeyedReduceStreamingOperation(config, channel, taskPlan);
-        keyedReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
-            edge.getName());
-        return keyedReduceStreamingOperation;
+        KeyedReduceStreamingOperation krop = new KeyedReduceStreamingOperation(
+            config, channel, taskPlan, sources, dests,
+            edgeGenerator, edge.getDataType(), edge.getKeyType(),
+            edge.getName(), edge.getFunction());
+        return krop;
       }
     }
 

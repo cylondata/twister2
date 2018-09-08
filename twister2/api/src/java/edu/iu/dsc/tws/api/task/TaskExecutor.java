@@ -88,7 +88,7 @@ public class TaskExecutor {
   }
 
   public void execute(DataFlowTaskGraph graph, ExecutionPlan plan) {
-    Executor executor = new Executor(config, plan, communicator.getChannel(),
+    Executor executor = new Executor(config, workerID, plan, communicator.getChannel(),
         OperationMode.BATCH);
     executor.execute();
   }

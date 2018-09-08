@@ -26,17 +26,20 @@ public class Executor {
 
   private Config config;
 
-  public Executor(Config cfg, ExecutionPlan executionPlan,
+  private int workerId;
+
+  public Executor(Config cfg, int wId, ExecutionPlan executionPlan,
                   TWSChannel channel) {
-    this(cfg, executionPlan, channel, OperationMode.STREAMING);
+    this(cfg, wId, executionPlan, channel, OperationMode.STREAMING);
   }
 
-  public Executor(Config cfg, ExecutionPlan executionPlan,
+  public Executor(Config cfg, int wId, ExecutionPlan executionPlan,
                   TWSChannel channel, OperationMode operationMode) {
     this.executionPlan = executionPlan;
     this.channel = channel;
     this.operationMode = operationMode;
     this.config = cfg;
+    this.workerId = wId;
   }
 
   /***
@@ -47,9 +50,9 @@ public class Executor {
     // lets start the execution
     IExecutor executor;
     if (operationMode == OperationMode.STREAMING) {
-      executor = new StreamingShareingExecutor();
+      executor = new StreamingShareingExecutor(workerId);
     } else {
-      executor = new BatchSharingExecutor();
+      executor = new BatchSharingExecutor(workerId);
     }
 
     return executor.execute(config, executionPlan, channel);

@@ -26,6 +26,12 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   // keep track of finished executions
   private Map<Integer, Boolean> finishedInstances = new HashMap<>();
 
+  private int workerId;
+
+  public BatchSharingExecutor(int workerId) {
+    this.workerId = workerId;
+  }
+
   /**
    * Execution Method for Batch Tasks
    */
@@ -107,7 +113,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
             break;
           }
         } catch (Throwable t) {
-          LOG.log(Level.SEVERE, "Error in executor", t);
+          LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
         }
       }
     }

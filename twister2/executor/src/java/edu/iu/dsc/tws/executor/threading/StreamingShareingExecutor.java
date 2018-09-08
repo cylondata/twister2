@@ -22,6 +22,12 @@ import edu.iu.dsc.tws.executor.api.INodeInstance;
 public class StreamingShareingExecutor extends ThreadSharingExecutor {
   private static final Logger LOG = Logger.getLogger(StreamingShareingExecutor.class.getName());
 
+  private int workerId;
+
+  public StreamingShareingExecutor(int workerId) {
+    this.workerId = workerId;
+  }
+
   public boolean runExecution() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
@@ -58,7 +64,7 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
             tasks.offer(nodeInstance);
           }
         } catch (Throwable t) {
-          LOG.log(Level.SEVERE, "Error in executor", t);
+          LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
         }
       }
     }

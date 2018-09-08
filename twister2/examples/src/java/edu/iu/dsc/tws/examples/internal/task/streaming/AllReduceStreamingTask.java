@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.internal.task.streaming;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -29,6 +30,7 @@ import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -39,6 +41,8 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 public class AllReduceStreamingTask implements IWorker {
+  private static final Logger LOG = Logger.getLogger(AllReduceStreamingTask.class.getName());
+
   @Override
   public void execute(Config config, int workerID, AllocatedResources resources,
                       IWorkerController workerController,
@@ -53,7 +57,12 @@ public class AllReduceStreamingTask implements IWorker {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "all-reduce-edge",
-        OperationNames.ALLREDUCE);
+        OperationNames.ALLREDUCE, new IFunction() {
+          @Override
+          public Object onMessage(Object object1, Object object2) {
+            return object1;
+          }
+        });
     builder.operationMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();
@@ -62,10 +71,17 @@ public class AllReduceStreamingTask implements IWorker {
 
   private static class GeneratorTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
-
+    private int count = 0;
     @Override
     public void execute() {
-      context.write("all-reduce-edge", "Hello");
+      boolean wrote = context.write("all-reduce-edge", "Hello");
+      if (wrote) {
+        count++;
+        if (count % 1000 == 0) {
+          LOG.info(String.format("%d %d Message Partition sent count : %d", context.getWorkerId(),
+              context.taskId(), count));
+        }
+      }
     }
   }
 
@@ -75,8 +91,8 @@ public class AllReduceStreamingTask implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 1000000 == 0) {
-        System.out.println("Message AllReduced : " + message.getContent() + ", Count : " + count);
+      if (count % 1000 == 0) {
+        LOG.info("Message AllReduced : " + message.getContent() + ", Count : " + count);
       }
       count++;
       return true;

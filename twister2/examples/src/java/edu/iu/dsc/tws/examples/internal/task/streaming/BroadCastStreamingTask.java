@@ -65,10 +65,17 @@ public class BroadCastStreamingTask implements IWorker {
 
   private static class GeneratorTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
-
+    private int count = 0;
     @Override
     public void execute() {
-      context.write("broadcast-edge", "Hello");
+      boolean wrote = context.write("broadcast-edge", "Hello");
+      if (wrote) {
+        count++;
+        if (count % 1000 == 0) {
+          LOG.info(String.format("%d %d Message Partition sent count : %d", context.getWorkerId(),
+              context.taskId(), count));
+        }
+      }
     }
   }
 
@@ -78,7 +85,7 @@ public class BroadCastStreamingTask implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (counter % 1000000 == 0) {
+      if (counter % 1000 == 0) {
         System.out.println(context.taskId() + " Message Braodcasted : "
             + message.getContent() + ", counter : " + counter);
       }
