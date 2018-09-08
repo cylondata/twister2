@@ -47,6 +47,7 @@ import edu.iu.dsc.tws.executor.comms.batch.GatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.PartitionBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.ReduceBatchOperation;
+import edu.iu.dsc.tws.executor.comms.streaming.AllGatherStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.AllReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.BroadcastStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.GatherStreamingOperation;
@@ -168,6 +169,11 @@ public class ParallelOperationFactory {
           allReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName());
           return allReduceStreamingOperation;
+        } else if (OperationNames.ALLGATHER.equals(edge.getOperation())) {
+          AllGatherStreamingOperation allgsop = new AllGatherStreamingOperation(
+              config, channel, taskPlan, sources, dests, edgeGenerator, edge.getDataType(),
+              edge.getName());
+          return allgsop;
         }
       } else {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
