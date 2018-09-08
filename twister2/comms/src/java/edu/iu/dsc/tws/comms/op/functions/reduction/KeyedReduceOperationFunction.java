@@ -51,8 +51,8 @@ public class KeyedReduceOperationFunction implements KeyedReduceFunction {
   @Override
   public Object reduce(Object t1, Object t2) {
     if (!(t1 instanceof KeyedContent) || !(t2 instanceof KeyedContent)) {
-      throw new IllegalArgumentException("The keyed operation function" +
-          " requires KeyedContent objects");
+      throw new IllegalArgumentException("The keyed operation function"
+          + " requires KeyedContent objects");
     }
 
     KeyedContent keyedContent1 = (KeyedContent) t1;
