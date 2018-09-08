@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -63,7 +64,7 @@ public class KeyedReduceStreamingTask implements IWorker {
           public Object onMessage(Object object1, Object object2) {
             return object1;
           }
-        });
+        }, DataType.OBJECT, DataType.OBJECT);
     builder.operationMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();
@@ -73,9 +74,18 @@ public class KeyedReduceStreamingTask implements IWorker {
   private static class GeneratorTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
 
+    private int count;
+
     @Override
     public void execute() {
-      context.write("keyed-reduce-edge", "Hello");
+      boolean wrote = context.write("keyed-reduce-edge", "test", "Hello");
+      if (wrote) {
+        count++;
+        if (count % 100 == 0) {
+          LOG.info(String.format("%d %d Reduce sent count : %d", context.getWorkerId(),
+              context.taskId(), count));
+        }
+      }
     }
   }
 
@@ -85,7 +95,7 @@ public class KeyedReduceStreamingTask implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 1000000 == 0) {
+      if (count % 100 == 0) {
         System.out.println("Message Keyed-Reduced : " + message.getContent()
             + ", Count : " + count);
       }

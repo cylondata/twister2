@@ -85,7 +85,7 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
 
     @Override
     public boolean progress() {
-      return false;
+      return true;
     }
   }
 }

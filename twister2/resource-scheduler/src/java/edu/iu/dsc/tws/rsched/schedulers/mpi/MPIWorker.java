@@ -170,6 +170,7 @@ public final class MPIWorker {
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(MPIContext.WORKER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
+        put(MPIContext.JOB_NAME, jobName).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
     return updatedConfig;
   }

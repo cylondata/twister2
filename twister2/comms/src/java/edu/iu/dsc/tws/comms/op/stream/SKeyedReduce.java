@@ -56,7 +56,7 @@ public class SKeyedReduce {
         new ReduceMultiStreamingPartialReceiver(fnc), edges);
     this.keyedReduce.init(comm.getConfig(), dataType, plan);
     this.destinationSelector = destSelector;
-    this.destinationSelector.prepare(sources, destinations);
+    this.destinationSelector.prepare(keyType, sources, destinations);
 
   }
 

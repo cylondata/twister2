@@ -57,12 +57,12 @@ public class TaskMessage implements IMessage {
 
   /**
    * Task message with key and data
-   * @param content data
    * @param key key
+   * @param content data
    * @param edge edge
    * @param sourceTask source task
    */
-  public TaskMessage(Object content, Object key, String edge, int sourceTask) {
+  public TaskMessage(Object key, Object content, String edge, int sourceTask) {
     this.content = content;
     this.key = key;
     this.edge = edge;

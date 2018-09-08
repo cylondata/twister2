@@ -174,7 +174,7 @@ public class ParallelOperationFactory {
       }
     }
 
-    throw new RuntimeException("Un-supported operation: " + operationMode);
+    throw new RuntimeException("Un-supported operation: " + edge.getOperation());
   }
 
 
