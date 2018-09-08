@@ -17,15 +17,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
 public class StreamingFinalGatherReceiver extends StreamingPartialGatherReceiver {
   private static final Logger LOG = Logger.getLogger(StreamingFinalGatherReceiver.class.getName());
 
-  private BatchReceiver receiver;
+  private MessageReceiver receiver;
 
-  public StreamingFinalGatherReceiver(BatchReceiver receiver) {
+  public StreamingFinalGatherReceiver(MessageReceiver receiver) {
     this.receiver = receiver;
   }
 
@@ -39,11 +39,10 @@ public class StreamingFinalGatherReceiver extends StreamingPartialGatherReceiver
   @Override
   protected boolean handleMessage(int task, Object message, int flags, int dest) {
     if (message instanceof List) {
-      receiver.receive(task, ((List<Object>) message).iterator());
+      return receiver.onMessage(task, 0, dest, flags, message);
     } else {
       LOG.log(Level.WARNING, "Messages should be in list format");
       return false;
     }
-    return true;
   }
 }

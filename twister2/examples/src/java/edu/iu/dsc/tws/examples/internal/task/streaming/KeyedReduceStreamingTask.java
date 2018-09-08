@@ -78,7 +78,7 @@ public class KeyedReduceStreamingTask implements IWorker {
 
     @Override
     public void execute() {
-      boolean wrote = context.write("keyed-reduce-edge", "test", "Hello");
+      boolean wrote = context.write("keyed-reduce-edge", "" + count, "Hello");
       if (wrote) {
         count++;
         if (count % 100 == 0) {

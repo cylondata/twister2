@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.internal.task.streaming;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -42,6 +43,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 public class GatherStreamingTask implements IWorker {
+  private static final Logger LOG = Logger.getLogger(GatherStreamingTask.class.getName());
 
   private RandomString randomString;
 
@@ -69,13 +71,22 @@ public class GatherStreamingTask implements IWorker {
   private static class GeneratorTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
 
+    private int count = 0;
+
     @Override
     public void execute() {
       String data = generateStringData();
       // lets generate a message
       KeyedContent message = new KeyedContent(0, data,
           MessageType.INTEGER, MessageType.OBJECT);
-      context.write("gather-edge", "1");
+      boolean wrote = context.write("gather-edge", "1");
+      if (wrote) {
+        count++;
+        if (count % 100 == 0) {
+          LOG.info(String.format("%d %d Reduce sent count : %d", context.getWorkerId(),
+              context.taskId(), count));
+        }
+      }
     }
 
     private static String generateStringData() {
@@ -89,10 +100,12 @@ public class GatherStreamingTask implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 100000 == 0) {
-        System.out.println("Message Gathered : " + message.getContent() + ", Count : " + count);
+      if (count % 100 == 0) {
+        LOG.info("Message Gathered : " + message.getContent() + ", Count : " + count);
       }
-      count++;
+      if (message.getContent() instanceof List) {
+        count += ((List) message.getContent()).size();
+      }
       return true;
     }
   }
