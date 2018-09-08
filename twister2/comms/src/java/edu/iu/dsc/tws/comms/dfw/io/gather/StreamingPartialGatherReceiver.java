@@ -87,6 +87,7 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
     return canAdd;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;
@@ -120,7 +121,11 @@ public class StreamingPartialGatherReceiver implements MessageReceiver {
           List<Object> out = new ArrayList<>();
           for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
             Object e1 = e.getValue().peek();
-            out.add(e1);
+            if (e1 instanceof List) {
+              out.addAll((List) e1);
+            } else {
+              out.add(e1);
+            }
           }
           if (handleMessage(t, out, 0, t)) {
             for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {

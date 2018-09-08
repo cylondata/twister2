@@ -97,6 +97,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
     return canAdd;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;
@@ -137,7 +138,11 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
             Queue<Object> valueList = e.getValue();
             if (valueList.size() > 0) {
               Object value = valueList.peek();
-              out.add(value);
+              if (value instanceof List) {
+                out.addAll((List) value);
+              } else {
+                out.add(value);
+              }
             }
           }
           int flags = 0;
