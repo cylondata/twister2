@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.common.config.Config;
  * this can cause errors
  * TODO: need to investigate why such issues occur
  */
-public interface KeyedReduceFunction {
+public interface KeyedReduceFunction extends ReduceFunction {
   void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
 
   Object reduce(Object t1, Object t2);
