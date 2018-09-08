@@ -35,12 +35,10 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
 
   private SBroadCast op;
 
-  public BroadcastStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
+  public BroadcastStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
+                                     int srcs, Set<Integer> dests, EdgeGenerator e,
+                                     DataType dataType, String edgeName) {
     super(config, network, tPlan);
-  }
-
-  public void prepare(int srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
     this.edgeGenerator = e;
     op = new SBroadCast(channel, taskPlan, srcs, dests,
         Utils.dataTypeToMessageType(dataType), new BcastReceiver());

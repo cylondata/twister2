@@ -53,14 +53,6 @@ public class IterativeJob extends TaskWorker {
     PartitionTask r = new PartitionTask();
     ComputeTask c = new ComputeTask();
 
-//    GraphBuilder builder = GraphBuilder.newBuilder();
-//    builder.addSource("source", g);
-//    builder.setParallelism("source", 4);
-//    builder.addSink("sink", r);
-//    builder.setParallelism("sink", 4);
-//    builder.connect("source", "sink", "partition-edge",
-//        OperationNames.PARTITION);
-
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
     ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);

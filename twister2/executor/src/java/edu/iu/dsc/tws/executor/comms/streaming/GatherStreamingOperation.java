@@ -34,12 +34,10 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(GatherStreamingOperation.class.getName());
   private SGather op;
 
-  public GatherStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
+  public GatherStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
+                                  Set<Integer> srcs, int dest, EdgeGenerator e,
+                                  DataType dataType, String edgeName, TaskPlan taskPlan) {
     super(config, network, tPlan);
-  }
-
-  public void prepare(Set<Integer> srcs, int dest, EdgeGenerator e,
-                      DataType dataType, String edgeName, Config config, TaskPlan taskPlan) {
     this.edgeGenerator = e;
     communicationEdge = e.generate(edgeName);
     op = new SGather(channel, taskPlan, srcs, dest, new GatherRcvr(),

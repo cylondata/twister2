@@ -55,7 +55,6 @@ import edu.iu.dsc.tws.executor.comms.streaming.KeyedPartitionStreamOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.KeyedReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.PartitionStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.ReduceStreamingOperation;
-import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -140,104 +139,41 @@ public class ParallelOperationFactory {
       //LOG.info("Streaming Job Building ...");
       if (!edge.isKeyed()) {
         if (OperationNames.PARTITION.equals(edge.getOperation())) {
-          PartitionStreamingOperation partitionOp = new PartitionStreamingOperation(config, channel,
-              taskPlan);
-          partitionOp.prepare(sources, dests, edgeGenerator, edge.getDataType(), edge.getName());
-          return partitionOp;
+          return new PartitionStreamingOperation(config, channel,
+              taskPlan, sources, dests, edgeGenerator, edge.getDataType(), edge.getName());
         } else if (OperationNames.BROADCAST.equals(edge.getOperation())) {
-          BroadcastStreamingOperation bcastOp = new BroadcastStreamingOperation(config, channel,
-              taskPlan);
-          // get the first as the source
-          bcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
+          return new BroadcastStreamingOperation(config, channel,
+              taskPlan, sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
               edge.getName());
-          return bcastOp;
         } else if (OperationNames.GATHER.equals(edge.getOperation())) {
-          GatherStreamingOperation gatherOp = new GatherStreamingOperation(config, channel,
-              taskPlan);
-          gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
-              edge.getName(), config, taskPlan);
-          return gatherOp;
+          return new GatherStreamingOperation(config, channel,
+              taskPlan, sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
+              edge.getName(), taskPlan);
         } else if (OperationNames.REDUCE.equals(edge.getOperation())) {
-          ReduceStreamingOperation reduceStreamingOperation = new ReduceStreamingOperation(config,
-              channel, taskPlan, edge.getFunction());
-          reduceStreamingOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
-              edge.getDataType(), edge.getName());
-          return reduceStreamingOperation;
+          return new ReduceStreamingOperation(config,
+              channel, taskPlan, edge.getFunction(), sources,
+              dests.iterator().next(), edgeGenerator, edge.getDataType(), edge.getName());
         } else if (OperationNames.ALLREDUCE.equals(edge.getOperation())) {
-          AllReduceStreamingOperation allReduceStreamingOperation
-              = new AllReduceStreamingOperation(config, channel, taskPlan, edge.getFunction());
-          allReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
+          return new AllReduceStreamingOperation(
+              config, channel, taskPlan, edge.getFunction(),
+              sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName());
-          return allReduceStreamingOperation;
         } else if (OperationNames.ALLGATHER.equals(edge.getOperation())) {
-          AllGatherStreamingOperation allgsop = new AllGatherStreamingOperation(
+          return new AllGatherStreamingOperation(
               config, channel, taskPlan, sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName());
-          return allgsop;
         }
       } else {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
-          KeyedReduceStreamingOperation krop = new KeyedReduceStreamingOperation(
+          return new KeyedReduceStreamingOperation(
               config, channel, taskPlan, sources, dests,
               edgeGenerator, edge.getDataType(), edge.getKeyType(),
               edge.getName(), edge.getFunction());
-          return krop;
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
-          KeyedPartitionStreamOperation kpop
-              = new KeyedPartitionStreamOperation(config, channel, taskPlan, sources, dests,
-              edgeGenerator, edge.getDataType(), edge.getKeyType(),
-              edge.getName());
-          return kpop;
+          return new KeyedPartitionStreamOperation(config, channel, taskPlan, sources, dests,
+          edgeGenerator, edge.getDataType(), edge.getKeyType(),
+          edge.getName());
         }
-      }
-    }
-
-    throw new RuntimeException("Un-supported operation: " + edge.getOperation());
-  }
-
-
-  /**
-   * Factory Format to Choose the Corresponding Operation
-   */
-  public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests) {
-    if (!edge.isKeyed()) {
-      if (Operations.PARTITION.equals(edge.getOperation())) {
-        PartitionStreamingOperation partitionOp = new PartitionStreamingOperation(config,
-            channel, taskPlan);
-        partitionOp.prepare(sources, dests, edgeGenerator, edge.getDataType(), edge.getName());
-        return partitionOp;
-      } else if (Operations.BROADCAST.equals(edge.getOperation())) {
-        BroadcastStreamingOperation bcastOp = new BroadcastStreamingOperation(config,
-            channel, taskPlan);
-        // get the first as the source
-        bcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
-            edge.getName());
-        return bcastOp;
-      } else if (Operations.GATHER.equals(edge.getOperation())) {
-        GatherStreamingOperation gatherOp = new GatherStreamingOperation(config, channel, taskPlan);
-        gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
-            edge.getName(), config, taskPlan);
-        return gatherOp;
-      } else if (Operations.REDUCE.equals(edge.getOperation())) {
-        ReduceStreamingOperation reduceStreamingOperation = new ReduceStreamingOperation(config,
-            channel, taskPlan, edge.getFunction());
-        reduceStreamingOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
-            edge.getDataType(), edge.getName());
-        return reduceStreamingOperation;
-      } else if (Operations.ALL_REDUCE.equals(edge.getOperation())) {
-        AllReduceStreamingOperation allReduceStreamingOperation
-            = new AllReduceStreamingOperation(config, channel, taskPlan, edge.getFunction());
-        allReduceStreamingOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
-            edge.getName());
-        return allReduceStreamingOperation;
-      }
-    } else {
-      if (Operations.KEYED_REDUCE.equals(edge.getOperation())) {
-        KeyedReduceStreamingOperation krop = new KeyedReduceStreamingOperation(
-            config, channel, taskPlan, sources, dests,
-            edgeGenerator, edge.getDataType(), edge.getKeyType(),
-            edge.getName(), edge.getFunction());
-        return krop;
       }
     }
 

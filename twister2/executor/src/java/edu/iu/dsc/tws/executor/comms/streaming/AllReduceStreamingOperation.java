@@ -40,13 +40,11 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
   private IFunction fn;
 
   public AllReduceStreamingOperation(Config config, Communicator network,
-                                     TaskPlan tPlan, IFunction function) {
+                                     TaskPlan tPlan, IFunction function,
+                                     Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
+                                     DataType dataType, String edgeName) {
     super(config, network, tPlan);
     this.fn = function;
-  }
-
-  public void prepare(Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
     this.edgeGenerator = e;
     op = new SAllReduce(channel, taskPlan, sources, dest, new ReduceFnImpl(fn),
         new FinalReduceReceive(), Utils.dataTypeToMessageType(dataType));

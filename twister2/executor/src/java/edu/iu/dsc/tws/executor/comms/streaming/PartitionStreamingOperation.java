@@ -44,12 +44,10 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   protected SPartition op;
 
 
-  public PartitionStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
+  public PartitionStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
+                                     Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+                                     DataType dataType, String edgeName) {
     super(config, network, tPlan);
-  }
-
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
     this.edgeGenerator = e;
     op = new SPartition(channel, taskPlan, srcs, dests, Utils.dataTypeToMessageType(dataType),
         new PartitionReceiver(), new LoadBalanceSelector());

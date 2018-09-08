@@ -43,13 +43,11 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
   protected IFunction function;
 
   public ReduceStreamingOperation(Config config, Communicator network,
-                                  TaskPlan tPlan, IFunction fnc) {
+                                  TaskPlan tPlan, IFunction fnc,
+                                  Set<Integer> sources, int dest, EdgeGenerator e,
+                                  DataType dataType, String edgeName) {
     super(config, network, tPlan);
     this.function = fnc;
-  }
-
-  public void prepare(Set<Integer> sources, int dest, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
     this.edgeGenerator = e;
     op = new SReduce(channel, taskPlan, sources, dest,
         new ReduceFunctionImpl(function), new FinalReduceReceiver(),
