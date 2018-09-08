@@ -55,8 +55,8 @@ public class KeyedReduceOperationFunction implements KeyedReduceFunction {
           " requires KeyedContent objects");
     }
 
-    KeyedContent keyedContent1 = (KeyedContent)t1;
-    KeyedContent keyedContent2 = (KeyedContent)t2;
+    KeyedContent keyedContent1 = (KeyedContent) t1;
+    KeyedContent keyedContent2 = (KeyedContent) t2;
 
     Object data1 = keyedContent1.getValue();
     Object data2 = keyedContent2.getValue();
@@ -335,6 +335,7 @@ public class KeyedReduceOperationFunction implements KeyedReduceFunction {
       } // END MIN
     }
 
-    return result;
+    return new KeyedContent(key, result,
+        keyedContent1.getKeyType(), keyedContent1.getContentType());
   }
 }
