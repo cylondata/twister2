@@ -33,20 +33,20 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.KeyedReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchReceiver;
 
 public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(KeyedReduceBatchFinalReceiver.class.getName());
 
-  private ReduceFunction reduceFunction;
+  private KeyedReduceFunction reduceFunction;
 
   private ReduceReceiver reduceReceiver;
 
   private Map<Integer, List<Object>> finalMessages = new HashMap<>();
 
-  public KeyedReduceBatchFinalReceiver(ReduceFunction reduce, ReduceReceiver receiver) {
+  public KeyedReduceBatchFinalReceiver(KeyedReduceFunction reduce, ReduceReceiver receiver) {
     super(reduce);
     this.reduceFunction = reduce;
     this.reduceReceiver = receiver;
@@ -66,29 +66,30 @@ public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
    */
   public boolean progress() {
     boolean needsFurtherProgress = false;
-    for (int t : messages.keySet()) {
-      if (batchDone.get(t)) {
+    for (int target : messages.keySet()) {
+      if (batchDone.get(target)) {
         continue;
       }
       boolean allFinished = true;
       // now check weather we have the messages for this source
-      Map<Integer, Queue<Object>> map = messages.get(t);
-      Map<Integer, Boolean> finishedForTarget = finished.get(t);
-      Map<Integer, Integer> countMap = counts.get(t);
-      Map<Integer, Integer> totalCountMap = totalCounts.get(t);
-      Set<Integer> emptyMessages = emptyReceivedSources.get(t);
+      Map<Integer, Queue<Object>> messagesForTarget = messages.get(target);
+      Map<Integer, Boolean> finishedForTarget = finished.get(target);
+      Map<Integer, Integer> countMap = counts.get(target);
+      Map<Integer, Integer> totalCountMap = totalCounts.get(target);
+      Set<Integer> emptyMessages = emptyReceivedSources.get(target);
 
       boolean found = true;
 
       boolean moreThanOne = false;
-      for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
-        if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
+      for (Map.Entry<Integer, Queue<Object>> targetSourceEntry : messagesForTarget.entrySet()) {
+        if (targetSourceEntry.getValue().size() == 0
+            && !finishedForTarget.get(targetSourceEntry.getKey())) {
           found = false;
-        } else if (e.getValue().size() > 0) {
+        } else if (targetSourceEntry.getValue().size() > 0) {
           moreThanOne = true;
         }
 
-        if (!finishedForTarget.get(e.getKey())) {
+        if (!finishedForTarget.get(targetSourceEntry.getKey())) {
           allFinished = false;
         }
       }
@@ -100,7 +101,7 @@ public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
 
       if (found) {
         List<Object> out = new ArrayList<>();
-        for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
+        for (Map.Entry<Integer, Queue<Object>> e : messagesForTarget.entrySet()) {
           Queue<Object> valueList = e.getValue();
           if (valueList.size() > 0) {
             Object value = valueList.poll();
@@ -112,7 +113,7 @@ public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
           Integer i = e.getValue();
           e.setValue(i - 1);
         }
-        finalMessages.get(t).addAll(out);
+        finalMessages.get(target).addAll(out);
       } else {
         allFinished = false;
       }
@@ -123,9 +124,9 @@ public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
       }
 
       if (allFinished) {
-        batchDone.put(t, true);
+        batchDone.put(target, true);
         Object previous = null;
-        List<Object> finalMessagePerTask = finalMessages.get(t);
+        List<Object> finalMessagePerTask = finalMessages.get(target);
         for (int i = 0; i < finalMessagePerTask.size(); i++) {
           if (previous == null) {
             previous = finalMessagePerTask.get(i);
@@ -135,7 +136,7 @@ public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
           }
 
         }
-        reduceReceiver.receive(t, previous);
+        reduceReceiver.receive(target, previous);
       }
     }
     return needsFurtherProgress;
