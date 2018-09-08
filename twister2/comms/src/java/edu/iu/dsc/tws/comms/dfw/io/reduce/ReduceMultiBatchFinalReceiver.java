@@ -17,19 +17,19 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.KeyedReduceFunction;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KeyedReduceBatchFinalReceiver;
 
 public class ReduceMultiBatchFinalReceiver implements MultiMessageReceiver {
-  private ReduceFunction reduceFunction;
+  private KeyedReduceFunction reduceFunction;
 
   private ReduceReceiver reduceReceiver;
 
   private Map<Integer, KeyedReduceBatchFinalReceiver> receiverMap = new HashMap<>();
 
-  public ReduceMultiBatchFinalReceiver(ReduceFunction reduceFn,
+  public ReduceMultiBatchFinalReceiver(KeyedReduceFunction reduceFn,
                                            ReduceReceiver reduceRcvr) {
     this.reduceFunction = reduceFn;
     this.reduceReceiver = reduceRcvr;

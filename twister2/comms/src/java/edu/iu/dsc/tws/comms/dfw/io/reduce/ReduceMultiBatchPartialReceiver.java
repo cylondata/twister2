@@ -17,16 +17,16 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.KeyedReduceFunction;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KeyedReduceBatchPartialReceiver;
 
 public class ReduceMultiBatchPartialReceiver implements MultiMessageReceiver {
-  private ReduceFunction reduceFunction;
+  private KeyedReduceFunction reduceFunction;
 
   private Map<Integer, KeyedReduceBatchPartialReceiver> receiverMap = new HashMap<>();
 
-  public ReduceMultiBatchPartialReceiver(ReduceFunction reduceFn) {
+  public ReduceMultiBatchPartialReceiver(KeyedReduceFunction reduceFn) {
     this.reduceFunction = reduceFn;
   }
 
@@ -34,10 +34,10 @@ public class ReduceMultiBatchPartialReceiver implements MultiMessageReceiver {
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      KeyedReduceBatchPartialReceiver finalReceiver =
+      KeyedReduceBatchPartialReceiver partialReceiver =
           new KeyedReduceBatchPartialReceiver(e.getKey(), reduceFunction);
-      receiverMap.put(e.getKey(), finalReceiver);
-      finalReceiver.init(cfg, op, e.getValue());
+      receiverMap.put(e.getKey(), partialReceiver);
+      partialReceiver.init(cfg, op, e.getValue());
     }
   }
 
