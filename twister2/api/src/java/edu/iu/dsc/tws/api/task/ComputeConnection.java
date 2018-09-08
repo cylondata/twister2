@@ -112,7 +112,6 @@ public class ComputeConnection {
     return this;
   }
 
-
   public ComputeConnection partition(String parent) {
     Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.PARTITION);
     inputs.put(parent, edge);
@@ -208,7 +207,7 @@ public class ComputeConnection {
       if (v2 == null) {
         throw new RuntimeException("Failed to connect non-existing task: " + e.getKey());
       }
-      graph.addTaskEdge(v1, v2, e.getValue());
+      graph.addTaskEdge(v2, v1, e.getValue());
     }
   }
 }

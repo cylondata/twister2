@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-//import java.util.LinkedHashSet;
-
 public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   protected Set<TV> vertices;
   protected Set<TE> edges;
@@ -83,7 +81,6 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
 
   @Override
   public boolean addTaskEdge(TV taskVertex1, TV taskVertex2, TE taskEdge) {
-
     if (taskEdge == null) {
       throw new NullPointerException();
     } else if (containsTaskEdge(taskEdge)) {
@@ -124,12 +121,6 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     }
     return ret;
   }
-
-  /* Commented for duplicate task edge validation for same tasks.
-  @Override
-  public boolean containsTaskEdge(TE taskEdge) {
-    return edges.contains(taskEdge);
-  }*/
 
   /**
    * This method is used to identify the duplicate task edge for the

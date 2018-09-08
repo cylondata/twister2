@@ -23,14 +23,16 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.Collector;
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -38,7 +40,6 @@ import edu.iu.dsc.tws.task.batch.BaseBatchCompute;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class IterativeJob extends TaskWorker {
@@ -52,17 +53,21 @@ public class IterativeJob extends TaskWorker {
     PartitionTask r = new PartitionTask();
     ComputeTask c = new ComputeTask();
 
-    GraphBuilder builder = GraphBuilder.newBuilder();
-    builder.addSource("source", g);
-    builder.setParallelism("source", 4);
-    builder.addSink("sink", r);
-    builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "partition-edge",
-        OperationNames.PARTITION);
+//    GraphBuilder builder = GraphBuilder.newBuilder();
+//    builder.addSource("source", g);
+//    builder.setParallelism("source", 4);
+//    builder.addSink("sink", r);
+//    builder.setParallelism("sink", 4);
+//    builder.connect("source", "sink", "partition-edge",
+//        OperationNames.PARTITION);
 
-    builder.operationMode(OperationMode.BATCH);
+    TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
+    graphBuilder.addSource("source", g, 4);
+    ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
+    computeConnection.partition("source", "partition", DataType.OBJECT);
+    graphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph graph = builder.build();
+    DataFlowTaskGraph graph = graphBuilder.build();
     for (int i = 0; i < 10; i++) {
       ExecutionPlan plan = taskExecutor.plan(graph);
       taskExecutor.addInput(graph, plan, "source", "input", new DataSet<>(0));
@@ -85,11 +90,11 @@ public class IterativeJob extends TaskWorker {
     @Override
     public void execute() {
       if (count == 999) {
-        if (context.writeEnd("partition-edge", "Hello")) {
+        if (context.writeEnd("partition", "Hello")) {
           count++;
         }
       } else if (count < 999) {
-        if (context.write("partition-edge", "Hello")) {
+        if (context.write("partition", "Hello")) {
           count++;
         }
       }
