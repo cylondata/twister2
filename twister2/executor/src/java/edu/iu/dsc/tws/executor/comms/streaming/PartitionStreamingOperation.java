@@ -43,12 +43,20 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
 
   protected SPartition op;
 
-
   public PartitionStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                      Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                                      DataType dataType, String edgeName) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
+
+    if (srcs.size() == 0) {
+      throw new IllegalArgumentException("Sources should have more than 0 elements");
+    }
+
+    if (dests == null) {
+      throw new IllegalArgumentException("Targets should have more than 0 elements");
+    }
+
     op = new SPartition(channel, taskPlan, srcs, dests, Utils.dataTypeToMessageType(dataType),
         new PartitionReceiver(), new LoadBalanceSelector());
     communicationEdge = e.generate(edgeName);

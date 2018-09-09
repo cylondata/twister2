@@ -147,6 +147,8 @@ public class TaskStreamingInstance implements INodeInstance {
         // if we successfully send remove
         if (op.send(taskId, message, flags)) {
           outQueue.poll();
+        } else {
+          break;
         }
       }
     }

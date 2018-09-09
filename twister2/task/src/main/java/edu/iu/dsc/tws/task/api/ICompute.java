@@ -31,5 +31,5 @@ public interface ICompute extends INode {
    * Execute with an incoming message
    * @param content
    */
-  void execute(IMessage content);
+  boolean execute(IMessage content);
 }

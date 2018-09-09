@@ -180,7 +180,7 @@ public class HDFSTaskExample implements IWorker {
     }
 
     @Override
-    public void execute(IMessage content) {
+    public boolean execute(IMessage content) {
 
       hdfsConnector = new HDFSConnector(config, inputFileName);
       HadoopFileSystem hadoopFileSystem = hdfsConnector.HDFSConnect();
@@ -227,6 +227,7 @@ public class HDFSTaskExample implements IWorker {
       } catch (IOException ioe) {
         ioe.printStackTrace();
       }
+      return true;
     }
   }
 
@@ -260,7 +261,8 @@ public class HDFSTaskExample implements IWorker {
     }
 
     @Override
-    public void execute(IMessage content) {
+    public boolean execute(IMessage content) {
+      return true;
     }
   }
 }

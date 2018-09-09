@@ -36,7 +36,6 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchCompute;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -51,7 +50,6 @@ public class IterativeJob extends TaskWorker {
 
     IterativeSourceTask g = new IterativeSourceTask();
     PartitionTask r = new PartitionTask();
-    ComputeTask c = new ComputeTask();
 
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
@@ -125,15 +123,6 @@ public class IterativeJob extends TaskWorker {
     @Override
     public Partition<Object> get() {
       return new Partition<>(context.taskIndex(), list);
-    }
-  }
-
-  private static class ComputeTask extends BaseBatchCompute {
-    private static final long serialVersionUID = -254264120110286748L;
-
-    @Override
-    public void execute(IMessage content) {
-
     }
   }
 
