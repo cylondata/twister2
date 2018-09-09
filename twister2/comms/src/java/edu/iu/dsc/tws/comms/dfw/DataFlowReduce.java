@@ -30,6 +30,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.CompletionListener;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -346,12 +347,13 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   @Override
   public void finish(int source) {
     LOG.info("Finish on DfReduce :" + source);
-    if (!isLastReceiver() && partialReceiver != null) {
-      partialReceiver.onFinish(source);
-    }
-    if (isLastReceiver() && finalReceiver != null) {
-      finalReceiver.onFinish(source);
-    }
+//    if (!isLastReceiver() && partialReceiver != null) {
+//      partialReceiver.onFinish(source);
+//    }
+//    if (isLastReceiver() && finalReceiver != null) {
+//      finalReceiver.onFinish(source);
+//    }
+    send(source, "", MessageFlags.EMPTY);
   }
 
   @Override

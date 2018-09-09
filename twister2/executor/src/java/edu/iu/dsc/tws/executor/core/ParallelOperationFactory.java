@@ -105,7 +105,7 @@ public class ParallelOperationFactory {
           ReduceBatchOperation reduceBatchOperation = new ReduceBatchOperation(config, channel,
               taskPlan);
           reduceBatchOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
-              edge.getDataType(), edge.getName());
+              edge.getDataType(), edge.getFunction(), edge.getName());
           return reduceBatchOperation;
         } else if (OperationNames.ALLREDUCE.equals(edge.getOperation())) {
           AllReduceBatchOperation allReduceBatchOperation = new AllReduceBatchOperation(config,
@@ -121,13 +121,7 @@ public class ParallelOperationFactory {
           return keyedReduceBatchOperation;
         }
       } else {
-        if (OperationNames.REDUCE.equals(edge.getOperation())) {
-          ReduceBatchOperation reduceBatchOperation = new ReduceBatchOperation(config, channel,
-              taskPlan);
-          reduceBatchOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
-              edge.getDataType(), edge.getName());
-          return reduceBatchOperation;
-        } else if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
+        if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
           KeyedReduceBatchOperation keyedReduceBatchOperation
               = new KeyedReduceBatchOperation(config, channel, taskPlan);
           keyedReduceBatchOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),

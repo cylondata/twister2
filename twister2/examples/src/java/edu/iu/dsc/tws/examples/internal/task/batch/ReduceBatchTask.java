@@ -66,7 +66,7 @@ public class ReduceBatchTask implements IWorker {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
     builder.connect("source", "sink", "reduce-edge",
-        OperationNames.REDUCE);
+        OperationNames.REDUCE, new IdentityFunction());
     builder.operationMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
@@ -79,7 +79,15 @@ public class ReduceBatchTask implements IWorker {
 
     @Override
     public void execute() {
-      count++;
+      if (count == 999) {
+        if (context.writeEnd("reduce-edge", "Hello")) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (context.write("reduce-edge", "Hello")) {
+          count++;
+        }
+      }
     }
   }
 
@@ -89,11 +97,13 @@ public class ReduceBatchTask implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
-      boolean status = false;
       count++;
-      status = count == 1;
-      return status;
+      if (count % 1 == 0) {
+        System.out.println("Message Partition Received : " + message.getContent()
+            + ", Count : " + count);
+      }
+
+      return true;
     }
   }
 

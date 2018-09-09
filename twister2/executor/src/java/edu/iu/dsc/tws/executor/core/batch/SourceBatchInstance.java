@@ -166,7 +166,8 @@ public class SourceBatchInstance implements INodeInstance {
       }
 
       // if execution is done and outqueue is emput, we have put everything to communication
-      if (state.isSet(InstanceState.EXECUTION_DONE) && outBatchQueue.isEmpty()) {
+      if (state.isSet(InstanceState.EXECUTION_DONE) && outBatchQueue.isEmpty()
+          && state.isNotSet(InstanceState.OUT_COMPLETE)) {
         for (IParallelOperation op : outBatchParOps.values()) {
           op.finish(batchTaskId);
         }

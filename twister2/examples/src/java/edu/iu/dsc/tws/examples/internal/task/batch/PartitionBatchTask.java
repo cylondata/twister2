@@ -95,7 +95,6 @@ public class PartitionBatchTask implements IWorker {
               + ", Count : " + count);
         }
       }
-      count++;
       return true;
     }
   }

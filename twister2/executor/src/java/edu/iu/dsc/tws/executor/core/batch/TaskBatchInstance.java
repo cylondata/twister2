@@ -199,6 +199,9 @@ public class TaskBatchInstance implements INodeInstance {
 
     // if execution is done and outqueue is emput, we have put everything to communication
     if (state.isSet(InstanceState.EXECUTION_DONE) && outQueue.isEmpty()) {
+      for (IParallelOperation op : outParOps.values()) {
+        op.finish(taskId);
+      }
       state.set(InstanceState.OUT_COMPLETE);
     }
 

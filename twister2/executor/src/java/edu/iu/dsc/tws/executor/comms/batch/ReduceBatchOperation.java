@@ -18,18 +18,16 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowReduce;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.batch.BReduce;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
+import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
@@ -37,76 +35,68 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
 
   private static final Logger LOG = Logger.getLogger(ReduceBatchOperation.class.getName());
 
-  protected DataFlowReduce op;
+  protected BReduce op;
 
   public ReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan) {
     super(config, network, tPlan);
   }
 
   public void prepare(Set<Integer> sources, int dest, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
+                      DataType dataType, IFunction fnc, String edgeName) {
     this.edgeGenerator = e;
-    op = new DataFlowReduce(channel.getChannel(), sources, dest,
-        new ReduceBatchFinalReceiver(new IdentityFunction(), new FinalReduceReceiver()),
-        new ReduceBatchPartialReceiver(dest, new IdentityFunction()));
+    op = new BReduce(channel, taskPlan, sources, dest,
+        new ReduceFnImpl(fnc),
+        new FinalReduceReceiver(), Utils.dataTypeToMessageType(dataType));
     communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
     //LOG.log(Level.INFO, String.format("Message %s", message.getContent()));
-    return op.send(source, message.getContent(), flags);
+    return op.reduce(source, message.getContent(), flags);
+  }
+
+  @Override
+  public void finish(int source) {
+    op.finish(source);
   }
 
   @Override
   public boolean progress() {
-    return op.progress() && !op.isComplete();
+    return op.progress() || op.hasPending();
   }
 
-  public static class IdentityFunction implements ReduceFunction {
+  public static class ReduceFnImpl implements ReduceFunction {
+    private IFunction fn;
+
+    public ReduceFnImpl(IFunction fn) {
+      this.fn = fn;
+    }
+
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
     public Object reduce(Object t1, Object t2) {
-      return t1;
+      return fn.onMessage(t1, t2);
     }
   }
 
 
-  public class FinalReduceReceiver implements ReduceReceiver, MessageReceiver {
+  public class FinalReduceReceiver implements ReduceReceiver {
     private int count = 0;
 
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
-
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      return false;
-    }
-
-    @Override
-    public void onFinish(int target) {
-      LOG.info("OnFinish : " + target);
-      //op.finish(target);
-    }
-
-    @Override
-    public boolean progress() {
-      return true;
     }
 
     @Override
     public boolean receive(int target, Object object) {
       TaskMessage msg = new TaskMessage(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
-      outMessages.get(target).offer(msg);
-      return true;
+      return outMessages.get(target).offer(msg);
     }
   }
 
