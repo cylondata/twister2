@@ -95,7 +95,7 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
         if (object instanceof List) {
           for (Object o : (List) object) {
             TaskMessage msg = new TaskMessage(o,
-                edge.getStringMapping(communicationEdge), target);
+                edgeGenerator.getStringMapping(communicationEdge), target);
             outMessages.get(target).offer(msg);
 
           }

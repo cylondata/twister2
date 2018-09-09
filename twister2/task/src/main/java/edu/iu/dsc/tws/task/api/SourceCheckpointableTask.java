@@ -24,9 +24,9 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSourceTask;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
-public abstract class SourceCheckpointableTask extends BaseStreamSourceTask {
+public abstract class SourceCheckpointableTask extends BaseStreamSource {
   private static final long serialVersionUID = -254264903510214728L;
 
   private static final Logger LOG = Logger.getLogger(SourceCheckpointableTask.class.getName());
