@@ -11,47 +11,51 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.streaming;
 
-
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
-
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
+import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.api.EdgeGenerator;
+import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class PartitionStreamingOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionStreamingOperation.class.getName());
+  private HashMap<Integer, Boolean> barrierMap = new HashMap<>();
 
-  protected DataFlowPartition op;
+  private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
+  private boolean checkpointStarted = false;
 
-  public PartitionStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
+  protected SPartition op;
+
+
+  public PartitionStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
+                                     Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+                                     DataType dataType, String edgeName) {
     super(config, network, tPlan);
-  }
-
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
-    this.edge = e;
-    //LOG.info("ParitionOperation Prepare 1");
-    op = new DataFlowPartition(channel.getChannel(), srcs, dests, new PartitionReceiver(),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT);
+    this.edgeGenerator = e;
+    op = new SPartition(channel, taskPlan, srcs, dests, Utils.dataTypeToMessageType(dataType),
+        new PartitionReceiver(), new LoadBalanceSelector());
     communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
-  public boolean send(int source, IMessage message, int dest) {
-    return op.send(source, message.getContent(), 0, dest);
+  public boolean send(int source, IMessage message, int flags) {
+    return op.partition(source, message.getContent(), flags);
   }
 
   public class PartitionReceiver implements MessageReceiver {
@@ -63,13 +67,34 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      barrierChecking(op, source, path, target, flags, object);
+      if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+        if (!checkpointStarted) {
+          checkpointStarted = true;
+        }
+        barrierMap.putIfAbsent(source, true);
+      } else {
+        if (barrierMap.containsKey(source)) {
+          if (incommingBuffer.containsKey(source)) {
+            incommingBuffer.get(source).add(object);
+          } else {
+            ArrayList<Object> bufferMessege = new ArrayList<>();
+            bufferMessege.add(object);
+            incommingBuffer.put(source, bufferMessege);
+          }
+        } else {
+          if (object instanceof List) {
+            TaskMessage msg = new TaskMessage(object,
+                edgeGenerator.getStringMapping(communicationEdge), target);
+            BlockingQueue<IMessage> messages = outMessages.get(target);
+            if (messages != null) {
+              return messages.offer(msg);
+            } else {
+              throw new RuntimeException("Un-expected target message: " + target);
+            }
+          }
+        }
+      }
       return true;
-    }
-
-    @Override
-    public void onFinish(int source) {
-
     }
 
     @Override

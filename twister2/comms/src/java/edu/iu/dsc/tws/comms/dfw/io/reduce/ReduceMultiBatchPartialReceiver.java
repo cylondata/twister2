@@ -17,15 +17,16 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.KeyedReduceFunction;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KeyedReduceBatchPartialReceiver;
 
 public class ReduceMultiBatchPartialReceiver implements MultiMessageReceiver {
-  private ReduceFunction reduceFunction;
+  private KeyedReduceFunction reduceFunction;
 
-  private Map<Integer, ReduceBatchPartialReceiver> receiverMap = new HashMap<>();
+  private Map<Integer, KeyedReduceBatchPartialReceiver> receiverMap = new HashMap<>();
 
-  public ReduceMultiBatchPartialReceiver(ReduceFunction reduceFn) {
+  public ReduceMultiBatchPartialReceiver(KeyedReduceFunction reduceFn) {
     this.reduceFunction = reduceFn;
   }
 
@@ -33,22 +34,22 @@ public class ReduceMultiBatchPartialReceiver implements MultiMessageReceiver {
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      ReduceBatchPartialReceiver finalReceiver =
-          new ReduceBatchPartialReceiver(e.getKey(), reduceFunction);
-      receiverMap.put(e.getKey(), finalReceiver);
-      finalReceiver.init(cfg, op, e.getValue());
+      KeyedReduceBatchPartialReceiver partialReceiver =
+          new KeyedReduceBatchPartialReceiver(e.getKey(), reduceFunction);
+      receiverMap.put(e.getKey(), partialReceiver);
+      partialReceiver.init(cfg, op, e.getValue());
     }
   }
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    ReduceBatchPartialReceiver partialReceiver = receiverMap.get(path);
+    KeyedReduceBatchPartialReceiver partialReceiver = receiverMap.get(path);
     return partialReceiver.onMessage(source, path, target, flags, object);
   }
 
   @Override
   public void progress() {
-    for (Map.Entry<Integer, ReduceBatchPartialReceiver> e : receiverMap.entrySet()) {
+    for (Map.Entry<Integer, KeyedReduceBatchPartialReceiver> e : receiverMap.entrySet()) {
       e.getValue().progress();
     }
   }

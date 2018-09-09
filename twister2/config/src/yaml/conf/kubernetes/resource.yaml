@@ -12,7 +12,7 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 
 # worker class to run
 twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BaseBroadcastCommunication"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BroadcastCommunication"
 # twister2.job.worker.class: "edu.iu.dsc.tws.examples.basic.batch.sort.SortJob"
 # twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
 # twister2.job.worker.class: "edu.iu.dsc.tws.examples.basic.comms.batch.BReduceExample"

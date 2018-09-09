@@ -107,11 +107,41 @@ public class DataFlowMultiReduce implements DataFlowOperation {
   }
 
   @Override
+  public boolean isDelegeteComplete() {
+    boolean isDone = true;
+    for (DataFlowReduce reduce : reduceMap.values()) {
+      isDone = isDone && reduce.isDelegeteComplete();
+      if (!isDone) {
+        //No need to check further if we already have one false
+        return false;
+      }
+    }
+    return isDone;
+  }
+
+  @Override
+  public boolean isComplete() {
+    boolean isDone = true;
+
+    for (DataFlowReduce reduce : reduceMap.values()) {
+      isDone = isDone && reduce.isComplete();
+      if (!isDone) {
+        //No need to check further if we already have one false
+        return false;
+      }
+    }
+    return isDone;
+  }
+
+  @Override
   public void close() {
   }
 
   @Override
   public void finish(int source) {
+    for (DataFlowReduce reduce : reduceMap.values()) {
+      reduce.finish(source);
+    }
   }
 
   @Override
@@ -121,9 +151,6 @@ public class DataFlowMultiReduce implements DataFlowOperation {
 
   /**
    * Initialize
-   * @param config
-   * @param type
-   * @param instancePlan
    */
   public void init(Config config, MessageType type, TaskPlan instancePlan) {
     executor = instancePlan.getThisExecutor();

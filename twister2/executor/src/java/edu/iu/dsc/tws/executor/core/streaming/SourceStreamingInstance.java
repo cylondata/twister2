@@ -29,9 +29,9 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
@@ -131,6 +131,9 @@ public class SourceStreamingInstance implements INodeInstance {
         // if we successfully send remove message
         if (op.send(streamingTaskId, message, 0)) {
           outStreamingQueue.poll();
+        } else {
+          // we need to break
+          break;
         }
       }
     }

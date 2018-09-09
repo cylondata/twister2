@@ -14,10 +14,12 @@ package edu.iu.dsc.tws.examples.internal.task;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
@@ -34,33 +36,35 @@ public final class TaskUtils {
   }
 
   public static void executeBatch(Config config, AllocatedResources resources,
-                                  DataFlowTaskGraph graph) {
+                                  DataFlowTaskGraph graph, IWorkerController workerController) {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
     WorkerPlan workerPlan = createWorkerPlan(resources);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
+    TWSChannel network = Network.initializeChannel(config, workerController, resources);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
-        new Communicator(config, network.getChannel()));
+        new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, plan, network.getChannel(), OperationMode.BATCH);
+    Executor executor = new Executor(config, resources.getWorkerId(),
+        plan, network, OperationMode.BATCH);
     executor.execute();
   }
 
-  public static void execute(Config config, AllocatedResources resources, DataFlowTaskGraph graph) {
+  public static void execute(Config config, AllocatedResources resources, DataFlowTaskGraph graph,
+                             IWorkerController workerController) {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
     WorkerPlan workerPlan = createWorkerPlan(resources);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
+    TWSChannel network = Network.initializeChannel(config, workerController, resources);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
-        new Communicator(config, network.getChannel()));
+        new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, plan, network.getChannel());
+    Executor executor = new Executor(config, resources.getWorkerId(), plan, network);
     executor.execute();
   }
 

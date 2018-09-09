@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.internal.task.streaming;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -26,20 +27,21 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
-import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSourceTask;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 public class PartitionStreamingTask implements IWorker {
+  private static final Logger LOG = Logger.getLogger(PartitionStreamingTask.class.getName());
+
   @Override
   public void execute(Config config, int workerID, AllocatedResources resources,
                       IWorkerController workerController,
@@ -50,51 +52,48 @@ public class PartitionStreamingTask implements IWorker {
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", 1);
+    builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "partition-edge",
-        CommunicationOperationType.STREAMING_PARTITION);
+        OperationNames.PARTITION);
     builder.operationMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();
-    TaskUtils.execute(config, resources, graph);
+    TaskUtils.execute(config, resources, graph, workerController);
   }
 
-  private static class GeneratorTask extends BaseStreamSourceTask {
+  private static class GeneratorTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
-    private TaskContext ctx;
-    private Config config;
+
+    private int count = 0;
 
     @Override
     public void execute() {
-      ctx.write("partition-edge", "Hello");
-    }
-
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
+      boolean wrote = context.write("partition-edge", "Hello");
+      if (wrote) {
+        count++;
+        if (count % 100 == 0) {
+          LOG.info(String.format("%d %d Message Partition sent count : %d", context.getWorkerId(),
+              context.taskId(), count));
+        }
+      }
     }
   }
 
-  private static class RecevingTask extends BaseStreamSinkTask {
+  private static class RecevingTask extends BaseStreamSink {
     private static final long serialVersionUID = -254264903510284798L;
+
     private int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 1 == 0) {
-        System.out.println("Message Partition Received : " + message.getContent()
-            + ", Count : " + count);
+      if (message.getContent() instanceof List) {
+        count += ((List) message.getContent()).size();
       }
-      count++;
+      LOG.info(String.format("%d %d Message Partition Received count: %d", context.getWorkerId(),
+          context.taskId(), count));
       return true;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-
     }
   }
 

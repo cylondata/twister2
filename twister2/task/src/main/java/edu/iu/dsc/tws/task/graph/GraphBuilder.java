@@ -119,6 +119,21 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
+                              IFunction function, DataType dataType, DataType keyType) {
+    Vertex v1 = graph.vertex(t1);
+    if (v1 == null) {
+      throw new RuntimeException("Failed to connect non-existing task: " + t1);
+    }
+
+    Vertex v2 = graph.vertex(t2);
+    if (v2 == null) {
+      throw new RuntimeException("Failed to connect non-existing task: " + t2);
+    }
+    graph.addTaskEdge(v1, v2, new Edge(name, operation, dataType, keyType, function));
+    return this;
+  }
+
+  public GraphBuilder connect(String t1, String t2, String name, String operation,
                               DataType dataType) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {

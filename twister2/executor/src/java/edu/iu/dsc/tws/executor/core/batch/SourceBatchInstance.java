@@ -17,9 +17,9 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.api.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
@@ -166,7 +166,8 @@ public class SourceBatchInstance implements INodeInstance {
       }
 
       // if execution is done and outqueue is emput, we have put everything to communication
-      if (state.isSet(InstanceState.EXECUTION_DONE) && outBatchQueue.isEmpty()) {
+      if (state.isSet(InstanceState.EXECUTION_DONE) && outBatchQueue.isEmpty()
+          && state.isNotSet(InstanceState.OUT_COMPLETE)) {
         for (IParallelOperation op : outBatchParOps.values()) {
           op.finish(batchTaskId);
         }

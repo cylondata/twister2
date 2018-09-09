@@ -23,8 +23,8 @@ public final class HadoopDataInputStream extends FSDataInputStream {
 
   private final org.apache.hadoop.fs.FSDataInputStream fosInputStream;
 
-  public HadoopDataInputStream(org.apache.hadoop.fs.FSDataInputStream fosInputStream1) {
-    this.fosInputStream = fosInputStream1;
+  public HadoopDataInputStream(org.apache.hadoop.fs.FSDataInputStream dataInputStream) {
+    this.fosInputStream = dataInputStream;
   }
 
   @Override

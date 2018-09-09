@@ -11,32 +11,71 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.streaming;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowAllGather;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
+import edu.iu.dsc.tws.comms.op.stream.SAllGather;
+import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.core.EdgeGenerator;
+import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class AllGatherStreamingOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(AllGatherStreamingOperation.class.getName());
 
-  protected DataFlowAllGather op;
+  protected SAllGather op;
 
-
-  public AllGatherStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
+  public AllGatherStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
+                                     Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
+                                     DataType dataType, String edgeName) {
     super(config, network, tPlan);
+    this.edgeGenerator = e;
+    op = new SAllGather(channel, taskPlan, sources, dest,
+        new FinalReduceReceive(), Utils.dataTypeToMessageType(dataType));
+    communicationEdge = e.generate(edgeName);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    return op.send(source, message.getContent(), flags);
+    return op.gather(source, message.getContent(), flags);
   }
 
   @Override
   public boolean progress() {
     return op.progress();
+  }
+
+  private class FinalReduceReceive implements MessageReceiver {
+    public void init(Config cfg, DataFlowOperation operation,
+                     Map<Integer, List<Integer>> expectedIds) {
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      TaskMessage msg = new TaskMessage(object,
+          edgeGenerator.getStringMapping(communicationEdge), target);
+      BlockingQueue<IMessage> messages = outMessages.get(target);
+      if (messages != null) {
+        if (messages.offer(msg)) {
+          return true;
+        }
+      }
+      return true;
+    }
+
+    @Override
+    public boolean progress() {
+      return true;
+    }
   }
 }

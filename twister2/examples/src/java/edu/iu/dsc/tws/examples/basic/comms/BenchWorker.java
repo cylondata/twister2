@@ -11,9 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,6 +36,8 @@ import edu.iu.dsc.tws.examples.Utils;
 public abstract class BenchWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(BenchWorker.class.getName());
 
+  private Lock lock = new ReentrantLock();
+
   protected AllocatedResources resourcePlan;
 
   protected int workerId;
@@ -48,7 +52,7 @@ public abstract class BenchWorker implements IWorker {
 
   protected Communicator communicator;
 
-  protected Map<Integer, Boolean> finishedSources = new HashMap<>();
+  protected Map<Integer, Boolean> finishedSources = new ConcurrentHashMap<>();
 
   protected boolean sourcesDone = false;
 
@@ -82,6 +86,7 @@ public abstract class BenchWorker implements IWorker {
   protected void progress() {
     int count = 0;
     // we need to progress the communication
+
     while (!isDone()) {
       // communicationProgress the channel
       channel.progress();
@@ -110,6 +115,7 @@ public abstract class BenchWorker implements IWorker {
     public void run() {
       LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
       int[] data = DataGenerator.generateIntData(jobParameters.getSize());
+//      int[] data = {1, 0, 2};
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
         int flag = 0;
@@ -119,8 +125,9 @@ public abstract class BenchWorker implements IWorker {
         sendMessages(task, data, flag);
       }
       LOG.info(String.format("%d Done sending", workerId));
-      finishedSources.put(task, true);
+      lock.lock();
       boolean allDone = true;
+      finishedSources.put(task, true);
       for (Map.Entry<Integer, Boolean> e : finishedSources.entrySet()) {
         if (!e.getValue()) {
           allDone = false;
@@ -128,7 +135,9 @@ public abstract class BenchWorker implements IWorker {
       }
       finishCommunication(task);
       sourcesDone = allDone;
-//      LOG.info(String.format("%d Sources done %s, %b", id, finishedSources, sourcesDone));
+      lock.unlock();
+
+
     }
   }
 }

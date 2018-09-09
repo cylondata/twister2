@@ -16,10 +16,9 @@ twister2.class.aurora.worker: "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWor
 ###################################################################################
 # ZooKeeper related config parameters
 ###################################################################################
-# ZooKeeper server ip address and port number
-# default port number is 2181, if not specified
-twister2.zookeeper.server.ip: "149.165.150.81"
-twister2.zookeeper.server.port: 2181
+# ZooKeeper server addresses: comma separated host:port pairs
+# example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
+twister2.zookeeper.server.addresses: "149.165.150.81:2181"
 
 # the root node path of this job on ZooKeeper
 # the default is "/twister2"

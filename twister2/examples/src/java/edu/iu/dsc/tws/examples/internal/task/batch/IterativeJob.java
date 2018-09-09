@@ -23,21 +23,23 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.Collector;
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSinkTask;
-import edu.iu.dsc.tws.task.batch.BaseBatchSourceTask;
+import edu.iu.dsc.tws.task.batch.BaseBatchCompute;
+import edu.iu.dsc.tws.task.batch.BaseBatchSink;
+import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class IterativeJob extends TaskWorker {
@@ -49,28 +51,29 @@ public class IterativeJob extends TaskWorker {
 
     IterativeSourceTask g = new IterativeSourceTask();
     PartitionTask r = new PartitionTask();
+    ComputeTask c = new ComputeTask();
 
-    GraphBuilder builder = GraphBuilder.newBuilder();
-    builder.addSource("source", g);
-    builder.setParallelism("source", 4);
-    builder.addSink("sink", r);
-    builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "partition-edge",
-        CommunicationOperationType.BATCH_PARTITION);
-    builder.operationMode(OperationMode.BATCH);
+    TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
+    graphBuilder.addSource("source", g, 4);
+    ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
+    computeConnection.partition("source", "partition", DataType.OBJECT);
+    graphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph graph = builder.build();
-    // this is a blocking call
-    ExecutionPlan plan = taskExecutor.plan(graph);
-    taskExecutor.addInput(graph, plan, "source", "input", new DataSet<>(0));
-    taskExecutor.execute(graph, plan);
-    DataSet<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
-    Set<Object> values = dataSet.getData();
-    LOG.log(Level.INFO, "Values: " + values);
+    DataFlowTaskGraph graph = graphBuilder.build();
+    for (int i = 0; i < 10; i++) {
+      ExecutionPlan plan = taskExecutor.plan(graph);
+      taskExecutor.addInput(graph, plan, "source", "input", new DataSet<>(0));
+
+      // this is a blocking call
+      taskExecutor.execute(graph, plan);
+      DataSet<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
+      Set<Object> values = dataSet.getData();
+      LOG.log(Level.INFO, "Values: " + values);
+    }
   }
 
-  private static class IterativeSourceTask extends BaseBatchSourceTask implements Receptor {
-    protected static final long serialVersionUID = -254264120110286748L;
+  private static class IterativeSourceTask extends BaseBatchSource implements Receptor {
+    private static final long serialVersionUID = -254264120110286748L;
 
     private DataSet<Object> input;
 
@@ -79,11 +82,11 @@ public class IterativeJob extends TaskWorker {
     @Override
     public void execute() {
       if (count == 999) {
-        if (ctx.writeEnd("partition-edge", "Hello")) {
+        if (context.writeEnd("partition", "Hello")) {
           count++;
         }
       } else if (count < 999) {
-        if (ctx.write("partition-edge", "Hello")) {
+        if (context.write("partition", "Hello")) {
           count++;
         }
       }
@@ -96,8 +99,8 @@ public class IterativeJob extends TaskWorker {
     }
   }
 
-  private static class PartitionTask extends BaseBatchSinkTask implements Collector<Object> {
-    protected static final long serialVersionUID = -254264120110286748L;
+  private static class PartitionTask extends BaseBatchSink implements Collector<Object> {
+    private static final long serialVersionUID = -5190777711234234L;
 
     private List<String> list = new ArrayList<>();
 
@@ -113,8 +116,7 @@ public class IterativeJob extends TaskWorker {
           count++;
           list.add(ret.toString());
         }
-        System.out.println("Message Partition Received : " + message.getContent()
-            + ", Count : " + count);
+        LOG.info("Message Partition Received : " + message.getContent() + ", Count : " + count);
       }
       count++;
       return true;
@@ -122,7 +124,16 @@ public class IterativeJob extends TaskWorker {
 
     @Override
     public Partition<Object> get() {
-      return new Partition<>(ctx.taskIndex(), list);
+      return new Partition<>(context.taskIndex(), list);
+    }
+  }
+
+  private static class ComputeTask extends BaseBatchCompute {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    @Override
+    public void execute(IMessage content) {
+
     }
   }
 

@@ -33,10 +33,11 @@ public class ReduceSumFunction implements ReduceFunction {
     if (t1 instanceof int[] && t2 instanceof int[]) {
       int[] t1Array = (int[]) t1;
       int[] t2Array = (int[]) t2;
+      int[] results = new int[t1Array.length];
       for (int i = 0; i < t1Array.length; i++) {
-        t1Array[i] = t1Array[i] + t2Array[i];
+        results[i] = t1Array[i] + t2Array[i];
       }
-      return t1Array;
+      return results;
     } else {
       throw new RuntimeException("Operation not supported");
     }

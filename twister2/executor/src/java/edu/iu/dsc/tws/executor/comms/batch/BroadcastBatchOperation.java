@@ -23,8 +23,8 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.api.EdgeGenerator;
+import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -39,7 +39,7 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
 
   public void prepare(int srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
-    this.edge = e;
+    this.edgeGenerator = e;
     LOG.info(String.format("Srcs %d dests %s", srcs, dests));
     op = new DataFlowBroadcast(channel.getChannel(), srcs, dests, new BcastReceiver());
     communicationEdge = e.generate(edgeName);
@@ -70,7 +70,7 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       TaskMessage msg = new TaskMessage(object,
-          edge.getStringMapping(communicationEdge), target);
+          edgeGenerator.getStringMapping(communicationEdge), target);
       int remainingCap = outMessages.get(target).remainingCapacity();
       //LOG.info("Remaining Capacity : " + remainingCap);
       boolean status = outMessages.get(target).offer(msg);

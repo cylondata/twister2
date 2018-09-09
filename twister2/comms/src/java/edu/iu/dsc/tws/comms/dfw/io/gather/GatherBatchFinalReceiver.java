@@ -114,6 +114,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   /**
    * Method used to communicationProgress work
    */
+  @SuppressWarnings("unchecked")
   public boolean progress() {
     boolean needsFurtherProgress = false;
     for (int t : messages.keySet()) {
@@ -157,7 +158,11 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
             Queue<Object> valueList = e.getValue();
             if (valueList.size() > 0) {
               Object value = valueList.poll();
-              out.add(value);
+              if (value instanceof List) {
+                out.addAll((List) value);
+              } else {
+                out.add(value);
+              }
               allFinished = false;
             }
           }

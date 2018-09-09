@@ -25,10 +25,10 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.batch.BPartition;
-import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.api.EdgeGenerator;
+import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -47,11 +47,11 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
 
   public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
-    this.edge = e;
+    this.edgeGenerator = e;
     //LOG.info("ParitionOperation Prepare 1");
     op = new BPartition(channel, taskPlan, srcs, dests,
         Utils.dataTypeToMessageType(dataType), new PartitionReceiver(),
-        new LoadBalanceDestinationSelector());
+        new LoadBalanceSelector());
     communicationEdge = e.generate(edgeName);
   }
 
@@ -72,7 +72,7 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
     @Override
     public void receive(int target, Iterator<Object> it) {
       TaskMessage msg = new TaskMessage(it,
-          edge.getStringMapping(communicationEdge), target);
+          edgeGenerator.getStringMapping(communicationEdge), target);
       outMessages.get(target).offer(msg);
     }
   }
@@ -84,10 +84,6 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() || hasPending();
-  }
-
-  public boolean hasPending() {
-    return op.hasPending();
+    return op.progress() || op.hasPending();
   }
 }

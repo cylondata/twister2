@@ -12,11 +12,12 @@
 package edu.iu.dsc.tws.comms.dfw.io.reduce;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -37,13 +38,14 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
   protected Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
   protected Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
   protected Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
+  protected Map<Integer, Set<Integer>> emptyReceivedSources = new HashMap<>();
   protected DataFlowOperation dataFlowOperation;
   protected int executor;
   protected int sendPendingMax = 128;
   protected int destination;
   protected Map<Integer, Boolean> batchDone = new HashMap<>();
+  protected Map<Integer, Boolean> isEmptySent = new HashMap<>();
   protected Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
-  protected Queue<Object> reducedValues;
 
   //Variables related to message buffering
   protected int bufferSize = 10;
@@ -74,7 +76,6 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
     sendPendingMax = DataFlowContext.sendPendingMax(cfg);
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
-    this.reducedValues = new ArrayBlockingQueue<>(sendPendingMax);
 
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
@@ -90,8 +91,10 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
       }
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
+      emptyReceivedSources.put(e.getKey(), new HashSet<>());
       counts.put(e.getKey(), countsPerTask);
       batchDone.put(e.getKey(), false);
+      isEmptySent.put(e.getKey(), false);
       totalCounts.put(e.getKey(), totalCountsPerTask);
 
       bufferCounts.put(e.getKey(), 0);
@@ -107,8 +110,15 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
     if (messages.get(target) == null) {
       throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
     }
-    Queue<Object> m = messages.get(target).get(source);
+
     Map<Integer, Boolean> finishedMessages = finished.get(target);
+
+    if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+      finishedMessages.put(source, true);
+      return true;
+    }
+
+    Queue<Object> m = messages.get(target).get(source);
 
     if (m.size() >= sendPendingMax) {
       canAdd = false;
@@ -132,7 +142,10 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
   }
 
   @Override
-  public void onFinish(int target) {
-    LOG.log(Level.INFO, "Task  " + target + " Completed ...");
+  public void onFinish(int source) {
+    for (Integer target : finished.keySet()) {
+      Map<Integer, Boolean> finishedMessages = finished.get(target);
+      finishedMessages.put(source, true);
+    }
   }
 }

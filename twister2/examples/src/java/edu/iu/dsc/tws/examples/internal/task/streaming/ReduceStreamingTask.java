@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.examples.internal.task.streaming;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -26,23 +26,23 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
-import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSourceTask;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 public class ReduceStreamingTask implements IWorker {
+  private static final Logger LOG = Logger.getLogger(ReduceStreamingTask.class.getName());
+
   @Override
   public void execute(Config config, int workerID, AllocatedResources resources,
                       IWorkerController workerController,
@@ -57,69 +57,47 @@ public class ReduceStreamingTask implements IWorker {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
     builder.connect("source", "sink", "reduce-edge",
-        CommunicationOperationType.STREAMING_REDUCE);
+        OperationNames.REDUCE, new IFunction() {
+          @Override
+          public Object onMessage(Object object1, Object object2) {
+            return object1;
+          }
+        });
     builder.operationMode(OperationMode.STREAMING);
-
-
     DataFlowTaskGraph graph = builder.build();
 
-    TaskUtils.execute(config, resources, graph);
+    TaskUtils.execute(config, resources, graph, workerController);
   }
 
-  private static class GeneratorTask extends BaseStreamSourceTask {
+  private static class GeneratorTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
-    private TaskContext ctx;
-    private Config config;
-
+    private int count;
     @Override
     public void execute() {
-      ctx.write("reduce-edge", "Hello");
+      boolean wrote = context.write("reduce-edge", "Hello");
+      if (wrote) {
+        count++;
+        if (count % 100 == 0) {
+          LOG.info(String.format("%d %d Reduce sent count : %d", context.getWorkerId(),
+              context.taskId(), count));
+        }
+      }
     }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-    }
-
-
   }
 
-  private static class RecevingTask extends BaseStreamSinkTask {
+  private static class RecevingTask extends BaseStreamSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 10000 == 0) {
-        System.out.println("Message Reduced : " + message.getContent() + ", Count : " + count);
+      if (count % 100 == 0) {
+        LOG.info("Reduce receive count : " + count);
       }
       count++;
       return true;
     }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-
-    }
   }
-
-  public static class IdentityFunction implements IFunction {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer,
-        List<Integer>> expectedIds, TaskContext context) {
-
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      System.out.println("Source : " + source + ", Path : " + path + "Target : " + target
-          + " Object : " + object.getClass().getName());
-      return true;
-    }
-  }
-
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
     List<Worker> workers = new ArrayList<>();
@@ -134,7 +112,6 @@ public class ReduceStreamingTask implements IWorker {
 
   public static void main(String[] args) {
     // first load the configurations from command line and config files
-    System.out.println("==================Reduce Task Example========================");
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);

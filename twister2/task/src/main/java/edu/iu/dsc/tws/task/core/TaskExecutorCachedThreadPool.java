@@ -29,7 +29,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.core.TWSCommunication;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.TaskExecutor;
 
@@ -41,7 +41,7 @@ import edu.iu.dsc.tws.task.api.TaskExecutor;
 public class TaskExecutorCachedThreadPool implements TaskExecutor {
 
   private static ThreadPoolExecutor executorPool;
-  private TWSCommunication channel;
+  private TWSChannel channel;
   private DataFlowOperation direct;
   private boolean progres = false;
 
@@ -61,7 +61,7 @@ public class TaskExecutorCachedThreadPool implements TaskExecutor {
   /**
    * Init task executor
    */
-  public void init(TWSCommunication twscom, DataFlowOperation dfo) {
+  public void init(TWSChannel twscom, DataFlowOperation dfo) {
     this.channel = twscom;
     this.direct = dfo;
     this.progres = true;

@@ -17,7 +17,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 
 public class CommunicationContext extends Context {
-  public static final String DATAFLOW_COMMUNICATION_CLASS = "twister2.network.dataflow.class";
   private static final String INTER_NODE_DEGREE = "network.routing.inter.node.degree";
   private static final String INTRA_NODE_DEGREE = "network.routing.intra.node.degree";
   public static final ByteOrder DEFAULT_BYTEORDER = ByteOrder.BIG_ENDIAN;
@@ -25,10 +24,6 @@ public class CommunicationContext extends Context {
   public static final String MPI_COMMUNICATION_TYPE = "mpi";
   public static final String TCP_COMMUNICATION_TYPE = "tcp";
   public static final String DEFAULT_COMMUNICATION_TYPE = MPI_COMMUNICATION_TYPE;
-
-  public static String communicationClass(Config cfg) {
-    return cfg.getStringValue(DATAFLOW_COMMUNICATION_CLASS);
-  }
 
   public static int interNodeDegree(Config cfg, int defaultValue) {
     return cfg.getIntegerValue(INTER_NODE_DEGREE, defaultValue);

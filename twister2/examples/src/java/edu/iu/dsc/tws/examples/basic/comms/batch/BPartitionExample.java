@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BPartition;
-import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceDestinationSelector;
+import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 
@@ -56,7 +56,7 @@ public class BPartitionExample extends BenchWorker {
 
     // create the communication
     partition = new BPartition(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceDestinationSelector());
+        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);

@@ -39,16 +39,15 @@ import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
-import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 
 public class StreamingTaskExampleKafka implements IWorker {
   @Override
@@ -73,7 +72,7 @@ public class StreamingTaskExampleKafka implements IWorker {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "partition-edge",
-        CommunicationOperationType.STREAMING_PARTITION);
+        OperationNames.PARTITION);
     builder.operationMode(OperationMode.STREAMING);
 
     builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
@@ -88,10 +87,10 @@ public class StreamingTaskExampleKafka implements IWorker {
 
     DataFlowTaskGraph graph = builder.build();
 
-    TaskUtils.execute(config, resources, graph);
+    TaskUtils.execute(config, resources, graph, workerController);
   }
 
-  private static class RecevingTask extends BaseStreamSinkTask {
+  private static class RecevingTask extends BaseStreamSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -102,11 +101,6 @@ public class StreamingTaskExampleKafka implements IWorker {
       }
       count++;
       return true;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      System.out.println("preparing listening");
     }
   }
 

@@ -73,8 +73,8 @@ public class BasicK8sWorker implements IWorker {
 
     printWorkersPerNode(workersPerNode);
 
-    sleepSomeTime(50);
-//    echoServer(workerController.getWorkerNetworkInfo());
+//    sleepSomeTime(50);
+    echoServer(workerController.getWorkerNetworkInfo());
   }
 
   /**

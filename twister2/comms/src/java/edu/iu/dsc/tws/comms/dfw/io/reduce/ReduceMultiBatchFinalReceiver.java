@@ -17,18 +17,19 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.KeyedReduceFunction;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KeyedReduceBatchFinalReceiver;
 
 public class ReduceMultiBatchFinalReceiver implements MultiMessageReceiver {
-  private ReduceFunction reduceFunction;
+  private KeyedReduceFunction reduceFunction;
 
   private ReduceReceiver reduceReceiver;
 
-  private Map<Integer, ReduceBatchFinalReceiver> receiverMap = new HashMap<>();
+  private Map<Integer, KeyedReduceBatchFinalReceiver> receiverMap = new HashMap<>();
 
-  public ReduceMultiBatchFinalReceiver(ReduceFunction reduceFn,
+  public ReduceMultiBatchFinalReceiver(KeyedReduceFunction reduceFn,
                                            ReduceReceiver reduceRcvr) {
     this.reduceFunction = reduceFn;
     this.reduceReceiver = reduceRcvr;
@@ -38,8 +39,8 @@ public class ReduceMultiBatchFinalReceiver implements MultiMessageReceiver {
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      ReduceBatchFinalReceiver finalReceiver =
-          new ReduceBatchFinalReceiver(reduceFunction, reduceReceiver);
+      KeyedReduceBatchFinalReceiver finalReceiver =
+          new KeyedReduceBatchFinalReceiver(reduceFunction, reduceReceiver);
       receiverMap.put(e.getKey(), finalReceiver);
       finalReceiver.init(cfg, op, e.getValue());
     }
@@ -47,13 +48,13 @@ public class ReduceMultiBatchFinalReceiver implements MultiMessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    ReduceBatchFinalReceiver finalReceiver = receiverMap.get(path);
+    KeyedReduceBatchFinalReceiver finalReceiver = receiverMap.get(path);
     return finalReceiver.onMessage(source, path, target, flags, object);
   }
 
   @Override
   public void progress() {
-    for (Map.Entry<Integer, ReduceBatchFinalReceiver> e : receiverMap.entrySet()) {
+    for (Map.Entry<Integer, KeyedReduceBatchFinalReceiver> e : receiverMap.entrySet()) {
       e.getValue().progress();
     }
   }

@@ -27,16 +27,15 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
-import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSinkTask;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSourceTask;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
@@ -57,47 +56,41 @@ public class BroadCastStreamingTask implements IWorker {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "broadcast-edge",
-        CommunicationOperationType.STREAMING_BROADCAST);
+        OperationNames.BROADCAST);
     builder.operationMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();
-    TaskUtils.execute(config, resources, graph);
+    TaskUtils.execute(config, resources, graph, workerController);
   }
 
-  private static class GeneratorTask extends BaseStreamSourceTask {
+  private static class GeneratorTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
-    private TaskContext ctx;
     private int count = 0;
-
     @Override
     public void execute() {
-      ctx.write("broadcast-edge", "Hello");
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
+      boolean wrote = context.write("broadcast-edge", "Hello");
+      if (wrote) {
+        count++;
+        if (count % 1000 == 0) {
+          LOG.info(String.format("%d %d Message Partition sent count : %d", context.getWorkerId(),
+              context.taskId(), count));
+        }
+      }
     }
   }
 
-  private static class RecevingTask extends BaseStreamSinkTask {
+  private static class RecevingTask extends BaseStreamSink {
     private static final long serialVersionUID = -254264903510284798L;
     private static int counter = 0;
-    private TaskContext ctx;
 
     @Override
     public boolean execute(IMessage message) {
-      if (counter % 1000000 == 0) {
-        System.out.println(ctx.taskId() + " Message Braodcasted : "
+      if (counter % 1000 == 0) {
+        System.out.println(context.taskId() + " Message Braodcasted : "
             + message.getContent() + ", counter : " + counter);
       }
       counter++;
       return true;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
     }
   }
 

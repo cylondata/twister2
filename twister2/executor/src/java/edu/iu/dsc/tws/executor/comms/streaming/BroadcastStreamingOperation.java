@@ -14,42 +14,40 @@ package edu.iu.dsc.tws.executor.comms.streaming;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.stream.SBroadCast;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.api.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.api.EdgeGenerator;
+import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class BroadcastStreamingOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(BroadcastStreamingOperation.class.getName());
-  private DataFlowBroadcast op;
 
-  public BroadcastStreamingOperation(Config config, Communicator network, TaskPlan tPlan) {
+  private SBroadCast op;
+
+  public BroadcastStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
+                                     int srcs, Set<Integer> dests, EdgeGenerator e,
+                                     DataType dataType, String edgeName) {
     super(config, network, tPlan);
-  }
-
-  public void prepare(int srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
-    this.edge = e;
-    LOG.info(String.format("Srcs %d dests %s", srcs, dests));
-    op = new DataFlowBroadcast(channel.getChannel(), srcs, dests, new BcastReceiver());
+    this.edgeGenerator = e;
+    op = new SBroadCast(channel, taskPlan, srcs, dests,
+        Utils.dataTypeToMessageType(dataType), new BcastReceiver());
     communicationEdge = e.generate(edgeName);
-    LOG.info("===Communication Edge : " + communicationEdge);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    return op.send(source, message.getContent(), flags);
+    return op.bcast(source, message.getContent(), flags);
   }
 
   @Override
@@ -66,13 +64,12 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       TaskMessage msg = new TaskMessage(object,
-          edge.getStringMapping(communicationEdge), target);
-      int remainingCap = outMessages.get(target).remainingCapacity();
-      //LOG.info("Remaining Capacity : " + remainingCap);
-      boolean status = outMessages.get(target).offer(msg);
-      /*LOG.info("Message from Communication : " + msg.getContent() + ", Status : "
-          + status + ", Rem Cap : " + remainingCap);*/
-      return true;
+          edgeGenerator.getStringMapping(communicationEdge), target);
+      BlockingQueue<IMessage> messages = outMessages.get(target);
+      if (messages != null) {
+        return messages.offer(msg);
+      }
+      return false;
     }
 
     @Override

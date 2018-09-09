@@ -30,6 +30,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.CompletionListener;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -108,9 +109,6 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   /**
    * We can receive messages from internal tasks or an external task, we allways receive messages
    * to the main task of the executor and we go from there
-   *
-   * @param currentMessage
-   * @param object
    */
   public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
@@ -236,10 +234,6 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
   /**
    * Initialize
-   * @param cfg
-   * @param t
-   * @param taskPlan
-   * @param edge
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.instancePlan = taskPlan;
@@ -325,6 +319,12 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     return OperationUtils.getIntegerListMap(router, instancePlan, destination);
   }
 
+  @Override
+  public boolean isDelegeteComplete() {
+    return delegete.isComplete();
+  }
+
+  @Override
   public boolean isComplete() {
     boolean done = delegete.isComplete();
     boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
@@ -346,9 +346,16 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-    LOG.info("Finish on DfReduce");
-    if (partialReceiver != null) {
-      partialReceiver.onFinish(source * -1);
+    LOG.info("Finish on DfReduce :" + source);
+//    if (!isLastReceiver() && partialReceiver != null) {
+//      partialReceiver.onFinish(source);
+//    }
+//    if (isLastReceiver() && finalReceiver != null) {
+//      finalReceiver.onFinish(source);
+//    }
+    while (!send(source, "", MessageFlags.EMPTY)) {
+      // lets progress until finish
+      progress();
     }
   }
 

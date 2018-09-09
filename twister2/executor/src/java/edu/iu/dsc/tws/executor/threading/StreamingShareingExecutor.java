@@ -13,11 +13,20 @@ package edu.iu.dsc.tws.executor.threading;
 
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 
 public class StreamingShareingExecutor extends ThreadSharingExecutor {
+  private static final Logger LOG = Logger.getLogger(StreamingShareingExecutor.class.getName());
+
+  private int workerId;
+
+  public StreamingShareingExecutor(int workerId) {
+    this.workerId = workerId;
+  }
 
   public boolean runExecution() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
@@ -48,10 +57,14 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
     @Override
     public void run() {
       while (true) {
-        INodeInstance nodeInstance = tasks.poll();
-        if (nodeInstance != null) {
-          nodeInstance.execute();
-          tasks.offer(nodeInstance);
+        try {
+          INodeInstance nodeInstance = tasks.poll();
+          if (nodeInstance != null) {
+            nodeInstance.execute();
+            tasks.offer(nodeInstance);
+          }
+        } catch (Throwable t) {
+          LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
         }
       }
     }

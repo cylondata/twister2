@@ -14,13 +14,23 @@ package edu.iu.dsc.tws.executor.threading;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 
 public class BatchSharingExecutor extends ThreadSharingExecutor {
+  private static final Logger LOG = Logger.getLogger(BatchSharingExecutor.class.getName());
+
   // keep track of finished executions
   private Map<Integer, Boolean> finishedInstances = new HashMap<>();
+
+  private int workerId;
+
+  public BatchSharingExecutor(int workerId) {
+    this.workerId = workerId;
+  }
 
   /**
    * Execution Method for Batch Tasks
@@ -89,17 +99,21 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     @Override
     public void run() {
       while (true) {
-        INodeInstance nodeInstance = tasks.poll();
-        if (nodeInstance != null) {
-          boolean needsFurther = nodeInstance.execute();
-          if (!needsFurther) {
-            finishedInstances.put(nodeInstance.getId(), true);
+        try {
+          INodeInstance nodeInstance = tasks.poll();
+          if (nodeInstance != null) {
+            boolean needsFurther = nodeInstance.execute();
+            if (!needsFurther) {
+              finishedInstances.put(nodeInstance.getId(), true);
+            } else {
+              // we need to further execute this task
+              tasks.offer(nodeInstance);
+            }
           } else {
-            // we need to further execute this task
-            tasks.offer(nodeInstance);
+            break;
           }
-        } else {
-          break;
+        } catch (Throwable t) {
+          LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
         }
       }
     }

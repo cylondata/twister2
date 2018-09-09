@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -26,7 +27,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.core.TWSNetwork;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.CommunicationOperationType;
@@ -87,11 +88,11 @@ public class SourceSinkDiscoveryExample implements IWorker {
     WorkerPlan workerPlan = createWorkerPlan(resources);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSNetwork network = new TWSNetwork(config, resources.getWorkerId());
+    TWSChannel network = Network.initializeChannel(config, workerController, resources);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
-        new Communicator(config, network.getChannel()));
+        new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, plan, network.getChannel());
+    Executor executor = new Executor(config, workerID, plan, network);
     executor.execute();
   }
 

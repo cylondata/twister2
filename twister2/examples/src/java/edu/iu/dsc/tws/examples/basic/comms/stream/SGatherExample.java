@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.basic.comms.stream;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,8 +19,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.stream.SGather;
@@ -94,7 +93,7 @@ public class SGatherExample extends BenchWorker {
     return reduceDone && sourcesDone && !reduce.hasPending();
   }
 
-  public class FinalReduceReceiver implements BatchReceiver {
+  public class FinalReduceReceiver implements MessageReceiver {
     private int count = 0;
     private int expected;
 
@@ -107,12 +106,20 @@ public class SGatherExample extends BenchWorker {
     }
 
     @Override
-    public void receive(int target, Iterator<Object> it) {
-      count++;
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      if (object instanceof List) {
+        count += ((List) object).size();
+      }
       if (count == expected) {
         LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
         reduceDone = true;
       }
+      return true;
+    }
+
+    @Override
+    public boolean progress() {
+      return true;
     }
   }
 }
