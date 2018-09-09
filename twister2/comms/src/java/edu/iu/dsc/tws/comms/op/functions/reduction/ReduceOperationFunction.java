@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 
-
 public class ReduceOperationFunction implements ReduceFunction {
 
   private MessageType messageType;

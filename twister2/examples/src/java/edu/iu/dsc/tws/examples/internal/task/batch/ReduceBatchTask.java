@@ -33,16 +33,13 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IFunction;
@@ -54,26 +51,24 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
-public class ReduceBatchTask implements IWorker {
+public class ReduceBatchTask extends TaskWorker {
   private static final Logger LOG = Logger.getLogger(ReduceBatchTask.class.getName());
 
   @Override
-  public void execute(Config config, int workerID, AllocatedResources resources,
-                      IWorkerController workerController,
-                      IPersistentVolume persistentVolume,
-                      IVolatileVolume volatileVolume) {
+  public void execute() {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
 
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
-    ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
+    ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 1);
     computeConnection.reduce("source", "reduce-edge",
         Op.SUM, DataType.INTEGER);
     graphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = graphBuilder.build();
-    TaskUtils.executeBatch(config, resources, graph, workerController);
+    ExecutionPlan plan = taskExecutor.plan(graph);
+    taskExecutor.execute(graph, plan);
   }
 
   private static class GeneratorTask extends BaseBatchSource {
