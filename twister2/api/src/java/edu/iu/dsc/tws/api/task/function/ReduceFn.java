@@ -11,9 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task.function;
 
-import edu.iu.dsc.tws.api.task.ReduceOp;
+import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 
 public class ReduceFn implements IFunction {
@@ -21,17 +23,12 @@ public class ReduceFn implements IFunction {
 
   private ReduceFunction reduceFunction;
 
-  private DataType dataType;
-
-  private ReduceOp reduceOp;
-
-  public ReduceFn(ReduceOp op, DataType dataType) {
-    this.dataType = dataType;
-    this.reduceOp = op;
+  public ReduceFn(Op op, DataType dataType) {
+    reduceFunction = new ReduceOperationFunction(op, Utils.dataTypeToMessageType(dataType));
   }
 
   @Override
   public Object onMessage(Object object1, Object object2) {
-    return null;
+    return reduceFunction.reduce(object1, object2);
   }
 }

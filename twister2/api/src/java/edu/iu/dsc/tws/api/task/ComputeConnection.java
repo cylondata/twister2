@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.task.function.ReduceFn;
+import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IFunction;
@@ -45,7 +46,7 @@ public class ComputeConnection {
     return this;
   }
 
-  public ComputeConnection reduce(String parent, ReduceOp op) {
+  public ComputeConnection reduce(String parent, Op op) {
     Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.REDUCE,
         new ReduceFn(op, DataType.OBJECT));
     inputs.put(parent, edge);
@@ -67,9 +68,17 @@ public class ComputeConnection {
     return this;
   }
 
-  public ComputeConnection reduce(String parent, String name, ReduceOp op) {
+  public ComputeConnection reduce(String parent, String name, Op op) {
     Edge edge = new Edge(name, OperationNames.REDUCE, DataType.OBJECT,
         new ReduceFn(op, DataType.OBJECT));
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  public ComputeConnection reduce(String parent, String name, Op op, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.REDUCE, dataType,
+        new ReduceFn(op, dataType));
     inputs.put(parent, edge);
 
     return this;

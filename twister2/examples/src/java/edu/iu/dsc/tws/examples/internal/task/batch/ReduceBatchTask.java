@@ -26,10 +26,13 @@ package edu.iu.dsc.tws.examples.internal.task.batch;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -37,8 +40,9 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.comms.api.Op;
+import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
-import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IFunction;
@@ -46,12 +50,13 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 public class ReduceBatchTask implements IWorker {
+  private static final Logger LOG = Logger.getLogger(ReduceBatchTask.class.getName());
+
   @Override
   public void execute(Config config, int workerID, AllocatedResources resources,
                       IWorkerController workerController,
@@ -60,16 +65,14 @@ public class ReduceBatchTask implements IWorker {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
 
-    GraphBuilder builder = GraphBuilder.newBuilder();
-    builder.addSource("source", g);
-    builder.setParallelism("source", 4);
-    builder.addSink("sink", r);
-    builder.setParallelism("sink", 1);
-    builder.connect("source", "sink", "reduce-edge",
-        OperationNames.REDUCE, new IdentityFunction());
-    builder.operationMode(OperationMode.BATCH);
+    TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
+    graphBuilder.addSource("source", g, 4);
+    ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
+    computeConnection.reduce("source", "reduce-edge",
+        Op.SUM, DataType.INTEGER);
+    graphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph graph = builder.build();
+    DataFlowTaskGraph graph = graphBuilder.build();
     TaskUtils.executeBatch(config, resources, graph, workerController);
   }
 
@@ -79,12 +82,13 @@ public class ReduceBatchTask implements IWorker {
 
     @Override
     public void execute() {
+      int[] val = {1};
       if (count == 999) {
-        if (context.writeEnd("reduce-edge", "Hello")) {
+        if (context.writeEnd("reduce-edge", val)) {
           count++;
         }
       } else if (count < 999) {
-        if (context.write("reduce-edge", "Hello")) {
+        if (context.write("reduce-edge", val)) {
           count++;
         }
       }
@@ -99,8 +103,7 @@ public class ReduceBatchTask implements IWorker {
     public boolean execute(IMessage message) {
       count++;
       if (count % 1 == 0) {
-        System.out.println("Message Partition Received : " + message.getContent()
-            + ", Count : " + count);
+        LOG.info(String.format("Message Partition Received : %s", message.getContent()));
       }
 
       return true;
