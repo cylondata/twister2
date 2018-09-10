@@ -515,7 +515,7 @@ Its capacity is the total persistent storage capacity of all workers and the Job
 
 ### Long Living Kubernetes Objects
 
-[**Role and RoleBinding objects**](../../install/kubernetes/twister2-auth.yaml): When Twister2 is installed in a cluster,
+[**Role and RoleBinding objects**](../../installation/kubernetes/twister2-auth.yaml): When Twister2 is installed in a cluster,
 a Role and RoleBinding object need to be created for the namespaces that will execute 
 Twister2 jobs. This can be executed by the Kubernetes administrator once.
 First, the namespace field in that file needs to be changed. Then, 
@@ -527,4 +527,4 @@ the following command needs to be executed:
 When using OpenMPI communications in Twister2, pods need to have password-free SSH access 
 among them. This is accomplished by first generating an SSH key pair and 
 deploying them as a Kubernetes Secret object on the cluster. 
-Please check [the document](../../install/kubernetes/Twister2-Kubernetes-install.md) for deploying the Secret object.
+Please check [the document](../../installation/kubernetes/Twister2-Kubernetes-install.md) for deploying the Secret object.
