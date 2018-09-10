@@ -48,6 +48,15 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
                                        DataType dType, DataType kType,
                                        String edgeName, IFunction fn) {
     super(config, network, tPlan);
+
+    if (sources.size() == 0) {
+      throw new RuntimeException("Sources should have more than 0 elements");
+    }
+
+    if (dests.size() == 0) {
+      throw new IllegalArgumentException("Targets should have more than 0 elements");
+    }
+
     dataType = Utils.dataTypeToMessageType(dType);
     keyType = Utils.dataTypeToMessageType(kType);
 

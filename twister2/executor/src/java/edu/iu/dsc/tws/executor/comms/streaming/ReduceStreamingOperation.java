@@ -51,11 +51,11 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
     this.edgeGenerator = e;
 
     if (sources.size() == 0) {
-      throw new RuntimeException("Sources should have more than 0 elements");
+      throw new IllegalArgumentException("Sources should have more than 0 elements");
     }
 
     if (fnc == null) {
-      throw new IllegalArgumentException("Reduce operation expects a function");
+      throw new IllegalArgumentException("Operation expects a function");
     }
 
     op = new SReduce(channel, taskPlan, sources, dest,

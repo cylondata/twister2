@@ -39,6 +39,15 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
                                      Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
                                      DataType dataType, String edgeName) {
     super(config, network, tPlan);
+
+    if (sources.size() == 0) {
+      throw new IllegalArgumentException("Sources should have more than 0 elements");
+    }
+
+    if (dest.size() == 0) {
+      throw new IllegalArgumentException("Targets should have more than 0 elements");
+    }
+
     this.edgeGenerator = e;
     op = new SAllGather(channel, taskPlan, sources, dest,
         new FinalReduceReceive(), Utils.dataTypeToMessageType(dataType));

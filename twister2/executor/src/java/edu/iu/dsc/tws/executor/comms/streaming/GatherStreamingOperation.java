@@ -38,6 +38,11 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
                                   Set<Integer> srcs, int dest, EdgeGenerator e,
                                   DataType dataType, String edgeName, TaskPlan taskPlan) {
     super(config, network, tPlan);
+
+    if (srcs.size() == 0) {
+      throw new IllegalArgumentException("Sources should have more than 0 elements");
+    }
+
     this.edgeGenerator = e;
     communicationEdge = e.generate(edgeName);
     op = new SGather(channel, taskPlan, srcs, dest, new GatherRcvr(),

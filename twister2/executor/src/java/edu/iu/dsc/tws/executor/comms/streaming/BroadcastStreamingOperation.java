@@ -39,6 +39,11 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
                                      int srcs, Set<Integer> dests, EdgeGenerator e,
                                      DataType dataType, String edgeName) {
     super(config, network, tPlan);
+
+    if (dests.size() == 0) {
+      throw new IllegalArgumentException("Targets should have more than 0 elements");
+    }
+
     this.edgeGenerator = e;
     op = new SBroadCast(channel, taskPlan, srcs, dests,
         Utils.dataTypeToMessageType(dataType), new BcastReceiver());
