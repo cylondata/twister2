@@ -57,6 +57,7 @@ public class TaskScheduler implements ITaskScheduler {
     this.workerPlan = plan;
 
     TaskSchedulePlan taskSchedulePlan = null;
+
     if ("STREAMING".equals(graph.getOperationMode().toString())) {
       taskSchedulePlan = scheduleStreamingTask();
     } else if ("BATCH".equals(graph.getOperationMode().toString())) {
@@ -74,13 +75,11 @@ public class TaskScheduler implements ITaskScheduler {
     if (config.getStringValue("SchedulingMode") != null) {
       this.schedulingType = config.getStringValue("SchedulingMode");
     } else {
-      this.schedulingType = TaskSchedulerContext.taskSchedulingMode(config);
+      this.schedulingType = TaskSchedulerContext.streamingTaskSchedulingMode(config);
     }
 
     LOG.info("Task Scheduling Type:" + schedulingType);
-
     TaskSchedulePlan taskSchedulePlan = null;
-
     if ("roundrobin".equalsIgnoreCase(schedulingType)) {
       RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
       roundRobinTaskScheduler.initialize(config);
@@ -100,6 +99,7 @@ public class TaskScheduler implements ITaskScheduler {
       dataLocalityAwareTaskScheduler.initialize(config);
       taskSchedulePlan = dataLocalityAwareTaskScheduler.schedule(dataFlowTaskGraph, workerPlan);
     }
+
     return taskSchedulePlan;
   }
 
@@ -114,13 +114,11 @@ public class TaskScheduler implements ITaskScheduler {
     if (config.getStringValue("SchedulingMode") != null) {
       this.schedulingType = config.getStringValue("SchedulingMode");
     } else {
-      this.schedulingType = TaskSchedulerContext.taskSchedulingMode(config);
+      this.schedulingType = TaskSchedulerContext.batchTaskSchedulingMode(config);
     }
 
     LOG.info("Task Scheduling Type:" + schedulingType);
-
     TaskSchedulePlan taskSchedulePlan = null;
-
     if ("roundrobin".equals(schedulingType)) {
       RoundRobinBatchTaskScheduler roundRobinBatchTaskScheduler
               = new RoundRobinBatchTaskScheduler();
@@ -136,6 +134,7 @@ public class TaskScheduler implements ITaskScheduler {
       //To return the taskschedule plan in a list
       //dataLocalityBatchTaskScheduler.scheduleBatch(dataFlowTaskGraph, workerPlan);
     }
+
     return taskSchedulePlan;
   }
 }

@@ -235,20 +235,15 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       Map<String, List<DataTransferTimeCalculator>> workerPlanMap;
       String taskName = aTaskEntrySet.getKey();
 
-      /* If the vertex has the input data set, get the status and the datanode name of the input
-      dataset in the HDFS */
-
       if (taskVertex.getName().equals(taskName)
-          && (taskVertex.getConfig().getListValue("inputdataset") != null)) {
+              && (taskVertex.getConfig().getListValue("inputdataset") != null)) {
 
         int totalNumberOfInstances = taskVertex.getParallelism();
-        List<DataTransferTimeCalculator> cal;
-        List<String> datanodesList;
+        List<String> datanodesList = dataNodeLocatorUtils.
+                findDataNodesLocation(taskVertex.getConfig().getListValue("inputdataset"));
 
-        datanodesList = dataNodeLocatorUtils.
-            findDataNodesLocation(taskVertex.getConfig().getListValue("inputdataset"));
         workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx);
-        cal = findBestWorkerNode(taskVertex, workerPlanMap);
+        List<DataTransferTimeCalculator> cal = findBestWorkerNode(taskVertex, workerPlanMap);
 
         /* This loop allocate the task instances to the respective container, before allocation
           it will check whether the container has reached maximum task instance size which is
@@ -257,12 +252,15 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
         for (int i = 0; i < totalNumberOfInstances; i++) {
           int maxContainerTaskObjectSize = 0;
           if (maxContainerTaskObjectSize <= maxTaskInstancesPerContainer) {
-            containerIndex = Integer.parseInt(cal.get(i).getNodeName().trim());
-            dataAwareAllocation.get(containerIndex).add(
-                new InstanceId(taskVertex.getName(), gTaskId, i));
-            maxContainerTaskObjectSize++;
+            //containerIndex = Integer.parseInt(cal.get(i).getNodeName().trim());
+            containerIndex = Integer.parseInt(cal.get(i).getNodeName());
+
             LOG.fine("Worker Node Allocation for task:" + taskName + "(" + i + ")"
                     + "-> Worker:" + containerIndex + "->" + Collections.min(cal).getDataNode());
+
+            dataAwareAllocation.get(containerIndex).add(
+                    new InstanceId(taskVertex.getName(), gTaskId, i));
+            maxContainerTaskObjectSize++;
           }
         }
         gTaskId++;
@@ -284,8 +282,13 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
   }
 
   /**
-   * This method generates the container and task instance map
-   * based on the task graph, its configuration, and the allocated worker plan.
+   * This method generates the container and task instance map which is based on the task graph,
+   * its configuration, and the allocated worker plan.
+   * @param taskVertexSet
+   * @param numberOfContainers
+   * @param workerPlan
+   * @param config
+   * @return
    */
   private static Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
       Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan, Config config) {
@@ -311,17 +314,20 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
       /*If the vertex has the input data set list, get the status and path of the file in HDFS.*/
       for (Vertex vertex : taskVertexSet) {
-        if (vertex.getName().equals(taskName)
-            && vertex.getConfig().getListValue("inputdataset") != null) {
+        if (vertex.getName().equals(taskName)) {
+
+          List<String> inputDataList;
+          if (vertex.getConfig().getListValue("inputdataset") != null) {
+            inputDataList = vertex.getConfig().getListValue("inputdataset");
+          } else {
+            throw new NullPointerException("Input Data File Not Found");
+          }
 
           int totalNumberOfInstances = vertex.getParallelism();
-          List<DataTransferTimeCalculator> cal;
-          List<String> datanodesList;
 
-          datanodesList = dataNodeLocatorUtils.
-              findDataNodesLocation(vertex.getConfig().getListValue("inputdataset"));
+          List<String> datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
           workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx);
-          cal = findBestWorkerNode(vertex, workerPlanMap);
+          List<DataTransferTimeCalculator> cal = findBestWorkerNode(vertex, workerPlanMap);
 
           for (int i = 0; i < totalNumberOfInstances; i++) {
             containerIndex = Integer.parseInt(cal.get(i).getNodeName().trim());

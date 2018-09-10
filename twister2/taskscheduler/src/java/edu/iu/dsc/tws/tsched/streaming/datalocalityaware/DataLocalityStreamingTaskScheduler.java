@@ -188,16 +188,15 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
     //To check the containers can hold all the parallel task instances.
     if (containerCapacity >= totalTask) {
-      LOG.info("Task scheduling can be performed for the container capacity of "
+      LOG.info("Task scheduling could be performed for the container capacity of "
           + containerCapacity + " and " + totalTask + " task instances");
       for (int i = 0; i < numberOfContainers; i++) {
         allocationMap.put(i, new ArrayList<>());
       }
     } else {
-      throw new ScheduleException("Task scheduling can't be performed for the container "
+      throw new ScheduleException("Task scheduling couldn't be performed for the container "
           + "capacity of " + containerCapacity + " and " + totalTask + " task instances");
     }
-
 
     //Parallel Task Map for the complete task graph
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
@@ -211,22 +210,19 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
           int totalTaskInstances = vertex.getParallelism();
           int maxContainerTaskObjectSize = 0;
 
-          List<DataTransferTimeCalculator> calList
-              = calculationList(index, config, vertex, workerPlan, allocationMap, containerIndex,
-              instancesPerContainer);
+          List<DataTransferTimeCalculator> calList = calculationList(index, config, vertex,
+                  workerPlan, allocationMap, containerIndex, instancesPerContainer);
 
           /* This loop allocate the task instances to the respective container, before allocation
           it will check whether the container has reached maximum task instance size */
 
           for (int i = 0; i < totalTaskInstances; i++) {
             containerIndex = Integer.parseInt(Collections.min(calList).getNodeName().trim());
-
             LOG.fine("Worker Node Allocation for task:" + vertex.getName() + "(" + i + ")"
                 + "-> Worker:" + containerIndex + "->" + Collections.min(calList).getDataNode());
-
             if (maxContainerTaskObjectSize < instancesPerContainer) {
-              allocationMap.get(containerIndex).add(
-                  new InstanceId(vertex.getName(), globalTaskIndex, i));
+              allocationMap.get(containerIndex).add(new InstanceId(vertex.getName(),
+                                                                   globalTaskIndex, i));
               ++maxContainerTaskObjectSize;
             } else {
               LOG.warning("Worker:" + containerIndex + "reached max task objects:"
@@ -265,7 +261,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     Map<String, List<DataTransferTimeCalculator>> workerPlanMap;
 
     List<String> inputDataList = vertex.getConfig().getListValue("inputdataset");
-    List<DataTransferTimeCalculator> dataTransferTimeCalculatorList;
+    List<DataTransferTimeCalculator> dataTransferTimeCalculatorList = null;
     List<String> datanodesList;
 
     /*If the index is zero, simply calculate the distance between the worker node and the
@@ -273,25 +269,24 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     the maximum task instances per container. If it is yes, then calculationList the container to
     the allocatedWorkers list which will not be considered for the next scheduling cycle.*/
 
-    if (inputDataList.size() > 0 && index == 0) {
+    if (inputDataList.size() > 0) {
+      if (index == 0) {
+        //If the vertex has input dataset and get the datanode name of the dataset in the HDFS.
+        datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
+        workerPlanMap = distanceCalculation(datanodesList, workerPlan, index, allocatedWorkers);
+        dataTransferTimeCalculatorList = findBestWorkerNode(vertex, workerPlanMap);
 
-      //If the vertex has input dataset and get the datanode name of the dataset in the HDFS.
-      datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
-      workerPlanMap = distanceCalculation(datanodesList, workerPlan, index, allocatedWorkers);
-      dataTransferTimeCalculatorList = findBestWorkerNode(vertex, workerPlanMap);
+      } else if (index > 0) {
 
-    } else if (inputDataList.size() > 0 && index > 0) {
-
-      //If the vertex has input dataset and get the datanode name of the dataset in the HDFS.
-      datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
-      Worker worker = workerPlan.getWorker(containerIndex);
-
-      if (aMap.get(containerIndex).size() >= maxTaskInstPerContainer) {
-        allocatedWorkers.add(worker.getId());
+        //If the vertex has input dataset and get the datanode name of the dataset in the HDFS.
+        datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
+        Worker worker = workerPlan.getWorker(containerIndex);
+        if (aMap.get(containerIndex).size() >= maxTaskInstPerContainer) {
+          allocatedWorkers.add(worker.getId());
+        }
+        workerPlanMap = distanceCalculation(datanodesList, workerPlan, index, allocatedWorkers);
+        dataTransferTimeCalculatorList = findBestWorkerNode(vertex, workerPlanMap);
       }
-
-      workerPlanMap = distanceCalculation(datanodesList, workerPlan, index, allocatedWorkers);
-      dataTransferTimeCalculatorList = findBestWorkerNode(vertex, workerPlanMap);
     } else {
       throw new NullPointerException("Input Data List Is Empty");
     }
@@ -441,11 +436,9 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
       for (int i = 0; i < totalTaskInstances; i++) {
 
         containerIndex = Integer.parseInt(Collections.min(calList).getNodeName().trim());
-
-        LOG.info("Worker Node Allocation for task:" + vertex.getName()
+        LOG.fine("Worker Node Allocation for task:" + vertex.getName()
                 + "(" + containerIndex + ")" + "-> Worker:" + containerIndex + "->"
                 + Collections.min(calList).getDataNode());
-
         if (maxContainerTaskObjectSize < maxTaskInstancesPerContainer) {
           dataLocalityAwareAllocationMap.get(containerIndex).add(new InstanceId(
                   vertex.getName(), globalTaskIndex, containerIndex));
