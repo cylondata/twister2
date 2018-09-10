@@ -56,7 +56,7 @@ ZooKeeper server runs in many clusters. This worker controller can be used in th
 The worker controller class is: 
 * [edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController](../../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/bootstrap/ZKWorkerController.java)
 
-Details of the implementation is provided in [the document](ZKBasedWorkerDiscovery.md). 
+Details of the implementation is provided in [the document](zk-based-worker-discovery.md). 
 
 ### Job Master Based Worker Controller
 Twister2 runs a Job Master in Twister2 jobs. 
@@ -64,7 +64,7 @@ We also provide a Job Master based worker controller implementation.
 The worker controller class is: 
 * [edu.iu.dsc.tws.master.client.JMWorkerController](../../../../twister2/master/src/java/edu/iu/dsc/tws/master/client/JMWorkerController.java)
 
-Details of the implementation is provided in [the document](../job-master/JobMaster.md). 
+Details of the implementation is provided in [the document](../job-master/job-master.md). 
 
 ### Kubernetes Master Based Worker Controller
 We developed a worker discoverer that uses Kubernetes master 
@@ -72,5 +72,5 @@ to discover other workers in a Twister2 job.
 The worker discoverer class is: 
 * [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerController](../../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerController.java)
 
-Details of the implementation is provided in [the document](../kubernetes/K8sBasedWorkerDiscovery.md). 
+Details of the implementation is provided in [the document](../kubernetes/k8s-based-worker-discovery.md). 
 
