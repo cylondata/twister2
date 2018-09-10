@@ -1,1 +1,2 @@
-twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel"
+#twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel"
+twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.DataFlowCommunication"
