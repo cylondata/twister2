@@ -104,15 +104,16 @@ public class BReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
-      int[] data = (int[]) object;
-      LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
-          Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
-      LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-      reduceDone = true;
+
+
       LOG.info("Final Output ==> ");
       if (object instanceof int[]) {
-        int[] res = (int[]) object;
-        String output = String.format("%s", Arrays.toString(res));
+        int[] data = (int[]) object;
+        LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
+            Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
+        LOG.log(Level.INFO, String.format("%d Received final input", workerId));
+        reduceDone = true;
+        String output = String.format("%s", Arrays.toString(data));
         LOG.info("Final Output : " + output);
       }
       return true;
