@@ -2,8 +2,8 @@
 
 ## Authorization of Pods
 Twister2 Worker pods need to get the IP address of the Job Master. 
-In addition, Job Master needs to be able to delete used resources after 
-the job has completed. Therefore, before running a Role and RoleBinding object need to be created. 
+In addition, Job Master needs to be able to delete used resources after the job has completed. 
+Therefore, before submitting a job, a Role and a RoleBinding object need to be created. 
 We prepared the following YAML file: twister2-auth.yaml.
 
 First modify the namespace field in the twister2-auth.yaml. 
@@ -16,14 +16,18 @@ Then execute the following command:
 Twister2 expects that either a Persistent Storage Provisioner or statically configured 
 PersistentVolume exists in the cluster. 
 Persistent storage class needs to be specified in the client.yaml configuration file. 
-Configuration parameter is: kubernetes.persistent.storage.class
+Configuration parameter is: 
+
+    kubernetes.persistent.storage.class
+
+We used the default storage value as "twister2-nfs-storage". 
+Please set your persistent storage class name in your provisioner and in the client.yaml config file. 
 
 We tested with NFS-Client provisioner from: 
 https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client
 
 NFS-Client provisioner is used if you already have an NFS server. 
-Otherwise you may also use NFS provisioner 
-that does not require to have an NFS provisioner: 
+Otherwise you may use the NFS provisioner that does not require to have an NFS server: 
 https://github.com/kubernetes-incubator/external-storage/tree/master/nfs
 
 Before proceeding with Twister2, make sure you either setup a static PersistentVolume
@@ -42,12 +46,12 @@ Second, create a Kubernetes Secret object for the namespace of Twister2 users:
 
     $kubectl create secret generic twister2-openmpi-ssh-key --from-file=id_rsa=/path/to/.ssh/id_rsa --from-file=id_rsa.pub=/path/to/.ssh/id_rsa.pub --from-file=authorized_keys=/path/to/.ssh/id_rsa.pub --namespace=default
 
-The fifth parameter is the name of the Secret object to be generated. 
-That has to match the configuration parameter in the configuration files: 
+The fifth parameter (twister2-openmpi-ssh-key) is the name of the Secret object to be generated. 
+That has to match the following configuration parameter in the network.yaml file: 
 
     kubernetes.secret.name
 
-You can retrieve the Secret object by executing in YAML form:
+You can retrieve the created Secret object in YAML form by executing the following command:
 
     $kubectl get secret <secret-name> -o=yaml
 
@@ -59,7 +63,7 @@ kubectl method as:
     $kubectl create secret -f /path/to/file/secret.yaml
 
 ## Providing Rack and Datacenter information to Twister2
-Twister2 can use rack names of the workers and the data center names when scheduling tasks. 
+Twister2 can use rack names and data center names of the nodes when scheduling tasks. 
 There are two ways administrators and user can provide this information. 
 
 **Through Configuration Files**:  
@@ -79,7 +83,7 @@ Here is an example configuration:
     - rack02: ['node61.ip', 'node62.ip', 'node63.ip']
 
 **Labelling Nodes With Rack and Data Center Information**:  
-Administrators can label their nodes in the cluster for their rack and datacenter data. 
+Administrators can label their nodes in the cluster for their rack and datacenter information. 
 Each node in the cluster must be labelled once. 
 When the user submits a Twister2 job, submitting client first queries Kubernetes master
 for the labels of nodes. It provides this list to all workers in the job. 
