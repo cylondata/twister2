@@ -81,5 +81,4 @@ public final class HadoopDataInputStream extends FSDataInputStream {
       bytes -= fsDataInputStream.skip(bytes);
     }*/
   }
-
 }

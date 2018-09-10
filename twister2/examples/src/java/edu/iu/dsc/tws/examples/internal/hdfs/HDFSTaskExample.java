@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -35,10 +37,10 @@ import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopDataOutputStream;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
+import edu.iu.dsc.tws.data.utils.HdfsUtils;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.OperationNames;
@@ -58,9 +60,11 @@ import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
 public class HDFSTaskExample implements IWorker {
 
+  private static final Logger LOG = Logger.getLogger(HDFSTaskExample.class.getName());
+
   private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
-  private HDFSConnector hdfsConnector;
+  private static HdfsUtils hdfsConnector;
 
   public static void main(String[] args) {
 
@@ -77,7 +81,7 @@ public class HDFSTaskExample implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("hdfstask-example");
     jobBuilder.setWorkerClass(HDFSTaskExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 3);
+    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 2);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
@@ -92,8 +96,8 @@ public class HDFSTaskExample implements IWorker {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    TaskMapper taskMapper = new TaskMapper("task1");
-    TaskReducer taskReducer = new TaskReducer("task2");
+    TaskMapper taskMapper = new TaskMapper();
+    TaskReducer taskReducer = new TaskReducer();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addTask("task1", taskMapper);
@@ -104,7 +108,15 @@ public class HDFSTaskExample implements IWorker {
 
     List<String> inputList = new ArrayList<>();
     inputList.add("dataset1.txt");
+
     builder.addConfiguration("task1", "inputdataset", inputList);
+    builder.addConfiguration("task2", "inputdataset", inputList);
+
+    List<String> outputList = new ArrayList<>();
+    outputList.add("datasetout.txt");
+
+    builder.addConfiguration("task1", "outputdataset", outputList);
+    builder.addConfiguration("task2", "outputdataset", outputList);
 
     builder.connect("task1", "task2", OperationNames.PARTITION);
     builder.operationMode(OperationMode.STREAMING);
@@ -116,12 +128,32 @@ public class HDFSTaskExample implements IWorker {
     taskScheduler.initialize(config);
     TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
+    //Just to print the task schedule plan...
+    if (workerID == 0) {
+      if (taskSchedulePlan != null) {
+        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+                = taskSchedulePlan.getContainersMap();
+        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+          Integer integer = entry.getKey();
+          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
+          Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
+                  = containerPlan.getTaskInstances();
+          LOG.info("Task Details for Container Id:" + integer);
+          for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
+            LOG.info("Task Id:" + ip.getTaskId()
+                    + "\tTask Index" + ip.getTaskIndex()
+                    + "\tTask Name:" + ip.getTaskName());
+          }
+        }
+      }
+    }
+
     TWSChannel network = Network.initializeChannel(config, workerController, resources);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
             new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network);
-    executor.execute();
+    //executor.execute();
   }
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
@@ -133,17 +165,14 @@ public class HDFSTaskExample implements IWorker {
     return new WorkerPlan(workers);
   }
 
-  private class TaskMapper implements ICompute {
+
+  private static class TaskMapper implements ICompute {
     private static final long serialVersionUID = 3233011943332591934L;
     public String taskName;
     private TaskContext ctx;
     private Config config;
     private String inputFileName;
     private String outputFileName;
-
-    protected TaskMapper(String tName) {
-      this.taskName = tName;
-    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -154,7 +183,6 @@ public class HDFSTaskExample implements IWorker {
       Map<String, Object> configs = ctx.getConfigurations();
 
       for (Map.Entry<String, Object> entry : configs.entrySet()) {
-
         if (entry.getKey().contains("inputdataset")) {
           List<String> inputFiles = (List<String>) entry.getValue();
           if (inputFiles.size() == 1) {
@@ -181,9 +209,8 @@ public class HDFSTaskExample implements IWorker {
 
     @Override
     public boolean execute(IMessage content) {
-
-      hdfsConnector = new HDFSConnector(config, inputFileName);
-      HadoopFileSystem hadoopFileSystem = hdfsConnector.HDFSConnect();
+      hdfsConnector = new HdfsUtils(config, inputFileName);
+      HadoopFileSystem hadoopFileSystem = hdfsConnector.createHDFSFileSystem();
       Path path = hdfsConnector.getPath();
 
       //Reading Input Files
@@ -208,16 +235,13 @@ public class HDFSTaskExample implements IWorker {
         }
       }
 
-      //Do Some computations...........
-
       //Writing to Output Files
-      hdfsConnector = new HDFSConnector(config, outputFileName);
-      hadoopFileSystem = hdfsConnector.HDFSConnect();
+      hdfsConnector = new HdfsUtils(config, outputFileName);
+      HadoopFileSystem hadoopfileSystem = hdfsConnector.createHDFSFileSystem();
       path = hdfsConnector.getPath();
       HadoopDataOutputStream hadoopDataOutputStream;
-
       try {
-        if (!hadoopFileSystem.exists(path)) {
+        if (!hadoopfileSystem.exists(path)) {
           hadoopDataOutputStream = hadoopFileSystem.create(path);
           for (int i = 0; i < 10; i++) {
             hadoopDataOutputStream.write(
@@ -227,20 +251,18 @@ public class HDFSTaskExample implements IWorker {
       } catch (IOException ioe) {
         ioe.printStackTrace();
       }
+
       return true;
     }
   }
 
-  private class TaskReducer implements ICompute {
+
+  private static class TaskReducer implements ICompute {
     private static final long serialVersionUID = 3233011943332591934L;
-    private String taskName;
+    private TaskContext ctx;
     private String outputFile;
     private Config config;
-    private TaskContext ctx;
-
-    protected TaskReducer(String tName) {
-      this.taskName = tName;
-    }
+    private String taskName;
 
     @SuppressWarnings("unchecked")
     @Override
@@ -256,7 +278,6 @@ public class HDFSTaskExample implements IWorker {
             this.outputFile = outputFiles.get(i);
           }
         }
-        hdfsConnector = new HDFSConnector(config, outputFile);
       }
     }
 

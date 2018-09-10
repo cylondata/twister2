@@ -30,31 +30,31 @@ public final class HadoopBlockLocation implements BlockLocation {
     this.blockLocation = blocklocation;
   }
 
+  /**
+   * To get the hostname of the filename
+   * @return
+   * @throws IOException
+   */
   @Override
   public String[] getHosts() throws IOException {
 
     if (this.hostnames == null) {
-
       final String[] hadoopHostnames = blockLocation.getHosts();
       this.hostnames = new String[hadoopHostnames.length];
-
       for (int i = 0; i < hadoopHostnames.length; ++i) {
         this.hostnames[i] = stripHostname(hadoopHostnames[i]);
       }
     }
-
     return this.hostnames;
   }
 
   @Override
   public long getLength() {
-
     return this.blockLocation.getLength();
   }
 
   @Override
   public long getOffset() {
-
     return this.blockLocation.getOffset();
   }
 
@@ -62,7 +62,6 @@ public final class HadoopBlockLocation implements BlockLocation {
   public int compareTo(final BlockLocation o) {
 
     final long diff = getOffset() - o.getOffset();
-
     return diff < 0 ? -1 : diff > 0 ? 1 : 0;
   }
 

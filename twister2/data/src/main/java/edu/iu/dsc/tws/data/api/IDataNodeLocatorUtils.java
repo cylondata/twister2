@@ -19,5 +19,5 @@ public interface IDataNodeLocatorUtils {
 
   List<String> findDataNodesLocation(String inputFileName);
 
-  //List<String> findDataNodesLocation(Set<Vertex> vertexSet);
 }
+
