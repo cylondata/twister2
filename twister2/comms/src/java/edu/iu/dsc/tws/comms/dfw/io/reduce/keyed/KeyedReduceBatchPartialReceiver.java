@@ -54,7 +54,6 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
       // now check weather we have the messages for this source
       Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
       Map<Integer, Boolean> finishedForTarget = finished.get(target);
-      Map<Integer, Integer> countMap = counts.get(target);
 
       boolean canProgress = true;
       Object currentVal = null;
@@ -62,7 +61,7 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
       while (canProgress) {
         boolean found = true;
         boolean allFinished = true;
-        boolean allZero = true;
+        boolean isAllQueuesEmpty = true;
 
         boolean moreThanOne = false;
         for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
@@ -104,24 +103,14 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
             // lets remove the value
             bufferCounts.put(target, 0);
             reducedValueMap.put(target, null);
-            for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
-              Queue<Object> value = e.getValue();
-              if (value.size() != 0) {
-                allZero = false;
-              }
-            }
-
-            for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
-              Integer i = e.getValue();
-              e.setValue(i - 1);
-            }
+            isAllQueuesEmpty = checkQueuesEmpty(messagePerTarget);
 
           } else {
             canProgress = false;
             needsFurtherProgress = true;
           }
 
-          if (dataFlowOperation.isDelegeteComplete() && allFinished && allZero) {
+          if (dataFlowOperation.isDelegeteComplete() && allFinished && isAllQueuesEmpty) {
             if (dataFlowOperation.sendPartial(target, new byte[0],
                 MessageFlags.EMPTY, destination)) {
               isEmptySent.put(target, true);
@@ -138,6 +127,23 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
       }
     }
     return needsFurtherProgress;
+  }
+
+  /**
+   * Checks if all the queues are empty
+   *
+   * @param messagePerTarget data object that holds the queues of objects from each sources
+   * @return true if all the message queues are empty
+   */
+  private boolean checkQueuesEmpty(Map<Integer, Queue<Object>> messagePerTarget) {
+    boolean isAllQueuesEmpty = true;
+    for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+      Queue<Object> value = e.getValue();
+      if (value.size() != 0) {
+        isAllQueuesEmpty = false;
+      }
+    }
+    return isAllQueuesEmpty;
   }
 
 
