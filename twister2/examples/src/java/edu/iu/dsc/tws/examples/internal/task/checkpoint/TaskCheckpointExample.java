@@ -69,8 +69,8 @@ public class TaskCheckpointExample implements IWorker {
 
     TWSChannel channel = Network.initializeChannel(config, workerController, resources);
 
-    GeneratorCheckpointTask g = new GeneratorCheckpointTask();
-    RecevingCheckpointTask r = new RecevingCheckpointTask(channel);
+    GeneratorTask g = new GeneratorTask();
+    ReceivingTask r = new ReceivingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
@@ -134,7 +134,7 @@ public class TaskCheckpointExample implements IWorker {
   private static final class RecevingCheckpointTask extends SinkTask {
     private static final long serialVersionUID = -254264903520284798L;
 
-    private TWSChannel channel;
+//    private TWSChannel channel;
 
     private int taskId;
 
@@ -145,12 +145,14 @@ public class TaskCheckpointExample implements IWorker {
 
     private RecevingCheckpointTask(TWSChannel channel) {
       super();
-      this.channel = channel;
+//      this.channel = channel;
     }
 
     @Override
     public boolean execute(IMessage message) {
 
+
+      System.out.println(message.getContent());
       CheckpointBarrier cb = (CheckpointBarrier) message.getContent();
       System.out.println(cb.getId() + " from taskId : " + taskId);
 //      channel.direct(newCfg, MessageType.OBJECT, 0, )
@@ -160,6 +162,43 @@ public class TaskCheckpointExample implements IWorker {
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.taskId = context.taskId();
+    }
+  }
+
+
+  private static class GeneratorTask extends SourceTask {
+    private static final long serialVersionUID = -254264903510284748L;
+    private TaskContext ctx;
+    private Config config;
+
+    @Override
+    public void execute() {
+      ctx.write("partition-edge", "Hello");
+    }
+
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      this.ctx = context;
+    }
+  }
+
+  private static class ReceivingTask extends SinkTask {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (count % 1000000 == 0) {
+        System.out.println(message.getContent());
+      }
+      count++;
+      return true;
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+
     }
   }
 
@@ -184,7 +223,6 @@ public class TaskCheckpointExample implements IWorker {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
-
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-checkpoint-example");
     jobBuilder.setWorkerClass(TaskCheckpointExample.class.getName());
