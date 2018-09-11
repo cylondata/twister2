@@ -70,10 +70,13 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
     }
+    reduceDone = true;
+    for (int target : targets) {
+      if (taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+        reduceDone = false;
+      }
+    }
 
-//    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-//      reduceDone = true;
-//    }
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
         workerId, sources, 1, tasksOfExecutor));
@@ -93,6 +96,9 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
+    if (reduceDone && sourcesDone && !keyedReduce.hasPending()) {
+      System.out.println(workerId + " is ............ Done");
+    }
     return reduceDone && sourcesDone && !keyedReduce.hasPending();
   }
 
