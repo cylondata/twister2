@@ -77,7 +77,8 @@ public class WordAggregate implements MultiMessageReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
     // nothing to do here
+    return true;
   }
 }

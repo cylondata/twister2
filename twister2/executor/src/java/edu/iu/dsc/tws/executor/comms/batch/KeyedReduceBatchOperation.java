@@ -127,7 +127,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
       return true;
     }
 
-    public void progress() {
+    public boolean progress() {
       for (int t : messages.keySet()) {
         boolean canProgress = true;
         while (canProgress) {
@@ -171,6 +171,8 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
           }
         }
       }
+      //TODO: need fix later to make sure to return false when no progress is needed
+      return true;
     }
   }
 
@@ -232,7 +234,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
       return true;
     }
 
-    public void progress() {
+    public boolean progress() {
       for (int t : messages.keySet()) {
         Map<Integer, Integer> cMap = counts.get(t);
         boolean canProgress = true;
@@ -272,6 +274,8 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
           }
         }
       }
+      //TODO: need fix later to make sure to return false when no progress is needed
+      return true;
     }
   }
 
