@@ -205,7 +205,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     }
 
     public boolean progress() {
-      return true;
+      return partialReceiver.progress();
     }
   }
 
@@ -229,7 +229,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
 
     @Override
     public boolean progress() {
-      return true;
+      return finalReceiver.progress();
     }
   }
 }

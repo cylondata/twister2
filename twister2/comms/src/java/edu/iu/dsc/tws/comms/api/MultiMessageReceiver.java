@@ -35,5 +35,5 @@ public interface MultiMessageReceiver {
    */
   boolean onMessage(int source, int path, int target, int flags, Object object);
 
-  void progress();
+  boolean progress();
 }
