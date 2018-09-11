@@ -30,4 +30,5 @@ public final class Constants {
   public static final String ARGS_PRINT_INTERVAL = "pi";
   public static final String ARGS_DATA_TYPE = "type";
   public static final String ARGS_INIT_ITERATIONS = "int_itr";
+  public static final String ARGS_VERIFY = "verify";
 }

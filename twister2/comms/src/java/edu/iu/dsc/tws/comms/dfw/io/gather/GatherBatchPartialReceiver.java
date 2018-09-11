@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
+
 public class GatherBatchPartialReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(GatherBatchPartialReceiver.class.getName());
 
@@ -43,6 +44,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
   public GatherBatchPartialReceiver(int dst) {
     this.destination = dst;
   }
+
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
