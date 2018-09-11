@@ -2,7 +2,7 @@
 
 twister2.hadoop.home: "${HADOOP_HOME}"
 
-twister2.hdfs.url: "hdfs://hairy.soic.indiana.edu:9000//"
+twister2.hdfs.url: "hdfs://hairy.soic.indiana.edu:9000/user/kgovind"
 
 twister2.hdfs.class: "org.apache.hadoop.hdfs.DistributedFileSystem"
 
