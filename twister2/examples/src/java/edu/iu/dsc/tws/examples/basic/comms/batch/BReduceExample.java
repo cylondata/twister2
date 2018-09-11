@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.batch;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -108,24 +107,12 @@ public class BReduceExample extends BenchWorker {
     @Override
     public boolean receive(int target, Object object) {
       experimentData.setOutput(object);
+      reduceDone = true;
       try {
         verify();
       } catch (VerificationException e) {
         e.printStackTrace();
-      } finally {
-        LOG.info("Final Output ==> ");
-        if (object instanceof int[]) {
-          int[] data = (int[]) object;
-          LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
-              Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
-          LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-          reduceDone = true;
-          String output = String.format("%s", Arrays.toString(data));
-          LOG.info("Final Output : " + output);
-        }
-
       }
-
       return true;
     }
   }
@@ -133,7 +120,6 @@ public class BReduceExample extends BenchWorker {
   public void verify() throws VerificationException {
     boolean doVerify = jobParameters.isDoVerify();
     boolean isVerified = false;
-
     if (doVerify) {
       LOG.info("Verifying results ...");
       ExperimentVerification experimentVerification
