@@ -59,8 +59,8 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
     hdfsUtils = new HdfsUtils(config);
-
     this.inputFileList = inputList;
+
     try {
       hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
     } catch (IOException ioe) {
@@ -68,8 +68,8 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     }
 
     List<String> dataNodes = new ArrayList<>();
-    for (int i = 0; i < this.inputFileList.size(); i++) {
 
+    for (int i = 0; i < this.inputFileList.size(); i++) {
       this.datasetName = this.inputFileList.get(i);
       String[] fName = new String[0];
 
@@ -88,9 +88,10 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
         if (!fileStatus.getPath().isNullOrEmpty()) {
 
           String fileURL = fileStatus.getPath().toString();
-
           String datanodeName = hdfsUtils.getDFSCK(fName);
+
           dataNodes.add(datanodeName);
+          dataNodes.add("samplenode"); //just for testing
 
           LOG.fine("HDFS URL:" + fileURL + "\tDataNode:" + datanodeName);
         }

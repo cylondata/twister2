@@ -139,7 +139,6 @@ public class DataLocalityBatchTaskExample implements IWorker {
 
     List<String> sourceInputDataset = new ArrayList<>();
     sourceInputDataset.add("dataset1.txt");
-    sourceInputDataset.add("dataset2.txt");
 
     builder.addConfiguration("source", "inputdataset", sourceInputDataset);
     builder.addConfiguration("sink1", "inputdataset", sourceInputDataset);
@@ -292,3 +291,4 @@ public class DataLocalityBatchTaskExample implements IWorker {
     }
   }
 }
+
