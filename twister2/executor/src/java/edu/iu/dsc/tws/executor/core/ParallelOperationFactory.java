@@ -9,30 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.executor.core;
 
 import java.util.Set;
@@ -108,25 +84,14 @@ public class ParallelOperationFactory {
               edge.getDataType(), edge.getFunction(), edge.getName());
           return reduceBatchOperation;
         } else if (OperationNames.ALLREDUCE.equals(edge.getOperation())) {
-          AllReduceBatchOperation allReduceBatchOperation = new AllReduceBatchOperation(config,
-              channel, taskPlan);
-          allReduceBatchOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
-              edge.getName());
-          return allReduceBatchOperation;
-        } else if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
-          KeyedReduceBatchOperation keyedReduceBatchOperation
-              = new KeyedReduceBatchOperation(config, channel, taskPlan);
-          keyedReduceBatchOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
-              edge.getName());
-          return keyedReduceBatchOperation;
+          return new AllReduceBatchOperation(config,
+              channel, taskPlan, sources, dests, edgeGenerator, edge.getDataType(),
+              edge.getName(), edge.getFunction());
         }
       } else {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
-          KeyedReduceBatchOperation keyedReduceBatchOperation
-              = new KeyedReduceBatchOperation(config, channel, taskPlan);
-          keyedReduceBatchOperation.prepare(sources, dests, edgeGenerator, edge.getDataType(),
-              edge.getName());
-          return keyedReduceBatchOperation;
+          return new KeyedReduceBatchOperation(config, channel, taskPlan, sources,
+              dests, edgeGenerator, edge.getDataType(), edge.getName(), edge.getFunction());
         }
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {

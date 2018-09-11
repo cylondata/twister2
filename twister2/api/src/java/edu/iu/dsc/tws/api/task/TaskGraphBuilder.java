@@ -31,16 +31,36 @@ import edu.iu.dsc.tws.task.graph.Vertex;
 public final class TaskGraphBuilder {
   private static final Logger LOG = Logger.getLogger(TaskGraphBuilder.class.getName());
 
+  /**
+   * Keep track of the nodes with their names
+   */
   private Map<String, Vertex> nodes = new HashMap<>();
 
+  /**
+   * The parent edges of a node
+   */
   private List<ComputeConnection> computeConnections = new ArrayList<>();
 
+  /**
+   * Source connections
+   */
   private List<SourceConnection> sourceConnections = new ArrayList<>();
 
+  /**
+   * Default parallelism read from a configuration parameter
+   */
   private int defaultParallelism;
 
+  /**
+   * The execution mode
+   */
   private OperationMode mode = OperationMode.STREAMING;
 
+  /**
+   * Create an instance of the task builder.
+   * @param cfg configuration
+   * @return new task graph builder instance
+   */
   public static TaskGraphBuilder newBuilder(Config cfg) {
     return new TaskGraphBuilder(cfg);
   }
@@ -91,15 +111,17 @@ public final class TaskGraphBuilder {
     Vertex vertex = new Vertex(name, source, defaultParallelism);
     nodes.put(name, vertex);
 
-    SourceConnection sc = new SourceConnection(name);
-    sourceConnections.add(sc);
-    return sc;
+    return createSourceConnection(name);
   }
 
   public SourceConnection addSource(String name, ISource source, int parllel) {
     Vertex vertex = new Vertex(name, source, parllel);
     nodes.put(name, vertex);
 
+    return createSourceConnection(name);
+  }
+
+  private SourceConnection createSourceConnection(String name) {
     SourceConnection sc = new SourceConnection(name);
     sourceConnections.add(sc);
     return sc;

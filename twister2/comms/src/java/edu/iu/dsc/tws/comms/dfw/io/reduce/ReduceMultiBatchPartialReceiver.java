@@ -17,16 +17,16 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.KeyedReduceFunction;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KeyedReduceBatchPartialReceiver;
 
 public class ReduceMultiBatchPartialReceiver implements MultiMessageReceiver {
-  private KeyedReduceFunction reduceFunction;
+  private ReduceFunction reduceFunction;
 
   private Map<Integer, KeyedReduceBatchPartialReceiver> receiverMap = new HashMap<>();
 
-  public ReduceMultiBatchPartialReceiver(KeyedReduceFunction reduceFn) {
+  public ReduceMultiBatchPartialReceiver(ReduceFunction reduceFn) {
     this.reduceFunction = reduceFn;
   }
 
@@ -48,9 +48,11 @@ public class ReduceMultiBatchPartialReceiver implements MultiMessageReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
+    boolean needsFurtherProgress = false;
     for (Map.Entry<Integer, KeyedReduceBatchPartialReceiver> e : receiverMap.entrySet()) {
-      e.getValue().progress();
+      needsFurtherProgress = needsFurtherProgress | e.getValue().progress();
     }
+    return needsFurtherProgress;
   }
 }

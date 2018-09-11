@@ -62,7 +62,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
 
     this.edgeGenerator = e;
     op = new SKeyedReduce(channel, taskPlan, sources, dests, new ReduceFunctionImpl(fn),
-         new PartitionRecvrImpl(), dataType, keyType, new HashingSelector());
+         new ReduceRecvrImpl(), dataType, keyType, new HashingSelector());
   }
 
   @Override
@@ -94,7 +94,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
     }
   }
 
-  private class PartitionRecvrImpl implements ReduceReceiver {
+  private class ReduceRecvrImpl implements ReduceReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {

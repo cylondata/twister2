@@ -25,20 +25,15 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
-import edu.iu.dsc.tws.comms.op.functions.reduction.KeyedReduceOperationFunction;
-import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.comms.op.batch.BAllReduce;
+import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
+import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 
-/**
- * Created by pulasthi on 8/24/18.
- */
-public class BKeyedReduceExample extends KeyedBenchWorker {
-  private static final Logger LOG = Logger.getLogger(BKeyedReduceExample.class.getName());
+public class BAllReduceExample extends BenchWorker {
+  private static final Logger LOG = Logger.getLogger(BAllReduceExample.class.getName());
 
-  private BKeyedReduce keyedReduce;
+  private BAllReduce reduce;
 
   private boolean reduceDone;
 
@@ -52,15 +47,15 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     for (int i = 0; i < noOfSourceTasks; i++) {
       sources.add(i);
     }
+    int noOfTargetTasks = jobParameters.getTaskStages().get(1);
     Set<Integer> targets = new HashSet<>();
-    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    for (int i = 0; i < noOfTargetTasks; i++) {
-      targets.add(noOfSourceTasks + i);
+    for (int i = noOfSourceTasks; i < noOfTargetTasks + noOfSourceTasks; i++) {
+      targets.add(i);
     }
-
-    keyedReduce = new BKeyedReduce(communicator, taskPlan, sources, targets,
-        new KeyedReduceOperationFunction(Op.SUM, MessageType.INTEGER),
-        new FinalReduceReceiver(), MessageType.OBJECT, new SimpleKeyBasedSelector());
+    // create the communication
+    reduce = new BAllReduce(communicator, taskPlan, sources, targets,
+        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER), new FinalReduceReceiver(),
+        MessageType.INTEGER);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -70,45 +65,36 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
     }
-    reduceDone = true;
-    for (int target : targets) {
-      if (taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-        reduceDone = false;
-      }
-    }
 
-
-    LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
-        workerId, sources, 1, tasksOfExecutor));
+    LOG.log(Level.INFO, String.format("%d Sources %s target %s this %s",
+        workerId, sources, targets, tasksOfExecutor));
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
-      Thread mapThread = new Thread(new KeyedBenchWorker.MapWorker(t));
+      Thread mapThread = new Thread(new BenchWorker.MapWorker(t));
       mapThread.start();
     }
-
   }
 
   @Override
   protected void progressCommunication() {
-    keyedReduce.progress();
+    reduce.progress();
+  }
+
+  @Override
+  protected boolean sendMessages(int task, Object data, int flag) {
+    while (!reduce.reduce(task, data, flag)) {
+      // lets wait a litte and try again
+      reduce.progress();
+    }
+    return true;
   }
 
   @Override
   protected boolean isDone() {
-    if (reduceDone && sourcesDone && !keyedReduce.hasPending()) {
-      System.out.println(workerId + " is ............ Done");
-    }
-    return reduceDone && sourcesDone && !keyedReduce.hasPending();
-  }
-
-  @Override
-  protected boolean sendMessages(int task, Object key, Object data, int flag) {
-    while (!keyedReduce.reduce(task, key, data, flag)) {
-      // lets wait a litte and try again
-      keyedReduce.progress();
-    }
-    return true;
+//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
+//        workerId, reduceDone, sourcesDone, reduce.hasPending()));
+    return reduceDone && sourcesDone && !reduce.hasPending();
   }
 
   public class FinalReduceReceiver implements ReduceReceiver {
@@ -118,18 +104,18 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
-      KeyedContent keyedContent = (KeyedContent) object;
-      int[] data = (int[]) keyedContent.getValue();
-      LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
-          Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
-      LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-      reduceDone = true;
+      if (object instanceof int[]) {
+        int[] data = (int[]) object;
+        reduceDone = true;
+        String output = String.format("%s", Arrays.toString(data));
+        LOG.info("Final Output : " + output);
+      }
       return true;
     }
   }
 
   @Override
   protected void finishCommunication(int src) {
-    keyedReduce.finish(src);
+    reduce.finish(src);
   }
 }

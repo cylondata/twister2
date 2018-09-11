@@ -25,7 +25,6 @@ package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -47,27 +46,17 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
   @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;
-    for (int t : messages.keySet()) {
-      if (batchDone.get(t)) {
-        if (!isEmptySent.get(t)) {
-          if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(t,
-              new byte[0], MessageFlags.EMPTY, destination)) {
-            isEmptySent.put(t, true);
-          } else {
-            needsFurtherProgress = true;
-          }
-        }
+    for (int target : messages.keySet()) {
+      if (batchDone.get(target)) {
+        needsFurtherProgress = !checkIfEmptyIsSent(target);
         continue;
       }
       // now check weather we have the messages for this source
-      Map<Integer, Queue<Object>> messagePerTarget = messages.get(t);
-      Map<Integer, Boolean> finishedForTarget = finished.get(t);
-      Map<Integer, Integer> countMap = counts.get(t);
-      Map<Integer, Integer> totalCountMap = totalCounts.get(t);
-      Set<Integer> emptyMessages = emptyReceivedSources.get(t);
+      Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
+      Map<Integer, Boolean> finishedForTarget = finished.get(target);
+      Map<Integer, Integer> countMap = counts.get(target);
 
       boolean canProgress = true;
-      int tempBufferCount = bufferCounts.get(t);
       Object currentVal = null;
 
       while (canProgress) {
@@ -91,51 +80,30 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
         // if we have queues with 0 and more than zero we need further communicationProgress
         if (!found && moreThanOne) {
           needsFurtherProgress = true;
-        }
-        if (found) {
-          currentVal = reducedValueMap.get(t);
-          for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
-            Queue<Object> valueList = e.getValue();
-            if (valueList.size() > 0) {
-              if (currentVal == null) {
-                currentVal = valueList.poll();
-                tempBufferCount += 1;
-              } else {
-                Object current = valueList.poll();
-                currentVal = reduceFunction.reduce(currentVal, current);
-                tempBufferCount += 1;
-              }
-            }
-          }
-          bufferCounts.put(t, tempBufferCount);
-          if (currentVal != null) {
-            reducedValueMap.put(t, currentVal);
+
+          //If we have got all the last messages then even if we don't get from all expected id's
+          //we can flush the remaining data
+          if (allFinished && dataFlowOperation.isDelegeteComplete()) {
+            currentVal = reduceMessagesAll(target, messagePerTarget);
           }
         }
 
-        if ((!bufferTillEnd && tempBufferCount >= bufferSize) || allFinished) {
+        if (found) {
+          currentVal = reduceMessagesSingle(target, messagePerTarget);
+        }
+
+        if ((!bufferTillEnd && bufferCounts.get(target) >= bufferSize) || allFinished) {
           int flags = 0;
-          boolean last;
           if (allFinished) {
-            last = true;
-            for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
-              Queue<Object> valueList = e.getValue();
-              if (valueList.size() > 1) {
-                last = false;
-              }
-            }
-            if (last) {
-              flags = MessageFlags.FLAGS_LAST;
-            }
+            flags = getFlags(messagePerTarget);
           }
 
           if (currentVal != null
-              && dataFlowOperation.sendPartial(t, currentVal, flags, destination)) {
+              && dataFlowOperation.sendPartial(target, currentVal, flags, destination)) {
             partialSendCount++;
             // lets remove the value
-            bufferCounts.put(t, 0);
-            tempBufferCount = 0;
-            reducedValueMap.put(t, null);
+            bufferCounts.put(target, 0);
+            reducedValueMap.put(target, null);
             for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
               Queue<Object> value = e.getValue();
               if (value.size() != 0) {
@@ -154,14 +122,14 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
           }
 
           if (dataFlowOperation.isDelegeteComplete() && allFinished && allZero) {
-            if (dataFlowOperation.sendPartial(t, new byte[0],
+            if (dataFlowOperation.sendPartial(target, new byte[0],
                 MessageFlags.EMPTY, destination)) {
-              isEmptySent.put(t, true);
+              isEmptySent.put(target, true);
             } else {
               needsFurtherProgress = true;
             }
-            batchDone.put(t, true);
-            // we don't want to go through the while loop for this one
+            batchDone.put(target, true);
+            // we don'target want to go through the while loop for this one
             break;
           } else {
             needsFurtherProgress = true;
@@ -170,6 +138,113 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
       }
     }
     return needsFurtherProgress;
+  }
+
+
+  /**
+   * Checks if this is the last message to be sent
+   *
+   * @param messagePerTarget data object that holds the queues of objects from each sources
+   * @return the message flags to be used
+   */
+  private int getFlags(Map<Integer, Queue<Object>> messagePerTarget) {
+    int flags = 0;
+    boolean last;
+    last = true;
+    for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+      Queue<Object> valueList = e.getValue();
+      if (valueList.size() > 1) {
+        last = false;
+      }
+    }
+    if (last) {
+      flags = MessageFlags.FLAGS_LAST;
+    }
+    return flags;
+  }
+
+  /**
+   * Makes a reduction for a single round. That is it only uses a single message from each expected
+   * id.
+   *
+   * @param target target task for which the reduction is done
+   * @param messagePerTarget data object that holds the queues of objects from each sources
+   * @return the reduced value as an object
+   */
+  private Object reduceMessagesSingle(int target, Map<Integer, Queue<Object>> messagePerTarget) {
+    Object currentVal;
+    int tempBufferCount = bufferCounts.get(target);
+    currentVal = reducedValueMap.get(target);
+    for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+      Queue<Object> valueList = e.getValue();
+      if (valueList.size() > 0) {
+        if (currentVal == null) {
+          currentVal = valueList.poll();
+          tempBufferCount += 1;
+        } else {
+          Object current = valueList.poll();
+          currentVal = reduceFunction.reduce(currentVal, current);
+          tempBufferCount += 1;
+        }
+      }
+    }
+    bufferCounts.put(target, tempBufferCount);
+    if (currentVal != null) {
+      reducedValueMap.put(target, currentVal);
+    }
+    return currentVal;
+  }
+
+  /**
+   * Makes a reduction for a all the messages in messagePerTarget. That is it only uses a single
+   * message from each expected id.
+   *
+   * @param target target task for which the reduction is done
+   * @param messagePerTarget data object that holds the queues of objects from each sources
+   * @return the reduced value as an object
+   */
+  private Object reduceMessagesAll(int target, Map<Integer, Queue<Object>> messagePerTarget) {
+    Object currentVal;
+    int tempBufferCount = bufferCounts.get(target);
+    currentVal = reducedValueMap.get(target);
+    for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+      Queue<Object> valueList = e.getValue();
+      while (valueList.size() > 0) {
+        if (currentVal == null) {
+          currentVal = valueList.poll();
+          tempBufferCount += 1;
+        } else {
+          Object current = valueList.poll();
+          currentVal = reduceFunction.reduce(currentVal, current);
+          tempBufferCount += 1;
+        }
+      }
+    }
+    bufferCounts.put(target, tempBufferCount);
+    if (currentVal != null) {
+      reducedValueMap.put(target, currentVal);
+    }
+    return currentVal;
+  }
+
+  /**
+   * checks if the Empty message was sent for this target and sends it if not sent and possible to
+   * send
+   *
+   * @param target target for which the check is done
+   * @return false if Empty is sent
+   */
+  private boolean checkIfEmptyIsSent(int target) {
+    boolean isSent = true;
+    if (!isEmptySent.get(target)) {
+      if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(target,
+          new byte[0], MessageFlags.EMPTY, destination)) {
+        isEmptySent.put(target, true);
+      } else {
+        isSent = false;
+      }
+    }
+    return isSent;
   }
 
   @Override

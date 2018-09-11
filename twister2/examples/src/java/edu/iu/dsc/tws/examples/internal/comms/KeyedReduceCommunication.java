@@ -117,6 +117,7 @@ public class KeyedReduceCommunication implements IWorker {
   private class MapWorker implements Runnable {
     private int task = 0;
     private int sendCount = 0;
+
     MapWorker(int task) {
       this.task = task;
     }
@@ -215,7 +216,7 @@ public class KeyedReduceCommunication implements IWorker {
       return true;
     }
 
-    public void progress() {
+    public boolean progress() {
       for (int t : messages.keySet()) {
         boolean canProgress = true;
         while (canProgress) {
@@ -259,6 +260,8 @@ public class KeyedReduceCommunication implements IWorker {
           }
         }
       }
+      //TODO: need fix later to make sure to return false when no progress is needed
+      return true;
     }
   }
 
@@ -321,7 +324,7 @@ public class KeyedReduceCommunication implements IWorker {
       return true;
     }
 
-    public void progress() {
+    public boolean progress() {
       for (int t : messages.keySet()) {
         Map<Integer, Integer> cMap = counts.get(t);
         boolean canProgress = true;
@@ -362,6 +365,8 @@ public class KeyedReduceCommunication implements IWorker {
           }
         }
       }
+      //TODO: need fix later to make sure to return false when no progress is needed
+      return true;
     }
   }
 
