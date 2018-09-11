@@ -58,7 +58,7 @@ public class KeyedReduceBatchTask implements IWorker {
     builder.addSource("source", g);
     builder.setParallelism("source", 4);
     builder.addSink("sink", r);
-    builder.setParallelism("sink", 1);
+    builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "keyed-reduce-edge",
         OperationNames.KEYED_REDUCE, new IFunction() {
           @Override
