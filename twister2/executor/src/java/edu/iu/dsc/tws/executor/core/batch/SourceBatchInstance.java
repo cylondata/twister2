@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
+import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
@@ -98,6 +99,16 @@ public class SourceBatchInstance implements INodeInstance {
    */
   private Set<String> outputEdges;
 
+  /**
+   * The low watermark for queued messages
+   */
+  private int lowWaterMark;
+
+  /**
+   * The high water mark for messages
+   */
+  private int highWaterMark;
+
   public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue,
                              Config config, String tName, int tId, int tIndex, int parallel,
                              int wId, Map<String, Object> cfgs, Set<String> outEdges) {
@@ -111,6 +122,8 @@ public class SourceBatchInstance implements INodeInstance {
     this.nodeConfigs = cfgs;
     this.workerId = wId;
     this.outputEdges = outEdges;
+    this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
+    this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
   }
 
   public void prepare() {
@@ -132,7 +145,8 @@ public class SourceBatchInstance implements INodeInstance {
 
     if (batchTask != null) {
       // if we are in executing state we can run
-      if (state.isSet(InstanceState.EXECUTING) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
+      if (state.isSet(InstanceState.EXECUTING) && state.isNotSet(InstanceState.EXECUTION_DONE)
+          && outBatchQueue.size() < lowWaterMark) {
         batchTask.execute();
       }
 

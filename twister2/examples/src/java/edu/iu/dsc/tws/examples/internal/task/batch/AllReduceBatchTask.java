@@ -30,54 +30,58 @@ import java.util.List;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.comms.api.Op;
+import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 
-public class AllReduceBatchTask implements IWorker {
+public class AllReduceBatchTask extends TaskWorker {
   @Override
-  public void execute(Config config, int workerID, AllocatedResources resources,
-                      IWorkerController workerController,
-                      IPersistentVolume persistentVolume,
-                      IVolatileVolume volatileVolume) {
+  public void execute() {
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
-    OperationMode operationMode = OperationMode.BATCH;
-    GraphBuilder builder = GraphBuilder.newBuilder();
-    builder.addSource("source", g);
-    builder.setParallelism("source", 4);
-    builder.addSink("sink", r);
-    builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "all-reduce-edge",
-        OperationNames.ALLREDUCE);
-    builder.operationMode(operationMode);
-    DataFlowTaskGraph graph = builder.build();
-    TaskUtils.executeBatch(config, resources, graph, workerController);
+
+    TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
+    graphBuilder.addSource("source", g, 4);
+    ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
+    computeConnection.allreduce("source", "reduce-edge",
+        Op.SUM, DataType.INTEGER);
+    graphBuilder.setMode(OperationMode.BATCH);
+
+    DataFlowTaskGraph graph = graphBuilder.build();
+    ExecutionPlan plan = taskExecutor.plan(graph);
+    taskExecutor.execute(graph, plan);
   }
 
   private static class GeneratorTask extends BaseBatchSource {
     private static final long serialVersionUID = -254264903510284748L;
-
+    private int count = 0;
     @Override
     public void execute() {
-      context.write("all-reduce-edge", "Hello");
+      if (count == 999) {
+        if (context.writeEnd("all-reduce-edge", "Hello")) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (context.write("all-reduce-edge", "Hello")) {
+          count++;
+        }
+      }
     }
   }
 
