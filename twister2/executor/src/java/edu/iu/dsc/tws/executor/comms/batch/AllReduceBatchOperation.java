@@ -21,48 +21,54 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowAllReduce;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.batch.BAllReduce;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
+import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class AllReduceBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(AllReduceBatchOperation.class.getName());
 
-  protected DataFlowAllReduce op;
+  protected BAllReduce op;
 
-  public AllReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan) {
+  public AllReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+                                 Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
+                                 DataType dataType, String edgeName, IFunction fnc) {
     super(config, network, tPlan);
-  }
-
-  public void prepare(Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
     this.edgeGenerator = e;
-    op = new DataFlowAllReduce(channel.getChannel(), sources, dest, 0, new IndentityFunction(),
-        new FinalReduceReceive(), 0, 0, true);
+    op = new BAllReduce(channel, taskPlan, sources, dest,
+        new ReduceFnImpl(fnc),
+        new FinalReduceReceiver(), Utils.dataTypeToMessageType(dataType));
     communicationEdge = e.generate(edgeName);
-    op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    return op.send(source, message.getContent(), flags);
+    //LOG.log(Level.INFO, String.format("Message %s", message.getContent()));
+    return op.reduce(source, message.getContent(), flags);
+  }
+
+  @Override
+  public void finish(int source) {
+    op.finish(source);
   }
 
   @Override
   public boolean progress() {
-    return op.progress() && hasPending();
+    return op.progress() || op.hasPending();
   }
 
-  public boolean hasPending() {
-    return !op.isComplete();
-  }
+  public static class ReduceFnImpl implements ReduceFunction {
+    private IFunction fn;
 
-  public static class IndentityFunction implements ReduceFunction {
+    public ReduceFnImpl(IFunction fn) {
+      this.fn = fn;
+    }
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -70,13 +76,15 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
 
     @Override
     public Object reduce(Object t1, Object t2) {
-      return t1;
+      return fn.onMessage(t1, t2);
     }
   }
 
-  public class FinalReduceReceive implements ReduceReceiver {
+
+  public class FinalReduceReceiver implements ReduceReceiver {
     private int count = 0;
 
+    @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
     }
@@ -85,8 +93,7 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
     public boolean receive(int target, Object object) {
       TaskMessage msg = new TaskMessage(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
-      outMessages.get(target).offer(msg);
-      return true;
+      return outMessages.get(target).offer(msg);
     }
   }
 }

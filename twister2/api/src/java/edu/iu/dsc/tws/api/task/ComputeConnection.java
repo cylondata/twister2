@@ -177,6 +177,22 @@ public class ComputeConnection {
     return this;
   }
 
+  public ComputeConnection allreduce(String parent, String name,
+                                     IFunction function, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.ALLREDUCE, dataType, function);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  public ComputeConnection allreduce(String parent, String name,
+                                     Op op, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.ALLREDUCE, dataType, new ReduceFn(op, dataType));
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
   public ComputeConnection allgather(String parent) {
     Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.ALLGATHER);
     inputs.put(parent, edge);

@@ -92,8 +92,8 @@ public class BAllReduceExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-        workerId, reduceDone, sourcesDone, reduce.hasPending()));
+//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
+//        workerId, reduceDone, sourcesDone, reduce.hasPending()));
     return reduceDone && sourcesDone && !reduce.hasPending();
   }
 
@@ -104,12 +104,8 @@ public class BAllReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
-      LOG.info("Final Output ==> ");
       if (object instanceof int[]) {
         int[] data = (int[]) object;
-        LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
-            Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
-        LOG.log(Level.INFO, String.format("%d Received final input", workerId));
         reduceDone = true;
         String output = String.format("%s", Arrays.toString(data));
         LOG.info("Final Output : " + output);
