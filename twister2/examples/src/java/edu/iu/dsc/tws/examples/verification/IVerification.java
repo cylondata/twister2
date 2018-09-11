@@ -9,21 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.core;
+package edu.iu.dsc.tws.examples.verification;
 
-public final class OperationNames {
-
-  private OperationNames() {
-  }
-
-  public static final String REDUCE = "reduce";
-  public static final String GATHER = "gather";
-  public static final String PARTITION = "partition";
-  public static final String ALLGATHER = "allgather";
-  public static final String ALLREDUCE = "allreduce";
-  public static final String BROADCAST = "broadcast";
-  public static final String KEYED_PARTITION = "keyed_partition";
-  public static final String KEYED_REDUCE = "keyed_reduce";
-
+public interface IVerification {
+  boolean isVerified() throws VerificationException;
 }
-
