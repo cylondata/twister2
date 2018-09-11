@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -75,8 +74,6 @@ public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
       Map<Integer, Queue<Object>> messagesForTarget = messages.get(target);
       Map<Integer, Boolean> finishedForTarget = finished.get(target);
       Map<Integer, Integer> countMap = counts.get(target);
-      Map<Integer, Integer> totalCountMap = totalCounts.get(target);
-      Set<Integer> emptyMessages = emptyReceivedSources.get(target);
 
       boolean found = true;
 
@@ -97,6 +94,7 @@ public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
       // if we have queues with 0 and more than zero we need further communicationProgress
       if (!found && moreThanOne) {
         needsFurtherProgress = true;
+
       }
 
       if (found) {
@@ -115,7 +113,24 @@ public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
         }
         finalMessages.get(target).addAll(out);
       } else {
-        allFinished = false;
+        if (allFinished && dataFlowOperation.isDelegeteComplete()) {
+          List<Object> out = new ArrayList<>();
+          for (Map.Entry<Integer, Queue<Object>> e : messagesForTarget.entrySet()) {
+            Queue<Object> valueList = e.getValue();
+            while (valueList.size() > 0) {
+              Object value = valueList.poll();
+              out.add(value);
+              allFinished = false;
+            }
+          }
+          for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
+            Integer i = e.getValue();
+            e.setValue(i - 1);
+          }
+          finalMessages.get(target).addAll(out);
+        } else {
+          allFinished = false;
+        }
       }
 
       if (!dataFlowOperation.isDelegeteComplete()) {
