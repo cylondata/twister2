@@ -16,15 +16,15 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.KeyedReduceFunction;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 
 /**
  * Provides support for keyed reduce operations
  */
-public class KeyedReduceOperationFunction implements KeyedReduceFunction {
+public class KeyedReduceOperationFunction implements ReduceFunction {
 
   private MessageType messageType;
   private Op operation;

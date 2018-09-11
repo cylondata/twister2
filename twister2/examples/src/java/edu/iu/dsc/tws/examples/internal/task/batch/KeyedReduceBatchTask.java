@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task.batch;
 
 import java.util.ArrayList;
@@ -38,11 +26,13 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.examples.internal.task.streaming.KeyedReduceStreamingTask;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
@@ -70,7 +60,12 @@ public class KeyedReduceBatchTask implements IWorker {
     builder.addSink("sink", r);
     builder.setParallelism("sink", 1);
     builder.connect("source", "sink", "keyed-reduce-edge",
-        OperationNames.KEYED_REDUCE);
+        OperationNames.KEYED_REDUCE, new IFunction() {
+          @Override
+          public Object onMessage(Object object1, Object object2) {
+            return object1;
+          }
+        }, DataType.OBJECT, DataType.INTEGER);
     builder.operationMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
@@ -80,9 +75,20 @@ public class KeyedReduceBatchTask implements IWorker {
   private static class GeneratorTask extends BaseBatchSource {
     private static final long serialVersionUID = -254264903510284748L;
 
+    private int count = 0;
+
     @Override
     public void execute() {
-      context.write("keyed-reduce-edge", "Hello");
+      int[] val = {1};
+      if (count == 999) {
+        if (context.writeEnd("keyed-reduce-edge", "" + count, val)) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (context.write("keyed-reduce-edge", "" + count, val)) {
+          count++;
+        }
+      }
     }
   }
 
@@ -92,10 +98,8 @@ public class KeyedReduceBatchTask implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 1000000 == 0) {
-        System.out.println("Message Keyed-Reduced : " + message.getContent()
-            + ", Count : " + count);
-      }
+      LOG.info("Message Keyed-Reduced : " + message.getContent()
+          + ", Count : " + count);
       count++;
       return true;
     }
