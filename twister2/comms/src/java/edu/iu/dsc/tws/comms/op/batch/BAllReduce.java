@@ -26,7 +26,18 @@ public class BAllReduce {
   public BAllReduce(Communicator comm, TaskPlan plan,
                     Set<Integer> sources, Set<Integer> destination, ReduceFunction fnc,
                     ReduceReceiver rcvr, MessageType dataType) {
-    int middleTask = 0;
+    if (sources.size() == 0) {
+      throw new IllegalArgumentException("The sources cannot be empty");
+    }
+
+    if (destination.size() == 0) {
+      throw new IllegalArgumentException("The destination cannot be empty");
+    }
+
+    int middleTask = comm.nextId();
+    int firstSource = sources.iterator().next();
+    plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
+
     reduce = new DataFlowAllReduce(comm.getChannel(), sources, destination, middleTask, fnc,
         rcvr, comm.nextEdge(), comm.nextEdge(), false);
     reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
