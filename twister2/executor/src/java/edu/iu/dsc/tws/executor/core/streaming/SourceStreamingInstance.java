@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
@@ -94,6 +95,7 @@ public class SourceStreamingInstance implements INodeInstance {
    */
   private int workerId;
 
+  private int i = 0;
 
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
                                  Config config, String tName, int tId, int tIndex, int parallel,
@@ -124,16 +126,26 @@ public class SourceStreamingInstance implements INodeInstance {
     streamingTask.execute();
     // now check the output queue
     while (!outStreamingQueue.isEmpty()) {
+      i++;
       IMessage message = outStreamingQueue.peek();
       if (message != null) {
         String edge = message.edge();
         IParallelOperation op = outStreamingParOps.get(edge);
         // if we successfully send remove message
-        if (op.send(streamingTaskId, message, 0)) {
-          outStreamingQueue.poll();
+        if (i % 100 == 0) {
+          if (op.send(streamingTaskId, message, MessageFlags.BARRIER)) {
+            outStreamingQueue.poll();
+          } else {
+            // we need to break
+            break;
+          }
         } else {
-          // we need to break
-          break;
+          if (op.send(streamingTaskId, message, 0)) {
+            outStreamingQueue.poll();
+          } else {
+            // we need to break
+            break;
+          }
         }
       }
     }
