@@ -74,10 +74,18 @@ public class AllReduceBatchTask implements IWorker {
 
   private static class GeneratorTask extends BaseBatchSource {
     private static final long serialVersionUID = -254264903510284748L;
-
+    private int count = 0;
     @Override
     public void execute() {
-      context.write("all-reduce-edge", "Hello");
+      if (count == 999) {
+        if (context.writeEnd("all-reduce-edge", "Hello")) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (context.write("all-reduce-edge", "Hello")) {
+          count++;
+        }
+      }
     }
   }
 
