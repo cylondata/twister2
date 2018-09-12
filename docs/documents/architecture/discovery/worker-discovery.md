@@ -72,5 +72,5 @@ to discover other workers in a Twister2 job.
 The worker discoverer class is: 
 * [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerController](../../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerController.java)
 
-Details of the implementation is provided in [the document](../kubernetes/k8s-based-worker-discovery.md). 
+Details of the implementation is provided in [the document](../resource-schedulers/kubernetes/k8s-based-worker-discovery.md). 
 
