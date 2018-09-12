@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -164,12 +165,12 @@ public class HDFSTaskExample implements IWorker {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void execute() {
+    public void prepare(Config cfg, TaskContext ctx) {
+      this.context = ctx;
+      this.config = cfg;
 
       Map<String, Object> configs = context.getConfigurations();
-
       for (Map.Entry<String, Object> entry : configs.entrySet()) {
-
         if (entry.getKey().contains("inputdataset")) {
           List<String> inputFiles = (List<String>) entry.getValue();
           if (inputFiles.size() == 1) {
@@ -180,28 +181,24 @@ public class HDFSTaskExample implements IWorker {
             }
           }
         }
-
-        if (entry.getKey().contains("outputdataset")) {
-          List<String> outputFiles = (List<String>) entry.getValue();
-          if (outputFiles.size() == 1) {
-            this.outputFileName = outputFiles.get(0);
-          } else {
-            for (int i = 0; i < outputFiles.size(); i++) {
-              this.outputFileName = outputFiles.get(i);
-            }
-          }
-        }
       }
+    }
 
-      HDFSReaderWriter hdfsReaderWriter;
-
-      hdfsReaderWriter = new HDFSReaderWriter(config, inputFileName);
-      hdfsReaderWriter.readInputFromHDFS();
+    @SuppressWarnings("unchecked")
+    @Override
+    public void execute() {
+      if (count == 0) {
+        HDFSReaderWriter hdfsReaderWriter = new HDFSReaderWriter(config, inputFileName);
+        hdfsReaderWriter.readInputFromHDFS();
+      }
 
       boolean wrote = context.write("partition-edge", "Hello");
       if (wrote) {
-        LOG.info(String.format("%d %d Message Partition sent count : %d", context.getWorkerId(),
-                context.taskId(), 1));
+        count++;
+        if (count % 100 == 0) {
+          LOG.info(String.format("%d %d Message Partition sent count : %d", context.getWorkerId(),
+                  context.taskId(), count));
+        }
       }
     }
   }
@@ -214,7 +211,9 @@ public class HDFSTaskExample implements IWorker {
 
     @SuppressWarnings("unchecked")
     @Override
-    public boolean execute(IMessage message) {
+    public void prepare(Config cfg, TaskContext ctx) {
+      this.context = ctx;
+      this.config = cfg;
 
       Map<String, Object> configs = context.getConfigurations();
       for (Map.Entry<String, Object> entry : configs.entrySet()) {
@@ -230,8 +229,16 @@ public class HDFSTaskExample implements IWorker {
         }
       }
 
-      HDFSReaderWriter hdfsReaderWriter = new HDFSReaderWriter(config, outputFileName);
-      hdfsReaderWriter.writeOutputToHDFS();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean execute(IMessage message) {
+
+      if (count == 0) {
+        HDFSReaderWriter hdfsReaderWriter = new HDFSReaderWriter(config, outputFileName);
+        hdfsReaderWriter.writeOutputToHDFS();
+      }
 
       if (message.getContent() instanceof List) {
         count += ((List) message.getContent()).size();
