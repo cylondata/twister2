@@ -32,22 +32,21 @@ public class HDFSReaderWriter {
   private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
   private HdfsUtils hdfsUtils;
-
   private Config config;
   private String fileName;
 
   protected HDFSReaderWriter(Config cfg, String fName) {
     this.config = cfg;
     this.fileName = fName;
+    hdfsUtils = new HdfsUtils(config, fileName);
   }
 
   public void readInputFromHDFS() {
 
-    hdfsUtils = new HdfsUtils(config, fileName);
     HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
     Path path = hdfsUtils.getPath();
-
     BufferedReader br = null;
+
     try {
       if (hadoopFileSystem.exists(path)) {
         br = new BufferedReader(new InputStreamReader(hadoopFileSystem.open(path)));
@@ -65,22 +64,17 @@ public class HDFSReaderWriter {
   }
 
   public void writeOutputToHDFS() {
-    hdfsUtils = new HdfsUtils(config, fileName);
+
     HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
     Path path = hdfsUtils.getPath();
     HadoopDataOutputStream hadoopDataOutputStream = null;
+
     try {
       if (!hadoopFileSystem.exists(path)) {
         hadoopDataOutputStream = hadoopFileSystem.create(path);
         for (int i = 0; i < 20; i++) {
           hadoopDataOutputStream.write(
-                  "Hello, I am writing to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
-        }
-      } else {
-        hadoopDataOutputStream = hadoopFileSystem.append(path);
-        for (int i = 0; i < 20; i++) {
-          hadoopDataOutputStream.write(
-                  "Hello, I am writing to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
+                  "Hello, writing to Data Output Stream\n".getBytes(DEFAULT_CHARSET));
         }
       }
     } catch (IOException ioe) {
