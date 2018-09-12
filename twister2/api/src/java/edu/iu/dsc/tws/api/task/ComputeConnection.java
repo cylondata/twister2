@@ -28,7 +28,7 @@ public class ComputeConnection {
 
   private Map<String, Edge> inputs = new HashMap<>();
 
-  public ComputeConnection(String nodeName) {
+  ComputeConnection(String nodeName) {
     this.nodeName = nodeName;
   }
 
@@ -87,6 +87,14 @@ public class ComputeConnection {
   public ComputeConnection reduce(String parent, String name,
                                   IFunction function, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.REDUCE, dataType, function);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  public ComputeConnection keyedReduce(String parent, String name,
+                                  IFunction function, DataType keyTpe, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe, function);
     inputs.put(parent, edge);
 
     return this;

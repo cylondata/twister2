@@ -58,6 +58,7 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
    */
   @Override
   public Object build(Object partialObject, int edge) {
+    LOG.info("*****************************************************************");
     ChannelMessage currentMessage = (ChannelMessage) partialObject;
     int readLength = 0;
     int bufferIndex = 0;
