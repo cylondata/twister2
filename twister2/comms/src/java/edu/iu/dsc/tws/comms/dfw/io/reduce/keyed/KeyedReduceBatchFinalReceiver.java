@@ -32,20 +32,20 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.KeyedReduceFunction;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchReceiver;
 
 public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(KeyedReduceBatchFinalReceiver.class.getName());
 
-  private KeyedReduceFunction reduceFunction;
+  private ReduceFunction reduceFunction;
 
   private ReduceReceiver reduceReceiver;
 
   private Map<Integer, List<Object>> finalMessages = new HashMap<>();
 
-  public KeyedReduceBatchFinalReceiver(KeyedReduceFunction reduce, ReduceReceiver receiver) {
+  public KeyedReduceBatchFinalReceiver(ReduceFunction reduce, ReduceReceiver receiver) {
     super(reduce);
     this.reduceFunction = reduce;
     this.reduceReceiver = receiver;

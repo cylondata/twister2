@@ -11,12 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.hdfs;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,22 +31,18 @@ import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.hdfs.HadoopDataOutputStream;
-import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
-import edu.iu.dsc.tws.data.utils.HdfsUtils;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -61,10 +51,6 @@ import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 public class HDFSTaskExample implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(HDFSTaskExample.class.getName());
-
-  private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
-
-  private static HdfsUtils hdfsConnector;
 
   public static void main(String[] args) {
 
@@ -96,37 +82,41 @@ public class HDFSTaskExample implements IWorker {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    TaskMapper taskMapper = new TaskMapper();
-    TaskReducer taskReducer = new TaskReducer();
+    GeneratorTask g = new GeneratorTask();
+    ReceivingTask r = new ReceivingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
-    builder.addTask("task1", taskMapper);
-    builder.addTask("task2", taskReducer);
 
-    builder.setParallelism("task1", 2);
-    builder.setParallelism("task2", 2);
+    builder.addSource("source", g);
+    builder.setParallelism("source", 2);
+
+    builder.addSink("sink", r);
+    builder.setParallelism("sink", 2);
+
+    builder.connect("source", "sink", "partition-edge",
+            OperationNames.PARTITION);
+    builder.operationMode(OperationMode.STREAMING);
 
     List<String> inputList = new ArrayList<>();
     inputList.add("dataset1.txt");
 
-    builder.addConfiguration("task1", "inputdataset", inputList);
-    builder.addConfiguration("task2", "inputdataset", inputList);
+    builder.addConfiguration("source", "inputdataset", inputList);
+    builder.addConfiguration("sink", "inputdataset", inputList);
 
     List<String> outputList = new ArrayList<>();
     outputList.add("datasetout.txt");
 
-    builder.addConfiguration("task1", "outputdataset", outputList);
-    builder.addConfiguration("task2", "outputdataset", outputList);
-
-    builder.connect("task1", "task2", OperationNames.PARTITION);
-    builder.operationMode(OperationMode.STREAMING);
+    builder.addConfiguration("source", "outputdataset", outputList);
+    builder.addConfiguration("sink", "outputdataset", outputList);
 
     WorkerPlan workerPlan = createWorkerPlan(resources);
     DataFlowTaskGraph graph = builder.build();
 
+    TaskSchedulePlan taskSchedulePlan;
+
     TaskScheduler taskScheduler = new TaskScheduler();
     taskScheduler.initialize(config);
-    TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
+    taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
     //Just to print the task schedule plan...
     if (workerID == 0) {
@@ -153,7 +143,7 @@ public class HDFSTaskExample implements IWorker {
             new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network);
-    //executor.execute();
+    executor.execute();
   }
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
@@ -165,24 +155,21 @@ public class HDFSTaskExample implements IWorker {
     return new WorkerPlan(workers);
   }
 
+  private static class GeneratorTask extends BaseStreamSource {
 
-  private static class TaskMapper implements ICompute {
-    private static final long serialVersionUID = 3233011943332591934L;
-    public String taskName;
-    private TaskContext ctx;
-    private Config config;
+    private static final long serialVersionUID = -254264903510284748L;
+    private int count = 0;
     private String inputFileName;
     private String outputFileName;
 
     @SuppressWarnings("unchecked")
     @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-      this.config = cfg;
+    public void execute() {
 
-      Map<String, Object> configs = ctx.getConfigurations();
+      Map<String, Object> configs = context.getConfigurations();
 
       for (Map.Entry<String, Object> entry : configs.entrySet()) {
+
         if (entry.getKey().contains("inputdataset")) {
           List<String> inputFiles = (List<String>) entry.getValue();
           if (inputFiles.size() == 1) {
@@ -205,85 +192,54 @@ public class HDFSTaskExample implements IWorker {
           }
         }
       }
-    }
 
-    @Override
-    public boolean execute(IMessage content) {
-      hdfsConnector = new HdfsUtils(config, inputFileName);
-      HadoopFileSystem hadoopFileSystem = hdfsConnector.createHDFSFileSystem();
-      Path path = hdfsConnector.getPath();
+      HDFSReaderWriter hdfsReaderWriter;
 
-      //Reading Input Files
-      BufferedReader br = null;
-      try {
-        if (!hadoopFileSystem.exists(path)) {
-          br = new BufferedReader(new InputStreamReader(hadoopFileSystem.open(path)));
-          while (br.readLine() != null) {
-            br.read();
-          }
-        } else {
-          throw new FileNotFoundException("File Not Found In HDFS");
-        }
-      } catch (IOException e) {
-        e.printStackTrace();
-      } finally {
-        try {
-          br.close();
-          hadoopFileSystem.close();
-        } catch (IOException ioe) {
-          ioe.printStackTrace();
-        }
+      hdfsReaderWriter = new HDFSReaderWriter(config, inputFileName);
+      hdfsReaderWriter.readInputFromHDFS();
+
+      boolean wrote = context.write("partition-edge", "Hello");
+      if (wrote) {
+        LOG.info(String.format("%d %d Message Partition sent count : %d", context.getWorkerId(),
+                context.taskId(), 1));
       }
-
-      //Writing to Output Files
-      hdfsConnector = new HdfsUtils(config, outputFileName);
-      HadoopFileSystem hadoopfileSystem = hdfsConnector.createHDFSFileSystem();
-      path = hdfsConnector.getPath();
-      HadoopDataOutputStream hadoopDataOutputStream;
-      try {
-        if (!hadoopfileSystem.exists(path)) {
-          hadoopDataOutputStream = hadoopFileSystem.create(path);
-          for (int i = 0; i < 10; i++) {
-            hadoopDataOutputStream.write(
-                    "Hello, I am writing to Hadoop Data Output Stream\n".getBytes(DEFAULT_CHARSET));
-          }
-        }
-      } catch (IOException ioe) {
-        ioe.printStackTrace();
-      }
-
-      return true;
     }
   }
 
+  private static class ReceivingTask extends BaseStreamSink {
 
-  private static class TaskReducer implements ICompute {
-    private static final long serialVersionUID = 3233011943332591934L;
-    private TaskContext ctx;
-    private String outputFile;
-    private Config config;
-    private String taskName;
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+    private String outputFileName;
 
     @SuppressWarnings("unchecked")
     @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-      this.config = cfg;
+    public boolean execute(IMessage message) {
 
-      Map<String, Object> configs = ctx.getConfigurations();
+      Map<String, Object> configs = context.getConfigurations();
       for (Map.Entry<String, Object> entry : configs.entrySet()) {
         if (entry.getKey().contains("outputdataset")) {
           List<String> outputFiles = (List<String>) entry.getValue();
-          for (int i = 0; i < outputFiles.size(); i++) {
-            this.outputFile = outputFiles.get(i);
+          if (outputFiles.size() == 1) {
+            this.outputFileName = outputFiles.get(0);
+          } else {
+            for (int i = 0; i < outputFiles.size(); i++) {
+              this.outputFileName = outputFiles.get(i);
+            }
           }
         }
       }
-    }
 
-    @Override
-    public boolean execute(IMessage content) {
+      HDFSReaderWriter hdfsReaderWriter = new HDFSReaderWriter(config, outputFileName);
+      hdfsReaderWriter.writeOutputToHDFS();
+
+      if (message.getContent() instanceof List) {
+        count += ((List) message.getContent()).size();
+      }
+      LOG.info(String.format("%d %d Message Partition Received count: %d", context.getWorkerId(),
+              context.taskId(), count));
       return true;
     }
   }
 }
+

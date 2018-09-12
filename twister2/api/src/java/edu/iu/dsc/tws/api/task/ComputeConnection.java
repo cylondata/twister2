@@ -92,6 +92,14 @@ public class ComputeConnection {
     return this;
   }
 
+  public ComputeConnection keyedReduce(String parent, String name,
+                                  IFunction function, DataType keyTpe, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.REDUCE, dataType, function);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
 
   public ComputeConnection gather(String parent) {
     Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.GATHER);

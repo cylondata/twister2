@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.batch;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +28,9 @@ import edu.iu.dsc.tws.comms.op.batch.BReduce;
 import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class BReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BReduceExample.class.getName());
@@ -104,19 +106,30 @@ public class BReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
-
-
-      LOG.info("Final Output ==> ");
-      if (object instanceof int[]) {
-        int[] data = (int[]) object;
-        LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
-            Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
-        LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-        reduceDone = true;
-        String output = String.format("%s", Arrays.toString(data));
-        LOG.info("Final Output : " + output);
+      experimentData.setOutput(object);
+      reduceDone = true;
+      try {
+        verify();
+      } catch (VerificationException e) {
+        e.printStackTrace();
       }
       return true;
+    }
+  }
+
+  public void verify() throws VerificationException {
+    boolean doVerify = jobParameters.isDoVerify();
+    boolean isVerified = false;
+    if (doVerify) {
+      LOG.info("Verifying results ...");
+      ExperimentVerification experimentVerification
+          = new ExperimentVerification(experimentData, OperationNames.REDUCE);
+      isVerified = experimentVerification.isVerified();
+      if (isVerified) {
+        LOG.info("Results generated from the experiment are verified.");
+      } else {
+        throw new VerificationException("Results do not match");
+      }
     }
   }
 

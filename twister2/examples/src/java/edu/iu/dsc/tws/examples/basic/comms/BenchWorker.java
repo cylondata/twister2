@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.verification.ExperimentData;
 
 public abstract class BenchWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(BenchWorker.class.getName());
@@ -58,6 +59,9 @@ public abstract class BenchWorker implements IWorker {
 
   protected List<WorkerNetworkInfo> workerList = null;
 
+  protected ExperimentData experimentData;
+
+
   @Override
   public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
@@ -75,6 +79,8 @@ public abstract class BenchWorker implements IWorker {
     channel = Network.initializeChannel(config, workerController, resourcePlan);
     // create the communicator
     communicator = new Communicator(cfg, channel);
+    //collect experiment data
+    experimentData = new ExperimentData();
     // now lets execute
     execute();
     // now communicationProgress
@@ -115,6 +121,8 @@ public abstract class BenchWorker implements IWorker {
     public void run() {
       LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
       int[] data = DataGenerator.generateIntData(jobParameters.getSize());
+      experimentData.setInput(data);
+      experimentData.setTaskStages(jobParameters.getTaskStages());
 //      int[] data = {1, 0, 2};
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
