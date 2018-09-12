@@ -52,7 +52,7 @@ public class KeyedReduceOperationFunction implements ReduceFunction {
   public Object reduce(Object t1, Object t2) {
     if (!(t1 instanceof KeyedContent) || !(t2 instanceof KeyedContent)) {
       throw new IllegalArgumentException("The keyed operation function"
-          + " requires KeyedContent objects");
+          + " requires KeyedContent objects " + t1 + " " + t2);
     }
 
     KeyedContent keyedContent1 = (KeyedContent) t1;
