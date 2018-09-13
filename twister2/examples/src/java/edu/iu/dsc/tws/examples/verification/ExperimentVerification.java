@@ -28,7 +28,6 @@ public class ExperimentVerification implements IVerification {
 
   private ExperimentData experimentData;
   private String operationNames;
-  protected Map<Integer, Boolean> comparedStages = new ConcurrentHashMap<>();
 
   public ExperimentVerification(ExperimentData experimentData, String operationNames) {
     this.experimentData = experimentData;
@@ -63,7 +62,7 @@ public class ExperimentVerification implements IVerification {
     }
 
     if (OperationNames.ALLREDUCE.equals(this.operationNames)) {
-      List<Boolean> responses = new ArrayList<>();
+
       if (experimentData.getInput() instanceof int[]
           && experimentData.getOutput() instanceof int[]) {
         int sourceCount = experimentData.getTaskStages().get(0);
@@ -84,13 +83,6 @@ public class ExperimentVerification implements IVerification {
               .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
           String outString = Arrays.toString(output);
           isVerified = resString.equals(outString);
-          responses.add(isVerified);
-
-        }
-        if (responses.size() == sinkCount) {
-          LOG.info("Went with all workers");
-        } else {
-
         }
       }
     }

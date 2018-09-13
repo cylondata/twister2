@@ -112,7 +112,9 @@ public class BAllReduceExample extends BenchWorker {
       experimentData.setNumOfWorkers(jobParameters.getContainers());
 
       try {
-        verify();
+        if(workerId==0){
+          verify();
+        }
       } catch (VerificationException e) {
         e.printStackTrace();
       }
