@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -69,8 +70,10 @@ public class BKeyedGather {
     this.destinationSelector.prepare(sources, destinations);
   }
 
-  public boolean gather(int source, Object message, int flags) {
-    return keyedGather.send(source, message, flags);
+  public boolean gather(int source, Object key, Object data, int flags) {
+    int dest = destinationSelector.next(source, key);
+    return keyedGather.send(source, new KeyedContent(key, data, keyType,
+        dataType), flags, dest);
   }
 
   public boolean hasPending() {

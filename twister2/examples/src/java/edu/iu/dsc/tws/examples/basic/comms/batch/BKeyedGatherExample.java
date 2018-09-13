@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.batch;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -19,6 +18,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BatchReceiver;
@@ -33,7 +34,7 @@ import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
 public class BKeyedGatherExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(BKeyedGatherExample.class.getName());
 
-  private BKeyedGather gather;
+  private BKeyedGather keyedGather;
 
   private boolean gatherDone;
 
@@ -54,7 +55,7 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
       targets.add(noOfSourceTasks + i);
     }
     // create the communication
-    gather = new BKeyedGather(communicator, taskPlan, sources, targets,
+    keyedGather = new BKeyedGather(communicator, taskPlan, sources, targets,
         MessageType.INTEGER, MessageType.INTEGER, new FinalReduceReceiver(),
         new SimpleKeyBasedSelector());
 
@@ -87,24 +88,28 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected void progressCommunication() {
-    gather.progress();
+    keyedGather.progress();
   }
 
   @Override
   protected boolean isDone() {
 //    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-//        workerId, gatherDone, sourcesDone, gather.hasPending()));
-    return gatherDone && sourcesDone && !gather.hasPending();
+//        workerId, gatherDone, sourcesDone, keyedGather.hasPending()));
+    return gatherDone && sourcesDone && !keyedGather.hasPending();
   }
 
   @Override
   protected boolean sendMessages(int task, Object key, Object data, int flag) {
-    return false;
+    while (!keyedGather.gather(task, key, data, flag)) {
+      // lets wait a litte and try again
+      keyedGather.progress();
+    }
+    return true;
   }
 
   @Override
   protected void finishCommunication(int src) {
-    gather.finish(src);
+    keyedGather.finish(src);
   }
 
   public class FinalReduceReceiver implements BatchReceiver {
@@ -115,20 +120,23 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
     @Override
     public void receive(int target, Iterator<Object> it) {
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-      LOG.info("Final Output ==> ");
-      while (it.hasNext()) {
-        Object object = it.next();
-        if (object instanceof int[]) {
-          int[] data = (int[]) object;
-//          LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
-//              Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
-//          LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-          String output = String.format("%s", Arrays.toString(data));
-          LOG.info("Final Output : " + output);
-        } else {
-          LOG.info("Object Type : " + object.getClass().getName());
-        }
-      }
+
+      LOG.info("Final Output Length : " + Iterators.size(it));
+
+//      while (it.hasNext()) {
+//        Object object = it.next();
+//        KeyedContent keyedContent = (KeyedContent) object;
+//        if (keyedContent.getValue() instanceof int[]) {
+//          int[] data = (int[]) keyedContent.getValue();
+////          LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
+////              Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
+////          LOG.log(Level.INFO, String.format("%d Received final input", workerId));
+//          String output = String.format("%s", Arrays.toString(data));
+//          LOG.info("Final Output : " + output);
+//        } else {
+//          LOG.info("Object Type : " + object.getClass().getName());
+//        }
+//      }
       gatherDone = true;
     }
   }

@@ -40,7 +40,8 @@ import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 
 public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(KeyedGatherBatchPartialReceiver.class.getName());
+  private static final Logger LOG = Logger.getLogger(
+      KeyedGatherBatchPartialReceiver.class.getName());
 
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages

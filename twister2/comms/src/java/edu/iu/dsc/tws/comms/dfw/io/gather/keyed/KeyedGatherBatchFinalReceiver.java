@@ -188,7 +188,11 @@ public class KeyedGatherBatchFinalReceiver implements MessageReceiver {
 //        }
           finalMessages.get(t).addAll(out);
         } else {
-          allFinished = false;
+          if(allFinished && dataFlowOperation.isDelegeteComplete()){
+
+          }else{
+            allFinished = false;
+          }
         }
       } else {
 
