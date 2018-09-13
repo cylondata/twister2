@@ -125,12 +125,6 @@ public abstract class KeyedReduceBatchReceiver implements MessageReceiver {
       throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
     }
 
-    if (!(object instanceof KeyedContent)) {
-      if ((flags & MessageFlags.EMPTY) != MessageFlags.EMPTY) {
-        throw new RuntimeException("Not keyed content: " + object);
-      }
-    }
-
     Map<Integer, Boolean> finishedMessages = finished.get(target);
 
     if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {

@@ -98,17 +98,24 @@ public class DataFlowMultiReduce implements DataFlowOperation {
 
   @Override
   public synchronized boolean progress() {
+    boolean needsFurther = false;
     try {
       for (DataFlowReduce reduce : reduceMap.values()) {
-        reduce.progress();
+        if (reduce.progress()) {
+          needsFurther = true;
+        }
       }
-      finalReceiver.progress();
-      partialReceiver.progress();
+      if (finalReceiver.progress()) {
+        needsFurther = true;
+      }
+      if (partialReceiver.progress()) {
+        needsFurther = true;
+      }
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-    return true;
+    return needsFurther;
   }
 
   @Override

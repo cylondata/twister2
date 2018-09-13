@@ -102,7 +102,7 @@ public class BinaryTree {
     }
 
     // lets remove root group from others as we need special treatment here
-    groups.remove(rootGroup);
+    groups.remove(new Integer(rootGroup));
 
     // sort the list
     Collections.sort(groups);
