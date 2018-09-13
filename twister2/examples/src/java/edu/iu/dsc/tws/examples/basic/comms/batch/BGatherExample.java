@@ -97,6 +97,11 @@ public class BGatherExample extends BenchWorker {
     return gatherDone && sourcesDone && !gather.hasPending();
   }
 
+  @Override
+  protected void finishCommunication(int src) {
+    gather.finish(src);
+  }
+
   public class FinalReduceReceiver implements BatchReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -110,9 +115,9 @@ public class BGatherExample extends BenchWorker {
         Object object = it.next();
         if (object instanceof int[]) {
           int[] data = (int[]) object;
-          LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
-              Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
-          LOG.log(Level.INFO, String.format("%d Received final input", workerId));
+//          LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
+//              Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
+//          LOG.log(Level.INFO, String.format("%d Received final input", workerId));
           String output = String.format("%s", Arrays.toString(data));
           LOG.info("Final Output : " + output);
         } else {
