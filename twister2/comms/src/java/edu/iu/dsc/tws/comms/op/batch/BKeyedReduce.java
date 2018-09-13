@@ -40,7 +40,7 @@ public class BKeyedReduce {
 
   public BKeyedReduce(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> destinations, ReduceFunction fnc,
-                      ReduceReceiver rcvr, MessageType dType, MessageType kType,
+                      ReduceReceiver rcvr, MessageType kType, MessageType dType,
                       DestinationSelector destSelector) {
     this.keyType = kType;
     this.dataType = dType;

@@ -25,14 +25,15 @@ import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.batch.BGather;
+import edu.iu.dsc.tws.comms.op.batch.BKeyedGather;
+import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
 
 public class BKeyedGatherExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(BKeyedGatherExample.class.getName());
 
-  private BGather gather;
+  private BKeyedGather gather;
 
   private boolean gatherDone;
 
@@ -47,10 +48,15 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
     for (int i = 0; i < noOfSourceTasks; i++) {
       sources.add(i);
     }
-    int target = noOfSourceTasks;
+    Set<Integer> targets = new HashSet<>();
+    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
+    for (int i = 0; i < noOfTargetTasks; i++) {
+      targets.add(noOfSourceTasks + i);
+    }
     // create the communication
-    gather = new BGather(communicator, taskPlan, sources, target,
-        MessageType.INTEGER, new FinalReduceReceiver());
+    gather = new BKeyedGather(communicator, taskPlan, sources, targets,
+        MessageType.INTEGER, MessageType.INTEGER, new FinalReduceReceiver(),
+        new SimpleKeyBasedSelector());
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -62,12 +68,15 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
       sourcesDone = true;
     }
 
-    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-      gatherDone = true;
+    gatherDone = true;
+    for (int target : targets) {
+      if (taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+        gatherDone = false;
+      }
     }
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
-        workerId, sources, target, tasksOfExecutor));
+        workerId, sources, 1, tasksOfExecutor));
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced

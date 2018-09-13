@@ -45,8 +45,8 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
     super(config, network, tPlan);
     this.edgeGenerator = e;
     op = new BKeyedReduce(channel, taskPlan, sources, dests, new ReduceFunctionImpl(function),
-        new ReduceRecvrImpl(), Utils.dataTypeToMessageType(dataType),
-        Utils.dataTypeToMessageType(keyType), new HashingSelector());
+        new ReduceRecvrImpl(), Utils.dataTypeToMessageType(keyType),
+        Utils.dataTypeToMessageType(dataType), new HashingSelector());
     communicationEdge = e.generate(edgeName);
   }
 
