@@ -54,21 +54,39 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
     taskClient.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
         new TaskClientMessageHandler());
 
+    taskClient.registerResponseHandler(Checkpoint.BarrierSend.newBuilder(),
+        new BarrierClientMessageHandler());
+
+    taskClient.registerResponseHandler(Checkpoint.BarrierSync.newBuilder(),
+        new BarrierClientMessageHandler());
+
     tryUntilConnected(taskClient, taskLooper, 5000);
+
+
     sendTaskDiscoveryMessage();
   }
 
   public void checkForBarrier() {
 
-    barrierLooper = new Progress();
+//    barrierLooper = new Progress();
+//
+//    barrierClient = new RRClient("localhost", 6789, config, barrierLooper,
+//        ctx.taskId(), new BarrierClientConnectHandler());
+//
+//    barrierClient.registerResponseHandler(Checkpoint.BarrierSend.newBuilder(),
+//        new BarrierClientMessageHandler());
+//
+//    barrierClient.registerResponseHandler(Checkpoint.BarrierSync.newBuilder(),
+//        new BarrierClientMessageHandler());
+//
+//    tryUntilConnected(barrierClient, barrierLooper, 5000);
+    Checkpoint.BarrierSync message = Checkpoint.BarrierSync.newBuilder()
+        .setCurrentBarrierID(currentBarrierID)
+        .build();
 
-    barrierClient = new RRClient("localhost", 6789, config, taskLooper,
-        ctx.taskId(), new BarrierClientConnectHandler());
+    taskClient.sendRequest(message);
 
-    barrierClient.registerResponseHandler(Checkpoint.BarrierSend.newBuilder(),
-        new BarrierClientMessageHandler());
 
-    tryUntilConnected(barrierClient, barrierLooper, 5000);
 
   }
 
