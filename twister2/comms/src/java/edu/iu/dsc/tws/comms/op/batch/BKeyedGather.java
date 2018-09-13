@@ -44,7 +44,8 @@ public class BKeyedGather {
       edges.add(comm.nextEdge());
     }
     this.keyedGather = new DataFlowMultiGather(comm.getChannel(), sources, destinations,
-        new GatherMultiBatchFinalReceiver(rcvr), new GatherMultiBatchPartialReceiver(), edges);
+        new GatherMultiBatchFinalReceiver(rcvr), new GatherMultiBatchPartialReceiver(), edges,
+        kType, dType);
     this.keyedGather.init(comm.getConfig(), dType, plan, comm.nextEdge());
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(sources, destinations);
@@ -61,7 +62,8 @@ public class BKeyedGather {
       edges.add(comm.nextEdge());
     }
     this.keyedGather = new DataFlowMultiGather(comm.getChannel(), sources, destinations,
-        new GatherMultiBatchFinalReceiver(rcvr), new GatherMultiBatchPartialReceiver(), edges);
+        new GatherMultiBatchFinalReceiver(rcvr), new GatherMultiBatchPartialReceiver(), edges,
+        kType, dType);
     this.keyedGather.init(comm.getConfig(), dType, plan, comm.nextEdge());
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(sources, destinations);

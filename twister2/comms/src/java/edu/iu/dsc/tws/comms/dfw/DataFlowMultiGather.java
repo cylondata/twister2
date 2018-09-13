@@ -52,22 +52,14 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
   private TaskPlan plan;
 
-  private MessageType type;
+  private MessageType dataType;
 
-  public DataFlowMultiGather(TWSChannel chnl,
-                             Set<Integer> sources, Set<Integer> destination,
-                             MultiMessageReceiver finalRecv, Set<Integer> es) {
-    this.channel = chnl;
-    this.sources = sources;
-    this.destinations = destination;
-    this.finalReceiver = finalRecv;
-    this.edges = es;
-    this.gatherMap = new HashMap<>();
-  }
+  private MessageType keyType;
 
   public DataFlowMultiGather(TWSChannel chnl, Set<Integer> sources, Set<Integer> destination,
                              MultiMessageReceiver finalRecv, MultiMessageReceiver partialRecv,
-                             Set<Integer> es) {
+                             Set<Integer> es, MessageType kType,
+                             MessageType dType) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
@@ -75,6 +67,8 @@ public class DataFlowMultiGather implements DataFlowOperation {
     this.edges = es;
     this.gatherMap = new HashMap<>();
     this.partialReceiver = partialRecv;
+    this.dataType = dType;
+    this.keyType = kType;
   }
 
   @Override
@@ -138,14 +132,10 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
   /**
    * Initialize
-   * @param config
-   * @param t
-   * @param instancePlan
-   * @param edge
    */
-  public void init(Config config, MessageType t, TaskPlan instancePlan, int edge) {
+  public void init(Config config, MessageType dType, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
-    this.type = t;
+    this.dataType = dType;
     this.plan = instancePlan;
 
     Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
@@ -160,13 +150,14 @@ public class DataFlowMultiGather implements DataFlowOperation {
       if (partialReceiver != null) {
         partialRcvr = new GatherPartialReceiver(dest);
         gather = new DataFlowGather(channel, sources, dest,
-            finalRcvr, partialRcvr, count, dest, config, t, instancePlan, edgeList.get(count));
+            finalRcvr, partialRcvr, count, dest, config, instancePlan,
+            true, keyType, dataType, edgeList.get(count));
       } else {
         gather = new DataFlowGather(channel, sources, dest,
-            finalRcvr, count, dest, config, t, instancePlan, edgeList.get(count));
+            finalRcvr, count, dest, config, dType, instancePlan, edgeList.get(count));
       }
 
-      gather.init(config, t, instancePlan, edgeList.get(count));
+      gather.init(config, dType, instancePlan, edgeList.get(count));
       gatherMap.put(dest, gather);
       count++;
 
