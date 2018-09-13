@@ -47,7 +47,7 @@ public class AllReduceBatchTask extends TaskWorker {
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
     ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
-    computeConnection.allreduce("source", "reduce-edge",
+    computeConnection.allreduce("source", "all-reduce-edge",
         Op.SUM, DataType.INTEGER);
     graphBuilder.setMode(OperationMode.BATCH);
 
@@ -61,12 +61,13 @@ public class AllReduceBatchTask extends TaskWorker {
     private int count = 0;
     @Override
     public void execute() {
+      int[] val = {1};
       if (count == 999) {
-        if (context.writeEnd("all-reduce-edge", "Hello")) {
+        if (context.writeEnd("all-reduce-edge", val)) {
           count++;
         }
       } else if (count < 999) {
-        if (context.write("all-reduce-edge", "Hello")) {
+        if (context.write("all-reduce-edge", val)) {
           count++;
         }
       }
