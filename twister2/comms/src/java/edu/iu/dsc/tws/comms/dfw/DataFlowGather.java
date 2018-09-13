@@ -28,6 +28,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -332,6 +333,11 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     return done && !needsFurtherProgress;
   }
 
+  @Override
+  public boolean isDelegeteComplete() {
+    return delegete.isComplete();
+  }
+
   protected Set<Integer> receivingExecutors() {
     return router.receivingExecutors();
   }
@@ -346,6 +352,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     return true;
   }
 
+
   @Override
   public void close() {
 
@@ -353,7 +360,17 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-
+    LOG.info("Finish on DfReduce :" + source);
+//    if (!isLastReceiver() && partialReceiver != null) {
+//      partialReceiver.onFinish(source);
+//    }
+//    if (isLastReceiver() && finalReceiver != null) {
+//      finalReceiver.onFinish(source);
+//    }
+    while (!send(source, "", MessageFlags.EMPTY)) {
+      // lets progress until finish
+      progress();
+    }
   }
 
   @Override
