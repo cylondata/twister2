@@ -166,7 +166,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
       ReducePartialReceiver partialRcvr = new ReducePartialReceiver(dest);
       ReduceFinalReceiver finalRcvr = new ReduceFinalReceiver(dest);
       DataFlowReduce reduce = new DataFlowReduce(channel, sources, dest,
-          finalRcvr, partialRcvr, count, dest);
+          finalRcvr, partialRcvr, count, dest, true);
       reduce.init(config, type, instancePlan, edgeList.get(count));
       reduceMap.put(dest, reduce);
       count++;

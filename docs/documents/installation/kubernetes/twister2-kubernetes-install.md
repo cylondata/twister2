@@ -55,7 +55,7 @@ You can retrieve the created Secret object in YAML form by executing the followi
 
     $kubectl get secret <secret-name> -o=yaml
 
-Another possibility for deploying the Secret object is to use the [YAML file template](../../architecture/kubernetes/yaml-templates/secret.yaml). 
+Another possibility for deploying the Secret object is to use the [YAML file template](../../architecture/resource-schedulers/kubernetes/yaml-templates/secret.yaml). 
 You can edit that secret.yaml file. You can put the public and private keys to the corresponding fields.
 You can set the name and the namespace values. Then, you can create the Secret object by using
 kubectl method as:

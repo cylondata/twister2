@@ -47,7 +47,7 @@ public class KeyedReduceBatchTask extends TaskWorker {
 
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
-    graphBuilder.addSink("sink", r, 1).keyedReduce("source",
+    graphBuilder.addSink("sink", r, 4).keyedReduce("source",
         "keyed-reduce-edge", new IFunction() {
           @Override
           public Object onMessage(Object object1, Object object2) {

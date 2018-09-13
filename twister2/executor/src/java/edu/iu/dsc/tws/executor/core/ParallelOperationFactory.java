@@ -91,7 +91,8 @@ public class ParallelOperationFactory {
       } else {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
           return new KeyedReduceBatchOperation(config, channel, taskPlan, sources,
-              dests, edgeGenerator, edge.getDataType(), edge.getName(), edge.getFunction());
+              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(),
+              edge.getName(), edge.getFunction());
         }
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {

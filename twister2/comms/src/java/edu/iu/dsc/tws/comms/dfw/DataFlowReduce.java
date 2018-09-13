@@ -72,6 +72,8 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
   private CompletionListener completionListener;
 
+  private boolean isKeyed = false;
+
   private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
   private Table<Integer, Integer, RoutingParameters> partialRoutingParamCache
       = HashBasedTable.create();
@@ -88,6 +90,19 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     this.partialReceiver = partialRcvr;
     this.pathToUse = p;
     this.delegete = new ChannelDataFlowOperation(channel);
+  }
+
+  public DataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
+                        MessageReceiver finalRcvr,
+                        MessageReceiver partialRcvr, int indx, int p, boolean keyed) {
+    this.index = indx;
+    this.sources = sources;
+    this.destination = destination;
+    this.finalReceiver = finalRcvr;
+    this.partialReceiver = partialRcvr;
+    this.pathToUse = p;
+    this.delegete = new ChannelDataFlowOperation(channel);
+    this.isKeyed = keyed;
   }
 
   public DataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
@@ -301,7 +316,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     delegete.init(cfg, t, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
   }
 
   @Override

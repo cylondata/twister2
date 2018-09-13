@@ -61,7 +61,6 @@ public abstract class BenchWorker implements IWorker {
 
   protected ExperimentData experimentData;
 
-
   @Override
   public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
@@ -110,6 +109,10 @@ public abstract class BenchWorker implements IWorker {
   protected void finishCommunication(int src) {
   }
 
+  protected Object generateData() {
+    return DataGenerator.generateIntData(jobParameters.getSize());
+  }
+
   protected class MapWorker implements Runnable {
     private int task;
 
@@ -120,7 +123,7 @@ public abstract class BenchWorker implements IWorker {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
-      int[] data = DataGenerator.generateIntData(jobParameters.getSize());
+      Object data = generateData();
       experimentData.setInput(data);
       experimentData.setTaskStages(jobParameters.getTaskStages());
 //      int[] data = {1, 0, 2};

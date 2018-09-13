@@ -36,13 +36,13 @@ public class ReduceOperationFunction implements ReduceFunction {
   }
 
   @Override
-  public Object reduce(Object t1, Object t2) {
+  public Object reduce(Object data1, Object data2) {
     Object result = null;
     if (this.operation == Op.SUM) { // Start SUM
       if (this.messageType == MessageType.INTEGER) {
-        if (t1 instanceof int[] && t2 instanceof int[]) {
-          int[] i1 = (int[]) t1;
-          int[] i2 = (int[]) t2;
+        if (data1 instanceof int[] && data2 instanceof int[]) {
+          int[] i1 = (int[]) data1;
+          int[] i2 = (int[]) data2;
           int[] res = new int[i1.length];
           for (int i = 0; i < i1.length; i++) {
             res[i] = i1[i] + i2[i];
@@ -50,53 +50,53 @@ public class ReduceOperationFunction implements ReduceFunction {
           result = res;
         }
       } else if (this.messageType == MessageType.DOUBLE) {
-        if (t1 instanceof double[] && t2 instanceof double[]) {
-          double[] i1 = (double[]) t1;
-          double[] i2 = (double[]) t2;
+        if (data1 instanceof double[] && data2 instanceof double[]) {
+          double[] i1 = (double[]) data1;
+          double[] i2 = (double[]) data2;
           double[] res = new double[i1.length];
           for (int i = 0; i < i1.length; i++) {
             res[i] = i1[i] + i2[i];
           }
           result = res;
-        } else if (this.messageType == MessageType.SHORT) {
-          if (t1 instanceof short[] && t2 instanceof short[]) {
-            short[] i1 = (short[]) t1;
-            short[] i2 = (short[]) t2;
-            short[] res = new short[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (short) (i1[i] + i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.BYTE) {
-          if (t1 instanceof byte[] && t2 instanceof byte[]) {
-            byte[] i1 = (byte[]) t1;
-            byte[] i2 = (byte[]) t2;
-            byte[] res = new byte[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (byte) (i1[i] + i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.LONG) {
-          if (t1 instanceof long[] && t2 instanceof long[]) {
-            long[] i1 = (long[]) t1;
-            long[] i2 = (long[]) t2;
-            long[] res = new long[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = i1[i] + i2[i];
-            }
-            result = res;
-          }
-
         }
-      } // END SUM
+      } else if (this.messageType == MessageType.SHORT) {
+        if (data1 instanceof short[] && data2 instanceof short[]) {
+          short[] i1 = (short[]) data1;
+          short[] i2 = (short[]) data2;
+          short[] res = new short[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (short) (i1[i] + i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.BYTE) {
+        if (data1 instanceof byte[] && data2 instanceof byte[]) {
+          byte[] i1 = (byte[]) data1;
+          byte[] i2 = (byte[]) data2;
+          byte[] res = new byte[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (byte) (i1[i] + i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.LONG) {
+        if (data1 instanceof long[] && data2 instanceof long[]) {
+          long[] i1 = (long[]) data1;
+          long[] i2 = (long[]) data2;
+          long[] res = new long[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = i1[i] + i2[i];
+          }
+          result = res;
+        }
+
+      }
     }
     if (this.operation == Op.PRODUCT) { // Start PRODUCT
       if (this.messageType == MessageType.INTEGER) {
-        if (t1 instanceof int[] && t2 instanceof int[]) {
-          int[] i1 = (int[]) t1;
-          int[] i2 = (int[]) t2;
+        if (data1 instanceof int[] && data2 instanceof int[]) {
+          int[] i1 = (int[]) data1;
+          int[] i2 = (int[]) data2;
           int[] res = new int[i1.length];
           for (int i = 0; i < i1.length; i++) {
             res[i] = i1[i] * i2[i];
@@ -104,53 +104,52 @@ public class ReduceOperationFunction implements ReduceFunction {
           result = res;
         }
       } else if (this.messageType == MessageType.DOUBLE) {
-        if (t1 instanceof double[] && t2 instanceof double[]) {
-          double[] i1 = (double[]) t1;
-          double[] i2 = (double[]) t2;
+        if (data1 instanceof double[] && data2 instanceof double[]) {
+          double[] i1 = (double[]) data1;
+          double[] i2 = (double[]) data2;
           double[] res = new double[i1.length];
           for (int i = 0; i < i1.length; i++) {
             res[i] = i1[i] * i2[i];
           }
           result = res;
-        } else if (this.messageType == MessageType.SHORT) {
-          if (t1 instanceof short[] && t2 instanceof short[]) {
-            short[] i1 = (short[]) t1;
-            short[] i2 = (short[]) t2;
-            short[] res = new short[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (short) (i1[i] * i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.BYTE) {
-          if (t1 instanceof byte[] && t2 instanceof byte[]) {
-            byte[] i1 = (byte[]) t1;
-            byte[] i2 = (byte[]) t2;
-            byte[] res = new byte[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (byte) (i1[i] * i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.LONG) {
-          if (t1 instanceof long[] && t2 instanceof long[]) {
-            long[] i1 = (long[]) t1;
-            long[] i2 = (long[]) t2;
-            long[] res = new long[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = i1[i] * i2[i];
-            }
-            result = res;
-          }
         }
-      } // END PRODUCT
-    }
-
+      } else if (this.messageType == MessageType.SHORT) {
+        if (data1 instanceof short[] && data2 instanceof short[]) {
+          short[] i1 = (short[]) data1;
+          short[] i2 = (short[]) data2;
+          short[] res = new short[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (short) (i1[i] * i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.BYTE) {
+        if (data1 instanceof byte[] && data2 instanceof byte[]) {
+          byte[] i1 = (byte[]) data1;
+          byte[] i2 = (byte[]) data2;
+          byte[] res = new byte[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (byte) (i1[i] * i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.LONG) {
+        if (data1 instanceof long[] && data2 instanceof long[]) {
+          long[] i1 = (long[]) data1;
+          long[] i2 = (long[]) data2;
+          long[] res = new long[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = i1[i] * i2[i];
+          }
+          result = res;
+        }
+      }
+    } // END PRODUCT
     if (this.operation == Op.DIVISION) { // Start DIVISION
       if (this.messageType == MessageType.INTEGER) {
-        if (t1 instanceof int[] && t2 instanceof int[]) {
-          int[] i1 = (int[]) t1;
-          int[] i2 = (int[]) t2;
+        if (data1 instanceof int[] && data2 instanceof int[]) {
+          int[] i1 = (int[]) data1;
+          int[] i2 = (int[]) data2;
           int[] res = new int[i1.length];
           for (int i = 0; i < i1.length; i++) {
             res[i] = i1[i] / i2[i];
@@ -158,53 +157,53 @@ public class ReduceOperationFunction implements ReduceFunction {
           result = res;
         }
       } else if (this.messageType == MessageType.DOUBLE) {
-        if (t1 instanceof double[] && t2 instanceof double[]) {
-          double[] i1 = (double[]) t1;
-          double[] i2 = (double[]) t2;
+        if (data1 instanceof double[] && data2 instanceof double[]) {
+          double[] i1 = (double[]) data1;
+          double[] i2 = (double[]) data2;
           double[] res = new double[i1.length];
           for (int i = 0; i < i1.length; i++) {
             res[i] = i1[i] / i2[i];
           }
           result = res;
-        } else if (this.messageType == MessageType.SHORT) {
-          if (t1 instanceof short[] && t2 instanceof short[]) {
-            short[] i1 = (short[]) t1;
-            short[] i2 = (short[]) t2;
-            short[] res = new short[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (short) (i1[i] / i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.BYTE) {
-          if (t1 instanceof byte[] && t2 instanceof byte[]) {
-            byte[] i1 = (byte[]) t1;
-            byte[] i2 = (byte[]) t2;
-            byte[] res = new byte[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (byte) (i1[i] / i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.LONG) {
-          if (t1 instanceof long[] && t2 instanceof long[]) {
-            long[] i1 = (long[]) t1;
-            long[] i2 = (long[]) t2;
-            long[] res = new long[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = i1[i] / i2[i];
-            }
-            result = res;
-          }
         }
-      } // END DIVISION
-    }
+      } else if (this.messageType == MessageType.SHORT) {
+        if (data1 instanceof short[] && data2 instanceof short[]) {
+          short[] i1 = (short[]) data1;
+          short[] i2 = (short[]) data2;
+          short[] res = new short[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (short) (i1[i] / i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.BYTE) {
+        if (data1 instanceof byte[] && data2 instanceof byte[]) {
+          byte[] i1 = (byte[]) data1;
+          byte[] i2 = (byte[]) data2;
+          byte[] res = new byte[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (byte) (i1[i] / i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.LONG) {
+        if (data1 instanceof long[] && data2 instanceof long[]) {
+          long[] i1 = (long[]) data1;
+          long[] i2 = (long[]) data2;
+          long[] res = new long[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = i1[i] / i2[i];
+          }
+          result = res;
+        }
+      }
+    } // END DIVISION
 
     if (this.operation == Op.MAX) { // Start MAX
       if (this.messageType == MessageType.INTEGER) {
-        if (t1 instanceof int[] && t2 instanceof int[]) {
-          int[] i1 = (int[]) t1;
-          int[] i2 = (int[]) t2;
+        if (data1 instanceof int[] && data2 instanceof int[]) {
+          int[] i1 = (int[]) data1;
+          int[] i2 = (int[]) data2;
           int[] res = new int[i1.length];
           for (int i = 0; i < i1.length; i++) {
             res[i] = Math.max(i1[i], i2[i]);
@@ -212,53 +211,53 @@ public class ReduceOperationFunction implements ReduceFunction {
           result = res;
         }
       } else if (this.messageType == MessageType.DOUBLE) {
-        if (t1 instanceof double[] && t2 instanceof double[]) {
-          double[] i1 = (double[]) t1;
-          double[] i2 = (double[]) t2;
+        if (data1 instanceof double[] && data2 instanceof double[]) {
+          double[] i1 = (double[]) data1;
+          double[] i2 = (double[]) data2;
           double[] res = new double[i1.length];
           for (int i = 0; i < i1.length; i++) {
             res[i] = Math.max(i1[i], i2[i]);
           }
           result = res;
-        } else if (this.messageType == MessageType.SHORT) {
-          if (t1 instanceof short[] && t2 instanceof short[]) {
-            short[] i1 = (short[]) t1;
-            short[] i2 = (short[]) t2;
-            short[] res = new short[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (short) Math.max(i1[i], i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.BYTE) {
-          if (t1 instanceof byte[] && t2 instanceof byte[]) {
-            byte[] i1 = (byte[]) t1;
-            byte[] i2 = (byte[]) t2;
-            byte[] res = new byte[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (byte) Math.max(i1[i], i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.LONG) {
-          if (t1 instanceof long[] && t2 instanceof long[]) {
-            long[] i1 = (long[]) t1;
-            long[] i2 = (long[]) t2;
-            long[] res = new long[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = Math.max(i1[i], i2[i]);
-            }
-            result = res;
-          }
         }
-      } // END MAX
-    }
+      } else if (this.messageType == MessageType.SHORT) {
+        if (data1 instanceof short[] && data2 instanceof short[]) {
+          short[] i1 = (short[]) data1;
+          short[] i2 = (short[]) data2;
+          short[] res = new short[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (short) Math.max(i1[i], i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.BYTE) {
+        if (data1 instanceof byte[] && data2 instanceof byte[]) {
+          byte[] i1 = (byte[]) data1;
+          byte[] i2 = (byte[]) data2;
+          byte[] res = new byte[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (byte) Math.max(i1[i], i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.LONG) {
+        if (data1 instanceof long[] && data2 instanceof long[]) {
+          long[] i1 = (long[]) data1;
+          long[] i2 = (long[]) data2;
+          long[] res = new long[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = Math.max(i1[i], i2[i]);
+          }
+          result = res;
+        }
+      }
+    } // END MAX
 
     if (this.operation == Op.MIN) { // Start MIN
       if (this.messageType == MessageType.INTEGER) {
-        if (t1 instanceof int[] && t2 instanceof int[]) {
-          int[] i1 = (int[]) t1;
-          int[] i2 = (int[]) t2;
+        if (data1 instanceof int[] && data2 instanceof int[]) {
+          int[] i1 = (int[]) data1;
+          int[] i2 = (int[]) data2;
           int[] res = new int[i1.length];
           for (int i = 0; i < i1.length; i++) {
             res[i] = Math.min(i1[i], i2[i]);
@@ -266,47 +265,47 @@ public class ReduceOperationFunction implements ReduceFunction {
           result = res;
         }
       } else if (this.messageType == MessageType.DOUBLE) {
-        if (t1 instanceof double[] && t2 instanceof double[]) {
-          double[] i1 = (double[]) t1;
-          double[] i2 = (double[]) t2;
+        if (data1 instanceof double[] && data2 instanceof double[]) {
+          double[] i1 = (double[]) data1;
+          double[] i2 = (double[]) data2;
           double[] res = new double[i1.length];
           for (int i = 0; i < i1.length; i++) {
             res[i] = Math.min(i1[i], i2[i]);
           }
           result = res;
-        } else if (this.messageType == MessageType.SHORT) {
-          if (t1 instanceof short[] && t2 instanceof short[]) {
-            short[] i1 = (short[]) t1;
-            short[] i2 = (short[]) t2;
-            short[] res = new short[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (short) Math.min(i1[i], i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.BYTE) {
-          if (t1 instanceof byte[] && t2 instanceof byte[]) {
-            byte[] i1 = (byte[]) t1;
-            byte[] i2 = (byte[]) t2;
-            byte[] res = new byte[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (byte) Math.min(i1[i], i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.LONG) {
-          if (t1 instanceof long[] && t2 instanceof long[]) {
-            long[] i1 = (long[]) t1;
-            long[] i2 = (long[]) t2;
-            long[] res = new long[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = Math.min(i1[i], i2[i]);
-            }
-            result = res;
-          }
         }
-      } // END MIN
-    }
+      } else if (this.messageType == MessageType.SHORT) {
+        if (data1 instanceof short[] && data2 instanceof short[]) {
+          short[] i1 = (short[]) data1;
+          short[] i2 = (short[]) data2;
+          short[] res = new short[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (short) Math.min(i1[i], i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.BYTE) {
+        if (data1 instanceof byte[] && data2 instanceof byte[]) {
+          byte[] i1 = (byte[]) data1;
+          byte[] i2 = (byte[]) data2;
+          byte[] res = new byte[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (byte) Math.min(i1[i], i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.LONG) {
+        if (data1 instanceof long[] && data2 instanceof long[]) {
+          long[] i1 = (long[]) data1;
+          long[] i2 = (long[]) data2;
+          long[] res = new long[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = Math.min(i1[i], i2[i]);
+          }
+          result = res;
+        }
+      }
+    } // END MIN
 
     return result;
   }

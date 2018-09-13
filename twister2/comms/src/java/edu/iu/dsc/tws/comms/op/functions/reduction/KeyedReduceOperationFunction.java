@@ -52,7 +52,7 @@ public class KeyedReduceOperationFunction implements ReduceFunction {
   public Object reduce(Object t1, Object t2) {
     if (!(t1 instanceof KeyedContent) || !(t2 instanceof KeyedContent)) {
       throw new IllegalArgumentException("The keyed operation function"
-          + " requires KeyedContent objects");
+          + " requires KeyedContent objects " + t1 + " " + t2);
     }
 
     KeyedContent keyedContent1 = (KeyedContent) t1;
@@ -85,39 +85,39 @@ public class KeyedReduceOperationFunction implements ReduceFunction {
             res[i] = i1[i] + i2[i];
           }
           result = res;
-        } else if (this.messageType == MessageType.SHORT) {
-          if (data1 instanceof short[] && data2 instanceof short[]) {
-            short[] i1 = (short[]) data1;
-            short[] i2 = (short[]) data2;
-            short[] res = new short[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (short) (i1[i] + i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.BYTE) {
-          if (data1 instanceof byte[] && data2 instanceof byte[]) {
-            byte[] i1 = (byte[]) data1;
-            byte[] i2 = (byte[]) data2;
-            byte[] res = new byte[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (byte) (i1[i] + i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.LONG) {
-          if (data1 instanceof long[] && data2 instanceof long[]) {
-            long[] i1 = (long[]) data1;
-            long[] i2 = (long[]) data2;
-            long[] res = new long[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = i1[i] + i2[i];
-            }
-            result = res;
-          }
-
         }
-      } // END SUM
+      } else if (this.messageType == MessageType.SHORT) {
+        if (data1 instanceof short[] && data2 instanceof short[]) {
+          short[] i1 = (short[]) data1;
+          short[] i2 = (short[]) data2;
+          short[] res = new short[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (short) (i1[i] + i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.BYTE) {
+        if (data1 instanceof byte[] && data2 instanceof byte[]) {
+          byte[] i1 = (byte[]) data1;
+          byte[] i2 = (byte[]) data2;
+          byte[] res = new byte[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (byte) (i1[i] + i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.LONG) {
+        if (data1 instanceof long[] && data2 instanceof long[]) {
+          long[] i1 = (long[]) data1;
+          long[] i2 = (long[]) data2;
+          long[] res = new long[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = i1[i] + i2[i];
+          }
+          result = res;
+        }
+
+      }
     }
     if (this.operation == Op.PRODUCT) { // Start PRODUCT
       if (this.messageType == MessageType.INTEGER) {
@@ -139,40 +139,39 @@ public class KeyedReduceOperationFunction implements ReduceFunction {
             res[i] = i1[i] * i2[i];
           }
           result = res;
-        } else if (this.messageType == MessageType.SHORT) {
-          if (data1 instanceof short[] && data2 instanceof short[]) {
-            short[] i1 = (short[]) data1;
-            short[] i2 = (short[]) data2;
-            short[] res = new short[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (short) (i1[i] * i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.BYTE) {
-          if (data1 instanceof byte[] && data2 instanceof byte[]) {
-            byte[] i1 = (byte[]) data1;
-            byte[] i2 = (byte[]) data2;
-            byte[] res = new byte[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (byte) (i1[i] * i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.LONG) {
-          if (data1 instanceof long[] && data2 instanceof long[]) {
-            long[] i1 = (long[]) data1;
-            long[] i2 = (long[]) data2;
-            long[] res = new long[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = i1[i] * i2[i];
-            }
-            result = res;
-          }
         }
-      } // END PRODUCT
-    }
-
+      } else if (this.messageType == MessageType.SHORT) {
+        if (data1 instanceof short[] && data2 instanceof short[]) {
+          short[] i1 = (short[]) data1;
+          short[] i2 = (short[]) data2;
+          short[] res = new short[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (short) (i1[i] * i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.BYTE) {
+        if (data1 instanceof byte[] && data2 instanceof byte[]) {
+          byte[] i1 = (byte[]) data1;
+          byte[] i2 = (byte[]) data2;
+          byte[] res = new byte[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (byte) (i1[i] * i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.LONG) {
+        if (data1 instanceof long[] && data2 instanceof long[]) {
+          long[] i1 = (long[]) data1;
+          long[] i2 = (long[]) data2;
+          long[] res = new long[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = i1[i] * i2[i];
+          }
+          result = res;
+        }
+      }
+    } // END PRODUCT
     if (this.operation == Op.DIVISION) { // Start DIVISION
       if (this.messageType == MessageType.INTEGER) {
         if (data1 instanceof int[] && data2 instanceof int[]) {
@@ -193,39 +192,39 @@ public class KeyedReduceOperationFunction implements ReduceFunction {
             res[i] = i1[i] / i2[i];
           }
           result = res;
-        } else if (this.messageType == MessageType.SHORT) {
-          if (data1 instanceof short[] && data2 instanceof short[]) {
-            short[] i1 = (short[]) data1;
-            short[] i2 = (short[]) data2;
-            short[] res = new short[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (short) (i1[i] / i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.BYTE) {
-          if (data1 instanceof byte[] && data2 instanceof byte[]) {
-            byte[] i1 = (byte[]) data1;
-            byte[] i2 = (byte[]) data2;
-            byte[] res = new byte[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (byte) (i1[i] / i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.LONG) {
-          if (data1 instanceof long[] && data2 instanceof long[]) {
-            long[] i1 = (long[]) data1;
-            long[] i2 = (long[]) data2;
-            long[] res = new long[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = i1[i] / i2[i];
-            }
-            result = res;
-          }
         }
-      } // END DIVISION
-    }
+      } else if (this.messageType == MessageType.SHORT) {
+        if (data1 instanceof short[] && data2 instanceof short[]) {
+          short[] i1 = (short[]) data1;
+          short[] i2 = (short[]) data2;
+          short[] res = new short[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (short) (i1[i] / i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.BYTE) {
+        if (data1 instanceof byte[] && data2 instanceof byte[]) {
+          byte[] i1 = (byte[]) data1;
+          byte[] i2 = (byte[]) data2;
+          byte[] res = new byte[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (byte) (i1[i] / i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.LONG) {
+        if (data1 instanceof long[] && data2 instanceof long[]) {
+          long[] i1 = (long[]) data1;
+          long[] i2 = (long[]) data2;
+          long[] res = new long[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = i1[i] / i2[i];
+          }
+          result = res;
+        }
+      }
+    } // END DIVISION
 
     if (this.operation == Op.MAX) { // Start MAX
       if (this.messageType == MessageType.INTEGER) {
@@ -247,39 +246,39 @@ public class KeyedReduceOperationFunction implements ReduceFunction {
             res[i] = Math.max(i1[i], i2[i]);
           }
           result = res;
-        } else if (this.messageType == MessageType.SHORT) {
-          if (data1 instanceof short[] && data2 instanceof short[]) {
-            short[] i1 = (short[]) data1;
-            short[] i2 = (short[]) data2;
-            short[] res = new short[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (short) Math.max(i1[i], i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.BYTE) {
-          if (data1 instanceof byte[] && data2 instanceof byte[]) {
-            byte[] i1 = (byte[]) data1;
-            byte[] i2 = (byte[]) data2;
-            byte[] res = new byte[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (byte) Math.max(i1[i], i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.LONG) {
-          if (data1 instanceof long[] && data2 instanceof long[]) {
-            long[] i1 = (long[]) data1;
-            long[] i2 = (long[]) data2;
-            long[] res = new long[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = Math.max(i1[i], i2[i]);
-            }
-            result = res;
-          }
         }
-      } // END MAX
-    }
+      } else if (this.messageType == MessageType.SHORT) {
+        if (data1 instanceof short[] && data2 instanceof short[]) {
+          short[] i1 = (short[]) data1;
+          short[] i2 = (short[]) data2;
+          short[] res = new short[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (short) Math.max(i1[i], i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.BYTE) {
+        if (data1 instanceof byte[] && data2 instanceof byte[]) {
+          byte[] i1 = (byte[]) data1;
+          byte[] i2 = (byte[]) data2;
+          byte[] res = new byte[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (byte) Math.max(i1[i], i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.LONG) {
+        if (data1 instanceof long[] && data2 instanceof long[]) {
+          long[] i1 = (long[]) data1;
+          long[] i2 = (long[]) data2;
+          long[] res = new long[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = Math.max(i1[i], i2[i]);
+          }
+          result = res;
+        }
+      }
+    } // END MAX
 
     if (this.operation == Op.MIN) { // Start MIN
       if (this.messageType == MessageType.INTEGER) {
@@ -301,39 +300,39 @@ public class KeyedReduceOperationFunction implements ReduceFunction {
             res[i] = Math.min(i1[i], i2[i]);
           }
           result = res;
-        } else if (this.messageType == MessageType.SHORT) {
-          if (data1 instanceof short[] && data2 instanceof short[]) {
-            short[] i1 = (short[]) data1;
-            short[] i2 = (short[]) data2;
-            short[] res = new short[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (short) Math.min(i1[i], i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.BYTE) {
-          if (data1 instanceof byte[] && data2 instanceof byte[]) {
-            byte[] i1 = (byte[]) data1;
-            byte[] i2 = (byte[]) data2;
-            byte[] res = new byte[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = (byte) Math.min(i1[i], i2[i]);
-            }
-            result = res;
-          }
-        } else if (this.messageType == MessageType.LONG) {
-          if (data1 instanceof long[] && data2 instanceof long[]) {
-            long[] i1 = (long[]) data1;
-            long[] i2 = (long[]) data2;
-            long[] res = new long[i1.length];
-            for (int i = 0; i < i1.length; i++) {
-              res[i] = Math.min(i1[i], i2[i]);
-            }
-            result = res;
-          }
         }
-      } // END MIN
-    }
+      } else if (this.messageType == MessageType.SHORT) {
+        if (data1 instanceof short[] && data2 instanceof short[]) {
+          short[] i1 = (short[]) data1;
+          short[] i2 = (short[]) data2;
+          short[] res = new short[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (short) Math.min(i1[i], i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.BYTE) {
+        if (data1 instanceof byte[] && data2 instanceof byte[]) {
+          byte[] i1 = (byte[]) data1;
+          byte[] i2 = (byte[]) data2;
+          byte[] res = new byte[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = (byte) Math.min(i1[i], i2[i]);
+          }
+          result = res;
+        }
+      } else if (this.messageType == MessageType.LONG) {
+        if (data1 instanceof long[] && data2 instanceof long[]) {
+          long[] i1 = (long[]) data1;
+          long[] i2 = (long[]) data2;
+          long[] res = new long[i1.length];
+          for (int i = 0; i < i1.length; i++) {
+            res[i] = Math.min(i1[i], i2[i]);
+          }
+          result = res;
+        }
+      }
+    } // END MIN
 
     return new KeyedContent(key, result,
         keyedContent1.getKeyType(), keyedContent1.getContentType());
