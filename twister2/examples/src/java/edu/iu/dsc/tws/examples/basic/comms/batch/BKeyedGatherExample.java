@@ -27,10 +27,10 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BGather;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
 
-public class BGatherExample extends BenchWorker {
-  private static final Logger LOG = Logger.getLogger(BGatherExample.class.getName());
+public class BKeyedGatherExample extends KeyedBenchWorker {
+  private static final Logger LOG = Logger.getLogger(BKeyedGatherExample.class.getName());
 
   private BGather gather;
 
@@ -82,19 +82,15 @@ public class BGatherExample extends BenchWorker {
   }
 
   @Override
-  protected boolean sendMessages(int task, Object data, int flag) {
-    while (!gather.gather(task, data, flag)) {
-      // lets wait a litte and try again
-      gather.progress();
-    }
-    return true;
-  }
-
-  @Override
   protected boolean isDone() {
 //    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
 //        workerId, gatherDone, sourcesDone, gather.hasPending()));
     return gatherDone && sourcesDone && !gather.hasPending();
+  }
+
+  @Override
+  protected boolean sendMessages(int task, Object key, Object data, int flag) {
+    return false;
   }
 
   @Override

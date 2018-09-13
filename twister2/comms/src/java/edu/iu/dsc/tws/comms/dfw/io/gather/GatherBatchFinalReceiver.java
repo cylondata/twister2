@@ -83,6 +83,10 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
     boolean canAdd = true;
     Queue<Object> m = messages.get(target).get(source);
     Map<Integer, Boolean> finishedMessages = finished.get(target);
+    if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+      finishedMessages.put(source, true);
+      return true;
+    }
     if (m.size() >= sendPendingMax) {
       canAdd = false;
 //      LOG.info(String.format("%d Final add FALSE target %d source %d", executor, target, source));
@@ -135,7 +139,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
         for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
-          }  else {
+          } else {
             moreThanOne = true;
           }
 
