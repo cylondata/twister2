@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchReceiver;
 
 public class KeyedReduceBatchPartialReceiver extends KeyedReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(

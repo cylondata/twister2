@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 
 public abstract class ReduceBatchReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(ReduceBatchReceiver.class.getName());

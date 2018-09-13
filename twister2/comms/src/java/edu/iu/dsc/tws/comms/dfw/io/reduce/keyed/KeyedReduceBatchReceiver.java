@@ -130,7 +130,7 @@ public abstract class KeyedReduceBatchReceiver implements MessageReceiver {
         throw new RuntimeException("Not keyed content: " + object);
       }
     }
-    
+
     Map<Integer, Boolean> finishedMessages = finished.get(target);
 
     if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
