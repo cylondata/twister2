@@ -68,6 +68,7 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.verification.ExperimentData;
 
 /**
  * BenchWorker class that works with keyed operations
@@ -97,6 +98,8 @@ public abstract class KeyedBenchWorker implements IWorker {
 
   protected List<WorkerNetworkInfo> workerList = null;
 
+  protected ExperimentData experimentData;
+
   @Override
   public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
@@ -124,6 +127,8 @@ public abstract class KeyedBenchWorker implements IWorker {
     channel = Network.initializeChannel(config, workerController, resourcePlan);
     // create the communicator
     communicator = new Communicator(cfg, channel);
+    //collect experiment data
+    experimentData = new ExperimentData();
     // now lets execute
     execute();
     // now progress
@@ -163,6 +168,8 @@ public abstract class KeyedBenchWorker implements IWorker {
     public void run() {
       LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
       int[] data = DataGenerator.generateIntData(jobParameters.getSize());
+      experimentData.setInput(data);
+      experimentData.setTaskStages(jobParameters.getTaskStages());
       Integer key;
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
