@@ -35,7 +35,7 @@ public class BKeyedGather {
 
   public BKeyedGather(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> destinations,
-                      MessageType dType, MessageType kType,
+                      MessageType kType, MessageType dType,
                       BatchReceiver rcvr, DestinationSelector destSelector) {
     this.keyType = kType;
     this.dataType = dType;
@@ -53,7 +53,7 @@ public class BKeyedGather {
 
   public BKeyedGather(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> destinations,
-                      MessageType dType, MessageType kType, BatchReceiver rcvr,
+                      MessageType kType, MessageType dType, BatchReceiver rcvr,
                       Comparator<Object> comparator, DestinationSelector destSelector) {
     this.keyType = kType;
     this.dataType = dType;
