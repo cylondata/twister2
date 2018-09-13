@@ -60,7 +60,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
     keyedReduce = new BKeyedReduce(communicator, taskPlan, sources, targets,
         new KeyedReduceOperationFunction(Op.SUM, MessageType.INTEGER),
-        new FinalReduceReceiver(), MessageType.INTEGER, MessageType.OBJECT,
+        new FinalReduceReceiver(), MessageType.INTEGER, MessageType.INTEGER,
         new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
