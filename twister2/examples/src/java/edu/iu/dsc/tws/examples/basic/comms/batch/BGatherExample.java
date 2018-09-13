@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.batch;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -28,6 +27,9 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BGather;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class BGatherExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BGatherExample.class.getName());
@@ -104,22 +106,32 @@ public class BGatherExample extends BenchWorker {
 
     @Override
     public void receive(int target, Iterator<Object> it) {
-      LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-      LOG.info("Final Output ==> ");
-      while (it.hasNext()) {
-        Object object = it.next();
-        if (object instanceof int[]) {
-          int[] data = (int[]) object;
-          LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
-              Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
-          LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-          String output = String.format("%s", Arrays.toString(data));
-          LOG.info("Final Output : " + output);
-        } else {
-          LOG.info("Object Type : " + object.getClass().getName());
-        }
-      }
       gatherDone = true;
+      LOG.log(Level.INFO, String.format("%d Received final input", workerId));
+      Object object = it.next();
+      experimentData.setOutput(object);
+      try {
+        verify();
+      } catch (VerificationException e) {
+        e.printStackTrace();
+      }
+
+    }
+  }
+
+  public void verify() throws VerificationException {
+    boolean doVerify = jobParameters.isDoVerify();
+    boolean isVerified = false;
+    if (doVerify) {
+      LOG.info("Verifying results ...");
+      ExperimentVerification experimentVerification
+          = new ExperimentVerification(experimentData, OperationNames.GATHER);
+      isVerified = experimentVerification.isVerified();
+      if (isVerified) {
+        LOG.info("Results generated from the experiment are verified.");
+      } else {
+        throw new VerificationException("Results do not match");
+      }
     }
   }
 }

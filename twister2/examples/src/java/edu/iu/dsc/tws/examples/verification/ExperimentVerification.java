@@ -12,11 +12,7 @@
 package edu.iu.dsc.tws.examples.verification;
 
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -57,12 +53,10 @@ public class ExperimentVerification implements IVerification {
           String outString = Arrays.toString(output);
           isVerified = resString.equals(outString);
         }
-
       }
     }
 
     if (OperationNames.ALLREDUCE.equals(this.operationNames)) {
-
       if (experimentData.getInput() instanceof int[]
           && experimentData.getOutput() instanceof int[]) {
         int sourceCount = experimentData.getTaskStages().get(0);
@@ -86,6 +80,31 @@ public class ExperimentVerification implements IVerification {
         }
       }
     }
+
+    if (OperationNames.GATHER.equals(this.operationNames)) {
+      if (experimentData.getInput() instanceof int[]
+          && experimentData.getOutput() instanceof int[]) {
+        int sourceCount = experimentData.getTaskStages().get(0);
+        int sinkCount = experimentData.getTaskStages().get(1);
+        if ((sourceCount < sinkCount) && (sinkCount != 1)) {
+          throw new VerificationException("Invalid task stages : " + sourceCount + "," + sinkCount);
+        } else {
+          LOG.info("Current Worker : " + experimentData.getWorkerId()
+              + "/" + experimentData.getNumOfWorkers());
+          int[] input = (int[]) experimentData.getInput();
+          int[] output = (int[]) experimentData.getOutput();
+          int[] res = input;
+          isVerified = Arrays.equals(input, output);
+          String resString = Arrays
+              .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+          String outputRes = Arrays
+              .toString(Arrays.copyOfRange(output, 0, Math.min(res.length, 10)));
+          LOG.info("Expected Result : " + resString);
+          LOG.info("Generated Result : " + outputRes);
+        }
+      }
+    }
+
     return isVerified;
   }
 
