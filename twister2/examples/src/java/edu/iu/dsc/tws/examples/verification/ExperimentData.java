@@ -18,6 +18,8 @@ public class ExperimentData {
   private Object input;
   private Object output;
   private List<Integer> taskStages;
+  private int workerId;
+  private int numOfWorkers;
 
   public ExperimentData() {
 
@@ -45,5 +47,21 @@ public class ExperimentData {
 
   public void setTaskStages(List<Integer> taskList) {
     this.taskStages = taskList;
+  }
+
+  public int getWorkerId() {
+    return workerId;
+  }
+
+  public void setWorkerId(int workerId) {
+    this.workerId = workerId;
+  }
+
+  public int getNumOfWorkers() {
+    return numOfWorkers;
+  }
+
+  public void setNumOfWorkers(int numOfWorkers) {
+    this.numOfWorkers = numOfWorkers;
   }
 }
