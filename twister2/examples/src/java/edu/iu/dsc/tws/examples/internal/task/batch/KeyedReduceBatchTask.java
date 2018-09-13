@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.examples.internal.task.batch;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -71,13 +70,11 @@ public class KeyedReduceBatchTask extends TaskWorker {
     @Override
     public void execute() {
       int[] val = {1};
-      if (count == 25) {
-        LOG.log(Level.INFO, "Calling with end");
+      if (count == 1000) {
         if (context.writeEnd("keyed-reduce-edge", "" + count, val)) {
           count++;
         }
-      } else if (count < 25) {
-        LOG.log(Level.INFO, "Calling count " + count);
+      } else if (count < 1000) {
         if (context.write("keyed-reduce-edge", "" + count, val)) {
           count++;
         }
