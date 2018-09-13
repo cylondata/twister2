@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.gather.StreamingPartialGatherReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
@@ -80,7 +80,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
                         MessageReceiver finalRcvr,
                         int indx, int p,
                         Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
-    this(channel, sources, destination, finalRcvr, new StreamingPartialGatherReceiver(),
+    this(channel, sources, destination, finalRcvr, new GatherStreamingPartialReceiver(),
         indx, p, cfg, t, taskPlan, edge);
   }
 

@@ -18,8 +18,8 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
-import edu.iu.dsc.tws.comms.dfw.io.gather.StreamingFinalGatherReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.StreamingPartialGatherReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
 public class SGather {
@@ -31,8 +31,8 @@ public class SGather {
                  Set<Integer> sources, int destination,
                  MessageReceiver rcvr, MessageType dataType) {
     gather = new DataFlowGather(comm.getChannel(), sources, destination,
-        new StreamingFinalGatherReceiver(rcvr),
-        new StreamingPartialGatherReceiver(), 0, 0,
+        new GatherStreamingFinalReceiver(rcvr),
+        new GatherStreamingPartialReceiver(), 0, 0,
         comm.getConfig(), dataType, plan, comm.nextEdge());
     gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
