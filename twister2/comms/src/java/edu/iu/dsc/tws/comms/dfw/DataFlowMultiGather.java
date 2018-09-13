@@ -102,19 +102,27 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
   @Override
   public synchronized boolean progress() {
+    boolean needsFurther = false;
+
     try {
       for (DataFlowGather reduce : gatherMap.values()) {
-        reduce.progress();
+        if (reduce.progress()) {
+          needsFurther = true;
+        }
       }
       if (partialReceiver != null) {
-        partialReceiver.progress();
+        if (partialReceiver.progress()) {
+          needsFurther = true;
+        }
       }
-      finalReceiver.progress();
+      if (finalReceiver.progress()) {
+        needsFurther = true;
+      }
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-    return true;
+    return needsFurther;
   }
 
   @Override
@@ -231,7 +239,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
     @Override
     public boolean progress() {
-      return true;
+      return partialReceiver.progress();
     }
   }
 
@@ -254,7 +262,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
     @Override
     public boolean progress() {
-      return true;
+      return finalReceiver.progress();
     }
   }
 }

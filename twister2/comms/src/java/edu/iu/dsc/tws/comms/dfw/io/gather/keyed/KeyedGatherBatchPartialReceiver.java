@@ -152,7 +152,7 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
             canProgress = false;
-          } else {
+          } else if (e.getValue().size() > 0) {
             moreThanOne = true;
           }
 
