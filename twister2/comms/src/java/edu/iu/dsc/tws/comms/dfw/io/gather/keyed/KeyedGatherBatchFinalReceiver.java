@@ -170,30 +170,39 @@ public class KeyedGatherBatchFinalReceiver implements MessageReceiver {
 
         if (found) {
           List<Object> out = new ArrayList<>();
-          for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
-            Queue<Object> valueList = e.getValue();
-            if (valueList.size() > 0) {
-              Object value = valueList.poll();
-              if (value instanceof List) {
-                out.addAll((List) value);
-              } else {
-                out.add(value);
+          if (allFinished && dataFlowOperation.isDelegeteComplete()) {
+            for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
+              Queue<Object> valueList = e.getValue();
+              //Add all values
+              while (valueList.size() > 0) {
+                Object value = valueList.poll();
+                if (value instanceof List) {
+                  out.addAll((List) value);
+                } else {
+                  out.add(value);
+                }
+                allFinished = false;
+                needsFurtherProgress = true;
               }
-              allFinished = false;
+            }
+          } else {
+            for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
+              Queue<Object> valueList = e.getValue();
+              if (valueList.size() > 0) {
+                Object value = valueList.poll();
+                if (value instanceof List) {
+                  out.addAll((List) value);
+                } else {
+                  out.add(value);
+                }
+                allFinished = false;
+                needsFurtherProgress = true;
+              }
             }
           }
-//        for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
-//          Integer i = e.getValue();
-//          e.setValue(i - 1);
-//        }
           finalMessages.get(t).addAll(out);
-        } else {
-          if(allFinished && dataFlowOperation.isDelegeteComplete()){
-
-          }else{
-            allFinished = false;
-          }
         }
+
       } else {
 
         for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
@@ -212,8 +221,6 @@ public class KeyedGatherBatchFinalReceiver implements MessageReceiver {
         } else {
           batchReceiver.receive(t, memoryManagers.get(t).iterator());
         }
-        // we can call on finish at this point
-        onFinish(t);
       }
     }
     return needsFurtherProgress;

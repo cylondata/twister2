@@ -123,6 +123,9 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
   @Override
   public void finish(int source) {
+    for (DataFlowGather gather : gatherMap.values()) {
+      gather.finish(source);
+    }
   }
 
   @Override
@@ -180,6 +183,33 @@ public class DataFlowMultiGather implements DataFlowOperation {
   public boolean sendPartial(int source, Object message, int flags) {
     // now what we need to do
     throw new RuntimeException("Not implemented");
+  }
+
+  @Override
+  public boolean isDelegeteComplete() {
+    boolean isDone = true;
+    for (DataFlowGather gather : gatherMap.values()) {
+      isDone = isDone && gather.isDelegeteComplete();
+      if (!isDone) {
+        //No need to check further if we already have one false
+        return false;
+      }
+    }
+    return isDone;
+  }
+
+  @Override
+  public boolean isComplete() {
+    boolean isDone = true;
+
+    for (DataFlowGather gather : gatherMap.values()) {
+      isDone = isDone && gather.isComplete();
+      if (!isDone) {
+        //No need to check further if we already have one false
+        return false;
+      }
+    }
+    return isDone;
   }
 
   private class GatherPartialReceiver implements MessageReceiver {
