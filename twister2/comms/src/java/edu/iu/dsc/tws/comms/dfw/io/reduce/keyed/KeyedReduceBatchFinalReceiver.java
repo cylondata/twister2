@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchReceiver;
 
-public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
+public class KeyedReduceBatchFinalReceiver extends KeyedReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(KeyedReduceBatchFinalReceiver.class.getName());
 
   private ReduceFunction reduceFunction;

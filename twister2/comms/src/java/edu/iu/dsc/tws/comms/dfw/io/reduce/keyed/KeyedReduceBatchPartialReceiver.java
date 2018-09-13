@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchReceiver;
 
-public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
+public class KeyedReduceBatchPartialReceiver extends KeyedReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(
       KeyedReduceBatchPartialReceiver.class.getName());
   private int partialSendCount;
