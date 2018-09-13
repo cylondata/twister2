@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchReceiver;
 
 public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
@@ -181,11 +180,6 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
     if (currentVal != null) {
       reducedValueMap.put(target, currentVal);
     }
-    if (currentVal instanceof KeyedContent) {
-      if (((KeyedContent) currentVal).getKey() instanceof byte[]) {
-        throw new RuntimeException("Current val is bytes");
-      }
-    }
     return currentVal;
   }
 
@@ -217,11 +211,6 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
     bufferCounts.put(target, tempBufferCount);
     if (currentVal != null) {
       reducedValueMap.put(target, currentVal);
-    }
-    if (currentVal instanceof KeyedContent) {
-      if (((KeyedContent) currentVal).getKey() instanceof byte[]) {
-        throw new RuntimeException("Current val is bytes");
-      }
     }
     return currentVal;
   }

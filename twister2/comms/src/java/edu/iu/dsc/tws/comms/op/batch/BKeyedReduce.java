@@ -50,7 +50,7 @@ public class BKeyedReduce {
     }
     this.keyedReduce = new DataFlowMultiReduce(comm.getChannel(), sources, destinations,
         new ReduceMultiBatchFinalReceiver(fnc, rcvr),
-        new ReduceMultiBatchPartialReceiver(fnc), edges);
+        new ReduceMultiBatchPartialReceiver(fnc), edges, keyType, dataType);
     this.keyedReduce.init(comm.getConfig(), dataType, plan);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(sources, destinations);

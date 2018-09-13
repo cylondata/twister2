@@ -119,6 +119,9 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
+      if (object == null) {
+        return true;
+      }
       KeyedContent keyedContent = (KeyedContent) object;
       int[] data = (int[]) keyedContent.getValue();
       LOG.log(Level.INFO, String.format("%d Results : %s", workerId,

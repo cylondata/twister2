@@ -68,7 +68,8 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   private Config config;
   private TaskPlan instancePlan;
   private int executor;
-  private MessageType type;
+  private MessageType dataType;
+  private MessageType keyType;
 
   private CompletionListener completionListener;
 
@@ -94,7 +95,8 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
   public DataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
                         MessageReceiver finalRcvr,
-                        MessageReceiver partialRcvr, int indx, int p, boolean keyed) {
+                        MessageReceiver partialRcvr, int indx, int p, boolean keyed,
+                        MessageType kType, MessageType dType) {
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
@@ -103,6 +105,8 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     this.pathToUse = p;
     this.delegete = new ChannelDataFlowOperation(channel);
     this.isKeyed = keyed;
+    this.keyType = kType;
+    this.dataType = dType;
   }
 
   public DataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
@@ -253,7 +257,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.instancePlan = taskPlan;
     this.config = cfg;
-    this.type = t;
+    this.dataType = t;
     this.executor = instancePlan.getThisExecutor();
 
     // we only have one path
@@ -313,7 +317,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     }
 
     this.delegete.setCompletionListener(completionListener);
-    delegete.init(cfg, t, taskPlan, edge,
+    delegete.init(cfg, t, t, keyType, keyType, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
@@ -368,7 +372,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 //    if (isLastReceiver() && finalReceiver != null) {
 //      finalReceiver.onFinish(source);
 //    }
-    while (!send(source, "", MessageFlags.EMPTY)) {
+    while (!send(source, new byte[0], MessageFlags.EMPTY)) {
       // lets progress until finish
       progress();
     }

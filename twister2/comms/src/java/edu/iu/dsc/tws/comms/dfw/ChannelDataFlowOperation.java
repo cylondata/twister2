@@ -38,7 +38,6 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 
@@ -315,11 +314,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   public boolean sendMessagePartial(int source, Object message, int target,
                                     int flags, RoutingParameters routingParameters) {
-    if (message instanceof KeyedContent) {
-      if (((KeyedContent) message).getKey() instanceof byte[]) {
-        throw new RuntimeException("Byte message");
-      }
-    }
     // for partial sends we use minus value to find the correct queue
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);
@@ -339,11 +333,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   public boolean sendMessage(int source, Object message, int target,
                              int flags, RoutingParameters routingParameters) {
-    if (message instanceof KeyedContent) {
-      if (((KeyedContent) message).getKey() instanceof byte[]) {
-        throw new RuntimeException("Byte message");
-      }
-    }
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source);
     if (pendingSendMessages == null) {
