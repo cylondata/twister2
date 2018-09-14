@@ -30,6 +30,20 @@ task, it will invoke the scheduleStreamingTask method whereas if it is a batch t
 the scheduleBatchTask method.
 
     edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler
+    
+has the following methods namely
+
+    scheduleStreamingTask()
+    
+    scheduleBatchTask()
+    
+    generateTaskSchedulePlan(String classname)
+    
+The scheduleStreamingTask and scheduleBatchTask call the generateTaskSchedulePlan with the scheduling
+class name as an argument which is specified in the task.yaml. The generateTaskSchedulePlan 
+dynamically load the respective task schedulers (streaming/batch -> roundrobin, firstfit, or 
+datalocalityaware) and access the initialize and schedule methods in the task schedulers to generate
+the task schedule plan.
 
 ## Proto file
 
