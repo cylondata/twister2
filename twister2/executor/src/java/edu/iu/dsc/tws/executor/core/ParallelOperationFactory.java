@@ -74,10 +74,9 @@ public class ParallelOperationFactory {
               edge.getName());
           return bcastOp;
         } else if (OperationNames.GATHER.equals(edge.getOperation())) {
-          GatherBatchOperation gatherOp = new GatherBatchOperation(config, channel, taskPlan);
-          gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
-              edge.getName(), config, taskPlan);
-          return gatherOp;
+          return new GatherBatchOperation(config, channel, taskPlan,
+              sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
+              edge.getName(),  taskPlan);
         } else if (OperationNames.REDUCE.equals(edge.getOperation())) {
           ReduceBatchOperation reduceBatchOperation = new ReduceBatchOperation(config, channel,
               taskPlan);

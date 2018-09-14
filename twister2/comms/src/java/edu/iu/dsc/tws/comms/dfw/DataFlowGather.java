@@ -353,13 +353,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   @Override
   public void finish(int source) {
     LOG.info("Finish on DfReduce :" + source);
-//    if (!isLastReceiver() && partialReceiver != null) {
-//      partialReceiver.onFinish(source);
-//    }
-//    if (isLastReceiver() && finalReceiver != null) {
-//      finalReceiver.onFinish(source);
-//    }
-    while (!send(source, "", MessageFlags.EMPTY)) {
+    while (!send(source, new byte[0], MessageFlags.EMPTY)) {
       // lets progress until finish
       progress();
     }
