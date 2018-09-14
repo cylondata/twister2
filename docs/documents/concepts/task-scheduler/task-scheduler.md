@@ -18,20 +18,26 @@ scheduling algorithms namely RoundRobin, FirstFit, and DataLocality.
 
 ## Implementation
 
-The task scheduler has a base interface named ITaskScheduler that consists of two main methods 
-namely initialize and schedule methods to initialize the taskgraph configuration and schedule the 
-taskgraph based on the workers information available in the resource plan.
+The task scheduler has the main class named TaskScheduler which implements the base interface  
+ITaskScheduler that consists of two main methods namely initialize and schedule methods to initialize
+the taskgraph configuration and schedule the taskgraph based on the workers information available in
+the resource plan.
           
-    edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler 
-
-The task scheduler has the main class named TaskScheduler which is responsible for invoking the 
-respective schedulers based on the type of task and the scheduling mode. If it is a streaming 
-task, it will invoke the scheduleStreamingTask method whereas if it is a batch task it will invoke 
-the scheduleBatchTask method.
+    edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler
+    
+has the following methods namely
+    
+    initialize (Config config)
+    
+    schedule(DataflowTaskGraph graph, WorkerPlan plan)
+    
+The TaskScheduler is responsible for invoking the respective schedulers based on the type of task 
+and the scheduling mode. If it is a streaming task, it will invoke the scheduleStreamingTask method 
+whereas if it is a batch task it will invoke the scheduleBatchTask method.
 
     edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler
     
-has the following methods namely
+has the following methods such as
 
     scheduleStreamingTask()
     
@@ -41,9 +47,8 @@ has the following methods namely
     
 The scheduleStreamingTask and scheduleBatchTask call the generateTaskSchedulePlan with the scheduling
 class name as an argument which is specified in the task.yaml. The generateTaskSchedulePlan 
-dynamically load the respective task schedulers (streaming/batch -> roundrobin, firstfit, or 
-datalocalityaware) and access the initialize and schedule methods in the task schedulers to generate
-the task schedule plan.
+dynamically load the respective task schedulers (roundrobin, firstfit, or datalocalityaware) and 
+access the initialize and schedule methods in the task schedulers to generate the task schedule plan.
 
 ## Proto file
 
