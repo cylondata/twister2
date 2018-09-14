@@ -162,7 +162,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       throw new RuntimeException("Un-expected target id: " + target);
     }
 
-    if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+    if ((flags & MessageFlags.END) == MessageFlags.END) {
       Set<Integer> finished = finishedSources.get(target);
       if (finished.contains(source)) {
         LOG.log(Level.WARNING,

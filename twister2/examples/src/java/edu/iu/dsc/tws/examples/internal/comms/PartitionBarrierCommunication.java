@@ -144,7 +144,7 @@ public class PartitionBarrierCommunication implements IWorker {
           data[5] = 'd';
           data[6] = 'd';
           data[7] = 'd';
-          int flags = MessageFlags.FLAGS_LAST;
+          int flags = MessageFlags.LAST;
           if (i == 3) {
             flags = MessageFlags.BARRIER;
           }
@@ -184,7 +184,7 @@ public class PartitionBarrierCommunication implements IWorker {
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
-      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
         finished.get(target).put(source, true);
       }
 

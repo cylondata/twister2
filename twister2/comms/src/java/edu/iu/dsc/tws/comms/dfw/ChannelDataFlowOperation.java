@@ -606,7 +606,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     int id = currentMessage.getOriginatingId();
     MessageHeader header = currentMessage.getHeader();
     Object object = DataFlowContext.EMPTY_OBJECT;
-    if ((header.getFlags() & MessageFlags.EMPTY) != MessageFlags.EMPTY) {
+    if ((header.getFlags() & MessageFlags.END) != MessageFlags.END) {
       object = messageDeSerializer.get(receiveId).build(currentMessage,
           currentMessage.getHeader().getEdge());
     } else if ((header.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {

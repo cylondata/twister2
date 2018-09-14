@@ -372,7 +372,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 //    if (isLastReceiver() && finalReceiver != null) {
 //      finalReceiver.onFinish(source);
 //    }
-    while (!send(source, new byte[0], MessageFlags.EMPTY)) {
+    while (!send(source, new byte[0], MessageFlags.END)) {
       // lets progress until finish
       progress();
     }

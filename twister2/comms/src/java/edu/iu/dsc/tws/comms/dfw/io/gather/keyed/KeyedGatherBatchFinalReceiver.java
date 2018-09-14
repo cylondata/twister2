@@ -95,7 +95,7 @@ public class KeyedGatherBatchFinalReceiver implements MessageReceiver {
     boolean canAdd = true;
     Queue<Object> m = messages.get(target).get(source);
     Map<Integer, Boolean> finishedMessages = finished.get(target);
-    if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+    if ((flags & MessageFlags.END) == MessageFlags.END) {
       finishedMessages.put(source, true);
       return true;
     }
@@ -119,7 +119,7 @@ public class KeyedGatherBatchFinalReceiver implements MessageReceiver {
         m.add(object);
       }
 
-      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
 //        LOG.info(String.format("%d Final LAST target %d source %d", executor, target, source));
         finishedMessages.put(source, true);
       }

@@ -131,7 +131,7 @@ public abstract class BenchWorker implements IWorker {
         // lets generate a message
         int flag = 0;
         if (i == jobParameters.getIterations() - 1) {
-          flag = MessageFlags.FLAGS_LAST;
+          flag = MessageFlags.LAST;
         }
         sendMessages(task, data, flag);
       }

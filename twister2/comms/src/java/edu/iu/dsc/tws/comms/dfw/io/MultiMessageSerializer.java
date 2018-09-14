@@ -112,7 +112,7 @@ public class MultiMessageSerializer implements MessageSerializer {
       if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
           || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT
           || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
-        if ((sendMessage.getFlags() & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+        if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
           sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
           sendMessage.getSerializationState().setTotalBytes(0);
         } else {

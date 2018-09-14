@@ -99,7 +99,7 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
     Map<Integer, Boolean> finishedMessages = finished.get(target);
     Queue<Object> m = messages.get(target).get(source);
 
-    if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+    if ((flags & MessageFlags.END) == MessageFlags.END) {
       finishedMessages.put(source, true);
       return true;
     }
@@ -115,7 +115,7 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
       counts.get(target).put(source, c + 1);
 
       m.add(object);
-      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
         finishedMessages.put(source, true);
       }
     }
@@ -130,7 +130,7 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
       if (batchDone.get(target)) {
         if (!isEmptySent.get(target)) {
           if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(target,
-              new byte[0], MessageFlags.EMPTY, destination)) {
+              new byte[0], MessageFlags.END, destination)) {
             isEmptySent.put(target, true);
           } else {
             needsFurtherProgress = true;
@@ -207,7 +207,7 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
               }
             }
             if (last) {
-              flags = MessageFlags.FLAGS_LAST;
+              flags = MessageFlags.LAST;
             }
           }
           if (dataFlowOperation.sendPartial(target, sendList, flags, destination)) {
@@ -232,7 +232,7 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
         }
         if (dataFlowOperation.isDelegeteComplete() && allFinished && allZero) {
           if (dataFlowOperation.sendPartial(target, new byte[0],
-              MessageFlags.EMPTY, destination)) {
+              MessageFlags.END, destination)) {
             isEmptySent.put(target, true);
           } else {
             needsFurtherProgress = true;

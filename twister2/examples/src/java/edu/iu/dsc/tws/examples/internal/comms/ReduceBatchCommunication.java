@@ -124,7 +124,7 @@ public class ReduceBatchCommunication implements IWorker {
           // lets generate a message
           int flag = 0;
           if (i == 10 - 1) {
-            flag = MessageFlags.FLAGS_LAST;
+            flag = MessageFlags.LAST;
           }
           while (!reduce.send(task, data, flag)) {
             // lets wait a litte and try again
