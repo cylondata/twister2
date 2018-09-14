@@ -29,7 +29,7 @@ public class DefaultOutputCollection implements OutputCollection {
   }
 
   @Override
-  public boolean collect(int edge, IMessage m) {
+  public boolean collect(String edge, IMessage m) {
     boolean offer = this.outQueue.offer(m);
     if (offer) {
       count++;

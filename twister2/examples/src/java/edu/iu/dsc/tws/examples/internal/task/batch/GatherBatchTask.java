@@ -26,7 +26,6 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
-import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -40,9 +39,6 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 public class GatherBatchTask implements IWorker {
-
-  private RandomString randomString;
-
   @Override
   public void execute(Config config, int workerID, AllocatedResources resources,
                       IWorkerController workerController,
@@ -67,9 +63,19 @@ public class GatherBatchTask implements IWorker {
   private static class GeneratorTask extends BaseBatchSource {
     private static final long serialVersionUID = -254264903510284748L;
 
+    private int count = 0;
+
     @Override
     public void execute() {
-      context.write("gather-edge", "1");
+      if (count == 999) {
+        if (context.writeEnd("gather-edge", "Hello")) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (context.write("gather-edge", "Hello")) {
+          count++;
+        }
+      }
     }
   }
 

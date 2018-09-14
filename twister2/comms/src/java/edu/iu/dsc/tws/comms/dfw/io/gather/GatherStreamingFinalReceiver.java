@@ -20,12 +20,12 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
-public class StreamingFinalGatherReceiver extends StreamingPartialGatherReceiver {
-  private static final Logger LOG = Logger.getLogger(StreamingFinalGatherReceiver.class.getName());
+public class GatherStreamingFinalReceiver extends GatherStreamingPartialReceiver {
+  private static final Logger LOG = Logger.getLogger(GatherStreamingFinalReceiver.class.getName());
 
   private MessageReceiver receiver;
 
-  public StreamingFinalGatherReceiver(MessageReceiver receiver) {
+  public GatherStreamingFinalReceiver(MessageReceiver receiver) {
     this.receiver = receiver;
   }
 

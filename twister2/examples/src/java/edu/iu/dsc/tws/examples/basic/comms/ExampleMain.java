@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BAllReduceExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BGatherExample;
+import edu.iu.dsc.tws.examples.basic.comms.batch.BKeyedGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BKeyedPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BKeyedReduceExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BPartitionExample;
@@ -175,8 +176,18 @@ public class ExampleMain {
           break;
         case "gather":
           twister2Job = Twister2Job.newBuilder()
-              .setName("partition-batch-bench")
+              .setName("gather-batch-bench")
               .setWorkerClass(BGatherExample.class.getName())
+              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
+              .setConfig(jobConfig)
+              .build();
+          // now submit the job
+          Twister2Submitter.submitJob(twister2Job, config);
+          break;
+        case "keyedgather":
+          twister2Job = Twister2Job.newBuilder()
+              .setName("keyed-gather-batch-bench")
+              .setWorkerClass(BKeyedGatherExample.class.getName())
               .setRequestResource(new WorkerComputeResource(2, 1024), containers)
               .setConfig(jobConfig)
               .build();

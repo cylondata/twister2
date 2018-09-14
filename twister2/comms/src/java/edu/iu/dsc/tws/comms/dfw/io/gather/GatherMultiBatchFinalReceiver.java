@@ -19,11 +19,12 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KeyedGatherBatchFinalReceiver;
 
 public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
   private BatchReceiver batchReceiver;
 
-  private Map<Integer, GatherBatchFinalReceiver> receiverMap = new HashMap<>();
+  private Map<Integer, KeyedGatherBatchFinalReceiver> receiverMap = new HashMap<>();
 
   public GatherMultiBatchFinalReceiver(BatchReceiver receiver) {
     this.batchReceiver = receiver;
@@ -33,7 +34,8 @@ public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      GatherBatchFinalReceiver finalReceiver = new GatherBatchFinalReceiver(batchReceiver);
+      KeyedGatherBatchFinalReceiver finalReceiver = new KeyedGatherBatchFinalReceiver(
+          batchReceiver);
       receiverMap.put(e.getKey(), finalReceiver);
 
       finalReceiver.init(cfg, op, e.getValue());
@@ -42,7 +44,7 @@ public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    GatherBatchFinalReceiver finalReceiver = receiverMap.get(path);
+    KeyedGatherBatchFinalReceiver finalReceiver = receiverMap.get(path);
     return finalReceiver.onMessage(source, path, target, flags, object);
   }
 
@@ -50,7 +52,7 @@ public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
   public boolean progress() {
     boolean needsFurtherProgress = false;
 
-    for (Map.Entry<Integer, GatherBatchFinalReceiver> e : receiverMap.entrySet()) {
+    for (Map.Entry<Integer, KeyedGatherBatchFinalReceiver> e : receiverMap.entrySet()) {
       needsFurtherProgress = needsFurtherProgress | e.getValue().progress();
     }
     return needsFurtherProgress;

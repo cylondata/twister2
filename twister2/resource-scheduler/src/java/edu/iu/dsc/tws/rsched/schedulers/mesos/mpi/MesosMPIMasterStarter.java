@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -60,7 +61,7 @@ public final class MesosMPIMasterStarter {
 
 
     MesosMPIMasterStarter mpiMaster = new MesosMPIMasterStarter();
-    Thread.sleep(5000);
+    //Thread.sleep(5000);
     //gets the docker home directory
     String homeDir = System.getenv("HOME");
     int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
@@ -93,7 +94,29 @@ public final class MesosMPIMasterStarter {
       LOG.severe("Host unkown " + e.getMessage());
     }
 
-    String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
+
+
+    ZKJobMasterFinder finder = new ZKJobMasterFinder(mpiMaster.config);
+    finder.initialize();
+
+    String jobMasterIPandPort = finder.getJobMasterIPandPort();
+    if (jobMasterIPandPort == null) {
+      LOG.info("Job Master has not joined yet. Will wait and try to get the address ...");
+      jobMasterIPandPort = finder.waitAndGetJobMasterIPandPort(20000);
+      LOG.info("Job Master address: " + jobMasterIPandPort);
+    } else {
+      LOG.info("Job Master address: " + jobMasterIPandPort);
+    }
+
+    finder.close();
+
+
+
+    //old way of finding
+    //String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
+
+    String jobMasterPort = jobMasterIPandPort.substring(jobMasterIPandPort.lastIndexOf(":") + 1);
+    String jobMasterIP = jobMasterIPandPort.substring(0, jobMasterIPandPort.lastIndexOf(":"));
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("Worker ID..: " + workerId);
     StringBuilder outputBuilder = new StringBuilder();
@@ -105,7 +128,7 @@ public final class MesosMPIMasterStarter {
     Writer writer = new BufferedWriter(new OutputStreamWriter(
         new FileOutputStream("/twister2/hostFile", true)));
 
-    for (int i = 1; i < workerCount; i++) {
+    for (int i = 0; i < workerCount; i++) {
 
       writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
           + "\n");

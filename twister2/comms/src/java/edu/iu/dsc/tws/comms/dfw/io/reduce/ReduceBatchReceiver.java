@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 
 public abstract class ReduceBatchReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(ReduceBatchReceiver.class.getName());
@@ -110,12 +109,6 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
 
     if (messages.get(target) == null) {
       throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
-    }
-
-    if (!(object instanceof KeyedContent)) {
-      if ((flags & MessageFlags.EMPTY) != MessageFlags.EMPTY) {
-        throw new RuntimeException("Not keyed content: " + object);
-      }
     }
 
     Map<Integer, Boolean> finishedMessages = finished.get(target);

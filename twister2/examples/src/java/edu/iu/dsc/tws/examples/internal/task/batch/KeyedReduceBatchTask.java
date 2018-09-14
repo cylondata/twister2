@@ -47,7 +47,7 @@ public class KeyedReduceBatchTask extends TaskWorker {
 
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
-    graphBuilder.addSink("sink", r, 1).keyedReduce("source",
+    graphBuilder.addSink("sink", r, 4).keyedReduce("source",
         "keyed-reduce-edge", new IFunction() {
           @Override
           public Object onMessage(Object object1, Object object2) {
@@ -70,11 +70,11 @@ public class KeyedReduceBatchTask extends TaskWorker {
     @Override
     public void execute() {
       int[] val = {1};
-      if (count == 999) {
+      if (count == 1000) {
         if (context.writeEnd("keyed-reduce-edge", "" + count, val)) {
           count++;
         }
-      } else if (count < 999) {
+      } else if (count < 1000) {
         if (context.write("keyed-reduce-edge", "" + count, val)) {
           count++;
         }
@@ -118,7 +118,7 @@ public class KeyedReduceBatchTask extends TaskWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("partition-example");
+    jobBuilder.setName("keyed-reduce-example");
     jobBuilder.setWorkerClass(KeyedReduceBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);

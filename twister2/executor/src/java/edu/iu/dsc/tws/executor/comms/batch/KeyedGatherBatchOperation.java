@@ -11,49 +11,46 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.batch;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BatchReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
+import edu.iu.dsc.tws.comms.op.batch.BKeyedGather;
 import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
-public class KeyedReduceBatchOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(KeyedReduceBatchOperation.class.getName());
+public class KeyedGatherBatchOperation extends AbstractParallelOperation {
+  protected BKeyedGather op;
 
-  protected BKeyedReduce op;
-
-  public KeyedReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+  public KeyedGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                    Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                                    DataType dataType, DataType keyType,
-                                   String edgeName, IFunction function) {
+                                   String edgeName) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
-    op = new BKeyedReduce(channel, taskPlan, sources, dests, new ReduceFunctionImpl(function),
-        new ReduceRecvrImpl(), Utils.dataTypeToMessageType(keyType),
-        Utils.dataTypeToMessageType(dataType), new HashingSelector());
+    op = new BKeyedGather(channel, taskPlan, sources, dests,
+        Utils.dataTypeToMessageType(keyType),
+        Utils.dataTypeToMessageType(dataType), new GatherRecvrImpl(), new HashingSelector());
+
     communicationEdge = e.generate(edgeName);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
     TaskMessage taskMessage = (TaskMessage) message;
-    return op.reduce(source, taskMessage.getKey(), taskMessage.getContent(), flags);
+    return op.gather(source, taskMessage.getKey(), taskMessage.getContent(), flags);
   }
 
   @Override
@@ -61,41 +58,20 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
     return op.progress() || op.hasPending();
   }
 
-  private class ReduceFunctionImpl implements ReduceFunction {
-    private IFunction fn;
-
-    ReduceFunctionImpl(IFunction fn) {
-      this.fn = fn;
-    }
-
-    @Override
-    public void init(Config cfg, DataFlowOperation ops,
-                     Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public Object reduce(Object t1, Object t2) {
-      return fn.onMessage(t1, t2);
-    }
-  }
-
-  private class ReduceRecvrImpl implements ReduceReceiver {
+  private class GatherRecvrImpl implements BatchReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
-    public boolean receive(int target, Object object) {
-      TaskMessage msg = new TaskMessage(object,
+    public void receive(int target, Iterator<Object> it) {
+      TaskMessage msg = new TaskMessage(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
-        if (messages.offer(msg)) {
-          return true;
-        }
+        messages.offer(msg);
       }
-      return true;
     }
   }
 

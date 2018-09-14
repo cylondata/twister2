@@ -201,11 +201,12 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean progress() {
+    boolean partialNeedsProgress = false;
     try {
       delegete.progress();
       if (lock.tryLock()) {
         try {
-          finalReceiver.progress();
+          partialNeedsProgress = finalReceiver.progress();
         } finally {
           lock.unlock();
         }
@@ -214,7 +215,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-    return true;
+    return partialNeedsProgress;
   }
 
   public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {

@@ -28,6 +28,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -37,7 +38,7 @@ import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.gather.StreamingPartialGatherReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
@@ -66,7 +67,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   private ChannelDataFlowOperation delegete;
   private TaskPlan instancePlan;
   private int executor;
-  private MessageType type;
+  private MessageType dataType;
   private MessageType keyType;
   private boolean isKeyed;
   private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
@@ -79,18 +80,8 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
                         MessageReceiver finalRcvr,
                         int indx, int p,
                         Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
-    this(channel, sources, destination, finalRcvr, new StreamingPartialGatherReceiver(),
+    this(channel, sources, destination, finalRcvr, new GatherStreamingPartialReceiver(),
         indx, p, cfg, t, taskPlan, edge);
-  }
-
-  public DataFlowGather(TWSChannel channel, Set<Integer> sources, int destination,
-                        MessageReceiver finalRcvr,
-                        int indx, int p,
-                        Config cfg, MessageType t, MessageType keyType,
-                        TaskPlan taskPlan, int edge) {
-    this(channel, sources, destination, finalRcvr, new StreamingPartialGatherReceiver(),
-        indx, p, cfg, t, keyType, taskPlan, edge);
-    this.isKeyed = true;
   }
 
   public DataFlowGather(TWSChannel channel, Set<Integer> sources, int destination,
@@ -98,23 +89,25 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
                         MessageReceiver partialRcvr, int indx, int p,
                         Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this(channel, sources, destination, finalRcvr, partialRcvr,
-        indx, p, cfg, t, MessageType.SHORT, taskPlan, edge);
+        indx, p, cfg, taskPlan, false, t, null, edge);
     this.isKeyed = false;
   }
 
   public DataFlowGather(TWSChannel channel, Set<Integer> sources, int destination,
                         MessageReceiver finalRcvr,
                         MessageReceiver partialRcvr, int indx, int p,
-                        Config cfg, MessageType t, MessageType kt, TaskPlan taskPlan, int edge) {
+                        Config cfg, TaskPlan taskPlan, boolean keyed, MessageType dType,
+                        MessageType kType, int edge) {
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
     this.finalReceiver = finalRcvr;
     this.partialReceiver = partialRcvr;
     this.pathToUse = p;
-    this.keyType = kt;
+    this.keyType = kType;
+    this.dataType = dType;
     this.instancePlan = taskPlan;
-    this.isKeyed = true;
+    this.isKeyed = keyed;
 
     this.delegete = new ChannelDataFlowOperation(channel);
   }
@@ -255,7 +248,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
    * Initialize
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
-    this.type = t;
+    this.dataType = t;
     this.instancePlan = taskPlan;
     this.executor = taskPlan.getThisExecutor();
     // we only have one path
@@ -332,6 +325,11 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     return done && !needsFurtherProgress;
   }
 
+  @Override
+  public boolean isDelegeteComplete() {
+    return delegete.isComplete();
+  }
+
   protected Set<Integer> receivingExecutors() {
     return router.receivingExecutors();
   }
@@ -346,6 +344,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     return true;
   }
 
+
   @Override
   public void close() {
 
@@ -353,7 +352,11 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-
+    LOG.info("Finish on DfReduce :" + source);
+    while (!send(source, new byte[0], MessageFlags.EMPTY)) {
+      // lets progress until finish
+      progress();
+    }
   }
 
   @Override

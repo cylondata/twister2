@@ -157,6 +157,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
 
   @Override
   public void finish(int source) {
+    reduce.finish(source);
   }
 
   @Override

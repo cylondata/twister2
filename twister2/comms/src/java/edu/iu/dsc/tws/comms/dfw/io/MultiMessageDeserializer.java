@@ -58,7 +58,6 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
    */
   @Override
   public Object build(Object partialObject, int edge) {
-    LOG.info("*****************************************************************");
     ChannelMessage currentMessage = (ChannelMessage) partialObject;
     int readLength = 0;
     int bufferIndex = 0;
@@ -82,9 +81,6 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
         messageBuffers.add(dataBuffer);
         tempLength += dataBuffer.getByteBuffer().remaining();
         tempBufferIndex++;
-//        LOG.info(String.format("%d temp %d length %d readLength %d header %d buf_pos %d",
-//            executor, tempLength, length, readLength, header.getLength(),
-//            mpiBuffer.getByteBuffer().position()));
       }
 
       Object object = buildMessage(currentMessage, messageBuffers, length);
@@ -120,7 +116,6 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
     if (header == null) {
       throw new RuntimeException("Header must be built before the message");
     }
-//    LOG.info(String.format("%d deserilizing message", executor));
     while (readLength < header.getLength()) {
       List<DataBuffer> messageBuffers = new ArrayList<>();
       DataBuffer dataBuffer = buffers.get(bufferIndex);
@@ -134,9 +129,6 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
         messageBuffers.add(dataBuffer);
         tempLength += dataBuffer.getByteBuffer().remaining();
         tempBufferIndex++;
-//        LOG.info(String.format("%d temp %d length %d readLength %d header %d buf_pos %d",
-//            executor, tempLength, length, readLength, header.getLength(),
-//            mpiBuffer.getByteBuffer().position()));
       }
 
       Object object = getSingleDataBuffers(currentMessage, messageBuffers, length);
@@ -157,8 +149,8 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
     return returnList;
   }
 
-  public Object getSingleDataBuffers(ChannelMessage channelMessage,
-                                     List<DataBuffer> message, int length) {
+  private Object getSingleDataBuffers(ChannelMessage channelMessage,
+                                      List<DataBuffer> message, int length) {
     MessageType type = channelMessage.getType();
 
     if (!keyed) {
@@ -183,7 +175,6 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
    */
   @Override
   public MessageHeader buildHeader(DataBuffer buffer, int edge) {
-//   LOG.info(String.format("%d read header pos: %d", executor, buffer.getByteBuffer().position()));
     int sourceId = buffer.getByteBuffer().getInt();
     int flags = buffer.getByteBuffer().getInt();
     int destId = buffer.getByteBuffer().getInt();

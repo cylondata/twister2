@@ -14,17 +14,16 @@ package edu.iu.dsc.tws.examples.internal.task.batch;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -37,8 +36,9 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
+public class KeyedGatherBatchTask extends TaskWorker {
+  private static final Logger LOG = Logger.getLogger(KeyedGatherBatchTask.class.getName());
 
-public class AllReduceBatchTask extends TaskWorker {
   @Override
   public void execute() {
     GeneratorTask g = new GeneratorTask();
@@ -46,28 +46,30 @@ public class AllReduceBatchTask extends TaskWorker {
 
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
-    ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
-    computeConnection.allreduce("source", "all-reduce-edge",
-        Op.SUM, DataType.INTEGER);
+    graphBuilder.addSink("sink", r, 4).keyedGather("source",
+        "keyed-gather-edge", DataType.OBJECT, DataType.INTEGER);
     graphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = graphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
+    // this is a blocking call
     taskExecutor.execute(graph, plan);
   }
 
   private static class GeneratorTask extends BaseBatchSource {
     private static final long serialVersionUID = -254264903510284748L;
+
     private int count = 0;
+
     @Override
     public void execute() {
       int[] val = {1};
-      if (count == 999) {
-        if (context.writeEnd("all-reduce-edge", val)) {
+      if (count == 1000) {
+        if (context.writeEnd("keyed-gather-edge", "" + count, val)) {
           count++;
         }
-      } else if (count < 999) {
-        if (context.write("all-reduce-edge", val)) {
+      } else if (count < 1000) {
+        if (context.write("keyed-gather-edge", "" + count, val)) {
           count++;
         }
       }
@@ -80,9 +82,7 @@ public class AllReduceBatchTask extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-
-      System.out.println("Message AllReduced : " + message.getContent() + ", Count : " + count);
-
+      LOG.info("Message Keyed-Reduced : " + message.getContent() + ", Count : " + count);
       count++;
       return true;
     }
@@ -98,6 +98,7 @@ public class AllReduceBatchTask extends TaskWorker {
     return new WorkerPlan(workers);
   }
 
+
   public static void main(String[] args) {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -109,15 +110,13 @@ public class AllReduceBatchTask extends TaskWorker {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
-
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("reduce-task-example");
-    jobBuilder.setWorkerClass(AllReduceBatchTask.class.getName());
+    jobBuilder.setName("keyed-gather-example");
+    jobBuilder.setWorkerClass(KeyedGatherBatchTask.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
     Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
-
 }

@@ -17,9 +17,9 @@ import java.util.Map;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
-import edu.iu.dsc.tws.comms.dfw.io.gather.StreamingPartialGatherReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 
-public class AllGatherStreamingFinalReceiver extends StreamingPartialGatherReceiver {
+public class AllGatherStreamingFinalReceiver extends GatherStreamingPartialReceiver {
   private DataFlowBroadcast broadcast;
 
   public AllGatherStreamingFinalReceiver(DataFlowBroadcast broadcast) {

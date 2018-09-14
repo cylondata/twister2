@@ -40,7 +40,7 @@ public class BKeyedReduce {
 
   public BKeyedReduce(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> destinations, ReduceFunction fnc,
-                      ReduceReceiver rcvr, MessageType dType, MessageType kType,
+                      ReduceReceiver rcvr, MessageType kType, MessageType dType,
                       DestinationSelector destSelector) {
     this.keyType = kType;
     this.dataType = dType;
@@ -50,7 +50,7 @@ public class BKeyedReduce {
     }
     this.keyedReduce = new DataFlowMultiReduce(comm.getChannel(), sources, destinations,
         new ReduceMultiBatchFinalReceiver(fnc, rcvr),
-        new ReduceMultiBatchPartialReceiver(fnc), edges);
+        new ReduceMultiBatchPartialReceiver(fnc), edges, keyType, dataType);
     this.keyedReduce.init(comm.getConfig(), dataType, plan);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(sources, destinations);

@@ -182,6 +182,14 @@ public class RRClient {
     messageBuilders.put(builder.getDescriptorForType().getFullName(), builder);
   }
 
+  /**
+   * Register a message type for sending
+   * @param builder the message type
+   */
+  public void registerMessage(Message.Builder builder) {
+    messageBuilders.put(builder.getDescriptorForType().getFullName(), builder);
+  }
+
   private class Handler implements ChannelHandler {
     @Override
     public void onError(SocketChannel ch) {
@@ -225,7 +233,8 @@ public class RRClient {
       Message.Builder builder = messageBuilders.get(messageType);
 
       if (builder == null) {
-        throw new RuntimeException("Received response without a registered response");
+        throw new RuntimeException("Message builder should be registered, "
+            + "see registerMessage method");
       }
 
       try {

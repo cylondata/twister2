@@ -26,9 +26,9 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
-public class StreamingPartialGatherReceiver implements MessageReceiver {
+public class GatherStreamingPartialReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(
-      StreamingPartialGatherReceiver.class.getName());
+      GatherStreamingPartialReceiver.class.getName());
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
   private Map<Integer, Map<Integer, Queue<Object>>> messages = new TreeMap<>();

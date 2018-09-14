@@ -133,7 +133,8 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         List<byte[]> keyList = (List<byte[]>) keyPair.getValue();
         List<byte[]> dataList = (List<byte[]>) data;
         for (int i = 0; i < keyList.size(); i++) {
-          results.add(new KeyedContent(keyList.get(i), dataList.get(i)));
+          results.add(new KeyedContent(keyList.get(i), dataList.get(i),
+              message.getKeyType(), type));
         }
         return results;
       } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
@@ -143,7 +144,8 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         data = DataDeserializer.getAsByteArray(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey(), type);
       }
-      return new KeyedContent(keyPair.getValue(), data);
+      return new KeyedContent(keyPair.getValue(), data,
+          message.getKeyType(), type);
     }
   }
 
@@ -176,18 +178,19 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         List<byte[]> dataList = (List<byte[]>) data;
         results = new ArrayList<>();
         for (int i = 0; i < keyList.size(); i++) {
-          results.add(new KeyedContent(keyList.get(i), dataList.get(i)));
+          results.add(new KeyedContent(keyList.get(i), dataList.get(i),
+              message.getKeyType(), type));
         }
         return results;
       } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
         Object d = DataDeserializer.deserializeData(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey() - KEY_LENGTH_FEILD_SIZE,
             deserializer, type);
-        return new KeyedContent(keyPair.getValue(), d);
+        return new KeyedContent(keyPair.getValue(), d, message.getKeyType(), type);
       } else {
         Object d = DataDeserializer.deserializeData(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey(), deserializer, type);
-        return new KeyedContent(keyPair.getValue(), d);
+        return new KeyedContent(keyPair.getValue(), d, message.getKeyType(), type);
       }
     }
   }

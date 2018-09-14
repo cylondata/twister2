@@ -46,7 +46,7 @@ public class MesosWorkerController implements IWorkerController {
     this.job = job;
     this.workerIp = ip;
     this.workerPort = port;
-    numberOfWorkers = MesosContext.numberOfContainers(config);
+    numberOfWorkers = MesosContext.numberOfContainers(config) - 1;
     containerPerWorker = MesosContext.containerPerWorker(config);
     workerList = new ArrayList<>();
     thisWorker = new WorkerNetworkInfo(convertStringToIP(ip), port, workerID,

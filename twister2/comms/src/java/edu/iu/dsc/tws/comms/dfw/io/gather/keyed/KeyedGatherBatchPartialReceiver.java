@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io.gather;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,14 +39,16 @@ import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 
-public class GatherBatchPartialReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(GatherBatchPartialReceiver.class.getName());
+public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(
+      KeyedGatherBatchPartialReceiver.class.getName());
 
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
   private Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
   private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
   private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
+  private Map<Integer, List<Object>> sendMessages = new HashMap<>();
   protected Map<Integer, Boolean> isEmptySent = new HashMap<>();
   private DataFlowOperation dataFlowOperation;
   private int executor;
@@ -42,11 +56,11 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
   private int destination;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
 
-  public GatherBatchPartialReceiver(int dst) {
+  public KeyedGatherBatchPartialReceiver(int dst) {
     this.destination = dst;
   }
 
-
+  @SuppressWarnings("unchecked")
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     executor = op.getTaskPlan().getThisExecutor();
@@ -66,6 +80,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
       isEmptySent.put(e.getKey(), false);
+      sendMessages.put(e.getKey(), new ArrayList<Object>());
       counts.put(e.getKey(), countsPerTask);
       batchDone.put(e.getKey(), false);
     }
@@ -128,7 +143,8 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
         // now check weather we have the messages for this source
         Map<Integer, Queue<Object>> map = messages.get(target);
         Map<Integer, Boolean> finishedForTarget = finished.get(target);
-        Map<Integer, Integer> countMap = counts.get(target);
+        List<Object> sendList = sendMessages.get(target);
+
         boolean found = true;
         boolean allFinished = true;
         boolean moreThanOne = false;
@@ -136,7 +152,7 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
             canProgress = false;
-          } else {
+          } else if (e.getValue().size() > 0) {
             moreThanOne = true;
           }
 
@@ -152,18 +168,35 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
         boolean allZero = true;
 
         if (found) {
-          List<Object> out = new ArrayList<>();
-          for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
-            Queue<Object> valueList = e.getValue();
-            if (valueList.size() > 0) {
-              Object value = valueList.peek();
-              if (value instanceof List) {
-                out.addAll((List) value);
-              } else {
-                out.add(value);
+
+          //If we have got all the last messages then even if we don't get from all expected id's
+          //we can flush the remaining data
+          if (allFinished && dataFlowOperation.isDelegeteComplete()) {
+            for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
+              Queue<Object> valueList = e.getValue();
+              while (valueList.size() > 0) {
+                Object value = valueList.poll();
+                if (value instanceof List) {
+                  sendList.addAll((List) value);
+                } else {
+                  sendList.add(value);
+                }
+              }
+            }
+          } else {
+            for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
+              Queue<Object> valueList = e.getValue();
+              if (valueList.size() > 0) {
+                Object value = valueList.poll();
+                if (value instanceof List) {
+                  sendList.addAll((List) value);
+                } else {
+                  sendList.add(value);
+                }
               }
             }
           }
+
           int flags = 0;
           if (allFinished) {
             boolean last = true;
@@ -177,20 +210,16 @@ public class GatherBatchPartialReceiver implements MessageReceiver {
               flags = MessageFlags.FLAGS_LAST;
             }
           }
-          if (dataFlowOperation.sendPartial(target, out, flags, destination)) {
+          if (dataFlowOperation.sendPartial(target, sendList, flags, destination)) {
+            sendMessages.put(target, new ArrayList<Object>());
             for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
               Queue<Object> value = e.getValue();
-              if (value.size() > 0) {
-                value.poll();
-              }
               if (value.size() != 0) {
                 allZero = false;
               }
             }
-            for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
-              Integer i = e.getValue();
-              e.setValue(i - 1);
-            }
+
+
             if (allFinished && allZero) {
               batchDone.put(target, true);
               // we don't want to go through the while loop for this one
