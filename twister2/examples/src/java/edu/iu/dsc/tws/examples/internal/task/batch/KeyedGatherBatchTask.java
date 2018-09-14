@@ -82,8 +82,7 @@ public class KeyedGatherBatchTask extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.info("Message Keyed-Reduced : " + message.getContent()
-          + ", Count : " + count);
+      LOG.info("Message Keyed-Reduced : " + message.getContent() + ", Count : " + count);
       count++;
       return true;
     }
