@@ -229,6 +229,24 @@ public class ComputeConnection {
   }
 
   /**
+   * Create a keyed gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param keyTpe the key data type
+   * @param dataType the data type
+   *
+   * @return the ComputeConnection
+   */
+  public ComputeConnection keyedGather(String parent, String name,
+                                       DataType keyTpe, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.KEYED_GATHER, dataType, keyTpe);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
    * Create a gather connection
    *
    * @param parent the parent to connection
