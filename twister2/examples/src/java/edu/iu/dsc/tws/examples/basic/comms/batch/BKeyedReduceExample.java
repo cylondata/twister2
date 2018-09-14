@@ -60,7 +60,8 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
     keyedReduce = new BKeyedReduce(communicator, taskPlan, sources, targets,
         new KeyedReduceOperationFunction(Op.SUM, MessageType.INTEGER),
-        new FinalReduceReceiver(), MessageType.OBJECT, new SimpleKeyBasedSelector());
+        new FinalReduceReceiver(), MessageType.INTEGER, MessageType.INTEGER,
+        new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -70,10 +71,13 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
     }
+    reduceDone = true;
+    for (int target : targets) {
+      if (taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+        reduceDone = false;
+      }
+    }
 
-//    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-//      reduceDone = true;
-//    }
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
         workerId, sources, 1, tasksOfExecutor));
@@ -93,6 +97,9 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
+    if (reduceDone && sourcesDone && !keyedReduce.hasPending()) {
+      System.out.println(workerId + " is ............ Done");
+    }
     return reduceDone && sourcesDone && !keyedReduce.hasPending();
   }
 
@@ -112,6 +119,9 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
+      if (object == null) {
+        return true;
+      }
       KeyedContent keyedContent = (KeyedContent) object;
       int[] data = (int[]) keyedContent.getValue();
       LOG.log(Level.INFO, String.format("%d Results : %s", workerId,

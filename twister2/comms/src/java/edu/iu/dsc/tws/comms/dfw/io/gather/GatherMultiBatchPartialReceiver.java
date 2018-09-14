@@ -18,9 +18,10 @@ import java.util.Map;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KeyedGatherBatchPartialReceiver;
 
 public class GatherMultiBatchPartialReceiver implements MultiMessageReceiver {
-  private Map<Integer, GatherBatchPartialReceiver> receiverMap = new HashMap<>();
+  private Map<Integer, KeyedGatherBatchPartialReceiver> receiverMap = new HashMap<>();
 
   public GatherMultiBatchPartialReceiver() {
   }
@@ -29,7 +30,8 @@ public class GatherMultiBatchPartialReceiver implements MultiMessageReceiver {
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      GatherBatchPartialReceiver partialReceiver = new GatherBatchPartialReceiver(e.getKey());
+      KeyedGatherBatchPartialReceiver partialReceiver = new KeyedGatherBatchPartialReceiver(
+          e.getKey());
       receiverMap.put(e.getKey(), partialReceiver);
 
       partialReceiver.init(cfg, op, e.getValue());
@@ -38,14 +40,16 @@ public class GatherMultiBatchPartialReceiver implements MultiMessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    GatherBatchPartialReceiver partialReceiver = receiverMap.get(path);
+    KeyedGatherBatchPartialReceiver partialReceiver = receiverMap.get(path);
     return partialReceiver.onMessage(source, path, target, flags, object);
   }
 
   @Override
-  public void progress() {
-    for (Map.Entry<Integer, GatherBatchPartialReceiver> e : receiverMap.entrySet()) {
-      e.getValue().progress();
+  public boolean progress() {
+    boolean needsFurtherProgress = false;
+    for (Map.Entry<Integer, KeyedGatherBatchPartialReceiver> e : receiverMap.entrySet()) {
+      needsFurtherProgress = needsFurtherProgress | e.getValue().progress();
     }
+    return needsFurtherProgress;
   }
 }

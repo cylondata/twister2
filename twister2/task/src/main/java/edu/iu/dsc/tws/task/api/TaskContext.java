@@ -144,7 +144,7 @@ public class TaskContext {
     if (isDone.containsKey(edge) && isDone.get(edge)) {
       throw new RuntimeException("Cannot send on a stream that ended");
     }
-    return collection.collect(0, new TaskMessage(key, message, edge, taskId));
+    return collection.collect(edge, new TaskMessage(key, message, edge, taskId));
   }
 
   /**
@@ -156,7 +156,7 @@ public class TaskContext {
     if (isDone.containsKey(edge) && isDone.get(edge)) {
       throw new RuntimeException("Cannot send on a stream that ended");
     }
-    return collection.collect(0, new TaskMessage(message, edge, taskId));
+    return collection.collect(edge, new TaskMessage(message, edge, taskId));
   }
 
   /**
@@ -168,7 +168,22 @@ public class TaskContext {
     if (isDone.containsKey(edge) && isDone.get(edge)) {
       throw new RuntimeException("Cannot send on a stream that ended");
     }
-    boolean collect = collection.collect(0, new TaskMessage(message, edge, taskId));
+    boolean collect = collection.collect(edge, new TaskMessage(message, edge, taskId));
+    isDone.put(edge, true);
+    return collect;
+  }
+
+  /**
+   * Write the last message
+   * @param edge edge
+   * @param key key
+   * @param message message
+   */
+  public boolean writeEnd(String edge, Object key, Object message) {
+    if (isDone.containsKey(edge) && isDone.get(edge)) {
+      throw new RuntimeException("Cannot send on a stream that ended");
+    }
+    boolean collect = collection.collect(edge, new TaskMessage(key, message, edge, taskId));
     isDone.put(edge, true);
     return collect;
   }

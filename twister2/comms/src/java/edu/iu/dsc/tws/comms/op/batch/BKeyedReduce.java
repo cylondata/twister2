@@ -15,8 +15,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.api.KeyedReduceFunction;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.ReduceReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowMultiReduce;
@@ -34,16 +34,23 @@ public class BKeyedReduce {
 
   private DestinationSelector destinationSelector;
 
+  private MessageType keyType;
+
+  private MessageType dataType;
+
   public BKeyedReduce(Communicator comm, TaskPlan plan,
-                      Set<Integer> sources, Set<Integer> destinations, KeyedReduceFunction fnc,
-                      ReduceReceiver rcvr, MessageType dataType, DestinationSelector destSelector) {
+                      Set<Integer> sources, Set<Integer> destinations, ReduceFunction fnc,
+                      ReduceReceiver rcvr, MessageType kType, MessageType dType,
+                      DestinationSelector destSelector) {
+    this.keyType = kType;
+    this.dataType = dType;
     Set<Integer> edges = new HashSet<>();
     for (int i = 0; i < destinations.size(); i++) {
       edges.add(comm.nextEdge());
     }
     this.keyedReduce = new DataFlowMultiReduce(comm.getChannel(), sources, destinations,
         new ReduceMultiBatchFinalReceiver(fnc, rcvr),
-        new ReduceMultiBatchPartialReceiver(fnc), edges);
+        new ReduceMultiBatchPartialReceiver(fnc), edges, keyType, dataType);
     this.keyedReduce.init(comm.getConfig(), dataType, plan);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(sources, destinations);
@@ -52,8 +59,8 @@ public class BKeyedReduce {
 
   public boolean reduce(int src, Object key, Object data, int flags) {
     int dest = destinationSelector.next(src, key);
-    return keyedReduce.send(src, new KeyedContent(key, data, MessageType.INTEGER,
-        MessageType.INTEGER), flags, dest);
+    return keyedReduce.send(src, new KeyedContent(key, data, keyType,
+        dataType), flags, dest);
   }
 
   public boolean hasPending() {

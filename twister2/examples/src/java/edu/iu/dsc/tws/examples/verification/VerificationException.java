@@ -9,24 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.basic.taskinformation;
+package edu.iu.dsc.tws.examples.verification;
 
-public class TaskInformation {
+public class VerificationException extends Exception {
+  private static final long serialVersionUID = 8518462128140814091L;
 
-  private final String taskName;
-  private final int jobId;
-
-  public TaskInformation(String taskName, int jobId) {
-    this.taskName = taskName;
-    this.jobId = jobId;
+  public VerificationException(String message) {
+    super(message);
   }
-
-  public String getTaskName() {
-    return taskName;
-  }
-
-  public int getJobId() {
-    return jobId;
-  }
-
 }

@@ -73,9 +73,9 @@ public class Test {
   public void runTest2() {
     IntData data = new IntData(128);
     List list = new ArrayList<>();
-    list.add(new KeyedContent(new Short((short) 0), data));
+    list.add(new KeyedContent(new Short((short) 0), data, MessageType.OBJECT, MessageType.INTEGER));
     data = new IntData(128);
-    list.add(new KeyedContent(new Short((short) 1), data));
+    list.add(new KeyedContent(new Short((short) 1), data, MessageType.OBJECT, MessageType.INTEGER));
     ChannelMessage message = serializeObject(list, 1);
     System.out.println("Serialized first");
     deserialize(message);

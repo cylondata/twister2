@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.allgather.AllGatherStreamingFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.StreamingPartialGatherReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 
 public class DataFlowAllGather implements DataFlowOperation {
   private static final Logger LOG = Logger.getLogger(DataFlowAllGather.class.getName());
@@ -76,7 +76,7 @@ public class DataFlowAllGather implements DataFlowOperation {
     broadcast = new DataFlowBroadcast(channel, middleTask, destinations, finalReceiver);
     broadcast.init(config, type, instancePlan, broadCastEdge);
 
-    StreamingPartialGatherReceiver partialReceiver = new StreamingPartialGatherReceiver();
+    GatherStreamingPartialReceiver partialReceiver = new GatherStreamingPartialReceiver();
     AllGatherStreamingFinalReceiver finalRecvr = new AllGatherStreamingFinalReceiver(broadcast);
 
     gather = new DataFlowGather(channel, sources, middleTask,

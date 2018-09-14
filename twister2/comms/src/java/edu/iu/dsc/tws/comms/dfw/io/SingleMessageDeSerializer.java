@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -114,7 +113,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
     ChannelMessage message = (ChannelMessage) partialObject;
     MessageType type = message.getType();
     //Used when handling multi messages
-    List<ImmutablePair<byte[], byte[]>> results;
+    List<KeyedContent> results;
     if (!keyed) {
       return DataDeserializer.getAsByteArray(message.getBuffers(),
           message.getHeader().getLength(), type);
@@ -134,7 +133,8 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         List<byte[]> keyList = (List<byte[]>) keyPair.getValue();
         List<byte[]> dataList = (List<byte[]>) data;
         for (int i = 0; i < keyList.size(); i++) {
-          results.add(new ImmutablePair<>(keyList.get(i), dataList.get(i)));
+          results.add(new KeyedContent(keyList.get(i), dataList.get(i),
+              message.getKeyType(), type));
         }
         return results;
       } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
@@ -144,8 +144,8 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         data = DataDeserializer.getAsByteArray(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey(), type);
       }
-
-      return new ImmutablePair<>(keyPair.getValue(), data);
+      return new KeyedContent(keyPair.getValue(), data,
+          message.getKeyType(), type);
     }
   }
 
@@ -167,7 +167,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
           message.getBuffers(), deserializer);
       MessageType keyType = message.getKeyType();
       Object data;
-      List<ImmutablePair<byte[], byte[]>> results;
+      List<KeyedContent> results;
 
       if (MessageTypeUtils.isMultiMessageType(keyType)) {
         List<byte[]> keyList = (List<byte[]>) keyPair.getValue();
@@ -178,17 +178,19 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         List<byte[]> dataList = (List<byte[]>) data;
         results = new ArrayList<>();
         for (int i = 0; i < keyList.size(); i++) {
-          results.add(new ImmutablePair<>(keyList.get(i), dataList.get(i)));
+          results.add(new KeyedContent(keyList.get(i), dataList.get(i),
+              message.getKeyType(), type));
         }
         return results;
       } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
-        return DataDeserializer.deserializeData(message.getBuffers(),
+        Object d = DataDeserializer.deserializeData(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey() - KEY_LENGTH_FEILD_SIZE,
             deserializer, type);
-
+        return new KeyedContent(keyPair.getValue(), d, message.getKeyType(), type);
       } else {
-        return DataDeserializer.deserializeData(message.getBuffers(),
+        Object d = DataDeserializer.deserializeData(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey(), deserializer, type);
+        return new KeyedContent(keyPair.getValue(), d, message.getKeyType(), type);
       }
     }
   }

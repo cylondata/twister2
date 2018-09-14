@@ -237,6 +237,9 @@ public class SingleMessageSerializer implements MessageSerializer {
 
     if (state.getPart() == SerializeState.Part.INIT
         || state.getPart() == SerializeState.Part.HEADER) {
+      if (key instanceof byte[]) {
+        LOG.info("Byte message with size: " + ((byte[]) key).length);
+      }
       boolean complete = KeySerializer.copyKeyToBuffer(key,
           keyType, targetBuffer.getByteBuffer(), state, serializer);
       if (complete) {

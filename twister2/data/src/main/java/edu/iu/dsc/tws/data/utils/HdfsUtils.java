@@ -81,8 +81,9 @@ public class HdfsUtils {
   }
 
   public Path getPath() {
-    String directoryString = HdfsDataContext.getHdfsUrlDefault(this.config) + this.fileName;
+    String directoryString = HdfsDataContext.getHdfsUrlDefault(this.config) + "/" + this.fileName;
     Path path = new Path(directoryString);
+    LOG.info("Directory String Is:" + directoryString + "\tpath:" + path);
     return path;
   }
 
@@ -130,7 +131,7 @@ public class HdfsUtils {
   public int getLengthOfFile(String fName) {
     int length = 0;
     String inputFileName = HdfsDataContext.getHdfsDataDirectory(config) + "/" + fName;
-    String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + inputFileName;
+    String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + "/" + inputFileName;
     Path path = new Path(directoryString);
     HadoopFileSystem hadoopFileSystem = createHDFSFileSystem();
     try {

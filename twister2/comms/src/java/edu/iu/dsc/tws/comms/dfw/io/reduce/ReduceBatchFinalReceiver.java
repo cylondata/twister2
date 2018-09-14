@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -62,8 +61,6 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
       Map<Integer, Queue<Object>> map = messages.get(t);
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
       Map<Integer, Integer> countMap = counts.get(t);
-      Map<Integer, Integer> totalCountMap = totalCounts.get(t);
-      Set<Integer> emptyMessages = emptyReceivedSources.get(t);
 
       boolean found = true;
 

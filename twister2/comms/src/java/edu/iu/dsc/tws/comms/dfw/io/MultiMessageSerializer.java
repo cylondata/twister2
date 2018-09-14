@@ -97,6 +97,9 @@ public class MultiMessageSerializer implements MessageSerializer {
     while (sendBuffers.size() > 0 && sendMessage.serializedState()
         != OutMessage.SendState.SERIALIZED) {
       DataBuffer buffer = sendBuffers.poll();
+      if (buffer == null) {
+        break;
+      }
 
       if (sendMessage.serializedState() == OutMessage.SendState.INIT
           || sendMessage.serializedState() == OutMessage.SendState.SENT_INTERNALLY) {

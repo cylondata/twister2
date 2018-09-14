@@ -60,7 +60,7 @@ public abstract class KeyedReduceBatchReceiver implements MessageReceiver {
   protected Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
 
   //Variables related to message buffering
-  protected int bufferSize = 10;
+  protected int bufferSize = 1;
   protected boolean bufferTillEnd = false;
   protected Map<Integer, Integer> bufferCounts = new HashMap<>();
   protected Map<Integer, Object> reducedValueMap = new HashMap<>();

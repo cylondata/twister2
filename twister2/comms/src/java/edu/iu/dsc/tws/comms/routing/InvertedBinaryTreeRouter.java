@@ -115,7 +115,9 @@ public class InvertedBinaryTreeRouter {
         LOG.fine(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
       }
     }
-
+//    LOG.info(String.format("%d Index %d Destination identifiers %s receiveExecs %s receiveTasks "
+//            + "%s sendInternal %s sendExternal %s", executor, index, receiveExecutors,
+//        receiveTasks, sendInternalTasks, sendExternalTasks, destinationIdentifiers));
 //    LOG.info(String.format("****** %d internal tasks: %s",
 //        plan.getThisExecutor(), sendInternalTasks));
 //    LOG.info(String.format("****** %d external tasks: %s",
@@ -162,8 +164,8 @@ public class InvertedBinaryTreeRouter {
     if (o != null) {
       return (int) o;
     } else {
-      throw new RuntimeException(String.format("%d Unexpected source - %s requesting destination",
-          executor, source));
+      throw new RuntimeException(String.format("%d Unexpected source - "
+              + "%s requesting destination %s", executor, source, destinationIdentifiers));
     }
   }
 

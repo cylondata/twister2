@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BAllReduceExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BGatherExample;
+import edu.iu.dsc.tws.examples.basic.comms.batch.BKeyedGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BKeyedPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BKeyedReduceExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BPartitionExample;
@@ -64,6 +65,7 @@ public class ExampleMain {
     options.addOption(Utils.createOption(Constants.ARGS_PRINT_INTERVAL, true, "Threads", false));
     options.addOption(Utils.createOption(Constants.ARGS_DATA_TYPE, true, "Data", false));
     options.addOption(Utils.createOption(Constants.ARGS_INIT_ITERATIONS, true, "Data", false));
+    options.addOption(Constants.ARGS_VERIFY, false, "verify");
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
@@ -72,6 +74,7 @@ public class ExampleMain {
     int itr = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_ITR));
     String operation = cmd.getOptionValue(Constants.ARGS_OPERATION);
     boolean stream = cmd.hasOption(Constants.ARGS_STREAM);
+    boolean verify = cmd.hasOption(Constants.ARGS_VERIFY);
 
     String threads = "true";
     if (cmd.hasOption(Constants.ARGS_THREADS)) {
@@ -122,6 +125,7 @@ public class ExampleMain {
     jobConfig.put(Constants.ARGS_PRINT_INTERVAL, printInt);
     jobConfig.put(Constants.ARGS_DATA_TYPE, dataType);
     jobConfig.put(Constants.ARGS_INIT_ITERATIONS, intItr);
+    jobConfig.put(Constants.ARGS_VERIFY, verify);
 
     // build the job
     Twister2Job twister2Job;
@@ -172,8 +176,18 @@ public class ExampleMain {
           break;
         case "gather":
           twister2Job = Twister2Job.newBuilder()
-              .setName("partition-batch-bench")
+              .setName("gather-batch-bench")
               .setWorkerClass(BGatherExample.class.getName())
+              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
+              .setConfig(jobConfig)
+              .build();
+          // now submit the job
+          Twister2Submitter.submitJob(twister2Job, config);
+          break;
+        case "keyedgather":
+          twister2Job = Twister2Job.newBuilder()
+              .setName("keyed-gather-batch-bench")
+              .setWorkerClass(BKeyedGatherExample.class.getName())
               .setRequestResource(new WorkerComputeResource(2, 1024), containers)
               .setConfig(jobConfig)
               .build();

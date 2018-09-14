@@ -52,22 +52,14 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
   private TaskPlan plan;
 
-  private MessageType type;
+  private MessageType dataType;
 
-  public DataFlowMultiGather(TWSChannel chnl,
-                             Set<Integer> sources, Set<Integer> destination,
-                             MultiMessageReceiver finalRecv, Set<Integer> es) {
-    this.channel = chnl;
-    this.sources = sources;
-    this.destinations = destination;
-    this.finalReceiver = finalRecv;
-    this.edges = es;
-    this.gatherMap = new HashMap<>();
-  }
+  private MessageType keyType;
 
   public DataFlowMultiGather(TWSChannel chnl, Set<Integer> sources, Set<Integer> destination,
                              MultiMessageReceiver finalRecv, MultiMessageReceiver partialRecv,
-                             Set<Integer> es) {
+                             Set<Integer> es, MessageType kType,
+                             MessageType dType) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
@@ -75,6 +67,8 @@ public class DataFlowMultiGather implements DataFlowOperation {
     this.edges = es;
     this.gatherMap = new HashMap<>();
     this.partialReceiver = partialRecv;
+    this.dataType = dType;
+    this.keyType = kType;
   }
 
   @Override
@@ -108,19 +102,27 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
   @Override
   public synchronized boolean progress() {
+    boolean needsFurther = false;
+
     try {
       for (DataFlowGather reduce : gatherMap.values()) {
-        reduce.progress();
+        if (reduce.progress()) {
+          needsFurther = true;
+        }
       }
       if (partialReceiver != null) {
-        partialReceiver.progress();
+        if (partialReceiver.progress()) {
+          needsFurther = true;
+        }
       }
-      finalReceiver.progress();
+      if (finalReceiver.progress()) {
+        needsFurther = true;
+      }
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-    return true;
+    return needsFurther;
   }
 
   @Override
@@ -129,6 +131,9 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
   @Override
   public void finish(int source) {
+    for (DataFlowGather gather : gatherMap.values()) {
+      gather.finish(source);
+    }
   }
 
   @Override
@@ -138,14 +143,10 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
   /**
    * Initialize
-   * @param config
-   * @param t
-   * @param instancePlan
-   * @param edge
    */
-  public void init(Config config, MessageType t, TaskPlan instancePlan, int edge) {
+  public void init(Config config, MessageType dType, TaskPlan instancePlan, int edge) {
     executor = instancePlan.getThisExecutor();
-    this.type = t;
+    this.dataType = dType;
     this.plan = instancePlan;
 
     Map<Integer, Map<Integer, List<Integer>>> finalReceives = new HashMap<>();
@@ -160,13 +161,14 @@ public class DataFlowMultiGather implements DataFlowOperation {
       if (partialReceiver != null) {
         partialRcvr = new GatherPartialReceiver(dest);
         gather = new DataFlowGather(channel, sources, dest,
-            finalRcvr, partialRcvr, count, dest, config, t, instancePlan, edgeList.get(count));
+            finalRcvr, partialRcvr, count, dest, config, instancePlan,
+            true, keyType, dataType, edgeList.get(count));
       } else {
         gather = new DataFlowGather(channel, sources, dest,
-            finalRcvr, count, dest, config, t, instancePlan, edgeList.get(count));
+            finalRcvr, count, dest, config, dType, instancePlan, edgeList.get(count));
       }
 
-      gather.init(config, t, instancePlan, edgeList.get(count));
+      gather.init(config, dType, instancePlan, edgeList.get(count));
       gatherMap.put(dest, gather);
       count++;
 
@@ -191,6 +193,33 @@ public class DataFlowMultiGather implements DataFlowOperation {
     throw new RuntimeException("Not implemented");
   }
 
+  @Override
+  public boolean isDelegeteComplete() {
+    boolean isDone = true;
+    for (DataFlowGather gather : gatherMap.values()) {
+      isDone = isDone && gather.isDelegeteComplete();
+      if (!isDone) {
+        //No need to check further if we already have one false
+        return false;
+      }
+    }
+    return isDone;
+  }
+
+  @Override
+  public boolean isComplete() {
+    boolean isDone = true;
+
+    for (DataFlowGather gather : gatherMap.values()) {
+      isDone = isDone && gather.isComplete();
+      if (!isDone) {
+        //No need to check further if we already have one false
+        return false;
+      }
+    }
+    return isDone;
+  }
+
   private class GatherPartialReceiver implements MessageReceiver {
     private int destination;
 
@@ -210,7 +239,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
     @Override
     public boolean progress() {
-      return true;
+      return partialReceiver.progress();
     }
   }
 
@@ -233,7 +262,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
     @Override
     public boolean progress() {
-      return true;
+      return finalReceiver.progress();
     }
   }
 }
