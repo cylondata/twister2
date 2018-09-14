@@ -58,9 +58,8 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
       throw new IllegalArgumentException("Operation expects a function");
     }
 
-    op = new SReduce(channel, taskPlan, sources, dest,
-        new ReduceFunctionImpl(function), new FinalReduceReceiver(),
-        Utils.dataTypeToMessageType(dataType));
+    op = new SReduce(channel, taskPlan, sources, dest, Utils.dataTypeToMessageType(dataType),
+        new ReduceFunctionImpl(function), new FinalReduceReceiver());
   }
 
   @Override

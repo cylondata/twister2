@@ -53,9 +53,8 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
     }
 
     keyedReduce = new SKeyedReduce(communicator, taskPlan, sources, targets,
-        new ReduceIdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()),
-        MessageType.OBJECT, MessageType.OBJECT,
-        new SimpleKeyBasedSelector());
+        MessageType.OBJECT, MessageType.OBJECT, new ReduceIdentityFunction(),
+        new FinalReduceReceiver(jobParameters.getIterations()), new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -65,10 +64,6 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
     }
-
-//    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-//      reduceDone = true;
-//    }
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
         workerId, sources, 1, tasksOfExecutor));

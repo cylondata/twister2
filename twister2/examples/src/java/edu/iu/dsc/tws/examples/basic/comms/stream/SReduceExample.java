@@ -48,9 +48,8 @@ public class SReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    reduce = new SReduce(communicator, taskPlan, sources, target,
-        new ReduceIdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()),
-        MessageType.INTEGER);
+    reduce = new SReduce(communicator, taskPlan, sources, target, MessageType.INTEGER,
+        new ReduceIdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()));
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,

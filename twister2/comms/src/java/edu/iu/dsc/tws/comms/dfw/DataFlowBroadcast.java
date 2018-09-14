@@ -228,7 +228,6 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     } else {
       routingParameters = sendRoutingParameters(src, DataFlowContext.DEFAULT_DESTINATION);
     }
-//    LOG.info("Bcast passing down: " + routingParameters);
 
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(src);

@@ -51,9 +51,8 @@ public class SAllReduceExample extends BenchWorker {
       targets.add(i);
     }
     // create the communication
-    reduce = new SAllReduce(communicator, taskPlan, sources, targets,
-        new IdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()),
-        MessageType.INTEGER);
+    reduce = new SAllReduce(communicator, taskPlan, sources, targets, MessageType.INTEGER,
+        new IdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()));
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,

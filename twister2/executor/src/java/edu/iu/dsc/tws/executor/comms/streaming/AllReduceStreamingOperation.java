@@ -58,8 +58,8 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
 
     this.fn = function;
     this.edgeGenerator = e;
-    op = new SAllReduce(channel, taskPlan, sources, dest, new ReduceFnImpl(fn),
-        new FinalReduceReceive(), Utils.dataTypeToMessageType(dataType));
+    op = new SAllReduce(channel, taskPlan, sources, dest,
+        Utils.dataTypeToMessageType(dataType), new ReduceFnImpl(fn), new FinalReduceReceive());
     communicationEdge = e.generate(edgeName);
   }
 

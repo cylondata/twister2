@@ -39,10 +39,6 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
 
   private SKeyedReduce op;
 
-  private MessageType dataType;
-
-  private MessageType keyType;
-
   public KeyedReduceStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                        Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                                        DataType dType, DataType kType,
@@ -57,12 +53,12 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
       throw new IllegalArgumentException("Targets should have more than 0 elements");
     }
 
-    dataType = Utils.dataTypeToMessageType(dType);
-    keyType = Utils.dataTypeToMessageType(kType);
+    MessageType dataType = Utils.dataTypeToMessageType(dType);
+    MessageType keyType = Utils.dataTypeToMessageType(kType);
 
     this.edgeGenerator = e;
-    op = new SKeyedReduce(channel, taskPlan, sources, dests, new ReduceFunctionImpl(fn),
-         new ReduceRecvrImpl(), dataType, keyType, new HashingSelector());
+    op = new SKeyedReduce(channel, taskPlan, sources, dests, keyType, dataType,
+        new ReduceFunctionImpl(fn), new ReduceRecvrImpl(), new HashingSelector());
   }
 
   @Override
