@@ -124,7 +124,7 @@ public class JobParameters {
     int iterations = Integer.parseInt(cfg.getStringValue(Constants.ARGS_ITR));
     int size = Integer.parseInt(cfg.getStringValue(Constants.ARGS_SIZE));
     String col = cfg.getStringValue(Constants.ARGS_OPERATION);
-    int containers = Integer.parseInt(cfg.getStringValue(Constants.ARGS_CONTAINERS));
+    int containers = Integer.parseInt(cfg.getStringValue(Constants.ARGS_WORKERS));
     String taskStages = cfg.getStringValue(Constants.ARGS_TASK_STAGES);
     int gap = Integer.parseInt(cfg.getStringValue(Constants.ARGS_GAP));
     String fName = cfg.getStringValue(Constants.ARGS_FNAME);

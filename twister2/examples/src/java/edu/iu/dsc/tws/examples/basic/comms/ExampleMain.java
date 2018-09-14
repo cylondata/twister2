@@ -52,7 +52,7 @@ public class ExampleMain {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     Options options = new Options();
-    options.addOption(Constants.ARGS_CONTAINERS, true, "Containers");
+    options.addOption(Constants.ARGS_WORKERS, true, "Workers");
     options.addOption(Constants.ARGS_SIZE, true, "Size");
     options.addOption(Constants.ARGS_ITR, true, "Iteration");
     options.addOption(Utils.createOption(Constants.ARGS_OPERATION, true, "Operation", true));
@@ -69,7 +69,7 @@ public class ExampleMain {
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
-    int containers = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_CONTAINERS));
+    int workers = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_WORKERS));
     int size = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_SIZE));
     int itr = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_ITR));
     String operation = cmd.getOptionValue(Constants.ARGS_OPERATION);
@@ -116,7 +116,7 @@ public class ExampleMain {
     jobConfig.put(Constants.ARGS_ITR, Integer.toString(itr));
     jobConfig.put(Constants.ARGS_OPERATION, operation);
     jobConfig.put(Constants.ARGS_SIZE, Integer.toString(size));
-    jobConfig.put(Constants.ARGS_CONTAINERS, Integer.toString(containers));
+    jobConfig.put(Constants.ARGS_WORKERS, Integer.toString(workers));
     jobConfig.put(Constants.ARGS_TASK_STAGES, taskStages);
     jobConfig.put(Constants.ARGS_GAP, gap);
     jobConfig.put(Constants.ARGS_FNAME, fName);
@@ -135,20 +135,20 @@ public class ExampleMain {
           twister2Job = Twister2Job.newBuilder()
               .setName("reduce-batch-bench")
               .setWorkerClass(BReduceExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
+              .setRequestResource(new WorkerComputeResource(2, 1024), workers)
               .setConfig(jobConfig)
               .build();
           // now submit the job
           Twister2Submitter.submitJob(twister2Job, config);
           break;
         case "allreduce":
-          submitJob(config, containers, jobConfig, BAllReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, BAllReduceExample.class.getName());
           break;
         case "keyedreduce":
           twister2Job = Twister2Job.newBuilder()
               .setName("keyed-reduce-batch-bench")
               .setWorkerClass(BKeyedReduceExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
+              .setRequestResource(new WorkerComputeResource(2, 1024), workers)
               .setConfig(jobConfig)
               .build();
           // now submit the job
@@ -158,7 +158,7 @@ public class ExampleMain {
           twister2Job = Twister2Job.newBuilder()
               .setName("partition-batch-bench")
               .setWorkerClass(BPartitionExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
+              .setRequestResource(new WorkerComputeResource(2, 1024), workers)
               .setConfig(jobConfig)
               .build();
           // now submit the job
@@ -168,7 +168,7 @@ public class ExampleMain {
           twister2Job = Twister2Job.newBuilder()
               .setName("keyed-partition-batch-bench")
               .setWorkerClass(BKeyedPartitionExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
+              .setRequestResource(new WorkerComputeResource(2, 1024), workers)
               .setConfig(jobConfig)
               .build();
           // now submit the job
@@ -178,7 +178,7 @@ public class ExampleMain {
           twister2Job = Twister2Job.newBuilder()
               .setName("gather-batch-bench")
               .setWorkerClass(BGatherExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
+              .setRequestResource(new WorkerComputeResource(2, 1024), workers)
               .setConfig(jobConfig)
               .build();
           // now submit the job
@@ -188,7 +188,7 @@ public class ExampleMain {
           twister2Job = Twister2Job.newBuilder()
               .setName("keyed-gather-batch-bench")
               .setWorkerClass(BKeyedGatherExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
+              .setRequestResource(new WorkerComputeResource(2, 1024), workers)
               .setConfig(jobConfig)
               .build();
           // now submit the job
@@ -198,28 +198,28 @@ public class ExampleMain {
     } else {
       switch (operation) {
         case "reduce":
-          submitJob(config, containers, jobConfig, SReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, SReduceExample.class.getName());
           break;
         case "keyedreduce":
-          submitJob(config, containers, jobConfig, SKeyedReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, SKeyedReduceExample.class.getName());
           break;
         case "bcast":
-          submitJob(config, containers, jobConfig, SBroadcastExample.class.getName());
+          submitJob(config, workers, jobConfig, SBroadcastExample.class.getName());
           break;
         case "partition":
-          submitJob(config, containers, jobConfig, SPartitionExample.class.getName());
+          submitJob(config, workers, jobConfig, SPartitionExample.class.getName());
           break;
         case "keyedpartition":
-          submitJob(config, containers, jobConfig, SKeyedPartitionExample.class.getName());
+          submitJob(config, workers, jobConfig, SKeyedPartitionExample.class.getName());
           break;
         case "gather":
-          submitJob(config, containers, jobConfig, SGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, SGatherExample.class.getName());
           break;
         case "allreduce":
-          submitJob(config, containers, jobConfig, SAllReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, SAllReduceExample.class.getName());
           break;
         case "allgather":
-          submitJob(config, containers, jobConfig, SAllGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, SAllGatherExample.class.getName());
           break;
         default:
           LOG.log(Level.SEVERE, "Un-supported operation: " + operation);

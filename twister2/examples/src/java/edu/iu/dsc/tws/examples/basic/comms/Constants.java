@@ -18,7 +18,7 @@ public final class Constants {
   public static final String ARGS_ITR = "itr";
   public static final String ARGS_SIZE = "size";
   public static final String ARGS_OPERATION = "op";
-  public static final String ARGS_CONTAINERS = "workers";
+  public static final String ARGS_WORKERS = "workers";
   public static final String ARGS_PARALLEL = "parallel";
   public static final String ARGS_TASKS = "tasks";
   public static final String ARGS_TASK_STAGES = "stages";
