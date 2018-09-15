@@ -12,8 +12,7 @@
 package edu.iu.dsc.tws.comms.api;
 
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 
@@ -24,10 +23,9 @@ public interface BulkReceiver {
   /**
    * Initialize the receiver
    * @param cfg configuration
-   * @param op the operation
-   * @param expectedIds expected ids
+   * @param targets expected targets
    */
-  void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
+  void init(Config cfg, Set<Integer> targets);
 
   /**
    * Receive to specific target

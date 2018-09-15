@@ -58,8 +58,6 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
    */
   private boolean sorted;
 
-  private boolean disk;
-
   /**
    * Comparator for sorting records
    */
@@ -111,7 +109,6 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
                                      boolean d, Comparator<Object> com) {
     this.bulkReceiver = receiver;
     this.sorted = srt;
-    this.disk = d;
     this.kryoSerializer = new KryoSerializer();
     this.comparator = com;
   }
@@ -151,7 +148,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       totalReceives.put(target, 0);
       finishedSources.put(target, new HashSet<>());
     }
-    this.bulkReceiver.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
   }
 
   @Override

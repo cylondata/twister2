@@ -165,10 +165,9 @@ public class AllReduceCommunication implements IWorker {
 
   private class FinalSingularReceive implements SingularReceiver {
     private int count = 0;
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-        LOG.info(String.format("%d Final Task %d receives from %s",
-            id, e.getKey(), e.getValue().toString()));
+    public void init(Config cfg, Set<Integer> expectedIds) {
+      for (Integer e : expectedIds) {
+        LOG.info(String.format("%d Final Task receives from %d", id, e));
       }
     }
 

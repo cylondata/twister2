@@ -41,7 +41,7 @@ public class KeyedReduceBatchFinalReceiver extends KeyedReduceBatchReceiver {
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
-    singularReceiver.init(cfg, op, expectedIds);
+    singularReceiver.init(cfg, expectedIds.keySet());
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       finalMessages.put(e.getKey(), new ArrayList<>());
     }

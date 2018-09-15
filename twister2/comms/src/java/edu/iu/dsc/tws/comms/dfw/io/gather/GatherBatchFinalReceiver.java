@@ -69,7 +69,7 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
     }
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
-    this.bulkReceiver.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
   }
 
   @Override

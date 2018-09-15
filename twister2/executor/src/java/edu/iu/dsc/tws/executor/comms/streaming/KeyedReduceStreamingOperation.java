@@ -92,8 +92,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
 
   private class SingularRecvrImpl implements SingularReceiver {
     @Override
-    public void init(Config cfg, DataFlowOperation operation,
-                     Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override

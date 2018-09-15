@@ -86,7 +86,7 @@ public class KeyedGatherBatchFinalReceiver implements MessageReceiver {
     this.memoryManagers = new HashMap<>();
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
-    this.bulkReceiver.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
   }
 
   @Override

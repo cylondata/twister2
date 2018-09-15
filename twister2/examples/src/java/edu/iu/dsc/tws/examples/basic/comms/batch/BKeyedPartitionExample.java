@@ -13,8 +13,6 @@ package edu.iu.dsc.tws.examples.basic.comms.batch;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,7 +21,6 @@ import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
@@ -99,8 +96,8 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
     private int expected;
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      expected = expectedIds.keySet().size() * jobParameters.getIterations();
+    public void init(Config cfg, Set<Integer> expectedIds) {
+      expected = expectedIds.size() * jobParameters.getIterations();
     }
 
     @Override

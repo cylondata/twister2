@@ -85,8 +85,7 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
     private int count = 0;
 
     @Override
-    public void init(Config cfg, DataFlowOperation operation,
-                     Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override

@@ -11,12 +11,28 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 
+/**
+ * Interface for receiving a single value. If the value is received successfully, it should
+ * return true. This interface will be called multiple times with the same message
+ * until it returns true.
+ */
 public interface SingularReceiver {
-  void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
+  /**
+   * Initialize a receiver
+   * @param cfg configuration
+   * @param targets the target ids
+   */
+  void init(Config cfg, Set<Integer> targets);
+
+  /**
+   * Receive an object for a target id.
+   * @param target target id
+   * @param object object
+   * @return true if the receive is accepted
+   */
   boolean receive(int target, Object object);
 }

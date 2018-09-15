@@ -166,7 +166,7 @@ public class ReduceBatchCommunication implements IWorker {
     private int count = 0;
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
 
     }
 

@@ -102,8 +102,8 @@ public class SAllReduceExample extends BenchWorker {
     }
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      expected = expected * expectedIds.keySet().size();
+    public void init(Config cfg, Set<Integer> expectedIds) {
+      expected = expected * expectedIds.size();
     }
 
     @Override

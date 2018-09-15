@@ -92,8 +92,7 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
 
   private class FinalSingularReceiver implements SingularReceiver {
     @Override
-    public void init(Config cfg, DataFlowOperation operation,
-                     Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override

@@ -30,7 +30,7 @@ public class ReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
-    this.singularReceiver.init(cfg, op, expectedIds);
+    this.singularReceiver.init(cfg, expectedIds.keySet());
   }
 
   @Override

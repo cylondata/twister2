@@ -13,14 +13,13 @@ package edu.iu.dsc.tws.examples.basic.batch.sort;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
 
 public class RecordSave implements BulkReceiver {
   private static final Logger LOG = Logger.getLogger(RecordSave.class.getName());
@@ -36,11 +35,8 @@ public class RecordSave implements BulkReceiver {
   private int executor;
 
   @Override
-  public void init(Config cfg, DataFlowOperation op,
-                   Map<Integer, List<Integer>> expectedIds) {
-    TaskPlan plan = op.getTaskPlan();
-    this.executor = op.getTaskPlan().getThisExecutor();
-    LOG.fine(String.format("%d final expected task ids %s", plan.getThisExecutor(), expectedIds));
+  public void init(Config cfg, Set<Integer> expectedIds) {
+    LOG.fine(String.format("Final expected task ids %s", expectedIds));
   }
 
   @Override

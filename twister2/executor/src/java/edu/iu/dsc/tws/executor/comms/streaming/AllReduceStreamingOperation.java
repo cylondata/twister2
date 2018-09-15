@@ -91,8 +91,7 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
   }
 
   private class FinalSingularReceive implements SingularReceiver {
-    public void init(Config cfg, DataFlowOperation operation,
-                     Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override

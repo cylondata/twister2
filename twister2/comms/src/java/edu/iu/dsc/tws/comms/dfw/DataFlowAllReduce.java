@@ -174,7 +174,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      this.singularReceiver.init(cfg, op, expectedIds);
+      this.singularReceiver.init(cfg, expectedIds.keySet());
     }
 
     @Override
