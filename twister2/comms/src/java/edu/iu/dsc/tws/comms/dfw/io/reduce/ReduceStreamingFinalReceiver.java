@@ -17,24 +17,24 @@ import java.util.Map;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 
 public class ReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
-  private ReduceReceiver reduceReceiver;
+  private SingularReceiver singularReceiver;
 
-  public ReduceStreamingFinalReceiver(ReduceFunction function, ReduceReceiver receiver) {
+  public ReduceStreamingFinalReceiver(ReduceFunction function, SingularReceiver receiver) {
     super(function);
-    this.reduceReceiver = receiver;
+    this.singularReceiver = receiver;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
-    this.reduceReceiver.init(cfg, op, expectedIds);
+    this.singularReceiver.init(cfg, op, expectedIds);
   }
 
   @Override
   public boolean handleMessage(int source, Object message, int flags, int dest) {
-    return reduceReceiver.receive(source, message);
+    return singularReceiver.receive(source, message);
   }
 }

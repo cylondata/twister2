@@ -16,7 +16,7 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public interface ReduceReceiver {
+public interface SingularReceiver {
   void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
   boolean receive(int target, Object object);
 }

@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BAllReduce;
 import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
@@ -54,7 +54,7 @@ public class BAllReduceExample extends BenchWorker {
     }
     // create the communication
     reduce = new BAllReduce(communicator, taskPlan, sources, targets,
-        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER), new FinalReduceReceiver(),
+        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER), new FinalSingularReceiver(),
         MessageType.INTEGER);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -97,7 +97,7 @@ public class BAllReduceExample extends BenchWorker {
     return reduceDone && sourcesDone && !reduce.hasPending();
   }
 
-  public class FinalReduceReceiver implements ReduceReceiver {
+  public class FinalSingularReceiver implements SingularReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }

@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.batch.BAllReduce;
@@ -43,7 +43,7 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
     this.edgeGenerator = e;
     op = new BAllReduce(channel, taskPlan, sources, dest,
         new ReduceFnImpl(fnc),
-        new FinalReduceReceiver(), Utils.dataTypeToMessageType(dataType));
+        new FinalSingularReceiver(), Utils.dataTypeToMessageType(dataType));
     communicationEdge = e.generate(edgeName);
   }
 
@@ -81,7 +81,7 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
   }
 
 
-  public class FinalReduceReceiver implements ReduceReceiver {
+  public class FinalSingularReceiver implements SingularReceiver {
     private int count = 0;
 
     @Override

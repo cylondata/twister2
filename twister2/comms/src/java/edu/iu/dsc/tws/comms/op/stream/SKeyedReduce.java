@@ -17,7 +17,7 @@ import java.util.Set;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowMultiReduce;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
@@ -64,7 +64,7 @@ public class SKeyedReduce {
    */
   public SKeyedReduce(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> targets, MessageType kType,
-                      MessageType dType, ReduceFunction fnc, ReduceReceiver rcvr,
+                      MessageType dType, ReduceFunction fnc, SingularReceiver rcvr,
                       DestinationSelector destSelector) {
     this.keyType = kType;
     this.dataType = dType;

@@ -15,7 +15,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowReduce;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchFinalReceiver;
@@ -27,7 +27,7 @@ public class BReduce {
 
   public BReduce(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, int destination, ReduceFunction fnc,
-                 ReduceReceiver rcvr, MessageType dataType) {
+                 SingularReceiver rcvr, MessageType dataType) {
     reduce = new DataFlowReduce(comm.getChannel(), sources, destination,
         new ReduceBatchFinalReceiver(fnc, rcvr),
         new ReduceBatchPartialReceiver(destination, fnc));

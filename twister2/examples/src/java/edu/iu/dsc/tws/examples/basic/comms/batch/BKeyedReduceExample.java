@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
@@ -60,7 +60,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
     keyedReduce = new BKeyedReduce(communicator, taskPlan, sources, targets,
         new KeyedReduceOperationFunction(Op.SUM, MessageType.INTEGER),
-        new FinalReduceReceiver(), MessageType.INTEGER, MessageType.INTEGER,
+        new FinalSingularReceiver(), MessageType.INTEGER, MessageType.INTEGER,
         new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -112,7 +112,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     return true;
   }
 
-  public class FinalReduceReceiver implements ReduceReceiver {
+  public class FinalSingularReceiver implements SingularReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }

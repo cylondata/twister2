@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
@@ -45,7 +45,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
     super(config, network, tPlan);
     this.edgeGenerator = e;
     op = new BKeyedReduce(channel, taskPlan, sources, dests, new ReduceFunctionImpl(function),
-        new ReduceRecvrImpl(), Utils.dataTypeToMessageType(keyType),
+        new SingularRecvrImpl(), Utils.dataTypeToMessageType(keyType),
         Utils.dataTypeToMessageType(dataType), new HashingSelector());
     communicationEdge = e.generate(edgeName);
   }
@@ -79,7 +79,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
     }
   }
 
-  private class ReduceRecvrImpl implements ReduceReceiver {
+  private class SingularRecvrImpl implements SingularReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {

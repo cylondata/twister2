@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowReduce;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingFinalReceiver;
@@ -58,7 +58,7 @@ public class SReduce {
    */
   public SReduce(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, int target,
-                 MessageType dataType, ReduceFunction fnc, ReduceReceiver rcvr) {
+                 MessageType dataType, ReduceFunction fnc, SingularReceiver rcvr) {
     reduce = new DataFlowReduce(comm.getChannel(), sources, target,
         new ReduceStreamingFinalReceiver(fnc, rcvr),
         new ReduceStreamingPartialReceiver(target, fnc));

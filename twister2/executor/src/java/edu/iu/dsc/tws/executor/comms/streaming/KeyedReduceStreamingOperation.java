@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
@@ -58,7 +58,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
 
     this.edgeGenerator = e;
     op = new SKeyedReduce(channel, taskPlan, sources, dests, keyType, dataType,
-        new ReduceFunctionImpl(fn), new ReduceRecvrImpl(), new HashingSelector());
+        new ReduceFunctionImpl(fn), new SingularRecvrImpl(), new HashingSelector());
   }
 
   @Override
@@ -90,7 +90,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
     }
   }
 
-  private class ReduceRecvrImpl implements ReduceReceiver {
+  private class SingularRecvrImpl implements SingularReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {

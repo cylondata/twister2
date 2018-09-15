@@ -19,20 +19,20 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KeyedReduceBatchFinalReceiver;
 
 public class ReduceMultiBatchFinalReceiver implements MultiMessageReceiver {
   private ReduceFunction reduceFunction;
 
-  private ReduceReceiver reduceReceiver;
+  private SingularReceiver singularReceiver;
 
   private Map<Integer, KeyedReduceBatchFinalReceiver> receiverMap = new HashMap<>();
 
   public ReduceMultiBatchFinalReceiver(ReduceFunction reduceFn,
-                                           ReduceReceiver reduceRcvr) {
+                                           SingularReceiver reduceRcvr) {
     this.reduceFunction = reduceFn;
-    this.reduceReceiver = reduceRcvr;
+    this.singularReceiver = reduceRcvr;
   }
 
   @Override
@@ -40,7 +40,7 @@ public class ReduceMultiBatchFinalReceiver implements MultiMessageReceiver {
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
       KeyedReduceBatchFinalReceiver finalReceiver =
-          new KeyedReduceBatchFinalReceiver(reduceFunction, reduceReceiver);
+          new KeyedReduceBatchFinalReceiver(reduceFunction, singularReceiver);
       receiverMap.put(e.getKey(), finalReceiver);
       finalReceiver.init(cfg, op, e.getValue());
     }

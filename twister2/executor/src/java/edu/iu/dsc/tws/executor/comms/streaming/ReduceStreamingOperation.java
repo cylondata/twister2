@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.stream.SReduce;
@@ -59,7 +59,7 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
     }
 
     op = new SReduce(channel, taskPlan, sources, dest, Utils.dataTypeToMessageType(dataType),
-        new ReduceFunctionImpl(function), new FinalReduceReceiver());
+        new ReduceFunctionImpl(function), new FinalSingularReceiver());
   }
 
   @Override
@@ -90,7 +90,7 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
     }
   }
 
-  private class FinalReduceReceiver implements ReduceReceiver {
+  private class FinalSingularReceiver implements SingularReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {

@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
 import edu.iu.dsc.tws.comms.op.stream.SReduce;
@@ -49,7 +49,7 @@ public class SReduceExample extends BenchWorker {
 
     // create the communication
     reduce = new SReduce(communicator, taskPlan, sources, target, MessageType.INTEGER,
-        new ReduceIdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()));
+        new ReduceIdentityFunction(), new FinalSingularReceiver(jobParameters.getIterations()));
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -94,11 +94,11 @@ public class SReduceExample extends BenchWorker {
     return reduceDone && sourcesDone && !reduce.hasPending();
   }
 
-  public class FinalReduceReceiver implements ReduceReceiver {
+  public class FinalSingularReceiver implements SingularReceiver {
     private int count = 0;
     private int expected;
 
-    public FinalReduceReceiver(int expected) {
+    public FinalSingularReceiver(int expected) {
       this.expected = expected;
     }
 

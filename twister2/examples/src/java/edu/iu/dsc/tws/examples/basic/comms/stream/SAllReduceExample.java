@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.stream.SAllReduce;
 import edu.iu.dsc.tws.examples.Utils;
@@ -52,7 +52,7 @@ public class SAllReduceExample extends BenchWorker {
     }
     // create the communication
     reduce = new SAllReduce(communicator, taskPlan, sources, targets, MessageType.INTEGER,
-        new IdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()));
+        new IdentityFunction(), new FinalSingularReceiver(jobParameters.getIterations()));
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -93,11 +93,11 @@ public class SAllReduceExample extends BenchWorker {
     return reduceDone && sourcesDone && !reduce.hasPending();
   }
 
-  public class FinalReduceReceiver implements ReduceReceiver {
+  public class FinalSingularReceiver implements SingularReceiver {
     private int count = 0;
     private int expected;
 
-    public FinalReduceReceiver(int expected) {
+    public FinalSingularReceiver(int expected) {
       this.expected = expected;
     }
 

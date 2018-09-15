@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
 import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
@@ -54,7 +54,7 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
 
     keyedReduce = new SKeyedReduce(communicator, taskPlan, sources, targets,
         MessageType.OBJECT, MessageType.OBJECT, new ReduceIdentityFunction(),
-        new FinalReduceReceiver(jobParameters.getIterations()), new SimpleKeyBasedSelector());
+        new FinalSingularReceiver(jobParameters.getIterations()), new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -95,11 +95,11 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
     return true;
   }
 
-  public class FinalReduceReceiver implements ReduceReceiver {
+  public class FinalSingularReceiver implements SingularReceiver {
     private int count = 0;
     private int expected;
 
-    public FinalReduceReceiver(int expected) {
+    public FinalSingularReceiver(int expected) {
       this.expected = expected;
     }
 

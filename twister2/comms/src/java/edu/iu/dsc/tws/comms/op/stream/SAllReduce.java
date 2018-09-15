@@ -15,7 +15,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowAllReduce;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -41,7 +41,7 @@ public class SAllReduce {
    */
   public SAllReduce(Communicator comm, TaskPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
-                    ReduceFunction fnc, ReduceReceiver rcvr) {
+                    ReduceFunction fnc, SingularReceiver rcvr) {
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }
