@@ -18,9 +18,9 @@ import java.util.Map;
 import edu.iu.dsc.tws.common.config.Config;
 
 /**
- * Batch receiver, with iterator for receiving
+ * Receiver for multiple values
  */
-public interface BatchReceiver {
+public interface BulkReceiver {
   /**
    * Initialize the receiver
    * @param cfg configuration
@@ -34,5 +34,5 @@ public interface BatchReceiver {
    * @param target the target
    * @param it iterator with messages
    */
-  void receive(int target, Iterator<Object> it);
+  boolean receive(int target, Iterator<Object> it);
 }

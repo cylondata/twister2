@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.comms.op.batch;
 import java.util.Comparator;
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
@@ -28,7 +28,7 @@ public class BGather {
   public BGather(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, int destinations,
                  MessageType dataType,
-                 BatchReceiver rcvr) {
+                 BulkReceiver rcvr) {
     this.gather = new DataFlowGather(comm.getChannel(), sources, destinations,
         new GatherBatchFinalReceiver(rcvr), new GatherBatchPartialReceiver(destinations),
         0, 0, comm.getConfig(), dataType, plan, comm.nextEdge());
@@ -38,7 +38,7 @@ public class BGather {
   public BGather(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, int destinations,
                  MessageType dataType,
-                 BatchReceiver rcvr, Comparator<Object> comparator) {
+                 BulkReceiver rcvr, Comparator<Object> comparator) {
     this.gather = new DataFlowGather(comm.getChannel(), sources, destinations,
         new GatherBatchFinalReceiver(rcvr), new GatherBatchPartialReceiver(destinations),
         0, 0, comm.getConfig(), dataType, plan, comm.nextEdge());

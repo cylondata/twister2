@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -64,7 +64,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
     op.finish(source);
   }
 
-  private class FinalGatherReceiver implements BatchReceiver {
+  private class FinalGatherReceiver implements BulkReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     @Override
@@ -74,11 +74,11 @@ public class GatherBatchOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public void receive(int target, Iterator<Object> it) {
+    public boolean receive(int target, Iterator<Object> it) {
       // add the object to the map
       TaskMessage msg = new TaskMessage(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
-      outMessages.get(target).offer(msg);
+      return outMessages.get(target).offer(msg);
     }
   }
 

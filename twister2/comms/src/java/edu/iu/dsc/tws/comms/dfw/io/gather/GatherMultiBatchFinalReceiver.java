@@ -16,18 +16,18 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KeyedGatherBatchFinalReceiver;
 
 public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
-  private BatchReceiver batchReceiver;
+  private BulkReceiver bulkReceiver;
 
   private Map<Integer, KeyedGatherBatchFinalReceiver> receiverMap = new HashMap<>();
 
-  public GatherMultiBatchFinalReceiver(BatchReceiver receiver) {
-    this.batchReceiver = receiver;
+  public GatherMultiBatchFinalReceiver(BulkReceiver receiver) {
+    this.bulkReceiver = receiver;
   }
 
   @Override
@@ -35,7 +35,7 @@ public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
       KeyedGatherBatchFinalReceiver finalReceiver = new KeyedGatherBatchFinalReceiver(
-          batchReceiver);
+          bulkReceiver);
       receiverMap.put(e.getKey(), finalReceiver);
 
       finalReceiver.init(cfg, op, e.getValue());

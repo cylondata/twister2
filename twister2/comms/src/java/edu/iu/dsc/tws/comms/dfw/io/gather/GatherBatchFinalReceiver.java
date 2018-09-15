@@ -20,13 +20,12 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 
 public class GatherBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(GatherBatchFinalReceiver.class.getName());
@@ -40,20 +39,17 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   private DataFlowOperation dataFlowOperation;
   private int executor;
   private int sendPendingMax = 128;
-  private BatchReceiver batchReceiver;
+  private BulkReceiver bulkReceiver;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
-  private boolean isStoreBased;
-  private Map<Integer, OperationMemoryManager> memoryManagers;
 
-  public GatherBatchFinalReceiver(BatchReceiver batchReceiver) {
-    this.batchReceiver = batchReceiver;
+  public GatherBatchFinalReceiver(BulkReceiver bulkReceiver) {
+    this.bulkReceiver = bulkReceiver;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     executor = op.getTaskPlan().getThisExecutor();
     sendPendingMax = DataFlowContext.sendPendingMax(cfg);
-    isStoreBased = false;
     LOG.fine(String.format("%d expected ids %s", executor, expectedIds));
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
@@ -71,10 +67,9 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
       counts.put(e.getKey(), countsPerTask);
       batchDone.put(e.getKey(), false);
     }
-    this.memoryManagers = new HashMap<>();
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
-    this.batchReceiver.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, op, expectedIds);
   }
 
   @Override
@@ -89,26 +84,17 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
     }
     if (m.size() >= sendPendingMax) {
       canAdd = false;
-//      LOG.info(String.format("%d Final add FALSE target %d source %d", executor, target, source));
     } else {
-//      LOG.info(String.format("%d Final add TRUE target %d source %d", executor, target, source));
       if (object instanceof ChannelMessage) {
         ((ChannelMessage) object).incrementRefCount();
         //TODO: how to handle refcount with store based data, is it needed?
-      } else if (object instanceof OperationMemoryManager) {
-        isStoreBased = true;
-        memoryManagers.put(target, (OperationMemoryManager) object);
       }
 
       Integer c = counts.get(target).get(source);
       counts.get(target).put(source, c + 1);
-
-      if (!isStoreBased) {
-        m.add(object);
-      }
+      m.add(object);
 
       if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
-//        LOG.info(String.format("%d Final LAST target %d source %d", executor, target, source));
         finishedMessages.put(source, true);
       }
     }
@@ -130,85 +116,53 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
       // now check weather we have the messages for this source
       Map<Integer, Queue<Object>> map = messages.get(t);
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
-      Map<Integer, Integer> countMap = counts.get(t);
-//      LOG.info(String.format("%d gather final counts %d %s %s", executor, t, countMap,
-//          finishedForTarget));
-      if (!isStoreBased) {
-        boolean found = true;
-        boolean moreThanOne = false;
-        for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
-          if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
-            found = false;
-          } else {
-            moreThanOne = true;
-          }
 
-          if (!finishedForTarget.get(e.getKey())) {
-            allFinished = false;
-          } /*else {
-          LOG.info(String.format("%d final finished receiving to %d from %d",
-              executor, t, e.getKey()));
-        }*/
-        }
-
-        // if we have queues with 0 and more than zero we need further progress
-        if (!found && moreThanOne) {
-          needsFurtherProgress = true;
-        }
-
-        if (found) {
-          List<Object> out = new ArrayList<>();
-          for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
-            Queue<Object> valueList = e.getValue();
-            if (valueList.size() > 0) {
-              Object value = valueList.poll();
-              if (value instanceof List) {
-                out.addAll((List) value);
-              } else {
-                out.add(value);
-              }
-              allFinished = false;
-            }
-          }
-//        for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
-//          Integer i = e.getValue();
-//          e.setValue(i - 1);
-//        }
-          finalMessages.get(t).addAll(out);
+      boolean found = true;
+      boolean moreThanOne = false;
+      for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
+        if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
+          found = false;
         } else {
+          moreThanOne = true;
+        }
+
+        if (!finishedForTarget.get(e.getKey())) {
           allFinished = false;
         }
-      } else {
+      }
 
+      // if we have queues with 0 and more than zero we need further progress
+      if (!found && moreThanOne) {
+        needsFurtherProgress = true;
+      }
+
+      if (found) {
+        List<Object> out = new ArrayList<>();
         for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
-          if (!finishedForTarget.get(e.getKey())) {
+          Queue<Object> valueList = e.getValue();
+          if (valueList.size() > 0) {
+            Object value = valueList.poll();
+            if (value instanceof List) {
+              out.addAll((List) value);
+            } else {
+              out.add(value);
+            }
             allFinished = false;
           }
         }
+        finalMessages.get(t).addAll(out);
+      } else {
+        allFinished = false;
       }
 
 
       if (allFinished) {
-//        LOG.info(String.format("%d final all finished %d", executor, t));
         batchDone.put(t, true);
-        if (!isStoreBased) {
-          batchReceiver.receive(t, finalMessages.get(t).iterator());
-        } else {
-          batchReceiver.receive(t, memoryManagers.get(t).iterator());
-        }
+        bulkReceiver.receive(t, finalMessages.get(t).iterator());
         // we can call on finish at this point
         onFinish(t);
       }
     }
     return needsFurtherProgress;
   }
-
-  public boolean isStoreBased() {
-    return isStoreBased;
-  }
-
-  public void setStoreBased(boolean storeBased) {
-    isStoreBased = storeBased;
-  }
-
 }

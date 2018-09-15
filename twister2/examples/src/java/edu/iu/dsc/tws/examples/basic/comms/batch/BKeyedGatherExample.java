@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -112,13 +112,13 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
     keyedGather.finish(src);
   }
 
-  public class FinalReduceReceiver implements BatchReceiver {
+  public class FinalReduceReceiver implements BulkReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
-    public void receive(int target, Iterator<Object> it) {
+    public boolean receive(int target, Iterator<Object> it) {
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
 
       LOG.info("Final Output Length : " + Iterators.size(it));
@@ -138,6 +138,7 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
 //        }
 //      }
       gatherDone = true;
+      return true;
     }
   }
 }

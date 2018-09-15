@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -63,17 +63,17 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
     return op.partition(source, message.getContent(), 0);
   }
 
-  public class PartitionReceiver implements BatchReceiver {
+  public class PartitionReceiver implements BulkReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
-    public void receive(int target, Iterator<Object> it) {
+    public boolean receive(int target, Iterator<Object> it) {
       TaskMessage msg = new TaskMessage(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
-      outMessages.get(target).offer(msg);
+      return outMessages.get(target).offer(msg);
     }
   }
 

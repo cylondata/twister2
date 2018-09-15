@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -94,7 +94,7 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
     return true;
   }
 
-  public class PartitionReceiver implements BatchReceiver {
+  public class PartitionReceiver implements BulkReceiver {
     private int count = 0;
     private int expected;
 
@@ -104,10 +104,11 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
     }
 
     @Override
-    public void receive(int target, Iterator<Object> it) {
+    public boolean receive(int target, Iterator<Object> it) {
       LOG.log(Level.INFO, String.format("%d Received message %d count %d",
           workerId, target, Iterators.size(it)));
       partitionDone = true;
+      return true;
     }
   }
 

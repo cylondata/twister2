@@ -18,11 +18,11 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 
-public class WordAggregator implements BatchReceiver {
+public class WordAggregator implements BulkReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregator.class.getName());
 
   private Config config;
@@ -44,7 +44,7 @@ public class WordAggregator implements BatchReceiver {
   }
 
   @Override
-  public void receive(int target, Iterator<Object> it) {
+  public boolean receive(int target, Iterator<Object> it) {
     Map<String, Integer> localwordCounts = new HashMap<>();
     while (it.hasNext()) {
       Object next = it.next();
@@ -62,5 +62,6 @@ public class WordAggregator implements BatchReceiver {
       }
     }
     LOG.info(String.format("%d Final word %s", executor, localwordCounts));
+    return true;
   }
 }

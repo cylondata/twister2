@@ -15,7 +15,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -37,7 +37,7 @@ public class BKeyedGather {
   public BKeyedGather(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> destinations,
                       MessageType kType, MessageType dType,
-                      BatchReceiver rcvr, DestinationSelector destSelector) {
+                      BulkReceiver rcvr, DestinationSelector destSelector) {
     this.keyType = kType;
     this.dataType = dType;
     Set<Integer> edges = new HashSet<>();
@@ -54,7 +54,7 @@ public class BKeyedGather {
 
   public BKeyedGather(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> destinations,
-                      MessageType kType, MessageType dType, BatchReceiver rcvr,
+                      MessageType kType, MessageType dType, BulkReceiver rcvr,
                       Comparator<Object> comparator, DestinationSelector destSelector) {
     this.keyType = kType;
     this.dataType = dType;

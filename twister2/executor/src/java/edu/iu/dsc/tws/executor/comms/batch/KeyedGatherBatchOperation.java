@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -58,19 +58,21 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
     return op.progress() || op.hasPending();
   }
 
-  private class GatherRecvrImpl implements BatchReceiver {
+  private class GatherRecvrImpl implements BulkReceiver {
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
     }
 
     @Override
-    public void receive(int target, Iterator<Object> it) {
+    public boolean receive(int target, Iterator<Object> it) {
       TaskMessage msg = new TaskMessage(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
-        messages.offer(msg);
+        return messages.offer(msg);
+      } else {
+        throw new RuntimeException("Un-expected message for target: " + target);
       }
     }
   }

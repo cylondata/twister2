@@ -23,7 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -46,7 +46,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * The receiver
    */
-  private BatchReceiver batchReceiver;
+  private BulkReceiver bulkReceiver;
 
   /**
    * Sort mergers for each target
@@ -107,9 +107,9 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
    */
   private Set<Integer> targets = new HashSet<>();
 
-  public PartitionBatchFinalReceiver(BatchReceiver receiver, boolean srt,
+  public PartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
                                      boolean d, Comparator<Object> com) {
-    this.batchReceiver = receiver;
+    this.bulkReceiver = receiver;
     this.sorted = srt;
     this.disk = d;
     this.kryoSerializer = new KryoSerializer();
@@ -151,7 +151,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       totalReceives.put(target, 0);
       finishedSources.put(target, new HashSet<>());
     }
-    this.batchReceiver.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, op, expectedIds);
   }
 
   @Override
@@ -224,7 +224,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     Shuffle sortedMerger = sortedMergers.get(target);
     sortedMerger.switchToReading();
     Iterator<Object> itr = sortedMerger.readIterator();
-    batchReceiver.receive(target, itr);
+    bulkReceiver.receive(target, itr);
     onFinish(target);
   }
 
