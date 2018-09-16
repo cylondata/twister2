@@ -96,7 +96,7 @@ public class SingleMessageSerializer implements MessageSerializer {
       if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
           || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT
           || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
-        if ((sendMessage.getFlags() & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+        if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
           sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
           sendMessage.getSerializationState().setTotalBytes(0);
         } else {
@@ -237,6 +237,9 @@ public class SingleMessageSerializer implements MessageSerializer {
 
     if (state.getPart() == SerializeState.Part.INIT
         || state.getPart() == SerializeState.Part.HEADER) {
+      if (key instanceof byte[]) {
+        LOG.info("Byte message with size: " + ((byte[]) key).length);
+      }
       boolean complete = KeySerializer.copyKeyToBuffer(key,
           keyType, targetBuffer.getByteBuffer(), state, serializer);
       if (complete) {

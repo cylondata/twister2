@@ -125,6 +125,7 @@ public class MesosScheduler implements Scheduler {
 
               //worker 0 will be the job master.
               if (taskId.getValue().equals("0")) {
+
                 ((TaskInfo.Builder) taskBuilder).setName("Job Master");
 
                 classNameParam = Protos.Parameter.newBuilder().setKey("env")

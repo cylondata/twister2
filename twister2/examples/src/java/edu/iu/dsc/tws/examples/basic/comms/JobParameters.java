@@ -44,6 +44,8 @@ public class JobParameters {
 
   private int initIterations = 0;
 
+  private boolean doVerify = false;
+
   public JobParameters(int size, int iterations, String col,
                        int containers, List<Integer> taskStages, int gap) {
     this.size = size;
@@ -114,11 +116,15 @@ public class JobParameters {
     return initIterations;
   }
 
+  public boolean isDoVerify() {
+    return doVerify;
+  }
+
   public static JobParameters build(Config cfg) {
     int iterations = Integer.parseInt(cfg.getStringValue(Constants.ARGS_ITR));
     int size = Integer.parseInt(cfg.getStringValue(Constants.ARGS_SIZE));
     String col = cfg.getStringValue(Constants.ARGS_OPERATION);
-    int containers = Integer.parseInt(cfg.getStringValue(Constants.ARGS_CONTAINERS));
+    int containers = Integer.parseInt(cfg.getStringValue(Constants.ARGS_WORKERS));
     String taskStages = cfg.getStringValue(Constants.ARGS_TASK_STAGES);
     int gap = Integer.parseInt(cfg.getStringValue(Constants.ARGS_GAP));
     String fName = cfg.getStringValue(Constants.ARGS_FNAME);
@@ -127,6 +133,7 @@ public class JobParameters {
     int pi = Integer.parseInt(cfg.getStringValue(Constants.ARGS_PRINT_INTERVAL));
     String type = cfg.getStringValue(Constants.ARGS_DATA_TYPE);
     int intItr = Integer.parseInt(cfg.getStringValue(Constants.ARGS_INIT_ITERATIONS));
+    boolean doVerify = cfg.getBooleanValue(Constants.ARGS_VERIFY);
 
     String[] stages = taskStages.split(",");
     List<Integer> taskList = new ArrayList<>();
@@ -146,6 +153,7 @@ public class JobParameters {
     jobParameters.printInterval = pi;
     jobParameters.dataType = type;
     jobParameters.initIterations = intItr;
+    jobParameters.doVerify = doVerify;
     return jobParameters;
   }
 

@@ -16,33 +16,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 
 public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(ReduceBatchFinalReceiver.class.getName());
 
   private ReduceFunction reduceFunction;
 
-  private ReduceReceiver reduceReceiver;
+  private SingularReceiver singularReceiver;
 
   private Map<Integer, List<Object>> finalMessages = new HashMap<>();
 
-  public ReduceBatchFinalReceiver(ReduceFunction reduce, ReduceReceiver receiver) {
+  public ReduceBatchFinalReceiver(ReduceFunction reduce, SingularReceiver receiver) {
     super(reduce);
     this.reduceFunction = reduce;
-    this.reduceReceiver = receiver;
+    this.singularReceiver = receiver;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
-    reduceReceiver.init(cfg, op, expectedIds);
+    singularReceiver.init(cfg, expectedIds.keySet());
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       finalMessages.put(e.getKey(), new ArrayList<>());
     }
@@ -62,8 +61,6 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
       Map<Integer, Queue<Object>> map = messages.get(t);
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
       Map<Integer, Integer> countMap = counts.get(t);
-      Map<Integer, Integer> totalCountMap = totalCounts.get(t);
-      Set<Integer> emptyMessages = emptyReceivedSources.get(t);
 
       boolean found = true;
 
@@ -122,7 +119,7 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
           }
 
         }
-        reduceReceiver.receive(t, previous);
+        singularReceiver.receive(t, previous);
       }
     }
     return needsFurtherProgress;

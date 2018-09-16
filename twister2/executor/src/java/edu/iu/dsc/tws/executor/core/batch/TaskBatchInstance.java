@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
+import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
@@ -118,6 +119,17 @@ public class TaskBatchInstance implements INodeInstance {
    */
   private TaskContext taskContext;
 
+  /**
+   * The low watermark for queued messages
+   */
+  private int lowWaterMark;
+
+  /**
+   * The high water mark for messages
+   */
+  private int highWaterMark;
+
+
   public TaskBatchInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                            BlockingQueue<IMessage> outQueue, Config config, String tName,
                            int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
@@ -134,6 +146,8 @@ public class TaskBatchInstance implements INodeInstance {
     this.workerId = wId;
     this.inputEdges = inEdges;
     this.outputEdges = outEdges;
+    this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
+    this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
   }
 
   public void prepare() {
@@ -155,26 +169,18 @@ public class TaskBatchInstance implements INodeInstance {
   public boolean execute() {
     // we started the executio
     if (state.isSet(InstanceState.INIT) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
-      while (!inQueue.isEmpty()) {
+      while (!inQueue.isEmpty() && outQueue.size() < lowWaterMark) {
         IMessage m = inQueue.poll();
         task.execute(m);
         state.set(InstanceState.EXECUTING);
       }
 
-      // now check the context
-      boolean isDone = true;
-      for (String e : outputEdges) {
-        if (!taskContext.isDone(e)) {
-          // we are done with execution
-          isDone = false;
-          break;
-        }
-      }
-
+      // for compute we don't have to have the context done as when the inputs finish and execution
+      // is done, we are done executing
       // progress in communication
       boolean needsFurther = communicationProgress(inParOps);
       // if we no longer needs to progress comm and input is empty
-      if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty() && isDone) {
+      if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty()) {
         state.set(InstanceState.EXECUTION_DONE);
       }
     }

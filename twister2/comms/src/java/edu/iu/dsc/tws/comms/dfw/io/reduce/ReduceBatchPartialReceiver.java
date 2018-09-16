@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.dfw.io.reduce;
 
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -37,7 +36,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
       if (batchDone.get(t)) {
         if (!isEmptySent.get(t)) {
           if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(t,
-              new byte[0], MessageFlags.EMPTY, destination)) {
+              new byte[0], MessageFlags.END, destination)) {
             isEmptySent.put(t, true);
           } else {
             needsFurtherProgress = true;
@@ -49,8 +48,6 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
       Map<Integer, Queue<Object>> messagePerTarget = messages.get(t);
       Map<Integer, Boolean> finishedForTarget = finished.get(t);
       Map<Integer, Integer> countMap = counts.get(t);
-      Map<Integer, Integer> totalCountMap = totalCounts.get(t);
-      Set<Integer> emptyMessages = emptyReceivedSources.get(t);
 
       boolean canProgress = true;
       int tempBufferCount = bufferCounts.get(t);
@@ -111,7 +108,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
               }
             }
             if (last) {
-              flags = MessageFlags.FLAGS_LAST;
+              flags = MessageFlags.LAST;
             }
           }
 
@@ -141,7 +138,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
 
           if (dataFlowOperation.isDelegeteComplete() && allFinished && allZero) {
             if (dataFlowOperation.sendPartial(t, new byte[0],
-                MessageFlags.EMPTY, destination)) {
+                MessageFlags.END, destination)) {
               isEmptySent.put(t, true);
             } else {
               needsFurtherProgress = true;

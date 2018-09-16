@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.comms.op.batch;
 import java.util.Comparator;
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -32,7 +32,7 @@ public class BPartition {
 
   public BPartition(Communicator comm, TaskPlan plan,
                     Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
-                    BatchReceiver rcvr,
+                    BulkReceiver rcvr,
                     DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
@@ -44,7 +44,7 @@ public class BPartition {
 
   public BPartition(Communicator comm, TaskPlan plan,
                     Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
-                    BatchReceiver rcvr,
+                    BulkReceiver rcvr,
                     DestinationSelector destSelector, Comparator<Object> comparator) {
     this.destinationSelector = destSelector;
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,

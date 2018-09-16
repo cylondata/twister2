@@ -121,6 +121,6 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
 
   @Override
   protected void finishCommunication(int src) {
-//    partition.finish(src);
+    partition.finish(src);
   }
 }

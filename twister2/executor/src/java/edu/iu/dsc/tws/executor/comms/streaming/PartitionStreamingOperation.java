@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -34,21 +35,30 @@ import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
+/**
+ * The streaming operation.
+ */
 public class PartitionStreamingOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionStreamingOperation.class.getName());
-  private HashMap<Integer, Boolean> barrierMap = new HashMap<>();
 
-  private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
   private boolean checkpointStarted = false;
 
   protected SPartition op;
-
 
   public PartitionStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                      Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                                      DataType dataType, String edgeName) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
+
+    if (srcs.size() == 0) {
+      throw new IllegalArgumentException("Sources should have more than 0 elements");
+    }
+
+    if (dests == null) {
+      throw new IllegalArgumentException("Targets should have more than 0 elements");
+    }
+
     op = new SPartition(channel, taskPlan, srcs, dests, Utils.dataTypeToMessageType(dataType),
         new PartitionReceiver(), new LoadBalanceSelector());
     communicationEdge = e.generate(edgeName);
@@ -59,10 +69,18 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   }
 
   public class PartitionReceiver implements MessageReceiver {
+    private HashMap<Integer, Boolean> barrierMap = new HashMap<>();
+
+    private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
+    // keep track of the incoming messages
+    private Map<Integer, BlockingQueue<TaskMessage>> inComing = new HashMap<>();
+
     @Override
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {
-
+      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
+        inComing.put(e.getKey(), new LinkedBlockingQueue<>());
+      }
     }
 
     @Override
@@ -83,15 +101,16 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
             incommingBuffer.put(source, bufferMessege);
           }
         } else {
+          BlockingQueue<TaskMessage> messages = inComing.get(target);
+          if (messages.size() > 128) {
+            return false;
+          }
+
           if (object instanceof List) {
             TaskMessage msg = new TaskMessage(object,
                 edgeGenerator.getStringMapping(communicationEdge), target);
-            BlockingQueue<IMessage> messages = outMessages.get(target);
-            if (messages != null) {
-              return messages.offer(msg);
-            } else {
-              throw new RuntimeException("Un-expected target message: " + target);
-            }
+
+            messages.offer(msg);
           }
         }
       }
@@ -100,6 +119,19 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean progress() {
+      for (Map.Entry<Integer, BlockingQueue<TaskMessage>> e : inComing.entrySet()) {
+        BlockingQueue<IMessage> messages = outMessages.get(e.getKey());
+        BlockingQueue<TaskMessage> inComingMessages = inComing.get(e.getKey());
+
+        TaskMessage msg = inComingMessages.peek();
+        if (msg != null) {
+          boolean offer = messages.offer(msg);
+          if (offer) {
+            inComingMessages.poll();
+          }
+        }
+      }
+
       return true;
     }
   }

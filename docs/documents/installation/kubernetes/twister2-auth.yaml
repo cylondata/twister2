@@ -1,0 +1,47 @@
+# this is used to allow twister2 workers (pods) to get, watch and list events from Kubernetes master
+# Twister2 workers need to watch the job master pod in a job to discover the job master IP address
+# Job master needs to have delete permission to cleanup job resources
+# This Role and RoleBinding need to be created at the Kubernetes master for the used namespace,
+# before submitting Twister2 jobs
+# ref: https://kubernetes.io/docs/admin/authorization/rbac/
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: twister2-role
+rules:
+  # Workers should be able to get, watch and list pods
+- apiGroups: [""] # indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "delete"]
+
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch", "delete"]
+
+- apiGroups: ["apps"]
+  resources: ["statefulsets"]
+  verbs: ["get", "list", "watch", "delete"]
+
+---
+
+# This role binding allows authenticated users to cleanup twister2 jobs in the "default" namespace.
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: twister2-role-binding
+  namespace: default
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+  namespace: default
+roleRef:
+  kind: Role
+  name: twister2-role
+  apiGroup: rbac.authorization.k8s.io

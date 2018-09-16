@@ -29,10 +29,10 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
+import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerUtils;
 import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIWorker;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -85,6 +85,7 @@ public final class MesosMPIWorkerStarter {
       config = JobUtils.overrideConfigs(job, config);
       config = JobUtils.updateConfigs(job, config);
 
+      LOG.info("in worker starter...... job worker count:" + job.getNumberOfWorkers());
       workerController = new MesosWorkerController(config, job,
           Inet4Address.getLocalHost().getHostAddress(), 2023, workerID);
       workerController.initializeWithZooKeeper();
@@ -103,7 +104,6 @@ public final class MesosMPIWorkerStarter {
         + "\nIP address..: " + workerController.getWorkerNetworkInfo().getWorkerIP().toString());
 
     startWorker(workerController, null);
-
     try {
       MPI.Finalize();
     } catch (MPIException ignore) {
@@ -146,12 +146,11 @@ public final class MesosMPIWorkerStarter {
       volatileVolume =
           new MesosVolatileVolume(SchedulerContext.jobName(config), workerID);
     }
-
     // lets create the resource plan
     Map<Integer, String> processNames = MPIWorker.createResourcePlan(config);
     // now create the resource plan
     //AllocatedResources resourcePlan = MPIWorker.addContainers(config, processNames);
-    AllocatedResources resourcePlan = K8sWorkerUtils.createAllocatedResources("mesos",
+    AllocatedResources resourcePlan = MesosWorkerUtils.createAllocatedResources("mesos",
         workerID, job);
     //resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config), workerID);
     worker.execute(config, workerID, resourcePlan, workerController, pv, volatileVolume);

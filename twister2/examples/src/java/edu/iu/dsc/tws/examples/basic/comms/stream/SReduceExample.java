@@ -12,16 +12,13 @@
 package edu.iu.dsc.tws.examples.basic.comms.stream;
 
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
 import edu.iu.dsc.tws.comms.op.stream.SReduce;
@@ -48,9 +45,8 @@ public class SReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    reduce = new SReduce(communicator, taskPlan, sources, target,
-        new ReduceIdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()),
-        MessageType.INTEGER);
+    reduce = new SReduce(communicator, taskPlan, sources, target, MessageType.INTEGER,
+        new ReduceIdentityFunction(), new FinalSingularReceiver(jobParameters.getIterations()));
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -95,16 +91,16 @@ public class SReduceExample extends BenchWorker {
     return reduceDone && sourcesDone && !reduce.hasPending();
   }
 
-  public class FinalReduceReceiver implements ReduceReceiver {
+  public class FinalSingularReceiver implements SingularReceiver {
     private int count = 0;
     private int expected;
 
-    public FinalReduceReceiver(int expected) {
+    public FinalSingularReceiver(int expected) {
       this.expected = expected;
     }
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override

@@ -22,42 +22,82 @@ import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
+/**
+ * Streaming Partition Operation
+ */
 public class SPartition {
   private static final Logger LOG = Logger.getLogger(SPartition.class.getName());
 
+  /**
+   * The actual operation
+   */
   private DataFlowPartition partition;
 
+  /**
+   * Destination selector
+   */
   private DestinationSelector destinationSelector;
 
+  /**
+   * Construct a Streaming partition operation
+   *
+   * @param comm the communicator
+   * @param plan task plan
+   * @param sources source tasks
+   * @param targets target tasks
+   * @param rcvr receiver
+   * @param dataType data type
+   */
   public SPartition(Communicator comm, TaskPlan plan,
-                    Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
+                    Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     MessageReceiver rcvr,
                     DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
-    this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations, rcvr,
+    this.partition = new DataFlowPartition(comm.getChannel(), sources, targets, rcvr,
         new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT, dataType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
   }
 
-  public boolean partition(int source, Object message, int flags) {
-    final int dest = destinationSelector.next(source);
+  /**
+   * Send a message to be partitioned
+   *
+   * @param src source
+   * @param message message
+   * @param flags message flag
+   * @return true if the message is accepted
+   */
+  public boolean partition(int src, Object message, int flags) {
+    final int dest = destinationSelector.next(src);
 
-    boolean send = partition.send(source, message, flags, dest);
+    boolean send = partition.send(src, message, flags, dest);
     if (send) {
-      destinationSelector.commit(source, dest);
+      destinationSelector.commit(src, dest);
     }
     return send;
   }
 
+  /**
+   * Weather we have messages pending
+   * @return true if there are messages pending
+   */
   public boolean hasPending() {
     return !partition.isComplete();
   }
 
+  /**
+   * Progress the operation, if not called, messages will not be processed
+   *
+   * @return true if further progress is needed
+   */
   public boolean progress() {
     return partition.progress();
   }
 
+  /**
+   * Indicate the end of the communication
+   * @param src the source that is ending
+   */
   public void finish(int src) {
     partition.finish(src);
   }

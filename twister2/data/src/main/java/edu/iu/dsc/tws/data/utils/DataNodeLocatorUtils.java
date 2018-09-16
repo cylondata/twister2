@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.HDFSConnector;
 import edu.iu.dsc.tws.data.api.IDataNodeLocatorUtils;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.Path;
@@ -35,7 +34,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
   private static final Logger LOG = Logger.getLogger(DataNodeLocatorUtils.class.getName());
 
   private Config config;
-  private HDFSConnector hdfsConnector;
+  private HdfsUtils hdfsUtils;
   private String datasetName;
   private List<String> inputFileList = new ArrayList<>();
 
@@ -59,8 +58,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
 
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-
-    hdfsConnector = new HDFSConnector(config);
+    hdfsUtils = new HdfsUtils(config);
     this.inputFileList = inputList;
 
     try {
@@ -72,10 +70,9 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     List<String> dataNodes = new ArrayList<>();
 
     for (int i = 0; i < this.inputFileList.size(); i++) {
-
       this.datasetName = this.inputFileList.get(i);
-
       String[] fName = new String[0];
+
       if (this.inputFileList.size() == 1) {
         fName = new String[this.inputFileList.size()];
         fName[0] = this.inputFileList.get(i);
@@ -91,12 +88,12 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
         if (!fileStatus.getPath().isNullOrEmpty()) {
 
           String fileURL = fileStatus.getPath().toString();
-          String datanodeName = hdfsConnector.getDFSCK(fName);
+          String datanodeName = hdfsUtils.getDFSCK(fName);
+
+          dataNodes.add(datanodeName);
+          dataNodes.add("samplenode"); //just for testing
 
           LOG.fine("HDFS URL:" + fileURL + "\tDataNode:" + datanodeName);
-
-          dataNodes.add(datanodeName); //proper data node
-          dataNodes.add("samepledatenode1"); //this is just for testing (it will be removed)
         }
       } catch (IOException e) {
         e.printStackTrace();
@@ -120,8 +117,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
 
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-
-    hdfsConnector = new HDFSConnector(config);
+    hdfsUtils = new HdfsUtils(config);
 
     try {
       hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
@@ -130,33 +126,16 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     }
 
     List<String> dataNodes = new ArrayList<>();
-
     String[] fName = new String[0];
     fName[0] = datasetName;
 
     try {
       Path path = new Path(datasetName);
       FileStatus fileStatus = hadoopFileSystem.getFileStatus(path);
-
       if (!fileStatus.getPath().isNullOrEmpty()) {
         String fileURL = fileStatus.getPath().toString();
-        String datanodeName = hdfsConnector.getDFSCK(fName);
-
-        LOG.info("HDFS URL:" + fileURL + "\tDataNode:" + datanodeName);
-
-        if ("dataset1.txt".equals(datasetName)) {
-          dataNodes.add("datanode1");
-          dataNodes.add("datanode2");
-        } else if ("dataset2.txt".equals(datasetName)) {
-          dataNodes.add("datanode1");
-          dataNodes.add("datanode2");
-        } else if ("dataset3.txt".equals(datasetName)) {
-          dataNodes.add("datanode1");
-          dataNodes.add("datanode2");
-        } else if ("dataset4.txt".equals(datasetName)) {
-          dataNodes.add("datanode1");
-          dataNodes.add("datanode2");
-        }
+        String datanodeName = hdfsUtils.getDFSCK(fName);
+        LOG.fine("HDFS URL:" + fileURL + "\tDataNode:" + datanodeName);
       }
     } catch (java.io.IOException e) {
       e.printStackTrace();

@@ -46,11 +46,11 @@ public class MesosWorkerController implements IWorkerController {
     this.job = job;
     this.workerIp = ip;
     this.workerPort = port;
-    numberOfWorkers = MesosContext.numberOfContainers(config);
+    numberOfWorkers = MesosContext.numberOfContainers(config) - 1;
     containerPerWorker = MesosContext.containerPerWorker(config);
     workerList = new ArrayList<>();
     thisWorker = new WorkerNetworkInfo(convertStringToIP(ip), port, workerID,
-        new NodeInfo(ip, null, null));
+        new NodeInfo(ip, "rack1", "dc1"));
   }
 
   /**
@@ -92,7 +92,7 @@ public class MesosWorkerController implements IWorkerController {
     String workerHostPort = workerIp + ":" + workerPort;
 
     // temporary value
-    NodeInfo nodeInfo = new NodeInfo(null, null, null);
+    NodeInfo nodeInfo = new NodeInfo(workerIp, null, null);
     zkWorkerController =
         new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
     zkWorkerController.initialize();

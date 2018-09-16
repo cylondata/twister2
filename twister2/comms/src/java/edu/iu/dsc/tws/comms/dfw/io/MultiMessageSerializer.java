@@ -75,10 +75,6 @@ public class MultiMessageSerializer implements MessageSerializer {
    */
   @Override
   public Object build(Object message, Object partialBuildObject) {
-    int noOfMessages = 1;
-    if (message instanceof List) {
-      noOfMessages = ((List) message).size();
-    }
     OutMessage sendMessage = (OutMessage) partialBuildObject;
 
     // we got an already serialized message, lets just return it
@@ -97,6 +93,9 @@ public class MultiMessageSerializer implements MessageSerializer {
     while (sendBuffers.size() > 0 && sendMessage.serializedState()
         != OutMessage.SendState.SERIALIZED) {
       DataBuffer buffer = sendBuffers.poll();
+      if (buffer == null) {
+        break;
+      }
 
       if (sendMessage.serializedState() == OutMessage.SendState.INIT
           || sendMessage.serializedState() == OutMessage.SendState.SENT_INTERNALLY) {
@@ -109,7 +108,7 @@ public class MultiMessageSerializer implements MessageSerializer {
       if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
           || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT
           || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
-        if ((sendMessage.getFlags() & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+        if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
           sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
           sendMessage.getSerializationState().setTotalBytes(0);
         } else {

@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.stream.SAllReduce;
@@ -44,10 +44,22 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
                                      Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
                                      DataType dataType, String edgeName) {
     super(config, network, tPlan);
+    if (sources.size() == 0) {
+      throw new IllegalArgumentException("Sources should have more than 0 elements");
+    }
+
+    if (dest.size() == 0) {
+      throw new IllegalArgumentException("Targets should have more than 0 elements");
+    }
+
+    if (function == null) {
+      throw new IllegalArgumentException("Operation expects a function");
+    }
+
     this.fn = function;
     this.edgeGenerator = e;
-    op = new SAllReduce(channel, taskPlan, sources, dest, new ReduceFnImpl(fn),
-        new FinalReduceReceive(), Utils.dataTypeToMessageType(dataType));
+    op = new SAllReduce(channel, taskPlan, sources, dest,
+        Utils.dataTypeToMessageType(dataType), new ReduceFnImpl(fn), new FinalSingularReceive());
     communicationEdge = e.generate(edgeName);
   }
 
@@ -78,9 +90,8 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
     }
   }
 
-  private class FinalReduceReceive implements ReduceReceiver {
-    public void init(Config cfg, DataFlowOperation operation,
-                     Map<Integer, List<Integer>> expectedIds) {
+  private class FinalSingularReceive implements SingularReceiver {
+    public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override

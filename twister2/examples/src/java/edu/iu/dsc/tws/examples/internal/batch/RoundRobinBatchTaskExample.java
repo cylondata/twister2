@@ -139,13 +139,12 @@ public class RoundRobinBatchTaskExample implements IWorker {
 
     List<String> sourceInputDataset = new ArrayList<>();
     sourceInputDataset.add("dataset1.txt");
-    sourceInputDataset.add("dataset2.txt");
 
     builder.addConfiguration("source", "inputdataset", sourceInputDataset);
-
-    List<String> sinkOutputDataset1 = new ArrayList<>();
-    sinkOutputDataset1.add("sinkoutput1.txt");
-    builder.addConfiguration("sink1", "outputdataset1", sinkOutputDataset1);
+    builder.addConfiguration("sink1", "inputdataset", sourceInputDataset);
+    builder.addConfiguration("sink2", "inputdataset", sourceInputDataset);
+    builder.addConfiguration("merge", "inputdataset", sourceInputDataset);
+    builder.addConfiguration("final", "inputdataset", sourceInputDataset);
 
     DataFlowTaskGraph graph = builder.build();
     WorkerPlan workerPlan = createWorkerPlan(resources);

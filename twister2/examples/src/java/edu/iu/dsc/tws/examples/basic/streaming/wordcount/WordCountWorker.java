@@ -70,7 +70,7 @@ public class WordCountWorker implements IWorker {
     Map<String, Object> newCfg = new HashMap<>();
     // create the communication
     keyGather = new DataFlowMultiGather(channel, sources, destinations,
-        new WordAggregate(), destinations);
+        new WordAggregate(), null, destinations, MessageType.OBJECT, MessageType.OBJECT);
     // intialize the operation
     keyGather.init(config, MessageType.OBJECT, taskPlan, 0);
 

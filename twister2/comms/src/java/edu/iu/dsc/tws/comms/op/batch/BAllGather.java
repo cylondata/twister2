@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.comms.op.batch;
 
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowAllGather;
@@ -24,14 +24,25 @@ public class BAllGather {
 
   public BAllGather(Communicator comm, TaskPlan plan,
                     Set<Integer> sources, Set<Integer> destination,
-                    MessageReceiver rcvr, MessageType dataType) {
-    int middleTask = 0;
+                    BulkReceiver rcvr, MessageType dataType) {
+    if (sources.size() == 0) {
+      throw new IllegalArgumentException("The sources cannot be empty");
+    }
+
+    if (destination.size() == 0) {
+      throw new IllegalArgumentException("The destination cannot be empty");
+    }
+    int middleTask = comm.nextId();
+
+    int firstSource = sources.iterator().next();
+    plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
+
     gather = new DataFlowAllGather(comm.getChannel(), sources, destination, middleTask, rcvr,
-        comm.nextEdge(), comm.nextEdge());
+        comm.nextEdge(), comm.nextEdge(), false);
     gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
-  public boolean reduce(int src, Object message, int flags) {
+  public boolean gather(int src, Object message, int flags) {
     return gather.send(src, message, flags);
   }
 

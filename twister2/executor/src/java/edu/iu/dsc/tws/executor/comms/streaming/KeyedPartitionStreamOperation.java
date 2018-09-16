@@ -48,6 +48,14 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
     dataType = Utils.dataTypeToMessageType(dType);
     keyType = Utils.dataTypeToMessageType(kType);
 
+    if (sources.size() == 0) {
+      throw new IllegalArgumentException("Sources should have more than 0 elements");
+    }
+
+    if (dests.size() == 0) {
+      throw new IllegalArgumentException("Sources should have more than 0 elements");
+    }
+
     this.edgeGenerator = e;
     op = new SKeyedPartition(channel, taskPlan, sources, dests,
         dataType, keyType, new PartitionRecvrImpl(), new HashingSelector());

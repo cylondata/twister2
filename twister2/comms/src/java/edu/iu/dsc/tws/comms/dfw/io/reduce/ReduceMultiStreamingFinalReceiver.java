@@ -19,20 +19,20 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KeyedReduceStreamingFinalReceiver;
 
 public class ReduceMultiStreamingFinalReceiver implements MultiMessageReceiver {
   private ReduceFunction reduceFunction;
 
-  private ReduceReceiver reduceReceiver;
+  private SingularReceiver singularReceiver;
 
   private Map<Integer, KeyedReduceStreamingFinalReceiver> receiverMap = new HashMap<>();
 
   public ReduceMultiStreamingFinalReceiver(ReduceFunction reduceFunction,
-                                           ReduceReceiver reduceReceiver) {
+                                           SingularReceiver singularReceiver) {
     this.reduceFunction = reduceFunction;
-    this.reduceReceiver = reduceReceiver;
+    this.singularReceiver = singularReceiver;
   }
 
   @Override
@@ -40,7 +40,7 @@ public class ReduceMultiStreamingFinalReceiver implements MultiMessageReceiver {
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
       KeyedReduceStreamingFinalReceiver finalReceiver =
-          new KeyedReduceStreamingFinalReceiver(reduceFunction, reduceReceiver);
+          new KeyedReduceStreamingFinalReceiver(reduceFunction, singularReceiver);
       receiverMap.put(e.getKey(), finalReceiver);
       finalReceiver.init(cfg, op, e.getValue());
     }
@@ -53,9 +53,11 @@ public class ReduceMultiStreamingFinalReceiver implements MultiMessageReceiver {
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
+    boolean needsFurtherProgress = false;
     for (Map.Entry<Integer, KeyedReduceStreamingFinalReceiver> e : receiverMap.entrySet()) {
-      e.getValue().progress();
+      needsFurtherProgress = needsFurtherProgress | e.getValue().progress();
     }
+    return needsFurtherProgress;
   }
 }

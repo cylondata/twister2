@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
+import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
@@ -96,6 +97,16 @@ public class TaskStreamingInstance implements INodeInstance {
    */
   private int workerId;
 
+  /**
+   * The low watermark for queued messages
+   */
+  private int lowWaterMark;
+
+  /**
+   * The high water mark for messages
+   */
+  private int highWaterMark;
+
   public TaskStreamingInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                                BlockingQueue<IMessage> outQueue, Config config, String tName,
                                int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
@@ -110,6 +121,8 @@ public class TaskStreamingInstance implements INodeInstance {
     this.taskName = tName;
     this.nodeConfigs = cfgs;
     this.workerId = wId;
+    this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
+    this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
   }
 
   public void prepare() {
@@ -128,7 +141,7 @@ public class TaskStreamingInstance implements INodeInstance {
 
   public boolean execute() {
     // execute if there are incoming messages
-    while (!inQueue.isEmpty()) {
+    while (!inQueue.isEmpty() && outQueue.size() < lowWaterMark) {
       IMessage m = inQueue.poll();
       if (m != null) {
         task.execute(m);
@@ -147,6 +160,8 @@ public class TaskStreamingInstance implements INodeInstance {
         // if we successfully send remove
         if (op.send(taskId, message, flags)) {
           outQueue.poll();
+        } else {
+          break;
         }
       }
     }

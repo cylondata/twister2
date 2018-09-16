@@ -12,9 +12,9 @@
 package edu.iu.dsc.tws.api.task;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -35,9 +35,11 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 /**
- * The task executor API
+ * The task executor API, this class can be used to create an execution plan and execute
  */
 public class TaskExecutor {
+  private static final Logger LOG = Logger.getLogger(TaskExecutor.class.getName());
+
   /**
    * Configuration
    */
@@ -59,10 +61,12 @@ public class TaskExecutor {
   private Communicator communicator;
 
   /**
-   * Inputs
+   * Creates a task executor.
+   * @param cfg the configuration
+   * @param wId the worker id
+   * @param resources allocated resources
+   * @param net communicator
    */
-  private Map<String, DataSet<Object>> inputs = new HashMap<>();
-
   public TaskExecutor(Config cfg, int wId, AllocatedResources resources, Communicator net) {
     this.config = cfg;
     this.workerID = wId;
@@ -71,7 +75,8 @@ public class TaskExecutor {
   }
 
   /**
-   * Execute the task graph and return a data set
+   * Create an execution plan from the given graph
+   *
    * @param graph task graph
    * @return the data set
    */
@@ -87,6 +92,14 @@ public class TaskExecutor {
     return executionPlanBuilder.build(config, graph, taskSchedulePlan);
   }
 
+  /**
+   * Execute a plan and a graph. This call blocks until the execution finishes. In case of
+   * streaming, this call doesn't return while for batch computations it returns after
+   * the execution is done.
+   *
+   * @param graph the dataflow graph
+   * @param plan the execution plan
+   */
   public void execute(DataFlowTaskGraph graph, ExecutionPlan plan) {
     Executor executor = new Executor(config, workerID, plan, communicator.getChannel(),
         OperationMode.BATCH);
@@ -122,16 +135,17 @@ public class TaskExecutor {
 
   /**
    * Extract output from a task graph
-   * @param graph
-   * @param plan
-   * @param name
-   * @return
+   *
+   * @param graph the graph
+   * @param plan plan created from the graph
+   * @param taskName name of the output to retrieve
+   * @return a DataSet with set of partitions from each task in this executor
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public DataSet<Object> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan, String name) {
-    Map<Integer, INodeInstance> nodes = plan.getNodes(name);
+  public DataSet<Object> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan, String taskName) {
+    Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {
-      throw new RuntimeException("Failed to get output from non-existing task name: " + name);
+      throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);
     }
 
     DataSet<Object> dataSet = new DataSet<>(0);
@@ -149,6 +163,43 @@ public class TaskExecutor {
     return dataSet;
   }
 
+  /**
+   * Extract output from a task graph
+   *
+   * @param graph the graph
+   * @param plan plan created from the graph
+   * @param taskName name of the output to retrieve
+   * @param dataName name of the data set
+   * @return a DataSet with set of partitions from each task in this executor
+   */
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public DataSet<Object> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan,
+                                   String taskName, String dataName) {
+    Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
+    if (nodes == null) {
+      throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);
+    }
+
+    DataSet<Object> dataSet = new DataSet<>(0);
+    for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
+      INodeInstance node = e.getValue();
+      INode task = node.getNode();
+      if (task instanceof Collector) {
+        Partition partition = ((Collector) task).get(dataName);
+        if (partition != null) {
+          dataSet.addPartition(partition);
+        } else {
+          LOG.warning(String.format("Task id %d returned null for data %s",
+              node.getId(), dataName));
+        }
+      } else {
+        throw new RuntimeException("Cannot collect from node because it is "
+            + "not a collector: " + node);
+      }
+    }
+    return dataSet;
+  }
+
   private WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
     List<Worker> workers = new ArrayList<>();
     for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
@@ -157,9 +208,5 @@ public class TaskExecutor {
     }
 
     return new WorkerPlan(workers);
-  }
-
-  public void addInput(String key, DataSet<Object> input) {
-    inputs.put(key, input);
   }
 }

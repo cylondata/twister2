@@ -45,6 +45,7 @@ public class AllReduceBatchFinalReceiver extends ReduceBatchReceiver {
    * Method used to communicationProgress work
    */
   public boolean progress() {
+    boolean needsFurtherProgress = false;
     for (int t : messages.keySet()) {
       if (batchDone.get(t)) {
         continue;
@@ -59,14 +60,21 @@ public class AllReduceBatchFinalReceiver extends ReduceBatchReceiver {
 //      LOG.info(String.format("%d reduce final counts %d %s %s %s", executor, t, countMap,
 //          totalCountMap, finishedForTarget));
       boolean found = true;
+      boolean moreThanOne = false;
       for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
         if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
           found = false;
+        }  else if (e.getValue().size() > 0) {
+          moreThanOne = true;
         }
 
         if (!finishedForTarget.get(e.getKey())) {
           allFinished = false;
         }
+      }
+
+      if (!found && moreThanOne) {
+        needsFurtherProgress = true;
       }
 
       if (found) {
@@ -88,9 +96,13 @@ public class AllReduceBatchFinalReceiver extends ReduceBatchReceiver {
         allFinished = false;
       }
 
+      if (!dataFlowOperation.isDelegeteComplete()) {
+        allFinished = false;
+        needsFurtherProgress = true;
+      }
+
       if (allFinished) {
 //        LOG.info(String.format("%d final all finished %d", executor, t));
-        batchDone.put(t, true);
         Object previous = null;
         List<Object> finalMessagePerTask = finalMessages.get(t);
         for (int i = 0; i < finalMessagePerTask.size(); i++) {
@@ -101,9 +113,13 @@ public class AllReduceBatchFinalReceiver extends ReduceBatchReceiver {
             previous = reduceFunction.reduce(previous, current);
           }
         }
-        reduceReceiver.send(t, previous, 0);
+        // if we send this successfully we are done
+        if (reduceReceiver.send(t, previous, 0)) {
+          batchDone.put(t, true);
+          onFinish(t);
+        }
       }
     }
-    return true;
+    return needsFurtherProgress;
   }
 }

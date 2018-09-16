@@ -16,13 +16,20 @@ import edu.iu.dsc.tws.common.config.Context;
 
 public class ExecutorContext extends Context {
   public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
-  public static final String INSTANCE_QUEUE_SIZE = "twister2.exector.instance.queue.size";
+  public static final String INSTANCE_QUEUE_LOW_WATERMARK =
+      "twister2.exector.instance.queue.low.watermark";
+  public static final String INSTANCE_QUEUE_HIGH_WATERMARK =
+      "twister2.exector.instance.queue.high.watermark";
 
   public static int threadsPerContainer(Config cfg) {
     return cfg.getIntegerValue(THREADS_PER_WORKER, 1);
   }
 
-  public static int instanceQueueSize(Config cfg) {
-    return cfg.getIntegerValue(INSTANCE_QUEUE_SIZE, 64);
+  public static int instanceQueueLowWaterMark(Config cfg) {
+    return cfg.getIntegerValue(INSTANCE_QUEUE_LOW_WATERMARK, 64);
+  }
+
+  public static int instanceQueueHighWaterMark(Config cfg) {
+    return cfg.getIntegerValue(INSTANCE_QUEUE_LOW_WATERMARK, 128);
   }
 }
