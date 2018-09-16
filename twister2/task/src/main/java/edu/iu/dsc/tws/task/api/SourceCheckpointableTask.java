@@ -78,7 +78,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
 //        new BarrierClientMessageHandler());
 //
 //    tryUntilConnected(barrierClient, barrierLooper, 5000);
-//    sendBarrierSyncMessage();
+    sendBarrierSyncMessage();
 
 
 

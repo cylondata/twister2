@@ -59,7 +59,6 @@ public class TaskBarrierMonitor implements MessageHandler {
 
   @Override
   public void onMessage(RequestID id, int taskId, Message message) {
-
     if (message instanceof Checkpoint.TaskDiscovery) {
       Checkpoint.TaskDiscovery taskDiscoveryMessage = (Checkpoint.TaskDiscovery) message;
 
@@ -84,9 +83,11 @@ public class TaskBarrierMonitor implements MessageHandler {
       }
 
     } else if (message instanceof Checkpoint.BarrierSync) {
-      Checkpoint.BarrierSync barrierSyncMessage = (Checkpoint.BarrierSync) message;
 
       LOG.info("Source task " + taskId + " sent BarrierSync message.");
+      Checkpoint.BarrierSync barrierSyncMessage = (Checkpoint.BarrierSync) message;
+
+
     }
   }
 
