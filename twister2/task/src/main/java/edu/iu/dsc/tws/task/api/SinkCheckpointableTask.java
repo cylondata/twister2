@@ -117,6 +117,7 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
     Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
         .setTaskID(ctx.taskId())
         .setTaskType(Checkpoint.TaskDiscovery.TaskType.SINK)
+        .setParrallelism(this.ctx.getParallelism())
         .build();
 
     client.sendRequest(message);

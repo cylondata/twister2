@@ -9,6 +9,7 @@ option java_outer_classname = "Checkpoint";
 message TaskDiscovery {
     int32 taskID = 1;
     TaskType taskType = 2;
+    int32 parrallelism = 3;
 
     enum TaskType {
         SOURCE = 0;

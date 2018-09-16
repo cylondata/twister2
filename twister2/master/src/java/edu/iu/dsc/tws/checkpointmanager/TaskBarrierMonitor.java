@@ -46,8 +46,13 @@ public class TaskBarrierMonitor implements MessageHandler {
   private List<Integer> sourceTaskList;
   private List<Integer> sinkTaskList;
 
+  private int sourceParallelism;
+  private int sinkParallelism;
+
   private boolean sendBarrierFlag;
   private int currentBarrierID;
+
+  private boolean allTaskGotRegistered;
 
   public TaskBarrierMonitor(Config cfg, CheckpointManager checkpointManager, RRServer server) {
     this.config = cfg;
@@ -55,10 +60,16 @@ public class TaskBarrierMonitor implements MessageHandler {
     this.rrServer = server;
     this.sourceTaskList = new ArrayList<>();
     this.sinkTaskList = new ArrayList<>();
+
+    this.sourceParallelism = 0;
+    this.sinkParallelism = 0;
+
+    this.allTaskGotRegistered = false;
   }
 
   @Override
   public void onMessage(RequestID id, int taskId, Message message) {
+
     if (message instanceof Checkpoint.TaskDiscovery) {
       Checkpoint.TaskDiscovery taskDiscoveryMessage = (Checkpoint.TaskDiscovery) message;
 
@@ -68,7 +79,12 @@ public class TaskBarrierMonitor implements MessageHandler {
 
         this.sourceTaskList.add(taskDiscoveryMessage.getTaskID());
 
-        printTaskList(sourceTaskList, "Source");
+        if (this.sourceParallelism == 0) {
+          sourceParallelism = taskDiscoveryMessage.getParrallelism();
+        }
+
+        checkAllTaskGotRegistered();
+
 
       } else if (taskDiscoveryMessage.getTaskType()
           .equals(Checkpoint.TaskDiscovery.TaskType.SINK)) {
@@ -78,7 +94,11 @@ public class TaskBarrierMonitor implements MessageHandler {
 
         this.sinkTaskList.add(taskDiscoveryMessage.getTaskID());
 
-        printTaskList(sinkTaskList, "Sink");
+        if (this.sinkParallelism == 0) {
+          sinkParallelism = taskDiscoveryMessage.getParrallelism();
+        }
+
+        checkAllTaskGotRegistered();
 
       }
 
@@ -86,7 +106,6 @@ public class TaskBarrierMonitor implements MessageHandler {
 
       LOG.info("Source task " + taskId + " sent BarrierSync message.");
       Checkpoint.BarrierSync barrierSyncMessage = (Checkpoint.BarrierSync) message;
-
 
     }
   }
@@ -97,5 +116,14 @@ public class TaskBarrierMonitor implements MessageHandler {
       temp += " " + i;
     }
     LOG.info(temp);
+  }
+
+  private void checkAllTaskGotRegistered() {
+    if ((sourceTaskList.size() == sourceParallelism) && (sinkTaskList.size() == sinkParallelism)) {
+      printTaskList(sourceTaskList, "Source");
+      printTaskList(sinkTaskList, "Sink");
+
+      this.allTaskGotRegistered = true;
+    }
   }
 }

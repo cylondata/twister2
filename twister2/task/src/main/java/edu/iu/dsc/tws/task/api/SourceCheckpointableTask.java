@@ -169,6 +169,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
     Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
         .setTaskID(ctx.taskId())
         .setTaskType(Checkpoint.TaskDiscovery.TaskType.SOURCE)
+        .setParrallelism(ctx.getParallelism())
         .build();
 
     taskClient.sendRequest(message);
