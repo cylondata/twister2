@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.comms.op.stream;
 
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowAllGather;
@@ -39,7 +39,7 @@ public class SAllGather {
    */
   public SAllGather(Communicator comm, TaskPlan plan,
                     Set<Integer> sources, Set<Integer> targets,
-                    MessageReceiver rcvr, MessageType dataType) {
+                    BulkReceiver rcvr, MessageType dataType) {
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }
@@ -52,7 +52,7 @@ public class SAllGather {
     int firstSource = sources.iterator().next();
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
     gather = new DataFlowAllGather(comm.getChannel(), sources, targets, middleTask, rcvr,
-        comm.nextEdge(), comm.nextEdge());
+        comm.nextEdge(), comm.nextEdge(), true);
     gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 

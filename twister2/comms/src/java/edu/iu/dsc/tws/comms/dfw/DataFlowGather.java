@@ -129,13 +129,11 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     // check weather this message is for a sub task
     if (!isLast()
         && partialReceiver != null) {
-//      LOG.info(String.format("%d calling PARTIAL receiver %d", executor, header.getSourceId()));
       return partialReceiver.onMessage(header.getSourceId(),
           DataFlowContext.DEFAULT_DESTINATION,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              DataFlowContext.DEFAULT_DESTINATION), header.getFlags(), currentMessage);
+              DataFlowContext.DEFAULT_DESTINATION), header.getFlags(), object);
     } else {
-//      LOG.info(String.format("%d calling FINAL receiver %d", executor, header.getSourceId()));
       return finalReceiver.onMessage(header.getSourceId(),
           DataFlowContext.DEFAULT_DESTINATION,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
@@ -209,12 +207,8 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
                                        Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
-//      LOG.info(String.format("%d internally FINAL receiver %d %s", executor, source,
-//          finalReceiver.getClass().getName()));
       return finalReceiver.onMessage(source, path, target, flags, message);
     } else {
-//      LOG.info(String.format("%d internally PARTIAL receiver %d %s", executor, source,
-//          partialReceiver.getClass().getName()));
       // now we need to serialize this to the buffer
       return partialReceiver.onMessage(source, path, target, flags, message);
     }
@@ -353,7 +347,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   @Override
   public void finish(int source) {
     LOG.info("Finish on DfReduce :" + source);
-    while (!send(source, new byte[0], MessageFlags.END)) {
+    while (!send(source, new double[0], MessageFlags.END)) {
       // lets progress until finish
       progress();
     }

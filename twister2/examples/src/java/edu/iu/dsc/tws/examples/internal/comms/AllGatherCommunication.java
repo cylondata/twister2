@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.internal.comms;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,8 +32,8 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -80,7 +81,7 @@ public class AllGatherCommunication implements IWorker {
 
     LOG.info("Setting up AllGather dataflow operation");
     allAggregate = new DataFlowAllGather(network, sources, destinations, NO_OF_TASKS,
-        new FinalAllGatherReceive(), 0, 1);
+        new FinalAllGatherReceive(), 0, 1, true);
     allAggregate.init(cfg, MessageType.OBJECT, taskPlan, 0);
     if (id == 0 || id == 1) {
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
@@ -140,7 +141,7 @@ public class AllGatherCommunication implements IWorker {
     }
   }
 
-  private class FinalAllGatherReceive implements MessageReceiver {
+  private class FinalAllGatherReceive implements BulkReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
     private Map<Integer, Map<Integer, List<Object>>> messages = new HashMap<>();
@@ -150,7 +151,6 @@ public class AllGatherCommunication implements IWorker {
 
     private long start = System.nanoTime();
 
-    @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
         Map<Integer, List<Object>> messagesPerTask = new HashMap<>();
@@ -172,7 +172,6 @@ public class AllGatherCommunication implements IWorker {
           + ", Message EntrySetSize : " + messages.entrySet().size());
     }
 
-    @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
       LOG.info("OnMessage : source : " + source + ", destination : " + path
@@ -250,6 +249,16 @@ public class AllGatherCommunication implements IWorker {
         }
       }
       return true;
+    }
+
+    @Override
+    public void init(Config cfg, Set<Integer> targets) {
+
+    }
+
+    @Override
+    public boolean receive(int target, Iterator<Object> it) {
+      return false;
     }
   }
 

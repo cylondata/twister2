@@ -126,7 +126,6 @@ public abstract class BenchWorker implements IWorker {
       Object data = generateData();
       experimentData.setInput(data);
       experimentData.setTaskStages(jobParameters.getTaskStages());
-//      int[] data = {1, 0, 2};
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
         int flag = 0;
@@ -147,8 +146,6 @@ public abstract class BenchWorker implements IWorker {
       finishCommunication(task);
       sourcesDone = allDone;
       lock.unlock();
-
-
     }
   }
 }

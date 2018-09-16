@@ -175,20 +175,12 @@ public class TaskBatchInstance implements INodeInstance {
         state.set(InstanceState.EXECUTING);
       }
 
-      // now check the context
-      boolean isDone = true;
-      for (String e : outputEdges) {
-        if (!taskContext.isDone(e)) {
-          // we are done with execution
-          isDone = false;
-          break;
-        }
-      }
-
+      // for compute we don't have to have the context done as when the inputs finish and execution
+      // is done, we are done executing
       // progress in communication
       boolean needsFurther = communicationProgress(inParOps);
       // if we no longer needs to progress comm and input is empty
-      if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty() && isDone) {
+      if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty()) {
         state.set(InstanceState.EXECUTION_DONE);
       }
     }

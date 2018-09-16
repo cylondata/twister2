@@ -75,10 +75,6 @@ public class MultiMessageSerializer implements MessageSerializer {
    */
   @Override
   public Object build(Object message, Object partialBuildObject) {
-    int noOfMessages = 1;
-    if (message instanceof List) {
-      noOfMessages = ((List) message).size();
-    }
     OutMessage sendMessage = (OutMessage) partialBuildObject;
 
     // we got an already serialized message, lets just return it
