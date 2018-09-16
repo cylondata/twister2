@@ -49,7 +49,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() && hasPending();
+    return op.progress() || op.hasPending();
   }
 
   public boolean hasPending() {
