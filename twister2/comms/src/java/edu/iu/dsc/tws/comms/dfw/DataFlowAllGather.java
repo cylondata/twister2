@@ -155,6 +155,8 @@ public class DataFlowAllGather implements DataFlowOperation {
   private static class BCastReceiver implements MessageReceiver {
     private BulkReceiver bulkReceiver;
 
+    private boolean received = false;
+
     BCastReceiver(BulkReceiver reduceRcvr) {
       this.bulkReceiver = reduceRcvr;
     }
@@ -167,14 +169,18 @@ public class DataFlowAllGather implements DataFlowOperation {
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       if (object instanceof List) {
-        return bulkReceiver.receive(target, (Iterator<Object>) ((List) object).iterator());
+        boolean rcvd = bulkReceiver.receive(target, (Iterator<Object>) ((List) object).iterator());
+        if (rcvd) {
+          received = true;
+          return true;
+        }
       }
       return false;
     }
 
     @Override
     public boolean progress() {
-      return false;
+      return !received;
     }
   }
 }
