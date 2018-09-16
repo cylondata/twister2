@@ -132,20 +132,11 @@ public class SourceStreamingInstance implements INodeInstance {
         String edge = message.edge();
         IParallelOperation op = outStreamingParOps.get(edge);
         // if we successfully send remove message
-        if (i % 100 == 0) {
-          if (op.send(streamingTaskId, message, MessageFlags.BARRIER)) {
-            outStreamingQueue.poll();
-          } else {
-            // we need to break
-            break;
-          }
+        if (op.send(streamingTaskId, message, 0)) {
+          outStreamingQueue.poll();
         } else {
-          if (op.send(streamingTaskId, message, 0)) {
-            outStreamingQueue.poll();
-          } else {
-            // we need to break
-            break;
-          }
+          // we need to break
+          break;
         }
       }
     }
@@ -160,6 +151,10 @@ public class SourceStreamingInstance implements INodeInstance {
   @Override
   public INode getNode() {
     return streamingTask;
+  }
+
+  public boolean sendBarrier(IParallelOperation op, IMessage message) {
+    return op.send(streamingTaskId, message, MessageFlags.BARRIER);
   }
 
   public BlockingQueue<IMessage> getOutStreamingQueue() {
