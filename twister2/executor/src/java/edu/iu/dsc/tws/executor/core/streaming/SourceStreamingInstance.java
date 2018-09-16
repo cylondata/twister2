@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
@@ -150,6 +151,10 @@ public class SourceStreamingInstance implements INodeInstance {
   @Override
   public INode getNode() {
     return streamingTask;
+  }
+
+  public boolean sendBarrier(IParallelOperation op, IMessage message) {
+    return op.send(streamingTaskId, message, MessageFlags.BARRIER);
   }
 
   public BlockingQueue<IMessage> getOutStreamingQueue() {
