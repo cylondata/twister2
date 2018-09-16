@@ -65,6 +65,11 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
     return op.progress();
   }
 
+  @Override
+  public void finish(int source) {
+    op.finish(source);
+  }
+
   private class FinalGatherReceive implements BulkReceiver {
     public void init(Config cfg, DataFlowOperation operation,
                      Map<Integer, List<Integer>> expectedIds) {

@@ -86,7 +86,7 @@ public class AllGatherBatchTask implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.info("Message AllGather : Count : " + count);
+      LOG.info(context.getWorkerId() + " Message AllGather : Count : " + count);
       count++;
       return true;
     }

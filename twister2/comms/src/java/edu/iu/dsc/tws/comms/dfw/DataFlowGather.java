@@ -334,8 +334,8 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean progress() {
-    OperationUtils.progressReceivers(delegete, lock, finalReceiver, partialLock, partialReceiver);
-    return true;
+    return OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+        partialLock, partialReceiver);
   }
 
 
@@ -346,7 +346,6 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-    LOG.info("Finish on DfReduce :" + source);
     while (!send(source, new double[0], MessageFlags.END)) {
       // lets progress until finish
       progress();

@@ -354,13 +354,6 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-    LOG.info("Finish on DfReduce :" + source);
-//    if (!isLastReceiver() && partialReceiver != null) {
-//      partialReceiver.onFinish(source);
-//    }
-//    if (isLastReceiver() && finalReceiver != null) {
-//      finalReceiver.onFinish(source);
-//    }
     while (!send(source, new byte[0], MessageFlags.END)) {
       // lets progress until finish
       progress();
