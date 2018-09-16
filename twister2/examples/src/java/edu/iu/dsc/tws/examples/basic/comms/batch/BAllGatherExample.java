@@ -77,7 +77,7 @@ public class BAllGatherExample extends BenchWorker {
 
   @Override
   protected boolean sendMessages(int task, Object data, int flag) {
-    while (!gather.reduce(task, data, flag)) {
+    while (!gather.gather(task, data, flag)) {
       // lets wait a litte and try again
       gather.progress();
     }

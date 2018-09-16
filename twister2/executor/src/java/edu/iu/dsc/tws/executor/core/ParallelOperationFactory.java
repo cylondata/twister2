@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.comms.batch.AllGatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.AllReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.BroadcastBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.GatherBatchOperation;
@@ -76,7 +77,11 @@ public class ParallelOperationFactory {
         } else if (OperationNames.GATHER.equals(edge.getOperation())) {
           return new GatherBatchOperation(config, channel, taskPlan,
               sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
-              edge.getName(),  taskPlan);
+              edge.getName());
+        } else if (OperationNames.ALLGATHER.equals(edge.getOperation())) {
+          return new AllGatherBatchOperation(config, channel, taskPlan,
+              sources, dests, edgeGenerator, edge.getDataType(),
+              edge.getName());
         } else if (OperationNames.REDUCE.equals(edge.getOperation())) {
           ReduceBatchOperation reduceBatchOperation = new ReduceBatchOperation(config, channel,
               taskPlan);
