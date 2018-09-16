@@ -51,9 +51,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
     taskClient.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
         new TaskClientMessageHandler());
 
-    taskClient.registerResponseHandler(Checkpoint.BarrierSend.newBuilder(),
-        new BarrierClientMessageHandler());
-
     taskClient.registerResponseHandler(Checkpoint.BarrierSync.newBuilder(),
         new BarrierClientMessageHandler());
 
@@ -159,7 +156,10 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
         if (barrierSend.getSendBarrier()) {
           currentBarrierID = barrierSend.getCurrentBarrierID();
           LOG.info("Signal to emit barrier with ID : " + currentBarrierID + " received");
+
           emitBarrier();
+
+          currentBarrierID++;
         }
       }
     }
@@ -179,12 +179,17 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
   private void sendBarrierSyncMessage() {
     Checkpoint.BarrierSync message = Checkpoint.BarrierSync.newBuilder()
         .setCurrentBarrierID(currentBarrierID)
+        .setTaskID(ctx.taskId())
         .build();
 
     taskClient.sendRequest(message);
     taskLooper.loop();
   }
 
+  /**
+   * This will have the method to emit barrier in to the outgoing channel of the source task
+   */
+  private void emitBarrier() {
 
-  public void emitBarrier() { }
+  }
 }

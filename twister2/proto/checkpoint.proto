@@ -19,6 +19,7 @@ message TaskDiscovery {
 
 message BarrierSync {
     int32 currentBarrierID = 1;
+    int32 taskID = 2;
 }
 
 message BarrierSend {

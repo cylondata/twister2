@@ -24,7 +24,9 @@
 package edu.iu.dsc.tws.checkpointmanager;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -48,6 +50,8 @@ public class TaskBarrierMonitor implements MessageHandler {
 
   private int sourceParallelism;
   private int sinkParallelism;
+
+  private Set<Integer> currentBarrierReceivedSourceSet;
 
   private boolean sendBarrierFlag;
   private int currentBarrierID;
@@ -107,6 +111,30 @@ public class TaskBarrierMonitor implements MessageHandler {
       LOG.info("Source task " + taskId + " sent BarrierSync message.");
       Checkpoint.BarrierSync barrierSyncMessage = (Checkpoint.BarrierSync) message;
 
+      if (currentBarrierID == barrierSyncMessage.getCurrentBarrierID() && sendBarrierFlag
+          && allTaskGotRegistered) {
+
+        Checkpoint.BarrierSend barrierSendMessage = Checkpoint.BarrierSend.newBuilder()
+            .setSendBarrier(true)
+            .setCurrentBarrierID(currentBarrierID)
+            .build();
+
+        rrServer.sendResponse(id, barrierSendMessage);
+
+        currentBarrierReceivedSourceSet.add(barrierSyncMessage.getTaskID());
+
+        checkAllBarrierGotSent();
+
+      } else {
+
+        Checkpoint.BarrierSend barrierSendMessage = Checkpoint.BarrierSend.newBuilder()
+            .setSendBarrier(true)
+            .setCurrentBarrierID(currentBarrierID)
+            .build();
+
+        rrServer.sendResponse(id, barrierSendMessage);
+      }
+
     }
   }
 
@@ -118,12 +146,31 @@ public class TaskBarrierMonitor implements MessageHandler {
     LOG.info(temp);
   }
 
+  /**
+   * This will check whether all the source and sink tasks have got registered
+   */
   private void checkAllTaskGotRegistered() {
     if ((sourceTaskList.size() == sourceParallelism) && (sinkTaskList.size() == sinkParallelism)) {
       printTaskList(sourceTaskList, "Source");
       printTaskList(sinkTaskList, "Sink");
 
       this.allTaskGotRegistered = true;
+    }
+
+    sendBarrierFlag = true;
+    currentBarrierID = 1;
+
+    currentBarrierReceivedSourceSet = new HashSet<Integer>();
+  }
+
+  /**
+   * This will make sendBarrier Conditions false so that it will not
+   * emit any more barriers until previous barrier got received from the sink
+   */
+  private void checkAllBarrierGotSent() {
+    if (currentBarrierReceivedSourceSet.size() == sourceParallelism) {
+      currentBarrierReceivedSourceSet = new HashSet<Integer>();
+      sendBarrierFlag = false;
     }
   }
 }
