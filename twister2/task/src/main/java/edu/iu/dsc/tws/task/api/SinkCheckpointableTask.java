@@ -123,4 +123,11 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
     client.sendRequest(message);
     looper.loop();
   }
+
+  /**
+   * This method should get called when a valid checkpoint is made.
+   */
+  private void receivedValidBarrier(){
+
+  }
 }
