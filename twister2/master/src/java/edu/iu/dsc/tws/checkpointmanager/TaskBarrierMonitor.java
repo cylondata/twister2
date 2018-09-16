@@ -23,6 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.checkpointmanager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -52,6 +53,8 @@ public class TaskBarrierMonitor implements MessageHandler {
     this.config = cfg;
     this.checkpointManager = checkpointManager;
     this.rrServer = server;
+    this.sourceTaskList = new ArrayList<>();
+    this.sinkTaskList = new ArrayList<>();
   }
 
   @Override

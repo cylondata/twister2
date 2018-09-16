@@ -61,8 +61,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
         new BarrierClientMessageHandler());
 
     tryUntilConnected(taskClient, taskLooper, 5000);
-
-
     sendTaskDiscoveryMessage();
   }
 
@@ -80,11 +78,8 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
 //        new BarrierClientMessageHandler());
 //
 //    tryUntilConnected(barrierClient, barrierLooper, 5000);
-    Checkpoint.BarrierSync message = Checkpoint.BarrierSync.newBuilder()
-        .setCurrentBarrierID(currentBarrierID)
-        .build();
+//    sendBarrierSyncMessage();
 
-    taskClient.sendRequest(message);
 
 
 
@@ -159,12 +154,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       LOG.info("BarrierClientConnectHandler got connected");
-
-      Checkpoint.BarrierSync message = Checkpoint.BarrierSync.newBuilder()
-          .setCurrentBarrierID(currentBarrierID)
-          .build();
-
-      barrierClient.sendRequest(message);
     }
 
     @Override
@@ -201,7 +190,18 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
         .build();
 
     taskClient.sendRequest(message);
+    taskLooper.loop();
   }
+
+  private void sendBarrierSyncMessage() {
+    Checkpoint.BarrierSync message = Checkpoint.BarrierSync.newBuilder()
+        .setCurrentBarrierID(currentBarrierID)
+        .build();
+
+    taskClient.sendRequest(message);
+    taskLooper.loop();
+  }
+
 
   public void emitBarrier() { }
 }
