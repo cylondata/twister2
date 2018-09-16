@@ -127,7 +127,6 @@ public class SourceStreamingInstance implements INodeInstance {
     }
     // now check the output queue
     while (!outStreamingQueue.isEmpty()) {
-      i++;
       IMessage message = outStreamingQueue.peek();
       if (message != null) {
         String edge = message.edge();
