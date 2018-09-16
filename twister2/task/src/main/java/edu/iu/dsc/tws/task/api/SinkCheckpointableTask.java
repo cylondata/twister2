@@ -127,7 +127,7 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
   /**
    * This method should get called when a valid checkpoint is made.
    */
-  private void receivedValidBarrier(){
+  private void receivedValidBarrier() {
 
   }
 }
