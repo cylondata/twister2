@@ -37,9 +37,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
   public RRClient taskClient;
   public Progress taskLooper;
 
-  public RRClient barrierClient;
-  public Progress barrierLooper;
-
   private int currentBarrierID = 0;
 
   public void connect(Config cfg, TaskContext context) {
@@ -66,18 +63,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
 
   public void checkForBarrier() {
 
-//    barrierLooper = new Progress();
-//
-//    barrierClient = new RRClient("localhost", 6789, config, barrierLooper,
-//        ctx.taskId(), new BarrierClientConnectHandler());
-//
-//    barrierClient.registerResponseHandler(Checkpoint.BarrierSend.newBuilder(),
-//        new BarrierClientMessageHandler());
-//
-//    barrierClient.registerResponseHandler(Checkpoint.BarrierSync.newBuilder(),
-//        new BarrierClientMessageHandler());
-//
-//    tryUntilConnected(barrierClient, barrierLooper, 5000);
     sendBarrierSyncMessage();
 
 
@@ -176,10 +161,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
           LOG.info("Signal to emit barrier with ID : " + currentBarrierID + " received");
           emitBarrier();
         }
-
       }
-
-      barrierClient.disconnect();
     }
   }
 
