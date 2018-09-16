@@ -48,9 +48,12 @@ public class ReduceMultiStreamingPartialReceiver implements MultiMessageReceiver
   }
 
   @Override
-  public void progress() {
+  public boolean progress() {
+    boolean needsFurtherProgress = false;
+
     for (Map.Entry<Integer, KeyedReduceStreamingPartialReceiver> e : receiverMap.entrySet()) {
-      e.getValue().progress();
+      needsFurtherProgress = needsFurtherProgress | e.getValue().progress();
     }
+    return needsFurtherProgress;
   }
 }

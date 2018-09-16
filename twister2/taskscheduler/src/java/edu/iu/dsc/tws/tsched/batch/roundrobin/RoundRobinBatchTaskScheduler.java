@@ -70,6 +70,77 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   private Config config;
 
   /**
+   * This method retrieves the parallel task map and the total number of task instances for the
+   * task vertex. Then, it will allocate the instances into the number of containers allocated for
+   * the task in a round robin fashion.
+   */
+  private static Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgorithm(
+          Vertex taskVertex, int numberOfContainers) {
+
+    TaskAttributes taskAttributes = new TaskAttributes();
+    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
+
+    for (int i = 0; i < numberOfContainers; i++) {
+      roundrobinAllocation.put(i, new ArrayList<>());
+    }
+
+    try {
+      Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertex);
+      int containerIndex = 0;
+      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+        String task = e.getKey();
+        int numberOfInstances = e.getValue();
+        for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+          ++containerIndex;
+          if (containerIndex >= roundrobinAllocation.size()) {
+            containerIndex = 0;
+          }
+        }
+        gtaskId++;
+      }
+    } catch (NullPointerException ne) {
+      ne.printStackTrace();
+    }
+    return roundrobinAllocation;
+  }
+
+  /**
+   * This method retrieves the parallel task map and the total number of task instances for the
+   * task vertex set. Then, it will allocate the instances into the number of containers allocated
+   * for the task in a round robin fashion.
+   */
+  private static Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgorithm(
+          Set<Vertex> taskVertexSet, int numberOfContainers) {
+
+    TaskAttributes taskAttributes = new TaskAttributes();
+    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
+    for (int i = 0; i < numberOfContainers; i++) {
+      roundrobinAllocation.put(i, new ArrayList<>());
+    }
+
+    try {
+      Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+      int containerIndex = 0;
+      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+        String task = e.getKey();
+        int numberOfInstances = e.getValue();
+        for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+          ++containerIndex;
+          if (containerIndex >= roundrobinAllocation.size()) {
+            containerIndex = 0;
+          }
+        }
+        gtaskId++;
+      }
+    } catch (NullPointerException ne) {
+      ne.printStackTrace();
+    }
+    return roundrobinAllocation;
+  }
+
+  /**
    * This method initialize the task instance values with the values specified in the task config
    * object.
    *
@@ -210,79 +281,6 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
       }
     }
     return taskSchedulePlan;
-  }
-
-  /**
-   * This method retrieves the parallel task map and the total number of task instances for the
-   * task vertex. Then, it will allocate the instances into the number of containers allocated for
-   * the task in a round robin fashion.
-   */
-  private static Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgorithm(
-          Vertex taskVertex, int numberOfContainers) {
-
-    TaskAttributes taskAttributes = new TaskAttributes();
-    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
-
-    for (int i = 0; i < numberOfContainers; i++) {
-      roundrobinAllocation.put(i, new ArrayList<>());
-    }
-
-    LOG.fine("Container Map Values Before Allocation: " + roundrobinAllocation);
-    try {
-      Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertex);
-      int containerIndex = 0;
-      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-        String task = e.getKey();
-        int numberOfInstances = e.getValue();
-        for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
-          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
-          ++containerIndex;
-          if (containerIndex >= roundrobinAllocation.size()) {
-            containerIndex = 0;
-          }
-        }
-        gtaskId++;
-      }
-      LOG.fine("Container Map Values After Allocation:" + roundrobinAllocation);
-    } catch (NullPointerException ne) {
-      ne.printStackTrace();
-    }
-    return roundrobinAllocation;
-  }
-
-  /**
-   * This method retrieves the parallel task map and the total number of task instances for the
-   * task vertex set. Then, it will allocate the instances into the number of containers allocated
-   * for the task in a round robin fashion.
-   */
-  private static Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgorithm(
-          Set<Vertex> taskVertexSet, int numberOfContainers) {
-
-    TaskAttributes taskAttributes = new TaskAttributes();
-    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
-    for (int i = 0; i < numberOfContainers; i++) {
-      roundrobinAllocation.put(i, new ArrayList<>());
-    }
-
-    try {
-      Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
-      int containerIndex = 0;
-      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-        String task = e.getKey();
-        int numberOfInstances = e.getValue();
-        for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
-          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
-          ++containerIndex;
-          if (containerIndex >= roundrobinAllocation.size()) {
-            containerIndex = 0;
-          }
-        }
-        gtaskId++;
-      }
-    } catch (NullPointerException ne) {
-      ne.printStackTrace();
-    }
-    return roundrobinAllocation;
   }
 
   /**

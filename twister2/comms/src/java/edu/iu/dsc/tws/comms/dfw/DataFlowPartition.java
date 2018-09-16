@@ -29,7 +29,6 @@ import com.google.common.collect.Table;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.CompletionListener;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -156,11 +155,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   private boolean isKeyed;
 
   /**
-   * Send completion listener
-   */
-  private CompletionListener completionListener;
-
-  /**
    * Routing parameters are cached
    */
   private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
@@ -236,26 +230,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     this.delegete = new ChannelDataFlowOperation(channel);
     this.partitionStratergy = stratergy;
 
-    for (int s : sources) {
-      destinationIndex.put(s, 0);
-    }
-
-    this.finalReceiver = finalRcvr;
-    this.partialReceiver = partialRcvr;
-  }
-
-  public DataFlowPartition(TWSChannel channel, Set<Integer> srcs,
-                           Set<Integer> dests, MessageReceiver finalRcvr,
-                           MessageReceiver partialRcvr,
-                           PartitionStratergy stratergy,
-                           CompletionListener cmpListener) {
-    this.sources = srcs;
-    this.destinations = dests;
-    this.destinationIndex = new HashMap<>();
-    this.destinationsList = new ArrayList<>(destinations);
-    this.delegete = new ChannelDataFlowOperation(channel);
-    this.partitionStratergy = stratergy;
-    this.completionListener = cmpListener;
     for (int s : sources) {
       destinationIndex.put(s, 0);
     }
@@ -404,8 +378,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
         sendRoutingParameters(src, dest);
       }
     }
-
-    delegete.setCompletionListener(completionListener);
 
     delegete.init(cfg, t, receiveType, keyType, receiveKeyType, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,

@@ -92,5 +92,8 @@ public abstract class TaskWorker implements IWorker {
     execute();
   }
 
+  /**
+   * A user needs to implement this method to create the task graph and execute it
+   */
   public abstract void execute();
 }

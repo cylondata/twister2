@@ -84,7 +84,8 @@ public class KeyedReduceCommunication implements IWorker {
     // this method calls the execute method
     // I think this is wrong
     reduce = new DataFlowMultiReduce(network,
-        sources, destinations, new FinalReduceReceive(), new PartialReduceWorker(), destinations);
+        sources, destinations, new FinalReduceReceive(), new PartialReduceWorker(), destinations,
+        MessageType.OBJECT, MessageType.OBJECT);
     reduce.init(cfg, MessageType.OBJECT, taskPlan);
 
     if (id == 0 || id == 1) {
@@ -117,6 +118,7 @@ public class KeyedReduceCommunication implements IWorker {
   private class MapWorker implements Runnable {
     private int task = 0;
     private int sendCount = 0;
+
     MapWorker(int task) {
       this.task = task;
     }
@@ -215,7 +217,7 @@ public class KeyedReduceCommunication implements IWorker {
       return true;
     }
 
-    public void progress() {
+    public boolean progress() {
       for (int t : messages.keySet()) {
         boolean canProgress = true;
         while (canProgress) {
@@ -259,6 +261,8 @@ public class KeyedReduceCommunication implements IWorker {
           }
         }
       }
+      //TODO: need fix later to make sure to return false when no progress is needed
+      return true;
     }
   }
 
@@ -321,7 +325,7 @@ public class KeyedReduceCommunication implements IWorker {
       return true;
     }
 
-    public void progress() {
+    public boolean progress() {
       for (int t : messages.keySet()) {
         Map<Integer, Integer> cMap = counts.get(t);
         boolean canProgress = true;
@@ -362,6 +366,8 @@ public class KeyedReduceCommunication implements IWorker {
           }
         }
       }
+      //TODO: need fix later to make sure to return false when no progress is needed
+      return true;
     }
   }
 

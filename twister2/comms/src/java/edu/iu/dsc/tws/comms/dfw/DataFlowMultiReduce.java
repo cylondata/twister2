@@ -55,10 +55,13 @@ public class DataFlowMultiReduce implements DataFlowOperation {
 
   private MessageType dataType;
 
+  private MessageType keyType;
+
   public DataFlowMultiReduce(TWSChannel chnl,
                              Set<Integer> sources, Set<Integer> destination,
                              MultiMessageReceiver finalRecv,
-                             MultiMessageReceiver partialRecv, Set<Integer> es) {
+                             MultiMessageReceiver partialRecv, Set<Integer> es,
+                             MessageType kType, MessageType dType) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
@@ -66,6 +69,8 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     this.finalReceiver = finalRecv;
     this.edges = es;
     this.reduceMap = new HashMap<>();
+    this.keyType = kType;
+    this.dataType = dType;
   }
 
   @Override
@@ -93,17 +98,24 @@ public class DataFlowMultiReduce implements DataFlowOperation {
 
   @Override
   public synchronized boolean progress() {
+    boolean needsFurther = false;
     try {
       for (DataFlowReduce reduce : reduceMap.values()) {
-        reduce.progress();
+        if (reduce.progress()) {
+          needsFurther = true;
+        }
       }
-      finalReceiver.progress();
-      partialReceiver.progress();
+      if (finalReceiver.progress()) {
+        needsFurther = true;
+      }
+      if (partialReceiver.progress()) {
+        needsFurther = true;
+      }
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-    return true;
+    return needsFurther;
   }
 
   @Override
@@ -166,7 +178,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
       ReducePartialReceiver partialRcvr = new ReducePartialReceiver(dest);
       ReduceFinalReceiver finalRcvr = new ReduceFinalReceiver(dest);
       DataFlowReduce reduce = new DataFlowReduce(channel, sources, dest,
-          finalRcvr, partialRcvr, count, dest);
+          finalRcvr, partialRcvr, count, dest, true, keyType, dataType);
       reduce.init(config, type, instancePlan, edgeList.get(count));
       reduceMap.put(dest, reduce);
       count++;
@@ -205,7 +217,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     }
 
     public boolean progress() {
-      return true;
+      return partialReceiver.progress();
     }
   }
 
@@ -229,7 +241,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
 
     @Override
     public boolean progress() {
-      return true;
+      return finalReceiver.progress();
     }
   }
 }

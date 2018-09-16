@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowReduce;
@@ -80,7 +80,7 @@ public class ReduceBatchCommunication implements IWorker {
     // this method calls the execute method
     // I think this is wrong
     reduce = new DataFlowReduce(network, sources,
-        dest, new ReduceBatchFinalReceiver(new SumFunction(), new FinalReduceReceiver()),
+        dest, new ReduceBatchFinalReceiver(new SumFunction(), new FinalSingularReceiver()),
         new ReduceBatchPartialReceiver(dest, new SumFunction()));
     reduce.init(cfg, MessageType.OBJECT, taskPlan, 0);
 
@@ -124,7 +124,7 @@ public class ReduceBatchCommunication implements IWorker {
           // lets generate a message
           int flag = 0;
           if (i == 10 - 1) {
-            flag = MessageFlags.FLAGS_LAST;
+            flag = MessageFlags.LAST;
           }
           while (!reduce.send(task, data, flag)) {
             // lets wait a litte and try again
@@ -162,11 +162,11 @@ public class ReduceBatchCommunication implements IWorker {
     return new IntData(d);
   }
 
-  public static class FinalReduceReceiver implements ReduceReceiver {
+  public static class FinalSingularReceiver implements SingularReceiver {
     private int count = 0;
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
 
     }
 

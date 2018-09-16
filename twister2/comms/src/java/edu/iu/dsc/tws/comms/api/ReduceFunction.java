@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.common.config.Config;
  * The reduce operation takes in two objects and returns the reduced value.
  * Note: make sure not to reuse one of the incoming objects when returning the reduced values since
  * this can cause errors
- * TODO: need to investigate why such issues occur
  */
 public interface ReduceFunction {
   void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);

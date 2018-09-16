@@ -23,7 +23,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.checkpointmanager;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -45,13 +48,27 @@ public class TaskBarrierMonitor implements MessageHandler {
   private List<Integer> sourceTaskList;
   private List<Integer> sinkTaskList;
 
+  private int sourceParallelism;
+  private int sinkParallelism;
+
+  private Set<Integer> currentBarrierReceivedSourceSet;
+
   private boolean sendBarrierFlag;
   private int currentBarrierID;
+
+  private boolean allTaskGotRegistered;
 
   public TaskBarrierMonitor(Config cfg, CheckpointManager checkpointManager, RRServer server) {
     this.config = cfg;
     this.checkpointManager = checkpointManager;
     this.rrServer = server;
+    this.sourceTaskList = new ArrayList<>();
+    this.sinkTaskList = new ArrayList<>();
+
+    this.sourceParallelism = 0;
+    this.sinkParallelism = 0;
+
+    this.allTaskGotRegistered = false;
   }
 
   @Override
@@ -66,7 +83,12 @@ public class TaskBarrierMonitor implements MessageHandler {
 
         this.sourceTaskList.add(taskDiscoveryMessage.getTaskID());
 
-        printTaskList(sourceTaskList, "Source");
+        if (this.sourceParallelism == 0) {
+          sourceParallelism = taskDiscoveryMessage.getParrallelism();
+        }
+
+        checkAllTaskGotRegistered();
+
 
       } else if (taskDiscoveryMessage.getTaskType()
           .equals(Checkpoint.TaskDiscovery.TaskType.SINK)) {
@@ -76,14 +98,43 @@ public class TaskBarrierMonitor implements MessageHandler {
 
         this.sinkTaskList.add(taskDiscoveryMessage.getTaskID());
 
-        printTaskList(sinkTaskList, "Sink");
+        if (this.sinkParallelism == 0) {
+          sinkParallelism = taskDiscoveryMessage.getParrallelism();
+        }
+
+        checkAllTaskGotRegistered();
 
       }
 
     } else if (message instanceof Checkpoint.BarrierSync) {
-      Checkpoint.BarrierSync barrierSyncMessage = (Checkpoint.BarrierSync) message;
 
       LOG.info("Source task " + taskId + " sent BarrierSync message.");
+      Checkpoint.BarrierSync barrierSyncMessage = (Checkpoint.BarrierSync) message;
+
+      if (currentBarrierID == barrierSyncMessage.getCurrentBarrierID() && sendBarrierFlag
+          && allTaskGotRegistered) {
+
+        Checkpoint.BarrierSend barrierSendMessage = Checkpoint.BarrierSend.newBuilder()
+            .setSendBarrier(true)
+            .setCurrentBarrierID(currentBarrierID)
+            .build();
+
+        rrServer.sendResponse(id, barrierSendMessage);
+
+        currentBarrierReceivedSourceSet.add(barrierSyncMessage.getTaskID());
+
+        checkAllBarrierGotSent();
+
+      } else {
+
+        Checkpoint.BarrierSend barrierSendMessage = Checkpoint.BarrierSend.newBuilder()
+            .setSendBarrier(true)
+            .setCurrentBarrierID(currentBarrierID)
+            .build();
+
+        rrServer.sendResponse(id, barrierSendMessage);
+      }
+
     }
   }
 
@@ -93,5 +144,33 @@ public class TaskBarrierMonitor implements MessageHandler {
       temp += " " + i;
     }
     LOG.info(temp);
+  }
+
+  /**
+   * This will check whether all the source and sink tasks have got registered
+   */
+  private void checkAllTaskGotRegistered() {
+    if ((sourceTaskList.size() == sourceParallelism) && (sinkTaskList.size() == sinkParallelism)) {
+      printTaskList(sourceTaskList, "Source");
+      printTaskList(sinkTaskList, "Sink");
+
+      this.allTaskGotRegistered = true;
+    }
+
+    sendBarrierFlag = true;
+    currentBarrierID = 1;
+
+    currentBarrierReceivedSourceSet = new HashSet<Integer>();
+  }
+
+  /**
+   * This will make sendBarrier Conditions false so that it will not
+   * emit any more barriers until previous barrier got received from the sink
+   */
+  private void checkAllBarrierGotSent() {
+    if (currentBarrierReceivedSourceSet.size() == sourceParallelism) {
+      currentBarrierReceivedSourceSet = new HashSet<Integer>();
+      sendBarrierFlag = false;
+    }
   }
 }

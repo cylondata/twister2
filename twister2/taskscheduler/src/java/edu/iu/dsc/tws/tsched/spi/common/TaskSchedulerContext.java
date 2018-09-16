@@ -20,11 +20,23 @@ import edu.iu.dsc.tws.common.config.Context;
  */
 public class TaskSchedulerContext extends Context {
 
-  public static final String TWISTER2_TASK_SCHEDULING_MODE = "twister2.class.task.taskscheduler";
-  public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "roundrobin";
+  public static final String TWISTER2_STREAMING_TASK_SCHEDULING_MODE = "twister2.streaming"
+          + ".taskscheduler";
+  public static final String TWISTER2_STREAMING_TASK_SCHEDULING_MODE_DEFAULT = "roundrobin";
 
-  //public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "firstfit";
-  //public static final String TWISTER2_TASK_SCHEDULING_MODE_DEFAULT = "datalocalityaware";
+  public static final String TWISTER2_BATCH_TASK_SCHEDULING_MODE = "twister2.batch"
+          + ".taskscheduler";
+  public static final String TWISTER2_BATCH_TASK_SCHEDULING_MODE_DEFAULT = "roundrobin";
+
+  public static final String TWISTER2_STREAMING_TASK_SCHEDULING_CLASS =
+          "twister2.streaming.taskscheduler.class";
+  public static final String TWISTER2_STREAMING_TASK_SCHEDULING_CLASS_DEFAULT =
+          "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler";
+
+  public static final String TWISTER2_BATCH_TASK_SCHEDULING_CLASS =
+          "twister2.batch.taskscheduler.class";
+  public static final String TWISTER2_BATCH_TASK_SCHEDULING_CLASS_DEFAULT =
+          "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler";
 
   public static final String TWISTER2_TASK_TYPE = "twister2.task.type";
   public static final String TWISTER2_TASK_TYPE_DEFAULT = "streaming";
@@ -51,70 +63,66 @@ public class TaskSchedulerContext extends Context {
   public static final double TWISTER2_CONTAINER_INSTANCE_CPU_DEFAULT = 2.0;
 
   public static final String TWISTER2_CONTAINER_INSTANCE_NETWORK
-      = "twister2.container.instance.network";
+          = "twister2.container.instance.network";
   public static final double TWISTER2_CONTAINER_INSTANCE_NETWORK_DEFAULT = 1024;
 
   public static final String TWISTER2_TASK_PARALLELISM = "twister2.task.parallelism";
   public static final int TWISTER2_TASK_PARALLELISM_DEFAULT = 2;
 
   public static final String TWISTER2_NO_OF_INSTANCES_PER_CONTAINER
-      = "twister2.task.instances";
+          = "twister2.task.instances";
   public static final int TWISTER2_NO_OF_INSTANCES_PER_CONTAINER_DEFAULT = 2;
 
-  public  static final String TWISTER2_RAM_PADDING_PER_CONTAINER
-      = "twister2.ram.padding.container";
-  public  static final double TWISTER2_RAM_PADDING_PER_CONTAINER_DEFAULT = 2.0;
+  public static final String TWISTER2_RAM_PADDING_PER_CONTAINER
+          = "twister2.ram.padding.container";
+  public static final double TWISTER2_RAM_PADDING_PER_CONTAINER_DEFAULT = 2.0;
 
-  public  static final String TWISTER2_DISK_PADDING_PER_CONTAINER
-      = "twister2.disk.padding.container";
-  private static final double TWISTER2_DISK_PADDING_PER_CONTAINER_DEFAULT = 12.0;
+  public static final String TWISTER2_DISK_PADDING_PER_CONTAINER
+          = "twister2.disk.padding.container";
+  public static final double TWISTER2_DISK_PADDING_PER_CONTAINER_DEFAULT = 12.0;
 
-  public  static final String TWISTER2_CPU_PADDING_PER_CONTAINER
-      = "twister2.cpu.padding.container";
-  public  static final double TWISTER2_CPU_PADDING_PER_CONTAINER_DEFAULT = 1.0;
+  public static final String TWISTER2_CPU_PADDING_PER_CONTAINER
+          = "twister2.cpu.padding.container";
+  public static final double TWISTER2_CPU_PADDING_PER_CONTAINER_DEFAULT = 1.0;
 
-  public  static final String TWISTER2_CONTAINER_PADDING_PERCENTAGE
-      = "twister2.container.padding.percentage";
+  public static final String TWISTER2_CONTAINER_PADDING_PERCENTAGE
+          = "twister2.container.padding.percentage";
   public static final int TWISTER2_CONTAINER_PADDING_PERCENTAGE_DEFAULT = 1;
 
   public static final String TWISTER2_CONTAINER_INSTANCE_BANDWIDTH
-      = "twister2.container.instance.bandwidth";
-  public static final double TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT = 20; //Mbps
+          = "twister2.container.instance.bandwidth";
+  public static final double TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT = 100; //Mbps
 
   public static final String TWISTER2_CONTAINER_INSTANCE_LATENCY
-      = "twister2.container.instance.latency";
+          = "twister2.container.instance.latency";
   public static final double TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT = 0.02; //Milliseconds
 
   public static final String TWISTER2_DATANODE_INSTANCE_BANDWIDTH
-      = "twister2.datanode.instance.bandwidth";
-  public static final double TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT = 20; //Mbps
+          = "twister2.datanode.instance.bandwidth";
+  public static final double TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT = 200; //Mbps
 
   public static final String TWISTER2_DATANODE_INSTANCE_LATENCY
-      = "twister2.datanode.instance.latency";
-  public static final double TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT = 0.02; //Milliseconds
+          = "twister2.datanode.instance.latency";
+  public static final double TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT = 0.01; //Milliseconds
 
-  public static double datanodeInstanceBandwidth(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_DATANODE_INSTANCE_BANDWIDTH,
-        TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT);
+  public static String streamingTaskSchedulingMode(Config cfg) {
+    return cfg.getStringValue(TWISTER2_STREAMING_TASK_SCHEDULING_MODE,
+            TWISTER2_STREAMING_TASK_SCHEDULING_MODE_DEFAULT);
   }
 
-  public static double datanodeInstanceLatency(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_DATANODE_INSTANCE_LATENCY,
-        TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT);
+  public static String batchTaskSchedulingMode(Config cfg) {
+    return cfg.getStringValue(TWISTER2_BATCH_TASK_SCHEDULING_MODE,
+            TWISTER2_BATCH_TASK_SCHEDULING_MODE_DEFAULT);
   }
 
-  public static double containerInstanceBandwidth(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_BANDWIDTH,
-        TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT);
+  public static String streamingTaskSchedulingClass(Config cfg) {
+    return cfg.getStringValue(TWISTER2_STREAMING_TASK_SCHEDULING_CLASS,
+            TWISTER2_STREAMING_TASK_SCHEDULING_CLASS_DEFAULT);
   }
 
-  public static double containerInstanceLatency(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_LATENCY,
-        TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT);
-  }
-
-  public static String taskSchedulingMode(Config cfg) {
-    return cfg.getStringValue(TWISTER2_TASK_SCHEDULING_MODE, TWISTER2_TASK_SCHEDULING_MODE_DEFAULT);
+  public static String batchTaskSchedulingClass(Config cfg) {
+    return cfg.getStringValue(TWISTER2_BATCH_TASK_SCHEDULING_CLASS,
+            TWISTER2_BATCH_TASK_SCHEDULING_CLASS_DEFAULT);
   }
 
   public static String taskType(Config cfg) {
@@ -135,58 +143,77 @@ public class TaskSchedulerContext extends Context {
 
   public static double taskInstanceNetwork(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_TASK_INSTANCE_NETWORK,
-        TWISTER2_TASK_INSTANCE_NETWORK_DEFAULT);
+            TWISTER2_TASK_INSTANCE_NETWORK_DEFAULT);
   }
 
   public static double containerInstanceRam(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_RAM,
-        TWISTER2_CONTAINER_INSTANCE_RAM_DEFAULT);
+            TWISTER2_CONTAINER_INSTANCE_RAM_DEFAULT);
   }
 
   public static double containerInstanceDisk(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_DISK,
-        TWISTER2_CONTAINER_INSTANCE_DISK_DEFAULT);
+            TWISTER2_CONTAINER_INSTANCE_DISK_DEFAULT);
   }
 
   public static double containerInstanceCpu(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_CPU,
-        TWISTER2_CONTAINER_INSTANCE_CPU_DEFAULT);
+            TWISTER2_CONTAINER_INSTANCE_CPU_DEFAULT);
   }
 
   public static double containerInstanceNetwork(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_NETWORK,
-        TWISTER2_CONTAINER_INSTANCE_NETWORK_DEFAULT);
+            TWISTER2_CONTAINER_INSTANCE_NETWORK_DEFAULT);
   }
 
   public static int taskParallelism(Config cfg) {
     return cfg.getIntegerValue(TWISTER2_TASK_PARALLELISM,
-        TWISTER2_TASK_PARALLELISM_DEFAULT);
+            TWISTER2_TASK_PARALLELISM_DEFAULT);
   }
 
   public static int defaultTaskInstancesPerContainer(Config cfg) {
     return cfg.getIntegerValue(TWISTER2_NO_OF_INSTANCES_PER_CONTAINER,
-        TWISTER2_NO_OF_INSTANCES_PER_CONTAINER_DEFAULT);
+            TWISTER2_NO_OF_INSTANCES_PER_CONTAINER_DEFAULT);
   }
 
   public static double containerRamPadding(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_RAM_PADDING_PER_CONTAINER,
-        TWISTER2_RAM_PADDING_PER_CONTAINER_DEFAULT);
+            TWISTER2_RAM_PADDING_PER_CONTAINER_DEFAULT);
   }
 
   public static double containerDiskPadding(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_DISK_PADDING_PER_CONTAINER,
-        TWISTER2_DISK_PADDING_PER_CONTAINER_DEFAULT);
+            TWISTER2_DISK_PADDING_PER_CONTAINER_DEFAULT);
   }
 
   public static double containerCpuPadding(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_CPU_PADDING_PER_CONTAINER,
-        TWISTER2_CPU_PADDING_PER_CONTAINER_DEFAULT);
+            TWISTER2_CPU_PADDING_PER_CONTAINER_DEFAULT);
   }
 
   public static int containerPaddingPercentage(Config cfg) {
     return cfg.getIntegerValue(TWISTER2_CONTAINER_PADDING_PERCENTAGE,
-        TWISTER2_CONTAINER_PADDING_PERCENTAGE_DEFAULT);
+            TWISTER2_CONTAINER_PADDING_PERCENTAGE_DEFAULT);
+  }
+
+  public static double datanodeInstanceBandwidth(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_DATANODE_INSTANCE_BANDWIDTH,
+            TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT);
+  }
+
+  public static double datanodeInstanceLatency(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_DATANODE_INSTANCE_LATENCY,
+            TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT);
+  }
+
+  public static double containerInstanceBandwidth(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_BANDWIDTH,
+            TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT);
+  }
+
+  public static double containerInstanceLatency(Config cfg) {
+    return cfg.getDoubleValue(TWISTER2_CONTAINER_INSTANCE_LATENCY,
+            TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT);
   }
 }
-
 

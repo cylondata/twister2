@@ -27,7 +27,10 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.basic.comms.batch.BAllGatherExample;
+import edu.iu.dsc.tws.examples.basic.comms.batch.BAllReduceExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BGatherExample;
+import edu.iu.dsc.tws.examples.basic.comms.batch.BKeyedGatherExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BKeyedPartitionExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BKeyedReduceExample;
 import edu.iu.dsc.tws.examples.basic.comms.batch.BPartitionExample;
@@ -50,7 +53,7 @@ public class ExampleMain {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     Options options = new Options();
-    options.addOption(Constants.ARGS_CONTAINERS, true, "Containers");
+    options.addOption(Constants.ARGS_WORKERS, true, "Workers");
     options.addOption(Constants.ARGS_SIZE, true, "Size");
     options.addOption(Constants.ARGS_ITR, true, "Iteration");
     options.addOption(Utils.createOption(Constants.ARGS_OPERATION, true, "Operation", true));
@@ -63,14 +66,16 @@ public class ExampleMain {
     options.addOption(Utils.createOption(Constants.ARGS_PRINT_INTERVAL, true, "Threads", false));
     options.addOption(Utils.createOption(Constants.ARGS_DATA_TYPE, true, "Data", false));
     options.addOption(Utils.createOption(Constants.ARGS_INIT_ITERATIONS, true, "Data", false));
+    options.addOption(Constants.ARGS_VERIFY, false, "verify");
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
-    int containers = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_CONTAINERS));
+    int workers = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_WORKERS));
     int size = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_SIZE));
     int itr = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_ITR));
     String operation = cmd.getOptionValue(Constants.ARGS_OPERATION);
     boolean stream = cmd.hasOption(Constants.ARGS_STREAM);
+    boolean verify = cmd.hasOption(Constants.ARGS_VERIFY);
 
     String threads = "true";
     if (cmd.hasOption(Constants.ARGS_THREADS)) {
@@ -112,7 +117,7 @@ public class ExampleMain {
     jobConfig.put(Constants.ARGS_ITR, Integer.toString(itr));
     jobConfig.put(Constants.ARGS_OPERATION, operation);
     jobConfig.put(Constants.ARGS_SIZE, Integer.toString(size));
-    jobConfig.put(Constants.ARGS_CONTAINERS, Integer.toString(containers));
+    jobConfig.put(Constants.ARGS_WORKERS, Integer.toString(workers));
     jobConfig.put(Constants.ARGS_TASK_STAGES, taskStages);
     jobConfig.put(Constants.ARGS_GAP, gap);
     jobConfig.put(Constants.ARGS_FNAME, fName);
@@ -121,147 +126,78 @@ public class ExampleMain {
     jobConfig.put(Constants.ARGS_PRINT_INTERVAL, printInt);
     jobConfig.put(Constants.ARGS_DATA_TYPE, dataType);
     jobConfig.put(Constants.ARGS_INIT_ITERATIONS, intItr);
+    jobConfig.put(Constants.ARGS_VERIFY, verify);
 
     // build the job
     Twister2Job twister2Job;
     if (!stream) {
       switch (operation) {
         case "reduce":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("reduce-batch-bench")
-              .setWorkerClass(BReduceExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, BReduceExample.class.getName());
+          break;
+        case "allreduce":
+          submitJob(config, workers, jobConfig, BAllReduceExample.class.getName());
           break;
         case "keyedreduce":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("keyed-reduce-batch-bench")
-              .setWorkerClass(BKeyedReduceExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, BKeyedReduceExample.class.getName());
           break;
         case "partition":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("partition-batch-bench")
-              .setWorkerClass(BPartitionExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, BPartitionExample.class.getName());
           break;
         case "keyedpartition":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("keyed-partition-batch-bench")
-              .setWorkerClass(BKeyedPartitionExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, BKeyedPartitionExample.class.getName());
           break;
         case "gather":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("partition-batch-bench")
-              .setWorkerClass(BGatherExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, BGatherExample.class.getName());
+          break;
+        case "allgather":
+          submitJob(config, workers, jobConfig, BAllGatherExample.class.getName());
+          break;
+        case "keyedgather":
+          submitJob(config, workers, jobConfig, BKeyedGatherExample.class.getName());
           break;
       }
     } else {
       switch (operation) {
         case "reduce":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("reduce-stream-bench")
-              .setWorkerClass(SReduceExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, SReduceExample.class.getName());
           break;
         case "keyedreduce":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("keyed-reduce-stream-bench")
-              .setWorkerClass(SKeyedReduceExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, SKeyedReduceExample.class.getName());
           break;
         case "bcast":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("bcast-stream-bench")
-              .setWorkerClass(SBroadcastExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, SBroadcastExample.class.getName());
           break;
         case "partition":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("partition-stream-bench")
-              .setWorkerClass(SPartitionExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, SPartitionExample.class.getName());
           break;
         case "keyedpartition":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("keyed-partition-stream-bench")
-              .setWorkerClass(SKeyedPartitionExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, SKeyedPartitionExample.class.getName());
           break;
         case "gather":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("gather-stream-bench")
-              .setWorkerClass(SGatherExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, SGatherExample.class.getName());
           break;
         case "allreduce":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("allreduce-stream-bench")
-              .setWorkerClass(SAllReduceExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, SAllReduceExample.class.getName());
           break;
         case "allgather":
-          twister2Job = Twister2Job.newBuilder()
-              .setName("allgather-stream-bench")
-              .setWorkerClass(SAllGatherExample.class.getName())
-              .setRequestResource(new WorkerComputeResource(2, 1024), containers)
-              .setConfig(jobConfig)
-              .build();
-          // now submit the job
-          Twister2Submitter.submitJob(twister2Job, config);
+          submitJob(config, workers, jobConfig, SAllGatherExample.class.getName());
           break;
         default:
           LOG.log(Level.SEVERE, "Un-supported operation: " + operation);
       }
     }
+  }
+
+  private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
+    Twister2Job twister2Job;
+    twister2Job = Twister2Job.newBuilder()
+        .setName(clazz)
+        .setWorkerClass(clazz)
+        .setRequestResource(new WorkerComputeResource(2, 1024), containers)
+        .setConfig(jobConfig)
+        .build();
+    // now submit the job
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 }

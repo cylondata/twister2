@@ -188,8 +188,8 @@ public class SimpleTaskGraphExample implements IWorker {
     }
 
     @Override
-    public void execute(IMessage content) {
-
+    public boolean execute(IMessage content) {
+      return true;
     }
   }
 
@@ -206,7 +206,8 @@ public class SimpleTaskGraphExample implements IWorker {
     }
 
     @Override
-    public void execute(IMessage content) {
+    public boolean execute(IMessage content) {
+      return true;
     }
   }
 
@@ -223,7 +224,8 @@ public class SimpleTaskGraphExample implements IWorker {
     }
 
     @Override
-    public void execute(IMessage content) {
+    public boolean execute(IMessage content) {
+      return true;
     }
   }
 
@@ -240,7 +242,8 @@ public class SimpleTaskGraphExample implements IWorker {
     }
 
     @Override
-    public void execute(IMessage content) {
+    public boolean execute(IMessage content) {
+      return true;
     }
   }
 }

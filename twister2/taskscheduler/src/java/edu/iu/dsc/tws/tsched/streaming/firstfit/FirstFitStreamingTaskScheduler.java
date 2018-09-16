@@ -73,14 +73,10 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
   public void initialize(Config cfg) {
 
     this.config = cfg;
-
-    //Double instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
-
     this.instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
     this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
     this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
     this.paddingPercentage = TaskSchedulerContext.containerPaddingPercentage(this.config);
-
     this.defaultResourceValue = new Resource(instanceRAM, this.instanceDisk, this.instanceCPU);
     this.defaultNoOfTaskInstances = TaskSchedulerContext.defaultTaskInstancesPerContainer(
         this.config);

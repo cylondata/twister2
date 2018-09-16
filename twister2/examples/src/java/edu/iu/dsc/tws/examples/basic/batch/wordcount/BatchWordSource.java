@@ -75,7 +75,7 @@ public class BatchWordSource implements Runnable {
       nextIndex++;
       int flags = 0;
       if (i >= (noOfWords - noOfDestinations)) {
-        flags = MessageFlags.FLAGS_LAST;
+        flags = MessageFlags.LAST;
       }
       // lets try to process if send doesn't succeed
       while (!operation.send(taskId, word, flags, dest)) {

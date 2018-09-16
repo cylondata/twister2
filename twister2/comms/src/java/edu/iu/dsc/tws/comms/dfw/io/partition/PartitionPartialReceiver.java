@@ -262,7 +262,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
           Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
           for (int dest : destinations) {
             if (!finishedDestPerSource.contains(dest)) {
-              if (operation.sendPartial(source, new byte[1], MessageFlags.EMPTY, dest)) {
+              if (operation.sendPartial(source, new byte[1], MessageFlags.END, dest)) {
                 finishedDestPerSource.add(dest);
                 progressAttempts = 0;
               } else {

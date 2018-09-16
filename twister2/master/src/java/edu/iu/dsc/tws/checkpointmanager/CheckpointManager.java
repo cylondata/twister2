@@ -88,6 +88,7 @@ public class CheckpointManager extends Thread {
         -2, new ServerConnectHandler());
 
     rrServer.registerRequestHandler(Checkpoint.TaskDiscovery.newBuilder(), taskBarrierMonitor);
+    rrServer.registerRequestHandler(Checkpoint.BarrierSync.newBuilder(), taskBarrierMonitor);
 
     rrServer.start();
 
@@ -99,12 +100,15 @@ public class CheckpointManager extends Thread {
   }
 
   public CheckpointManager() {
-    TaskBarrierMonitor taskBarrierMonitor = new TaskBarrierMonitor(cfg, this, rrServer);
+
     looper = new Progress();
     rrServer = new RRServer(cfg, "localhost", 6789, looper,
         -2, new ServerConnectHandler());
 
+    TaskBarrierMonitor taskBarrierMonitor = new TaskBarrierMonitor(cfg, this, rrServer);
+
     rrServer.registerRequestHandler(Checkpoint.TaskDiscovery.newBuilder(), taskBarrierMonitor);
+    rrServer.registerRequestHandler(Checkpoint.BarrierSync.newBuilder(), taskBarrierMonitor);
 
     rrServer.start();
 

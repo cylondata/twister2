@@ -11,17 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.batch;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BGather;
@@ -96,15 +94,35 @@ public class BGatherExample extends BenchWorker {
     return gatherDone && sourcesDone && !gather.hasPending();
   }
 
-  public class FinalReduceReceiver implements BatchReceiver {
+  @Override
+  protected void finishCommunication(int src) {
+    gather.finish(src);
+  }
+
+  public class FinalReduceReceiver implements BulkReceiver {
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override
-    public void receive(int target, Iterator<Object> it) {
+    public boolean receive(int target, Iterator<Object> it) {
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
+      LOG.info("Final Output ==> ");
+      while (it.hasNext()) {
+        Object object = it.next();
+        if (object instanceof int[]) {
+          int[] data = (int[]) object;
+//          LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
+//              Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
+//          LOG.log(Level.INFO, String.format("%d Received final input", workerId));
+          String output = String.format("%s", Arrays.toString(data));
+          LOG.info("Final Output : " + output);
+        } else {
+          LOG.info("Object Type : " + object.getClass().getName());
+        }
+      }
       gatherDone = true;
+      return true;
     }
   }
 }

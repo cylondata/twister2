@@ -49,6 +49,7 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
         new ClientMessageHandler());
 
     tryUntilConnected(5000);
+    sendTaskDiscoveryMessage();
   }
 
   public boolean tryUntilConnected(long timeLimit) {
@@ -94,12 +95,6 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
     public void onConnect(SocketChannel channel, StatusCode status) {
       LOG.info("TaskClientConnectHandler inside Sink Task got connected");
 
-      Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
-          .setTaskID(ctx.taskId())
-          .setTaskType(Checkpoint.TaskDiscovery.TaskType.SINK)
-          .build();
-
-      client.sendRequest(message);
     }
 
     @Override
@@ -116,5 +111,23 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
 
       client.disconnect();
     }
+  }
+
+  private void sendTaskDiscoveryMessage() {
+    Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
+        .setTaskID(ctx.taskId())
+        .setTaskType(Checkpoint.TaskDiscovery.TaskType.SINK)
+        .setParrallelism(this.ctx.getParallelism())
+        .build();
+
+    client.sendRequest(message);
+    looper.loop();
+  }
+
+  /**
+   * This method should get called when a valid checkpoint is made.
+   */
+  private void receivedValidBarrier() {
+
   }
 }

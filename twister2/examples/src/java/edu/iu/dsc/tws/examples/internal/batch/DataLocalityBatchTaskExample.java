@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.data.api.HDFSConnector;
+import edu.iu.dsc.tws.data.utils.HdfsUtils;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.OperationNames;
@@ -139,7 +139,6 @@ public class DataLocalityBatchTaskExample implements IWorker {
 
     List<String> sourceInputDataset = new ArrayList<>();
     sourceInputDataset.add("dataset1.txt");
-    sourceInputDataset.add("dataset2.txt");
 
     builder.addConfiguration("source", "inputdataset", sourceInputDataset);
     builder.addConfiguration("sink1", "inputdataset", sourceInputDataset);
@@ -235,13 +234,11 @@ public class DataLocalityBatchTaskExample implements IWorker {
     private Config config;
     private String outputFile;
     private String inputFile;
-    private HDFSConnector hdfsConnector = null;
+    private HdfsUtils hdfsUtils = null;
 
     @Override
     public boolean execute(IMessage message) {
-
-      System.out.println("Message AllReduced : " + message.getContent() + ", Count : " + count);
-      hdfsConnector.HDFSConnect(message.getContent().toString());
+      LOG.info("Message AllReduced : " + message.getContent() + ", Count : " + count);
       count++;
       return true;
     }
@@ -261,7 +258,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
             LOG.info("Output File(s):" + this.outputFile);
           }
         }
-        hdfsConnector = new HDFSConnector(config, outputFile);
+        hdfsUtils = new HdfsUtils(config, outputFile);
       }
     }
   }
@@ -294,3 +291,4 @@ public class DataLocalityBatchTaskExample implements IWorker {
     }
   }
 }
+

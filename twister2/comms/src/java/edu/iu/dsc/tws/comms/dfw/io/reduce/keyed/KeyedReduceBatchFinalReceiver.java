@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
 import java.util.ArrayList;
@@ -28,34 +16,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.KeyedReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchReceiver;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 
-public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
+public class KeyedReduceBatchFinalReceiver extends KeyedReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(KeyedReduceBatchFinalReceiver.class.getName());
 
-  private KeyedReduceFunction reduceFunction;
+  private ReduceFunction reduceFunction;
 
-  private ReduceReceiver reduceReceiver;
+  private SingularReceiver singularReceiver;
 
   private Map<Integer, List<Object>> finalMessages = new HashMap<>();
 
-  public KeyedReduceBatchFinalReceiver(KeyedReduceFunction reduce, ReduceReceiver receiver) {
+  public KeyedReduceBatchFinalReceiver(ReduceFunction reduce, SingularReceiver receiver) {
     super(reduce);
     this.reduceFunction = reduce;
-    this.reduceReceiver = receiver;
+    this.singularReceiver = receiver;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
-    reduceReceiver.init(cfg, op, expectedIds);
+    singularReceiver.init(cfg, expectedIds.keySet());
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       finalMessages.put(e.getKey(), new ArrayList<>());
     }
@@ -75,8 +61,6 @@ public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
       Map<Integer, Queue<Object>> messagesForTarget = messages.get(target);
       Map<Integer, Boolean> finishedForTarget = finished.get(target);
       Map<Integer, Integer> countMap = counts.get(target);
-      Map<Integer, Integer> totalCountMap = totalCounts.get(target);
-      Set<Integer> emptyMessages = emptyReceivedSources.get(target);
 
       boolean found = true;
 
@@ -97,6 +81,7 @@ public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
       // if we have queues with 0 and more than zero we need further communicationProgress
       if (!found && moreThanOne) {
         needsFurtherProgress = true;
+
       }
 
       if (found) {
@@ -115,7 +100,24 @@ public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
         }
         finalMessages.get(target).addAll(out);
       } else {
-        allFinished = false;
+        if (allFinished && dataFlowOperation.isDelegeteComplete()) {
+          List<Object> out = new ArrayList<>();
+          for (Map.Entry<Integer, Queue<Object>> e : messagesForTarget.entrySet()) {
+            Queue<Object> valueList = e.getValue();
+            while (valueList.size() > 0) {
+              Object value = valueList.poll();
+              out.add(value);
+              allFinished = false;
+            }
+          }
+          for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
+            Integer i = e.getValue();
+            e.setValue(i - 1);
+          }
+          finalMessages.get(target).addAll(out);
+        } else {
+          allFinished = false;
+        }
       }
 
       if (!dataFlowOperation.isDelegeteComplete()) {
@@ -136,7 +138,7 @@ public class KeyedReduceBatchFinalReceiver extends ReduceBatchReceiver {
           }
 
         }
-        reduceReceiver.receive(target, previous);
+        singularReceiver.receive(target, previous);
       }
     }
     return needsFurtherProgress;

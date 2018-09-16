@@ -21,11 +21,19 @@ public final class HadoopFileStatus implements FileStatus {
     this.fileStatus = fileStatus;
   }
 
+  /**
+   * To get the length of the filename
+   * @return
+   */
   @Override
   public long getLen() {
     return fileStatus.getLen();
   }
 
+  /**
+   * To get the length of the block size
+   * @return
+   */
   @Override
   public long getBlockSize() {
     long blocksize = fileStatus.getBlockSize();
@@ -36,16 +44,28 @@ public final class HadoopFileStatus implements FileStatus {
     return blocksize;
   }
 
+  /**
+   * To get the access time of the file
+   * @return
+   */
   @Override
   public long getAccessTime() {
     return fileStatus.getAccessTime();
   }
 
+  /**
+   * To get the modification time of the file
+   * @return
+   */
   @Override
   public long getModificationTime() {
     return fileStatus.getModificationTime();
   }
 
+  /**
+   * To get the replication of the file
+   * @return
+   */
   @Override
   public short getReplication() {
     return fileStatus.getReplication();
@@ -55,11 +75,19 @@ public final class HadoopFileStatus implements FileStatus {
     return this.fileStatus;
   }
 
+  /**
+   * To get the path of the file
+   * @return
+   */
   @Override
   public edu.iu.dsc.tws.data.fs.Path getPath() {
     return new edu.iu.dsc.tws.data.fs.Path(fileStatus.getPath().toString());
   }
 
+  /**
+   * To check whether it is a directory or not.
+   * @return
+   */
   @SuppressWarnings("deprecation")
   @Override
   public boolean isDir() {
