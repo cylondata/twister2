@@ -108,7 +108,7 @@ public class BReduceExample extends BenchWorker {
       try {
         verify();
       } catch (VerificationException e) {
-        e.printStackTrace();
+        throw new RuntimeException("Verification failed", e);
       }
       return true;
     }

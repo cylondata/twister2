@@ -52,8 +52,9 @@ public class BPartition {
                     BulkReceiver rcvr,
                     DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
+    String shuffleDir = comm.getPersistentDirectory();
     this.partition = new DataFlowPartition(comm.getChannel(), sources, targets,
-        new PartitionBatchFinalReceiver(rcvr, false, true, null),
+        new PartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
         new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT, dataType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
@@ -100,5 +101,9 @@ public class BPartition {
    */
   public boolean progress() {
     return partition.progress();
+  }
+
+  public void close() {
+    partition.close();
   }
 }

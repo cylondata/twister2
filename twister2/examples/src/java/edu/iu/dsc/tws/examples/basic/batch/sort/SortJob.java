@@ -80,7 +80,7 @@ public class SortJob implements IWorker {
     this.noOfTasksPerExecutor = NO_OF_TASKS / allocatedResources.getNumberOfWorkers();
 
     partition = new DataFlowPartition(config, channel, taskPlan, sources, destinations,
-        new PartitionBatchFinalReceiver(new RecordSave(), false, true,
+        new PartitionBatchFinalReceiver(new RecordSave(), false, "/tmp",
             new IntegerComparator()),
         new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
         MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,

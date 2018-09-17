@@ -220,8 +220,8 @@ public final class MPIWorker {
 
   /**
    * create a AllocatedResources
-   * @param config
-   * @return
+   * @param config configuration
+   * @return  a map of rank to hostname
    */
   public static Map<Integer, String> createResourcePlan(Config config) {
     try {

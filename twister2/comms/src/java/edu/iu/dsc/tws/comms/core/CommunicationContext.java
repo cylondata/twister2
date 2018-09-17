@@ -15,6 +15,7 @@ import java.nio.ByteOrder;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.config.TokenSub;
 
 public class CommunicationContext extends Context {
   private static final String INTER_NODE_DEGREE = "network.routing.inter.node.degree";
@@ -24,6 +25,8 @@ public class CommunicationContext extends Context {
   public static final String MPI_COMMUNICATION_TYPE = "mpi";
   public static final String TCP_COMMUNICATION_TYPE = "tcp";
   public static final String DEFAULT_COMMUNICATION_TYPE = MPI_COMMUNICATION_TYPE;
+  public static final String PERSISTENT_DIRECTORY = "network.ops.persistent.dir";
+  public static final String PERSISTENT_DIRECTORY_DEFAULT_VALUE = "${TWISTER2_HOME}/persistent/";
 
   public static int interNodeDegree(Config cfg, int defaultValue) {
     return cfg.getIntegerValue(INTER_NODE_DEGREE, defaultValue);
@@ -35,5 +38,10 @@ public class CommunicationContext extends Context {
 
   public static String communicationType(Config cfg) {
     return cfg.getStringValue(COMMUNICATION_TYPE, MPI_COMMUNICATION_TYPE);
+  }
+
+  public static String persistentDirectory(Config cfg) {
+    return TokenSub.substitute(cfg, cfg.getStringValue(PERSISTENT_DIRECTORY,
+        PERSISTENT_DIRECTORY_DEFAULT_VALUE), Context.substitutions);
   }
 }
