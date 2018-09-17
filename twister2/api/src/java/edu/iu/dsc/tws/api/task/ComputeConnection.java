@@ -57,7 +57,7 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection broadcast(String parent) {
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.BROADCAST);
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.BROADCAST);
     inputs.put(parent, edge);
 
     return this;
@@ -71,7 +71,7 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection reduce(String parent, IFunction function) {
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.REDUCE, function);
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.REDUCE, function);
     inputs.put(parent, edge);
 
     return this;
@@ -90,7 +90,7 @@ public class ComputeConnection {
       LOG.log(Level.SEVERE, "Reduce operations are only applicable to primitive types");
     }
 
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.REDUCE,
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.REDUCE,
         dataType, new ReduceFn(op, dataType));
     inputs.put(parent, edge);
 
@@ -106,7 +106,7 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection reduce(String parent, IFunction function, DataType dataType) {
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.REDUCE, dataType, function);
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.REDUCE, dataType, function);
     inputs.put(parent, edge);
 
     return this;
@@ -193,7 +193,7 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection gather(String parent) {
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.GATHER,
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.GATHER,
         DataType.OBJECT, DataType.OBJECT);
     inputs.put(parent, edge);
 
@@ -208,7 +208,7 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection gather(String parent, DataType dataType) {
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.GATHER, dataType);
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.GATHER, dataType);
     inputs.put(parent, edge);
 
     return this;
@@ -268,7 +268,7 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection partition(String parent) {
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.PARTITION);
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.PARTITION);
     inputs.put(parent, edge);
 
     return this;
@@ -282,7 +282,7 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection partition(String parent, DataType dataType) {
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.PARTITION, dataType);
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.PARTITION, dataType);
     inputs.put(parent, edge);
 
     return this;
@@ -325,7 +325,7 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection allreduce(String parent, IFunction function) {
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.ALLREDUCE, function);
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLREDUCE, function);
     inputs.put(parent, edge);
 
     return this;
@@ -344,7 +344,7 @@ public class ComputeConnection {
       LOG.log(Level.SEVERE, "Reduce operations are only applicable to primitive types");
     }
 
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.ALLREDUCE,
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLREDUCE,
         dataType, new ReduceFn(op, dataType));
     inputs.put(parent, edge);
 
@@ -360,7 +360,7 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection allreduce(String parent, IFunction function, DataType dataType) {
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.ALLREDUCE, dataType, function);
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLREDUCE, dataType, function);
     inputs.put(parent, edge);
 
     return this;
@@ -427,7 +427,7 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection allgather(String parent) {
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.ALLGATHER);
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLGATHER);
     inputs.put(parent, edge);
 
     return this;
@@ -441,7 +441,7 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection allgather(String parent, DataType dataType) {
-    Edge edge = new Edge(TaskContext.DEFAULT_EDGE, OperationNames.ALLGATHER, dataType);
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLGATHER, dataType);
     inputs.put(parent, edge);
 
     return this;
