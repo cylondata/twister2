@@ -106,7 +106,8 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection reduce(String parent, IFunction function, DataType dataType) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.REDUCE, dataType, function);
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE,
+        OperationNames.REDUCE, dataType, function);
     inputs.put(parent, edge);
 
     return this;
@@ -360,7 +361,8 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection allreduce(String parent, IFunction function, DataType dataType) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLREDUCE, dataType, function);
+    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE,
+        OperationNames.ALLREDUCE, dataType, function);
     inputs.put(parent, edge);
 
     return this;
