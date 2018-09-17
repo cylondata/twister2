@@ -20,17 +20,33 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowAllReduce;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
+/**
+ * Batch ALLReduce Operation
+ */
 public class BAllReduce {
+  /**
+   * The actual operation
+   */
   private DataFlowAllReduce reduce;
 
+  /**
+   * Construct a Batch AllReduce operation
+   *
+   * @param comm the communicator
+   * @param plan task plan
+   * @param sources source tasks
+   * @param targets target tasks
+   * @param rcvr receiver
+   * @param dataType data type
+   */
   public BAllReduce(Communicator comm, TaskPlan plan,
-                    Set<Integer> sources, Set<Integer> destination, ReduceFunction fnc,
+                    Set<Integer> sources, Set<Integer> targets, ReduceFunction fnc,
                     SingularReceiver rcvr, MessageType dataType) {
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }
 
-    if (destination.size() == 0) {
+    if (targets.size() == 0) {
       throw new IllegalArgumentException("The destination cannot be empty");
     }
 
@@ -38,23 +54,44 @@ public class BAllReduce {
     int firstSource = sources.iterator().next();
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
-    reduce = new DataFlowAllReduce(comm.getChannel(), sources, destination, middleTask, fnc,
+    reduce = new DataFlowAllReduce(comm.getChannel(), sources, targets, middleTask, fnc,
         rcvr, comm.nextEdge(), comm.nextEdge(), false);
     reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
+  /**
+   * Send a message to be reduced
+   *
+   * @param src source
+   * @param message message
+   * @param flags message flag
+   * @return true if the message is accepted
+   */
   public boolean reduce(int src, Object message, int flags) {
     return reduce.send(src, message, flags);
   }
 
+  /**
+   * Progress the operation, if not called, messages will not be processed
+   *
+   * @return true if further progress is needed
+   */
   public boolean progress() {
     return reduce.progress();
   }
 
+  /**
+   * Weather we have messages pending
+   * @return true if there are messages pending
+   */
   public boolean hasPending() {
     return !reduce.isComplete();
   }
 
+  /**
+   * Indicate the end of the communication
+   * @param source the source that is ending
+   */
   public void finish(int source) {
     reduce.finish(source);
   }
