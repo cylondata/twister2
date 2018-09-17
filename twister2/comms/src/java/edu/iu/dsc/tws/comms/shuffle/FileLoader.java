@@ -45,7 +45,7 @@ public final class FileLoader {
   public static void saveObjects(List<byte[]> records, List<Integer> sizes,
                                  long size, String outFileName) {
     try {
-      LOG.info("Saving file: " + outFileName);
+      LOG.fine("Saving file: " + outFileName);
       Files.createDirectories(Paths.get(outFileName).getParent());
       FileChannel rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
       // we need to write the size of each message
