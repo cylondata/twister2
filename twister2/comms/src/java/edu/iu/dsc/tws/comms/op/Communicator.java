@@ -11,10 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.op;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
+import edu.iu.dsc.tws.comms.core.CommunicationContext;
 
 /**
  * Communicator that keeps the information about.
@@ -22,17 +24,45 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 public class Communicator {
   private static final Logger LOG = Logger.getLogger(Communicator.class.getName());
 
+  /**
+   * Communication channel
+   */
   private final TWSChannel channel;
 
+  /**
+   * Configuration
+   */
   private final Config config;
 
+  /**
+   * Generating edges
+   */
   private EdgeGenerator edgeGenerator;
 
+  /**
+   * Generating task ids
+   */
   private TaskIdGenerator idGenerator;
 
+  /**
+   * The directory to use for persisting any operations
+   */
+  private String persistentDirectory = "/tmp";
+
   public Communicator(Config cfg, TWSChannel ch) {
+    this(cfg, ch, null);
+  }
+
+  public Communicator(Config config, TWSChannel ch, String persDir) {
     this.channel = ch;
-    this.config = cfg;
+    this.config = config;
+    // first lets try to retrieve through a config
+    if (persDir == null) {
+      this.persistentDirectory = CommunicationContext.persistentDirectory(config);
+    } else {
+      this.persistentDirectory = persDir;
+    }
+    LOG.log(Level.INFO, String.format("Using the persistent directory %s", persistentDirectory));
     this.edgeGenerator = new EdgeGenerator(0);
     this.idGenerator = new TaskIdGenerator(100000000);
   }
@@ -51,5 +81,9 @@ public class Communicator {
 
   public int nextId() {
     return idGenerator.nextId();
+  }
+
+  public String getPersistentDirectory() {
+    return persistentDirectory;
   }
 }
