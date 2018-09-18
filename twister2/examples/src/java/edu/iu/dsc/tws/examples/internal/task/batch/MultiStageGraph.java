@@ -9,10 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.internal.task.streaming;
+package edu.iu.dsc.tws.examples.internal.task.batch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -26,7 +27,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IFunction;
@@ -39,8 +40,8 @@ import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
-public class PartitionReduceTask extends TaskWorker {
-  private static final Logger LOG = Logger.getLogger(PartitionReduceTask.class.getName());
+public class MultiStageGraph extends TaskWorker {
+  private static final Logger LOG = Logger.getLogger(MultiStageGraph.class.getName());
 
   @Override
   public void execute() {
@@ -59,10 +60,11 @@ public class PartitionReduceTask extends TaskWorker {
         return object1;
       }
     });
-    builder.setMode(OperationMode.STREAMING);
+    builder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
-    TaskUtils.execute(config, allocatedResources, graph, workerController);
+    ExecutionPlan plan = taskExecutor.plan(graph);
+    taskExecutor.execute(graph, plan);
   }
 
   private static class GeneratorTask extends BaseStreamSource {
@@ -72,12 +74,13 @@ public class PartitionReduceTask extends TaskWorker {
 
     @Override
     public void execute() {
-      boolean wrote = context.write("partition-edge", "Hello");
-      if (wrote) {
-        count++;
-        if (count % 100 == 0) {
-          LOG.info(String.format("%d %d Source sent count : %d", context.getWorkerId(),
-              context.taskId(), count));
+      if (count == 999) {
+        if (context.writeEnd("partition-edge", "Hello")) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (context.write("partition-edge", "Hello")) {
+          count++;
         }
       }
     }
@@ -96,6 +99,7 @@ public class PartitionReduceTask extends TaskWorker {
     }
   }
 
+  @SuppressWarnings("rawtypes")
   private static class PartitionTask extends BaseStreamCompute {
     private static final long serialVersionUID = -254264903510284798L;
 
@@ -103,10 +107,11 @@ public class PartitionReduceTask extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (message.getContent() instanceof List) {
-        count += ((List) message.getContent()).size();
-        for (Object o : (List) message.getContent()) {
-          context.write("compute-edge", o);
+      if (message.getContent() instanceof Iterator) {
+        Iterator it = (Iterator) message.getContent();
+        while (it.hasNext()) {
+          count += 1;
+          context.write("compute-edge", it.next());
         }
       }
       LOG.info(String.format("%d %d Partition Received count: %d", context.getWorkerId(),
@@ -138,8 +143,8 @@ public class PartitionReduceTask extends TaskWorker {
     jobConfig.putAll(configurations);
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("partition-example");
-    jobBuilder.setWorkerClass(PartitionReduceTask.class.getName());
+    jobBuilder.setName(MultiStageGraph.class.getName());
+    jobBuilder.setWorkerClass(MultiStageGraph.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

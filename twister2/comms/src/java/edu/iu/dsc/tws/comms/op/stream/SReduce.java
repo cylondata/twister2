@@ -47,12 +47,13 @@ public class SReduce {
   private DataFlowReduce reduce;
 
   /**
-   * Construct a Streaming Key based partition operation
+   * Construct a Streaming Reduce operation
    *
    * @param comm the communicator
    * @param plan task plan
    * @param sources source tasks
    * @param target target tasks
+   * @param fnc reduce function
    * @param rcvr receiver
    * @param dataType data type
    */

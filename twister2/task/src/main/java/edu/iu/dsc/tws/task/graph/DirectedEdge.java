@@ -13,6 +13,12 @@ package edu.iu.dsc.tws.task.graph;
 
 import java.util.Comparator;
 
+/**
+ * This class is responsible for assigning the directed task edge between the task vertices.
+ * @param <TV>
+ * @param <TE>
+ */
+
 public class DirectedEdge<TV, TE> {
   protected TV sourceTaskVertex;
   protected TV targetTaskVertex;
@@ -34,31 +40,5 @@ public class DirectedEdge<TV, TE> {
     this.taskEdge = taskEdge;
     this.vertexComparator = vertexComparator;
   }
-
-  public TE getTaskEdge() {
-    return taskEdge;
-  }
-
-  public void setTaskEdge(TE taskEdge) {
-    this.taskEdge = taskEdge;
-  }
-
-  public TV getSourceTaskVertex() {
-    return sourceTaskVertex;
-  }
-
-  public void setSourceTaskVertex(TV sourceTaskVertex) {
-    this.sourceTaskVertex = sourceTaskVertex;
-  }
-
-  public TV getTargetTaskVertex() {
-    return targetTaskVertex;
-  }
-
-  public void setTargetTaskVertex(TV targetTaskVertex) {
-    this.targetTaskVertex = targetTaskVertex;
-  }
-
-
 }
 

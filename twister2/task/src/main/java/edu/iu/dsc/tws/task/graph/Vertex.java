@@ -19,13 +19,40 @@ import edu.iu.dsc.tws.task.api.INode;
  * including the name, runtime configuration etc.
  */
 public class Vertex {
+
+  /**
+   * Represents task name
+   */
   private String name;
+
+  /**
+   * Represents task
+   */
   private INode task;
+
+  /**
+   * Represents task cpu requirement
+   */
   private int cpu;
+
+  /**
+   * Represents task memory requirement
+   */
   private int memory;
+
+  /**
+   * Represents task ram requirement
+   */
   private int ram;
+
+  /**
+   * Represents task parallelism value
+   */
   private int parallelism = 1;
 
+  /**
+   * Config value for the task vertex
+   */
   private Config config;
 
   public Vertex(String n, INode t) {

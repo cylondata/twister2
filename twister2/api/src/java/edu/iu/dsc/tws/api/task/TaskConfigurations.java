@@ -13,12 +13,12 @@ package edu.iu.dsc.tws.api.task;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public final class TaskContext {
+public final class TaskConfigurations {
   public static final String DEFAULT_PARALLELISM = "twister2.task.default.parallelism";
 
   public static final String DEFAULT_EDGE = "default";
 
-  private TaskContext() {
+  private TaskConfigurations() {
   }
 
   public static int getDefaultParallelism(Config cfg, int def) {

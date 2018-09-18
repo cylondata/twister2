@@ -84,8 +84,12 @@ public abstract class TaskWorker implements IWorker {
 
     // create the channel
     channel = Network.initializeChannel(config, workerController, allocatedResources);
+    String persistent = null;
+    if (vVolume != null && vVolume.getWorkerDirPath() != null) {
+      persistent = vVolume.getWorkerDirPath();
+    }
     // create the communicator
-    communicator = new Communicator(config, channel);
+    communicator = new Communicator(config, channel, persistent);
     // create the executor
     taskExecutor = new TaskExecutor(config, workerId, allocatedResources, communicator);
     // call execute

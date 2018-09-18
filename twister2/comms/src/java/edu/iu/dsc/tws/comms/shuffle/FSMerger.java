@@ -161,7 +161,7 @@ public class FSMerger implements Shuffle {
       if (numOfBytesInMemory > maxBytesToKeepInMemory
           || bytesInMemory.size() > maxRecordsInMemory) {
         // save the bytes to disk
-        LOG.log(Level.INFO, String.format("Save objects bytes %d objects %d",
+        LOG.log(Level.FINE, String.format("Save objects bytes %d objects %d",
             numOfBytesInMemory, bytesInMemory.size()));
         FileLoader.saveObjects(bytesInMemory, bytesLength,
             numOfBytesInMemory, getSaveFileName(noOfFileWritten));

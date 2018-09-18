@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.op.batch;
 
-import java.util.Comparator;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -22,41 +21,68 @@ import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
+/**
+ * Batch Gather Operation
+ */
 public class BGather {
+  /**
+   * The actual operation
+   */
   private DataFlowGather gather;
 
+  /**
+   * Construct a Streaming Gather operation
+   *
+   * @param comm the communicator
+   * @param plan task plan
+   * @param sources source tasks
+   * @param target target tasks
+   * @param rcvr receiver
+   * @param dataType data type
+   */
   public BGather(Communicator comm, TaskPlan plan,
-                 Set<Integer> sources, int destinations,
+                 Set<Integer> sources, int target,
                  MessageType dataType,
                  BulkReceiver rcvr) {
-    this.gather = new DataFlowGather(comm.getChannel(), sources, destinations,
-        new GatherBatchFinalReceiver(rcvr), new GatherBatchPartialReceiver(destinations),
+    this.gather = new DataFlowGather(comm.getChannel(), sources, target,
+        new GatherBatchFinalReceiver(rcvr), new GatherBatchPartialReceiver(target),
         0, 0, comm.getConfig(), dataType, plan, comm.nextEdge());
     this.gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
-  public BGather(Communicator comm, TaskPlan plan,
-                 Set<Integer> sources, int destinations,
-                 MessageType dataType,
-                 BulkReceiver rcvr, Comparator<Object> comparator) {
-    this.gather = new DataFlowGather(comm.getChannel(), sources, destinations,
-        new GatherBatchFinalReceiver(rcvr), new GatherBatchPartialReceiver(destinations),
-        0, 0, comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-  }
-
+  /**
+   * Send a message to be gathered
+   *
+   * @param source source
+   * @param message message
+   * @param flags message flag
+   * @return true if the message is accepted
+   */
   public boolean gather(int source, Object message, int flags) {
     return gather.send(source, message, flags);
   }
 
+  /**
+   * Weather we have messages pending
+   * @return true if there are messages pending
+   */
   public boolean hasPending() {
     return !gather.isComplete();
   }
 
+  /**
+   * Indicate the end of the communication
+   * @param source the source that is ending
+   */
   public void finish(int source) {
     gather.finish(source);
   }
 
+  /**
+   * Progress the operation, if not called, messages will not be processed
+   *
+   * @return true if further progress is needed
+   */
   public boolean progress() {
     return gather.progress();
   }
