@@ -88,6 +88,18 @@ public class FsCheckpointStreamFactory {
 
     private Path statePath;
 
+    public void setCheckpointID(String checkpointID) {
+      this.checkpointID = checkpointID;
+    }
+
+    private String checkpointID;
+
+    public void setVertexID(String vertexID) {
+      this.vertexID = vertexID;
+    }
+
+    private String vertexID;
+
     private volatile boolean closed;
 
     public FsCheckpointStateOutputStream(
@@ -187,10 +199,10 @@ public class FsCheckpointStreamFactory {
       }
     }
 
-    public void closeWriting(String checkpointID, String vertexID) throws Exception {
+    public void closeWriting() throws Exception {
       synchronized (this) {
         try {
-          flush(checkpointID, vertexID);
+          flush();
 
           pos = writeBuffer.length;
 
@@ -226,7 +238,7 @@ public class FsCheckpointStreamFactory {
 
     }
 
-    public void flush(String checkpointID, String vertexID) throws IOException {
+    public void flush() throws IOException {
       if (!closed) {
         // initialize stream if this is the first flush (stream flush, not Darjeeling harvest)
         if (outStream == null) {
@@ -243,15 +255,15 @@ public class FsCheckpointStreamFactory {
       }
     }
 
-    private Path createStatePath(String checkpointID, String vertexID) {
-      return new Path(basePath, checkpointID + "_" + vertexID);
+    private Path createStatePath(String checkPointID, String vertexid) {
+      return new Path(basePath, checkPointID + "_" + vertexid);
     }
 
-    private void createStream(String checkpointID, String vertexID) throws IOException {
+    private void createStream(String checkpointid, String vertexid) throws IOException {
       Exception latestException = null;
       for (int attempt = 0; attempt < 10; attempt++) {
         try {
-          Path newStatePath = createStatePath(checkpointID, vertexID);
+          Path newStatePath = createStatePath(checkpointid, vertexid);
 //                    final File file =fs.pathToFile(statePath);
           FSDataOutputStream newOutStream = fs.create(newStatePath);
 
@@ -267,18 +279,16 @@ public class FsCheckpointStreamFactory {
       throw new IOException("Could not open output stream for state backend", latestException);
     }
 
-    public void Write(int b, String checkpointID, String vertexID) throws IOException {
-      if (pos >= writeBuffer.length) {
-        flush(checkpointID, vertexID);
-      }
-      writeBuffer[pos++] = (byte) b;
-    }
+    public StreamStateHandle readData(String checkpointid, String vertexid) {
 
-    public StreamStateHandle readData(String checkpointID, String vertexID) {
-
-      Path readPath = createStatePath(checkpointID, vertexID);
+      Path readPath = createStatePath(checkpointid, vertexid);
       return new FileStateHandle(readPath, 1L);
 
+    }
+
+    public void initialize(String checkpointid, String vertexid) {
+      this.setCheckpointID(checkpointid);
+      this.setVertexID(vertexid);
     }
 
 
