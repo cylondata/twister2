@@ -45,8 +45,8 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
 
     this.edgeGenerator = e;
     communicationEdge = e.generate(edgeName);
-    op = new SGather(channel, taskPlan, srcs, dest, new GatherRcvr(),
-        Utils.dataTypeToMessageType(dataType));
+    op = new SGather(channel, taskPlan, srcs, dest, Utils.dataTypeToMessageType(dataType),
+        new GatherRcvr());
   }
 
   @Override

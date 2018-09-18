@@ -21,17 +21,9 @@ public class KeyedContent {
 
   private Object value;
 
-  private MessageType keyType = MessageType.SHORT;
+  private MessageType keyType;
 
-  private MessageType contentType = MessageType.OBJECT;
-
-  public KeyedContent() {
-  }
-
-  public KeyedContent(Object keyObj, Object object) {
-    this.key = keyObj;
-    this.value = object;
-  }
+  private MessageType contentType;
 
   public KeyedContent(Object k, Object data,
                       MessageType keyType, MessageType dataType) {

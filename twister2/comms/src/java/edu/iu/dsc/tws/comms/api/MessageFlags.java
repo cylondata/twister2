@@ -15,12 +15,9 @@ public final class MessageFlags {
   private MessageFlags() {
   }
 
-  public static final int FLAGS_LAST = 1 << 30;
-  public static final int FLAGS_MULTI_MSG = 1 << 29;
+  public static final int LAST = 1 << 30;
   public static final int ORIGIN_SENDER = 1 << 28;
   public static final int ORIGIN_PARTIAL = 1 << 27;
-  public static final int EMPTY = 1 << 26;
+  public static final int END = 1 << 26;
   public static final int BARRIER = 1 << 25;
-  public static final int LAST_MESSAGE = 1 << 24;
-
 }

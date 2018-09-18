@@ -78,7 +78,7 @@ public class AllReduceStreamingTask implements IWorker {
       if (wrote) {
         count++;
         if (count % 1000 == 0) {
-          LOG.info(String.format("%d %d Message Partition sent count : %d", context.getWorkerId(),
+          LOG.info(String.format("%d %d AllReduce sent count : %d", context.getWorkerId(),
               context.taskId(), count));
         }
       }

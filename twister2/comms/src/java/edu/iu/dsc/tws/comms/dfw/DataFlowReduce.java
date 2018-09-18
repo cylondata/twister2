@@ -28,7 +28,6 @@ import com.google.common.collect.Table;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.CompletionListener;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -68,9 +67,10 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   private Config config;
   private TaskPlan instancePlan;
   private int executor;
-  private MessageType type;
+  private MessageType dataType;
+  private MessageType keyType;
 
-  private CompletionListener completionListener;
+  private boolean isKeyed = false;
 
   private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
   private Table<Integer, Integer, RoutingParameters> partialRoutingParamCache
@@ -91,15 +91,24 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   }
 
   public DataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
-                        MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
-    this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
+                        MessageReceiver finalRcvr,
+                        MessageReceiver partialRcvr, int indx, int p, boolean keyed,
+                        MessageType kType, MessageType dType) {
+    this.index = indx;
+    this.sources = sources;
+    this.destination = destination;
+    this.finalReceiver = finalRcvr;
+    this.partialReceiver = partialRcvr;
+    this.pathToUse = p;
+    this.delegete = new ChannelDataFlowOperation(channel);
+    this.isKeyed = keyed;
+    this.keyType = kType;
+    this.dataType = dType;
   }
 
   public DataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
-                        MessageReceiver finalRcvr, MessageReceiver partialRcvr,
-                        CompletionListener compListener) {
+                        MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
     this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
-    this.completionListener = compListener;
   }
 
   private boolean isLast(int source, int path, int taskIdentifier) {
@@ -238,7 +247,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.instancePlan = taskPlan;
     this.config = cfg;
-    this.type = t;
+    this.dataType = t;
     this.executor = instancePlan.getThisExecutor();
 
     // we only have one path
@@ -297,11 +306,10 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
       partialSendRoutingParameters(s, pathToUse);
     }
 
-    this.delegete.setCompletionListener(completionListener);
-    delegete.init(cfg, t, taskPlan, edge,
+    delegete.init(cfg, t, t, keyType, keyType, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
   }
 
   @Override
@@ -346,14 +354,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-    LOG.info("Finish on DfReduce :" + source);
-//    if (!isLastReceiver() && partialReceiver != null) {
-//      partialReceiver.onFinish(source);
-//    }
-//    if (isLastReceiver() && finalReceiver != null) {
-//      finalReceiver.onFinish(source);
-//    }
-    while (!send(source, "", MessageFlags.EMPTY)) {
+    while (!send(source, new byte[0], MessageFlags.END)) {
       // lets progress until finish
       progress();
     }

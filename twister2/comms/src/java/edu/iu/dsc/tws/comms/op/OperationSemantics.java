@@ -24,8 +24,4 @@ public enum OperationSemantics {
    * Streaming with and end, not sorted
    */
   STREAMING_BATCH,
-  /**
-   * Streaming with an end and sorted
-   */
-  STREAMING_BATCH_SORTED,
 }

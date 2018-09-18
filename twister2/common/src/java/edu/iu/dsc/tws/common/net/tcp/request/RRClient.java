@@ -144,8 +144,8 @@ public class RRClient {
       return null;
     }
     String messageType = message.getDescriptorForType().getFullName();
-    if (!responseHandlers.containsKey(messageType)) {
-      throw new RuntimeException("Message without a response handler");
+    if (!messageBuilders.containsKey(messageType)) {
+      throw new RuntimeException("Message without a message builder");
     }
 
     RequestID id = RequestID.generate();
@@ -179,6 +179,14 @@ public class RRClient {
    */
   public void registerResponseHandler(Message.Builder builder, MessageHandler handler) {
     responseHandlers.put(builder.getDescriptorForType().getFullName(), handler);
+    messageBuilders.put(builder.getDescriptorForType().getFullName(), builder);
+  }
+
+  /**
+   * Register a message type for sending
+   * @param builder the message type
+   */
+  public void registerMessage(Message.Builder builder) {
     messageBuilders.put(builder.getDescriptorForType().getFullName(), builder);
   }
 
@@ -225,7 +233,8 @@ public class RRClient {
       Message.Builder builder = messageBuilders.get(messageType);
 
       if (builder == null) {
-        throw new RuntimeException("Received response without a registered response");
+        throw new RuntimeException("Message builder should be registered, "
+            + "see registerMessage method");
       }
 
       try {

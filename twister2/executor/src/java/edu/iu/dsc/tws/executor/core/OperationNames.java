@@ -24,6 +24,7 @@ public final class OperationNames {
   public static final String BROADCAST = "broadcast";
   public static final String KEYED_PARTITION = "keyed_partition";
   public static final String KEYED_REDUCE = "keyed_reduce";
+  public static final String KEYED_GATHER = "keyed_gather";
 
 }
 

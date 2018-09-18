@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceBatchFinalReceiver;
@@ -46,7 +46,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
   private MessageReceiver partialReceiver;
 
   // the final receiver
-  private ReduceReceiver finalReceiver;
+  private SingularReceiver finalReceiver;
 
   private TWSChannel channel;
 
@@ -69,7 +69,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
   public DataFlowAllReduce(TWSChannel chnl,
                            Set<Integer> sources, Set<Integer> destination, int middleTask,
                            ReduceFunction reduceFn,
-                           ReduceReceiver finalRecv,
+                           SingularReceiver finalRecv,
                            int redEdge, int broadEdge,
                            boolean strm) {
     this.channel = chnl;
@@ -157,6 +157,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
 
   @Override
   public void finish(int source) {
+    reduce.finish(source);
   }
 
   @Override
@@ -165,20 +166,20 @@ public class DataFlowAllReduce implements DataFlowOperation {
   }
 
   private static class BCastReceiver implements MessageReceiver {
-    private ReduceReceiver reduceReceiver;
+    private SingularReceiver singularReceiver;
 
-    BCastReceiver(ReduceReceiver reduceRcvr) {
-      this.reduceReceiver = reduceRcvr;
+    BCastReceiver(SingularReceiver reduceRcvr) {
+      this.singularReceiver = reduceRcvr;
     }
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      this.reduceReceiver.init(cfg, op, expectedIds);
+      this.singularReceiver.init(cfg, expectedIds.keySet());
     }
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      return reduceReceiver.receive(target, object);
+      return singularReceiver.receive(target, object);
     }
 
     @Override

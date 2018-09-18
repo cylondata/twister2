@@ -37,7 +37,6 @@ public class DataFlowContext extends CommunicationContext {
 
   private static final String SHUFFLE_MAX_BYTES_IN_MEMORY = "shuffle.memory.bytes.max";
   private static final String SHUFFLE_MAX_RECORDS_IN_MEMORY = "shuffle.memory.records.max";
-  private static final String SHUFFLE_DIRECTORY_PATH = "shuffle.directory.path";
 
   public static final int DEFAULT_DESTINATION = 0;
 
@@ -78,10 +77,6 @@ public class DataFlowContext extends CommunicationContext {
 
   public static int getNetworkPartitionMessageGroupHighWaterMark(Config cfg) {
     return cfg.getIntegerValue(NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK, 16);
-  }
-
-  public static String getShuffleDirectoryPath(Config cfg) {
-    return cfg.getStringValue(SHUFFLE_DIRECTORY_PATH, "/tmp");
   }
 
   public static int getShuffleMaxRecordsInMemory(Config cfg) {

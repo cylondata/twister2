@@ -9,9 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.utils;
+package edu.iu.dsc.tws.comms.api;
 
-public final class Utils {
-  private Utils() {
-  }
+import java.util.Iterator;
+import java.util.Set;
+
+import edu.iu.dsc.tws.common.config.Config;
+
+/**
+ * Receiver for multiple values
+ */
+public interface BulkReceiver {
+  /**
+   * Initialize the receiver
+   * @param cfg configuration
+   * @param targets expected targets
+   */
+  void init(Config cfg, Set<Integer> targets);
+
+  /**
+   * Receive to specific target
+   * @param target the target
+   * @param it iterator with messages
+   */
+  boolean receive(int target, Iterator<Object> it);
 }

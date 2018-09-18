@@ -11,10 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+/**
+ * The reduce operation supported by default on the primitive arrays
+ */
 public enum  Op {
-  SUM,
-  MAX,
-  MIN,
-  PRODUCT,
-  DIVISION
+  SUM,  // sum of values in each position of the array
+  MAX,  // get the max of each position of the array
+  MIN,  // get the min of each position of the array
+  PRODUCT,  // get the product of each position of the array
+  DIVISION  // get the division of each position of the array
 }

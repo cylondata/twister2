@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task.batch;
 
 import java.util.ArrayList;
@@ -59,7 +47,7 @@ public class AllReduceBatchTask extends TaskWorker {
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
     ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
-    computeConnection.allreduce("source", "reduce-edge",
+    computeConnection.allreduce("source", "all-reduce-edge",
         Op.SUM, DataType.INTEGER);
     graphBuilder.setMode(OperationMode.BATCH);
 
@@ -73,12 +61,13 @@ public class AllReduceBatchTask extends TaskWorker {
     private int count = 0;
     @Override
     public void execute() {
+      int[] val = {1};
       if (count == 999) {
-        if (context.writeEnd("all-reduce-edge", "Hello")) {
+        if (context.writeEnd("all-reduce-edge", val)) {
           count++;
         }
       } else if (count < 999) {
-        if (context.write("all-reduce-edge", "Hello")) {
+        if (context.write("all-reduce-edge", val)) {
           count++;
         }
       }

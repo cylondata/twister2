@@ -11,10 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.op.batch;
 
-import java.util.Comparator;
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -23,37 +22,52 @@ import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
+/**
+ * Streaming Partition Operation
+ */
 public class BPartition {
+  /**
+   * The actual operation
+   */
   private DataFlowPartition partition;
 
-  private Communicator comm;
-
+  /**
+   * Destination selector
+   */
   private DestinationSelector destinationSelector;
 
+  /**
+   * Construct a Batch partition operation
+   *
+   * @param comm the communicator
+   * @param plan task plan
+   * @param sources source tasks
+   * @param targets target tasks
+   * @param rcvr receiver
+   * @param dataType data type
+   * @param  destSelector destination selector
+   */
   public BPartition(Communicator comm, TaskPlan plan,
-                    Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
-                    BatchReceiver rcvr,
+                    Set<Integer> sources, Set<Integer> targets, MessageType dataType,
+                    BulkReceiver rcvr,
                     DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
-    this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
-        new PartitionBatchFinalReceiver(rcvr, false, true, null),
+    String shuffleDir = comm.getPersistentDirectory();
+    this.partition = new DataFlowPartition(comm.getChannel(), sources, targets,
+        new PartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
         new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT, dataType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
   }
 
-  public BPartition(Communicator comm, TaskPlan plan,
-                    Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
-                    BatchReceiver rcvr,
-                    DestinationSelector destSelector, Comparator<Object> comparator) {
-    this.destinationSelector = destSelector;
-    this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
-        new PartitionBatchFinalReceiver(rcvr, true, true, comparator),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT, dataType);
-    this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
-  }
-
+  /**
+   * Send a message to be partitioned
+   *
+   * @param source source
+   * @param message message
+   * @param flags message flag
+   * @return true if the message is accepted
+   */
   public boolean partition(int source, Object message, int flags) {
     int dest = destinationSelector.next(source);
 
@@ -64,15 +78,32 @@ public class BPartition {
     return send;
   }
 
+  /**
+   * Weather we have messages pending
+   * @return true if there are messages pending
+   */
   public boolean hasPending() {
     return !partition.isComplete();
   }
 
+  /**
+   * Indicate the end of the communication
+   * @param source the source that is ending
+   */
   public void finish(int source) {
     partition.finish(source);
   }
 
+  /**
+   * Progress the operation, if not called, messages will not be processed
+   *
+   * @return true if further progress is needed
+   */
   public boolean progress() {
     return partition.progress();
+  }
+
+  public void close() {
+    partition.close();
   }
 }

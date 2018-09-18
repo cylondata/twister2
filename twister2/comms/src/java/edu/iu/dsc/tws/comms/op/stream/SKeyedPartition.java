@@ -22,19 +22,36 @@ import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
+/**
+ * Streaming Keyed Partition Operation
+ */
 public class SKeyedPartition {
+  /**
+   * The actual operation
+   */
   private DataFlowPartition partition;
 
-  private Communicator comm;
-
+  /**
+   * Destination selector
+   */
   private DestinationSelector destinationSelector;
 
+  /**
+   * Construct a Streaming Key based partition operation
+   *
+   * @param comm the communicator
+   * @param plan task plan
+   * @param sources source tasks
+   * @param targets target tasks
+   * @param rcvr receiver
+   * @param dataType data type
+   */
   public SKeyedPartition(Communicator comm, TaskPlan plan,
-                         Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
+                         Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                          MessageType keyType, MessageReceiver rcvr,
                          DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
-    this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations, rcvr,
+    this.partition = new DataFlowPartition(comm.getChannel(), sources, targets, rcvr,
         new PartitionPartialReceiver(),
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
 
@@ -42,25 +59,47 @@ public class SKeyedPartition {
     this.destinationSelector.prepare(keyType, partition.getSources(), partition.getDestinations());
   }
 
-  public boolean partition(int source, Object key, Object message, int flags) {
-    int dest = destinationSelector.next(source);
+  /**
+   * Send a message to be partitioned based on the key
+   *
+   * @param src source
+   * @param key key
+   * @param message message
+   * @param flags message flag
+   * @return true if the message is accepted
+   */
+  public boolean partition(int src, Object key, Object message, int flags) {
+    int dest = destinationSelector.next(src);
 
-    boolean send = partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
+    boolean send = partition.send(src, new KeyedContent(key, message, partition.getKeyType(),
         partition.getDataType()), flags, dest);
     if (send) {
-      destinationSelector.commit(source, dest);
+      destinationSelector.commit(src, dest);
     }
     return send;
   }
 
-  public void finish(int source) {
-    partition.finish(source);
+  /**
+   * Indicate the end of the communication
+   * @param src the source that is ending
+   */
+  public void finish(int src) {
+    partition.finish(src);
   }
 
+  /**
+   * Progress the operation, if not called, messages will not be processed
+   *
+   * @return true if further progress is needed
+   */
   public boolean progress() {
     return partition.progress();
   }
 
+  /**
+   * Weather we have messages pending
+   * @return true if there are messages pending
+   */
   public boolean hasPending() {
     return !partition.isComplete();
   }

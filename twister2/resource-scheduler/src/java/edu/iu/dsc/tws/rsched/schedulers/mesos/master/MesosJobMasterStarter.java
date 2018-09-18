@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.rsched.schedulers.mesos.master;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,7 +35,8 @@ import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
+//import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
@@ -67,22 +69,43 @@ public final class MesosJobMasterStarter {
     logger.initLogging();
 
     MesosWorkerController workerController = null;
-    try {
-      JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
+    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
-      workerController = new MesosWorkerController(config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2023, workerId);
-      LOG.info("Initializing with zookeeper");
-      workerController.initializeWithZooKeeper();
-      LOG.info("Waiting for all workers to join");
-      workerController.waitForAllWorkersToJoin(
-          ZKContext.maxWaitTimeForAllWorkersToJoin(config));
-      LOG.info("Everyone has joined");
-      //container.execute(worker.config, id, null, workerController, null);
+//    try {
+//      workerController = new MesosWorkerController(config, job,
+//          Inet4Address.getLocalHost().getHostAddress(), 2023, workerId);
+//      LOG.info("Initializing with zookeeper");
+//      workerController.initializeWithZooKeeper();
+//      LOG.info("Waiting for all workers to join");
+//      workerController.waitForAllWorkersToJoin(
+//          ZKContext.maxWaitTimeForAllWorkersToJoin(config));
+//      LOG.info("Everyone has joined");
+////      //container.execute(worker.config, id, null, workerController, null);
+//
+//
+//    } catch (Exception e) {
+//      LOG.severe("Error " + e.getMessage());
+//    }
 
-    } catch (Exception e) {
-      LOG.severe("Error " + e.getMessage());
+    //this block is for ZKjobmaster register
+    ZKJobMasterRegistrar registrar = null;
+    try {
+      registrar = new ZKJobMasterRegistrar(config,
+          Inet4Address.getLocalHost().getHostAddress(), 2023);
+      LOG.info("JobMaster REGISTERED:");
+    } catch (UnknownHostException e) {
+      LOG.info("JobMaster CAN NOT BE REGISTERED:");
+      e.printStackTrace();
     }
+    boolean initialized = registrar.initialize();
+    if (!initialized) {
+      LOG.info("CAN NOT INITIALIZE");
+    }
+    if (!initialized && registrar.sameZNodeExist()) {
+      registrar.deleteJobMasterZNode();
+      registrar.initialize();
+    }
+    //end ZK job master register
 
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
       JobMaster jobMaster;
@@ -99,6 +122,7 @@ public final class MesosJobMasterStarter {
     }
 
     waitIndefinitely();
+    registrar.close();
   }
 
   /**

@@ -103,7 +103,6 @@ public class AllReduceBatchFinalReceiver extends ReduceBatchReceiver {
 
       if (allFinished) {
 //        LOG.info(String.format("%d final all finished %d", executor, t));
-        batchDone.put(t, true);
         Object previous = null;
         List<Object> finalMessagePerTask = finalMessages.get(t);
         for (int i = 0; i < finalMessagePerTask.size(); i++) {
@@ -114,7 +113,11 @@ public class AllReduceBatchFinalReceiver extends ReduceBatchReceiver {
             previous = reduceFunction.reduce(previous, current);
           }
         }
-        reduceReceiver.send(t, previous, 0);
+        // if we send this successfully we are done
+        if (reduceReceiver.send(t, previous, 0)) {
+          batchDone.put(t, true);
+          onFinish(t);
+        }
       }
     }
     return needsFurtherProgress;

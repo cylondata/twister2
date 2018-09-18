@@ -37,7 +37,7 @@ public final class MesosMPISlaveStarter {
 
   public static void main(String[] args) throws Exception {
 
-    Thread.sleep(5000);
+    //Thread.sleep(5000);
     workerID = Integer.parseInt(System.getenv("WORKER_ID"));
     jobName = System.getenv("JOB_NAME");
     String twister2Home = Paths.get("").toAbsolutePath().toString();
@@ -62,7 +62,7 @@ public final class MesosMPISlaveStarter {
       workerController.close();
 
     } catch (Exception e) {
-      LOG.severe("Host unkown " + e.getMessage());
+      LOG.severe("Host unknown " + e.getMessage());
     }
     Thread.sleep(3000000);
 

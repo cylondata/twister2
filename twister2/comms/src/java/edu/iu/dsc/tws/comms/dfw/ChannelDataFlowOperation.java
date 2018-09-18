@@ -32,7 +32,6 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.CompletionListener;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -156,11 +155,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   private ProgressionTracker deserializeProgressTracker;
 
-  /**
-   * Completion listener
-   */
-  private CompletionListener completionListener;
-
   private Map<Integer, AtomicBoolean> sendsDone = new HashMap<>();
 
   private Map<Integer, AtomicBoolean> receivesDone = new HashMap<>();
@@ -248,10 +242,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     init(cfg, messageType, messageType, keyType, keyType,
         plan, graphEdge, recvExecutors, lastReceiver, msgReceiver,
         pendingSendPerSource, pRMPS, pendingReceiveDesrialize, serializer, deSerializer, keyed);
-  }
-
-  public void setCompletionListener(CompletionListener cmpListener) {
-    this.completionListener = cmpListener;
   }
 
   private void initSerializers() {
@@ -606,7 +596,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     int id = currentMessage.getOriginatingId();
     MessageHeader header = currentMessage.getHeader();
     Object object = DataFlowContext.EMPTY_OBJECT;
-    if ((header.getFlags() & MessageFlags.EMPTY) != MessageFlags.EMPTY) {
+    if ((header.getFlags() & MessageFlags.END) != MessageFlags.END) {
       object = messageDeSerializer.get(receiveId).build(currentMessage,
           currentMessage.getHeader().getEdge());
     } else if ((header.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
@@ -740,9 +730,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           throw new RuntimeException(String.format("%d Buffer release failed for target %d",
               executor, message.getHeader().getDestinationIdentifier()));
         }
-      }
-      if (completionListener != null) {
-        completionListener.completed(message.getOriginatingId());
       }
       if (message.getOverflowBuffers().size() > 0) {
         for (DataBuffer byteBuffer : message.getOverflowBuffers()) {

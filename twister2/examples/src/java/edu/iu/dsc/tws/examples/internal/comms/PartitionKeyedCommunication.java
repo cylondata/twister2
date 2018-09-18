@@ -160,7 +160,7 @@ public class PartitionKeyedCommunication implements IWorker {
           }
           KeyedContent mesage = new KeyedContent(task * 111, data2,
               MessageType.INTEGER, MessageType.INTEGER);
-          int flags = MessageFlags.FLAGS_LAST;
+          int flags = MessageFlags.LAST;
           while (!partition.send(task, mesage, flags, i)) {
             // lets wait a litte and try again
             try {
@@ -215,11 +215,11 @@ public class PartitionKeyedCommunication implements IWorker {
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
-      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
         finished.get(target).put(source, true);
       }
 
-      if (((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) && isAllFinished(target)) {
+      if (((flags & MessageFlags.LAST) == MessageFlags.LAST) && isAllFinished(target)) {
         System.out.printf("All Done for Task %d \n", target);
       }
 

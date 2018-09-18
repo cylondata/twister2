@@ -12,16 +12,13 @@
 package edu.iu.dsc.tws.examples.basic.comms.stream;
 
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
 import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
@@ -53,9 +50,8 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
     }
 
     keyedReduce = new SKeyedReduce(communicator, taskPlan, sources, targets,
-        new ReduceIdentityFunction(), new FinalReduceReceiver(jobParameters.getIterations()),
-        MessageType.OBJECT, MessageType.OBJECT,
-        new SimpleKeyBasedSelector());
+        MessageType.OBJECT, MessageType.OBJECT, new ReduceIdentityFunction(),
+        new FinalSingularReceiver(jobParameters.getIterations()), new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -65,10 +61,6 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
     }
-
-//    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-//      reduceDone = true;
-//    }
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
         workerId, sources, 1, tasksOfExecutor));
@@ -100,16 +92,16 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
     return true;
   }
 
-  public class FinalReduceReceiver implements ReduceReceiver {
+  public class FinalSingularReceiver implements SingularReceiver {
     private int count = 0;
     private int expected;
 
-    public FinalReduceReceiver(int expected) {
+    public FinalSingularReceiver(int expected) {
       this.expected = expected;
     }
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override

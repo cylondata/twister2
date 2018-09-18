@@ -9,24 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.basic.taskinformation;
+package edu.iu.dsc.tws.api.task;
 
-public class TaskInformation {
+import edu.iu.dsc.tws.common.config.Config;
 
-  private final String taskName;
-  private final int jobId;
+public final class TaskConfigurations {
+  public static final String DEFAULT_PARALLELISM = "twister2.task.default.parallelism";
 
-  public TaskInformation(String taskName, int jobId) {
-    this.taskName = taskName;
-    this.jobId = jobId;
+  public static final String DEFAULT_EDGE = "default";
+
+  private TaskConfigurations() {
   }
 
-  public String getTaskName() {
-    return taskName;
+  public static int getDefaultParallelism(Config cfg, int def) {
+    return cfg.getIntegerValue(DEFAULT_PARALLELISM, def);
   }
-
-  public int getJobId() {
-    return jobId;
-  }
-
 }

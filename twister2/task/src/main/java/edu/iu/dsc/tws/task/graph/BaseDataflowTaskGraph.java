@@ -15,8 +15,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -33,7 +31,6 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   public BaseDataflowTaskGraph(Comparator<TV> comparator, Comparator<TE> eComparator) {
-    //this.vertices = new LinkedHashSet<>();
     this.vertices = new HashSet<>();
     this.edges = new HashSet<>();
     this.directedEdges = new HashSet<>();
@@ -123,8 +120,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   /**
-   * This method is used to identify the duplicate task edge for the
-   * same two tasks in the graph.
+   * This method is used to identify the duplicate task edge for the same two tasks in the graph.
    * @param taskEdge
    * @return
    */
@@ -141,7 +137,6 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return flag;
   }
 
-  /* Commented for duplicate task vertex names in the graph. */
   @Override
   public boolean containsTaskVertex(TV taskVertex) {
     return vertices.contains(taskVertex);
@@ -341,9 +336,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
    *
    */
   public boolean validate() {
-    //return true;
-
-    //Code to check the self-loop
+    //call to check the self-loop
     boolean flag = false;
     if (!detectSelfLoop(getTaskVertexSet())) {
       return true;
@@ -373,8 +366,12 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     }
   }
 
+  /**
+   * This method identifies the self-loop in the task graph.
+   * @param taskVertex
+   * @return
+   */
   public boolean detectSelfLoop(Set<TV> taskVertex) {
-
     boolean flag = false;
     Iterator<TV> vertexIterator = taskVertex.iterator();
     while (vertexIterator.hasNext()) {
@@ -386,41 +383,12 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
 
-  public boolean containsSelfLoop(TV sourceTaskVertex) {
-
+  private boolean containsSelfLoop(TV sourceTaskVertex) {
     boolean flag = false;
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (de.sourceTaskVertex.equals(de.targetTaskVertex)) {
         throw new RuntimeException("Self-loop detected for the taskgraph");
       }
-    }
-    return flag;
-  }
-
-  private List<Set<TV>> detectCycle = new LinkedList<>();
-
-  @SuppressWarnings("unchecked")
-  public boolean detectCycle(DataFlowTaskGraph dataFlowTaskGraph) {
-    boolean flag = false;
-    Set<TV> taskVertex = (Set<TV>) dataFlowTaskGraph.getTaskVertexSet();
-    for (TV tv : taskVertex) {
-      if (containsCycle(tv)) {
-        flag = true;
-      }
-    }
-    return flag;
-  }
-
-  public boolean containsCycle(TV sourceTaskVertex) {
-
-    boolean flag = false;
-    if (detectCycle.size() == 0) {
-      detectCycle.add(childrenOfTask(sourceTaskVertex));
-    } else if (detectCycle.size() >= 1
-        && detectCycle.contains(childrenOfTask(sourceTaskVertex))) {
-      detectCycle.add(childrenOfTask(sourceTaskVertex));
-      flag = true;
-      //throw new RuntimeException("Cycle detected in the taskgraph");
     }
     return flag;
   }
@@ -432,10 +400,10 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
    * @return true/false
    */
   public boolean hasCycle() {
-
     Set<TV> taskVertexSet = getTaskVertexSet();
     Set<TV> sourceTaskVertex = new HashSet<>();
     Set<TV> targetTaskVertex = new HashSet<>();
+
     while (taskVertexSet.size() > 0) {
       TV taskVertex = taskVertexSet.iterator().next();
       if (detectCycle(taskVertex, taskVertexSet, sourceTaskVertex, targetTaskVertex)) {

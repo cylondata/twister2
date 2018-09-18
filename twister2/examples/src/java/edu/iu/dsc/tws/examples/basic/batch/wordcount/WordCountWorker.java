@@ -70,7 +70,8 @@ public class WordCountWorker implements IWorker {
     // create the communication
     keyGather = new DataFlowMultiGather(channel, sources, destinations,
         new GatherMultiBatchFinalReceiver(new WordAggregator()),
-        new GatherMultiBatchPartialReceiver(), destinations);
+        new GatherMultiBatchPartialReceiver(), destinations,
+        MessageType.OBJECT, MessageType.OBJECT);
     // intialize the operation
     keyGather.init(config, MessageType.OBJECT, taskPlan, 0);
     // start the threads

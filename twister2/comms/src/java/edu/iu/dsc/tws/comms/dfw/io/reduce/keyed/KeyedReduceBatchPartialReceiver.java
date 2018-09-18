@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
 import java.util.Map;
@@ -29,9 +17,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchReceiver;
 
-public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
+public class KeyedReduceBatchPartialReceiver extends KeyedReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(
       KeyedReduceBatchPartialReceiver.class.getName());
   private int partialSendCount;
@@ -54,7 +41,6 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
       // now check weather we have the messages for this source
       Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
       Map<Integer, Boolean> finishedForTarget = finished.get(target);
-      Map<Integer, Integer> countMap = counts.get(target);
 
       boolean canProgress = true;
       Object currentVal = null;
@@ -62,7 +48,7 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
       while (canProgress) {
         boolean found = true;
         boolean allFinished = true;
-        boolean allZero = true;
+        boolean isAllQueuesEmpty = true;
 
         boolean moreThanOne = false;
         for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
@@ -104,26 +90,16 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
             // lets remove the value
             bufferCounts.put(target, 0);
             reducedValueMap.put(target, null);
-            for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
-              Queue<Object> value = e.getValue();
-              if (value.size() != 0) {
-                allZero = false;
-              }
-            }
-
-            for (Map.Entry<Integer, Integer> e : countMap.entrySet()) {
-              Integer i = e.getValue();
-              e.setValue(i - 1);
-            }
+            isAllQueuesEmpty = checkQueuesEmpty(messagePerTarget);
 
           } else {
             canProgress = false;
             needsFurtherProgress = true;
           }
 
-          if (dataFlowOperation.isDelegeteComplete() && allFinished && allZero) {
+          if (dataFlowOperation.isDelegeteComplete() && allFinished && isAllQueuesEmpty) {
             if (dataFlowOperation.sendPartial(target, new byte[0],
-                MessageFlags.EMPTY, destination)) {
+                MessageFlags.END, destination)) {
               isEmptySent.put(target, true);
             } else {
               needsFurtherProgress = true;
@@ -138,6 +114,23 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
       }
     }
     return needsFurtherProgress;
+  }
+
+  /**
+   * Checks if all the queues are empty
+   *
+   * @param messagePerTarget data object that holds the queues of objects from each sources
+   * @return true if all the message queues are empty
+   */
+  private boolean checkQueuesEmpty(Map<Integer, Queue<Object>> messagePerTarget) {
+    boolean isAllQueuesEmpty = true;
+    for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+      Queue<Object> value = e.getValue();
+      if (value.size() != 0) {
+        isAllQueuesEmpty = false;
+      }
+    }
+    return isAllQueuesEmpty;
   }
 
 
@@ -158,7 +151,7 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
       }
     }
     if (last) {
-      flags = MessageFlags.FLAGS_LAST;
+      flags = MessageFlags.LAST;
     }
     return flags;
   }
@@ -238,7 +231,7 @@ public class KeyedReduceBatchPartialReceiver extends ReduceBatchReceiver {
     boolean isSent = true;
     if (!isEmptySent.get(target)) {
       if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(target,
-          new byte[0], MessageFlags.EMPTY, destination)) {
+          new byte[0], MessageFlags.END, destination)) {
         isEmptySent.put(target, true);
       } else {
         isSent = false;
