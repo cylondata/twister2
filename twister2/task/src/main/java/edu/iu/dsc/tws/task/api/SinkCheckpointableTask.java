@@ -34,42 +34,60 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
   public TaskContext ctx;
   public Config config;
 
-  public RRClient client;
-  public Progress looper;
+  private RRClient taskClient;
+  private Progress taskLooper;
+
+  /**
+   * to control the connection error when we repeatedly try connecting
+   */
+  private boolean connectionRefused = false;
 
   public void connect(Config cfg, TaskContext context) {
     this.ctx = context;
 
-    looper = new Progress();
+    taskLooper = new Progress();
 
-    client = new RRClient("localhost", 6789, cfg, looper,
+    taskClient = new RRClient("localhost", 6789, cfg, taskLooper,
         context.taskId(), new ClientConnectHandler());
 
-    client.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
+    taskClient.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
         new ClientMessageHandler());
 
-    tryUntilConnected(5000);
+    tryUntilConnected(taskClient, taskLooper, 5000);
     sendTaskDiscoveryMessage();
   }
 
-  public boolean tryUntilConnected(long timeLimit) {
+  private boolean tryUntilConnected(RRClient client, Progress looper, long timeLimit) {
     long startTime = System.currentTimeMillis();
     long duration = 0;
-    long sleepInterval = 30;
+    long sleepInterval = 50;
 
+    // log interval in milliseconds
     long logInterval = 1000;
     long nextLogTime = logInterval;
 
+    // allow the first connection attempt
+    connectionRefused = true;
+
     while (duration < timeLimit) {
       // try connecting
-      client.connect();
-      // loop once to connect
+      if (connectionRefused) {
+        client.tryConnecting();
+        connectionRefused = false;
+      }
+
+      // loop to connect
       looper.loop();
 
       if (client.isConnected()) {
         return true;
       }
 
+      try {
+        Thread.sleep(sleepInterval);
+      } catch (InterruptedException e) {
+        LOG.warning("Sleep interrupted.");
+      }
 
       if (client.isConnected()) {
         return true;
@@ -78,7 +96,7 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
       duration = System.currentTimeMillis() - startTime;
 
       if (duration > nextLogTime) {
-        LOG.info("Still trying to connect to Checkpoint Manager");
+        LOG.info("Still trying to connect to the Checkpoint Manager from Sink Task");
         nextLogTime += logInterval;
       }
     }
@@ -109,7 +127,6 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
       LOG.info("TaskClientMessageHandler inside sink task got message from worker ID "
           + workerId);
 
-      client.disconnect();
     }
   }
 
@@ -120,8 +137,8 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
         .setParrallelism(this.ctx.getParallelism())
         .build();
 
-    client.sendRequest(message);
-    looper.loop();
+    taskClient.sendRequest(message);
+    taskLooper.loop();
   }
 
   /**

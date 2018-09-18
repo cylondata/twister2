@@ -39,6 +39,11 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
 
   private int currentBarrierID = 0;
 
+  /**
+   * to control the connection error when we repeatedly try connecting
+   */
+  private boolean connectionRefused = false;
+
   public void connect(Config cfg, TaskContext context) {
     this.ctx = context;
     this.config = cfg;
@@ -62,27 +67,38 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
 
     sendBarrierSyncMessage();
 
-
-
-
   }
 
-  public boolean tryUntilConnected(RRClient client, Progress looper, long timeLimit) {
+  private boolean tryUntilConnected(RRClient client, Progress looper, long timeLimit) {
     long startTime = System.currentTimeMillis();
     long duration = 0;
-    long sleepInterval = 30;
+    long sleepInterval = 50;
 
+    // log interval in milliseconds
     long logInterval = 1000;
     long nextLogTime = logInterval;
 
+    // allow the first connection attempt
+    connectionRefused = true;
+
     while (duration < timeLimit) {
       // try connecting
-      client.connect();
-      // loop once to connect
+      if (connectionRefused) {
+        client.tryConnecting();
+        connectionRefused = false;
+      }
+
+      // loop to connect
       looper.loop();
 
       if (client.isConnected()) {
         return true;
+      }
+
+      try {
+        Thread.sleep(sleepInterval);
+      } catch (InterruptedException e) {
+        LOG.warning("Sleep interrupted.");
       }
 
       if (client.isConnected()) {
@@ -92,7 +108,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
       duration = System.currentTimeMillis() - startTime;
 
       if (duration > nextLogTime) {
-        LOG.info("Still trying to connect");
+        LOG.info("Still trying to connect to the Checkpoint Manager from Source Task");
         nextLogTime += logInterval;
       }
     }
@@ -123,24 +139,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
       LOG.info("TaskClientMessageHandler inside source task got message from worker ID "
           + workerId);
 
-      taskClient.disconnect();
-    }
-  }
-
-  public class BarrierClientConnectHandler implements ConnectHandler {
-    @Override
-    public void onError(SocketChannel channel) {
-      LOG.severe("BarrierClientConnectHandler error thrown");
-    }
-
-    @Override
-    public void onConnect(SocketChannel channel, StatusCode status) {
-      LOG.info("BarrierClientConnectHandler got connected");
-    }
-
-    @Override
-    public void onClose(SocketChannel channel) {
-      LOG.info("BarrierClientConnect Handler got closed");
     }
   }
 
