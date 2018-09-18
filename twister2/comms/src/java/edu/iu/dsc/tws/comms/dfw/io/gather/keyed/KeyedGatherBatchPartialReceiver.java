@@ -56,6 +56,10 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
   private int destination;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
 
+  private int totalSendCount = 0;
+  private int totalSendCountActual = 0;
+  private Map<Integer, Integer> sourceCount = new HashMap<>();
+
   public KeyedGatherBatchPartialReceiver(int dst) {
     this.destination = dst;
   }
@@ -76,6 +80,8 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
         messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax));
         finishedPerTask.put(i, false);
         countsPerTask.put(i, 0);
+        sourceCount.put(i, 0);
+
       }
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
@@ -109,12 +115,18 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
       canAdd = false;
     } else {
       if (object instanceof ChannelMessage) {
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         ((ChannelMessage) object).incrementRefCount();
       }
       Integer c = counts.get(target).get(source);
       counts.get(target).put(source, c + 1);
 
       m.add(object);
+      if (object instanceof List) {
+        sourceCount.put(source, sourceCount.get(source) + ((List) object).size());
+      } else {
+        sourceCount.put(source, sourceCount.get(source) + 1);
+      }
       if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
         finishedMessages.put(source, true);
       }
@@ -131,6 +143,13 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
         if (!isEmptySent.get(target)) {
           if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(target,
               new byte[0], MessageFlags.EMPTY, destination)) {
+            String output = "";
+            for (Integer integer : sourceCount.keySet()) {
+              output += " :: " + integer + "," + sourceCount.get(integer);
+            }
+            System.out.printf("%d Number of total sends to %d is %d actual %d :: %s ::::::: \n",
+                executor,
+                target, totalSendCount, totalSendCountActual, output);
             isEmptySent.put(target, true);
           } else {
             needsFurtherProgress = true;
@@ -178,8 +197,10 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
                 Object value = valueList.poll();
                 if (value instanceof List) {
                   sendList.addAll((List) value);
+                  totalSendCount = totalSendCount + ((List) value).size();
                 } else {
                   sendList.add(value);
+                  totalSendCount++;
                 }
               }
             }
@@ -190,8 +211,10 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
                 Object value = valueList.poll();
                 if (value instanceof List) {
                   sendList.addAll((List) value);
+                  totalSendCount = totalSendCount + ((List) value).size();
                 } else {
                   sendList.add(value);
+                  totalSendCount++;
                 }
               }
             }
@@ -211,6 +234,7 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
             }
           }
           if (dataFlowOperation.sendPartial(target, sendList, flags, destination)) {
+            totalSendCountActual += sendList.size();
             sendMessages.put(target, new ArrayList<Object>());
             for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
               Queue<Object> value = e.getValue();
@@ -233,6 +257,13 @@ public class KeyedGatherBatchPartialReceiver implements MessageReceiver {
         if (dataFlowOperation.isDelegeteComplete() && allFinished && allZero) {
           if (dataFlowOperation.sendPartial(target, new byte[0],
               MessageFlags.EMPTY, destination)) {
+            String output = "";
+            for (Integer integer : sourceCount.keySet()) {
+              output += " :: " + integer + "," + sourceCount.get(integer);
+            }
+            System.out.printf("%d Number of total sends to %d is %d actual %d :: %s ::::::: \n",
+                executor,
+                target, totalSendCount, totalSendCountActual, output);
             isEmptySent.put(target, true);
           } else {
             needsFurtherProgress = true;
