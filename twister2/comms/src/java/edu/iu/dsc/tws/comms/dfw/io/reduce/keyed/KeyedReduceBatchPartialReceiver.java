@@ -101,7 +101,7 @@ public class KeyedReduceBatchPartialReceiver extends KeyedReduceBatchReceiver {
 
           if (dataFlowOperation.isDelegeteComplete() && allFinished && isAllQueuesEmpty) {
             if (dataFlowOperation.sendPartial(target, new byte[0],
-                MessageFlags.EMPTY, destination)) {
+                MessageFlags.END, destination)) {
               isEmptySent.put(target, true);
             } else {
               needsFurtherProgress = true;
@@ -153,7 +153,7 @@ public class KeyedReduceBatchPartialReceiver extends KeyedReduceBatchReceiver {
       }
     }
     if (last) {
-      flags = MessageFlags.FLAGS_LAST;
+      flags = MessageFlags.LAST;
     }
     return flags;
   }
@@ -233,7 +233,7 @@ public class KeyedReduceBatchPartialReceiver extends KeyedReduceBatchReceiver {
     boolean isSent = true;
     if (!isEmptySent.get(target)) {
       if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(target,
-          new byte[0], MessageFlags.EMPTY, destination)) {
+          new byte[0], MessageFlags.END, destination)) {
         isEmptySent.put(target, true);
       } else {
         isSent = false;

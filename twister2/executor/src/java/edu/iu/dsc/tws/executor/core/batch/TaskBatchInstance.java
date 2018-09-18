@@ -175,20 +175,12 @@ public class TaskBatchInstance implements INodeInstance {
         state.set(InstanceState.EXECUTING);
       }
 
-      // now check the context
-      boolean isDone = true;
-      for (String e : outputEdges) {
-        if (!taskContext.isDone(e)) {
-          // we are done with execution
-          isDone = false;
-          break;
-        }
-      }
-
+      // for compute we don't have to have the context done as when the inputs finish and execution
+      // is done, we are done executing
       // progress in communication
       boolean needsFurther = communicationProgress(inParOps);
       // if we no longer needs to progress comm and input is empty
-      if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty() && isDone) {
+      if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty()) {
         state.set(InstanceState.EXECUTION_DONE);
       }
     }
@@ -212,7 +204,8 @@ public class TaskBatchInstance implements INodeInstance {
     }
 
     // if execution is done and outqueue is emput, we have put everything to communication
-    if (state.isSet(InstanceState.EXECUTION_DONE) && outQueue.isEmpty()) {
+    if (state.isSet(InstanceState.EXECUTION_DONE) && outQueue.isEmpty()
+        && state.isNotSet(InstanceState.OUT_COMPLETE)) {
       for (IParallelOperation op : outParOps.values()) {
         op.finish(taskId);
       }
@@ -225,7 +218,7 @@ public class TaskBatchInstance implements INodeInstance {
     if (state.isSet(InstanceState.OUT_COMPLETE) && !needsFurther) {
       state.set(InstanceState.SENDING_DONE);
     }
-    return !state.isEqual(InstanceState.FINISH);
+    return !state.isSet(InstanceState.SENDING_DONE);
   }
 
   /**

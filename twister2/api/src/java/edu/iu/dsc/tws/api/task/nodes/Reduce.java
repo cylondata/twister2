@@ -12,4 +12,5 @@
 package edu.iu.dsc.tws.api.task.nodes;
 
 public class Reduce {
+
 }

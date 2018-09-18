@@ -11,12 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Iterator;
+import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public interface ReduceReceiver {
-  void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
-  boolean receive(int target, Object object);
+/**
+ * Receiver for multiple values
+ */
+public interface BulkReceiver {
+  /**
+   * Initialize the receiver
+   * @param cfg configuration
+   * @param targets expected targets
+   */
+  void init(Config cfg, Set<Integer> targets);
+
+  /**
+   * Receive to specific target
+   * @param target the target
+   * @param it iterator with messages
+   */
+  boolean receive(int target, Iterator<Object> it);
 }

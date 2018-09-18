@@ -11,28 +11,28 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 
 /**
- * Batch receiver, with iterator for receiving
+ * Interface for receiving a single value. If the value is received successfully, it should
+ * return true. This interface will be called multiple times with the same message
+ * until it returns true.
  */
-public interface BatchReceiver {
+public interface SingularReceiver {
   /**
-   * Initialize the receiver
+   * Initialize a receiver
    * @param cfg configuration
-   * @param op the operation
-   * @param expectedIds expected ids
+   * @param targets the target ids
    */
-  void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
+  void init(Config cfg, Set<Integer> targets);
 
   /**
-   * Receive to specific target
-   * @param target the target
-   * @param it iterator with messages
+   * Receive an object for a target id.
+   * @param target target id
+   * @param object object
+   * @return true if the receive is accepted
    */
-  void receive(int target, Iterator<Object> it);
+  boolean receive(int target, Object object);
 }

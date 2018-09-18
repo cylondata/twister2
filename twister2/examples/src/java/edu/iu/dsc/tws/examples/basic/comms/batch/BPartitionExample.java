@@ -13,8 +13,6 @@ package edu.iu.dsc.tws.examples.basic.comms.batch;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,8 +20,7 @@ import java.util.logging.Logger;
 import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BPartition;
@@ -89,20 +86,21 @@ public class BPartitionExample extends BenchWorker {
     return true;
   }
 
-  public class PartitionReceiver implements BatchReceiver {
+  public class PartitionReceiver implements BulkReceiver {
     private int count = 0;
     private int expected;
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
       expected = jobParameters.getIterations();
     }
 
     @Override
-    public void receive(int target, Iterator<Object> it) {
+    public boolean receive(int target, Iterator<Object> it) {
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, Iterators.size(it), expected));
       partitionDone = true;
+      return true;
     }
   }
 

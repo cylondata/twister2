@@ -12,15 +12,13 @@
 package edu.iu.dsc.tws.examples.basic.comms.stream;
 
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.stream.SAllGather;
@@ -88,12 +86,10 @@ public class SAllGatherExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-//        workerId, reduceDone, sourcesDone, reduce.hasPending()));
     return reduceDone && sourcesDone && !reduce.hasPending();
   }
 
-  public class FinalReduceReceiver implements MessageReceiver {
+  public class FinalReduceReceiver implements BulkReceiver {
     private int count = 0;
     private int expected;
 
@@ -102,23 +98,18 @@ public class SAllGatherExample extends BenchWorker {
     }
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      expected = expected * expectedIds.keySet().size();
+    public void init(Config cfg, Set<Integer> targets) {
+      expected = expected * targets.size();
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean receive(int target, Iterator<Object> it) {
       count++;
       if (count == expected) {
         LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
         reduceDone = true;
       }
       return true;
-    }
-
-    @Override
-    public boolean progress() {
-      return false;
     }
   }
 }

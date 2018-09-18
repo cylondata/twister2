@@ -11,17 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.allgather.AllGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.allgather.AllGatherStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 
 public class DataFlowAllGather implements DataFlowOperation {
@@ -37,7 +43,7 @@ public class DataFlowAllGather implements DataFlowOperation {
   private Set<Integer> destinations;
 
   // the final receiver
-  private MessageReceiver finalReceiver;
+  private BulkReceiver finalReceiver;
 
   private TWSChannel channel;
 
@@ -49,10 +55,12 @@ public class DataFlowAllGather implements DataFlowOperation {
 
   private int broadCastEdge;
 
+  private boolean streaming;
+
   public DataFlowAllGather(TWSChannel chnl,
                            Set<Integer> sources, Set<Integer> destination, int middleTask,
-                           MessageReceiver finalRecv,
-                           int redEdge, int broadEdge) {
+                           BulkReceiver finalRecv,
+                           int redEdge, int broadEdge, boolean stream) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
@@ -60,6 +68,7 @@ public class DataFlowAllGather implements DataFlowOperation {
     this.reduceEdge = redEdge;
     this.broadCastEdge = broadEdge;
     this.middleTask = middleTask;
+    this.streaming = stream;
   }
 
 
@@ -73,11 +82,19 @@ public class DataFlowAllGather implements DataFlowOperation {
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     this.executor = instancePlan.getThisExecutor();
 
-    broadcast = new DataFlowBroadcast(channel, middleTask, destinations, finalReceiver);
-    broadcast.init(config, type, instancePlan, broadCastEdge);
+    broadcast = new DataFlowBroadcast(channel, middleTask,
+        destinations, new BCastReceiver(finalReceiver));
+    broadcast.init(config, MessageType.OBJECT, instancePlan, broadCastEdge);
 
-    GatherStreamingPartialReceiver partialReceiver = new GatherStreamingPartialReceiver();
-    AllGatherStreamingFinalReceiver finalRecvr = new AllGatherStreamingFinalReceiver(broadcast);
+    MessageReceiver partialReceiver;
+    MessageReceiver finalRecvr;
+    if (streaming) {
+      finalRecvr = new AllGatherStreamingFinalReceiver(broadcast);
+      partialReceiver = new GatherStreamingPartialReceiver();
+    } else {
+      finalRecvr = new AllGatherBatchFinalReceiver(broadcast);
+      partialReceiver = new GatherBatchPartialReceiver(0);
+    }
 
     gather = new DataFlowGather(channel, sources, middleTask,
         finalRecvr, partialReceiver, 0, 0, config, type, instancePlan, edge);
@@ -126,10 +143,44 @@ public class DataFlowAllGather implements DataFlowOperation {
 
   @Override
   public void finish(int source) {
+    gather.finish(source);
   }
 
   @Override
   public TaskPlan getTaskPlan() {
     return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static class BCastReceiver implements MessageReceiver {
+    private BulkReceiver bulkReceiver;
+
+    private boolean received = false;
+
+    BCastReceiver(BulkReceiver reduceRcvr) {
+      this.bulkReceiver = reduceRcvr;
+    }
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+      this.bulkReceiver.init(cfg, expectedIds.keySet());
+    }
+
+    @Override
+    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+      if (object instanceof List) {
+        boolean rcvd = bulkReceiver.receive(target, (Iterator<Object>) ((List) object).iterator());
+        if (rcvd) {
+          received = true;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    @Override
+    public boolean progress() {
+      return !received;
+    }
   }
 }

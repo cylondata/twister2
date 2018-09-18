@@ -16,6 +16,9 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 
+/**
+ * This is the primary interface for receiving messages in an operation.
+ */
 public interface MessageReceiver {
   /**
    * Initialize the message receiver with tasks from which messages are expected

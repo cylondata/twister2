@@ -17,9 +17,11 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.comms.batch.AllGatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.AllReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.BroadcastBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.GatherBatchOperation;
+import edu.iu.dsc.tws.executor.comms.batch.KeyedGatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.PartitionBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.ReduceBatchOperation;
@@ -73,10 +75,13 @@ public class ParallelOperationFactory {
               edge.getName());
           return bcastOp;
         } else if (OperationNames.GATHER.equals(edge.getOperation())) {
-          GatherBatchOperation gatherOp = new GatherBatchOperation(config, channel, taskPlan);
-          gatherOp.prepare(sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
-              edge.getName(), config, taskPlan);
-          return gatherOp;
+          return new GatherBatchOperation(config, channel, taskPlan,
+              sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
+              edge.getName());
+        } else if (OperationNames.ALLGATHER.equals(edge.getOperation())) {
+          return new AllGatherBatchOperation(config, channel, taskPlan,
+              sources, dests, edgeGenerator, edge.getDataType(),
+              edge.getName());
         } else if (OperationNames.REDUCE.equals(edge.getOperation())) {
           ReduceBatchOperation reduceBatchOperation = new ReduceBatchOperation(config, channel,
               taskPlan);
@@ -93,6 +98,12 @@ public class ParallelOperationFactory {
           return new KeyedReduceBatchOperation(config, channel, taskPlan, sources,
               dests, edgeGenerator, edge.getDataType(), edge.getKeyType(),
               edge.getName(), edge.getFunction());
+        } else if (OperationNames.KEYED_GATHER.equals(edge.getOperation())) {
+          return new KeyedGatherBatchOperation(config, channel, taskPlan, sources,
+              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName());
+        }  else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
+          return new KeyedGatherBatchOperation(config, channel, taskPlan, sources,
+              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName());
         }
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {

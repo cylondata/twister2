@@ -36,7 +36,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
       if (batchDone.get(t)) {
         if (!isEmptySent.get(t)) {
           if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(t,
-              new byte[0], MessageFlags.EMPTY, destination)) {
+              new byte[0], MessageFlags.END, destination)) {
             isEmptySent.put(t, true);
           } else {
             needsFurtherProgress = true;
@@ -108,7 +108,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
               }
             }
             if (last) {
-              flags = MessageFlags.FLAGS_LAST;
+              flags = MessageFlags.LAST;
             }
           }
 
@@ -138,7 +138,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
 
           if (dataFlowOperation.isDelegeteComplete() && allFinished && allZero) {
             if (dataFlowOperation.sendPartial(t, new byte[0],
-                MessageFlags.EMPTY, destination)) {
+                MessageFlags.END, destination)) {
               isEmptySent.put(t, true);
             } else {
               needsFurtherProgress = true;

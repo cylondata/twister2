@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowAllReduce;
@@ -83,7 +83,7 @@ public class AllReduceCommunication implements IWorker {
       // this method calls the execute method
       // I think this is wrong
       allReduce = new DataFlowAllReduce(network, sources, destinations, dest,
-          new IndentityFunction(), new FinalReduceReceive(), 0, 1, true);
+          new IndentityFunction(), new FinalSingularReceive(), 0, 1, true);
       allReduce.init(cfg, MessageType.OBJECT, taskPlan, 0);
 
       if (id == 0 || id == 1) {
@@ -163,12 +163,11 @@ public class AllReduceCommunication implements IWorker {
     }
   }
 
-  private class FinalReduceReceive implements ReduceReceiver {
+  private class FinalSingularReceive implements SingularReceiver {
     private int count = 0;
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-        LOG.info(String.format("%d Final Task %d receives from %s",
-            id, e.getKey(), e.getValue().toString()));
+    public void init(Config cfg, Set<Integer> expectedIds) {
+      for (Integer e : expectedIds) {
+        LOG.info(String.format("%d Final Task receives from %d", id, e));
       }
     }
 

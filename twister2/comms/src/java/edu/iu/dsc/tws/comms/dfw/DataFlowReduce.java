@@ -28,7 +28,6 @@ import com.google.common.collect.Table;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.CompletionListener;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -71,8 +70,6 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   private MessageType dataType;
   private MessageType keyType;
 
-  private CompletionListener completionListener;
-
   private boolean isKeyed = false;
 
   private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
@@ -112,13 +109,6 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   public DataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
                         MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
     this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
-  }
-
-  public DataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
-                        MessageReceiver finalRcvr, MessageReceiver partialRcvr,
-                        CompletionListener compListener) {
-    this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
-    this.completionListener = compListener;
   }
 
   private boolean isLast(int source, int path, int taskIdentifier) {
@@ -316,7 +306,6 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
       partialSendRoutingParameters(s, pathToUse);
     }
 
-    this.delegete.setCompletionListener(completionListener);
     delegete.init(cfg, t, t, keyType, keyType, taskPlan, edge,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
@@ -365,14 +354,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-    LOG.info("Finish on DfReduce :" + source);
-//    if (!isLastReceiver() && partialReceiver != null) {
-//      partialReceiver.onFinish(source);
-//    }
-//    if (isLastReceiver() && finalReceiver != null) {
-//      finalReceiver.onFinish(source);
-//    }
-    while (!send(source, new byte[0], MessageFlags.EMPTY)) {
+    while (!send(source, new byte[0], MessageFlags.END)) {
       // lets progress until finish
       progress();
     }

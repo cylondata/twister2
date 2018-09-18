@@ -54,7 +54,7 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() && hasPending();
+    return op.progress() || hasPending();
   }
 
   public boolean hasPending() {

@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.internal.task.batch;
+package edu.iu.dsc.tws.examples.internal.task.streaming;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,78 +19,98 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.streaming.BaseStreamCompute;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
-public class KeyedReduceBatchTask extends TaskWorker {
-  private static final Logger LOG = Logger.getLogger(KeyedReduceBatchTask.class.getName());
+public class MultiStageGraph extends TaskWorker {
+  private static final Logger LOG = Logger.getLogger(MultiStageGraph.class.getName());
 
   @Override
   public void execute() {
     GeneratorTask g = new GeneratorTask();
-    RecevingTask r = new RecevingTask();
+    ReduceTask rt = new ReduceTask();
+    PartitionTask r = new PartitionTask();
 
-    TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
-    graphBuilder.addSource("source", g, 4);
-    graphBuilder.addSink("sink", r, 4).keyedReduce("source",
-        "keyed-reduce-edge", new IFunction() {
-          @Override
-          public Object onMessage(Object object1, Object object2) {
-            return object1;
-          }
-        }, DataType.OBJECT, DataType.INTEGER);
-    graphBuilder.setMode(OperationMode.BATCH);
+    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+    builder.addSource("source", g, 4);
+    ComputeConnection pc = builder.addCompute("compute", r, 4);
+    pc.partition("source", "partition-edge", DataType.OBJECT);
+    ComputeConnection rc = builder.addSink("sink", rt, 1);
+    rc.reduce("compute", "compute-edge", new IFunction() {
+      @Override
+      public Object onMessage(Object object1, Object object2) {
+        return object1;
+      }
+    });
+    builder.setMode(OperationMode.STREAMING);
 
-    DataFlowTaskGraph graph = graphBuilder.build();
-    ExecutionPlan plan = taskExecutor.plan(graph);
-    // this is a blocking call
-    taskExecutor.execute(graph, plan);
+    DataFlowTaskGraph graph = builder.build();
+    TaskUtils.execute(config, allocatedResources, graph, workerController);
   }
 
-  private static class GeneratorTask extends BaseBatchSource {
+  private static class GeneratorTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
 
     private int count = 0;
 
     @Override
     public void execute() {
-      int[] val = {1};
-      if (count == 1000) {
-        if (context.writeEnd("keyed-reduce-edge", "" + count, val)) {
-          count++;
-        }
-      } else if (count < 1000) {
-        if (context.write("keyed-reduce-edge", "" + count, val)) {
-          count++;
+      boolean wrote = context.write("partition-edge", "Hello");
+      if (wrote) {
+        count++;
+        if (count % 100 == 0) {
+          LOG.info(String.format("%d %d Source sent count : %d", context.getWorkerId(),
+              context.taskId(), count));
         }
       }
     }
   }
 
-  private static class RecevingTask extends BaseBatchSink {
-    private static final long serialVersionUID = -254264903510284798L;
+  private static class ReduceTask extends BaseStreamSink {
+    private static final long serialVersionUID = -254264903510284791L;
     private int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.info("Message Keyed-Reduced : " + message.getContent()
-          + ", Count : " + count);
       count++;
+      LOG.info(String.format("%d %d Reduce received count: %d", context.getWorkerId(),
+          context.taskId(), count));
+      return true;
+    }
+  }
+
+  private static class PartitionTask extends BaseStreamCompute {
+    private static final long serialVersionUID = -254264903510284798L;
+
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (message.getContent() instanceof List) {
+        count += ((List) message.getContent()).size();
+        for (Object o : (List) message.getContent()) {
+          context.write("compute-edge", o);
+        }
+      }
+      LOG.info(String.format("%d %d Partition Received count: %d", context.getWorkerId(),
+          context.taskId(), count));
       return true;
     }
   }
@@ -105,7 +125,6 @@ public class KeyedReduceBatchTask extends TaskWorker {
     return new WorkerPlan(workers);
   }
 
-
   public static void main(String[] args) {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -117,14 +136,14 @@ public class KeyedReduceBatchTask extends TaskWorker {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
+
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("keyed-reduce-example");
-    jobBuilder.setWorkerClass(KeyedReduceBatchTask.class.getName());
+    jobBuilder.setName(MultiStageGraph.class.getName());
+    jobBuilder.setWorkerClass(MultiStageGraph.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
     Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
-
 }

@@ -153,7 +153,7 @@ public class PartitionCommunication implements IWorker {
           data[5] = 'd';
           data[6] = 'd';
           data[7] = 'd';
-          int flags = MessageFlags.FLAGS_LAST;
+          int flags = MessageFlags.LAST;
           while (!partition.send(task, data, flags, i)) {
             // lets wait a litte and try again
             try {
@@ -190,11 +190,11 @@ public class PartitionCommunication implements IWorker {
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       // add the object to the map
-      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
         finished.get(target).put(source, true);
       }
 
-      if (((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) && isAllFinished(target)) {
+      if (((flags & MessageFlags.LAST) == MessageFlags.LAST) && isAllFinished(target)) {
         System.out.println(Arrays.toString((byte[]) object));
         System.out.printf("All Done for Task %d \n", target);
       }

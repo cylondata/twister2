@@ -18,12 +18,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -46,7 +47,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * The receiver
    */
-  private BatchReceiver batchReceiver;
+  private BulkReceiver bulkReceiver;
 
   /**
    * Sort mergers for each target
@@ -57,8 +58,6 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
    * weather we need to sort the records according to key
    */
   private boolean sorted;
-
-  private boolean disk;
 
   /**
    * Comparator for sorting records
@@ -107,19 +106,23 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
    */
   private Set<Integer> targets = new HashSet<>();
 
-  public PartitionBatchFinalReceiver(BatchReceiver receiver, boolean srt,
-                                     boolean d, Comparator<Object> com) {
-    this.batchReceiver = receiver;
+  /**
+   * The directory in which we will be saving the shuffle objects
+   */
+  private String shuffleDirectory;
+
+  public PartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
+                                     String shuffleDir, Comparator<Object> com) {
+    this.bulkReceiver = receiver;
     this.sorted = srt;
-    this.disk = d;
     this.kryoSerializer = new KryoSerializer();
     this.comparator = com;
+    this.shuffleDirectory = shuffleDir;
   }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     int maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
     int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
-    String path = DataFlowContext.getShuffleDirectoryPath(cfg);
 
     thisWorker = op.getTaskPlan().getThisExecutor();
     finishedSources = new HashMap<>();
@@ -135,15 +138,15 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
       Shuffle sortedMerger;
       if (partition.getKeyType() == null) {
-        sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, path,
+        sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
             getOperationName(target), partition.getDataType());
       } else {
         if (sorted) {
-          sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory, path,
-              getOperationName(target), partition.getKeyType(),
+          sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory,
+              shuffleDirectory, getOperationName(target), partition.getKeyType(),
               partition.getDataType(), comparator, target);
         } else {
-          sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, path,
+          sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
               getOperationName(target), partition.getKeyType(), partition.getDataType());
         }
       }
@@ -151,7 +154,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       totalReceives.put(target, 0);
       finishedSources.put(target, new HashSet<>());
     }
-    this.batchReceiver.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
   }
 
   @Override
@@ -162,7 +165,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       throw new RuntimeException("Un-expected target id: " + target);
     }
 
-    if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+    if ((flags & MessageFlags.END) == MessageFlags.END) {
       Set<Integer> finished = finishedSources.get(target);
       if (finished.contains(source)) {
         LOG.log(Level.WARNING,
@@ -172,10 +175,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       }
       if (finished.size() == partition.getSources().size()) {
         finishedTargets.add(target);
-      } /*else {
-        LOG.log(Level.INFO, String.format("%d finished for source %d - %s", thisWorker,
-            source, finished));
-      }*/
+      }
       return true;
     }
 
@@ -224,7 +224,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     Shuffle sortedMerger = sortedMergers.get(target);
     sortedMerger.switchToReading();
     Iterator<Object> itr = sortedMerger.readIterator();
-    batchReceiver.receive(target, itr);
+    bulkReceiver.receive(target, itr);
     onFinish(target);
   }
 
@@ -234,6 +234,6 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   private String getOperationName(int target) {
     int edge = partition.getEdge();
-    return "partition-" + edge + "-" + target;
+    return "partition-" + edge + "-" + target + "-" + UUID.randomUUID().toString();
   }
 }

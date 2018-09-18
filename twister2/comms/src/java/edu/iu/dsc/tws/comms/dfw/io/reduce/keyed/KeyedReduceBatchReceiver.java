@@ -126,7 +126,7 @@ public abstract class KeyedReduceBatchReceiver implements MessageReceiver {
 
     Map<Integer, Boolean> finishedMessages = finished.get(target);
 
-    if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+    if ((flags & MessageFlags.END) == MessageFlags.END) {
       finishedMessages.put(source, true);
       return true;
     }
@@ -146,7 +146,7 @@ public abstract class KeyedReduceBatchReceiver implements MessageReceiver {
       totalCounts.get(target).put(source, tc + 1);
       //LOG.info("Flags : " + flags + ", Message Flag Last : " + MessageFlags.FLAGS_LAST);
       m.add(object);
-      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
         finishedMessages.put(source, true);
         //LOG.info("onMessage ReduceBatchReceiver Final Message Added");
       }

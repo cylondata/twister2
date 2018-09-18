@@ -32,7 +32,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
@@ -52,13 +52,13 @@ public class KeyedGatherBatchFinalReceiver implements MessageReceiver {
   private DataFlowOperation dataFlowOperation;
   private int executor;
   private int sendPendingMax = 128;
-  private BatchReceiver batchReceiver;
+  private BulkReceiver bulkReceiver;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
   private boolean isStoreBased;
   private Map<Integer, OperationMemoryManager> memoryManagers;
 
-  public KeyedGatherBatchFinalReceiver(BatchReceiver batchReceiver) {
-    this.batchReceiver = batchReceiver;
+  public KeyedGatherBatchFinalReceiver(BulkReceiver bulkReceiver) {
+    this.bulkReceiver = bulkReceiver;
   }
 
   @Override
@@ -86,7 +86,7 @@ public class KeyedGatherBatchFinalReceiver implements MessageReceiver {
     this.memoryManagers = new HashMap<>();
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
-    this.batchReceiver.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
   }
 
   @Override
@@ -95,7 +95,7 @@ public class KeyedGatherBatchFinalReceiver implements MessageReceiver {
     boolean canAdd = true;
     Queue<Object> m = messages.get(target).get(source);
     Map<Integer, Boolean> finishedMessages = finished.get(target);
-    if ((flags & MessageFlags.EMPTY) == MessageFlags.EMPTY) {
+    if ((flags & MessageFlags.END) == MessageFlags.END) {
       finishedMessages.put(source, true);
       return true;
     }
@@ -119,7 +119,7 @@ public class KeyedGatherBatchFinalReceiver implements MessageReceiver {
         m.add(object);
       }
 
-      if ((flags & MessageFlags.FLAGS_LAST) == MessageFlags.FLAGS_LAST) {
+      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
 //        LOG.info(String.format("%d Final LAST target %d source %d", executor, target, source));
         finishedMessages.put(source, true);
       }
@@ -217,9 +217,9 @@ public class KeyedGatherBatchFinalReceiver implements MessageReceiver {
 //        LOG.info(String.format("%d final all finished %d", executor, t));
         batchDone.put(t, true);
         if (!isStoreBased) {
-          batchReceiver.receive(t, finalMessages.get(t).iterator());
+          bulkReceiver.receive(t, finalMessages.get(t).iterator());
         } else {
-          batchReceiver.receive(t, memoryManagers.get(t).iterator());
+          bulkReceiver.receive(t, memoryManagers.get(t).iterator());
         }
       }
     }

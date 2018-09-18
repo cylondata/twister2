@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.ReduceReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
@@ -39,10 +39,6 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
 
   private SKeyedReduce op;
 
-  private MessageType dataType;
-
-  private MessageType keyType;
-
   public KeyedReduceStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                        Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                                        DataType dType, DataType kType,
@@ -57,12 +53,12 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
       throw new IllegalArgumentException("Targets should have more than 0 elements");
     }
 
-    dataType = Utils.dataTypeToMessageType(dType);
-    keyType = Utils.dataTypeToMessageType(kType);
+    MessageType dataType = Utils.dataTypeToMessageType(dType);
+    MessageType keyType = Utils.dataTypeToMessageType(kType);
 
     this.edgeGenerator = e;
-    op = new SKeyedReduce(channel, taskPlan, sources, dests, new ReduceFunctionImpl(fn),
-         new ReduceRecvrImpl(), dataType, keyType, new HashingSelector());
+    op = new SKeyedReduce(channel, taskPlan, sources, dests, keyType, dataType,
+        new ReduceFunctionImpl(fn), new SingularRecvrImpl(), new HashingSelector());
   }
 
   @Override
@@ -94,10 +90,9 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
     }
   }
 
-  private class ReduceRecvrImpl implements ReduceReceiver {
+  private class SingularRecvrImpl implements SingularReceiver {
     @Override
-    public void init(Config cfg, DataFlowOperation operation,
-                     Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override

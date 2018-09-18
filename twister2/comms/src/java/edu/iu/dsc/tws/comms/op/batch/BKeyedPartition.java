@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.comms.op.batch;
 import java.util.Comparator;
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.BatchReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -34,10 +34,11 @@ public class BKeyedPartition {
   public BKeyedPartition(Communicator comm, TaskPlan plan,
                          Set<Integer> sources, Set<Integer> destinations,
                          MessageType dataType, MessageType keyType,
-                         BatchReceiver rcvr, DestinationSelector destSelector) {
+                         BulkReceiver rcvr, DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
+    String shuffleDir = comm.getPersistentDirectory();
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
-        new PartitionBatchFinalReceiver(rcvr, false, true, null),
+        new PartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
         new PartitionPartialReceiver(),
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
@@ -46,11 +47,12 @@ public class BKeyedPartition {
 
   public BKeyedPartition(Communicator comm, TaskPlan plan,
                          Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
-                         MessageType keyType, BatchReceiver rcvr,
+                         MessageType keyType, BulkReceiver rcvr,
                          DestinationSelector destSelector, Comparator<Object> comparator) {
     this.destinationSelector = destSelector;
+    String shuffleDir = comm.getPersistentDirectory();
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
-        new PartitionBatchFinalReceiver(rcvr, true, true, comparator),
+        new PartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
         new PartitionPartialReceiver(),
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());

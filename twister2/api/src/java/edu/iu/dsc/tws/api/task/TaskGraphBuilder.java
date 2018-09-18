@@ -66,7 +66,7 @@ public final class TaskGraphBuilder {
   }
 
   private TaskGraphBuilder(Config cfg) {
-    this.defaultParallelism = TaskContext.getDefaultParallelism(cfg, 1);
+    this.defaultParallelism = TaskConfigurations.getDefaultParallelism(cfg, 1);
   }
 
   /**

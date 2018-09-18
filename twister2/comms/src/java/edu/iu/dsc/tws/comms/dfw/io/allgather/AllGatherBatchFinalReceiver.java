@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io.gather;
+package edu.iu.dsc.tws.comms.dfw.io.allgather;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,15 +20,17 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
+import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
-public class GatherBatchFinalReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(GatherBatchFinalReceiver.class.getName());
+public class AllGatherBatchFinalReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(AllGatherBatchFinalReceiver.class.getName());
+
+  private DataFlowBroadcast gatherReceiver;
 
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
@@ -36,14 +38,12 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
   private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
   private Map<Integer, List<Object>> finalMessages = new HashMap<>();
   private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
-  private DataFlowOperation dataFlowOperation;
   private int executor;
   private int sendPendingMax = 128;
-  private BulkReceiver bulkReceiver;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
 
-  public GatherBatchFinalReceiver(BulkReceiver bulkReceiver) {
-    this.bulkReceiver = bulkReceiver;
+  public AllGatherBatchFinalReceiver(DataFlowBroadcast bCast) {
+    this.gatherReceiver = bCast;
   }
 
   @Override
@@ -67,9 +67,8 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
       counts.put(e.getKey(), countsPerTask);
       batchDone.put(e.getKey(), false);
     }
-    this.dataFlowOperation = op;
+    DataFlowOperation dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
-    this.bulkReceiver.init(cfg, expectedIds.keySet());
   }
 
   @Override
@@ -157,10 +156,11 @@ public class GatherBatchFinalReceiver implements MessageReceiver {
 
 
       if (allFinished) {
-        batchDone.put(t, true);
-        bulkReceiver.receive(t, finalMessages.get(t).iterator());
+        if (gatherReceiver.send(t, finalMessages.get(t), 0)) {
+          batchDone.put(t, true);
+          onFinish(t);
+        }
         // we can call on finish at this point
-        onFinish(t);
       }
     }
     return needsFurtherProgress;

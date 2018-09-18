@@ -9,8 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.api.task;
 
-public interface CompletionListener {
-  void completed(int source);
+import edu.iu.dsc.tws.common.config.Config;
+
+public final class TaskConfigurations {
+  public static final String DEFAULT_PARALLELISM = "twister2.task.default.parallelism";
+
+  public static final String DEFAULT_EDGE = "default";
+
+  private TaskConfigurations() {
+  }
+
+  public static int getDefaultParallelism(Config cfg, int def) {
+    return cfg.getIntegerValue(DEFAULT_PARALLELISM, def);
+  }
 }
