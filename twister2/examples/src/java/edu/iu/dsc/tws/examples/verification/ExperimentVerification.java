@@ -50,8 +50,9 @@ public class ExperimentVerification implements IVerification {
               .toArray();
           String resString = Arrays
               .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
-          LOG.info("Expected Result : " + resString);
           String outString = Arrays.toString(output);
+          LOG.info("Expected Result : " + resString);
+          LOG.info("Generated Result : " + outString);
           isVerified = resString.equals(outString);
         }
       }
@@ -77,6 +78,8 @@ public class ExperimentVerification implements IVerification {
           String resString = Arrays
               .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
           String outString = Arrays.toString(output);
+          LOG.info("Expected Result : " + resString);
+          LOG.info("Generated Result : " + outString);
           isVerified = resString.equals(outString);
         }
       }
@@ -106,13 +109,38 @@ public class ExperimentVerification implements IVerification {
       }
     }
 
+    if (OperationNames.ALLGATHER.equals(this.operationNames)) {
+      if (experimentData.getInput() instanceof int[]
+          && experimentData.getOutput() instanceof int[]) {
+        int sourceCount = experimentData.getTaskStages().get(0);
+        int sinkCount = experimentData.getTaskStages().get(1);
+        if ((sourceCount < sinkCount) && (sinkCount != 1)) {
+          throw new VerificationException("Invalid task stages : " + sourceCount + "," + sinkCount);
+        } else {
+          LOG.info("Current Worker : " + experimentData.getWorkerId()
+              + "/" + experimentData.getNumOfWorkers());
+          int[] input = (int[]) experimentData.getInput();
+          int[] output = (int[]) experimentData.getOutput();
+          int[] res = input;
+          isVerified = Arrays.equals(input, output);
+          String resString = Arrays
+              .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+          String outputRes = Arrays
+              .toString(Arrays.copyOfRange(output, 0, Math.min(res.length, 10)));
+          LOG.info("Expected Result : " + resString);
+          LOG.info("Generated Result : " + outputRes);
+        }
+      }
+    }
+
+
     if (OperationNames.KEYED_REDUCE.equals(this.operationNames)) {
       KeyedContent keyedOutput = (KeyedContent) experimentData.getOutput();
       if (experimentData.getInput() instanceof int[]
           && keyedOutput.getValue() instanceof int[]) {
         int sourceCount = experimentData.getTaskStages().get(0);
         int sinkCount = experimentData.getTaskStages().get(1);
-        if (sourceCount < sinkCount && sinkCount == 1) {
+        if (sourceCount > sinkCount && sinkCount == 1) {
           throw new VerificationException("Invalid task stages : " + sourceCount + "," + sinkCount);
         } else {
           int[] input = (int[]) experimentData.getInput();
@@ -130,6 +158,30 @@ public class ExperimentVerification implements IVerification {
           LOG.info("Generated Results : " + resGen);
           String outString = Arrays.toString(output);
           isVerified = resString.equals(outString);
+        }
+      }
+    }
+
+    if (OperationNames.BROADCAST.equals(this.operationNames)) {
+      if (experimentData.getInput() instanceof int[]
+          && experimentData.getOutput() instanceof int[]) {
+        int sourceCount = experimentData.getTaskStages().get(0);
+        int sinkCount = experimentData.getTaskStages().get(1);
+        if ((sourceCount < sinkCount) && (sinkCount > 1)) {
+          throw new VerificationException("Invalid task stages : " + sourceCount + "," + sinkCount);
+        } else {
+          LOG.info("Current Worker : " + experimentData.getWorkerId()
+              + "/" + experimentData.getNumOfWorkers());
+          int[] input = (int[]) experimentData.getInput();
+          int[] output = (int[]) experimentData.getOutput();
+          int[] res = input;
+          isVerified = Arrays.equals(input, output);
+          String resString = Arrays
+              .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+          String outputRes = Arrays
+              .toString(Arrays.copyOfRange(output, 0, Math.min(res.length, 10)));
+          LOG.info("Expected Result : " + resString);
+          LOG.info("Generated Result : " + outputRes);
         }
       }
     }

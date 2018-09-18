@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.stream;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -18,13 +19,18 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.functions.ReduceIdentityFunction;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.op.functions.reduction.KeyedReduceOperationFunction;
 import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.comms.op.stream.SKeyedReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
+import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class SKeyedReduceExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(SKeyedReduceExample.class.getName());
@@ -50,7 +56,8 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
     }
 
     keyedReduce = new SKeyedReduce(communicator, taskPlan, sources, targets,
-        MessageType.OBJECT, MessageType.OBJECT, new ReduceIdentityFunction(),
+        MessageType.OBJECT, MessageType.OBJECT,
+        new KeyedReduceOperationFunction(Op.SUM, MessageType.INTEGER),
         new FinalSingularReceiver(jobParameters.getIterations()), new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -109,7 +116,37 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
       count++;
       LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
       reduceDone = true;
+
+      KeyedContent keyedContent = (KeyedContent) object;
+      int[] data = (int[]) keyedContent.getValue();
+      LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
+          Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
+      LOG.log(Level.INFO, String.format("%d Received final input", workerId));
+
+      reduceDone = true;
+      experimentData.setOutput(object);
+      try {
+        verify();
+      } catch (VerificationException e) {
+        e.printStackTrace();
+      }
       return true;
+    }
+  }
+
+  public void verify() throws VerificationException {
+    boolean doVerify = jobParameters.isDoVerify();
+    boolean isVerified = false;
+    if (doVerify) {
+      LOG.info("Verifying results ...");
+      ExperimentVerification experimentVerification
+          = new ExperimentVerification(experimentData, OperationNames.KEYED_REDUCE);
+      isVerified = experimentVerification.isVerified();
+      if (isVerified) {
+        LOG.info("Results generated from the experiment are verified.");
+      } else {
+        throw new VerificationException("Results do not match");
+      }
     }
   }
 }

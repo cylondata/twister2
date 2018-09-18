@@ -26,6 +26,9 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.stream.SBroadCast;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class SBroadcastExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SBroadcastExample.class.getName());
@@ -91,6 +94,7 @@ public class SBroadcastExample extends BenchWorker {
   public class BCastReceiver implements MessageReceiver {
     private int count = 0;
     private int expected = 0;
+
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       expected = expectedIds.keySet().size() * jobParameters.getIterations();
@@ -106,12 +110,34 @@ public class SBroadcastExample extends BenchWorker {
       if (count == expected) {
         bCastDone = true;
       }
+      experimentData.setOutput(object);
+      try {
+        verify();
+      } catch (VerificationException e) {
+        e.printStackTrace();
+      }
       return true;
     }
 
     @Override
     public boolean progress() {
       return false;
+    }
+  }
+
+  public void verify() throws VerificationException {
+    boolean doVerify = jobParameters.isDoVerify();
+    boolean isVerified = false;
+    if (doVerify) {
+      LOG.info("Verifying results ...");
+      ExperimentVerification experimentVerification
+          = new ExperimentVerification(experimentData, OperationNames.BROADCAST);
+      isVerified = experimentVerification.isVerified();
+      if (isVerified) {
+        LOG.info("Results generated from the experiment are verified.");
+      } else {
+        throw new VerificationException("Results do not match");
+      }
     }
   }
 }
