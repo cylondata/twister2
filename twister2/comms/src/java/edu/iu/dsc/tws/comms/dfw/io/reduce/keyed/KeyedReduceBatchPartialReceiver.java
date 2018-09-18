@@ -67,15 +67,17 @@ public class KeyedReduceBatchPartialReceiver extends KeyedReduceBatchReceiver {
         if (!found && moreThanOne) {
           needsFurtherProgress = true;
 
-          //If we have got all the last messages then even if we don't get from all expected id's
-          //we can flush the remaining data
           if (allFinished && dataFlowOperation.isDelegeteComplete()) {
             currentVal = reduceMessagesAll(target, messagePerTarget);
           }
         }
 
         if (found) {
-          currentVal = reduceMessagesSingle(target, messagePerTarget);
+          if (allFinished && dataFlowOperation.isDelegeteComplete()) {
+            currentVal = reduceMessagesAll(target, messagePerTarget);
+          } else {
+            currentVal = reduceMessagesSingle(target, messagePerTarget);
+          }
         }
 
         if ((!bufferTillEnd && bufferCounts.get(target) >= bufferSize) || allFinished) {
