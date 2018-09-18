@@ -105,66 +105,6 @@ public class TaskCheckpointExample implements IWorker {
     executor.execute();
   }
 
-  private static class GeneratorCheckpointTask extends SourceTask {
-    private static final long serialVersionUID = -254264903510284848L;
-    private TaskContext ctx;
-    private Config config;
-
-    private long id = 1;
-
-    @Override
-    public void execute() {
-
-      CheckpointBarrier cb = new CheckpointBarrier(id, 2141535, null);
-      ctx.write("partition-edge", cb);
-      id++;
-      try {
-        Thread.sleep(1000);
-      } catch (Exception e) {
-        System.out.print("Sleep failed");
-      }
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-    }
-  }
-
-  private static final class RecevingCheckpointTask extends SinkTask {
-    private static final long serialVersionUID = -254264903520284798L;
-
-//    private TWSChannel channel;
-
-    private int taskId;
-
-    private Map<String, Object> newCfg = new HashMap<>();
-
-    private RecevingCheckpointTask() {
-    }
-
-    private RecevingCheckpointTask(TWSChannel channel) {
-      super();
-//      this.channel = channel;
-    }
-
-    @Override
-    public boolean execute(IMessage message) {
-
-
-      System.out.println(message.getContent());
-      CheckpointBarrier cb = (CheckpointBarrier) message.getContent();
-      System.out.println(cb.getId() + " from taskId : " + taskId);
-//      channel.direct(newCfg, MessageType.OBJECT, 0, )
-      return true;
-    }
-
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      this.taskId = context.taskId();
-    }
-  }
-
 
   private static class GeneratorTask extends SourceTask {
     private static final long serialVersionUID = -254264903510284748L;
