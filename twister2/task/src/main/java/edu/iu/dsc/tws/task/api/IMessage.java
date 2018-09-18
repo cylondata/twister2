@@ -26,4 +26,10 @@ public interface IMessage {
    * @return the edge identifier
    */
   String edge();
+
+  /**
+   * Returns the flag of the message
+   * @return flag of the message
+   */
+  int getFlag();
 }

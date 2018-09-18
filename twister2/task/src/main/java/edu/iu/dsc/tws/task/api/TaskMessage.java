@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
+
 /**
  * Wrapper interface for all the messages types.
  */
@@ -35,6 +36,7 @@ public class TaskMessage implements IMessage {
    */
   private int sourceTask;
 
+  private int flag = 0;
   /**
    * Create a task message with data
    * @param data data
@@ -56,6 +58,19 @@ public class TaskMessage implements IMessage {
   }
 
   /**
+   * Create a task message with data
+   * @param content data
+   * @param edge edge
+   * @param sourceTask sourcetask
+   */
+  public TaskMessage(Object content, String edge, int sourceTask, int flag) {
+    this.content = content;
+    this.edge = edge;
+    this.sourceTask = sourceTask;
+    this.flag = flag;
+  }
+
+  /**
    * Task message with key and data
    * @param key key
    * @param content data
@@ -71,6 +86,10 @@ public class TaskMessage implements IMessage {
 
   public Object getContent() {
     return content;
+  }
+
+  public int getFlag() {
+    return flag;
   }
 
   public void setContent(Object content) {

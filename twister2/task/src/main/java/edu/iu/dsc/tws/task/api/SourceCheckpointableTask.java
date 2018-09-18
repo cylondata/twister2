@@ -67,9 +67,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
   }
 
   public void checkForBarrier() {
-
     sendBarrierSyncMessage();
-
   }
 
   private boolean tryUntilConnected(RRClient client, Progress looper, long timeLimit) {
@@ -191,6 +189,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
    * This will have the method to emit barrier in to the outgoing channel of the source task
    */
   private void emitBarrier() {
-
+    ctx.writeBarrier("keyed-edge", new Object());
   }
 }

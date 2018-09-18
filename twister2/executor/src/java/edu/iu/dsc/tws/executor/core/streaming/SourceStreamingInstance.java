@@ -89,6 +89,8 @@ public class SourceStreamingInstance implements INodeInstance {
    */
   private int lowWaterMark;
 
+  private Set<String> outEdges;
+
   /**
    * The high water mark for messages
    */
@@ -106,6 +108,7 @@ public class SourceStreamingInstance implements INodeInstance {
     this.taskName = tName;
     this.nodeConfigs = cfgs;
     this.workerId = wId;
+    this.outEdges = outEdges;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
   }
@@ -129,14 +132,21 @@ public class SourceStreamingInstance implements INodeInstance {
     while (!outStreamingQueue.isEmpty()) {
       IMessage message = outStreamingQueue.peek();
       if (message != null) {
-        String edge = message.edge();
-        IParallelOperation op = outStreamingParOps.get(edge);
-        // if we successfully send remove message
-        if (op.send(streamingTaskId, message, 0)) {
-          outStreamingQueue.poll();
+        if ((message.getFlag() & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
+          String edge = message.edge();
+          IParallelOperation op = outStreamingParOps.get(edge);
+          // if we successfully send remove message
+          if (op.send(streamingTaskId, message, message.getFlag())) {
+            outStreamingQueue.poll();
+          } else {
+            // we need to break
+            break;
+          }
         } else {
-          // we need to break
-          break;
+          for (String edge: outEdges) {
+            IParallelOperation op = outStreamingParOps.get(edge);
+            op.send(streamingTaskId, message, message.getFlag());
+          }
         }
       }
     }

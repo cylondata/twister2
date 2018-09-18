@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.task.api;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.iu.dsc.tws.comms.api.MessageFlags;
+
 /**
  * Task context
  */
@@ -157,6 +159,15 @@ public class TaskContext {
       throw new RuntimeException("Cannot send on a stream that ended");
     }
     return collection.collect(edge, new TaskMessage(message, edge, taskId));
+  }
+
+  /**
+   * Write a barrier message to the destination
+   * @param edge edge
+   * @param message message
+   */
+  public boolean writeBarrier(String edge, Object message) {
+    return collection.collect(edge, new TaskMessage(message, edge, taskId, MessageFlags.BARRIER));
   }
 
   /**
