@@ -56,6 +56,9 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
     taskClient.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
         new TaskClientMessageHandler());
 
+    taskClient.registerResponseHandler(Checkpoint.BarrierSend.newBuilder(),
+        new BarrierClientMessageHandler());
+
     taskClient.registerResponseHandler(Checkpoint.BarrierSync.newBuilder(),
         new BarrierClientMessageHandler());
 
