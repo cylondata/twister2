@@ -126,6 +126,7 @@ public abstract class BenchWorker implements IWorker {
       Object data = generateData();
       experimentData.setInput(data);
       experimentData.setTaskStages(jobParameters.getTaskStages());
+      experimentData.setIterations(jobParameters.getIterations());
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
         int flag = 0;

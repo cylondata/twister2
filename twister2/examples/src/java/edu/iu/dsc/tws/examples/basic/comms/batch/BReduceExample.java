@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class BReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BReduceExample.class.getName());
@@ -104,6 +105,7 @@ public class BReduceExample extends BenchWorker {
     @Override
     public boolean receive(int target, Object object) {
       experimentData.setOutput(object);
+      experimentData.setOperationMode(OperationMode.BATCH);
       reduceDone = true;
       try {
         verify();

@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class SKeyedReduceExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(SKeyedReduceExample.class.getName());
@@ -125,6 +126,7 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
 
       reduceDone = true;
       experimentData.setOutput(object);
+      experimentData.setOperationMode(OperationMode.STREAMING);
       try {
         verify();
       } catch (VerificationException e) {

@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 /**
  * Created by pulasthi on 8/24/18.
@@ -131,6 +132,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
       reduceDone = true;
       experimentData.setOutput(object);
+      experimentData.setOperationMode(OperationMode.BATCH);
       try {
         verify();
       } catch (VerificationException e) {

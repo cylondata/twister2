@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class BAllReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BAllReduceExample.class.getName());
@@ -107,6 +108,7 @@ public class BAllReduceExample extends BenchWorker {
       experimentData.setOutput(object);
       experimentData.setWorkerId(workerId);
       experimentData.setNumOfWorkers(jobParameters.getContainers());
+      experimentData.setOperationMode(OperationMode.BATCH);
 
       try {
         if (workerId == 0) {

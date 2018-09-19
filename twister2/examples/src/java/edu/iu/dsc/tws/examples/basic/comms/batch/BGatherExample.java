@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class BGatherExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BGatherExample.class.getName());
@@ -112,6 +113,7 @@ public class BGatherExample extends BenchWorker {
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
       Object object = it.next();
       experimentData.setOutput(object);
+      experimentData.setOperationMode(OperationMode.BATCH);
       try {
         verify();
       } catch (VerificationException e) {

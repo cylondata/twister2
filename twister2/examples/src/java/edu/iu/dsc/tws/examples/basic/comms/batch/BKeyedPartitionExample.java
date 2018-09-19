@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 /**
  * This class is a example use of the keyed partition function
@@ -105,6 +106,7 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
       LOG.log(Level.INFO, String.format("%d Received message %d count %d",
           workerId, target, Iterators.size(it)));
       partitionDone = true;
+      experimentData.setOperationMode(OperationMode.BATCH);
       return true;
     }
   }

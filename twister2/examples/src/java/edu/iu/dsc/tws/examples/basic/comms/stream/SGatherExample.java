@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class SGatherExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SGatherExample.class.getName());
@@ -115,6 +116,7 @@ public class SGatherExample extends BenchWorker {
         count += ((List) object).size();
         ArrayList<?> a = (ArrayList<?>) object;
         experimentData.setOutput(a.get(0));
+        experimentData.setOperationMode(OperationMode.STREAMING);
       }
 
       if (count == expected) {

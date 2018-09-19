@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.op.batch.BPartition;
 import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class BPartitionExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BPartitionExample.class.getName());
@@ -97,6 +98,7 @@ public class BPartitionExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
+      experimentData.setOperationMode(OperationMode.BATCH);
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, Iterators.size(it), expected));
       partitionDone = true;

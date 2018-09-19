@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.stream;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +29,7 @@ import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class SPartitionExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SPartitionExample.class.getName());
@@ -99,6 +102,9 @@ public class SPartitionExample extends BenchWorker {
         for (Object o : (List) object) {
           count++;
         }
+        ArrayList<?> a = (ArrayList<?>) object;
+        int[] b = (int[]) a.get(0);
+        LOG.info(target + " : Response : " + Arrays.toString(b));
       }
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, count, expected));
@@ -107,6 +113,7 @@ public class SPartitionExample extends BenchWorker {
       if (count >= expected) {
         partitionDone = true;
       }
+      experimentData.setOperationMode(OperationMode.STREAMING);
       return true;
     }
 

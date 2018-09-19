@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class SReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
@@ -52,7 +53,6 @@ public class SReduceExample extends BenchWorker {
     reduce = new SReduce(communicator, taskPlan, sources, target, MessageType.INTEGER,
         new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
         new FinalSingularReceiver(jobParameters.getIterations()));
-
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -116,6 +116,7 @@ public class SReduceExample extends BenchWorker {
         reduceDone = true;
       }
       experimentData.setOutput(object);
+      experimentData.setOperationMode(OperationMode.STREAMING);
       try {
         verify();
       } catch (VerificationException e) {

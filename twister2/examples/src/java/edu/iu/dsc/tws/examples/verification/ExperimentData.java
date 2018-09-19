@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.examples.verification;
 
 import java.util.List;
 
+import edu.iu.dsc.tws.task.graph.OperationMode;
+
 public class ExperimentData {
 
   private Object input;
@@ -21,6 +23,8 @@ public class ExperimentData {
   private int workerId;
   private int numOfWorkers;
   private int taskId;
+  private int iterations;
+  private OperationMode operationMode;
 
   public ExperimentData() {
 
@@ -56,6 +60,22 @@ public class ExperimentData {
 
   public void setWorkerId(int workerId) {
     this.workerId = workerId;
+  }
+
+  public OperationMode getOperationMode() {
+    return operationMode;
+  }
+
+  public void setOperationMode(OperationMode operationMode) {
+    this.operationMode = operationMode;
+  }
+
+  public int getIterations() {
+    return iterations;
+  }
+
+  public void setIterations(int iterations) {
+    this.iterations = iterations;
   }
 
   public void setTaskId(int taskId) {

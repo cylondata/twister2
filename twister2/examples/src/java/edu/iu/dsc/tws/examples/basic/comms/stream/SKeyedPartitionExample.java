@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.op.stream.SKeyedPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 /**
  * Streaming keyed partition example
@@ -109,6 +110,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
       if (count >= expected) {
         partitionDone = true;
       }
+      experimentData.setOperationMode(OperationMode.STREAMING);
       return true;
     }
 
