@@ -48,14 +48,19 @@ public class Heap<K, V> {
   }
 
   public HeapNode<K, V> extractMin() {
-    // extract the root
-    HeapNode<K, V> min = heapArr.get(0);
-    // replace the root with the last element in the heap
-    if (heapArr.size() != 1) {
-      heapArr.set(0, heapArr.remove(heapArr.size() - 1));
+    if (heapArr.isEmpty()) {
+      return null;
     }
-    // sink down the root to its correct position
-    sinkDown(0);
+
+    // extract the root
+    HeapNode<K, V> min = heapArr.remove(0);
+    // replace the root with the last element in the heap
+    if (heapArr.size() > 1) {
+      heapArr.add(0, heapArr.remove(heapArr.size() - 1));
+      // sink down the root to its correct position
+      sinkDown(0);
+    }
+
     return min;
   }
 

@@ -66,5 +66,6 @@ public class HeapTest {
     Assert.assertEquals(12, (long) heap.extractMin().getKey());
     Assert.assertEquals(15, (long) heap.extractMin().getKey());
     Assert.assertEquals(17, (long) heap.extractMin().getKey());
+    Assert.assertNull(heap.extractMin());
   }
 }
