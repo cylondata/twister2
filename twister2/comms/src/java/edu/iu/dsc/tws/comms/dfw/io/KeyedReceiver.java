@@ -130,6 +130,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
    *
    * @param target target for which the messages are to be added
    * @param object the message/messages to be added
+   * @return true if the message was added or false otherwise
    */
   @SuppressWarnings("rawtypes")
   private boolean offerMessage(int target, Object object) {
@@ -191,5 +192,19 @@ public abstract class KeyedReceiver implements MessageReceiver {
       }
     }
     return true;
+  }
+
+  /**
+   * Once called this method will update the finishedSources data structure so that the given
+   * source is marked as finished for each target that is present.
+   *
+   * @param source the task id of the source that has finished
+   */
+  @Override
+  public void onFinish(int source) {
+    for (Integer target : finishedSources.keySet()) {
+      Map<Integer, Boolean> finishedMessages = finishedSources.get(target);
+      finishedMessages.put(source, true);
+    }
   }
 }
