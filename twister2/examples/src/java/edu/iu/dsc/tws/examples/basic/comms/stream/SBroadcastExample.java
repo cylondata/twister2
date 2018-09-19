@@ -110,6 +110,7 @@ public class SBroadcastExample extends BenchWorker {
       if (count == expected) {
         bCastDone = true;
       }
+      experimentData.setTaskId(target);
       experimentData.setOutput(object);
       try {
         verify();

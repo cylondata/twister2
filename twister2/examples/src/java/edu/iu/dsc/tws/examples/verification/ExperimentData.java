@@ -20,6 +20,7 @@ public class ExperimentData {
   private List<Integer> taskStages;
   private int workerId;
   private int numOfWorkers;
+  private int taskId;
 
   public ExperimentData() {
 
@@ -55,6 +56,14 @@ public class ExperimentData {
 
   public void setWorkerId(int workerId) {
     this.workerId = workerId;
+  }
+
+  public void setTaskId(int taskId) {
+    this.taskId = taskId;
+  }
+
+  public int getTaskId() {
+    return taskId;
   }
 
   public int getNumOfWorkers() {

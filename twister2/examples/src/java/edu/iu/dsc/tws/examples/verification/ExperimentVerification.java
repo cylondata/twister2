@@ -167,11 +167,12 @@ public class ExperimentVerification implements IVerification {
           && experimentData.getOutput() instanceof int[]) {
         int sourceCount = experimentData.getTaskStages().get(0);
         int sinkCount = experimentData.getTaskStages().get(1);
-        if ((sourceCount < sinkCount) && (sinkCount > 1)) {
+        if ((sourceCount > sinkCount) && (sinkCount < 2)) {
           throw new VerificationException("Invalid task stages : " + sourceCount + "," + sinkCount);
         } else {
           LOG.info("Current Worker : " + experimentData.getWorkerId()
               + "/" + experimentData.getNumOfWorkers());
+          LOG.info("Task Id : " + experimentData.getTaskId());
           int[] input = (int[]) experimentData.getInput();
           int[] output = (int[]) experimentData.getOutput();
           int[] res = input;
