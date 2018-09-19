@@ -16,6 +16,7 @@ import java.util.List;
 /**
  * Represent an open file part.
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class OpenFilePart {
   // the key values read
   private List<KeyValue> keyValues;
