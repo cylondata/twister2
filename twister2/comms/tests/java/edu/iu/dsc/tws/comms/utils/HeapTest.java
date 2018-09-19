@@ -67,10 +67,4 @@ public class HeapTest {
     Assert.assertEquals(15, (long) heap.extractMin().getKey());
     Assert.assertEquals(17, (long) heap.extractMin().getKey());
   }
-
-  public static void main(String[] args) {
-    HeapTest ht = new HeapTest();
-    ht.extractMin();
-
-  }
 }
