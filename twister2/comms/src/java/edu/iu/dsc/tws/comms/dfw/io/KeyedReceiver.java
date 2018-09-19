@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -63,7 +64,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
    * either be a END message or a LAST message in the message flags.
    * Structure - <target, <source, true/false>>
    */
-  protected Map<Integer, Map<Integer, Boolean>> finishedSources = new HashMap<>();
+  protected Map<Integer, Map<Integer, Boolean>> finishedSources = new ConcurrentHashMap<>();
 
 
   /**
@@ -98,11 +99,11 @@ public abstract class KeyedReceiver implements MessageReceiver {
     boolean canAdd = true;
 
     if (messages.get(target) == null) {
-      throw new RuntimeException(String.format("Executor %d, Partial receive error. Receiver did" +
-          "not expect messages for this target %d", executor, target));
+      throw new RuntimeException(String.format("Executor %d, Partial receive error. Receiver did"
+          + "not expect messages for this target %d", executor, target));
     } else if (!(object instanceof KeyedContent) && !(object instanceof List)) {
-      throw new RuntimeException(String.format("Executor %d, Partial receive error. Received" +
-          " object which is not of type KeyedContent or List for target %d", executor, target));
+      throw new RuntimeException(String.format("Executor %d, Partial receive error. Received"
+          + " object which is not of type KeyedContent or List for target %d", executor, target));
     }
 
 
@@ -115,8 +116,13 @@ public abstract class KeyedReceiver implements MessageReceiver {
 
     canAdd = offerMessage(target, object);
 
+    if (canAdd) {
+      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
+        finishedMessages.put(source, true);
+      }
+    }
 
-    return false;
+    return canAdd;
   }
 
   /**
@@ -125,11 +131,13 @@ public abstract class KeyedReceiver implements MessageReceiver {
    * @param target target for which the messages are to be added
    * @param object the message/messages to be added
    */
+  @SuppressWarnings("rawtypes")
   private boolean offerMessage(int target, Object object) {
     Map<Object, Queue<Object>> messagesPerTarget = messages.get(target);
     if (messagesPerTarget.size() > keyLimit) {
       needsFlush = true;
-      LOG.fine(String.format("Executor %d Partial cannot add any further keys needs flush "));
+      LOG.fine(String.format("Executor %d Partial cannot add any further keys needs flush ",
+          executor));
       return false;
     }
 
@@ -156,9 +164,9 @@ public abstract class KeyedReceiver implements MessageReceiver {
       }
 
       for (Object key : tempList.keySet()) {
-        if (messagesPerTarget.containsKey(key)){
+        if (messagesPerTarget.containsKey(key)) {
           messagesPerTarget.get(key).add(tempList.get(key));
-        }else{
+        } else {
           ArrayBlockingQueue<Object> messagesPerKey = new ArrayBlockingQueue<>(limitPerKey);
           messagesPerKey.add(tempList.get(key));
           messagesPerTarget.put(key, messagesPerKey);
@@ -172,8 +180,8 @@ public abstract class KeyedReceiver implements MessageReceiver {
           return messagesPerTarget.get(keyedContent.getKey()).add(keyedContent.getValue());
         } else {
           needsFlush = true;
-          LOG.fine(String.format("Executor %d Partial cannot add any further values for key " +
-              "needs flush "));
+          LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
+              + "needs flush ", executor));
           return false;
         }
       } else {
@@ -182,6 +190,6 @@ public abstract class KeyedReceiver implements MessageReceiver {
         messagesPerTarget.put(keyedContent.getKey(), messagesPerKey);
       }
     }
-  return true;
+    return true;
   }
 }
