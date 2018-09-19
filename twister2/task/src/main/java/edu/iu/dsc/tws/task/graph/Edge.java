@@ -107,22 +107,37 @@ public class Edge {
     this.dataType = dataType;
   }
 
+  /**
+   * To get the name of the task edge
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * To get the IFunction object.
+   */
   public IFunction getFunction() {
     return function;
   }
 
+  /**
+   * To get the operation name
+   */
   public String getOperation() {
     return operation;
   }
 
+  /**
+   * To get the datatype
+   */
   public DataType getDataType() {
     return dataType;
   }
 
+  /**
+   * To get the keytype
+   */
   public DataType getKeyType() {
     return keyType;
   }
