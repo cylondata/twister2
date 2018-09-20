@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -29,6 +30,9 @@ import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceStreamingInstance implements INodeInstance {
+
+  private static final Logger LOG = Logger.getLogger(SourceStreamingInstance.class.getName());
+
   /**
    * The actual streamingTask executing
    */
@@ -144,6 +148,7 @@ public class SourceStreamingInstance implements INodeInstance {
           }
         } else {
           for (String edge: outEdges) {
+            LOG.info("Sending barrier in all outgoing edges");
             IParallelOperation op = outStreamingParOps.get(edge);
             op.send(streamingTaskId, message, message.getFlag());
           }
