@@ -60,6 +60,11 @@ public abstract class KeyedReceiver implements MessageReceiver {
   protected DataFlowOperation dataFlowOperation;
 
   /**
+   * The destination identifier that defines the next destination for this receiver
+   */
+  protected int destination;
+
+  /**
    * Map that keeps track of which sources have sent an finished signal. The finish signal may
    * either be a END message or a LAST message in the message flags.
    * Structure - <target, <source, true/false>>
@@ -133,7 +138,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
    * @return true if the message was added or false otherwise
    */
   @SuppressWarnings("rawtypes")
-  private boolean offerMessage(int target, Object object) {
+  protected boolean offerMessage(int target, Object object) {
     Map<Object, Queue<Object>> messagesPerTarget = messages.get(target);
     if (messagesPerTarget.size() > keyLimit) {
       needsFlush = true;
