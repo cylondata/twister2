@@ -79,6 +79,16 @@ public abstract class KeyedReceiver implements MessageReceiver {
    */
   protected Map<Integer, Map<Object, Queue<Object>>> messages = new HashMap<>();
 
+  /**
+   * Tracks if the partial receiver has completed processing for a given target
+   */
+  protected Map<Integer, Boolean> batchDone = new HashMap<>();
+
+  /**
+   * Tracks if the empty message has been sent for each target
+   */
+  protected Map<Integer, Boolean> isEmptySent = new HashMap<>();
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     this.dataFlowOperation = op;
@@ -95,6 +105,9 @@ public abstract class KeyedReceiver implements MessageReceiver {
 
       finishedSources.put(expectedIdPerTarget.getKey(), finishedPerTarget);
       messages.put(expectedIdPerTarget.getKey(), new HashMap<>());
+      batchDone.put(expectedIdPerTarget.getKey(), false);
+      isEmptySent.put(expectedIdPerTarget.getKey(), false);
+
     }
   }
 
@@ -132,6 +145,8 @@ public abstract class KeyedReceiver implements MessageReceiver {
 
   /**
    * saves the given message (or messages if the object is a list) into the messages data structure
+   * if possible and rejects the message if the whole message cannot be added to the messages
+   * data structure.
    *
    * @param target target for which the messages are to be added
    * @param object the message/messages to be added
