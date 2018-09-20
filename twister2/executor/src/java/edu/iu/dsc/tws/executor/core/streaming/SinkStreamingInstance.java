@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -97,10 +98,15 @@ public class SinkStreamingInstance  implements INodeInstance {
 
   public boolean execute() {
     while (!streamingInQueue.isEmpty()) {
-      IMessage m = streamingInQueue.poll();
-      if (m != null) {
-        streamingTask.execute(m);
+      IMessage message = streamingInQueue.poll();
+      if (message != null) {
+        if ((message.getFlag() & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
+          streamingTask.execute(message);
+        } else {
+          //Send acknowledge message to jobmaster
+        }
       }
+
     }
 
     for (Map.Entry<String, IParallelOperation> e : streamingInParOps.entrySet()) {
