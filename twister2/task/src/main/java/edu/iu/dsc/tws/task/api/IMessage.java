@@ -32,4 +32,6 @@ public interface IMessage {
    * @return flag of the message
    */
   int getFlag();
+
+  int sourceTask();
 }
