@@ -1,4 +1,5 @@
-#Taskgraph in Twister2
+Taskgraph in Twister2
+=====================
 
 Twister2 provides a generic task graph. A task graph 'TG' generally consists of set of Task 
 Vertices'TV' and Task Edges (TE) which is mathematically denoted as Task Graph 

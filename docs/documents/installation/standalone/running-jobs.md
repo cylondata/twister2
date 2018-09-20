@@ -1,3 +1,5 @@
+Standalone using Nomad
+======================
 
 Starting Nomad
 --------------

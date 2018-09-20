@@ -9,31 +9,15 @@ Welcome to Twister2's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
    
-   documents/architecture/communication
-   documents/architecture/Main-Components
-   documents/common/Logging
-   documents/common/WorkerDiscovery
-   documents/job-master/JobMaster
-   documents/kubernetes/install/Twister2-Kubernetes-install
-   documents/kubernetes/K8sBasedWorkerDiscovery  
-   documents/kubernetes/K8sPersistentStorage  
-   documents/kubernetes/K8sServices
-   documents/kubernetes/K8sWorkerBindingMapping  
-   documents/kubernetes/OpenMPI-Support
-   documents/kubernetes/Twister2-on-Kubernetes
-   documents/standalone/standalone
-   documents/zookeeper/ZKBasedJobMasterDiscovery
-   documents/zookeeper/ZKBasedWorkerDiscovery
-   examples
+   documents/quickstart/quickstart
+   documents/architecture/main-components
+   documents/installation/installation 
+   documents/concepts/concepts 
+   documents/examples/examples.md
+   documents/developers/developer
 
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
 

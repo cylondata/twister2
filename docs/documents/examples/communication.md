@@ -1,4 +1,5 @@
-## Communication Examples
+Communication Examples
+======================
 
 Communication examples can be found in the source
 

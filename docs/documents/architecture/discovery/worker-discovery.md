@@ -1,5 +1,5 @@
-# Worker Discovery and Synchronization in Twister2 Jobs
-Ahmet Uyar
+Worker Discovery and Synchronization in Twister2 Jobs
+=======================================================
 
 We developed an interface: IWorkerController and provided its implementations by 
 using various cluster services. This interface provides the following services:

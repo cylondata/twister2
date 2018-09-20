@@ -1,4 +1,20 @@
-# Main Components of Twister2 Architecture
+Twister2 Architecture
+======================
+
+.. toctree::
+   :maxdepth: 5
+   
+   common/logging
+   discovery/worker-discovery
+   job-master/job-master  
+   resource-schedulers/kubernetes/k8s-based-worker-discovery  
+   resource-schedulers/kubernetes/k8s-persistent-storage  
+   resource-schedulers/kubernetes/k8s-services
+   resource-schedulers/kubernetes/k8s-worker-binding-mapping  
+   resource-schedulers/kubernetes/open-mpi-support
+   resource-schedulers/kubernetes/twister2-on-kubernetes
+   discovery/zk-based-job-master-discovery
+   discovery/zk-based-worker-discovery
 
 Twister2 Runtime consists of the following main components.
 

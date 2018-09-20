@@ -1,5 +1,13 @@
-TCP Communication
-=================
+Twister2 Communication
+======================
+
+.. toctree::
+   :maxdepth: 5
+   
+   communication-model
+
+TCP 
+---
 
 TCP functionality is implemented in the common package. It is based on non blocking network IO model
 with Java NIO.

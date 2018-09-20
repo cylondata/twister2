@@ -1,4 +1,13 @@
-# Twister2 Examples
+Twister2 Examples
+=================
+
+.. toctree::
+   :maxdepth: 5
+   
+   communication
+   task_examples
+   
+We have developed many examples that uses both Twister2 core functions as well as higher level abstractions.   
 
 This guide shows how to run Twister2 Examples
 
@@ -18,7 +27,7 @@ When we install Twister2, it will compile the examples. Lets go to the installti
 
 ```
 cd bazel-bin/scripts/package/twister2-dist/
-./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.WordCountJob
+./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.streaming.wordcount.WordCountJob
 ```
 After running the streaming example, your terminal will show the following set of lines :
 

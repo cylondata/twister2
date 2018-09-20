@@ -1,5 +1,5 @@
-# Twister2 on Kubernetes: Design, Features and Implementation
-Ahmet Uyar
+Twister2 on Kubernetes: Design, Features and Implementation
+===========================================================
 
 This document explains the design, features and implementations for running Twister2 jobs 
 on Kubernetes clusters. We designed and developed components to run Twister2 workers and

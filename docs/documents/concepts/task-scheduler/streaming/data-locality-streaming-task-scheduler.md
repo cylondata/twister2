@@ -1,4 +1,5 @@
-# DataLocality Aware scheduler for scheduling streaming tasks in Twister2
+Streaming DataLocality Aware scheduler
+======================================
 
 DataLocality Aware Task Scheduler allocates the task instances of the streaming task graph based on the 
 locality of data. It calculates the distance between the worker nodes and the data nodes and

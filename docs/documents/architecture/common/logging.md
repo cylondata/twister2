@@ -1,5 +1,5 @@
-# Twister2 Logging
-Ahmet Uyar
+Twister2 Logging
+================
 
 Logging in distributed environments is an important task. 
 Cluster resource schedulers provide logging mechanisms. For example, 

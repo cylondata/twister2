@@ -1,5 +1,5 @@
-# Persistent Storage on Kubernetes
-Ahmet Uyar
+Persistent Storage on Kubernetes
+================================
 
 Kubernetes provides [persistent storage](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) 
 support by using any one of the supported distributed file systems. 

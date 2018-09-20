@@ -1,5 +1,5 @@
-# Job Master Design, Features and Usage
-Ahmet Uyar
+Job Master Design, Features and Usage
+=======================================
 
 The Job Master manages job related activities during job execution such as 
 worker life cycle management, worker discovery, resource cleanup, 
