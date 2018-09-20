@@ -111,7 +111,7 @@ public class BAllGatherExample extends BenchWorker {
           verify();
         }
       } catch (VerificationException e) {
-        e.printStackTrace();
+        LOG.info("Exception Message : " + e.getMessage());
       }
       return true;
     }

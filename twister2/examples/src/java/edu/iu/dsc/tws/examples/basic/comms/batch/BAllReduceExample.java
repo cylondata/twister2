@@ -114,7 +114,7 @@ public class BAllReduceExample extends BenchWorker {
           verify();
         }
       } catch (VerificationException e) {
-        e.printStackTrace();
+        LOG.info("Exception Message : " + e.getMessage());
       }
 
       /*if (object instanceof int[]) {

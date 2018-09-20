@@ -116,7 +116,7 @@ public class BGatherExample extends BenchWorker {
       try {
         verify();
       } catch (VerificationException e) {
-        e.printStackTrace();
+        LOG.info("Exception Message : " + e.getMessage());
       }
       return true;
     }
