@@ -75,6 +75,12 @@ pkg_tar(
 )
 
 pkg_tar(
+    name = "twister2-ompi",
+    srcs = ["@ompi3//:ompi-files",],
+    package_dir = "lib",
+)
+
+pkg_tar(
     name = "twister2-core-lib-api",
     srcs = twister2_client_lib_api_files(),
     package_dir = "lib",
