@@ -132,11 +132,11 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
       reduceDone = true;
       experimentData.setOutput(object);
-      experimentData.setOperationMode(OperationMode.BATCH);
+
       try {
         verify();
       } catch (VerificationException e) {
-        e.printStackTrace();
+        LOG.info("Message : " + e.getMessage());
       }
       /*LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
           Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));

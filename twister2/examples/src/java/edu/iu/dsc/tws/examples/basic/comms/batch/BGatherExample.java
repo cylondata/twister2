@@ -113,7 +113,6 @@ public class BGatherExample extends BenchWorker {
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
       Object object = it.next();
       experimentData.setOutput(object);
-      experimentData.setOperationMode(OperationMode.BATCH);
       try {
         verify();
       } catch (VerificationException e) {

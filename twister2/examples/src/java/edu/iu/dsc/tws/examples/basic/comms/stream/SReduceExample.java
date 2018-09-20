@@ -116,11 +116,11 @@ public class SReduceExample extends BenchWorker {
         reduceDone = true;
       }
       experimentData.setOutput(object);
-      experimentData.setOperationMode(OperationMode.STREAMING);
+
       try {
         verify();
       } catch (VerificationException e) {
-        throw new RuntimeException("Verification failed", e);
+        LOG.info("Exception Message : " + e.getMessage());
       }
       return true;
     }

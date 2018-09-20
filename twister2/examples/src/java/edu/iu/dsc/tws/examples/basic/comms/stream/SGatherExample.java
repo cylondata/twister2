@@ -116,7 +116,6 @@ public class SGatherExample extends BenchWorker {
         count += ((List) object).size();
         ArrayList<?> a = (ArrayList<?>) object;
         experimentData.setOutput(a.get(0));
-        experimentData.setOperationMode(OperationMode.STREAMING);
       }
 
       if (count == expected) {
@@ -127,7 +126,7 @@ public class SGatherExample extends BenchWorker {
       try {
         verify();
       } catch (VerificationException e) {
-        e.printStackTrace();
+        LOG.info("Exception Message : " + e.getMessage());
       }
 
       return true;

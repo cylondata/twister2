@@ -105,12 +105,11 @@ public class BReduceExample extends BenchWorker {
     @Override
     public boolean receive(int target, Object object) {
       experimentData.setOutput(object);
-      experimentData.setOperationMode(OperationMode.BATCH);
       reduceDone = true;
       try {
         verify();
       } catch (VerificationException e) {
-        throw new RuntimeException("Verification failed", e);
+        LOG.info("Exception Message : " + e.getMessage());
       }
       return true;
     }

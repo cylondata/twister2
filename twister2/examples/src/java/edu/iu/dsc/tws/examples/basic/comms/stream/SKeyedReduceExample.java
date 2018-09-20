@@ -126,11 +126,11 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
 
       reduceDone = true;
       experimentData.setOutput(object);
-      experimentData.setOperationMode(OperationMode.STREAMING);
+
       try {
         verify();
       } catch (VerificationException e) {
-        e.printStackTrace();
+        LOG.info("Exception Message : " + e.getMessage());
       }
       return true;
     }

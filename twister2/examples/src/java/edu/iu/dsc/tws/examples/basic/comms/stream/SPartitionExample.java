@@ -113,7 +113,7 @@ public class SPartitionExample extends BenchWorker {
       if (count >= expected) {
         partitionDone = true;
       }
-      experimentData.setOperationMode(OperationMode.STREAMING);
+
       return true;
     }
 

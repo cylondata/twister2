@@ -106,7 +106,6 @@ public class BAllGatherExample extends BenchWorker {
       experimentData.setOutput(object);
       experimentData.setWorkerId(workerId);
       experimentData.setNumOfWorkers(jobParameters.getContainers());
-      experimentData.setOperationMode(OperationMode.BATCH);
       try {
         if (workerId == 0) {
           verify();

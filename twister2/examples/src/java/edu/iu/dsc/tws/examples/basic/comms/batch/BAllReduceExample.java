@@ -108,7 +108,6 @@ public class BAllReduceExample extends BenchWorker {
       experimentData.setOutput(object);
       experimentData.setWorkerId(workerId);
       experimentData.setNumOfWorkers(jobParameters.getContainers());
-      experimentData.setOperationMode(OperationMode.BATCH);
 
       try {
         if (workerId == 0) {

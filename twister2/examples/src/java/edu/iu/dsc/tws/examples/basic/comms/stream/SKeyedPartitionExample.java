@@ -110,7 +110,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
       if (count >= expected) {
         partitionDone = true;
       }
-      experimentData.setOperationMode(OperationMode.STREAMING);
+
       return true;
     }
 

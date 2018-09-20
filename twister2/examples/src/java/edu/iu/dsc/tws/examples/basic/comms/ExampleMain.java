@@ -127,6 +127,7 @@ public class ExampleMain {
     jobConfig.put(Constants.ARGS_DATA_TYPE, dataType);
     jobConfig.put(Constants.ARGS_INIT_ITERATIONS, intItr);
     jobConfig.put(Constants.ARGS_VERIFY, verify);
+    jobConfig.put(Constants.ARGS_STREAM, stream);
 
     // build the job
     Twister2Job twister2Job;

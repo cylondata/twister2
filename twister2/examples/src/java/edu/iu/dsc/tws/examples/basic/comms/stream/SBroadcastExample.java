@@ -113,11 +113,11 @@ public class SBroadcastExample extends BenchWorker {
       }
       experimentData.setTaskId(target);
       experimentData.setOutput(object);
-      experimentData.setOperationMode(OperationMode.STREAMING);
+
       try {
         verify();
       } catch (VerificationException e) {
-        e.printStackTrace();
+        LOG.info("Exception Message : " + e.getMessage());
       }
       return true;
     }

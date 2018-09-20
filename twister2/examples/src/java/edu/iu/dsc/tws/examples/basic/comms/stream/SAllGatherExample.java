@@ -117,13 +117,13 @@ public class SAllGatherExample extends BenchWorker {
       experimentData.setOutput(object);
       experimentData.setWorkerId(workerId);
       experimentData.setNumOfWorkers(jobParameters.getContainers());
-      experimentData.setOperationMode(OperationMode.STREAMING);
+
       try {
         if (workerId == 0) {
           verify();
         }
       } catch (VerificationException e) {
-        e.printStackTrace();
+        LOG.info("Exception Message : " + e.getMessage());
       }
       return true;
     }

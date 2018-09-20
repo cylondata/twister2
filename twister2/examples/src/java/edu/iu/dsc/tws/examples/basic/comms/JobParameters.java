@@ -46,6 +46,8 @@ public class JobParameters {
 
   private boolean doVerify = false;
 
+  private boolean stream = false;
+
   public JobParameters(int size, int iterations, String col,
                        int containers, List<Integer> taskStages, int gap) {
     this.size = size;
@@ -120,6 +122,14 @@ public class JobParameters {
     return doVerify;
   }
 
+  public boolean isStream() {
+    return stream;
+  }
+
+  public void setStream(boolean stream) {
+    this.stream = stream;
+  }
+
   public static JobParameters build(Config cfg) {
     int iterations = Integer.parseInt(cfg.getStringValue(Constants.ARGS_ITR));
     int size = Integer.parseInt(cfg.getStringValue(Constants.ARGS_SIZE));
@@ -134,6 +144,7 @@ public class JobParameters {
     String type = cfg.getStringValue(Constants.ARGS_DATA_TYPE);
     int intItr = Integer.parseInt(cfg.getStringValue(Constants.ARGS_INIT_ITERATIONS));
     boolean doVerify = cfg.getBooleanValue(Constants.ARGS_VERIFY);
+    boolean stream = cfg.getBooleanValue(Constants.ARGS_STREAM);
 
     String[] stages = taskStages.split(",");
     List<Integer> taskList = new ArrayList<>();
@@ -154,6 +165,7 @@ public class JobParameters {
     jobParameters.dataType = type;
     jobParameters.initIterations = intItr;
     jobParameters.doVerify = doVerify;
+    jobParameters.stream = stream;
     return jobParameters;
   }
 
