@@ -6,7 +6,7 @@ Task Scheduling in Twister2
    
    streaming/data-locality-streaming-task-scheduler
    streaming/first-fit-streaming-task-scheduler
-   streaming/round-robin-streaming-task-scheduler
+   streaming/round-robin-task-scheduler
    batch/round-robin-batch-task-scheduler
    batch/data-locality-batch-task-scheduler
    
