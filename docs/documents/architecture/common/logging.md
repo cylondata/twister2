@@ -17,14 +17,19 @@ Therefore, we implemented a persistent logging mechanism for Twister2 jobs.
 We save all log files in a job to a persistent volume. 
 All log files in a job is saved under the same directory. The logging directory is named as:
 
+```bash
     logs
+```    
 
 A log file is created for each worker in this log directory. 
-Worker log files are named as: 
-* worker-0.log.0
-* worker-1.log.0
-* worker-2.log.0
-* ...
+Worker log files are named as:
+
+```bash
+  * worker-0.log.0
+  * worker-1.log.0
+  * worker-2.log.0
+  * ...
+```
 
 There may be many log files for each worker. 
 In that case, more log files are created with increasing suffix value.
@@ -35,7 +40,10 @@ we add a FileHandler to the root logger of Java. The file is located in the pers
 So, Java logger directs the log messages to both the console and to this persistent log file. 
 
 We implemented the logger in the class:
-* [edu.iu.dsc.tws.common.logging.LoggingHelper](../../../../twister2/common/src/java/edu/iu/dsc/tws/common/logging/LoggingHelper.java)
+
+```bash
+  edu.iu.dsc.tws.common.logging.LoggingHelper
+```  
 
 ## Configuration Parameters
 Five configuration parameters are added for persistent logging. 
@@ -43,14 +51,18 @@ First one shows whether the user wants Twister2 to save log messages to the pers
 When its value is “true”, persistent logging is enabled. Otherwise, persistent value is disabled. 
 Configuration parameter name is called: 
 
-    persistent.logging.requested
+```bash
+  persistent.logging.requested
+```
 
 Other configuration parameters: 
 
-    twister2.logging.level
-    twister2.logging.max.file.size.mb
-    twister2.logging.maximum.files
-    twister2.logging.redirect.sysouterr
+```bash
+  twister2.logging.level
+  twister2.logging.max.file.size.mb
+  twister2.logging.maximum.files
+  twister2.logging.redirect.sysouterr
+```    
 
 The second parameters determines the log level. By default, it is INFO. 
 Valid logging levels: FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE
@@ -72,23 +84,25 @@ Users will not be able to see log messages on the screen.
 Kubernetes Twister2 workers initialize the worker loggers as the following. 
 This method needs to be called as early as possible when the workers start. 
 
-    public static void initWorkerLogger(int workerID, K8sPersistentVolume pv, Config cnfg) {
+```bash
+  public static void initWorkerLogger(int workerID, K8sPersistentVolume pv, Config cnfg) {
 
-      // set logging level
-      LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));
+    // set logging level
+    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cnfg));
 
-      // if persistent logging is requested, initialize it
-      if (pv != null && LoggingContext.persistentLoggingRequested(cnfg)) {
+    // if persistent logging is requested, initialize it
+    if (pv != null && LoggingContext.persistentLoggingRequested(cnfg)) {
 
-        if (LoggingContext.redirectSysOutErr(cnfg)) {
-          LOG.warning("Redirecting System.out and System.err to the log file. "
-            + "Check the log file for the upcoming log messages. ");
-        }
-
-        String logFile = K8sPersistentVolume.WORKER_LOG_FILE_NAME_PREFIX + workerID;
-        LoggingHelper.setupLogging(cnfg, pv.getLogDirPath(), logFile);
-
-        LOG.info("Persistent logging to file initialized.");
+      if (LoggingContext.redirectSysOutErr(cnfg)) {
+        LOG.warning("Redirecting System.out and System.err to the log file. "
+          + "Check the log file for the upcoming log messages. ");
       }
+
+      String logFile = K8sPersistentVolume.WORKER_LOG_FILE_NAME_PREFIX + workerID;
+      LoggingHelper.setupLogging(cnfg, pv.getLogDirPath(), logFile);
+
+      LOG.info("Persistent logging to file initialized.");
     }
+  }
+```  
 
