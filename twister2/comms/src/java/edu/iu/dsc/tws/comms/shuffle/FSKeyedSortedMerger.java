@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.comms.utils.Heap;
 import edu.iu.dsc.tws.comms.utils.HeapNode;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class FSKeyedSortedMerger implements Shuffle {
   private static final Logger LOG = Logger.getLogger(FSKeyedSortedMerger.class.getName());
   /**
@@ -152,7 +153,7 @@ public class FSKeyedSortedMerger implements Shuffle {
     // LOG.log(Level.INFO, "adding value: target: " + target + " " + recordsInMemory.size());
     lock.lock();
     try {
-      recordsInMemory.add(new KeyValue(k1, data, keyComparator));
+      recordsInMemory.add(new KeyValue(k1, data));
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
@@ -172,7 +173,7 @@ public class FSKeyedSortedMerger implements Shuffle {
       // lets convert the in-memory data to objects
       deserializeObjects();
       // lets sort the in-memory objects
-      Collections.sort(objectsInMemory);
+      Collections.sort(objectsInMemory, keyComparator);
     } finally {
       lock.unlock();
     }
@@ -182,7 +183,7 @@ public class FSKeyedSortedMerger implements Shuffle {
     for (int i = 0; i < recordsInMemory.size(); i++) {
       KeyValue kv = recordsInMemory.get(i);
       Object o = DataDeserializer.deserialize(dataType, kryoSerializer, (byte[]) kv.getValue());
-      objectsInMemory.add(new KeyValue(kv.getKey(), o, keyComparator));
+      objectsInMemory.add(new KeyValue(kv.getKey(), o));
     }
   }
 
@@ -200,7 +201,7 @@ public class FSKeyedSortedMerger implements Shuffle {
         recordsInMemory = new ArrayList<>();
 
         // first sort the values
-        Collections.sort(list);
+        list.sort(keyComparator);
 
         // save the bytes to disk
         int totalSize = FileLoader.saveKeyValues(list, bytesLength,

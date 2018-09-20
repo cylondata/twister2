@@ -18,6 +18,14 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
 
+/**
+ * It is the base class for the dataflow task graph which implements the IDataflowTaskGraph
+ * interface. This is the main interface for the directed dataflow task graph which consists of
+ * methods to add the task vertices, task edges, create the directed edges, finds out the inward and
+ * outward task edges, incoming and outgoing task edges.
+ * @param <TV>
+ * @param <TE>
+ */
 public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   protected Set<TV> vertices;
   protected Set<TE> edges;
@@ -38,6 +46,12 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     this.edgeComparator = eComparator;
   }
 
+  /**
+   * If the task vertex is not null and the task vertex is not available in the task vertex set,
+   * it will add the task vertex to the vertices set.
+   * @param taskVertex
+   * @return
+   */
   public boolean addTaskVertex(TV taskVertex) {
     if (taskVertex == null) {
       throw new NullPointerException();
@@ -49,6 +63,13 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     }
   }
 
+  /**
+   * If the task edge is not null and the task edge is not available in the task edge set,
+   * it will add the task edge to the edge set.
+   * @param sourceTaskVertex
+   * @param targetTaskVertex
+   * @return
+   */
   @Override
   public TE addTaskEdge(TV sourceTaskVertex, TV targetTaskVertex) {
 
@@ -76,6 +97,15 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return false;
   }
 
+  /**
+   * This method first check whether the task edge is null or not, then it will validate both the
+   * source and target vertex and create the directed dataflow edge between those task vertices.
+   * @param taskVertex1
+   * @param taskVertex2
+   * @param taskEdge
+   * @return
+   */
+
   @Override
   public boolean addTaskEdge(TV taskVertex1, TV taskVertex2, TE taskEdge) {
     if (taskEdge == null) {
@@ -95,11 +125,19 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return true;
   }
 
+  /**
+   * This method assign the directed dataflow edge between the source and target task vertex
+   * @param taskEdge
+   * @param sourceTaskVertex
+   * @param targetTaskVertex
+   * @return
+   */
   private DirectedEdge<TV, TE> createDirectedDataflowTaskEdge(
       TE taskEdge, TV sourceTaskVertex, TV targetTaskVertex) {
 
     DirectedEdge<TV, TE> directedEdge;
-    directedEdge = new DirectedEdge<TV, TE>();
+
+    directedEdge = new DirectedEdge<>();
 
     directedEdge.sourceTaskVertex = sourceTaskVertex;
     directedEdge.targetTaskVertex = targetTaskVertex;
@@ -108,6 +146,12 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return directedEdge;
   }
 
+  /**
+   * This method returns the directed dataflow edges between the source and target task vertex
+   * @param sourceTaskVertex
+   * @param targetTaskVertex
+   * @return
+   */
   public Set<TE> getAllTaskEdges(TV sourceTaskVertex, TV targetTaskVertex) {
     Set<TE> ret = new HashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
@@ -137,11 +181,21 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return flag;
   }
 
+  /**
+   * This method is to validate whether the task graph vertices has the task vertex(TV)
+   * @param taskVertex
+   * @return
+   */
   @Override
   public boolean containsTaskVertex(TV taskVertex) {
     return vertices.contains(taskVertex);
   }
 
+  /**
+   * This method returns the incoming task edges of the task vertex.
+   * @param taskVertex
+   * @return
+   */
   public Set<TE> incomingTaskEdgesOf(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
@@ -152,6 +206,12 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return ret;
   }
 
+  /**
+   * This method returns the out degree of the task vertex (TV) if there is any edge from the
+   * source task vertex to the task vertex.
+   * @param taskVertex
+   * @return
+   */
   public int outDegreeOfTask(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
@@ -162,6 +222,12 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return ret.size();
   }
 
+  /**
+   * This method removes the task edge between the source task vertex and the target task vertex.
+   * @param sourceVertex
+   * @param targetVertex
+   * @return
+   */
   public TE removeTaskEdge(TV sourceVertex, TV targetVertex) {
     Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
     while (it.hasNext()) {
@@ -174,6 +240,11 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return null;
   }
 
+  /**
+   * This method removes the task edge (TE) from the task graph.
+   * @param taskEdge
+   * @return
+   */
   public boolean removeTaskEdge(TE taskEdge) {
     Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
     while (it.hasNext()) {
@@ -186,6 +257,11 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return false;
   }
 
+  /**
+   * This method removes the task vertex (TV) from the task graph.
+   * @param taskVertex
+   * @return
+   */
   public boolean removeTaskVertex(TV taskVertex) {
     Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
     while (it.hasNext()) {
@@ -198,15 +274,30 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return vertices.remove(taskVertex);
   }
 
+  /**
+   * This method returns the set of task vertices in the task graph.
+   * @return
+   */
   @Override
   public Set<TV> getTaskVertexSet() {
     return vertices;
   }
 
+  /**
+   * This method returns the set of task edges in the task graph.
+   * @return
+   */
   public Set<TE> taskEdgeSet() {
     return edges;
   }
 
+  /**
+   * This method is used to calculate the connected child tasks between the task vertex(t) and the
+   * task edge (TE)
+   * @param t
+   * @param edge
+   * @return
+   */
   public TV connectedChildTask(TV t, TE edge) {
     Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
     while (it.hasNext()) {
@@ -219,6 +310,13 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return null;
   }
 
+
+  /**
+   * This method returns the connected parent tasks between the task vertex(t) and the task edge(TE)
+   * @param t
+   * @param edge
+   * @return
+   */
   public TV connectedParentTask(TV t, TE edge) {
     Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
     while (it.hasNext()) {
@@ -231,6 +329,11 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return null;
   }
 
+  /**
+   * This method returns the task edge set of the task vertex (TV).
+   * @param taskVertex
+   * @return
+   */
   public Set<TE> taskEdgesOf(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
     Iterator<DirectedEdge<TV, TE>> it = directedEdges.iterator();
@@ -244,6 +347,13 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return ret;
   }
 
+  /**
+   * This method calculates the out going task edges of the task vertex (TV). If there is an edge
+   * from the source task vertex to the task Vertex (TV) then it will be added to the outgoing
+   * task edge set.
+   * @param taskVertex
+   * @return
+   */
   public Set<TE> outgoingTaskEdgesOf(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
@@ -254,6 +364,11 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return ret;
   }
 
+  /**
+   * This method is helpful to find out the children of the task vertex (t).
+   * @param t
+   * @return
+   */
   public Set<TV> childrenOfTask(TV t) {
     Set<TV> ret = new HashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
@@ -264,6 +379,11 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return ret;
   }
 
+  /**
+   * This method is helpful to find out the parents of the task vertex (t).
+   * @param t
+   * @return
+   */
   public Set<TV> parentsOfTask(TV t) {
     Set<TV> ret = new HashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
@@ -274,6 +394,11 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return ret;
   }
 
+  /**
+   * This method returns the in-degree of the task vertex (TV).
+   * @param taskVertex
+   * @return
+   */
   public int inDegreeOfTask(TV taskVertex) {
     Set<TE> ret = new HashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
@@ -284,6 +409,12 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return ret.size();
   }
 
+  /**
+   * This method is to validate that whether the source and target task vertex has task edge.
+   * @param sourceTaskVertex
+   * @param targetTaskVertex
+   * @return
+   */
   @Override
   public boolean containsTaskEdge(TV sourceTaskVertex,
                                   TV targetTaskVertex) {
@@ -296,6 +427,11 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return false;
   }
 
+  /**
+   * This method remove all the task edges in the collection object.
+   * @param taskEdges
+   * @return
+   */
   @Override
   public boolean removeAllTaskEdges(Collection<? extends TE> taskEdges) {
     boolean success = false;
@@ -305,6 +441,11 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return success;
   }
 
+  /**
+   * This method remove all the task vertices in the collection object.
+   * @param taskVertices
+   * @return
+   */
   @Override
   public boolean removeAllTaskVertices(Collection<? extends TV>
                                            taskVertices) {
@@ -315,6 +456,13 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return flag;
   }
 
+  /**
+   * This method is responsible for removing all the task edges between the source and target
+   * task vertex.
+   * @param sourceTaskVertex
+   * @param targetTaskVertex
+   * @return
+   */
   @Override
   public Set<TE> removeAllTaskEdges(TV sourceTaskVertex,
                                     TV targetTaskVertex) {
@@ -326,14 +474,15 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return removedTaskEdge;
   }
 
+  //future use
   public DirectedEdge<TV, TE> getDataflowTaskEdge(TE taskEdge) {
     return null;
   }
 
   /**
-   * Validate the graph and check weather there are invalid entries
-   * @return true if the graph is valid
-   *
+   * This method validates the task graph to finds that if there is a self-loop in the task
+   * vertex set (task graph)
+   * @return
    */
   public boolean validate() {
     //call to check the self-loop
@@ -344,6 +493,11 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return flag;
   }
 
+  /**
+   * This method validates that whether the task graph contains the task vertex (TV).
+   * @param taskVertex
+   * @return
+   */
   protected boolean validateTaskVertex(TV taskVertex) {
     if (containsTaskVertex(taskVertex)) {
       return true;
@@ -355,6 +509,11 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     }
   }
 
+  /**
+   * This method validates that whether the task graph contains the task edge (TE).
+   * @param taskEdge
+   * @return
+   */
   protected boolean validateTaskEdges(TE taskEdge) {
     if (containsTaskEdge(taskEdge)) {
       return true;
@@ -367,7 +526,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   /**
-   * This method identifies the self-loop in the task graph.
+   * This method identifies the self-loop for the task vertex set (Set<TV>) in the task graph.
    * @param taskVertex
    * @return
    */
@@ -382,7 +541,11 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     return flag;
   }
 
-
+  /**
+   * This method validates the self-loop for a particular task vertex (TV)
+   * @param sourceTaskVertex
+   * @return
+   */
   private boolean containsSelfLoop(TV sourceTaskVertex) {
     boolean flag = false;
     for (DirectedEdge<TV, TE> de : directedEdges) {

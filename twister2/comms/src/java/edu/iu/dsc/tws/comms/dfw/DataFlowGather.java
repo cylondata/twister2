@@ -353,6 +353,17 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  @Override
+  public MessageType getDataType() {
+    return dataType;
+  }
+
+
+  @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
   }

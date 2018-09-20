@@ -120,11 +120,6 @@ public class KeyedReduceBatchFinalReceiver extends KeyedReduceBatchReceiver {
         }
       }
 
-      if (!dataFlowOperation.isDelegeteComplete()) {
-        allFinished = false;
-        needsFurtherProgress = true;
-      }
-
       if (allFinished) {
         batchDone.put(target, true);
         Object previous = null;

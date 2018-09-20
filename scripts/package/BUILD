@@ -1,36 +1,36 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar", "pkg_deb")
-load("/tools/rules/twister2_client", "twister2_client_bin_files")
-load("/tools/rules/twister2_client", "twister2_client_conf_files")
-load("/tools/rules/twister2_client", "twister2_client_slurmmpi_files")
-load("/tools/rules/twister2_client", "twister2_client_nodesmpi_files")
-load("/tools/rules/twister2_client", "twister2_client_aurora_files")
-load("/tools/rules/twister2_client", "twister2_client_kubernetes_files")
-load("/tools/rules/twister2_client", "twister2_client_mesos_files")
-load("/tools/rules/twister2_client", "twister2_client_standalone_files")
-load("/tools/rules/twister2_client", "twister2_client_lib_third_party_files")
-load("/tools/rules/twister2_client", "twister2_client_lib_task_scheduler_files")
-load("/tools/rules/twister2_client", "twister2_client_lib_resource_scheduler_files")
-load("/tools/rules/twister2_client", "twister2_client_lib_api_files")
-load("/tools/rules/twister2_client", "twister2_client_lib_task_files")
-load("/tools/rules/twister2_client", "twister2_client_lib_data_files")
-load("/tools/rules/twister2_client", "twister2_client_lib_data_lmdb_files")
-load("/tools/rules/twister2_client", "twister2_client_lib_communication_files")
-load("/tools/rules/twister2_client", "twister2_client_example_files")
-load("/tools/rules/twister2_client", "twister2_client_lib_common_files")
-load("/tools/rules/twister2_client", "twister2_client_lib_executor_files")
-load("/tools/rules/twister2_client", "twister2_client_lib_connector_files")
-load("/tools/rules/twister2_core", "twister2_core_files")
-load("/tools/rules/twister2_core", "twister2_core_conf_files")
-load("/tools/rules/twister2_core", "twister2_core_lib_communication_files")
-load("/tools/rules/twister2_core", "twister2_core_lib_resource_scheduler_files")
-load("/tools/rules/twister2_core", "twister2_core_lib_task_scheduler_files")
-load("/tools/rules/twister2_core", "twister2_core_lib_connector_files")
-load("/tools/rules/twister2_core", "twister2_core_lib_data_files")
-load("/tools/rules/twister2_core", "twister2_core_lib_executor_files")
-load("/tools/rules/twister2_core", "twister2_core_lib_data_lmdb_files")
-load("/tools/rules/twister2_master", "twister2_master_lib_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_bin_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_conf_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_slurmmpi_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_nodesmpi_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_aurora_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_kubernetes_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_mesos_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_standalone_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_lib_third_party_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_lib_task_scheduler_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_lib_resource_scheduler_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_lib_api_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_lib_task_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_lib_data_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_lib_data_lmdb_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_lib_communication_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_example_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_lib_common_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_lib_executor_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_lib_connector_files")
+load("//tools:rules/twister2_core.bzl", "twister2_core_files")
+load("//tools:rules/twister2_core.bzl", "twister2_core_conf_files")
+load("//tools:rules/twister2_core.bzl", "twister2_core_lib_communication_files")
+load("//tools:rules/twister2_core.bzl", "twister2_core_lib_resource_scheduler_files")
+load("//tools:rules/twister2_core.bzl", "twister2_core_lib_task_scheduler_files")
+load("//tools:rules/twister2_core.bzl", "twister2_core_lib_connector_files")
+load("//tools:rules/twister2_core.bzl", "twister2_core_lib_data_files")
+load("//tools:rules/twister2_core.bzl", "twister2_core_lib_executor_files")
+load("//tools:rules/twister2_core.bzl", "twister2_core_lib_data_lmdb_files")
+load("//tools:rules/twister2_master.bzl", "twister2_master_lib_files")
 
 generated_release_files = [
     "release.yaml",
@@ -72,6 +72,12 @@ pkg_tar(
         ":twister2-core-lib-third_party",
         ":twister2-master-lib",
     ],
+)
+
+pkg_tar(
+    name = "twister2-ompi",
+    srcs = ["@ompi3//:ompi-files",],
+    package_dir = "lib",
 )
 
 pkg_tar(

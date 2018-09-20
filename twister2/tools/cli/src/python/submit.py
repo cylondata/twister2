@@ -102,8 +102,7 @@ def submit_fatjar(cl_args, unknown_args):
 
     if not res.is_successful():
         err_context = ("Failed to create job definition " \
-                       "file when executing class '%s' of file '%s', Incorrect class file or build"
-                       " issue") % (main_class, job_file)
+                       "Please check logs for more information")
         res.add_context(err_context)
         return res
 
