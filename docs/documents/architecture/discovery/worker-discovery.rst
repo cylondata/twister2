@@ -64,7 +64,7 @@ We also provide a Job Master based worker controller implementation.
 The worker controller class is: 
 * [edu.iu.dsc.tws.master.client.JMWorkerController](../../../../twister2/master/src/java/edu/iu/dsc/tws/master/client/JMWorkerController.java)
 
-Details of the implementation is provided in [the document](../job-master/job-master.md). 
+Details of the implementation is provided in [the document](../job-master/job-master.rst). 
 
 ### Kubernetes Master Based Worker Controller
 We developed a worker discoverer that uses Kubernetes master 
@@ -72,5 +72,5 @@ to discover other workers in a Twister2 job.
 The worker discoverer class is: 
 * [edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerController](../../../../twister2/resource-scheduler/src/java/edu/iu/dsc/tws/rsched/schedulers/k8s/worker/K8sWorkerController.java)
 
-Details of the implementation is provided in [the document](../resource-schedulers/kubernetes/k8s-based-worker-discovery.md). 
+Details of the implementation is provided in [the document](../resource-schedulers/kubernetes/k8s-based-worker-discovery.rst). 
 

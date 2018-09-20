@@ -22,7 +22,8 @@ Twister2 Runtime consists of the following main components.
 2. Job Master
 3. Workers
 
-### Job Submission Client
+Job Submission Client
+
 This is the program that the user use to submit/terminate/modify Twister2 jobs. 
 It may run in the cluster or outside of it in the user machine. 
 
