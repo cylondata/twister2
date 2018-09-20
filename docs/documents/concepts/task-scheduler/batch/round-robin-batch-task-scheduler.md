@@ -1,4 +1,5 @@
-# RoundRobin TaskScheduler for scheduling batch tasks in Twister2
+Batch RoundRobin TaskScheduler
+===============================
 
 RoundRobinBatchTaskScheduler allocates the task instances of the task graph in a round robin 
 fashion which is similar to the Round Robin Task Scheduler for batch tasks. However, the primary 

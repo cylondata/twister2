@@ -1,5 +1,5 @@
-# Services for Twister2 Jobs on Kubernetes
-Ahmet Uyar
+Services for Twister2 Jobs on Kubernetes
+========================================
 
 We start a headless service for a regular Twister2 job. 
 Those jobs do not expose any ports to external entities. 

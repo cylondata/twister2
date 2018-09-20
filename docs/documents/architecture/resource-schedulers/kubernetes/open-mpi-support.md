@@ -1,5 +1,5 @@
-# Twister2 OpenMPI Support in Kubernetes
-Ahmet Uyar
+Twister2 OpenMPI Support in Kubernetes
+======================================
 
 We want the Twister2 workers to run OpenMPI jobs. OpenMPI jobs are different 
 than regular jobs in a number of ways. OpenMPI requires that:

@@ -1,5 +1,5 @@
-# ZooKeeper based Worker Discovery
-Ahmet Uyar
+ZooKeeper based Worker Discovery
+================================
 
 We designed a worker discovery, synchronization and ID assignment system
 for multi-worker jobs in cluster environments that use a ZooKeeper server.

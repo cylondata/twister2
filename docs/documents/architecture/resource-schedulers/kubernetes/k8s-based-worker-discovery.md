@@ -1,5 +1,5 @@
-# Kubernetes Master Based Worker Discovery
-Ahmet Uyar
+Kubernetes Master Based Worker Discovery
+==========================================
 
 We developed a worker controller that watches the pods in Kubernetes clusters by listening to 
 Kubernetes master. It provides the following services to workers in a Twister2 job: 

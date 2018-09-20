@@ -1,5 +1,5 @@
-# ZooKeeper Based Job Master Discovery
-Ahmet Uyar
+ZooKeeper Based Job Master Discovery
+====================================
 
 When a Twister2 job is submitted, a Job Master is created in addition to workers. 
 Workers need to know the Job Master IP address and the port number to be able to connect to it. 

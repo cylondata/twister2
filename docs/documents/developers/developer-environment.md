@@ -1,3 +1,6 @@
+Development Environment
+=======================
+
 We are using IntelliJ idea for development of the project. So it is well supported at the moment. We are not using Eclipse but we have added support. But it is not well tested.
 
 Before setting up the development environment, we need to build the project. We provide scripts to build IntelliJ and Eclipse projects.

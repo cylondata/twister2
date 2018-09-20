@@ -1,4 +1,5 @@
-## Dataflow Communication Model
+Dataflow Communication Model
+============================
 
 Twister2 supports a dataflow communication model. A dataflow program models a computation as a 
 graph with nodes of the graph doing user-defined computations and edges representing the 

@@ -1,4 +1,13 @@
-# Twister2 Examples
+Twister2 Examples
+=================
+
+.. toctree::
+   :maxdepth: 5
+   
+   communication
+   task_examples
+   
+We have developed many examples that uses both Twister2 core functions as well as higher level abstractions.   
 
 This guide shows how to run Twister2 Examples
 

@@ -1,5 +1,5 @@
-# Twister2 Worker Binding and Mapping in Kubernetes
-Ahmet Uyar
+Twister2 Worker Binding and Mapping in Kubernetes
+=================================================
 
 Worker binding is the process of binding workers to CPU cores. 
 Bounded workers are prevented to be moved from one core to the other during their lifetimes. 
