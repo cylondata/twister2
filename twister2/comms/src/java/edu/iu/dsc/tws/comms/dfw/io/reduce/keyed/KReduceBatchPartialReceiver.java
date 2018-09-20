@@ -85,7 +85,8 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
    * @param messagesPerTarget messages for the current target
    * @param keyedContent value to be reduced and inserted
    */
-  private void reduceAndInsert(Map<Object, Queue<Object>> messagesPerTarget, KeyedContent keyedContent) {
+  private void reduceAndInsert(Map<Object, Queue<Object>> messagesPerTarget,
+                               KeyedContent keyedContent) {
     Object currentEntry;
     Object key = keyedContent.getKey();
     if (!messagesPerTarget.containsKey(key)) {
@@ -136,13 +137,13 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
           }
           //try to send the message
           Object value = current.getValue().poll();
-          if(value != null){
+          if (value != null) {
             KeyedContent sendData = new KeyedContent(key, value, dataFlowOperation.getKeyType(),
                 dataFlowOperation.getDataType());
-            if(dataFlowOperation.sendPartial(target,sendData,flags,destination)){
+            if (dataFlowOperation.sendPartial(target, sendData, flags, destination)) {
               iter.remove();
               needsFlush = false;
-            }else{
+            } else {
               needsFurtherProgress = true;
             }
           }

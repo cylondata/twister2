@@ -87,19 +87,22 @@ public interface DataFlowOperation {
 
   /**
    * returns the key type that is associated with the data flow operation
+   *
    * @return the MessageType or an UnsupportedOperationException
    */
-  default MessageType getKeyType(){
+  default MessageType getKeyType() {
     throw new UnsupportedOperationException("method not supported");
   }
 
   /**
    * returns the data type that is associated with the data flow operation
+   *
    * @return the MessageType or an UnsupportedOperationException
    */
-  default MessageType getDataType(){
+  default MessageType getDataType() {
     throw new UnsupportedOperationException("method not supported");
   }
+
   /**
    * Task plan associated with this operation
    *
