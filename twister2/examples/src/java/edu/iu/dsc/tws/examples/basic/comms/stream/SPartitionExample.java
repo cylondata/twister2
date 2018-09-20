@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class SPartitionExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SPartitionExample.class.getName());

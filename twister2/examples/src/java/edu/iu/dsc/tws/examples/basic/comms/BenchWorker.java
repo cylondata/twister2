@@ -83,7 +83,6 @@ public abstract class BenchWorker implements IWorker {
     experimentData = new ExperimentData();
 
 
-
     // now lets execute
     execute();
     // now communicationProgress
@@ -131,9 +130,9 @@ public abstract class BenchWorker implements IWorker {
       experimentData.setInput(data);
       experimentData.setTaskStages(jobParameters.getTaskStages());
       experimentData.setIterations(jobParameters.getIterations());
-      if(jobParameters.isStream()){
+      if (jobParameters.isStream()) {
         experimentData.setOperationMode(OperationMode.STREAMING);
-      } else{
+      } else {
         experimentData.setOperationMode(OperationMode.BATCH);
       }
 

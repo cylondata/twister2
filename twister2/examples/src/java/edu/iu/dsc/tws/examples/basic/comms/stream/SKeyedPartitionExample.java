@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.op.stream.SKeyedPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
 /**
  * Streaming keyed partition example

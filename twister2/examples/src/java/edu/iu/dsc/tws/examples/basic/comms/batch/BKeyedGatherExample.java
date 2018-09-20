@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.op.batch.BKeyedGather;
 import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class BKeyedGatherExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(BKeyedGatherExample.class.getName());

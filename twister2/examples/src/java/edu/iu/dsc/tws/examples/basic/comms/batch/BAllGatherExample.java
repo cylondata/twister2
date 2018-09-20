@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class BAllGatherExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BAllGatherExample.class.getName());
