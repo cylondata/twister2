@@ -108,7 +108,10 @@ public class SourceSinkDiscoveryExample implements IWorker {
       if (count % 1000000 == 0) {
         checkForBarrier();
       }
-      ctx.write("partition-edge", "Hello");
+      if (count % 100000 == 0) {
+        ctx.write("partition-edge", "Hello");
+      }
+
       count++;
     }
 
@@ -130,10 +133,8 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 1000000 == 0) {
-        System.out.println(message.getContent());
-      }
-      count++;
+      System.out.println(message.getContent());
+
       return true;
     }
 

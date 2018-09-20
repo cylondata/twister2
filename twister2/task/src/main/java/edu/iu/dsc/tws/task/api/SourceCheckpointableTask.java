@@ -37,7 +37,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
   public RRClient taskClient;
   public Progress taskLooper;
 
-  private int currentBarrierID = 0;
+  private int currentBarrierID = 1;
 
   /**
    * to control the connection error when we repeatedly try connecting
@@ -189,6 +189,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
    * This will have the method to emit barrier in to the outgoing channel of the source task
    */
   private void emitBarrier() {
+    LOG.info("Sending barrier from source task ID : " + ctx.taskId());
     ctx.writeBarrier("keyed-edge", new Object());
   }
 }

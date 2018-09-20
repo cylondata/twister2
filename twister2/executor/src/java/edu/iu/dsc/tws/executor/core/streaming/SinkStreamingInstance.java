@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -26,6 +27,9 @@ import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SinkStreamingInstance  implements INodeInstance {
+
+  private static final Logger LOG = Logger.getLogger(SinkStreamingInstance.class.getName());
+
   /**
    * The actual streamingTask executing
    */
@@ -104,6 +108,7 @@ public class SinkStreamingInstance  implements INodeInstance {
           streamingTask.execute(message);
         } else {
           //Send acknowledge message to jobmaster
+          LOG.info("Barrier message received in Sink");
         }
       }
 

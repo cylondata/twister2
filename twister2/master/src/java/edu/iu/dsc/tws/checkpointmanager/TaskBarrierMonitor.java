@@ -78,7 +78,7 @@ public class TaskBarrierMonitor implements MessageHandler {
       Checkpoint.TaskDiscovery taskDiscoveryMessage = (Checkpoint.TaskDiscovery) message;
 
       if (taskDiscoveryMessage.getTaskType().equals(Checkpoint.TaskDiscovery.TaskType.SOURCE)) {
-        LOG.info("Source task with ID " + taskDiscoveryMessage.getTaskID()
+        LOG.fine("Source task with ID " + taskDiscoveryMessage.getTaskID()
             + " registered with Checkpoint Manager");
 
         this.sourceTaskList.add(taskDiscoveryMessage.getTaskID());
@@ -93,7 +93,7 @@ public class TaskBarrierMonitor implements MessageHandler {
       } else if (taskDiscoveryMessage.getTaskType()
           .equals(Checkpoint.TaskDiscovery.TaskType.SINK)) {
 
-        LOG.info("Sink task with ID " + taskDiscoveryMessage.getTaskID()
+        LOG.fine("Sink task with ID " + taskDiscoveryMessage.getTaskID()
             + " registered with Checkpoint Manager");
 
         this.sinkTaskList.add(taskDiscoveryMessage.getTaskID());
@@ -108,7 +108,7 @@ public class TaskBarrierMonitor implements MessageHandler {
 
     } else if (message instanceof Checkpoint.BarrierSync) {
 
-      LOG.info("Source task " + taskId + " sent BarrierSync message.");
+      LOG.fine("Source task " + taskId + " sent BarrierSync message.");
       Checkpoint.BarrierSync barrierSyncMessage = (Checkpoint.BarrierSync) message;
 
       if (currentBarrierID == barrierSyncMessage.getCurrentBarrierID() && sendBarrierFlag
@@ -155,12 +155,15 @@ public class TaskBarrierMonitor implements MessageHandler {
       printTaskList(sinkTaskList, "Sink");
 
       this.allTaskGotRegistered = true;
+
+      sendBarrierFlag = true;
+      currentBarrierID = 1;
+
+      currentBarrierReceivedSourceSet = new HashSet<Integer>();
+
+      LOG.info("All source and sink tasks got registered");
     }
 
-    sendBarrierFlag = true;
-    currentBarrierID = 1;
-
-    currentBarrierReceivedSourceSet = new HashSet<Integer>();
   }
 
   /**
@@ -171,6 +174,8 @@ public class TaskBarrierMonitor implements MessageHandler {
     if (currentBarrierReceivedSourceSet.size() == sourceParallelism) {
       currentBarrierReceivedSourceSet = new HashSet<Integer>();
       sendBarrierFlag = false;
+
+//      LOG.info("Barriers with Barrier ID " + currentBarrierID + " got sent from Source Tasks");
     }
   }
 }
