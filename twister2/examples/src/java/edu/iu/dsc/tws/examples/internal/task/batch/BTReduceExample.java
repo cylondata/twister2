@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.examples.basic.comms.JobParameters;
+import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.internal.task.BenchTaskWorker;
 
 

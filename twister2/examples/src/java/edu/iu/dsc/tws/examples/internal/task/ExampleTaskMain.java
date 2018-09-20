@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.basic.comms.Constants;
+import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
