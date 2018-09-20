@@ -58,7 +58,7 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
     Map<Object, Queue<Object>> messagesPerTarget = messages.get(target);
 
     if (messagesPerTarget.size() > keyLimit) {
-      needsFlush = true;
+      needsFlush.compareAndSet(false, true);
       LOG.fine(String.format("Executor %d Partial cannot add any further keys needs flush ",
           executor));
       return false;
@@ -120,7 +120,7 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
         needsFurtherProgress = true;
       }
 
-      if (needsFlush || sourcesFinished) {
+      if (needsFlush.get() || sourcesFinished) {
         int flags = 0;
 
         //In reduce a flush is only needed when the number of keys exceed the key limit
@@ -142,12 +142,13 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
                 dataFlowOperation.getDataType());
             if (dataFlowOperation.sendPartial(target, sendData, flags, destination)) {
               iter.remove();
-              needsFlush = false;
             } else {
               needsFurtherProgress = true;
             }
           }
         }
+        needsFlush.compareAndSet(true, false);
+
 
 
       }
@@ -155,6 +156,9 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
       //In reduce since we remove the key entry once we send it we only need to check if the map is
       //Empty
       isAllQueuesEmpty = messagePerTarget.isEmpty();
+      if (!isAllQueuesEmpty) {
+        needsFurtherProgress = true;
+      }
 
       if (dataFlowOperation.isDelegeteComplete() && sourcesFinished && isAllQueuesEmpty) {
         if (dataFlowOperation.sendPartial(target, new byte[0],

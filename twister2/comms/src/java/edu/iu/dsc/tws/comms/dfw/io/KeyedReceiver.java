@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -52,7 +53,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
    * buffered messages to be flushed, needsFlush needs to be set to true. The progress method
    * will look at this and flush the current buffer if needsFlush is true.
    */
-  protected boolean needsFlush;
+  protected AtomicBoolean needsFlush;
 
   /**
    * The dataflow operation that is related to the class instance. Ex - Reduce, Gather, etc.
@@ -156,7 +157,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
   protected boolean offerMessage(int target, Object object) {
     Map<Object, Queue<Object>> messagesPerTarget = messages.get(target);
     if (messagesPerTarget.size() > keyLimit) {
-      needsFlush = true;
+      needsFlush.compareAndSet(false, true);
       LOG.fine(String.format("Executor %d Partial cannot add any further keys needs flush ",
           executor));
       return false;
@@ -200,7 +201,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
         if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey) {
           return messagesPerTarget.get(keyedContent.getKey()).add(keyedContent.getValue());
         } else {
-          needsFlush = true;
+          needsFlush.compareAndSet(false, true);
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
               + "needs flush ", executor));
           return false;
