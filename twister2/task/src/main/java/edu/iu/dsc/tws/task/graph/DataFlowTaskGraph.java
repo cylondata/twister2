@@ -19,28 +19,32 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.task.api.ICompute;
 
+/**
+ * This class extends the base data flow task graph which is mainly responsible for building the
+ * task graph for the task vertex and the task edge.
+ */
 public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   private Map<String, Vertex> taskMap = new HashMap<>();
 
   private OperationMode operationMode = OperationMode.STREAMING;
 
   public DataFlowTaskGraph() {
-    super(new VertexComparator(), new EdgeComparator());
+    //super(new VertexComparator(), new EdgeComparator());
+    super(Comparator.comparing(Vertex::getName), Comparator.comparing(Edge::getName));
   }
 
   public DataFlowTaskGraph(OperationMode mode) {
-    super(new VertexComparator(), new EdgeComparator());
+    //super(new VertexComparator(), new EdgeComparator());
+    super(Comparator.comparing(Vertex::getName), Comparator.comparing(Edge::getName));
     this.operationMode = mode;
   }
 
-  @Override
-  public boolean validate() {
-    return super.validate();
-  }
-
+  /**
+   * This method is responsible for storing the directed edges between the source and target task
+   * vertex in a map.
+   */
   @Override
   public void build() {
-    // first validate
     validate();
 
     Set<ICompute> ret = new HashSet<>();
@@ -50,6 +54,12 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     }
   }
 
+  /**
+   * This method is responsible for adding the task vertex to the task map.
+   * @param name
+   * @param taskVertex
+   * @return
+   */
   public boolean addTaskVertex(String name, Vertex taskVertex) {
     if (!validateTaskVertex(name)) {
       addTaskVertex(taskVertex);
@@ -58,10 +68,14 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     return true;
   }
 
-  public boolean validateTaskVertex(String taskName) {
+  /**
+   * This method is to identify the duplicate names for the tasks in the taskgraph.
+   * @param taskName
+   * @return
+   */
+  private boolean validateTaskVertex(String taskName) {
     boolean flag = false;
     if (taskMap.containsKey(taskName)) {
-      //flag = true;
       throw new RuntimeException("Duplicate names for the submitted task:" + taskName);
     }
     return flag;
@@ -145,7 +159,25 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     }
   }
 
+  /**
+   * This is the getter method to get the property of operation mode "STREAMING" or "BATCH".
+   * @return
+   */
+  public OperationMode getOperationMode() {
+    return operationMode;
+  }
+
+  /**
+   * This is the setter method to set the property of the operation mode which is either
+   * "STREAMING" or "BATCH"
+   * @param operationMode
+   */
+  public void setOperationMode(OperationMode operationMode) {
+    this.operationMode = operationMode;
+  }
+
   private static class VertexComparator implements Comparator<Vertex> {
+
     @Override
     public int compare(Vertex o1, Vertex o2) {
       return new StringComparator().compare(o1.getName(), o2.getName());
@@ -153,6 +185,7 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   }
 
   private static class EdgeComparator implements Comparator<Edge> {
+
     @Override
     public int compare(Edge o1, Edge o2) {
       return new StringComparator().compare(o1.getName(), o2.getName());
@@ -160,6 +193,12 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   }
 
   public static class StringComparator implements Comparator<String> {
+
+    public Comparator<String> comp(String obj1, String obj2) {
+      Comparator<String> stringComparator = Comparator.comparing(String::toString);
+      return stringComparator;
+    }
+
     public int compare(String obj1, String obj2) {
       if (obj1 == null) {
         return -1;
@@ -173,13 +212,4 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
       return obj1.compareTo(obj2);
     }
   }
-
-  public OperationMode getOperationMode() {
-    return operationMode;
-  }
-
-  public void setOperationMode(OperationMode operationMode) {
-    this.operationMode = operationMode;
-  }
-
 }

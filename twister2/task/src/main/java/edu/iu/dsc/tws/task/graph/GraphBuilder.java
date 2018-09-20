@@ -17,6 +17,10 @@ import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
 
+/**
+ * This class is responsible for building the task graph and the configuration values required for
+ * each task in the task graph.
+ */
 public final class GraphBuilder {
   private DataFlowTaskGraph graph;
 

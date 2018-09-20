@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
  * into memory, this may not be the case for larger records and we have to take special
  * consideration into that.
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class FSSorter {
   private Heap heap;
 

@@ -11,43 +11,32 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
-import java.util.Comparator;
+public class KeyValue<K, V> {
 
-public class KeyValue implements Comparable<KeyValue> {
-  private Object key;
+  private K key;
 
-  private Object value;
+  private V value;
 
-  private Comparator<Object> keyComparator;
-
-  public KeyValue(Object k, Object v) {
+  public KeyValue(K k, V v) {
     this.key = k;
     this.value = v;
   }
 
-  public KeyValue(Object k, Object v, Comparator<Object> kComparator) {
-    this.key = k;
-    this.value = v;
-    this.keyComparator = kComparator;
-  }
-
-  public Object getKey() {
+  public K getKey() {
     return key;
   }
 
-  public Object getValue() {
+  public V getValue() {
     return value;
   }
 
   @Override
-  public int compareTo(KeyValue o) {
-    if (keyComparator == null) {
-      return -1;
-    }
-
-    if (o == null) {
-      throw new RuntimeException("o null");
-    }
-    return keyComparator.compare(this.getKey(), o.getKey());
+  public String toString() {
+    return "KeyValue{"
+        + "key="
+        + key
+        + ", value="
+        + value
+        + '}';
   }
 }

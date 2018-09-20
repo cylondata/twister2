@@ -23,68 +23,63 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.utils;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 
 import edu.iu.dsc.tws.comms.shuffle.KeyValue;
 
-public class Heap {
-  private HeapNode[] heap;
-  private int position;
-  private Comparator<Object> keyComparator;
+public class Heap<K, V> {
 
-  public Heap(int k, Comparator<Object> kComparator) {
+  private ArrayList<HeapNode<K, V>> heapArr = new ArrayList<>();
+  private Comparator<K> keyComparator;
+
+  public Heap(int k, Comparator<K> kComparator) {
     this.keyComparator = kComparator;
-    // size + 1 because index 0 will be empty
-    heap = new HeapNode[k + 1];
-    position = 0;
-    // put some junk values at 0th index node
-    heap[0] = new HeapNode(new KeyValue(new int[]{0}, ""), -1);
+    this.heapArr.ensureCapacity(k);
   }
 
-  public void insert(KeyValue data, int listNo) {
-    int[] key = (int[]) data.getKey();
-    try {
-      int i = key[0];
-    } catch (ArrayIndexOutOfBoundsException e) {
-      throw e;
-    }
-    // check if Heap is empty
-    if (position == 0) {
-      // insert the first element in heap
-      heap[position + 1] = new HeapNode(data, listNo);
-      position = 2;
-    } else {
-      // insert the element to the end
-      heap[position++] = new HeapNode(data, listNo);
-      bubbleUp();
-    }
+  public Heap(Comparator<K> kComparator) {
+    this.keyComparator = kComparator;
   }
 
-  public HeapNode extractMin() {
+  public void insert(KeyValue<K, V> data, int listNo) {
+    this.heapArr.add(new HeapNode<>(data, listNo, this.keyComparator));
+    this.bubbleUp();
+  }
+
+  public HeapNode<K, V> extractMin() {
+    if (heapArr.isEmpty()) {
+      return null;
+    }
+
     // extract the root
-    HeapNode min = heap[1];
+    HeapNode<K, V> min = heapArr.remove(0);
     // replace the root with the last element in the heap
-    heap[1] = heap[position - 1];
-    // set the last Node as NULL
-    heap[position - 1] = null;
-    // reduce the position pointer
-    position--;
-    // sink down the root to its correct position
-    sinkDown(1);
+    if (heapArr.size() > 1) {
+      heapArr.add(0, heapArr.remove(heapArr.size() - 1));
+      // sink down the root to its correct position
+      sinkDown(0);
+    }
+
     return min;
   }
 
   private void sinkDown(int k) {
     int smallest = k;
     // check which is smaller child , 2k or 2k+1.
-    if (2 * k < position
-        && keyComparator.compare(heap[smallest].data.getKey(), heap[2 * k].data.getKey()) > 0)  {
-      smallest = 2 * k;
+    int leftChildIndex = smallest * 2 + 1;
+    int rightChildIndex = smallest * 2 + 2;
+
+    if (leftChildIndex < heapArr.size()
+        && heapArr.get(leftChildIndex).compareTo(heapArr.get(smallest)) < 0) {
+      smallest = leftChildIndex;
     }
-    if (2 * k + 1 < position
-        && keyComparator.compare(heap[smallest].data.getKey(), heap[2 * k + 1].data.getKey()) > 0) {
-      smallest = 2 * k + 1;
+
+    if (rightChildIndex < heapArr.size()
+        && heapArr.get(rightChildIndex).compareTo(heapArr.get(smallest)) < 0) {
+      smallest = rightChildIndex;
     }
+
     if (smallest != k) { // if any if the child is small, swap
       swap(k, smallest);
       sinkDown(smallest); // call recursively
@@ -92,22 +87,35 @@ public class Heap {
   }
 
   private void swap(int a, int b) {
-    // System.out.println("swappinh" + mH[a] + " and " + mH[b]);
-    HeapNode temp = heap[a];
-    heap[a] = heap[b];
-    heap[b] = temp;
+    HeapNode<K, V> temp = heapArr.get(a);
+    heapArr.set(a, heapArr.get(b));
+    heapArr.set(b, temp);
   }
 
   private void bubbleUp() {
     // last position
-    int pos = position - 1;
+    int pos = this.heapArr.size() - 1;
+
     // check if its parent is greater.
     while (pos > 0
-        && keyComparator.compare(heap[pos / 2].data.getKey(), heap[pos].data.getKey()) > 0) {
-      HeapNode y = heap[pos]; // if yes, then swap
-      heap[pos] = heap[pos / 2];
-      heap[pos / 2] = y;
-      pos = pos / 2; // make pos to its parent for next iteration.
+        && heapArr.get((pos - 1) / 2).compareTo(heapArr.get(pos)) > 0) {
+      this.swap((pos - 1) / 2, pos);
+      pos = (pos - 1) / 2; // make pos to its parent for next iteration.
     }
+  }
+
+  /**
+   * Returning raw array for testing purposes
+   */
+  public ArrayList<HeapNode<K, V>> getRawArray() {
+    return heapArr;
+  }
+
+  @Override
+  public String toString() {
+    return "Heap{"
+        + "heap="
+        + heapArr
+        + '}';
   }
 }

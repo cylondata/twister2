@@ -481,11 +481,6 @@ maven_jar(
     artifact = "commons-io:commons-io:2.6",
 )
 
-#maven_jar(
-#    name = "org_apache_commons",
-#    artifact = "org.apache.commons:commons-collections4:4.1",
-#)
-
 maven_jar(
     name = "commons_collections",
     artifact = "commons-collections:commons-collections:3.2.2",
@@ -509,4 +504,11 @@ maven_jar(
 maven_jar(
     name = "org_apache_htrace",
     artifact = "org.apache.htrace:htrace-core4:4.2.0-incubating",
+)
+
+new_http_archive(
+    name = "ompi3",
+    urls = ["https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.2.tar.gz"],
+    strip_prefix = "openmpi-3.1.2",
+    build_file = "third_party/ompi3/ompi.BUILD",
 )

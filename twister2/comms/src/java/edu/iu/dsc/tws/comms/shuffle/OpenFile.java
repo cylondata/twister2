@@ -19,6 +19,7 @@ import java.util.List;
 /**
  * Represent an open file containing the channel and the buffer
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class OpenFile {
   private FileChannel rwChannel;
   private ByteBuffer byteBuffer;

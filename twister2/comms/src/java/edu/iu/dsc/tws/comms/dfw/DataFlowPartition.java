@@ -572,13 +572,16 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return destinations;
   }
 
+  @Override
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  @Override
   public MessageType getDataType() {
     return dataType;
   }
 
-  public MessageType getKeyType() {
-    return keyType;
-  }
 
   public int getEdge() {
     return edge;

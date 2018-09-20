@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public final class FileLoader {
   private static final Logger LOG = Logger.getLogger(FileLoader.class.getName());
 
