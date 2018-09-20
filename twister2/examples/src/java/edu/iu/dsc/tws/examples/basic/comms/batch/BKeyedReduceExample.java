@@ -28,6 +28,9 @@ import edu.iu.dsc.tws.comms.op.functions.reduction.KeyedReduceOperationFunction;
 import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.KeyedBenchWorker;
+import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 /**
  * Created by pulasthi on 8/24/18.
@@ -116,6 +119,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
+
       if (object == null) {
         return true;
       }
@@ -124,8 +128,36 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
       LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
           Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
+
       reduceDone = true;
+      experimentData.setOutput(object);
+
+      try {
+        verify();
+      } catch (VerificationException e) {
+        LOG.info("Message : " + e.getMessage());
+      }
+      /*LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
+          Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
+      LOG.log(Level.INFO, String.format("%d Received final input", workerId));*/
+
       return true;
+    }
+  }
+
+  public void verify() throws VerificationException {
+    boolean doVerify = jobParameters.isDoVerify();
+    boolean isVerified = false;
+    if (doVerify) {
+      LOG.info("Verifying results ...");
+      ExperimentVerification experimentVerification
+          = new ExperimentVerification(experimentData, OperationNames.KEYED_REDUCE);
+      isVerified = experimentVerification.isVerified();
+      if (isVerified) {
+        LOG.info("Results generated from the experiment are verified.");
+      } else {
+        throw new VerificationException("Results do not match");
+      }
     }
   }
 

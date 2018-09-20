@@ -21,12 +21,17 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.op.stream.SAllReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class SAllReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
@@ -52,7 +57,8 @@ public class SAllReduceExample extends BenchWorker {
     }
     // create the communication
     reduce = new SAllReduce(communicator, taskPlan, sources, targets, MessageType.INTEGER,
-        new IdentityFunction(), new FinalSingularReceiver(jobParameters.getIterations()));
+        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
+        new FinalSingularReceiver(jobParameters.getIterations()));
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -113,6 +119,19 @@ public class SAllReduceExample extends BenchWorker {
         LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
         reduceDone = true;
       }
+
+      experimentData.setOutput(object);
+      experimentData.setWorkerId(workerId);
+      experimentData.setNumOfWorkers(jobParameters.getContainers());
+
+      try {
+        if (workerId == 0) {
+          verify();
+        }
+      } catch (VerificationException e) {
+        LOG.info("Exception Message : " + e.getMessage());
+      }
+
       return true;
     }
   }
@@ -127,6 +146,22 @@ public class SAllReduceExample extends BenchWorker {
     public Object reduce(Object t1, Object t2) {
 //      LOG.log(Level.INFO, String.format("%d Received %d", id, ++count));
       return t1;
+    }
+  }
+
+  public void verify() throws VerificationException {
+    boolean doVerify = jobParameters.isDoVerify();
+    boolean isVerified = false;
+    if (doVerify) {
+      LOG.info("Verifying results ...");
+      ExperimentVerification experimentVerification
+          = new ExperimentVerification(experimentData, OperationNames.ALLREDUCE);
+      isVerified = experimentVerification.isVerified();
+      if (isVerified) {
+        LOG.info("Results generated from the experiment are verified.");
+      } else {
+        throw new VerificationException("Results do not match");
+      }
     }
   }
 }

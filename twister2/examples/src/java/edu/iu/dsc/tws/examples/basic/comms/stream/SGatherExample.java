@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.stream;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,9 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.stream.SGather;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class SGatherExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SGatherExample.class.getName());
@@ -109,17 +113,43 @@ public class SGatherExample extends BenchWorker {
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       if (object instanceof List) {
         count += ((List) object).size();
+        ArrayList<?> a = (ArrayList<?>) object;
+        experimentData.setOutput(a.get(0));
       }
+
       if (count == expected) {
         LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
         reduceDone = true;
       }
+
+      try {
+        verify();
+      } catch (VerificationException e) {
+        LOG.info("Exception Message : " + e.getMessage());
+      }
+
       return true;
     }
 
     @Override
     public boolean progress() {
       return true;
+    }
+  }
+
+  public void verify() throws VerificationException {
+    boolean doVerify = jobParameters.isDoVerify();
+    boolean isVerified = false;
+    if (doVerify) {
+      LOG.info("Verifying results ...");
+      ExperimentVerification experimentVerification
+          = new ExperimentVerification(experimentData, OperationNames.GATHER);
+      isVerified = experimentVerification.isVerified();
+      if (isVerified) {
+        LOG.info("Results generated from the experiment are verified.");
+      } else {
+        throw new VerificationException("Results do not match");
+      }
     }
   }
 }

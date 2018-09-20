@@ -105,6 +105,7 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
       LOG.log(Level.INFO, String.format("%d Received message %d count %d",
           workerId, target, Iterators.size(it)));
       partitionDone = true;
+
       return true;
     }
   }

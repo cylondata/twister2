@@ -109,6 +109,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
       if (count >= expected) {
         partitionDone = true;
       }
+
       return true;
     }
 

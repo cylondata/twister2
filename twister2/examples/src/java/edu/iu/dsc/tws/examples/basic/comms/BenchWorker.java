@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public abstract class BenchWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(BenchWorker.class.getName());
@@ -80,6 +81,8 @@ public abstract class BenchWorker implements IWorker {
     communicator = new Communicator(cfg, channel);
     //collect experiment data
     experimentData = new ExperimentData();
+
+
     // now lets execute
     execute();
     // now communicationProgress
@@ -126,6 +129,13 @@ public abstract class BenchWorker implements IWorker {
       Object data = generateData();
       experimentData.setInput(data);
       experimentData.setTaskStages(jobParameters.getTaskStages());
+      experimentData.setIterations(jobParameters.getIterations());
+      if (jobParameters.isStream()) {
+        experimentData.setOperationMode(OperationMode.STREAMING);
+      } else {
+        experimentData.setOperationMode(OperationMode.BATCH);
+      }
+
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
         int flag = 0;

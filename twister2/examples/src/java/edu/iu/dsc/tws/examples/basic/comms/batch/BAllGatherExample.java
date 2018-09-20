@@ -24,6 +24,9 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BAllGather;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class BAllGatherExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BAllGatherExample.class.getName());
@@ -98,8 +101,34 @@ public class BAllGatherExample extends BenchWorker {
     @Override
     public boolean receive(int target, Iterator<Object> it) {
       gatherDone = true;
+      Object object = it.next();
+      experimentData.setOutput(object);
+      experimentData.setWorkerId(workerId);
+      experimentData.setNumOfWorkers(jobParameters.getContainers());
+      try {
+        if (workerId == 0) {
+          verify();
+        }
+      } catch (VerificationException e) {
+        LOG.info("Exception Message : " + e.getMessage());
+      }
       return true;
+    }
+  }
 
+  public void verify() throws VerificationException {
+    boolean doVerify = jobParameters.isDoVerify();
+    boolean isVerified = false;
+    if (doVerify) {
+      LOG.info("Verifying results ...");
+      ExperimentVerification experimentVerification
+          = new ExperimentVerification(experimentData, OperationNames.ALLGATHER);
+      isVerified = experimentVerification.isVerified();
+      if (isVerified) {
+        LOG.info("Results generated from the experiment are verified.");
+      } else {
+        throw new VerificationException("Results do not match");
+      }
     }
   }
 

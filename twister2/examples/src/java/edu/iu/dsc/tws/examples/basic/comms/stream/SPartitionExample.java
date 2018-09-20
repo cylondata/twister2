@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.stream;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +101,9 @@ public class SPartitionExample extends BenchWorker {
         for (Object o : (List) object) {
           count++;
         }
+        ArrayList<?> a = (ArrayList<?>) object;
+        int[] b = (int[]) a.get(0);
+        LOG.info(target + " : Response : " + Arrays.toString(b));
       }
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, count, expected));
@@ -107,6 +112,7 @@ public class SPartitionExample extends BenchWorker {
       if (count >= expected) {
         partitionDone = true;
       }
+
       return true;
     }
 

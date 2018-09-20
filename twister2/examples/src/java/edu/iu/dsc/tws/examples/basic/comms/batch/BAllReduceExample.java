@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.basic.comms.batch;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -26,6 +25,9 @@ import edu.iu.dsc.tws.comms.op.batch.BAllReduce;
 import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.basic.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class BAllReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BAllReduceExample.class.getName());
@@ -101,13 +103,42 @@ public class BAllReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
-      if (object instanceof int[]) {
-        int[] data = (int[]) object;
-        reduceDone = true;
-        String output = String.format("%s", Arrays.toString(data));
-        LOG.info("Final Output : " + output);
+      reduceDone = true;
+      experimentData.setOutput(object);
+      experimentData.setWorkerId(workerId);
+      experimentData.setNumOfWorkers(jobParameters.getContainers());
+
+      try {
+        if (workerId == 0) {
+          verify();
+        }
+      } catch (VerificationException e) {
+        LOG.info("Exception Message : " + e.getMessage());
       }
+
+      /*if (object instanceof int[]) {
+        int[] data = (int[]) object;
+
+        String output = String.format("%s", Arrays.toString(data));
+        LOG.info("Worker Id :" + workerId + ", Final Output : " + output);
+      }*/
       return true;
+    }
+  }
+
+  public void verify() throws VerificationException {
+    boolean doVerify = jobParameters.isDoVerify();
+    boolean isVerified = false;
+    if (doVerify) {
+      LOG.info("Verifying results ...");
+      ExperimentVerification experimentVerification
+          = new ExperimentVerification(experimentData, OperationNames.ALLREDUCE);
+      isVerified = experimentVerification.isVerified();
+      if (isVerified) {
+        LOG.info("Results generated from the experiment are verified.");
+      } else {
+        throw new VerificationException("Results do not match");
+      }
     }
   }
 

@@ -117,7 +117,6 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
     @Override
     public boolean receive(int target, Iterator<Object> it) {
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-
       LOG.info("Final Output Length : " + Iterators.size(it));
 
 //      while (it.hasNext()) {
