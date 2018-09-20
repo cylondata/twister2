@@ -108,7 +108,7 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
 
       //If the batch is done skip progress for this target
       if (batchDone.get(target)) {
-        //needsFurtherProgress = !checkIfEmptyIsSent(target);
+        needsFurtherProgress = !checkIfEmptyIsSent(target);
         continue;
       }
 
@@ -169,8 +169,6 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
       } else {
         needsFurtherProgress = true;
       }
-
-
     }
 
     return needsFurtherProgress;
@@ -189,6 +187,26 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
       isDone &= isSourceDone;
     }
     return isDone;
+  }
+
+  /**
+   * checks if the Empty message was sent for this target and sends it if not sent and possible to
+   * send
+   *
+   * @param target target for which the check is done
+   * @return false if Empty is sent
+   */
+  private boolean checkIfEmptyIsSent(int target) {
+    boolean isSent = true;
+    if (!isEmptySent.get(target)) {
+      if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(target,
+          new byte[0], MessageFlags.END, destination)) {
+        isEmptySent.put(target, true);
+      } else {
+        isSent = false;
+      }
+    }
+    return isSent;
   }
 
 }
