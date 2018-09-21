@@ -11,14 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task.batch;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.internal.task.BenchTaskWorker;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.batch.BaseBatchSink;
+import edu.iu.dsc.tws.task.batch.BaseBatchSource;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 
 public class BTReduceExample extends BenchTaskWorker {
@@ -37,12 +43,53 @@ public class BTReduceExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     psource = taskStages.get(0);
     psink = taskStages.get(1);
-    initialize(SOURCE, SINK, EDGE, psource, psink, OPERATION, DATA_TYPE);
+    GeneratorTask g = new GeneratorTask();
+    RecevingTask r = new RecevingTask();
+    taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    taskGraphBuilder.addSource(SOURCE, g, psource);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    computeConnection.reduce(SOURCE, EDGE, OPERATION, DATA_TYPE);
+    taskGraphBuilder.setMode(OperationMode.BATCH);
+    dataFlowTaskGraph = taskGraphBuilder.build();
+    ExecutionPlan plan = taskExecutor.plan(dataFlowTaskGraph);
+    taskExecutor.execute(dataFlowTaskGraph, plan);
   }
 
-  @Override
-  public void run(ComputeConnection computeConnection) {
-    computeConnection.reduce(SOURCE, EDGE,
-        OPERATION, DATA_TYPE);
+  private static class GeneratorTask extends BaseBatchSource {
+    private static final long serialVersionUID = -254264903510284748L;
+    private int count = 0;
+
+    @Override
+    public void execute() {
+      int[] val = {1};
+      if (count == 999) {
+        if (context.writeEnd(EDGE, val)) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (context.write(EDGE, val)) {
+          count++;
+        }
+      }
+    }
   }
+
+  private static class RecevingTask extends BaseBatchSink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      count++;
+      if (count % 1 == 0) {
+        Object object = message.getContent();
+        if (object instanceof int[]) {
+          LOG.info("Received Message : " + Arrays.toString((int[]) object));
+        }
+      }
+
+      return true;
+    }
+  }
+
 }

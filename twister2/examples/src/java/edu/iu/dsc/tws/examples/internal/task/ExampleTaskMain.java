@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTReduceExample;
+import edu.iu.dsc.tws.examples.internal.task.batch.ReduceBatchTask;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 
@@ -113,6 +114,7 @@ public class ExampleTaskMain {
     jobConfig.put(Constants.ARGS_DATA_TYPE, dataType);
     jobConfig.put(Constants.ARGS_INIT_ITERATIONS, intItr);
     jobConfig.put(Constants.ARGS_VERIFY, verify);
+    jobConfig.put(Constants.ARGS_STREAM, stream);
 
     // build the job
     Twister2Job twister2Job;
@@ -120,6 +122,9 @@ public class ExampleTaskMain {
       switch (operation) {
         case "reduce":
           submitJob(config, workers, jobConfig, BTReduceExample.class.getName());
+          break;
+        case "reduce2":
+          submitJob(config, workers, jobConfig, ReduceBatchTask.class.getName());
           break;
       }
     } else {
