@@ -39,7 +39,7 @@ public class BTReduceExample extends BenchTaskWorker {
     psource = taskStages.get(0);
     psink = taskStages.get(1);
     GeneratorTask g = new GeneratorTask();
-    RecevingTask r = new RecevingTask();
+    Receiving r = new Receiving();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.reduce(SOURCE, EDGE, OPERATION, DATA_TYPE);
@@ -64,7 +64,7 @@ public class BTReduceExample extends BenchTaskWorker {
     }
   }
 
-  private static class RecevingTask extends BaseBatchSink {
+  private static class Receiving extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

@@ -42,7 +42,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   @Override
   public void execute() {
-    LOG.info("============================ Executing ============================");
     jobParameters = JobParameters.build(config);
     taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     if (jobParameters.isStream()) {
