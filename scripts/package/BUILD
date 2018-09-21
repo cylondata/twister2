@@ -199,6 +199,10 @@ pkg_tar(
         ":twister2-client-lib-third_party",
         ":twister2-core-lib-executor",
         ":twister2-master-lib",
+        ":twister2-ompi-lib",
+        ":twister2-ompi-bin",
+        ":twister2-ompi-include",
+        ":twister2-ompi-etc",
     ],
 )
 
