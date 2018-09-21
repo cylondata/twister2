@@ -1,20 +1,22 @@
-Twister2 Architecture
-======================
+# Twister2 Architecture
 
-.. toctree::
-   :maxdepth: 5
-   
-   common/logging
-   discovery/worker-discovery
-   job-master/job-master  
-   resource-schedulers/kubernetes/k8s-based-worker-discovery  
-   resource-schedulers/kubernetes/k8s-persistent-storage  
-   resource-schedulers/kubernetes/k8s-services
-   resource-schedulers/kubernetes/k8s-worker-binding-mapping  
-   resource-schedulers/kubernetes/open-mpi-support
-   resource-schedulers/kubernetes/twister2-on-kubernetes
-   discovery/zk-based-job-master-discovery
-   discovery/zk-based-worker-discovery
+Goal of Twister2 is to provide a layered approach for big data with independent components at each 
+level to compose an application. The layers include: 1. Resource allocations, 2. Data Access, 
+3. Communication, 4. Task System, and 5. Distributed Data. Among these communications, task system 
+and data management are the core components of the system with the others providing auxiliary 
+services. On top of these layers, one can develop higher-level APIs such as SQL interfaces. 
+The following figure shows the runtime architecture of Twister2 with various components. 
+Even though shows all the components in a single diagram, one can mix and match various components 
+according to their needs. Fault tolerance and security are two aspects that affect all these 
+components.
+
+![Alt text](../images/tws_architecture.png?raw=true "Title")
+
+The following table gives a summary of various components, APIs, and implementation choices.
+
+![Alt text](../images/twister2_architecture.png?raw=true "Title")
+
+## TWister2 Runtime
 
 Twister2 Runtime consists of the following main components.
 
