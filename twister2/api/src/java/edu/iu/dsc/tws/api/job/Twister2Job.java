@@ -39,7 +39,7 @@ public final class Twister2Job {
 
   private static final Logger LOG = Logger.getLogger(Twister2Job.class.getName());
 
-  private static final KryoSerializer kryoSerializer = new KryoSerializer();
+  private static final KryoSerializer KRYO_SERIALIZER = new KryoSerializer();
 
   private String name;
   private String workerClass;
@@ -59,7 +59,7 @@ public final class Twister2Job {
     JobAPI.Config.Builder configBuilder = JobAPI.Config.newBuilder();
 
     config.forEach((key, value) -> {
-      byte[] objectByte = kryoSerializer.serialize(value);
+      byte[] objectByte = KRYO_SERIALIZER.serialize(value);
       configBuilder.putConfigByteMap(key, ByteString.copyFrom(objectByte));
     });
 
