@@ -109,7 +109,8 @@ public class SinkStreamingInstance  implements INodeInstance {
           streamingTask.execute(message);
         } else {
           //Send acknowledge message to jobmaster
-          LOG.info("Barrier message received in Sink " + streamingTaskId);
+          LOG.info("Barrier message received in Sink " + streamingTaskId
+              + " from source " + message.sourceTask());
 
           ((SinkCheckpointableTask) streamingTask).receivedValidBarrier(message);
         }
