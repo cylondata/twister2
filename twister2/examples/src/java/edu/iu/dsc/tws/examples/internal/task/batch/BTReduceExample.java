@@ -15,12 +15,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.internal.task.BenchTaskWorker;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
@@ -45,14 +43,13 @@ public class BTReduceExample extends BenchTaskWorker {
     psink = taskStages.get(1);
     GeneratorTask g = new GeneratorTask();
     RecevingTask r = new RecevingTask();
-    taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.reduce(SOURCE, EDGE, OPERATION, DATA_TYPE);
     taskGraphBuilder.setMode(OperationMode.BATCH);
     dataFlowTaskGraph = taskGraphBuilder.build();
-    ExecutionPlan plan = taskExecutor.plan(dataFlowTaskGraph);
-    taskExecutor.execute(dataFlowTaskGraph, plan);
+    executionPlan = taskExecutor.plan(dataFlowTaskGraph);
+    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
   }
 
   private static class GeneratorTask extends BaseBatchSource {

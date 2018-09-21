@@ -42,6 +42,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
   @Override
   public void execute() {
     LOG.info("Executing ============================");
+    taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     intialize();
 
   }
