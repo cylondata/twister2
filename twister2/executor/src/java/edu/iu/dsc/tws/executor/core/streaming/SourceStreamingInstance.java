@@ -32,7 +32,6 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 public class SourceStreamingInstance implements INodeInstance {
 
   private static final Logger LOG = Logger.getLogger(SourceStreamingInstance.class.getName());
-
   /**
    * The actual streamingTask executing
    */
@@ -147,10 +146,12 @@ public class SourceStreamingInstance implements INodeInstance {
             break;
           }
         } else {
+          LOG.info("Sending bbarrier from source: " + message.sourceTask());
           for (String edge: outEdges) {
-            LOG.info("Sending barrier in all outgoing edges");
             IParallelOperation op = outStreamingParOps.get(edge);
-            op.send(streamingTaskId, message, message.getFlag());
+            if (op.send(streamingTaskId, message, message.getFlag())) {
+              outStreamingQueue.poll();
+            }
           }
         }
       }
