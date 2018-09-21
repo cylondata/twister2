@@ -71,13 +71,35 @@ pkg_tar(
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-third_party",
         ":twister2-master-lib",
+        ":twister2-ompi-lib",
+        ":twister2-ompi-bin",
+        ":twister2-ompi-include",
+        ":twister2-ompi-etc",
     ],
 )
 
 pkg_tar(
-    name = "twister2-ompi",
-    srcs = ["@ompi3//:ompi-files",],
-    package_dir = "lib",
+    name = "twister2-ompi-lib",
+    srcs = ["@ompi3//:ompi-lib-files",],
+    package_dir = "ompi/lib",
+)
+
+pkg_tar(
+    name = "twister2-ompi-bin",
+    srcs = ["@ompi3//:ompi-bin-files",],
+    package_dir = "ompi/bin",
+)
+
+pkg_tar(
+    name = "twister2-ompi-include",
+    srcs = ["@ompi3//:ompi-include-files",],
+    package_dir = "ompi/include",
+)
+
+pkg_tar(
+    name = "twister2-ompi-etc",
+    srcs = ["@ompi3//:ompi-etc-files",],
+    package_dir = "ompi/etc",
 )
 
 pkg_tar(
