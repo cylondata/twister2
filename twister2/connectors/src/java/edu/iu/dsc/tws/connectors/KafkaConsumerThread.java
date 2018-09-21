@@ -56,13 +56,13 @@ public class KafkaConsumerThread<T>  {
   }
 
 
-  public void run() {
+  public int run() {
     if (!fetchLoopStarted) {
       LOG.info("starting");
       initiateConnection();
       commitOffsets();
       if (!active) {
-        return;
+        return 0;
       }
       if (topicPartitions == null) {
         throw new Error("Topic Partition is not defined");
@@ -71,8 +71,10 @@ public class KafkaConsumerThread<T>  {
       fetchLoopStarted = true;
     }
     ConsumerRecords<String, String> records;
+    int messageCount = 0;
     records = consumer.poll(100);
     if (records != null) {
+
       for (ConsumerRecord<String, String> record : records) {
 //      }
         for (KafkaTopicPartitionState topicPartitionState : topicPartitionStates) {
@@ -85,10 +87,12 @@ public class KafkaConsumerThread<T>  {
             String value = record2.value();
 //            LOG.info("record = {} ; offset = {} ;", value, record2.offset());
             emitRecord(value, topicPartitionState, record2.offset());
+            messageCount++;
           }
         }
       }
     }
+    return messageCount;
   }
 
   public void initiateConnection() {
