@@ -172,15 +172,13 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
   public class BarrierClientMessageHandler implements MessageHandler {
     @Override
     public void onMessage(RequestID id, int workerId, Message message) {
-      LOG.info("BarrierClientMessageHandler got message from checkpoint Manager"
-          + workerId);
 
       if (message instanceof Checkpoint.BarrierSend) {
         Checkpoint.BarrierSend barrierSend = (Checkpoint.BarrierSend) message;
 
         if (barrierSend.getSendBarrier()) {
           currentBarrierID = barrierSend.getCurrentBarrierID();
-          LOG.info("Signal to emit barrier with ID : " + currentBarrierID + " received");
+//          LOG.info("Signal to emit barrier with ID : " + currentBarrierID + " received");
 
           emitBarrier();
           currentCheckpointInterval = globalCheckpointInterval;

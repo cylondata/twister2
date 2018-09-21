@@ -1,1 +1,2 @@
+twister2.checkpoint.enable: "true"
 twister2.statebackend.directory: "/home/kumar/statebackend/"

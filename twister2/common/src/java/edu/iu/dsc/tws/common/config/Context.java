@@ -71,6 +71,7 @@ public class Context {
 
   public static final ConfigEntry CHECKPOINT_YAML = new ConfigEntry(
       "twister2.config.file.checkpoint.yaml",  "${TWISTER2_CONF}/checkpoint.yaml");
+
   public static final String JOB_NAME = "twister2.job.name";
 
   // an internal property to represent the container id
@@ -94,6 +95,9 @@ public class Context {
 
   public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
   public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
+
+  public static final boolean TWISTER2_CHECKPOINT_ENABLE_DEFAULT = false;
+  public static final String TWISTER2_CHECKPOINT_ENABLE = "twister2.checkpoint.enable";
 
 
   static {

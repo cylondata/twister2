@@ -146,7 +146,6 @@ public class SourceStreamingInstance implements INodeInstance {
             break;
           }
         } else {
-          LOG.info("Sending bbarrier from source: " + message.sourceTask());
           for (String edge: outEdges) {
             IParallelOperation op = outStreamingParOps.get(edge);
             if (op.send(streamingTaskId, message, message.getFlag())) {

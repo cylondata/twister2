@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -85,33 +84,16 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-        if (!checkpointStarted) {
-          checkpointStarted = true;
-        }
-        barrierMap.putIfAbsent(source, true);
-      } else {
-        if (barrierMap.containsKey(source)) {
-          if (incommingBuffer.containsKey(source)) {
-            incommingBuffer.get(source).add(object);
-          } else {
-            ArrayList<Object> bufferMessege = new ArrayList<>();
-            bufferMessege.add(object);
-            incommingBuffer.put(source, bufferMessege);
-          }
-        } else {
-          BlockingQueue<TaskMessage> messages = inComing.get(target);
-          if (messages.size() > 128) {
-            return false;
-          }
+      BlockingQueue<TaskMessage> messages = inComing.get(target);
+      if (messages.size() > 128) {
+        return false;
+      }
 
-          if (object instanceof List) {
-            TaskMessage msg = new TaskMessage(object,
-                edgeGenerator.getStringMapping(communicationEdge), target);
+      if (object instanceof List) {
+        TaskMessage msg = new TaskMessage(object,
+            edgeGenerator.getStringMapping(communicationEdge), target, flags);
 
-            messages.offer(msg);
-          }
-        }
+        messages.offer(msg);
       }
       return true;
     }
