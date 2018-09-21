@@ -35,6 +35,10 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 public class ExampleTaskMain {
   private static final Logger LOG = Logger.getLogger(ExampleTaskMain.class.getName());
 
+  public ExampleTaskMain() {
+
+  }
+
   public static void main(String[] args) throws ParseException {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -134,6 +138,7 @@ public class ExampleTaskMain {
     }
   }
 
+
   private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
     LOG.info("Submitting Job ...");
 
@@ -147,4 +152,6 @@ public class ExampleTaskMain {
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
   }
+
+
 }
