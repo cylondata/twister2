@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SinkStreamingInstance  implements INodeInstance {
@@ -109,6 +110,8 @@ public class SinkStreamingInstance  implements INodeInstance {
         } else {
           //Send acknowledge message to jobmaster
           LOG.info("Barrier message received in Sink " + streamingTaskId);
+
+          ((SinkCheckpointableTask) streamingTask).receivedValidBarrier(message);
         }
       }
 

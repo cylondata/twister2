@@ -144,7 +144,18 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
   /**
    * This method should get called when a valid checkpoint is made.
    */
-  private void receivedValidBarrier() {
+  public void receivedValidBarrier(Object message) {
+    if (message instanceof Checkpoint.CheckpointBarrier) {
+      Checkpoint.CheckpointBarrier checkpointBarrier = (Checkpoint.CheckpointBarrier) message;
 
+      Checkpoint.CheckpointComplete checkpointCompleteMessage
+          = Checkpoint.CheckpointComplete.newBuilder()
+          .setCheckpointComplete(true)
+          .setCurrentBarrierID(checkpointBarrier.getCurrentBarrierID())
+          .build();
+
+      taskClient.sendRequest(checkpointCompleteMessage);
+      taskLooper.loop();
+    }
   }
 }

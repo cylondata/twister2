@@ -26,3 +26,12 @@ message BarrierSend {
     bool sendBarrier = 1;
     int32 currentBarrierID = 2;
 }
+
+message CheckpointComplete {
+    bool checkpointComplete = 1;
+    int32 currentBarrierID = 2;
+}
+
+message CheckpointBarrier {
+    int32 currentBarrierID = 1;
+}

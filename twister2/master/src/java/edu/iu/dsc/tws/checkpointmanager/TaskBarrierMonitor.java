@@ -135,6 +135,21 @@ public class TaskBarrierMonitor implements MessageHandler {
         rrServer.sendResponse(id, barrierSendMessage);
       }
 
+    } else if (message instanceof Checkpoint.CheckpointComplete) {
+
+      LOG.fine("Sink task " + taskId + " sent CheckpointComplete message.");
+
+      Checkpoint.CheckpointComplete checkpointCompleteMessage
+          = (Checkpoint.CheckpointComplete) message;
+
+      if (checkpointCompleteMessage.getCheckpointComplete()
+          && checkpointCompleteMessage.getCurrentBarrierID() == this.currentBarrierID) {
+        LOG.info("Checkpointing with Barrier ID " + currentBarrierID + " is completed");
+
+        //start the next checkpoint
+        currentBarrierID++;
+        sendBarrierFlag = true;
+      }
     }
   }
 
