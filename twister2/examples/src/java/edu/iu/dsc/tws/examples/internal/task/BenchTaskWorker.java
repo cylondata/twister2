@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
@@ -41,10 +42,18 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   @Override
   public void execute() {
-    LOG.info("Executing ============================");
+    LOG.info("============================ Executing ============================");
+    jobParameters = JobParameters.build(config);
     taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    if (jobParameters.isStream()) {
+      taskGraphBuilder.setMode(OperationMode.STREAMING);
+    } else {
+      taskGraphBuilder.setMode(OperationMode.BATCH);
+    }
     intialize();
-
+    dataFlowTaskGraph = taskGraphBuilder.build();
+    executionPlan = taskExecutor.plan(dataFlowTaskGraph);
+    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
   }
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {

@@ -17,12 +17,10 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.internal.task.BenchTaskWorker;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
 
 public class BTReduceExample extends BenchTaskWorker {
@@ -37,7 +35,6 @@ public class BTReduceExample extends BenchTaskWorker {
 
   @Override
   public void intialize() {
-    jobParameters = JobParameters.build(config);
     List<Integer> taskStages = jobParameters.getTaskStages();
     psource = taskStages.get(0);
     psink = taskStages.get(1);
@@ -46,10 +43,6 @@ public class BTReduceExample extends BenchTaskWorker {
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.reduce(SOURCE, EDGE, OPERATION, DATA_TYPE);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
-    dataFlowTaskGraph = taskGraphBuilder.build();
-    executionPlan = taskExecutor.plan(dataFlowTaskGraph);
-    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
   }
 
   private static class GeneratorTask extends BaseBatchSource {
