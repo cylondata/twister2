@@ -150,7 +150,6 @@ public class SourceStreamingInstance implements INodeInstance {
           for (String edge: outEdges) {
             IParallelOperation op = outStreamingParOps.get(edge);
             if (op.send(streamingTaskId, message, message.getFlag())) {
-              LOG.info("check");
               outStreamingQueue.poll();
             }
           }
