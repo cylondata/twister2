@@ -128,7 +128,7 @@ public class TaskBarrierMonitor implements MessageHandler {
       } else {
 
         Checkpoint.BarrierSend barrierSendMessage = Checkpoint.BarrierSend.newBuilder()
-            .setSendBarrier(true)
+            .setSendBarrier(false)
             .setCurrentBarrierID(currentBarrierID)
             .build();
 
@@ -175,7 +175,7 @@ public class TaskBarrierMonitor implements MessageHandler {
       currentBarrierReceivedSourceSet = new HashSet<Integer>();
       sendBarrierFlag = false;
 
-//      LOG.info("Barriers with Barrier ID " + currentBarrierID + " got sent from Source Tasks");
+      LOG.info("Barriers with Barrier ID " + currentBarrierID + " got sent from Source Tasks");
     }
   }
 }

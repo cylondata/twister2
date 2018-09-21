@@ -133,7 +133,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      System.out.println(message.getContent());
+      System.out.println(message.getContent() + " from Sink Task " + ctx.taskId());
 
       return true;
     }
