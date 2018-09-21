@@ -26,10 +26,10 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
 import edu.iu.dsc.tws.connectors.config.KafkaProducerConfig;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.SinkTask;
+import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class TwsKafkaProducer<T> extends SinkTask {
+public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
   private static final long serialVersionUID = -264264120110286749L;
   private static Logger log = LoggerFactory.getLogger(TwsKafkaProducer.class);
   private Properties kafkaConfigs;
@@ -74,6 +74,7 @@ public class TwsKafkaProducer<T> extends SinkTask {
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
+    connect(cfg, context);
     this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
     this.worldSize = context.getParallelism();
     log.info("myID : {} , worldSize : {} ", myIndex, worldSize);
