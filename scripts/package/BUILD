@@ -320,28 +320,6 @@ pkg_tar(
     package_dir = "examples",
 )
 
-######################################################
-# twister2 master packaging
-######################################################
-
-#pkg_tar(
-#    name = "twister2-master",
-#    extension = "tar.gz",
-#    # srcs = generated_release_files,
-#    package_dir = "twister2-master",
-#    deps = [
-#        ":twister2-client-conf-aurora",
-#        ":twister2-client-conf-kubernetes",
-#        ":twister2-client-conf-mesos",
-#        ":twister2-client-conf-nodesmpi",
-#        ":twister2-client-conf-slurmmpi",
-#        ":twister2-client-conf-standalone",
-#        ":twister2-client-lib-common",
-#        ":twister2-client-lib-third_party",
-#        ":twister2-master-lib",
-#    ],
-#)
-#
 pkg_tar(
     name = "twister2-master-lib",
     srcs = twister2_master_lib_files(),
