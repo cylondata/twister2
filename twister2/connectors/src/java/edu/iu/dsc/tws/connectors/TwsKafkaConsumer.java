@@ -42,7 +42,8 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
   @Override
   public void execute() {
     try {
-      kafkaConsumerThread.run();
+      int messageCount = kafkaConsumerThread.run();
+      updateMessageCount(messageCount);
     } catch (IllegalThreadStateException e) {
       log.info(e.toString());
     }
@@ -51,6 +52,7 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
   @Override
   public void prepare(Config cfg, TaskContext context) {
     connect(cfg, context);
+    setCheckpointInterval(4);
     this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
     this.worldSize = context.getParallelism();
     log.info("myID : {} , worldSize : {} ", myIndex, worldSize);

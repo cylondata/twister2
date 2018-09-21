@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
+import static java.lang.Math.max;
 
 public abstract class SourceCheckpointableTask extends BaseStreamSource {
   private static final long serialVersionUID = -254264903510214728L;
@@ -38,6 +39,10 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
   public Progress taskLooper;
 
   private int currentBarrierID = 1;
+  private int intermediateMessageCount;
+  private int currentCheckpointInterval = 50;
+  private int globalCheckpointInterval = 50;
+  private long overallMessageCount = 0;
 
   /**
    * to control the connection error when we repeatedly try connecting
@@ -47,7 +52,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
   public void connect(Config cfg, TaskContext context) {
     this.ctx = context;
     this.config = cfg;
-
+    this.intermediateMessageCount = 0;
     taskLooper = new Progress();
 
     taskClient = new RRClient("localhost", 6789, cfg, taskLooper,
@@ -65,6 +70,27 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
     tryUntilConnected(taskClient, taskLooper, 5000);
     sendTaskDiscoveryMessage();
   }
+
+  public void updateMessageCount(int messageCount) {
+    this.intermediateMessageCount += messageCount;
+    this.overallMessageCount += messageCount;
+    if (intermediateMessageCount >= currentCheckpointInterval) {
+      LOG.info(
+          "intermediateMessageCount: "  + intermediateMessageCount
+              +
+              " overallMessageCount: " + overallMessageCount
+              +
+              " currentCheckpointInterval: " + currentCheckpointInterval
+      );
+      checkForBarrier();
+      intermediateMessageCount = 0;
+      currentCheckpointInterval = max(
+          (int) (currentCheckpointInterval - currentCheckpointInterval * 0.5),
+          1);
+    }
+
+  }
+
 
   public void checkForBarrier() {
     sendBarrierSyncMessage();
@@ -155,7 +181,8 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
 //          LOG.info("Signal to emit barrier with ID : " + currentBarrierID + " received");
 
           emitBarrier();
-
+          currentCheckpointInterval = globalCheckpointInterval;
+          intermediateMessageCount = 0;
           currentBarrierID++;
         }
       }
@@ -196,5 +223,10 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
 
     ctx.writeBarrier("keyed-edge", checkpointBarrierMessage);
 
+  }
+
+  public void setCheckpointInterval(int checkpointInterval) {
+    this.globalCheckpointInterval = checkpointInterval;
+    this.currentCheckpointInterval = globalCheckpointInterval;
   }
 }
