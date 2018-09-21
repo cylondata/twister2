@@ -1,17 +1,20 @@
-Welcome to Twister2's documentation!
+Welcome to Twister2's Documentation!
 ====================================
 
-Contents:
+##Contents
 
-.. toctree::
-   :maxdepth: 5
-   
-   documents/quickstart/quickstart
-   documents/architecture/main-components
-   documents/installation/installation 
-   documents/concepts/concepts 
-   documents/examples/examples.md
-   documents/developers/developer
+
+[Quick Start](quickstart/quickstart.md)
+
+[Main Components](architecture/main-components.md)
+
+[Installation](installation/installation.md)
+
+[Concepts](concepts/concepts.md)
+
+[Examples](examples/examples.md)
+
+[Developer](developers/developer.md)
 
 
 
