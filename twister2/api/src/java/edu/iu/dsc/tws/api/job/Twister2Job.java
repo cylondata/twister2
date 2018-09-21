@@ -23,10 +23,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.job;
 
-import java.util.AbstractMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import com.google.protobuf.ByteString;
