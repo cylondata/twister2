@@ -26,80 +26,14 @@ import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 /**
  * Keyed reduce receiver for batch mode
  */
-public class KReduceBatchPartialReceiver extends KeyedReceiver {
+public class KReduceBatchPartialReceiver extends KReduceReceiver {
   private static final Logger LOG = Logger.getLogger(KReduceBatchPartialReceiver.class.getName());
 
-  /**
-   * The function that is used for the reduce operation
-   */
-  protected ReduceFunction reduceFunction;
 
   public KReduceBatchPartialReceiver(int dest, ReduceFunction function) {
     this.reduceFunction = function;
     this.destination = dest;
     this.limitPerKey = 1;
-  }
-
-  /**
-   * The reduce operation overrides the offer method because the reduce operation
-   * does not save all the incomming messages, it rather reduces messages with the same key and
-   * saves only the reduced values. So the messages data structure will only have a single
-   * entry for each target, key pair
-   *
-   * @param target target for which the messages are to be added
-   * @param object the message/messages to be added
-   * @return true if the message was added or false otherwise
-   */
-  @Override
-  @SuppressWarnings("rawtypes")
-  protected boolean offerMessage(int target, Object object) {
-
-
-    Map<Object, Queue<Object>> messagesPerTarget = messages.get(target);
-
-    if (!isFinalReceiver && messagesPerTarget.size() > keyLimit) {
-      LOG.fine(String.format("Executor %d Partial cannot add any further keys needs flush ",
-          executor));
-      moveMessagesToSendQueue(target, messagesPerTarget);
-      return false;
-    }
-    if (object instanceof List) {
-      List dataList = (List) object;
-      for (Object dataEntry : dataList) {
-        KeyedContent keyedContent = (KeyedContent) dataEntry;
-        if (!reduceAndInsert(messagesPerTarget, keyedContent)) {
-          throw new RuntimeException("Reduce operation should not fail to insert key");
-        }
-
-      }
-    } else {
-      KeyedContent keyedContent = (KeyedContent) object;
-      if (!reduceAndInsert(messagesPerTarget, keyedContent)) {
-        throw new RuntimeException("Reduce operation should not fail to insert key");
-      }
-    }
-    return true;
-  }
-
-  /**
-   * reduces the given KeyedContent value with the existing value in the messages for the same key.
-   * If the key is not present it will insert the key with the given value.
-   *
-   * @param messagesPerTarget messages for the current target
-   * @param keyedContent value to be reduced and inserted
-   */
-  private boolean reduceAndInsert(Map<Object, Queue<Object>> messagesPerTarget,
-                                  KeyedContent keyedContent) {
-    Object currentEntry;
-    Object key = keyedContent.getKey();
-    if (!messagesPerTarget.containsKey(key)) {
-      messagesPerTarget.put(key, new ArrayBlockingQueue<>(limitPerKey));
-      return messagesPerTarget.get(keyedContent.getKey()).offer(keyedContent.getValue());
-    } else {
-      currentEntry = messagesPerTarget.get(keyedContent.getKey()).poll();
-      currentEntry = reduceFunction.reduce(currentEntry, keyedContent.getValue());
-      return messagesPerTarget.get(keyedContent.getKey()).offer(currentEntry);
-    }
   }
 
   @Override
