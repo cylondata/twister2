@@ -13,18 +13,14 @@ package edu.iu.dsc.tws.executor.core;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public abstract class AbstractParallelOperation implements IParallelOperation {
   protected Config config;
@@ -69,38 +65,4 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
     return true;
   }
 
-  public void barrierChecking(
-      DataFlowPartition op, int source, int path, int target, int flags, Object object) {
-    if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-      if (!checkpointStarted) {
-        checkpointStarted = true;
-      }
-      barrierMap.putIfAbsent(source, true);
-      if (barrierMap.keySet() == op.getSources()) {
-        for (Integer dest :op.getDestinations()) {
-          op.send(source, new Object(), MessageFlags.BARRIER, dest);
-        }
-        //start checkpoint and flush the buffering messages
-      }
-    } else {
-      if (barrierMap.containsKey(source)) {
-        if (incommingBuffer.containsKey(source)) {
-          incommingBuffer.get(source).add(object);
-        } else {
-          ArrayList<Object> bufferMessege = new ArrayList<>();
-          bufferMessege.add(object);
-          incommingBuffer.put(source, bufferMessege);
-        }
-      } else {
-        if (object instanceof List) {
-          for (Object o : (List) object) {
-            TaskMessage msg = new TaskMessage(o,
-                edgeGenerator.getStringMapping(communicationEdge), target);
-            outMessages.get(target).offer(msg);
-
-          }
-        }
-      }
-    }
-  }
 }

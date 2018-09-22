@@ -94,7 +94,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
       }
       if (object instanceof List) {
         TaskMessage msg = new TaskMessage(object,
-            edgeGenerator.getStringMapping(communicationEdge), target, flags);
+            edgeGenerator.getStringMapping(communicationEdge), source, flags);
         messages.offer(msg);
       }
       return true;
