@@ -152,6 +152,7 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
           = Checkpoint.CheckpointComplete.newBuilder()
           .setCheckpointComplete(true)
           .setCurrentBarrierID(checkpointBarrier.getCurrentBarrierID())
+          .setSinkID(ctx.taskId())
           .build();
 
       taskClient.sendRequest(checkpointCompleteMessage);
