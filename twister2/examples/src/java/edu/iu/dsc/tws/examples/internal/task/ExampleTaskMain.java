@@ -27,6 +27,15 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.Constants;
+import edu.iu.dsc.tws.examples.internal.task.batch.BTAllGatherExample;
+import edu.iu.dsc.tws.examples.internal.task.batch.BTAllReduceExample;
+import edu.iu.dsc.tws.examples.internal.task.batch.BTBroadCastExample;
+import edu.iu.dsc.tws.examples.internal.task.batch.BTGatherExample;
+import edu.iu.dsc.tws.examples.internal.task.batch.BTIterativeJobExample;
+import edu.iu.dsc.tws.examples.internal.task.batch.BTKeyedGatherExample;
+import edu.iu.dsc.tws.examples.internal.task.batch.BTKeyedReduceExample;
+import edu.iu.dsc.tws.examples.internal.task.batch.BTMultiStageExample;
+import edu.iu.dsc.tws.examples.internal.task.batch.BTPartitionKeyedExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTReduceExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.ReduceBatchTask;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -127,8 +136,35 @@ public class ExampleTaskMain {
         case "reduce":
           submitJob(config, workers, jobConfig, BTReduceExample.class.getName());
           break;
-        case "reduce2":
-          submitJob(config, workers, jobConfig, ReduceBatchTask.class.getName());
+        case "allreduce":
+          submitJob(config, workers, jobConfig, BTAllReduceExample.class.getName());
+          break;
+        case "gather":
+          submitJob(config, workers, jobConfig, BTGatherExample.class.getName());
+          break;
+        case "allgather":
+          submitJob(config, workers, jobConfig, BTAllGatherExample.class.getName());
+          break;
+        case "bcast":
+          submitJob(config, workers, jobConfig, BTBroadCastExample.class.getName());
+          break;
+        case "partition":
+          submitJob(config, workers, jobConfig, BTPartitionKeyedExample.class.getName());
+          break;
+        case "keyed-reduce":
+          submitJob(config, workers, jobConfig, BTKeyedReduceExample.class.getName());
+          break;
+        case "keyed-gather":
+          submitJob(config, workers, jobConfig, BTKeyedGatherExample.class.getName());
+          break;
+        case "keyed-partition":
+          submitJob(config, workers, jobConfig, BTPartitionKeyedExample.class.getName());
+          break;
+        case "iterative-job":
+          submitJob(config, workers, jobConfig, BTIterativeJobExample.class.getName());
+          break;
+        case "multistage-job":
+          submitJob(config, workers, jobConfig, BTMultiStageExample.class.getName());
           break;
       }
     } else {

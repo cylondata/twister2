@@ -48,6 +48,6 @@ public class BTPartitionExample extends BenchTaskWorker {
     BaseBatchSink r = taskExamples.getSinkClass("partition");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.gather(SOURCE, EDGE, DATA_TYPE);
+    computeConnection.partition(SOURCE, EDGE, DATA_TYPE);
   }
 }

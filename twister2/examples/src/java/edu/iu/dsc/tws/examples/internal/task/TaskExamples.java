@@ -11,11 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.task.Collector;
+import edu.iu.dsc.tws.api.task.Receptor;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.dataset.DataSet;
+import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.batch.BaseBatchCompute;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
@@ -154,6 +163,19 @@ public class TaskExamples {
       Object object = message.getContent();
       if (object instanceof int[]) {
         LOG.info("Batch Gather Message Received : " + Arrays.toString((int[]) object));
+      } else if (object instanceof Iterator) {
+        Iterator<?> it = (Iterator<?>) object;
+        String out = "";
+        while (it.hasNext()) {
+          if (it.next() instanceof int[]) {
+            int[] a = (int[]) it.next();
+            out += Arrays.toString(a);
+          }
+        }
+
+        LOG.info("Batch Gather Message Received : " + out);
+      } else {
+        LOG.info("Class : " + object.getClass().getName());
       }
 
       return true;
@@ -198,7 +220,19 @@ public class TaskExamples {
 
       Object object = message.getContent();
       if (object instanceof int[]) {
-        LOG.info("Batch Gather Message Received : " + Arrays.toString((int[]) object));
+        LOG.info("Batch AllGather Message Received : " + Arrays.toString((int[]) object));
+      } else if (object instanceof Iterator) {
+        Iterator<?> it = (Iterator<?>) object;
+        String out = "";
+        while (it.hasNext()) {
+          if (it.next() instanceof int[]) {
+            int[] a = (int[]) it.next();
+            out += Arrays.toString(a);
+          }
+        }
+        LOG.info("Batch AllGather Message Received : " + out);
+      } else {
+        LOG.info("Class : " + object.getClass().getName());
       }
 
       return true;
@@ -289,8 +323,15 @@ public class TaskExamples {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.info("Message Keyed-Reduced : " + message.getContent()
-          + ", Count : " + count);
+      Object object = message.getContent();
+      if (object instanceof KeyedContent) {
+        KeyedContent keyedContent = (KeyedContent) object;
+        if (keyedContent.getValue() instanceof int[]) {
+          int[] a = (int[]) keyedContent.getValue();
+          LOG.info("Message Keyed-Reduced : " + keyedContent.getKey() + ", "
+              + Arrays.toString(a));
+        }
+      }
       count++;
 
       return true;
@@ -372,6 +413,151 @@ public class TaskExamples {
     }
   }
 
+  /**
+   * Iterative Job Example
+   **/
+
+  protected static class IterativeSourceTask extends BaseBatchSource implements Receptor {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    private DataSet<Object> input;
+
+    private int count = 0;
+
+    private String edge;
+
+    public IterativeSourceTask() {
+
+    }
+
+    public IterativeSourceTask(String e) {
+      this.edge = e;
+    }
+
+    @Override
+    public void execute() {
+      if (count == 999) {
+        if (context.writeEnd(edge, "Hello")) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (context.write(edge, "Hello")) {
+          count++;
+        }
+      }
+    }
+
+    @Override
+    public void add(String name, DataSet<Object> data) {
+      LOG.log(Level.INFO, "Received input: " + name);
+      input = data;
+    }
+  }
+
+  protected static class IterativeSinkTask extends BaseBatchSink implements Collector<Object> {
+    private static final long serialVersionUID = -5190777711234234L;
+
+    private List<String> list = new ArrayList<>();
+
+    private int count;
+
+    @Override
+    public boolean execute(IMessage message) {
+      LOG.log(Level.INFO, "Received message: " + message.getContent());
+
+      if (message.getContent() instanceof Iterator) {
+        while (((Iterator) message.getContent()).hasNext()) {
+          Object ret = ((Iterator) message.getContent()).next();
+          count++;
+          list.add(ret.toString());
+        }
+        LOG.info("Message Partition Received : " + message.getContent() + ", Count : " + count);
+      }
+      count++;
+      return true;
+    }
+
+    @Override
+    public Partition<Object> get() {
+      return new Partition<>(context.taskIndex(), list);
+    }
+  }
+
+  //multi-stage-generator
+  protected static class MultiStageGeneratorTask extends BaseBatchSource {
+    private static final long serialVersionUID = -254264903510284748L;
+
+    private int count = 0;
+
+    private String edge;
+
+    public MultiStageGeneratorTask() {
+
+    }
+
+    public MultiStageGeneratorTask(String edge) {
+      this.edge = edge;
+    }
+
+    @Override
+    public void execute() {
+      if (count == 999) {
+        if (context.writeEnd(edge, "Hello")) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (context.write(edge, "Hello")) {
+          count++;
+        }
+      }
+    }
+  }
+
+  //multi-stage-reduce
+  protected static class MultiStageReduceTask extends BaseBatchSink {
+    private static final long serialVersionUID = -254264903510284791L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      count++;
+      LOG.info(String.format("%d %d Reduce received count: %d", context.getWorkerId(),
+          context.taskId(), count));
+      return true;
+    }
+  }
+
+  //multi-stage-partition
+  @SuppressWarnings("rawtypes")
+  protected static class MultiStagePartitionTask extends BaseBatchCompute {
+    private static final long serialVersionUID = -254264903510284798L;
+
+    private String edge;
+
+    public MultiStagePartitionTask() {
+
+    }
+
+    public MultiStagePartitionTask(String edge) {
+      this.edge = edge;
+    }
+
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (message.getContent() instanceof Iterator) {
+        Iterator it = (Iterator) message.getContent();
+        while (it.hasNext()) {
+          count += 1;
+          context.write(edge, it.next());
+        }
+      }
+      LOG.info(String.format("%d %d Partition Received count: %d", context.getWorkerId(),
+          context.taskId(), count));
+      return true;
+    }
+  }
 
 
   public BaseBatchSource getSourceClass(String example, String edge) {
@@ -399,6 +585,12 @@ public class TaskExamples {
     }
     if ("bcast".equals(example)) {
       source = new BroadcastSourceTask(edge);
+    }
+    if ("iterative-source".equals(example)) {
+      source = new IterativeSourceTask(edge);
+    }
+    if ("multi-stage-generator".equals(example)) {
+      source = new MultiStageGeneratorTask(edge);
     }
     return source;
   }
@@ -429,6 +621,20 @@ public class TaskExamples {
     if ("bcast".equals(example)) {
       sink = new BroadcastSinkTask();
     }
+    if ("iterative-sink".equals(example)) {
+      sink = new IterativeSinkTask();
+    }
+    if ("multi-stage-sink".equals(example)) {
+      sink = new MultiStageReduceTask();
+    }
     return sink;
+  }
+
+  public BaseBatchCompute getComputeClass(String example, String edge) {
+    BaseBatchCompute compute = null;
+    if ("multi-stage-partition".equals(example)) {
+      compute = new MultiStagePartitionTask(edge);
+    }
+    return compute;
   }
 }

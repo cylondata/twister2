@@ -40,6 +40,10 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   protected JobParameters jobParameters;
 
+  protected boolean isIterativeJob = false;
+
+  protected boolean isMultiStageJob = false;
+
   @Override
   public void execute() {
     jobParameters = JobParameters.build(config);
@@ -50,9 +54,12 @@ public abstract class BenchTaskWorker extends TaskWorker {
       taskGraphBuilder.setMode(OperationMode.BATCH);
     }
     intialize();
-    dataFlowTaskGraph = taskGraphBuilder.build();
-    executionPlan = taskExecutor.plan(dataFlowTaskGraph);
-    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
+    if (!isIterativeJob && !isMultiStageJob) {
+      dataFlowTaskGraph = taskGraphBuilder.build();
+      executionPlan = taskExecutor.plan(dataFlowTaskGraph);
+      taskExecutor.execute(dataFlowTaskGraph, executionPlan);
+    }
+
   }
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {

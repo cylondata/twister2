@@ -50,7 +50,6 @@ public class AllReduceBatchTask extends TaskWorker {
     computeConnection.allreduce("source", "all-reduce-edge",
         Op.SUM, DataType.INTEGER);
     graphBuilder.setMode(OperationMode.BATCH);
-
     DataFlowTaskGraph graph = graphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, plan);

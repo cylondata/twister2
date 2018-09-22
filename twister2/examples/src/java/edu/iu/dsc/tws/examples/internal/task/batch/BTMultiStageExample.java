@@ -19,12 +19,11 @@ import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.internal.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.internal.task.TaskExamples;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.batch.BaseBatchCompute;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+
 
 public class BTMultiStageExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTAllReduceExample.class.getName());
@@ -55,21 +54,22 @@ public class BTMultiStageExample extends BenchTaskWorker {
     psink = taskStages.get(1);
     TaskExamples taskExamples = new TaskExamples();
     BaseBatchSource g = taskExamples.getSourceClass("multi-stage-generator", EDGE);
-    BaseBatchCompute c = taskExamples.getComputeClass("multi-stage-partition", COMPUTE_EDGE);
-    BaseBatchSink r = taskExamples.getSinkClass("multi-stage-reduce");
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    ComputeConnection pc = taskGraphBuilder.addCompute(COMPUTE, c, psink);
+    BaseBatchCompute r = taskExamples.getComputeClass("multi-stage-partition", COMPUTE_EDGE);
+    BaseBatchSink rt = taskExamples.getSinkClass("multi-stage-reduce");
+    taskGraphBuilder.addSource(SOURCE, g, 4);
+    ComputeConnection pc = taskGraphBuilder.addCompute(COMPUTE, r, 4);
     pc.partition(SOURCE, EDGE, DataType.OBJECT);
-    ComputeConnection rc = taskGraphBuilder.addSink(SINK, r, psink);
+    ComputeConnection rc = taskGraphBuilder.addSink(SINK, rt, 1);
     rc.reduce(COMPUTE, COMPUTE_EDGE, new IFunction() {
       @Override
       public Object onMessage(Object object1, Object object2) {
-        return null;
+        return object1;
       }
     });
-    DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();
-    ExecutionPlan plan = taskExecutor.plan(dataFlowTaskGraph);
-    taskExecutor.execute(dataFlowTaskGraph, plan);
+
+    dataFlowTaskGraph = taskGraphBuilder.build();
+    executionPlan = taskExecutor.plan(dataFlowTaskGraph);
+    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
 
   }
 }
