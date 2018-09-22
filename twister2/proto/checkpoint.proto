@@ -30,6 +30,7 @@ message BarrierSend {
 message CheckpointComplete {
     bool checkpointComplete = 1;
     int32 currentBarrierID = 2;
+    int32 sinkID = 3;
 }
 
 message CheckpointBarrier {

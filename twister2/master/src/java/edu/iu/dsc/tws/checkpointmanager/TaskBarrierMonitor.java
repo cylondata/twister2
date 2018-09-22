@@ -53,6 +53,8 @@ public class TaskBarrierMonitor implements MessageHandler {
 
   private Set<Integer> currentBarrierReceivedSourceSet;
 
+  private Set<Integer> barrierCompleteReceivedSinkSet;
+
   private boolean sendBarrierFlag;
   private int currentBarrierID;
 
@@ -146,9 +148,10 @@ public class TaskBarrierMonitor implements MessageHandler {
           && checkpointCompleteMessage.getCurrentBarrierID() == this.currentBarrierID) {
         LOG.info("Checkpointing with Barrier ID " + currentBarrierID + " is completed");
 
-        //start the next checkpoint
-        currentBarrierID++;
-        sendBarrierFlag = true;
+        currentBarrierReceivedSourceSet.add(checkpointCompleteMessage.getSinkID());
+
+        checkAllSinkSentBarrierComplete();
+
       }
     }
   }
@@ -176,6 +179,8 @@ public class TaskBarrierMonitor implements MessageHandler {
 
       currentBarrierReceivedSourceSet = new HashSet<Integer>();
 
+      barrierCompleteReceivedSinkSet = new HashSet<Integer>();
+
       LOG.info("All source and sink tasks got registered");
     }
 
@@ -191,6 +196,19 @@ public class TaskBarrierMonitor implements MessageHandler {
       sendBarrierFlag = false;
 
       LOG.info("Barriers with Barrier ID " + currentBarrierID + " got sent from Source Tasks");
+    }
+  }
+
+  private void checkAllSinkSentBarrierComplete() {
+    if (barrierCompleteReceivedSinkSet.size() == sinkParallelism) {
+      barrierCompleteReceivedSinkSet = new HashSet<Integer>();
+
+      LOG.info("All sinks acknowledged checkpoint manager for barrier ID : " + currentBarrierID);
+
+      //start the next checkpoint
+      currentBarrierID++;
+      sendBarrierFlag = true;
+
     }
   }
 }
