@@ -14,9 +14,11 @@ package edu.iu.dsc.tws.comms.op.batch;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
+import edu.iu.dsc.tws.comms.dfw.io.gather.DGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -39,13 +41,20 @@ public class BGather {
    * @param target target tasks
    * @param rcvr receiver
    * @param dataType data type
+   * @param shuffle weather to use disks
    */
   public BGather(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, int target,
                  MessageType dataType,
-                 BulkReceiver rcvr) {
+                 BulkReceiver rcvr, boolean shuffle) {
+    MessageReceiver finalRcvr;
+    if (!shuffle) {
+      finalRcvr = new GatherBatchFinalReceiver(rcvr);
+    } else {
+      finalRcvr = new DGatherBatchFinalReceiver(rcvr, comm.getPersistentDirectory());
+    }
     this.gather = new DataFlowGather(comm.getChannel(), sources, target,
-        new GatherBatchFinalReceiver(rcvr), new GatherBatchPartialReceiver(target),
+        finalRcvr, new GatherBatchPartialReceiver(target),
         0, 0, comm.getConfig(), dataType, plan, comm.nextEdge());
     this.gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }

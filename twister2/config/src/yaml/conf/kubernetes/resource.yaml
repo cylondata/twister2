@@ -1,10 +1,11 @@
 # Twister2 Docker image for Kubernetes
-twister2.docker.image.for.kubernetes: "auyar/twister2-openmpi:0.0.1"
+twister2.docker.image.for.kubernetes: "twister2/twister2-k8s:0.0.1"
 
 # the package uri
 twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
-# launcher class for aurora submission
+
 twister2.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesLauncher
+
 # the uplaoder class
 twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
