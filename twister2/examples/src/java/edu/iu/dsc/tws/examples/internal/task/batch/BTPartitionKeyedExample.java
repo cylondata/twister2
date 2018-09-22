@@ -21,9 +21,9 @@ import edu.iu.dsc.tws.examples.internal.task.TaskExamples;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
+public class BTPartitionKeyedExample extends BenchTaskWorker {
 
-public class BTReduceExample extends BenchTaskWorker {
-  private static final Logger LOG = Logger.getLogger(BTReduceExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(BTPartitionKeyedExample.class.getName());
   private static final String SOURCE = "source";
   private static final String SINK = "sink";
   private static final String EDGE = "edge";
@@ -32,17 +32,17 @@ public class BTReduceExample extends BenchTaskWorker {
   private static final Op OPERATION = Op.SUM;
   private static final DataType DATA_TYPE = DataType.INTEGER;
 
+
   @Override
   public void intialize() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     psource = taskStages.get(0);
     psink = taskStages.get(1);
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getSourceClass("reduce", EDGE);
-    BaseBatchSink r = taskExamples.getSinkClass("reduce");
+    BaseBatchSource g = taskExamples.getSourceClass("keyed-partition", EDGE);
+    BaseBatchSink r = taskExamples.getSinkClass("keyed-partition");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.reduce(SOURCE, EDGE, OPERATION, DATA_TYPE);
+    //keyed partition not implemented yet
   }
-
 }

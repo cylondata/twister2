@@ -21,15 +21,22 @@ import edu.iu.dsc.tws.examples.internal.task.TaskExamples;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
+public class BTAllGatherExample extends BenchTaskWorker {
 
-public class BTReduceExample extends BenchTaskWorker {
-  private static final Logger LOG = Logger.getLogger(BTReduceExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(BTAllGatherExample.class.getName());
+
   private static final String SOURCE = "source";
+
   private static final String SINK = "sink";
+
   private static final String EDGE = "edge";
+
   private static int psource = 4;
+
   private static int psink = 1;
+
   private static final Op OPERATION = Op.SUM;
+
   private static final DataType DATA_TYPE = DataType.INTEGER;
 
   @Override
@@ -38,11 +45,10 @@ public class BTReduceExample extends BenchTaskWorker {
     psource = taskStages.get(0);
     psink = taskStages.get(1);
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getSourceClass("reduce", EDGE);
-    BaseBatchSink r = taskExamples.getSinkClass("reduce");
+    BaseBatchSource g = taskExamples.getSourceClass("allgather", EDGE);
+    BaseBatchSink r = taskExamples.getSinkClass("allgather");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.reduce(SOURCE, EDGE, OPERATION, DATA_TYPE);
+    computeConnection.allgather(SOURCE, EDGE, DATA_TYPE);
   }
-
 }
