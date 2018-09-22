@@ -46,8 +46,8 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
     psource = taskStages.get(0);
     psink = taskStages.get(1);
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getSourceClass("keyed-gather", EDGE);
-    BaseBatchSink r = taskExamples.getSinkClass("keyed-gather");
+    BaseBatchSource g = taskExamples.getBatchSourceClass("keyed-gather", EDGE);
+    BaseBatchSink r = taskExamples.getBatchSinkClass("keyed-gather");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.keyedGather(SOURCE, EDGE, KEY_TYPE, DATA_TYPE);

@@ -44,8 +44,8 @@ public class BTAllReduceExample extends BenchTaskWorker {
     psource = taskStages.get(0);
     psink = taskStages.get(1);
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getSourceClass("allreduce", EDGE);
-    BaseBatchSink r = taskExamples.getSinkClass("allreduce");
+    BaseBatchSource g = taskExamples.getBatchSourceClass("allreduce", EDGE);
+    BaseBatchSink r = taskExamples.getBatchSinkClass("allreduce");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.allreduce(SOURCE, EDGE, OPERATION, DATA_TYPE);

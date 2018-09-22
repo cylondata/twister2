@@ -44,8 +44,8 @@ public class BTPartitionExample extends BenchTaskWorker {
     psource = taskStages.get(0);
     psink = taskStages.get(1);
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getSourceClass("partition", EDGE);
-    BaseBatchSink r = taskExamples.getSinkClass("partition");
+    BaseBatchSource g = taskExamples.getBatchSourceClass("partition", EDGE);
+    BaseBatchSink r = taskExamples.getBatchSinkClass("partition");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.partition(SOURCE, EDGE, DATA_TYPE);

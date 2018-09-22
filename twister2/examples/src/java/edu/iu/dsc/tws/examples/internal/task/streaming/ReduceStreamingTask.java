@@ -65,7 +65,6 @@ public class ReduceStreamingTask implements IWorker {
         });
     builder.operationMode(OperationMode.STREAMING);
     DataFlowTaskGraph graph = builder.build();
-
     TaskUtils.execute(config, resources, graph, workerController);
   }
 

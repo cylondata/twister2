@@ -36,6 +36,15 @@ import edu.iu.dsc.tws.examples.internal.task.batch.BTKeyedGatherExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTKeyedReduceExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTPartitionKeyedExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTReduceExample;
+import edu.iu.dsc.tws.examples.internal.task.streaming.STAllGatherExample;
+import edu.iu.dsc.tws.examples.internal.task.streaming.STAllReduceExample;
+import edu.iu.dsc.tws.examples.internal.task.streaming.STBroadCastExample;
+import edu.iu.dsc.tws.examples.internal.task.streaming.STGatherExample;
+import edu.iu.dsc.tws.examples.internal.task.streaming.STIterativeJobExample;
+import edu.iu.dsc.tws.examples.internal.task.streaming.STKeyedGatherExample;
+import edu.iu.dsc.tws.examples.internal.task.streaming.STKeyedReduceExample;
+import edu.iu.dsc.tws.examples.internal.task.streaming.STPartitionKeyedExample;
+import edu.iu.dsc.tws.examples.internal.task.streaming.STReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 
@@ -164,7 +173,36 @@ public class ExampleTaskMain {
       }
     } else {
       switch (operation) {
-
+        case "reduce":
+          submitJob(config, workers, jobConfig, STReduceExample.class.getName());
+          break;
+        case "allreduce":
+          submitJob(config, workers, jobConfig, STAllReduceExample.class.getName());
+          break;
+        case "gather":
+          submitJob(config, workers, jobConfig, STGatherExample.class.getName());
+          break;
+        case "allgather":
+          submitJob(config, workers, jobConfig, STAllGatherExample.class.getName());
+          break;
+        case "bcast":
+          submitJob(config, workers, jobConfig, STBroadCastExample.class.getName());
+          break;
+        case "partition":
+          submitJob(config, workers, jobConfig, STPartitionKeyedExample.class.getName());
+          break;
+        case "keyed-reduce":
+          submitJob(config, workers, jobConfig, STKeyedReduceExample.class.getName());
+          break;
+        case "keyed-gather":
+          submitJob(config, workers, jobConfig, STKeyedGatherExample.class.getName());
+          break;
+        case "keyed-partition":
+          submitJob(config, workers, jobConfig, STPartitionKeyedExample.class.getName());
+          break;
+        case "iterative-job":
+          submitJob(config, workers, jobConfig, STIterativeJobExample.class.getName());
+          break;
       }
     }
   }

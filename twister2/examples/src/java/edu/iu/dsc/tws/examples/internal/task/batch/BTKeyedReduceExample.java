@@ -47,8 +47,8 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     psource = taskStages.get(0);
     psink = taskStages.get(1);
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getSourceClass("keyed-reduce", EDGE);
-    BaseBatchSink r = taskExamples.getSinkClass("keyed-reduce");
+    BaseBatchSource g = taskExamples.getBatchSourceClass("keyed-reduce", EDGE);
+    BaseBatchSink r = taskExamples.getBatchSinkClass("keyed-reduce");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.keyedReduce(SOURCE, EDGE, new IFunction() {

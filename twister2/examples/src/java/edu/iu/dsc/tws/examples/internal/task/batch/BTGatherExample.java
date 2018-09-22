@@ -44,8 +44,8 @@ public class BTGatherExample extends BenchTaskWorker {
     psource = taskStages.get(0);
     psink = taskStages.get(1);
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getSourceClass("gather", EDGE);
-    BaseBatchSink r = taskExamples.getSinkClass("gather");
+    BaseBatchSource g = taskExamples.getBatchSourceClass("gather", EDGE);
+    BaseBatchSink r = taskExamples.getBatchSinkClass("gather");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.gather(SOURCE, EDGE, DATA_TYPE);

@@ -39,8 +39,8 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     psource = taskStages.get(0);
     psink = taskStages.get(1);
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getSourceClass("keyed-partition", EDGE);
-    BaseBatchSink r = taskExamples.getSinkClass("keyed-partition");
+    BaseBatchSource g = taskExamples.getBatchSourceClass("keyed-partition", EDGE);
+    BaseBatchSink r = taskExamples.getBatchSinkClass("keyed-partition");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     //keyed partition not implemented yet

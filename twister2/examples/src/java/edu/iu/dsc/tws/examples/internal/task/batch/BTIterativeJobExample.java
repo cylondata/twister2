@@ -50,8 +50,8 @@ public class BTIterativeJobExample extends BenchTaskWorker {
     psource = taskStages.get(0);
     psink = taskStages.get(1);
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getSourceClass("iterative-source", EDGE);
-    BaseBatchSink r = taskExamples.getSinkClass("iterative-sink");
+    BaseBatchSource g = taskExamples.getBatchSourceClass("iterative-source", EDGE);
+    BaseBatchSink r = taskExamples.getBatchSinkClass("iterative-sink");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.reduce(SOURCE, EDGE, OPERATION, DATA_TYPE);
