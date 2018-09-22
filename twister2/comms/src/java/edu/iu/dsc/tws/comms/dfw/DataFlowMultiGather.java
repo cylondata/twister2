@@ -158,7 +158,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
         partialRcvr = new GatherPartialReceiver(dest);
         gather = new DataFlowGather(channel, sources, dest,
             finalRcvr, partialRcvr, count, dest, config, instancePlan,
-            true, keyType, dataType, edgeList.get(count));
+            true, dataType, dataType, keyType, edgeList.get(count));
       } else {
         gather = new DataFlowGather(channel, sources, dest,
             finalRcvr, count, dest, config, dType, instancePlan, edgeList.get(count));

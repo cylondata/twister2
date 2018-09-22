@@ -146,7 +146,29 @@ public class Edge {
     return keyed;
   }
 
-  public void addProperties(String key, Object value) {
+  /**
+   * Add a property to the edge
+   * @param key key of the property
+   * @param value value
+   */
+  public void addProperty(String key, Object value) {
     properties.put(key, value);
+  }
+
+  /**
+   * Get the property with a specific key
+   * @param key name of the property
+   * @return property if exists and null if not
+   */
+  public Object getProperty(String key) {
+    return properties.get(key);
+  }
+
+  /**
+   * Add the properties to the edge
+   * @param props properties
+   */
+  public void addProperties(Map<String, Object> props) {
+    this.properties.putAll(props);
   }
 }

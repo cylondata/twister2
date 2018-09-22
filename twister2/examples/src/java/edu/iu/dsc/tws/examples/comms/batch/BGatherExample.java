@@ -49,7 +49,7 @@ public class BGatherExample extends BenchWorker {
     int target = noOfSourceTasks;
     // create the communication
     gather = new BGather(communicator, taskPlan, sources, target,
-        MessageType.INTEGER, new FinalReduceReceiver());
+        MessageType.INTEGER, new FinalReduceReceiver(), false);
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,

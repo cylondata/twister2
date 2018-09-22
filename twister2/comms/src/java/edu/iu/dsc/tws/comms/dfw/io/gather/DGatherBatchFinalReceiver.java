@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
@@ -24,51 +25,84 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
+import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
+import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
-public class DiskBasedGatherBatchFinalReceiver implements MessageReceiver {
+public class DGatherBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(
-      DiskBasedGatherBatchFinalReceiver.class.getName());
+      DGatherBatchFinalReceiver.class.getName());
 
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
   private Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
+  /**
+   * Finished sources for each target
+   */
   private Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
+  /**
+   * Final messages
+   */
   private Map<Integer, List<Object>> finalMessages = new HashMap<>();
-  private DataFlowOperation dataFlowOperation;
-  private int executor;
+  /**
+   * Send pending max
+   */
   private int sendPendingMax = 128;
+  /**
+   * The receiver
+   */
   private BulkReceiver bulkReceiver;
+  /**
+   * Weather this target is done
+   */
   private Map<Integer, Boolean> batchDone = new HashMap<>();
-  private FSMerger merger;
+  /**
+   * Sort mergers for each target
+   */
+  private Map<Integer, FSMerger> sortedMergers = new HashMap<>();
+  /**
+   * Shuffler directory
+   */
+  private String shuffleDirectory;
+  /**
+   * The actual operation
+   */
+  private DataFlowGather gather;
 
-  public DiskBasedGatherBatchFinalReceiver(BulkReceiver bulkReceiver) {
+  private KryoSerializer kryoSerializer;
+
+  public DGatherBatchFinalReceiver(BulkReceiver bulkReceiver, String shuffleDir) {
     this.bulkReceiver = bulkReceiver;
+    this.shuffleDirectory = shuffleDir;
+    this.kryoSerializer = new KryoSerializer();
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    executor = op.getTaskPlan().getThisExecutor();
+    int maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
+    int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
+
+    gather = (DataFlowGather) op;
     sendPendingMax = DataFlowContext.sendPendingMax(cfg);
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
-      Map<Integer, Integer> countsPerTask = new HashMap<>();
 
       for (int i : e.getValue()) {
         messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax));
         finishedPerTask.put(i, false);
-        countsPerTask.put(i, 0);
       }
       messages.put(e.getKey(), messagesPerTask);
       finished.put(e.getKey(), finishedPerTask);
       finalMessages.put(e.getKey(), new ArrayList<>());
       batchDone.put(e.getKey(), false);
+
+      FSMerger merger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
+          getOperationName(e.getKey()), gather.getDataType());
+      sortedMergers.put(e.getKey(), merger);
     }
-    this.dataFlowOperation = op;
-    this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
     this.bulkReceiver.init(cfg, expectedIds.keySet());
   }
 
@@ -85,10 +119,6 @@ public class DiskBasedGatherBatchFinalReceiver implements MessageReceiver {
     if (m.size() >= sendPendingMax) {
       canAdd = false;
     } else {
-      if (object instanceof ChannelMessage) {
-        ((ChannelMessage) object).incrementRefCount();
-      }
-
       m.add(object);
       if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
         finishedMessages.put(source, true);
@@ -104,6 +134,7 @@ public class DiskBasedGatherBatchFinalReceiver implements MessageReceiver {
   public boolean progress() {
     boolean needsFurtherProgress = false;
     for (int t : messages.keySet()) {
+      FSMerger fsMerger = sortedMergers.get(t);
       if (batchDone.get(t)) {
         continue;
       }
@@ -146,19 +177,27 @@ public class DiskBasedGatherBatchFinalReceiver implements MessageReceiver {
             allFinished = false;
           }
         }
-        finalMessages.get(t).addAll(out);
+        for (Object o : out) {
+          byte[] d = DataSerializer.serialize(o, kryoSerializer);
+          fsMerger.add(d, d.length);
+        }
       } else {
         allFinished = false;
       }
 
-
       if (allFinished) {
         batchDone.put(t, true);
-        bulkReceiver.receive(t, finalMessages.get(t).iterator());
+        fsMerger.switchToReading();
+        bulkReceiver.receive(t, fsMerger.readIterator());
         // we can call on finish at this point
         onFinish(t);
       }
     }
     return needsFurtherProgress;
+  }
+
+  private String getOperationName(int target) {
+    int edge = gather.getEdge();
+    return "gather-" + edge + "-" + target + "-" + UUID.randomUUID().toString();
   }
 }

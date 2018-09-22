@@ -75,9 +75,14 @@ public class ParallelOperationFactory {
               edge.getName());
           return bcastOp;
         } else if (OperationNames.GATHER.equals(edge.getOperation())) {
+          Object shuffleProp = edge.getProperty("shuffle");
+          boolean shuffle = false;
+          if (shuffleProp != null && shuffleProp instanceof Boolean && (Boolean) shuffleProp) {
+            shuffle = true;
+          }
           return new GatherBatchOperation(config, channel, taskPlan,
               sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
-              edge.getName());
+              edge.getName(), shuffle);
         } else if (OperationNames.ALLGATHER.equals(edge.getOperation())) {
           return new AllGatherBatchOperation(config, channel, taskPlan,
               sources, dests, edgeGenerator, edge.getDataType(),
