@@ -15,29 +15,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 
 /**
- * Keyed reduce receiver for batch mode
+ * Created by pulasthi on 9/20/18.
  */
-public class KReduceBatchPartialReceiver extends KeyedReceiver {
-  private static final Logger LOG = Logger.getLogger(KReduceBatchPartialReceiver.class.getName());
+public class KReduceBatchFinalReceiver extends KeyedReceiver {
+  private static final Logger LOG = Logger.getLogger(KReduceBatchFinalReceiver.class.getName());
 
   /**
    * The function that is used for the reduce operation
    */
-  protected ReduceFunction reduceFunction;
+  private ReduceFunction reduceFunction;
 
-  public KReduceBatchPartialReceiver(int dest, ReduceFunction function) {
-    this.reduceFunction = function;
-    this.destination = dest;
+  /**
+   * Final receiver that get the reduced values for the operation
+   */
+  private SingularReceiver singularReceiver;
+
+  public KReduceBatchFinalReceiver(ReduceFunction reduce, SingularReceiver receiver) {
+    this.reduceFunction = reduce;
+    this.singularReceiver = receiver;
     this.limitPerKey = 1;
+    this.isFinalReceiver = true;
   }
 
   /**
@@ -70,7 +75,7 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
         if (!reduceAndInsert(messagesPerTarget, keyedContent)) {
           throw new RuntimeException("Reduce operation should not fail to insert key");
         }
-
+        ;
       }
     } else {
       KeyedContent keyedContent = (KeyedContent) object;
@@ -106,88 +111,26 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
   public boolean progress() {
     boolean needsFurtherProgress = false;
     boolean sourcesFinished = false;
-    boolean isAllQueuesEmpty = false;
     for (int target : messages.keySet()) {
 
-      //If the batch is done skip progress for this target
       if (batchDone.get(target)) {
-        needsFurtherProgress = !checkIfEmptyIsSent(target);
         continue;
       }
 
-      // now check weather we have the messages for this source to be sent
-      BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
       sourcesFinished = isSourcesFinished(target);
-
       if (!sourcesFinished) {
         needsFurtherProgress = true;
       }
 
-      if (!targetSendQueue.isEmpty() || sourcesFinished) {
-        int flags = 0;
-
-        //In reduce a flush is only needed when the number of keys exceed the key limit
-        //So we flush the keys and remove them from the messages list.This would be the same
-        //when the sources are finished.
-        Object current = targetSendQueue.peek();
-        if (current != null) {
-          if (sourcesFinished && targetSendQueue.size() == 1) {
-            flags = MessageFlags.LAST;
-          }
-
-          if (dataFlowOperation.sendPartial(target, current, flags, destination)) {
-            targetSendQueue.poll();
-          } else {
-            needsFurtherProgress = true;
-          }
-
-        }
-      }
-
-      //In reduce since we remove the key entry once we send it we only need to check if the map is
-      //Empty
-      isAllQueuesEmpty = targetSendQueue.isEmpty();
-      if (!isAllQueuesEmpty) {
-        needsFurtherProgress = true;
-      }
-
-      if (dataFlowOperation.isDelegeteComplete() && sourcesFinished && isAllQueuesEmpty) {
-        if (dataFlowOperation.sendPartial(target, new byte[0],
-            MessageFlags.END, destination)) {
-          isEmptySent.put(target, true);
-        } else {
-          needsFurtherProgress = true;
-        }
+      if (sourcesFinished && dataFlowOperation.isDelegeteComplete()) {
         batchDone.put(target, true);
-        // we don'target want to go through the while loop for this one
-        break;
-      } else {
-        needsFurtherProgress = true;
+        //TODO: check if we can simply remove the data, that is use messages.remove()
+        singularReceiver.receive(target, messages.get(target));
       }
+
+
     }
 
     return needsFurtherProgress;
   }
-
-
-  /**
-   * checks if the Empty message was sent for this target and sends it if not sent and possible to
-   * send
-   *
-   * @param target target for which the check is done
-   * @return false if Empty is sent
-   */
-  private boolean checkIfEmptyIsSent(int target) {
-    boolean isSent = true;
-    if (!isEmptySent.get(target)) {
-      if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(target,
-          new byte[0], MessageFlags.END, destination)) {
-        isEmptySent.put(target, true);
-      } else {
-        isSent = false;
-      }
-    }
-    return isSent;
-  }
-
 }

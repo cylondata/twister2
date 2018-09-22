@@ -50,13 +50,6 @@ public abstract class KeyedReceiver implements MessageReceiver {
   protected int keyLimit;
 
   /**
-   * Once the receiver reaches the buffer limit or some other condition requires the current
-   * buffered messages to be flushed, needsFlush needs to be set to true. The progress method
-   * will look at this and flush the current buffer if needsFlush is true.
-   */
-  protected AtomicBoolean needsFlush;
-
-  /**
    * The dataflow operation that is related to the class instance. Ex - Reduce, Gather, etc.
    */
   protected DataFlowOperation dataFlowOperation;
@@ -97,6 +90,13 @@ public abstract class KeyedReceiver implements MessageReceiver {
    * Tracks if the empty message has been sent for each target
    */
   protected Map<Integer, Boolean> isEmptySent = new HashMap<>();
+
+  /**
+   * Indicates whether the receiver instance is a final receiver or not. The value is set to
+   * false by default. If the receiver is a final receiver the sendQueue data structure is not used
+   * the data is always kept in the messages data structure for efficiency
+   */
+  protected boolean isFinalReceiver = false;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -139,7 +139,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
 
     if ((flags & MessageFlags.END) == MessageFlags.END) {
       finishedMessages.put(source, true);
-      if (isSourcesFinished(target)) {
+      if (!isFinalReceiver && isSourcesFinished(target)) {
         return moveMessagesToSendQueue(target, messages.get(target));
       }
       return true;
@@ -152,7 +152,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
         finishedMessages.put(source, true);
         //TODO: the finish of the move may not happen for LAST flags since the method to move
         //TODO: may return false
-        if (isSourcesFinished(target)) {
+        if (!isFinalReceiver && isSourcesFinished(target)) {
           moveMessagesToSendQueue(target, messages.get(target));
         }
       }
@@ -173,8 +173,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
   @SuppressWarnings("rawtypes")
   protected boolean offerMessage(int target, Object object) {
     Map<Object, Queue<Object>> messagesPerTarget = messages.get(target);
-    if (needsFlush.get() || messagesPerTarget.size() > keyLimit) {
-      needsFlush.compareAndSet(false, true);
+    if (!isFinalReceiver && messagesPerTarget.size() > keyLimit) {
       LOG.fine(String.format("Executor %d Partial cannot add any further keys needs flush ",
           executor));
       moveMessagesToSendQueue(target, messagesPerTarget);
@@ -219,7 +218,6 @@ public abstract class KeyedReceiver implements MessageReceiver {
         if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey) {
           return messagesPerTarget.get(keyedContent.getKey()).add(keyedContent.getValue());
         } else {
-          needsFlush.compareAndSet(false, true);
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
               + "needs flush ", executor));
           return false;
