@@ -1,24 +1,14 @@
-# First steps with Twister2
-
-Lets look at how to setup Twister2 and run few examples. Twister2 is designed
-as in incremental distributed system to make it adaptable to different environments.
-Lets start with the simplest possible Twister2 job where we spawn set of workers
-and print a log.
-
-## Starting parallel workers
-
-At the base of Twister2 is a resource manager that allocates resources for jobs.
-Unlike many big data projects that mixes all sorts of capabilities here,
-Twister2 resource manager only allocate resources and spawn set of parallel
-processes. It is upto the user to do anything with those parallel processes after
-they are spawned.
-
-Okay lets exactly that and see how it works. There is a example called HelloWorld.java
-included with Twister2 examples package. Note that it implements the IWorker interface,
-which is the entry point to any Twister2 job. In the main method of this class
-we submit a job to Twister2 with this HelloWorld class as the job class.
-
-```java
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
@@ -81,23 +71,3 @@ public class HelloWorld implements IWorker {
     Twister2Submitter.submitJob(twister2Job, config);
   }
 }
-```
-
-Now lets run this class. Lets go inside the twister2 distibution and execute the following command
-from twister2 root directory.
-
-```bash
-./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
-```
-
-When this runs it will print a logs like this in to the console.
-
-```bash
-[INFO] edu.iu.dsc.tws.examples.basic.HelloWorld: Hello World from Worker 2; there are 8 other workers and I got a configuration value Twister2-Hello
-```
-
-It is that simple!
-
-## Communicating between workers
-
-Okay, the next step is to communicate between the workers we have created.

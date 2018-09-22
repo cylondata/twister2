@@ -1,9 +1,14 @@
 Twister2 Installation
 =====================
 
-.. toctree::
-   :maxdepth: 5
+One of our primary goals is to make the intallation of Twister2 as simple
+as possible.
 
-   standalone/running-jobs
-   kubernetes/running-jobs
-   kubernetes/twister2-kubernetes-install
+We are on our way to achieve that goal but we are not fully there yet.
+
+Once you have downloaded a twister2 distribution or compile it from the source,
+all you need to do is extract that distribution. That is all you need
+for the simple cases.
+
+
+
