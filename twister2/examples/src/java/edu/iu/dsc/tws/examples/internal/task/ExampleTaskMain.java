@@ -34,10 +34,8 @@ import edu.iu.dsc.tws.examples.internal.task.batch.BTGatherExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTIterativeJobExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTKeyedGatherExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTKeyedReduceExample;
-import edu.iu.dsc.tws.examples.internal.task.batch.BTMultiStageExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTPartitionKeyedExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTReduceExample;
-import edu.iu.dsc.tws.examples.internal.task.batch.ReduceBatchTask;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 
@@ -162,9 +160,6 @@ public class ExampleTaskMain {
           break;
         case "iterative-job":
           submitJob(config, workers, jobConfig, BTIterativeJobExample.class.getName());
-          break;
-        case "multistage-job":
-          submitJob(config, workers, jobConfig, BTMultiStageExample.class.getName());
           break;
       }
     } else {

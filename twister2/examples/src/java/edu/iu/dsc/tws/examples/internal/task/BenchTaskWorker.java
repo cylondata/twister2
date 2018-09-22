@@ -42,19 +42,21 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   protected boolean isIterativeJob = false;
 
-  protected boolean isMultiStageJob = false;
-
   @Override
   public void execute() {
     jobParameters = JobParameters.build(config);
+
     taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+
     if (jobParameters.isStream()) {
       taskGraphBuilder.setMode(OperationMode.STREAMING);
     } else {
       taskGraphBuilder.setMode(OperationMode.BATCH);
     }
+
     intialize();
-    if (!isIterativeJob && !isMultiStageJob) {
+
+    if (!isIterativeJob) {
       dataFlowTaskGraph = taskGraphBuilder.build();
       executionPlan = taskExecutor.plan(dataFlowTaskGraph);
       taskExecutor.execute(dataFlowTaskGraph, executionPlan);

@@ -483,82 +483,6 @@ public class TaskExamples {
     }
   }
 
-  //multi-stage-generator
-  protected static class MultiStageGeneratorTask extends BaseBatchSource {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    private int count = 0;
-
-    private String edge;
-
-    public MultiStageGeneratorTask() {
-
-    }
-
-    public MultiStageGeneratorTask(String edge) {
-      this.edge = edge;
-    }
-
-    @Override
-    public void execute() {
-      if (count == 999) {
-        if (context.writeEnd(edge, "Hello")) {
-          count++;
-        }
-      } else if (count < 999) {
-        if (context.write(edge, "Hello")) {
-          count++;
-        }
-      }
-    }
-  }
-
-  //multi-stage-reduce
-  protected static class MultiStageReduceTask extends BaseBatchSink {
-    private static final long serialVersionUID = -254264903510284791L;
-    private int count = 0;
-
-    @Override
-    public boolean execute(IMessage message) {
-      count++;
-      LOG.info(String.format("%d %d Reduce received count: %d", context.getWorkerId(),
-          context.taskId(), count));
-      return true;
-    }
-  }
-
-  //multi-stage-partition
-  @SuppressWarnings("rawtypes")
-  protected static class MultiStagePartitionTask extends BaseBatchCompute {
-    private static final long serialVersionUID = -254264903510284798L;
-
-    private String edge;
-
-    public MultiStagePartitionTask() {
-
-    }
-
-    public MultiStagePartitionTask(String edge) {
-      this.edge = edge;
-    }
-
-    private int count = 0;
-
-    @Override
-    public boolean execute(IMessage message) {
-      if (message.getContent() instanceof Iterator) {
-        Iterator it = (Iterator) message.getContent();
-        while (it.hasNext()) {
-          count += 1;
-          context.write(edge, it.next());
-        }
-      }
-      LOG.info(String.format("%d %d Partition Received count: %d", context.getWorkerId(),
-          context.taskId(), count));
-      return true;
-    }
-  }
-
 
   public BaseBatchSource getSourceClass(String example, String edge) {
     BaseBatchSource source = null;
@@ -588,9 +512,6 @@ public class TaskExamples {
     }
     if ("iterative-source".equals(example)) {
       source = new IterativeSourceTask(edge);
-    }
-    if ("multi-stage-generator".equals(example)) {
-      source = new MultiStageGeneratorTask(edge);
     }
     return source;
   }
@@ -624,17 +545,12 @@ public class TaskExamples {
     if ("iterative-sink".equals(example)) {
       sink = new IterativeSinkTask();
     }
-    if ("multi-stage-sink".equals(example)) {
-      sink = new MultiStageReduceTask();
-    }
     return sink;
   }
 
   public BaseBatchCompute getComputeClass(String example, String edge) {
     BaseBatchCompute compute = null;
-    if ("multi-stage-partition".equals(example)) {
-      compute = new MultiStagePartitionTask(edge);
-    }
+
     return compute;
   }
 }
