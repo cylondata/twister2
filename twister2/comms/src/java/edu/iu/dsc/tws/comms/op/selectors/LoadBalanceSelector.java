@@ -89,4 +89,8 @@ public class LoadBalanceSelector implements DestinationSelector {
 
     destinationIndexes.put(source, index);
   }
+
+  public List<Integer> getDestinations(int source) {
+    return destination.get(source);
+  }
 }

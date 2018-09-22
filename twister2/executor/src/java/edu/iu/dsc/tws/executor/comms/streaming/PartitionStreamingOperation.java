@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -88,11 +89,12 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
       if (messages.size() > 128) {
         return false;
       }
-
+      if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+        LOG.info("Barrier from : " + source + " to target: " + target);
+      }
       if (object instanceof List) {
         TaskMessage msg = new TaskMessage(object,
             edgeGenerator.getStringMapping(communicationEdge), target, flags);
-
         messages.offer(msg);
       }
       return true;

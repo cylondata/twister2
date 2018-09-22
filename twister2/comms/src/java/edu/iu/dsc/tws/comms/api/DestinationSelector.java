@@ -23,6 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -40,4 +41,6 @@ public interface DestinationSelector {
   int next(int source, Object key);
 
   void commit(int source, int next);
+
+  List<Integer> getDestinations(int source);
 }

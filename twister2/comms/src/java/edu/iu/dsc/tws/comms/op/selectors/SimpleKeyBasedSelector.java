@@ -67,4 +67,9 @@ public class SimpleKeyBasedSelector implements DestinationSelector {
 
   }
 
+  @Override
+  public List<Integer> getDestinations(int source) {
+    return destinationList;
+  }
+
 }

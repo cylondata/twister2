@@ -82,4 +82,9 @@ public class HashingSelector implements DestinationSelector {
 
     destinationIndexes.put(source, index);
   }
+
+  @Override
+  public List<Integer> getDestinations(int source) {
+    return destination.get(source);
+  }
 }

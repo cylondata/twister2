@@ -11,10 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.op.stream;
 
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -62,19 +64,30 @@ public class SPartition {
   /**
    * Send a message to be partitioned
    *
-   * @param src source
+   * @param source source
    * @param message message
    * @param flags message flag
    * @return true if the message is accepted
    */
-  public boolean partition(int src, Object message, int flags) {
-    final int dest = destinationSelector.next(src);
+  public boolean partition(int source, Object message, int flags) {
 
-    boolean send = partition.send(src, message, flags, dest);
-    if (send) {
-      destinationSelector.commit(src, dest);
+    if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
+      final int dest = destinationSelector.next(source);
+
+      boolean send = partition.send(source, message, flags, dest);
+      if (send) {
+        destinationSelector.commit(source, dest);
+      }
+      return send;
+
+    } else {
+      List<Integer> destinations = destinationSelector.getDestinations(source);
+
+      for (int dest : destinations) {
+        partition.send(source, message, flags, dest);
+      }
+      return true;
     }
-    return send;
   }
 
   /**
