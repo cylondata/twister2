@@ -11,11 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -57,13 +57,13 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
 
     Map<Object, Queue<Object>> messagesPerTarget = messages.get(target);
 
-    if (messagesPerTarget.size() > keyLimit) {
+    if (needsFlush.get() || messagesPerTarget.size() > keyLimit) {
       needsFlush.compareAndSet(false, true);
       LOG.fine(String.format("Executor %d Partial cannot add any further keys needs flush ",
           executor));
+      moveMessagesToSendQueue(target, messagesPerTarget);
       return false;
     }
-    Object currentEntry;
     if (object instanceof List) {
       List dataList = (List) object;
       for (Object dataEntry : dataList) {
@@ -112,50 +112,38 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
         continue;
       }
 
-      // now check weather we have the messages for this source
-      Map<Object, Queue<Object>> messagePerTarget = messages.get(target);
+      // now check weather we have the messages for this source to be sent
+      BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
       sourcesFinished = isSourcesFinished(target);
 
       if (!sourcesFinished) {
         needsFurtherProgress = true;
       }
 
-      if (needsFlush.get() || sourcesFinished) {
+      if (!targetSendQueue.isEmpty() || sourcesFinished) {
         int flags = 0;
 
         //In reduce a flush is only needed when the number of keys exceed the key limit
         //So we flush the keys and remove them from the messages list.This would be the same
         //when the sources are finished.
-
-        Iterator<Map.Entry<Object, Queue<Object>>> iter = messagePerTarget.entrySet().iterator();
-        while (iter.hasNext()) {
-
-          Map.Entry<Object, Queue<Object>> current = iter.next();
-          Object key = current.getKey();
-          if (sourcesFinished && messagePerTarget.size() == 1) {
+        Object current = targetSendQueue.peek();
+        if (current != null) {
+          if (sourcesFinished && targetSendQueue.size() == 1) {
             flags = MessageFlags.LAST;
           }
-          //try to send the message
-          Object value = current.getValue().poll();
-          if (value != null) {
-            KeyedContent sendData = new KeyedContent(key, value, dataFlowOperation.getKeyType(),
-                dataFlowOperation.getDataType());
-            if (dataFlowOperation.sendPartial(target, sendData, flags, destination)) {
-              iter.remove();
-            } else {
-              needsFurtherProgress = true;
-            }
+
+          if (dataFlowOperation.sendPartial(target, current, flags, destination)) {
+            targetSendQueue.poll();
+          } else {
+            needsFurtherProgress = true;
           }
+
         }
-        needsFlush.compareAndSet(true, false);
-
-
-
       }
 
       //In reduce since we remove the key entry once we send it we only need to check if the map is
       //Empty
-      isAllQueuesEmpty = messagePerTarget.isEmpty();
+      isAllQueuesEmpty = targetSendQueue.isEmpty();
       if (!isAllQueuesEmpty) {
         needsFurtherProgress = true;
       }
@@ -178,20 +166,6 @@ public class KReduceBatchPartialReceiver extends KeyedReceiver {
     return needsFurtherProgress;
   }
 
-  /**
-   * checks if the sources have finished for a given target.
-   *
-   * @param target the target to be checked
-   * @return true if all the sources for the given target are finished or false otherwise
-   */
-  private boolean isSourcesFinished(int target) {
-    Map<Integer, Boolean> finishedForTarget = finishedSources.get(target);
-    boolean isDone = true;
-    for (Boolean isSourceDone : finishedForTarget.values()) {
-      isDone &= isSourceDone;
-    }
-    return isDone;
-  }
 
   /**
    * checks if the Empty message was sent for this target and sends it if not sent and possible to
