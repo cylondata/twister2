@@ -64,13 +64,6 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
-    LOG.info("================================================");
-    LOG.info("MessageHeader : " + header.toString());
-    LOG.info("ChannelMessage : " + currentMessage.toString());
-    LOG.info("Message Object : " + object.toString());
-    LOG.info("Source ID : " + header.getSourceId());
-    LOG.info("Source ID : " + header.getSourceId());
-    LOG.info("================================================");
 
     // check weather this message is for a sub task
     return finalReceiver.onMessage(header.getSourceId(), 0,
@@ -102,9 +95,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
    * Initialize
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
-
     this.router = new DirectRouter(taskPlan, sources, destination);
-
 
     if (this.finalReceiver != null && isLastReceiver()) {
       this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
@@ -145,11 +136,6 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    LOG.info("================================================");
-    LOG.info("Source : " + source);
-    LOG.info("Message : " + message.toString());
-    LOG.info("Flags : " + flags);
-    LOG.info("================================================");
     return delegete.sendMessage(source, message, 0, flags, sendRoutingParameters(source, 0));
   }
 
