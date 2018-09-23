@@ -94,6 +94,8 @@ public abstract class TaskWorker implements IWorker {
     taskExecutor = new TaskExecutor(config, workerId, allocatedResources, communicator);
     // call execute
     execute();
+    // lets terminate the network
+    communicator.close();
   }
 
   /**
