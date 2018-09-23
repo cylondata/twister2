@@ -82,11 +82,12 @@ public abstract class BenchWorker implements IWorker {
     //collect experiment data
     experimentData = new ExperimentData();
 
-
     // now lets execute
     execute();
     // now communicationProgress
     progress();
+    // lets terminate the communicator
+    communicator.close();
   }
 
   protected abstract void execute();

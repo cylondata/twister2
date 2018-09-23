@@ -144,6 +144,12 @@ public class TWSTCPChannel implements TWSChannel {
         receiveBuffers));
   }
 
+  @Override
+  public void close() {
+    // we will call the comm stop
+    comm.stop();
+  }
+
   /**
    * Send a message to the given rank.
    *

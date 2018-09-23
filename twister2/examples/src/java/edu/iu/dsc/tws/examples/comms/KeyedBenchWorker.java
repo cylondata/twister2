@@ -133,6 +133,8 @@ public abstract class KeyedBenchWorker implements IWorker {
     execute();
     // now progress
     progress();
+    // lets terminate the communicator
+    communicator.close();
   }
 
   protected abstract void execute();
