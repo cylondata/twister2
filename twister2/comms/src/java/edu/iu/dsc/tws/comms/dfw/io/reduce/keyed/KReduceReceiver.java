@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
@@ -92,5 +93,28 @@ public abstract class KReduceReceiver extends KeyedReceiver {
       currentEntry = reduceFunction.reduce(currentEntry, keyedContent.getValue());
       return messagesPerTarget.get(keyedContent.getKey()).offer(currentEntry);
     }
+  }
+
+  /**
+   * moves all the buffered messages into the sendQueue for the given target, this method assumes
+   * that for each target that there is only one object in the queue. This is required when working
+   * with reduce operations
+   *
+   * @param target target for which the move needs to be done
+   * @return true if the messagesPerTarget is not empty at the end of the moving process or false
+   * otherwise
+   */
+  @Override
+  protected boolean moveMessagesToSendQueue(int target,
+                                            Map<Object, Queue<Object>> messagesPerTarget) {
+    BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
+    //FIX
+    messagesPerTarget.entrySet().removeIf(entry -> {
+      KeyedContent send = new KeyedContent(entry.getKey(), entry.getValue().poll(),
+          dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
+      return targetSendQueue.offer(send);
+    });
+
+    return messagesPerTarget.isEmpty();
   }
 }

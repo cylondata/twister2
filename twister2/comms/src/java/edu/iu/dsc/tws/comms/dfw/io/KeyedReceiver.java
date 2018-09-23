@@ -128,9 +128,6 @@ public abstract class KeyedReceiver implements MessageReceiver {
     if (messages.get(target) == null) {
       throw new RuntimeException(String.format("Executor %d, Partial receive error. Receiver did"
           + "not expect messages for this target %d", executor, target));
-    } else if (!(object instanceof KeyedContent) && !(object instanceof List)) {
-      throw new RuntimeException(String.format("Executor %d, Partial receive error. Received"
-          + " object which is not of type KeyedContent or List for target %d", executor, target));
     }
 
 
@@ -142,6 +139,11 @@ public abstract class KeyedReceiver implements MessageReceiver {
         return moveMessagesToSendQueue(target, messages.get(target));
       }
       return true;
+    }
+
+    if (!(object instanceof KeyedContent) && !(object instanceof List)) {
+      throw new RuntimeException(String.format("Executor %d, Partial receive error. Received"
+          + " object which is not of type KeyedContent or List for target %d", executor, target));
     }
 
     added = offerMessage(target, object);
@@ -255,6 +257,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
                                             Map<Object, Queue<Object>> messagesPerTarget) {
     BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
     messagesPerTarget.entrySet().removeIf(entry -> {
+      //FIX not working putting queue in kc
       KeyedContent send = new KeyedContent(entry.getKey(), entry.getValue(),
           dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
       return targetSendQueue.offer(send);

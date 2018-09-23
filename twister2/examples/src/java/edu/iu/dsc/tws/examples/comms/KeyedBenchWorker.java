@@ -173,7 +173,7 @@ public abstract class KeyedBenchWorker implements IWorker {
       Integer key;
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
-        key = KeyGenerator.generateIntegerKey();
+        key = 123 + task;
         int flag = 0;
         if (i == jobParameters.getIterations() - 1) {
           flag = MessageFlags.LAST;
