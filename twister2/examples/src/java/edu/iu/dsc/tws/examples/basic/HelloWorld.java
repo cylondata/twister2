@@ -42,7 +42,7 @@ public class HelloWorld implements IWorker {
     String helloKeyValue = config.getStringValue("hello-key");
 
     // lets do a log to indicate we are running
-    LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d other workers "
+    LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
             + "and I got a configuration value %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
   }
