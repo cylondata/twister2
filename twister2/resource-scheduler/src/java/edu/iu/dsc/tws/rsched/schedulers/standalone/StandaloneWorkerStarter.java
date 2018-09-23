@@ -44,10 +44,17 @@ import edu.iu.dsc.tws.rsched.utils.JobUtils;
 public final class StandaloneWorkerStarter {
   private static final Logger LOG = Logger.getLogger(StandaloneWorkerStarter.class.getName());
 
-  private StandaloneWorkerStarter() {
-  }
+  /**
+   * The jobmaster client
+   */
+  private JobMasterClient masterClient;
 
-  public static void main(String[] args) {
+  /**
+   * Configuration
+   */
+  private Config config;
+
+  private StandaloneWorkerStarter(String[] args) {
     Options cmdOptions = null;
     try {
       cmdOptions = setupOptions();
@@ -60,10 +67,7 @@ public final class StandaloneWorkerStarter {
 
       // load the configuration
       // we are loading the configuration for all the components
-      Config config = loadConfigurations(cmd, rank);
-      // normal worker
-      LOG.log(Level.INFO, "A worker process is starting...");
-      createWorker(config);
+      this.config = loadConfigurations(cmd, rank);
     } catch (ParseException e) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("SubmitterMain", cmdOptions);
@@ -71,11 +75,19 @@ public final class StandaloneWorkerStarter {
     }
   }
 
+  public static void main(String[] args) {
+    StandaloneWorkerStarter starter = new StandaloneWorkerStarter(args);
+    // normal worker
+    starter.createWorker();
+    // now close the worker
+    starter.closeWorker();
+  }
+
   /**
    * Setup the command line options for the MPI process
    * @return cli options
    */
-  private static Options setupOptions() {
+  private Options setupOptions() {
     Options options = new Options();
 
     Option containerClass = Option.builder("c")
@@ -126,7 +138,7 @@ public final class StandaloneWorkerStarter {
     return options;
   }
 
-  private static Config loadConfigurations(CommandLine cmd, int id) {
+  private Config loadConfigurations(CommandLine cmd, int id) {
     String twister2Home = cmd.getOptionValue("twister2_home");
     String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
@@ -137,9 +149,9 @@ public final class StandaloneWorkerStarter {
             + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
 
-    Config workerConfig = Config.newBuilder().putAll(config).
+    Config workerConfig = Config.newBuilder().putAll(cfg).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
@@ -149,7 +161,7 @@ public final class StandaloneWorkerStarter {
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
     job.getNumberOfWorkers();
 
-    Config updatedConfig = JobUtils.overrideConfigs(job, config);
+    Config updatedConfig = JobUtils.overrideConfigs(job, cfg);
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SchedulerContext.WORKER_CLASS, container).
@@ -159,9 +171,10 @@ public final class StandaloneWorkerStarter {
     return updatedConfig;
   }
 
-  private static void createWorker(Config config) {
+  private void createWorker() {
+    LOG.log(Level.INFO, "A worker process is starting...");
     // lets create the resource plan
-    IWorkerController workerController = createWorkerController(config);
+    IWorkerController workerController = createWorkerController();
     WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
 
     String workerClass = SchedulerContext.workerClass(config);
@@ -174,11 +187,10 @@ public final class StandaloneWorkerStarter {
       if (object instanceof IWorker) {
         IWorker container = (IWorker) object;
         // now initialize the container
-        container.execute(config, workerNetworkInfo.getWorkerID(), resourcePlan, null, null, null);
-      } else if (object instanceof IWorker) {
-        IWorker worker = (IWorker) object;
-        worker.execute(config, workerNetworkInfo.getWorkerID(), resourcePlan,
+        container.execute(config, workerNetworkInfo.getWorkerID(), resourcePlan,
             workerController, null, null);
+      } else {
+        throw new RuntimeException("Job is not of time IWorker: " + object.getClass().getName());
       }
       LOG.log(Level.FINE, "loaded worker class: " + workerClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
@@ -190,10 +202,9 @@ public final class StandaloneWorkerStarter {
 
   /**
    * Create the resource plan
-   * @param config config
    * @return
    */
-  private static IWorkerController createWorkerController(Config config) {
+  private IWorkerController createWorkerController() {
     // first get the worker id
     String indexEnv = System.getenv("NOMAD_ALLOC_INDEX");
     String idEnv = System.getenv("NOMAD_ALLOC_ID");
@@ -218,16 +229,16 @@ public final class StandaloneWorkerStarter {
     String host = localIps.get("worker");
     WorkerNetworkInfo networkInfo = new WorkerNetworkInfo(host, port, workerID);
 
-    JobMasterClient jobMasterClient = createMasterClient(config, jobMasterIP, jobMasterPort,
+    this.masterClient = createMasterClient(config, jobMasterIP, jobMasterPort,
         networkInfo, numberOfWorkers);
 
-    return jobMasterClient.getJMWorkerController();
+    return masterClient.getJMWorkerController();
   }
 
   /**
    * Create the job master client to get information about the workers
    */
-  private static JobMasterClient createMasterClient(Config cfg, String masterHost, int masterPort,
+  private JobMasterClient createMasterClient(Config cfg, String masterHost, int masterPort,
                                                     WorkerNetworkInfo networkInfo,
                                                     int numberContainers) {
     // we start the job master client
@@ -249,7 +260,7 @@ public final class StandaloneWorkerStarter {
    * @param cfg the configuration
    * @return port name -> port map
    */
-  private static Map<String, Integer> getPorts(Config cfg) {
+  private Map<String, Integer> getPorts(Config cfg) {
     String portNamesConfig = StandaloneContext.networkPortNames(cfg);
     String[] portNames = portNamesConfig.split(",");
     Map<String, Integer> ports = new HashMap<>();
@@ -267,7 +278,7 @@ public final class StandaloneWorkerStarter {
    * @param cfg the configuration
    * @param workerID worker id
    */
-  private static void initLogger(Config cfg, int workerID) {
+  private void initLogger(Config cfg, int workerID) {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
@@ -297,15 +308,26 @@ public final class StandaloneWorkerStarter {
     LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
   }
 
-  private static String getTaskDirectory() {
+  private String getTaskDirectory() {
     return System.getenv("NOMAD_TASK_DIR");
   }
 
-  private static Map<String, String> getIPAddress(Map<String, Integer> ports) {
+  private Map<String, String> getIPAddress(Map<String, Integer> ports) {
     Map<String, String> ips = new HashMap<>();
     for (Map.Entry<String, Integer> e : ports.entrySet()) {
       ips.put(e.getKey(), System.getenv("NOMAD_IP_" + e.getKey()));
     }
     return ips;
+  }
+
+  /**
+   * last method to call to close the worker
+   */
+  public void closeWorker() {
+
+    // send worker completed message to the Job Master and finish
+    // Job master will delete the StatefulSet object
+    masterClient.sendWorkerCompletedMessage();
+    masterClient.close();
   }
 }

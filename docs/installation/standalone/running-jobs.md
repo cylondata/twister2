@@ -1,5 +1,6 @@
-Standalone using Nomad
-======================
+# Nomad Scheduler
+
+Nomad implementation is experimental at the moment.
 
 Starting Nomad
 --------------
@@ -39,6 +40,6 @@ Kill workers
 
 .. code-block:: bash
 
-  kill $(jps | grep StandaloneWorkerStarter | awk '{print $1}')
+  kill $(ps ax | grep StandaloneWorkerStarter | awk '{print $1}')
 
 
