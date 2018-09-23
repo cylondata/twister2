@@ -717,7 +717,8 @@ public class TaskExamples {
 
     @Override
     public void execute() {
-      boolean wrote = context.write(edge, "Hello");
+      int[] a = {1};
+      boolean wrote = context.write(edge, a);
       if (wrote) {
         count++;
         if (count % 1000 == 0) {
@@ -955,12 +956,16 @@ public class TaskExamples {
     if ("allgather".equals(example)) {
       source = new SAllGatherSourceTask(edge);
     }
+    if ("bcast".equals(example)) {
+      source = new SBroadCastSourceTask(edge);
+    }
     if ("partition".equals(example)) {
       source = new SPartitionSourceTask(edge);
     }
     if ("keyed-reduce".equals(example)) {
       source = new SKeyedReduceSourceTask(edge);
     }
+
     /*if ("keyed-gather".equals(example)) {
       source = new SKeyedGatherSourceTask(edge);
     }
@@ -983,6 +988,9 @@ public class TaskExamples {
     }
     if ("allgather".equals(example)) {
       sink = new SAllGatherSinkTask();
+    }
+    if ("bcast".equals(example)) {
+      sink = new SBroadCastSinkTask();
     }
     if ("partition".equals(example)) {
       sink = new SPartitionSinkTask();
