@@ -11,17 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 
 /**
  * Keyed reduce receiver for batch mode
