@@ -45,7 +45,8 @@ public class KReduceBatchFinalReceiver extends KReduceReceiver {
       }
 
       sourcesFinished = isSourcesFinished(target);
-      if (!sourcesFinished) {
+      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
+          && messages.get(target).isEmpty())) {
         needsFurtherProgress = true;
       }
 

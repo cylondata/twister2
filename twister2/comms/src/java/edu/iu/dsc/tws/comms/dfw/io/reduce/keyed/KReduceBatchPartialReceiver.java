@@ -47,7 +47,8 @@ public class KReduceBatchPartialReceiver extends KReduceReceiver {
       BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
       sourcesFinished = isSourcesFinished(target);
 
-      if (!sourcesFinished) {
+      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
+          && messages.get(target).isEmpty() && targetSendQueue.isEmpty())) {
         needsFurtherProgress = true;
       }
 
@@ -89,8 +90,6 @@ public class KReduceBatchPartialReceiver extends KReduceReceiver {
         batchDone.put(target, true);
         // we don'target want to go through the while loop for this one
         break;
-      } else {
-        needsFurtherProgress = true;
       }
     }
 
