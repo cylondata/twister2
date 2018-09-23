@@ -24,8 +24,6 @@ import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 public class BTBroadCastExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(BTReduceExample.class.getName());
-  private static final String SOURCE = "source";
-  private static final String SINK = "sink";
   private static final String EDGE = "edge";
   private static int psource = 4;
   private static int psink = 1;

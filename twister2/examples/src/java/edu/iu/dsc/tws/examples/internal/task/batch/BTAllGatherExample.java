@@ -25,10 +25,6 @@ public class BTAllGatherExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(BTAllGatherExample.class.getName());
 
-  private static final String SOURCE = "source";
-
-  private static final String SINK = "sink";
-
   private static final String EDGE = "edge";
 
   private static int psource = 4;

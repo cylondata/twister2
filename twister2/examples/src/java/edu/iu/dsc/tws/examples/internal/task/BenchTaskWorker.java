@@ -30,6 +30,10 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 public abstract class BenchTaskWorker extends TaskWorker {
   private static final Logger LOG = Logger.getLogger(BenchTaskWorker.class.getName());
 
+  protected static final String SOURCE = "source";
+
+  protected static final String SINK = "sink";
+
   protected DataFlowTaskGraph dataFlowTaskGraph;
 
   protected TaskGraphBuilder taskGraphBuilder;

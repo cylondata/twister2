@@ -36,12 +36,15 @@ import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 public class STBroadCastExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(STReduceExample.class.getName());
-  private static final String SOURCE = "source";
-  private static final String SINK = "sink";
+
   private static final String EDGE = "edge";
+
   private static int psource = 4;
+
   private static int psink = 1;
+
   private static final Op OPERATION = Op.SUM;
+
   private static final DataType DATA_TYPE = DataType.INTEGER;
 
 
