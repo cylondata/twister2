@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.Receptor;
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
@@ -590,11 +589,10 @@ public class TaskExamples {
 
     @Override
     public void execute() {
-      String data = generateStringData();
+
       // lets generate a message
-      KeyedContent message = new KeyedContent(0, data,
-          MessageType.INTEGER, MessageType.OBJECT);
-      boolean wrote = context.write(edge, "1");
+      int[] a = {1};
+      boolean wrote = context.write(edge, a);
       if (wrote) {
         count++;
         if (count % 100 == 0) {
@@ -602,10 +600,6 @@ public class TaskExamples {
               context.taskId(), count));
         }
       }
-    }
-
-    private static String generateStringData() {
-      return "1";
     }
   }
 
@@ -616,7 +610,25 @@ public class TaskExamples {
     @Override
     public boolean execute(IMessage message) {
       if (count % 100 == 0) {
-        LOG.info("Stream Message Gathered : " + message.getContent() + ", Count : " + count);
+        Object object = message.getContent();
+        if (object instanceof int[]) {
+          LOG.info("Stream Message Gathered : " + Arrays.toString((int[]) object)
+              + ", Count : " + count);
+        } else if (object instanceof ArrayList) {
+          ArrayList<?> a = (ArrayList<?>) object;
+          String out = "";
+          for (int i = 0; i < a.size(); i++) {
+            Object o = a.get(i);
+            if (o instanceof int[]) {
+              out += Arrays.toString((int[]) o);
+            }
+          }
+          LOG.info("Stream Message Gathered : " + out + ", Count : " + count);
+        } else {
+          LOG.info("Stream Message Gathered : " + message.getContent().getClass().getName()
+              + ", Count : " + count);
+        }
+
       }
       if (message.getContent() instanceof List) {
         count += ((List) message.getContent()).size();
