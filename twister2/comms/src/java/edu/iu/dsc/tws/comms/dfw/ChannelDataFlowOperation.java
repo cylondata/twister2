@@ -305,9 +305,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   public boolean sendMessagePartial(int source, Object message, int target,
                                     int flags, RoutingParameters routingParameters) {
     // for partial sends we use minus value to find the correct queue
-    if (message instanceof ArrayBlockingQueue) {
-      System.out.println(executor + " >>>>>>>>>>>>>>>>>>>>>> " + source);
-    }
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);
     return offerForSend(source, message, target, flags,
@@ -326,9 +323,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   public boolean sendMessage(int source, Object message, int target,
                              int flags, RoutingParameters routingParameters) {
-    if (message instanceof ArrayBlockingQueue) {
-      System.out.println(executor + " >>>>>>>>>>>>>>>>>>>>>> " + source);
-    }
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source);
     if (pendingSendMessages == null) {
