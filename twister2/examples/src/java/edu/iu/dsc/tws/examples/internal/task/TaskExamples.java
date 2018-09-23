@@ -652,10 +652,12 @@ public class TaskExamples {
 
     @Override
     public void execute() {
-      boolean wrote = context.write(edge, "Hello");
+      int[] a = {1};
+      boolean wrote = context.write(edge, a);
       if (wrote) {
         count++;
-        if (count % 1000 == 0) {
+        if (count % 10000 == 0) {
+
           LOG.info(String.format("%d %d Message Gather sent count : %d", context.getWorkerId(),
               context.taskId(), count));
         }
@@ -670,7 +672,31 @@ public class TaskExamples {
     @Override
     public boolean execute(IMessage message) {
       if (count % 1000 == 0) {
-        LOG.info("Message AllGather : " + message.getContent() + ", Count : " + count);
+        Object object = message.getContent();
+        if (object instanceof int[]) {
+          LOG.info("Stream Message AllGathered : " + Arrays.toString((int[]) object)
+              + ", Count : " + count);
+        } else if (object instanceof ArrayList) {
+          ArrayList<?> a = (ArrayList<?>) object;
+          String out = "";
+          for (int i = 0; i < a.size(); i++) {
+            Object o = a.get(i);
+            if (o instanceof int[]) {
+              out += Arrays.toString((int[]) o);
+            }
+          }
+          LOG.info("Stream Message AllGathered : " + out + ", Count : " + count);
+        } else if (object instanceof Iterator) {
+          Iterator<?> it = (Iterator<?>) object;
+          String out = "";
+          while (it.hasNext()) {
+            if (it.next() instanceof int[]) {
+              int[] a = (int[]) it.next();
+              out += Arrays.toString(a);
+            }
+          }
+          LOG.info("Stream AllGather Message Received : " + out);
+        }
       }
       count++;
       return true;
