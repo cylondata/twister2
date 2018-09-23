@@ -20,14 +20,14 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KeyedReduceBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchFinalReceiver;
 
 public class ReduceMultiBatchFinalReceiver implements MultiMessageReceiver {
   private ReduceFunction reduceFunction;
 
   private SingularReceiver singularReceiver;
 
-  private Map<Integer, KeyedReduceBatchFinalReceiver> receiverMap = new HashMap<>();
+  private Map<Integer, KReduceBatchFinalReceiver> receiverMap = new HashMap<>();
 
   public ReduceMultiBatchFinalReceiver(ReduceFunction reduceFn,
                                            SingularReceiver reduceRcvr) {
@@ -39,8 +39,8 @@ public class ReduceMultiBatchFinalReceiver implements MultiMessageReceiver {
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      KeyedReduceBatchFinalReceiver finalReceiver =
-          new KeyedReduceBatchFinalReceiver(reduceFunction, singularReceiver);
+      KReduceBatchFinalReceiver finalReceiver =
+          new KReduceBatchFinalReceiver(reduceFunction, singularReceiver);
       receiverMap.put(e.getKey(), finalReceiver);
       finalReceiver.init(cfg, op, e.getValue());
     }
@@ -48,14 +48,14 @@ public class ReduceMultiBatchFinalReceiver implements MultiMessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    KeyedReduceBatchFinalReceiver finalReceiver = receiverMap.get(path);
+    KReduceBatchFinalReceiver finalReceiver = receiverMap.get(path);
     return finalReceiver.onMessage(source, path, target, flags, object);
   }
 
   @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;
-    for (Map.Entry<Integer, KeyedReduceBatchFinalReceiver> e : receiverMap.entrySet()) {
+    for (Map.Entry<Integer, KReduceBatchFinalReceiver> e : receiverMap.entrySet()) {
       needsFurtherProgress = needsFurtherProgress | e.getValue().progress();
     }
     return needsFurtherProgress;

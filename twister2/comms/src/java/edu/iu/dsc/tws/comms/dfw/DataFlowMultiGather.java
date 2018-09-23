@@ -212,6 +212,16 @@ public class DataFlowMultiGather implements DataFlowOperation {
     return isDone;
   }
 
+  @Override
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  @Override
+  public MessageType getDataType() {
+    return dataType;
+  }
+
   private class GatherPartialReceiver implements MessageReceiver {
     private int destination;
 
