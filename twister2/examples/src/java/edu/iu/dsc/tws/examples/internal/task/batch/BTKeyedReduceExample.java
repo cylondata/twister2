@@ -25,33 +25,25 @@ import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 public class BTKeyedReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTKeyedReduceExample.class.getName());
 
-  private static final String EDGE = "edge";
-
-  private static int psource = 4;
-
-  private static int psink = 1;
-
-  private static final Op OPERATION = Op.SUM;
-
-  private static final DataType DATA_TYPE = DataType.INTEGER;
-
-  private static final DataType KEY_TYPE = DataType.OBJECT;
-
   @Override
   public void intialize() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    psource = taskStages.get(0);
-    psink = taskStages.get(1);
+    int psource = taskStages.get(0);
+    int psink = taskStages.get(1);
+    Op operation = Op.SUM;
+    DataType keyType = DataType.OBJECT;
+    DataType dataType = DataType.INTEGER;
+    String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getBatchSourceClass("keyed-reduce", EDGE);
+    BaseBatchSource g = taskExamples.getBatchSourceClass("keyed-reduce", edge);
     BaseBatchSink r = taskExamples.getBatchSinkClass("keyed-reduce");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.keyedReduce(SOURCE, EDGE, new IFunction() {
+    computeConnection.keyedReduce(SOURCE, edge, new IFunction() {
       @Override
       public Object onMessage(Object object1, Object object2) {
         return object1;
       }
-    }, KEY_TYPE, DATA_TYPE);
+    }, keyType, dataType);
   }
 }
