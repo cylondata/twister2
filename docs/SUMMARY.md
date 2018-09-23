@@ -2,8 +2,7 @@
 
 * [Twister2](README.md)
 * [Documentation](documentation/README.md)
-  * [Quickstart](documentation/quickstart/README.md)
-    * [Quickstart](documentation/quickstart/quickstart.md)
+  * [Quickstart](documentation/quickstart/quickstart.md)
   * [Installation](documentation/installation/README.md)
     * [Installation](documentation/installation/installation.md)
     * [Standalone](documentation/installation/standalone/README.md)
