@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 /**
  * Keyed reduce receiver for batch mode
  */
-public class KReduceBatchPartialReceiver extends KReduceReceiver {
+public class KReduceBatchPartialReceiver extends KReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(KReduceBatchPartialReceiver.class.getName());
 
 

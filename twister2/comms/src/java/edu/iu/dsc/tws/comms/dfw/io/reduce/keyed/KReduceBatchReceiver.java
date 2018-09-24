@@ -23,10 +23,10 @@ import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 
 /**
- * Abstract class that is extended by keyed reduce receivers
+ * Abstract class that is extended by keyed reduce batch receivers
  */
-public abstract class KReduceReceiver extends KeyedReceiver {
-  private static final Logger LOG = Logger.getLogger(KReduceReceiver.class.getName());
+public abstract class KReduceBatchReceiver extends KeyedReceiver {
+  private static final Logger LOG = Logger.getLogger(KReduceBatchReceiver.class.getName());
 
 
   /**

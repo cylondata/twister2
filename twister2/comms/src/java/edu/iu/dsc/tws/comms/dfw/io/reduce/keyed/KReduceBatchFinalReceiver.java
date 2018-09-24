@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 /**
  * Created by pulasthi on 9/20/18.
  */
-public class KReduceBatchFinalReceiver extends KReduceReceiver {
+public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
   private static final Logger LOG = Logger.getLogger(KReduceBatchFinalReceiver.class.getName());
 
   /**
