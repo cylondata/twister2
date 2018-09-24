@@ -19,12 +19,12 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KeyedReduceStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceStreamingPartialReceiver;
 
 public class ReduceMultiStreamingPartialReceiver implements MultiMessageReceiver {
   private ReduceFunction reduceFunction;
 
-  private Map<Integer, KeyedReduceStreamingPartialReceiver> receiverMap = new HashMap<>();
+  private Map<Integer, KReduceStreamingPartialReceiver> receiverMap = new HashMap<>();
 
   public ReduceMultiStreamingPartialReceiver(ReduceFunction reduceFunction) {
     this.reduceFunction = reduceFunction;
@@ -34,8 +34,8 @@ public class ReduceMultiStreamingPartialReceiver implements MultiMessageReceiver
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      KeyedReduceStreamingPartialReceiver partialReceiver =
-          new KeyedReduceStreamingPartialReceiver(e.getKey(), reduceFunction);
+      KReduceStreamingPartialReceiver partialReceiver =
+          new KReduceStreamingPartialReceiver(e.getKey(), reduceFunction, 10);
       receiverMap.put(e.getKey(), partialReceiver);
       partialReceiver.init(cfg, op, e.getValue());
     }
@@ -43,7 +43,7 @@ public class ReduceMultiStreamingPartialReceiver implements MultiMessageReceiver
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    KeyedReduceStreamingPartialReceiver finalReceiver = receiverMap.get(path);
+    KReduceStreamingPartialReceiver finalReceiver = receiverMap.get(path);
     return finalReceiver.onMessage(source, path, target, flags, object);
   }
 
@@ -51,7 +51,7 @@ public class ReduceMultiStreamingPartialReceiver implements MultiMessageReceiver
   public boolean progress() {
     boolean needsFurtherProgress = false;
 
-    for (Map.Entry<Integer, KeyedReduceStreamingPartialReceiver> e : receiverMap.entrySet()) {
+    for (Map.Entry<Integer, KReduceStreamingPartialReceiver> e : receiverMap.entrySet()) {
       needsFurtherProgress = needsFurtherProgress | e.getValue().progress();
     }
     return needsFurtherProgress;
