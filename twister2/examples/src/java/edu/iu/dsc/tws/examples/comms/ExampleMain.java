@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.batch.BAllGatherExample;
@@ -130,7 +131,6 @@ public class ExampleMain {
     jobConfig.put(Constants.ARGS_STREAM, stream);
 
     // build the job
-    Twister2Job twister2Job;
     if (!stream) {
       switch (operation) {
         case "reduce":
@@ -193,7 +193,7 @@ public class ExampleMain {
   private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setName(clazz)
+        .setName(Context.jobName(config))
         .setWorkerClass(clazz)
         .setRequestResource(new WorkerComputeResource(2, 1024), containers)
         .setConfig(jobConfig)

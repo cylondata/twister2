@@ -262,6 +262,26 @@ public class ComputeConnection {
     return this;
   }
 
+
+  /**
+   * Create a gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param dataType data type
+   * @param props map of properties
+   *
+   * @return the ComputeConnection
+   */
+  public ComputeConnection gather(String parent, String name, DataType dataType,
+                                  Map<String, Object> props) {
+    Edge edge = new Edge(name, OperationNames.GATHER, dataType);
+    edge.addProperties(props);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
   /**
    * Create a partition connection
    *

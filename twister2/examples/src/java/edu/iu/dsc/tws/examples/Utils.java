@@ -146,48 +146,6 @@ public final class Utils {
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
   }
 
-//  public static TaskPlan createReduceTaskPlan(Config cfg, AllocatedResources plan,
-//                                              List<Integer> noOfTaskEachStage) {
-//    int noOfContainers = plan.getNumberOfWorkers();
-//    Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
-//    Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-//    int thisExecutor = plan.getWorkerId();
-//
-//    List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
-//    Map<String, List<WorkerComputeResource>> containersPerNode =
-//        ResourcePlanUtils.getContainersPerNode(containers);
-//
-//    int totalTasksPreviously = 0;
-//    for (int noOfTasks : noOfTaskEachStage) {
-//      int currentExecutorId = 0;
-//      for (int i = 0; i < noOfTasks; i++) {
-//        Set<Integer> nodesOfExecutor;
-//        if (executorToGraphNodes.get(currentExecutorId) == null) {
-//          nodesOfExecutor = new HashSet<>();
-//        } else {
-//          nodesOfExecutor = executorToGraphNodes.get(currentExecutorId);
-//        }
-//        nodesOfExecutor.add(totalTasksPreviously + i);
-//        executorToGraphNodes.put(currentExecutorId, nodesOfExecutor);
-//        // we go to the next executor
-//        currentExecutorId = nextExecutorId(currentExecutorId, noOfContainers);
-//      }
-//      totalTasksPreviously += noOfTasks;
-//    }
-//
-//    int i = 0;
-//    for (Map.Entry<String, List<WorkerComputeResource>> entry : containersPerNode.entrySet()) {
-//      Set<Integer> executorsOfGroup = new HashSet<>();
-//      for (WorkerComputeResource c : entry.getValue()) {
-//        executorsOfGroup.add(c.getId());
-//      }
-//      groupsToExeuctors.put(i, executorsOfGroup);
-//      i++;
-//    }
-//
-//    return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
-//  }
-
   private static int nextExecutorId(int current, int noOfContainers) {
     if (current < noOfContainers - 1) {
       return current + 1;

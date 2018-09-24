@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.batch;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -32,9 +30,6 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class PartitionBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionBatchOperation.class.getName());
-  private HashMap<Integer, ArrayList<Integer>> barrierMap = new HashMap<>();
-  private HashMap<Integer, Integer> incommingMap = new HashMap<>();
-  private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
 
   protected BPartition op;
 

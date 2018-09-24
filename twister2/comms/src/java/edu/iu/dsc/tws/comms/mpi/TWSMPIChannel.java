@@ -172,6 +172,11 @@ public class TWSMPIChannel implements TWSChannel {
         receiveBuffers));
   }
 
+  @Override
+  public void close() {
+    // nothing to do here
+  }
+
   /**
    * Send a message to the given rank.
    *

@@ -110,3 +110,5 @@ They need to set the value of the configuration parameter:
 If the value of this parameter is true, 
 Twister2 will try to get the rack and data center labels from the configuration files. 
 Otherwise, it will try to get it from the Kubernetes master. 
+
+## Running Uploader Web Server

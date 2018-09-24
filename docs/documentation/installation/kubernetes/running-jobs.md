@@ -1,3 +1,3 @@
-Submitting Jobs ib Kubernetes
+Submitting Jobs in Kubernetes
 =============================
 

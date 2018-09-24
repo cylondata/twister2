@@ -198,6 +198,16 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     throw new RuntimeException("Not implemented");
   }
 
+  @Override
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  @Override
+  public MessageType getDataType() {
+    return dataType;
+  }
+
   private class ReducePartialReceiver implements MessageReceiver {
     private int destination;
 

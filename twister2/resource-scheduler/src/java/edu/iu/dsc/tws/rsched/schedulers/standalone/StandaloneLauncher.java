@@ -116,6 +116,12 @@ public class StandaloneLauncher implements ILauncher {
       } catch (InterruptedException ignore) {
       }
     }
+
+    // now we need to terminate the job
+    if (!terminateJob(job.getJobName())) {
+      LOG.log(Level.INFO, "Failed to terminate job: " + job.getJobName());
+    }
+
     return start;
   }
 
