@@ -56,6 +56,11 @@ public final class StandaloneWorkerStarter {
    */
   private Config config;
 
+  /**
+   * The worker controller
+   */
+  private IWorkerController workerController;
+
   private StandaloneWorkerStarter(String[] args) {
     Options cmdOptions = null;
     try {
@@ -79,12 +84,16 @@ public final class StandaloneWorkerStarter {
 
   public static void main(String[] args) {
     StandaloneWorkerStarter starter = new StandaloneWorkerStarter(args);
+    starter.run();
+  }
+
+  public void run() {
     // normal worker
     try {
-      starter.createWorker();
+      startWorker();
     } finally {
       // now close the worker
-      starter.closeWorker();
+      closeWorker();
     }
   }
 
@@ -176,10 +185,10 @@ public final class StandaloneWorkerStarter {
     return updatedConfig;
   }
 
-  private void createWorker() {
+  private void startWorker() {
     LOG.log(Level.INFO, "A worker process is starting...");
     // lets create the resource plan
-    IWorkerController workerController = createWorkerController();
+    this.workerController = createWorkerController();
     WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
 
     String workerClass = SchedulerContext.workerClass(config);

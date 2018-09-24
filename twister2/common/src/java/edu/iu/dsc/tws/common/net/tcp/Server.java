@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.util.NetworkUtils;
 
 public class Server implements SelectHandler {
   private static final Logger LOG = Logger.getLogger(Server.class.getName());
@@ -233,7 +234,8 @@ public class Server implements SelectHandler {
   @Override
   public void handleError(SelectableChannel ch) {
     SocketAddress channelAddress = ((SocketChannel) ch).socket().getRemoteSocketAddress();
-    LOG.finest("Connection is closed: " + channelAddress);
+    LOG.info("Connection is closed: " + channelAddress);
+
     BaseNetworkChannel channel = connectedChannels.get(ch);
     if (channel == null) {
       LOG.warning("Error occurred in non-existing channel");

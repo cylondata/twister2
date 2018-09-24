@@ -30,4 +30,13 @@ public final class NetworkUtils {
       return -1;
     }
   }
+
+  public static String printStackTrace() {
+    String s = "";
+    StackTraceElement[] elements = Thread.currentThread().getStackTrace();
+    for (StackTraceElement e : elements) {
+      s += e.toString() + "\n";
+    }
+    return s;
+  }
 }

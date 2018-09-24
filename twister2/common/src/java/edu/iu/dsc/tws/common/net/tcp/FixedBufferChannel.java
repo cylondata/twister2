@@ -122,7 +122,6 @@ public class FixedBufferChannel extends BaseNetworkChannel {
         LOG.finest(String.format("READ Body %d", buffer.limit()));
         return ret;
       } else {
-        LOG.log(Level.INFO, String.format("READ Body not COMPLETE %d %d", buffer.limit(), retVal));
         return null;
       }
     }

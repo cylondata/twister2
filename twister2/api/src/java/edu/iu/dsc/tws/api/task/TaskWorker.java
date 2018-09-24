@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public abstract class TaskWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(TaskWorker.class.getName());
@@ -94,6 +95,8 @@ public abstract class TaskWorker implements IWorker {
     taskExecutor = new TaskExecutor(config, workerId, allocatedResources, communicator);
     // call execute
     execute();
+    // wait for the sync
+    workerController.waitOnBarrier(SchedulerContext.workerEndSyncWaitTime(config));
     // lets terminate the network
     communicator.close();
   }
