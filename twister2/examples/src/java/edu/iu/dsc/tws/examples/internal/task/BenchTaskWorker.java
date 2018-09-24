@@ -44,27 +44,20 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   protected JobParameters jobParameters;
 
-  protected boolean isIterativeJob = false;
-
   @Override
   public void execute() {
     jobParameters = JobParameters.build(config);
-
     taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-
     if (jobParameters.isStream()) {
       taskGraphBuilder.setMode(OperationMode.STREAMING);
     } else {
       taskGraphBuilder.setMode(OperationMode.BATCH);
     }
+    buildTaskGraph();
+    dataFlowTaskGraph = taskGraphBuilder.build();
+    executionPlan = taskExecutor.plan(dataFlowTaskGraph);
+    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
 
-    intialize();
-
-    if (!isIterativeJob) {
-      dataFlowTaskGraph = taskGraphBuilder.build();
-      executionPlan = taskExecutor.plan(dataFlowTaskGraph);
-      taskExecutor.execute(dataFlowTaskGraph, executionPlan);
-    }
 
   }
 
@@ -78,6 +71,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
     return new WorkerPlan(workers);
   }
 
-  public abstract void intialize();
+  public abstract TaskGraphBuilder buildTaskGraph();
 
 }

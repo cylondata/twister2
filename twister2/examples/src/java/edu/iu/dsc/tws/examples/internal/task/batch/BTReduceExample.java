@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.internal.task.batch;
 import java.util.List;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.internal.task.BenchTaskWorker;
@@ -26,7 +27,7 @@ public class BTReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTReduceExample.class.getName());
 
   @Override
-  public void intialize() {
+  public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int psource = taskStages.get(0);
     int psink = taskStages.get(1);
@@ -39,6 +40,7 @@ public class BTReduceExample extends BenchTaskWorker {
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.reduce(SOURCE, edge, operation, dataType);
+    return taskGraphBuilder;
   }
 
 }

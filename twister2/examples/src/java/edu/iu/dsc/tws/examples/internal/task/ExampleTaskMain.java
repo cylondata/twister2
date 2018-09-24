@@ -31,7 +31,6 @@ import edu.iu.dsc.tws.examples.internal.task.batch.BTAllGatherExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTAllReduceExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTBroadCastExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTGatherExample;
-import edu.iu.dsc.tws.examples.internal.task.batch.BTIterativeJobExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTKeyedGatherExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTKeyedReduceExample;
 import edu.iu.dsc.tws.examples.internal.task.batch.BTPartitionKeyedExample;
@@ -40,7 +39,6 @@ import edu.iu.dsc.tws.examples.internal.task.streaming.STAllGatherExample;
 import edu.iu.dsc.tws.examples.internal.task.streaming.STAllReduceExample;
 import edu.iu.dsc.tws.examples.internal.task.streaming.STBroadCastExample;
 import edu.iu.dsc.tws.examples.internal.task.streaming.STGatherExample;
-import edu.iu.dsc.tws.examples.internal.task.streaming.STIterativeJobExample;
 import edu.iu.dsc.tws.examples.internal.task.streaming.STKeyedGatherExample;
 import edu.iu.dsc.tws.examples.internal.task.streaming.STKeyedReduceExample;
 import edu.iu.dsc.tws.examples.internal.task.streaming.STPartitionKeyedExample;
@@ -167,9 +165,6 @@ public class ExampleTaskMain {
         case "keyed-partition":
           submitJob(config, workers, jobConfig, BTPartitionKeyedExample.class.getName());
           break;
-        case "iterative-job":
-          submitJob(config, workers, jobConfig, BTIterativeJobExample.class.getName());
-          break;
       }
     } else {
       switch (operation) {
@@ -199,9 +194,6 @@ public class ExampleTaskMain {
           break;
         case "keyed-partition":
           submitJob(config, workers, jobConfig, STPartitionKeyedExample.class.getName());
-          break;
-        case "iterative-job":
-          submitJob(config, workers, jobConfig, STIterativeJobExample.class.getName());
           break;
       }
     }
