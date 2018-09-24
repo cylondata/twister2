@@ -2,15 +2,14 @@
 
 ### Source
 
-{% tabs %}
-{% tab title="First Tab" %}
+You can download the source from the [GitHub](https://github.com/DSC-SPIDAL/twister2) repo. 
 
-{% endtab %}
 
-{% tab title="Second Tab" %}
+### Binaries 
 
-{% endtab %}
-{% endtabs %}
+Download the latest binaries from here. 
+
+
 
 
 
