@@ -237,6 +237,9 @@ public class TWSTCPChannel implements TWSChannel {
       Iterator<Request> requestIterator = receiveRequests.pendingRequests.iterator();
       while (requestIterator.hasNext()) {
         Request r = requestIterator.next();
+        if (r == null || r.request == null) {
+          continue;
+        }
         TCPStatus status = r.request.testStatus();
         if (status == TCPStatus.COMPLETE) {
           // lets call the callback about the receive complete

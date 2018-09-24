@@ -193,7 +193,7 @@ public class ExampleMain {
   private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setName(Context.jobName(config))
+        .setName(clazz)
         .setWorkerClass(clazz)
         .setRequestResource(new WorkerComputeResource(2, 1024), containers)
         .setConfig(jobConfig)

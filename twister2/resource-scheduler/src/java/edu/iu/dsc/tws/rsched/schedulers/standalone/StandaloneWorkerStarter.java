@@ -80,9 +80,12 @@ public final class StandaloneWorkerStarter {
   public static void main(String[] args) {
     StandaloneWorkerStarter starter = new StandaloneWorkerStarter(args);
     // normal worker
-    starter.createWorker();
-    // now close the worker
-    starter.closeWorker();
+    try {
+      starter.createWorker();
+    } finally {
+      // now close the worker
+      starter.closeWorker();
+    }
   }
 
   /**
