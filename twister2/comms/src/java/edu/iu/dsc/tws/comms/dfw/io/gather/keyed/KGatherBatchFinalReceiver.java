@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchReceiver;
 
 /**
  * Created by pulasthi on 9/20/18.
