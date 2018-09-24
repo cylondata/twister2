@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,6 +34,7 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -181,6 +183,11 @@ public final class StandaloneWorkerStarter {
 
     AllocatedResources resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config),
         workerNetworkInfo.getWorkerID());
+    List<WorkerNetworkInfo> networkInfos = workerController.waitForAllWorkersToJoin(30000);
+    for (WorkerNetworkInfo w : networkInfos) {
+      WorkerComputeResource workerComputeResource = new WorkerComputeResource(w.getWorkerID());
+      resourcePlan.addWorkerComputeResource(workerComputeResource);
+    }
 
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
