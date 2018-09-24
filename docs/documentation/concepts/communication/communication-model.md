@@ -7,7 +7,7 @@ communication links between the nodes. The data flowing through this graph is te
 events or messages. It is important to note that even though by definition dataflow programming 
 means data is flowing through a graph, it may not necessarily be the case physically, especially 
 in batch applications. Big data systems employ different APIs for creating the dataflow graph. 
-For example, Flink and Spark provide distributed data set-based APIs for creating the graph while 
+For example, Flink and Spark provide distributed dataset-based APIs for creating the graph while 
 systems such as Storm and Hadoop provide task-level APIs.
 
 We support the following dataflow operations.
@@ -29,19 +29,19 @@ We suport both streaming and batch versions of these operations.
 TaskPlan
 --------
 
-Task plan represents how the ids are overlyed on top of the workers. A worker process will have a 
-unique id.
+Task plan represents how the IDs are overlyed on top of the workers. A worker process will have a 
+unique ID.
 
 Streaming
 ---------
 
-A streaming communication never ends so as the communication operations. 
+Streaming communication is a continuous flow of data. 
 
 Batch
 -----
 
 A batch operation works on a finite amount of data. Hence it terminates after the data sending is
-finished.
+completed.
 
 Shuffle Engine
 --------------
@@ -51,13 +51,11 @@ In case of in-sufficient memory, we can persist the data to disk.
 Communication Operation
 -----------------------
 
-A communication operation is defined by, set of source ids, set of target ids, 
-a message receiver, a partial message receiver and set of edge ids.
+A communication operation is defined by, set of source IDs, set of target IDs, 
+a message receiver, a partial message receiver and set of edge IDs.
 
 Detecting termination
 ---------------------
 
 Because we are working on a distributed setting with a communication having multiple steps, 
 termination of the operation needs to be detected.  
-
-
