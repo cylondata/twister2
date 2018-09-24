@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
+/**
+ * This class has the getter and setter properties to get and set the calculated new centroid values
+ */
 public class KMeansCenters {
 
   private double[][] centers;

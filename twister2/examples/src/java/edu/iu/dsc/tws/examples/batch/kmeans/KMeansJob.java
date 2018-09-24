@@ -90,6 +90,12 @@ public class KMeansJob extends TaskWorker {
     DataSet<Object> datapoints = new DataSet<>(0);
     DataSet<Object> centroids = new DataSet<>(1);
 
+    //Set the configuration values in the configuration parameters.
+    KMeansDataGenerator.generateDataPointsFile("/home/kgovind/hadoop-2.9.0/input.txt",
+        100, 2, 100, 500);
+    KMeansDataGenerator.generateCentroidFile("/home/kgovind/hadoop-2.9.0/centroids.txt",
+        4, 2, 100, 500);
+
     //Reading File
     KMeansFileReader kMeansFileReader = new KMeansFileReader();
     double[][] dataPoint = kMeansFileReader.readDataPoints(
@@ -141,7 +147,7 @@ public class KMeansJob extends TaskWorker {
           context.taskIndex(), 2, startIndex, endIndex);
       KMeansCenters kMeansCenters = kMeansCalculator.calculate();
 
-      LOG.info("Task Index:::" + context.taskIndex() + "\t"
+      LOG.fine("Task Index:::" + context.taskIndex() + "\t"
           + "Calculated Centroid Value::::" + Arrays.deepToString(centroid));
       context.writeEnd("all-reduce", kMeansCenters);
     }
@@ -189,6 +195,9 @@ public class KMeansJob extends TaskWorker {
     }
   }
 
+  /**
+   * This class aggregates the cluster centroid values and sum the new centroid values.
+   */
   public class CentroidAggregator implements IFunction {
     private static final long serialVersionUID = -254264120110286748L;
 
@@ -224,7 +233,7 @@ public class KMeansJob extends TaskWorker {
         }
       }
       ret.setCenters(newCentroids);
-      LOG.info("Kmeans Centers final:" + Arrays.deepToString(newCentroids));
+      LOG.fine("Kmeans Centers final:" + Arrays.deepToString(newCentroids));
       return ret;
     }
   }

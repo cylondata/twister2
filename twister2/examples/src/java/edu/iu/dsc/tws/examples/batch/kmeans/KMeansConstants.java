@@ -10,6 +10,10 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
+
+/**
+ * This class is to declare the variables required for the K-Means Clustering Process.
+ */
 public final class KMeansConstants {
 
   public static final String ARGS_ITR = "itr";
@@ -26,6 +30,7 @@ public final class KMeansConstants {
   public static final String ARGS_DIMENSIONS = "dim";
   public static final String ARGS_K = "k";
   public static final String ARGS_N_POINTS = "np";
+  public static final String ARGS_FILESYSTEM = "local"; //"hdfs"
 
   private KMeansConstants() {
   }

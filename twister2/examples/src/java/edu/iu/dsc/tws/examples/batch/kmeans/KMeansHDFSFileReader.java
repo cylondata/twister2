@@ -13,19 +13,32 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.LineNumberReader;
-import java.util.logging.Logger;
+import java.io.InputStreamReader;
+
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
+import edu.iu.dsc.tws.data.utils.HdfsDataContext;
+import edu.iu.dsc.tws.data.utils.HdfsUtils;
 
 /**
- * This class is responsible for reading the input datapoints and the centroid values from the local
- * file system.
+ * This class is responsible for reading the input from the HDFS. It internally uses the HDFS Utils
+ * class to set the configuration values required for accessing the HDFS. Then, it will create the
+ * hadoop file system object to access the HDFS.
  */
-public class KMeansFileReader {
+public class KMeansHDFSFileReader {
 
-  private static final Logger LOG = Logger.getLogger(KMeansFileReader.class.getName());
+  private Config config;
+  private HdfsUtils hdfsUtils;
+  private HadoopFileSystem hadoopFileSystem;
+
+  public KMeansHDFSFileReader(Config cfg) {
+    this.config = cfg;
+    hdfsUtils = new HdfsUtils(this.config);
+    hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+  }
 
   /**
    * It reads the datapoints from the corresponding file and store the data in a two-dimensional
@@ -36,17 +49,25 @@ public class KMeansFileReader {
    */
   public double[][] readDataPoints(String fName, int dimension) {
 
+    String fileName = HdfsDataContext.getHdfsDataDirectory(config) + "/" + fName;
+    String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + fileName;
+    Path path = new Path(directoryString);
+
     BufferedReader bufferedReader = null;
     File f = new File(fName);
     try {
-      bufferedReader = new BufferedReader(new FileReader(f));
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
+      if (hadoopFileSystem.exists(path)) {
+        bufferedReader = new BufferedReader(new InputStreamReader(
+            hadoopFileSystem.open(path)));
+      }
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
     }
 
     String line = "";
     int value = 0;
-    int lengthOfFile = getNumberOfLines(fName);
+    int lengthOfFile = hdfsUtils.getLengthOfFile(fName);
+
     double[][] dataPoints = new double[lengthOfFile][dimension];
     try {
       while ((line = bufferedReader.readLine()) != null) {
@@ -61,6 +82,7 @@ public class KMeansFileReader {
     } finally {
       try {
         bufferedReader.close();
+        hadoopFileSystem.close();
       } catch (IOException ioe) {
         ioe.printStackTrace();
       }
@@ -69,34 +91,15 @@ public class KMeansFileReader {
   }
 
   /**
-   * It calculates the number of lines in the file name.
-   * @param fileName
-   * @return
-   */
-  public int getNumberOfLines(String fileName) {
-
-    int numberOfLines = 0;
-    try {
-      File file = new File(fileName);
-      LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(file));
-      lineNumberReader.skip(Long.MAX_VALUE);
-      numberOfLines = lineNumberReader.getLineNumber();
-      lineNumberReader.close();
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
-    }
-    return numberOfLines;
-  }
-
-  /**
-   * It reads the datapoints from the corresponding file and store the data in a two-dimensional
-   * array for the later processing.
+   *  It reads the centroids from the corresponding file and store the data in a two-dimensional
+   *  array for the later processing. The size of the two-dimensional array should be equal to the
+   *  number of clusters and the dimension considered for the clustering process.
    * @param fileName
    * @param dimension
+   * @param numberOfClusters
    * @return
    */
   public double[][] readCentroids(String fileName, int dimension, int numberOfClusters) {
-
     double[][] centroids = new double[numberOfClusters][dimension];
     BufferedReader bufferedReader = null;
     try {
