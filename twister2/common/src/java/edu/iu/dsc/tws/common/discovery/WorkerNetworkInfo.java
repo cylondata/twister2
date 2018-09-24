@@ -181,7 +181,7 @@ public class WorkerNetworkInfo {
   public String toString() {
     return "WorkerNetworkInfo{"
         + "workerID=" + workerID
-        + ", ip=" + ip
+        + ", ip=" + ip.getHostAddress()
         + ", port=" + port
         + ", nodeInfo=" + nodeInfo
         + '}';
