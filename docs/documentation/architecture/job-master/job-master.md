@@ -10,7 +10,7 @@ Currently, we implemented the following services:
 2. Worker life-cycle monitoring 
 3. Worker Discovery
 4. Job Termination
-5. Supporting check-point manager
+5. Barrier Service
 
 ## Possibilities for Job Master Architecture 
 There are three architectural alternatives for the design of the Job Master. 
