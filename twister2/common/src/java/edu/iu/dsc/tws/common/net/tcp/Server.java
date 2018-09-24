@@ -24,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.util.NetworkUtils;
 
 public class Server implements SelectHandler {
   private static final Logger LOG = Logger.getLogger(Server.class.getName());
