@@ -13,11 +13,12 @@ distribute the tasks in a parallel manner and aggregate the results which reduce
 time of K-Means Clustering process. 
 
 ### Implementation
-The KMeansSource is invoked to distribute the datapoints which is based on the number of 
+
+First, the KMeansSource is invoked to distribute the datapoints which is based on the number of 
 workers. For every iteration, the new centroid value is calculated and the calculated value is 
 distributed across all the task instances. This process repeats for ‘N’ number of iterations as 
 specified in the KMeans Constants file. At the end of every iteration, the centroid value is updated
 based on the calculated value and it will continue until the end of iteration. The PROBLEM_DIMENSION
-is used to set the features selected for the clustering analytics process.
+is used to set the features selected for the clustering analytics process. 
 
-
+### KMeans Constants
