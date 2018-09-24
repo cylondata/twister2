@@ -25,9 +25,9 @@ class MPIContext extends SchedulerContext {
   public static final String SLURM_SHELL_SCRIPT = "twister2.resource.scheduler.mpi.shell.script";
 
   public static final String PARTITION = "twister2.resource.scheduler.slurm.partition";
-  public static final String MPI_HOME = "twister2.resource.scheduler.mpi.home";
   public static final String MODE = "twsiter2.resource.scheduler.mpi.mode";
   public static final String NODES_FILE = "twister2.resource.scheduler.mpi.nodes.file";
+  public static final String MPIRUN_FILE = "twister2.resource.scheduler.mpi.mpirun.file";
 
   public static String workingDirectory(Config config) {
     return TokenSub.substitute(config, config.getStringValue(WORKING_DIRECTORY,
@@ -46,15 +46,15 @@ class MPIContext extends SchedulerContext {
     return cfg.getStringValue(PARTITION);
   }
 
-  public static String mpiExecFile(Config cfg) {
-    return cfg.getStringValue(MPI_HOME, "");
-  }
-
   public static String mpiMode(Config cfg) {
     return cfg.getStringValue(MODE, "node");
   }
 
   public static String nodeFiles(Config cfg) {
     return cfg.getStringValue(NODES_FILE, "nodes");
+  }
+
+  public static String mpiRunFile(Config cfg) {
+    return cfg.getStringValue(MPIRUN_FILE, "mpirun");
   }
 }

@@ -86,4 +86,11 @@ public class Communicator {
   public String getPersistentDirectory() {
     return persistentDirectory;
   }
+
+  /**
+   * Terminate the communicator
+   */
+  public void close() {
+    channel.close();
+  }
 }

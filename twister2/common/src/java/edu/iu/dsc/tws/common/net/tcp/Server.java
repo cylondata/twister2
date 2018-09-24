@@ -113,6 +113,7 @@ public class Server implements SelectHandler {
       SocketChannel channel = connections.getKey();
       progress.removeAllInterest(channel);
 
+      channelHandler.onClose(channel);
       connections.getValue().clear();
     }
 

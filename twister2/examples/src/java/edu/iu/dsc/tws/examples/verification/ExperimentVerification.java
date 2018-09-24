@@ -48,12 +48,12 @@ public class ExperimentVerification implements IVerification {
             int[] input = (int[]) experimentData.getInput();
             int[] output = (int[]) experimentData.getOutput();
             Object[] res = Arrays.stream(input)
-                .map(i -> i * sourceCount)
+                .map(i -> i * sourceCount * experimentData.getIterations())
                 .boxed()
                 .collect(Collectors.toList())
                 .toArray();
             String resString = Arrays
-                .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(res, 0, res.length));
             String outString = Arrays.toString(output);
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Result : " + outString);
@@ -76,12 +76,12 @@ public class ExperimentVerification implements IVerification {
             int[] input = (int[]) experimentData.getInput();
             int[] output = (int[]) experimentData.getOutput();
             Object[] res = Arrays.stream(input)
-                .map(i -> i * sourceCount)
+                .map(i -> i * sourceCount * experimentData.getIterations())
                 .boxed()
                 .collect(Collectors.toList())
                 .toArray();
             String resString = Arrays
-                .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(res, 0, res.length));
             String outString = Arrays.toString(output);
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Result : " + outString);
@@ -106,9 +106,9 @@ public class ExperimentVerification implements IVerification {
             int[] res = input;
             isVerified = Arrays.equals(input, output);
             String resString = Arrays
-                .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(res, 0, res.length));
             String outputRes = Arrays
-                .toString(Arrays.copyOfRange(output, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(output, 0, res.length));
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Result : " + outputRes);
           }
@@ -131,9 +131,9 @@ public class ExperimentVerification implements IVerification {
             int[] res = input;
             isVerified = Arrays.equals(input, output);
             String resString = Arrays
-                .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(res, 0, res.length));
             String outputRes = Arrays
-                .toString(Arrays.copyOfRange(output, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(output, 0, res.length));
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Result : " + outputRes);
           }
@@ -154,14 +154,14 @@ public class ExperimentVerification implements IVerification {
             int[] input = (int[]) experimentData.getInput();
             int[] output = (int[]) keyedOutput.getValue();
             Object[] res = Arrays.stream(input)
-                .map(i -> i * sourceCount)
+                .map(i -> i * sourceCount * experimentData.getIterations())
                 .boxed()
                 .collect(Collectors.toList())
                 .toArray();
             String resString = Arrays
-                .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(res, 0, res.length));
             String resGen = Arrays
-                .toString(Arrays.copyOfRange(output, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(output, 0, res.length));
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Results : " + resGen);
             String outString = Arrays.toString(output);
@@ -187,9 +187,9 @@ public class ExperimentVerification implements IVerification {
             int[] res = input;
             isVerified = Arrays.equals(input, output);
             String resString = Arrays
-                .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(res, 0, res.length));
             String outputRes = Arrays
-                .toString(Arrays.copyOfRange(output, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(output, 0, res.length));
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Result : " + outputRes);
           }
@@ -215,7 +215,7 @@ public class ExperimentVerification implements IVerification {
                 .collect(Collectors.toList())
                 .toArray();
             String resString = Arrays
-                .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(res, 0, res.length));
             String outString = Arrays.toString(output);
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Result : " + outString);
@@ -243,7 +243,7 @@ public class ExperimentVerification implements IVerification {
                 .collect(Collectors.toList())
                 .toArray();
             String resString = Arrays
-                .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(res, 0, res.length));
             String outString = Arrays.toString(output);
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Result : " + outString);
@@ -268,9 +268,9 @@ public class ExperimentVerification implements IVerification {
             int[] res = input;
             isVerified = Arrays.equals(input, output);
             String resString = Arrays
-                .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(res, 0, res.length));
             String outputRes = Arrays
-                .toString(Arrays.copyOfRange(output, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(output, 0, res.length));
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Result : " + outputRes);
           }
@@ -293,9 +293,9 @@ public class ExperimentVerification implements IVerification {
             int[] res = input;
             isVerified = Arrays.equals(input, output);
             String resString = Arrays
-                .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(res, 0, res.length));
             String outputRes = Arrays
-                .toString(Arrays.copyOfRange(output, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(output, 0, res.length));
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Result : " + outputRes);
           }
@@ -321,9 +321,9 @@ public class ExperimentVerification implements IVerification {
                 .collect(Collectors.toList())
                 .toArray();
             String resString = Arrays
-                .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(res, 0, res.length));
             String resGen = Arrays
-                .toString(Arrays.copyOfRange(output, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(output, 0, res.length));
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Results : " + resGen);
             String outString = Arrays.toString(output);
@@ -349,9 +349,9 @@ public class ExperimentVerification implements IVerification {
             int[] res = input;
             isVerified = Arrays.equals(input, output);
             String resString = Arrays
-                .toString(Arrays.copyOfRange(res, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(res, 0, res.length));
             String outputRes = Arrays
-                .toString(Arrays.copyOfRange(output, 0, Math.min(res.length, 10)));
+                .toString(Arrays.copyOfRange(output, 0, res.length));
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Result : " + outputRes);
           }

@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.EdgeGenerator;
 import edu.iu.dsc.tws.comms.op.OperationSemantics;
@@ -80,7 +80,7 @@ public class SortJob implements IWorker {
     this.noOfTasksPerExecutor = NO_OF_TASKS / allocatedResources.getNumberOfWorkers();
 
     partition = new DataFlowPartition(config, channel, taskPlan, sources, destinations,
-        new PartitionBatchFinalReceiver(new RecordSave(), false, "/tmp",
+        new DPartitionBatchFinalReceiver(new RecordSave(), false, "/tmp",
             new IntegerComparator()),
         new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
         MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,

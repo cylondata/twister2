@@ -12,8 +12,10 @@
 package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,9 +24,8 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
-import edu.iu.dsc.tws.comms.op.functions.reduction.KeyedReduceOperationFunction;
+import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
@@ -59,7 +60,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     }
 
     keyedReduce = new BKeyedReduce(communicator, taskPlan, sources, targets,
-        new KeyedReduceOperationFunction(Op.SUM, MessageType.INTEGER),
+        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
         new FinalSingularReceiver(), MessageType.INTEGER, MessageType.INTEGER,
         new SimpleKeyBasedSelector());
 
@@ -118,16 +119,20 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean receive(int target, Object object) {
 
       if (object == null) {
         return true;
       }
-      KeyedContent keyedContent = (KeyedContent) object;
-      int[] data = (int[]) keyedContent.getValue();
-      LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
-          Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
-      LOG.log(Level.INFO, String.format("%d Received final input", workerId));
+      HashMap<Object, Object> dataMap = (HashMap<Object, Object>) object;
+      for (Object kc : dataMap.values()) {
+        int[] data = (int[]) ((ArrayBlockingQueue) kc).poll();
+        LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
+            Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
+        LOG.log(Level.INFO, String.format("%d Received final input", workerId));
+      }
+
 
       reduceDone = true;
       experimentData.setOutput(object);

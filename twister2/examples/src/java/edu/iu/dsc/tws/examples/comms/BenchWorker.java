@@ -71,7 +71,10 @@ public abstract class BenchWorker implements IWorker {
     this.config = cfg;
     this.resourcePlan = allocatedResources;
     this.workerId = workerID;
-    this.workerList = workerController.getWorkerList();
+    this.workerList = workerController.waitForAllWorkersToJoin(50000);
+    for (WorkerNetworkInfo w : workerList) {
+      LOG.log(Level.INFO, "WorkerNetworkInfo: " + w);
+    }
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(
         cfg, allocatedResources, jobParameters.getTaskStages(), workerList);
@@ -82,11 +85,12 @@ public abstract class BenchWorker implements IWorker {
     //collect experiment data
     experimentData = new ExperimentData();
 
-
     // now lets execute
     execute();
     // now communicationProgress
     progress();
+    // lets terminate the communicator
+    communicator.close();
   }
 
   protected abstract void execute();
