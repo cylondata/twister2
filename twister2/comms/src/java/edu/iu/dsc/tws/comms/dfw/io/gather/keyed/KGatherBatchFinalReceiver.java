@@ -14,8 +14,7 @@ package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 
 /**
@@ -27,11 +26,11 @@ public class KGatherBatchFinalReceiver extends KeyedReceiver {
   /**
    * Final receiver that get the reduced values for the operation
    */
-  private SingularReceiver singularReceiver;
+  private BulkReceiver bulkReceiver;
 
-  public KGatherBatchFinalReceiver(ReduceFunction reduce, SingularReceiver receiver,
+  public KGatherBatchFinalReceiver(BulkReceiver receiver,
                                    int limitPerKey) {
-    this.singularReceiver = receiver;
+    this.bulkReceiver = receiver;
     this.limitPerKey = limitPerKey;
     this.isFinalReceiver = true;
   }
@@ -55,7 +54,7 @@ public class KGatherBatchFinalReceiver extends KeyedReceiver {
       if (sourcesFinished && dataFlowOperation.isDelegeteComplete()) {
         batchDone.put(target, true);
         //TODO: check if we can simply remove the data, that is use messages.remove()
-        singularReceiver.receive(target, messages.get(target));
+        //bulkReceiver.receive(target, messages.get(target));
       }
 
 
