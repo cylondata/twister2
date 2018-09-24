@@ -110,7 +110,7 @@ public abstract class KReduceBatchReceiver extends KeyedReceiver {
     BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
     //FIX
     messagesPerTarget.entrySet().removeIf(entry -> {
-      KeyedContent send = new KeyedContent(entry.getKey(), entry.getValue().poll(),
+      KeyedContent send = new KeyedContent(entry.getKey(), entry.getValue().peek(),
           dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
       return targetSendQueue.offer(send);
     });
