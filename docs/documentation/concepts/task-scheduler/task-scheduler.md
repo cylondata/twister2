@@ -1,16 +1,6 @@
 Task Scheduling in Twister2
 ===========================
 
-.. toctree::
-   :maxdepth: 5
-   
-   streaming/data-locality-streaming-task-scheduler
-   streaming/first-fit-streaming-task-scheduler
-   streaming/round-robin-task-scheduler
-   batch/round-robin-batch-task-scheduler
-   batch/data-locality-batch-task-scheduler
-   
-
 Task Scheduling is the process of scheduling the tasks into the cluster resources in a manner that 
 minimizes the task completion time and utilizes the resources effectively. The other main functional 
 requirements of task scheduling are scalability, dynamism, time and cost efficiency, handling 
