@@ -58,8 +58,12 @@ public class KReduceBatchPartialReceiver extends KReduceBatchReceiver {
         //In reduce a flush is only needed when the number of keys exceed the key limit
         //So we flush the keys and remove them from the messages list.This would be the same
         //when the sources are finished.
-        Object current = targetSendQueue.peek();
-        if (current != null) {
+
+        //Used to make sure that the code is not stuck in this while loop if the send keeps getting
+        //rejected
+        boolean canProgress = true;
+        Object current;
+        while (canProgress && (current = targetSendQueue.peek()) != null) {
           if (sourcesFinished && targetSendQueue.size() == 1) {
             flags = MessageFlags.LAST;
           }
@@ -67,6 +71,7 @@ public class KReduceBatchPartialReceiver extends KReduceBatchReceiver {
           if (dataFlowOperation.sendPartial(target, current, flags, destination)) {
             targetSendQueue.poll();
           } else {
+            canProgress = false;
             needsFurtherProgress = true;
           }
 
