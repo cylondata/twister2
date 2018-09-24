@@ -105,7 +105,7 @@ public class KMeansJob extends TaskWorker {
 
     DataFlowTaskGraph graph = graphBuilder.build();
 
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 2; i++) {
       datapoints.addPartition(0, dataPoint);
       centroids.addPartition(1, centroid);
 
@@ -174,18 +174,21 @@ public class KMeansJob extends TaskWorker {
   private static class KMeansAllReduceTask extends BaseBatchSink implements Collector<Object> {
     private static final long serialVersionUID = -5190777711234234L;
 
+    private double[][] centroids;
     private double[][] newCentroids;
 
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.FINE, "Received message: " + message.getContent());
-      newCentroids = ((KMeansCenters) message.getContent()).getCenters();
-      for (int i = 0; i < newCentroids.length; i++) {
-        for (int j = 0; j < newCentroids[0].length - 1; j++) {
-          double newVal =  newCentroids[i][j] / newCentroids[i][newCentroids[0].length - 1];
+      centroids = ((KMeansCenters) message.getContent()).getCenters();
+      newCentroids = new double[centroids.length][centroids[0].length - 1];
+      for (int i = 0; i < centroids.length; i++) {
+        for (int j = 0; j < centroids[0].length - 1; j++) {
+          double newVal =  centroids[i][j] / centroids[i][centroids[0].length - 1];
           newCentroids[i][j] = newVal;
         }
       }
+      LOG.fine("New Centroid Values:" + Arrays.deepToString(newCentroids));
       return true;
     }
 
