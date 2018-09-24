@@ -191,6 +191,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
         Object key = keyedContent.getKey();
         if (messagesPerTarget.containsKey(key)
             && messagesPerTarget.get(key).size() >= limitPerKey) {
+          moveMessageToSendQueue(target, messagesPerTarget, keyedContent.getKey());
           return false;
         }
         if (tempList.containsKey(key)) {
@@ -221,6 +222,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
         } else {
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
               + "needs flush ", executor));
+          moveMessageToSendQueue(target, messagesPerTarget, keyedContent.getKey());
           return false;
         }
       } else {
@@ -250,6 +252,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
    * moves all the buffered messages into the sendQueue for the given target
    *
    * @param target target for which the move needs to be done
+   * @param messagesPerTarget messages for given target
    * @return true if the messagesPerTarget is not empty at the end of the moving process or false
    * otherwise
    */
@@ -257,13 +260,59 @@ public abstract class KeyedReceiver implements MessageReceiver {
                                             Map<Object, Queue<Object>> messagesPerTarget) {
     BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
     messagesPerTarget.entrySet().removeIf(entry -> {
-      //FIX not working putting queue in kc
-      KeyedContent send = new KeyedContent(entry.getKey(), entry.getValue(),
-          dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
-      return targetSendQueue.offer(send);
+
+      BlockingQueue<Object> entryQueue = (ArrayBlockingQueue<Object>) entry.getValue();
+      Object current;
+
+      while ((current = entryQueue.peek()) != null) {
+        KeyedContent send = new KeyedContent(entry.getKey(), current,
+            dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
+
+        if (targetSendQueue.offer(send)) {
+          entryQueue.poll();
+        } else {
+          return false;
+        }
+      }
+
+      return true;
     });
 
     return messagesPerTarget.isEmpty();
+  }
+
+  /**
+   * Moves all the buffered messages for the given key into the sendQueue and removes the
+   * entry in the messages data structure if all the messages are moved
+   *
+   * @param target target for which the move needs to be done
+   * @param messagesPerTarget messages for given target
+   * @param key the key to be moved
+   * @return true if all the messages for that key are moved successfully
+   */
+  protected boolean moveMessageToSendQueue(int target, Map<Object, Queue<Object>> messagesPerTarget,
+                                           Object key) {
+    BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
+    BlockingQueue<Object> entryQueue = (ArrayBlockingQueue<Object>) messagesPerTarget.get(key);
+    Object current;
+
+    while ((current = entryQueue.peek()) != null) {
+      KeyedContent send = new KeyedContent(key, current,
+          dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
+
+      if (targetSendQueue.offer(send)) {
+        entryQueue.poll();
+      } else {
+        return false;
+      }
+    }
+
+    if (messagesPerTarget.get(key).isEmpty()) {
+      messagesPerTarget.remove(key);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /**

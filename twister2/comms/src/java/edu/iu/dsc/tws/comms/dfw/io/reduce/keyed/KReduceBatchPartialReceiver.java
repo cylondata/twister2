@@ -55,10 +55,6 @@ public class KReduceBatchPartialReceiver extends KReduceBatchReceiver {
       if (!targetSendQueue.isEmpty() || sourcesFinished) {
         int flags = 0;
 
-        //In reduce a flush is only needed when the number of keys exceed the key limit
-        //So we flush the keys and remove them from the messages list.This would be the same
-        //when the sources are finished.
-
         //Used to make sure that the code is not stuck in this while loop if the send keeps getting
         //rejected
         boolean canProgress = true;
