@@ -18,16 +18,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 
-public class WordAggregate implements MultiMessageReceiver {
+public class WordAggregate implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregate.class.getName());
-
-  private Config config;
-
-  private DataFlowOperation operation;
 
   private int totalCount = 0;
 
@@ -36,8 +31,7 @@ public class WordAggregate implements MultiMessageReceiver {
   private int executor;
 
   @Override
-  public void init(Config cfg, DataFlowOperation op,
-                   Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     TaskPlan plan = op.getTaskPlan();
     this.executor = op.getTaskPlan().getThisExecutor();
     LOG.fine(String.format("%d final expected task ids %s", plan.getThisExecutor(), expectedIds));
@@ -47,15 +41,8 @@ public class WordAggregate implements MultiMessageReceiver {
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     if (object instanceof List) {
       for (Object o : (List) object) {
-        if (o instanceof KeyedContent) {
-          addValue(((KeyedContent) o).getValue().toString());
-        } else {
-          addValue(o.toString());
-        }
+        addValue(o.toString());
       }
-    } else if (object instanceof KeyedContent) {
-      String value = ((KeyedContent) object).getValue().toString();
-      addValue(value);
     } else {
       addValue(object.toString());
     }

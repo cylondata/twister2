@@ -59,6 +59,7 @@ public class SchedulerContext extends Context {
   // persistent volume per worker in GB
   public static final double PERSISTENT_VOLUME_PER_WORKER_DEFAULT = 0.0;
   public static final String PERSISTENT_VOLUME_PER_WORKER = "persistent.volume.per.worker";
+  public static final String WORKER_END_SYNC_TIME = "twister2.worker.end.sync.wait.time.ms";
 
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
@@ -135,4 +136,7 @@ public class SchedulerContext extends Context {
     return jobName + ".job";
   }
 
+  public static int workerEndSyncWaitTime(Config cfg) {
+    return cfg.getIntegerValue("twister2.worker.end.sync.time.ms", 30000);
+  }
 }

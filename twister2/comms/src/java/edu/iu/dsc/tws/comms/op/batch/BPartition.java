@@ -15,10 +15,12 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
@@ -50,12 +52,21 @@ public class BPartition {
   public BPartition(Communicator comm, TaskPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     BulkReceiver rcvr,
-                    DestinationSelector destSelector) {
+                    DestinationSelector destSelector, boolean shuffle) {
     this.destinationSelector = destSelector;
     String shuffleDir = comm.getPersistentDirectory();
+
+    MessageReceiver finalRcvr;
+    if (shuffle) {
+      finalRcvr = new DPartitionBatchFinalReceiver(
+          rcvr, false, shuffleDir, null);
+    } else {
+      finalRcvr = new PartitionBatchFinalReceiver(rcvr);
+    }
+
     this.partition = new DataFlowPartition(comm.getChannel(), sources, targets,
-        new DPartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT, dataType);
+        finalRcvr, new PartitionPartialReceiver(),
+        DataFlowPartition.PartitionStratergy.DIRECT, dataType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
   }
@@ -69,7 +80,7 @@ public class BPartition {
    * @return true if the message is accepted
    */
   public boolean partition(int source, Object message, int flags) {
-    int dest = destinationSelector.next(source);
+    int dest = destinationSelector.next(source, message);
 
     boolean send = partition.send(source, message, flags, dest);
     if (send) {

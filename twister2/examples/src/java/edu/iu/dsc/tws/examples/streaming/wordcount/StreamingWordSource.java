@@ -17,46 +17,36 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 
 public class StreamingWordSource implements Runnable {
   private static final Logger LOG = Logger.getLogger(StreamingWordSource.class.getName());
 
-  private DataFlowOperation operation;
+  private SPartition operation;
 
   private Random random = new Random();
-
-  private char[] tempCharacters;
 
   private static final int MAX_CHARS = 5;
 
   private int noOfWords;
 
-  private int noOfDestinations;
-
   private int taskId;
 
-  private List<Integer> destinations;
-
   private RandomString randomString;
-
-  private int noOfWordsSent;
 
   private int executor;
 
   private List<String> sampleWords = new ArrayList<>();
 
-  public StreamingWordSource(Config config, DataFlowOperation operation, int words,
-                             List<Integer> dests, int tId, int noOfSampleWords) {
+  public StreamingWordSource(Config config, SPartition operation, int words,
+                             int tId, int noOfSampleWords, TaskPlan taskPlan) {
     this.operation = operation;
-    this.tempCharacters = new char[MAX_CHARS];
     this.noOfWords = words;
-    this.destinations = dests;
     this.taskId = tId;
-    this.noOfDestinations = destinations.size();
     this.randomString = new RandomString(MAX_CHARS, new Random(), RandomString.ALPHANUM);
-    this.executor = operation.getTaskPlan().getThisExecutor();
+    this.executor = taskPlan.getThisExecutor();
 
     for (int i = 0; i < noOfSampleWords; i++) {
       sampleWords.add(randomString.nextRandomSizeString());
@@ -65,27 +55,12 @@ public class StreamingWordSource implements Runnable {
 
   @Override
   public void run() {
-    int nextIndex = 0;
     for (int i = 0; i < noOfWords; i++) {
       String word = sampleWords.get(random.nextInt(sampleWords.size()));
-      int destIndex = Math.abs(word.hashCode() % noOfDestinations);
-      nextIndex = nextIndex % noOfDestinations;
-      int dest = destinations.get(nextIndex);
-      nextIndex++;
       // lets try to process if send doesn't succeed
-      while (!operation.send(taskId, word, 0, dest)) {
-        try {
-          Thread.sleep(1);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
+      while (!operation.partition(taskId, word, 0)) {
+        operation.progress();
       }
-      noOfWordsSent++;
-//      LOG.info(String.format("%d %d Sending word true %d", executor, taskId, noOfWordsSent));
     }
-  }
-
-  private String generateWord() {
-    return randomString.nextRandomSizeString();
   }
 }

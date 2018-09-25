@@ -68,7 +68,7 @@ public class SPartition {
    * @return true if the message is accepted
    */
   public boolean partition(int src, Object message, int flags) {
-    final int dest = destinationSelector.next(src);
+    final int dest = destinationSelector.next(src, message);
 
     boolean send = partition.send(src, message, flags, dest);
     if (send) {

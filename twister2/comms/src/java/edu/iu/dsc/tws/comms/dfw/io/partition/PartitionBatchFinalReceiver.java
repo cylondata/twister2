@@ -64,7 +64,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * These sources called onFinished
    */
-  private Set<Integer> onFinishedSources = new HashSet<>();
+  private Map<Integer, Set<Integer>> onFinishedSources = new HashMap<>();
 
   /**
    * Sources of this worker
@@ -75,6 +75,8 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
    * The worker id
    */
   private int thisWorker;
+
+  private Set<Integer> sources;
 
   public PartitionBatchFinalReceiver(BulkReceiver receiver) {
     this.receiver = receiver;
@@ -88,10 +90,12 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
         ((DataFlowPartition) op).getSources());
     thisWorker = op.getTaskPlan().getThisExecutor();
     this.operation = op;
+    this.sources = ((DataFlowPartition) op).getSources();
 
     // lists to keep track of messages for destinations
     for (int d : expectedIds.keySet()) {
       targetMessages.put(d, new ArrayList<>());
+      onFinishedSources.put(d, new HashSet<>());
     }
   }
 
@@ -111,19 +115,22 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   @Override
   public boolean onMessage(int src, int path, int target, int flags, Object object) {
     lock.lock();
-
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
-      if (onFinishedSources.contains(src)) {
-        LOG.log(Level.WARNING,
-            String.format("%d Duplicate finish from source id %d", this.thisWorker, src));
-      } else {
-        onFinishedSources.add(src);
-      }
-      return true;
-    }
-
     try {
+      Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(target);
+      if ((flags & MessageFlags.END) == MessageFlags.END) {
+        if (onFinishedSrcsTarget.contains(src)) {
+          LOG.log(Level.WARNING,
+              String.format("%d Duplicate finish from source id %d", this.thisWorker, src));
+        } else {
+          onFinishedSrcsTarget.add(src);
+        }
+        return true;
+      }
+
       List<Object> targetMsgList = targetMessages.get(target);
+      if (targetMsgList == null) {
+        throw new RuntimeException(String.format("%d target not exisits %d", executor, target));
+      }
       if (object instanceof List) {
         targetMsgList.addAll((Collection<?>) object);
       } else {
@@ -140,19 +147,23 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     boolean needsFurtherProgress = false;
     lock.lock();
     try {
-      if (operation.isDelegeteComplete()
-          && onFinishedSources.equals(thisWorkerSources)) {
-        Iterator<Map.Entry<Integer, List<Object>>> it = targetMessages.entrySet().iterator();
-        while (it.hasNext()) {
-          Map.Entry<Integer, List<Object>> e = it.next();
-          if (receiver.receive(e.getKey(), e.getValue().iterator())) {
-            it.remove();
-          } else {
-            needsFurtherProgress = true;
+      for (Map.Entry<Integer, Set<Integer>> entry : onFinishedSources.entrySet()) {
+        Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(entry.getKey());
+
+        if (operation.isDelegeteComplete()
+            && onFinishedSrcsTarget.equals(sources)) {
+          Iterator<Map.Entry<Integer, List<Object>>> it = targetMessages.entrySet().iterator();
+          while (it.hasNext()) {
+            Map.Entry<Integer, List<Object>> e = it.next();
+            if (receiver.receive(e.getKey(), e.getValue().iterator())) {
+              it.remove();
+            } else {
+              needsFurtherProgress = true;
+            }
           }
+        } else {
+          needsFurtherProgress = true;
         }
-      } else {
-        needsFurtherProgress = true;
       }
     } finally {
       lock.unlock();

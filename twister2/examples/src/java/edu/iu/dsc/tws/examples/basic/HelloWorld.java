@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,6 +21,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
@@ -43,8 +45,21 @@ public class HelloWorld implements IWorker {
 
     // lets do a log to indicate we are running
     LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
-            + "and I got a configuration value %s", workerID,
+            + "and I got a message: %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
+
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    String workersStr = WorkerNetworkInfo.workerListAsString(workerList);
+    LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
+
+    try {
+      LOG.info("I am sleeping for 1 minute and complete.");
+      Thread.sleep(60 * 1000);
+      LOG.info("I am done sleeping. Exiting.");
+    } catch (InterruptedException e) {
+      LOG.severe("Thread sleep interrupted.");
+    }
+
   }
 
   public static void main(String[] args) {
@@ -63,7 +78,7 @@ public class HelloWorld implements IWorker {
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("hello-world-job")
-        .setWorkerClass(HelloWorld.class.getName())
+        .setWorkerClass(HelloWorld.class)
         .setRequestResource(new WorkerComputeResource(2, 1024), numberOfWorkers)
         .setConfig(jobConfig)
         .build();

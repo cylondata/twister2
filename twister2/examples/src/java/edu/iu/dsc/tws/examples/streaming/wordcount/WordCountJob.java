@@ -19,24 +19,16 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public final class WordCountJob {
   private WordCountJob() {
   }
 
   public static void main(String[] args) {
-
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
-    // build JobConfig
-    HashMap<String, Object> configurations = new HashMap<>();
-    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
-
     JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(configurations);
-
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("streaming-wordcount");
     jobBuilder.setWorkerClass(WordCountWorker.class.getName());

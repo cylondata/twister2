@@ -172,7 +172,7 @@ public class Client implements SelectHandler {
     try {
       socketChannel.close();
       // we call the onclose with null value
-      channelHandler.onClose(null);
+      channelHandler.onClose(socketChannel);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to stop Client", e);
     }
