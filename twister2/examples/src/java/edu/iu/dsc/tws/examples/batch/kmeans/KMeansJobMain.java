@@ -35,6 +35,7 @@ public class KMeansJobMain {
 
   public static void main(String[] args) throws ParseException {
     LOG.log(Level.INFO, "KMeans Clustering Job");
+
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
@@ -79,8 +80,8 @@ public class KMeansJobMain {
 
     LOG.info("workers:" + workers + "\titeration:" + itr + "\tdimension:" + dim
         + "\tnumber of clusters:" + numOfClusters + "\tfilename:" + fileName
-        + "\tdatapoints file:" + datapointsFile + "\tcenters file:" + centersFile
-        + "\tfilesys:" + fileSystem);
+        + "\tnumber of datapoints:" + numberOfPoints + "\tdatapoints file:" + datapointsFile
+        + "\tcenters file:" + centersFile + "\tfilesys:" + fileSystem);
 
     configurations.put(KMeansConstants.ARGS_FNAME, fileName);
     configurations.put(KMeansConstants.ARGS_POINTS, datapointsFile);

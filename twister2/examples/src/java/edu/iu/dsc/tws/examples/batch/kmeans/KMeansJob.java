@@ -12,27 +12,19 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
@@ -44,38 +36,12 @@ public class KMeansJob extends TaskWorker {
 
   private static final Logger LOG = Logger.getLogger(KMeansJob.class.getName());
 
-  public static void main(String[] args) {
-    LOG.log(Level.INFO, "KMeans job");
-    // first load the configurations from command line and config files
-    Config config = ResourceAllocator.loadConfig(new HashMap<>());
-
-    // build JobConfig
-    HashMap<String, Object> configurations = new HashMap<>();
-    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
-
-    // build JobConfig
-    JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(configurations);
-
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("kmeans-job");
-    jobBuilder.setWorkerClass(KMeansJob.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
-    jobBuilder.setConfig(jobConfig);
-
-    // now submit the job
-    Twister2Submitter.submitJob(jobBuilder.build(), config);
-  }
+  private KMeansJobParameters kMeansJobParameters;
 
   @SuppressWarnings("unchecked")
   @Override
   public void execute() {
     LOG.log(Level.INFO, "Task worker starting: " + workerId);
-
-    //this.jobParameters = KMeansJobParameters.build(config);
-    /*int numberOfIterations = this.jobParameters.getIterations();
-    String inputFileName = this.jobParameters.getPointFile();
-    String centroidFileName = this.jobParameters.getCenterFile();*/
 
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
@@ -86,26 +52,52 @@ public class KMeansJob extends TaskWorker {
     computeConnection.allreduce("source", "all-reduce", new CentroidAggregator(), DataType.OBJECT);
     graphBuilder.setMode(OperationMode.BATCH);
 
+    this.kMeansJobParameters = KMeansJobParameters.build(config);
+
+    int workers = kMeansJobParameters.getWorkers();
+    int iterations = kMeansJobParameters.getIterations();
+    int numberOfPoints = kMeansJobParameters.getNumberOfPoints();
+    int dimension = kMeansJobParameters.getDimension();
+    int minValue = kMeansJobParameters.getMinValue();
+    int maxValue = kMeansJobParameters.getMaxValue();
+    int numberOfClusters = kMeansJobParameters.getClusters();
+
+    String datapointsFileName = kMeansJobParameters.getPointsFile();
+    String centroidFileName = kMeansJobParameters.getCentersFile();
+    String fileSystem = kMeansJobParameters.getFileSystem();
+    String inputData = kMeansJobParameters.getDataInput();
+
+    LOG.info("workers:" + workers + "\titeration:" + iterations
+        + "\tnumber of datapoints:" + numberOfPoints + "\tdimension:" + dimension
+        + "\tnumber of clusters:" + numberOfClusters + "\tdatapoints file:" + datapointsFileName
+        + "\tcenters file:" + centroidFileName + "\tfilesys:" + fileSystem);
+
+    double[][] dataPoint;
+    double[][] centroid;
+
+    KMeansFileReader kMeansFileReader = new KMeansFileReader();
+
+    if ("generate".equals(inputData)) {
+      KMeansDataGenerator.generateDataPointsFile(
+          datapointsFileName, numberOfPoints, dimension, minValue, maxValue);
+      KMeansDataGenerator.generateCentroidFile(
+          centroidFileName, numberOfClusters, dimension, minValue, maxValue);
+
+      dataPoint = kMeansFileReader.readDataPoints(datapointsFileName, dimension);
+      centroid = kMeansFileReader.readCentroids(centroidFileName, dimension, numberOfClusters);
+
+    } else {
+      dataPoint = kMeansFileReader.readDataPoints(datapointsFileName, dimension);
+      centroid = kMeansFileReader.readCentroids(centroidFileName, dimension, numberOfClusters);
+    }
+
+    DataFlowTaskGraph graph = graphBuilder.build();
+
     //Store datapoints and centroids
     DataSet<Object> datapoints = new DataSet<>(0);
     DataSet<Object> centroids = new DataSet<>(1);
 
-    //Set the configuration values in the configuration parameters.
-    KMeansDataGenerator.generateDataPointsFile("/home/kgovind/hadoop-2.9.0/input.txt",
-        100, 2, 100, 500);
-    KMeansDataGenerator.generateCentroidFile("/home/kgovind/hadoop-2.9.0/centroids.txt",
-        4, 2, 100, 500);
-
-    //Reading File
-    KMeansFileReader kMeansFileReader = new KMeansFileReader();
-    double[][] dataPoint = kMeansFileReader.readDataPoints(
-        "/home/kgovind/hadoop-2.9.0/kmeans-input.txt", 2);
-    double[][] centroid = kMeansFileReader.readCentroids(
-        "/home/kgovind/hadoop-2.9.0/kmeans-centroid.txt", 2, 4);
-
-    DataFlowTaskGraph graph = graphBuilder.build();
-
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < iterations; i++) {
       datapoints.addPartition(0, dataPoint);
       centroids.addPartition(1, centroid);
 
@@ -184,7 +176,7 @@ public class KMeansJob extends TaskWorker {
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {
         for (int j = 0; j < centroids[0].length - 1; j++) {
-          double newVal =  centroids[i][j] / centroids[i][centroids[0].length - 1];
+          double newVal = centroids[i][j] / centroids[i][centroids[0].length - 1];
           newCentroids[i][j] = newVal;
         }
       }
@@ -194,7 +186,7 @@ public class KMeansJob extends TaskWorker {
 
     @Override
     public Partition<Object> get() {
-      return  new Partition<>(context.taskIndex(), new KMeansCenters().setCenters(newCentroids));
+      return new Partition<>(context.taskIndex(), new KMeansCenters().setCenters(newCentroids));
     }
   }
 
