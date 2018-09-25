@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.taskwordcount;
+package edu.iu.dsc.tws.examples.streaming.taskwordcount;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -50,7 +50,7 @@ public class WordCountTaskJob extends TaskWorker {
     builder.addSource("word-source", source, 4);
     builder.addSink("word-aggregator", counter, 4).keyedReduce("word-source", EDGE,
         new ReduceFn(Op.SUM, DataType.INTEGER), DataType.OBJECT, DataType.INTEGER);
-    builder.setMode(OperationMode.BATCH);
+    builder.setMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
@@ -65,14 +65,8 @@ public class WordCountTaskJob extends TaskWorker {
 
     @Override
     public void execute() {
-      if (count == NUMBER_MESSAGES - 1) {
-        if (context.writeEnd(EDGE, "Hello")) {
-          count++;
-        }
-      } else if (count < NUMBER_MESSAGES - 1) {
-        if (context.write(EDGE, "Hello")) {
-          count++;
-        }
+      if (context.write(EDGE, "Hello")) {
+        count++;
       }
     }
   }
