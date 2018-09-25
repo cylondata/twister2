@@ -16,7 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -27,12 +26,9 @@ public class WordAggregator implements BulkReceiver {
 
   private boolean isDone;
 
-  private String uuid;
-
   @Override
   public void init(Config cfg, Set<Integer> expectedIds) {
     isDone = false;
-    uuid = UUID.randomUUID().toString();
   }
 
   @Override
@@ -49,8 +45,7 @@ public class WordAggregator implements BulkReceiver {
       }
     }
     isDone = true;
-    LOG.info(String.format("Task %d Final word ***** %s %b %s",
-        target, localwordCounts, isDone, uuid));
+    LOG.info(String.format("Task %d final words: %s", target, localwordCounts));
     return true;
   }
 

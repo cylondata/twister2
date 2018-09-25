@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
@@ -58,7 +57,6 @@ public class HashingSelector implements DestinationSelector {
   public int next(int source, Object first) {
     List<Integer> destinations = destination.get(source);
     int next = first.hashCode() % destinations.size();
-    LOG.log(Level.INFO, String.format("Next %d %d", next, destinations.get(next)));
     return destinations.get(next);
   }
 

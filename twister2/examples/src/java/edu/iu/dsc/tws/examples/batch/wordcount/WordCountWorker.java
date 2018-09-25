@@ -77,7 +77,7 @@ public class WordCountWorker implements IWorker {
     // create the communication
     wordAggregator = new WordAggregator();
     keyGather = new BPartition(channel, taskPlan, sources, destinations,
-        MessageType.OBJECT, wordAggregator, new HashingSelector());
+        MessageType.OBJECT, wordAggregator, new HashingSelector(), false);
 
     scheduleTasks();
     progress();
