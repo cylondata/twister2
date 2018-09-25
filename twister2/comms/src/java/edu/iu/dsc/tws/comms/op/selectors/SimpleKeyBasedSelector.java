@@ -45,12 +45,12 @@ public class SimpleKeyBasedSelector implements DestinationSelector {
   }
 
   @Override
-  public int next(int source) {
+  public int next(int source, Object data) {
     return 0;
   }
 
   @Override
-  public int next(int source, Object key) {
+  public int next(int source, Object key, Object data) {
     if (key instanceof Integer) {
       return getIntegerKeyBasedId((Integer) key);
     }

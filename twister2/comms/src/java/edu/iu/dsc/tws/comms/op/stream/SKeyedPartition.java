@@ -69,7 +69,7 @@ public class SKeyedPartition {
    * @return true if the message is accepted
    */
   public boolean partition(int src, Object key, Object message, int flags) {
-    int dest = destinationSelector.next(src);
+    int dest = destinationSelector.next(src, key, message);
 
     boolean send = partition.send(src, new KeyedContent(key, message, partition.getKeyType(),
         partition.getDataType()), flags, dest);

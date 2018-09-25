@@ -69,7 +69,7 @@ public class BPartition {
    * @return true if the message is accepted
    */
   public boolean partition(int source, Object message, int flags) {
-    int dest = destinationSelector.next(source);
+    int dest = destinationSelector.next(source, message);
 
     boolean send = partition.send(source, message, flags, dest);
     if (send) {
