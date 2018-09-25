@@ -17,6 +17,7 @@ import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
@@ -117,7 +118,7 @@ public final class Twister2Job {
       return this;
     }
 
-    public BasicJobBuilder setWorkerClass(Class workerClass) {
+    public BasicJobBuilder setWorkerClass(Class<? extends IWorker> workerClass) {
       twister2Job.workerClass = workerClass.getName();
       return this;
     }
