@@ -44,9 +44,16 @@ filegroup(
 filegroup(
     name = "tarpkgs",
     srcs = [
+        ":twister2-client-mpi",
+        ":twister2-core-mpi",
+    ],
+)
+
+filegroup(
+    name = "tarpkgs_no_mpi",
+    srcs = [
         ":twister2-client",
         ":twister2-core",
-        #        ":twister2-master",
     ],
 )
 
@@ -56,6 +63,26 @@ filegroup(
 
 pkg_tar(
     name = "twister2-core",
+    extension = "tar.gz",
+    # srcs = generated_release_files,
+    package_dir = "twister2-core",
+    deps = [
+        ":twister2-core-lib-api",
+        ":twister2-core-lib-common",
+        ":twister2-core-lib-communication",
+        ":twister2-core-lib-connector",
+        ":twister2-core-lib-data",
+        ":twister2-core-lib-lmdb",
+        ":twister2-core-lib-resource-scheduler",
+        ":twister2-core-lib-task",
+        ":twister2-core-lib-task-scheduler",
+        ":twister2-core-lib-third_party",
+        ":twister2-master-lib",
+    ],
+)
+
+pkg_tar(
+    name = "twister2-core-mpi",
     extension = "tar.gz",
     # srcs = generated_release_files,
     package_dir = "twister2-core",
@@ -174,6 +201,36 @@ pkg_tar(
 
 pkg_tar(
     name = "twister2-client",
+    extension = "tar.gz",
+    # srcs = generated_release_files,
+    package_dir = "twister2-dist",
+    deps = [
+        ":twister2-client-bin",
+        ":twister2-client-communication",
+        ":twister2-client-conf-aurora",
+        ":twister2-client-conf-kubernetes",
+        ":twister2-client-conf-mesos",
+        ":twister2-client-conf-nodesmpi",
+        ":twister2-client-conf-slurmmpi",
+        ":twister2-client-conf-standalone",
+        ":twister2-client-dist",
+        ":twister2-client-examples",
+        ":twister2-client-lib-api",
+        ":twister2-client-lib-common",
+        ":twister2-client-lib-connector",
+        ":twister2-client-lib-data",
+        ":twister2-client-lib-data-lmdb",
+        ":twister2-client-lib-resource-scheduler",
+        ":twister2-client-lib-task",
+        ":twister2-client-lib-task-scheduler",
+        ":twister2-client-lib-third_party",
+        ":twister2-core-lib-executor",
+        ":twister2-master-lib",
+    ],
+)
+
+pkg_tar(
+    name = "twister2-client-mpi",
     extension = "tar.gz",
     # srcs = generated_release_files,
     package_dir = "twister2-dist",
