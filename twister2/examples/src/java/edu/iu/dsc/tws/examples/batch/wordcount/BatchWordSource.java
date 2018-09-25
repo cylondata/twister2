@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BPartition;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 
@@ -34,19 +32,16 @@ public class BatchWordSource implements Runnable {
 
   private int taskId;
 
-  private RandomString randomString;
-
-  private int executor;
-
   private List<String> sampleWords = new ArrayList<>();
 
-  public BatchWordSource(Config config, BPartition operation, int words,
-                             int tId, int noOfSampleWords, TaskPlan taskPlan) {
+  private boolean done;
+
+  public BatchWordSource(BPartition operation, int words,
+                             int tId, int noOfSampleWords) {
     this.operation = operation;
     this.noOfWords = words;
     this.taskId = tId;
-    this.randomString = new RandomString(MAX_CHARS, new Random(), RandomString.ALPHANUM);
-    this.executor = taskPlan.getThisExecutor();
+    RandomString randomString = new RandomString(MAX_CHARS, new Random(), RandomString.ALPHANUM);
 
     for (int i = 0; i < noOfSampleWords; i++) {
       sampleWords.add(randomString.nextRandomSizeString());
@@ -64,5 +59,10 @@ public class BatchWordSource implements Runnable {
     }
     // we need to finish the operation
     operation.finish(taskId);
+    done = true;
+  }
+
+  public boolean isDone() {
+    return done;
   }
 }

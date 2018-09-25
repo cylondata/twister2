@@ -24,15 +24,11 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 public class WordAggregator implements BulkReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregator.class.getName());
 
-  private int totalCount = 0;
-
-  private Map<String, Integer> wordCounts = new HashMap<>();
-
-  private int executor;
+  private boolean isDone;
 
   @Override
   public void init(Config cfg, Set<Integer> expectedIds) {
-
+    isDone = false;
   }
 
   @Override
@@ -42,18 +38,28 @@ public class WordAggregator implements BulkReceiver {
       Object next = it.next();
       if (next instanceof List) {
         for (Object o : (List) next) {
-          int count = 0;
-          String value = o.toString();
-          if (localwordCounts.containsKey(value)) {
-            count = localwordCounts.get(value);
-          }
-          count++;
-          totalCount++;
-          localwordCounts.put(value, count);
+          addWord(localwordCounts, o);
         }
+      } else {
+        addWord(localwordCounts, next);
       }
     }
-    LOG.info(String.format("%d Final word %s", executor, localwordCounts));
+    LOG.info(String.format("%d Final word %s", target, localwordCounts));
+    isDone = true;
     return true;
+  }
+
+  public void addWord(Map<String, Integer> localwordCounts, Object o) {
+    int count = 0;
+    String value = o.toString();
+    if (localwordCounts.containsKey(value)) {
+      count = localwordCounts.get(value);
+    }
+    count++;
+    localwordCounts.put(value, count);
+  }
+
+  public boolean isDone() {
+    return isDone;
   }
 }

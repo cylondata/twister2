@@ -52,6 +52,10 @@ public class WordCountWorker implements IWorker {
   private Set<Integer> destinations;
   private TaskPlan taskPlan;
 
+  private Set<BatchWordSource> batchWordSources = new HashSet<>();
+
+  private WordAggregator wordAggregator;
+
   @Override
   public void execute(Config cfg, int workerID, AllocatedResources resources,
                       IWorkerController workerController,
@@ -66,8 +70,9 @@ public class WordCountWorker implements IWorker {
     setupNetwork(workerController, resources);
 
     // create the communication
+    wordAggregator = new WordAggregator();
     keyGather = new BPartition(channel, taskPlan, sources, destinations,
-        MessageType.OBJECT, new WordAggregator(), new HashingSelector());
+        MessageType.OBJECT, wordAggregator, new HashingSelector());
 
     scheduleTasks();
     progress();
@@ -96,8 +101,10 @@ public class WordCountWorker implements IWorker {
     if (id < 2) {
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
-        Thread mapThread = new Thread(new BatchWordSource(config, keyGather, 1000,
-            noOfTasksPerExecutor * id + i, 10, taskPlan));
+        BatchWordSource target = new BatchWordSource(keyGather, 1000,
+            noOfTasksPerExecutor * id + i, 10);
+        batchWordSources.add(target);
+        Thread mapThread = new Thread(target);
         mapThread.start();
       }
     }
@@ -105,12 +112,26 @@ public class WordCountWorker implements IWorker {
 
   private void progress() {
     // we need to communicationProgress the communication
-    while (true) {
+    boolean done = false;
+    while (!done) {
       try {
+        done = true;
         // communicationProgress the channel
         channel.getChannel().progress();
         // we should communicationProgress the communication directive
-        keyGather.progress();
+        boolean needsProgress = keyGather.progress();
+        if (needsProgress) {
+          done = false;
+        }
+
+        for (BatchWordSource b : batchWordSources) {
+          if (!b.isDone()) {
+            done = false;
+          }
+        }
+        if (!wordAggregator.isDone()) {
+          done = false;
+        }
       } catch (Throwable t) {
         LOG.log(Level.SEVERE, "Error", t);
       }
