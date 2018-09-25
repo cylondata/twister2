@@ -11,10 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.streaming.wordcount;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,16 +26,17 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
+import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
+import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 
 public class WordCountWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
 
-  private DataFlowMultiGather keyGather;
+  private SPartition keyGather;
 
-
-  private TWSChannel channel;
+  private Communicator channel;
 
   private static final int NO_OF_TASKS = 8;
 
@@ -67,12 +65,9 @@ public class WordCountWorker implements IWorker {
     setupTasks();
     setupNetwork(workerController, resources);
 
-    Map<String, Object> newCfg = new HashMap<>();
     // create the communication
-    keyGather = new DataFlowMultiGather(channel, sources, destinations,
-        new WordAggregate(), null, destinations, MessageType.OBJECT, MessageType.OBJECT);
-    // intialize the operation
-    keyGather.init(config, MessageType.OBJECT, taskPlan, 0);
+    keyGather = new SPartition(channel, taskPlan, sources, destinations,
+        MessageType.OBJECT, new WordAggregate(), new HashingSelector());
 
     scheduleTasks();
     progress();
@@ -93,7 +88,8 @@ public class WordCountWorker implements IWorker {
   }
 
   private void setupNetwork(IWorkerController controller, AllocatedResources resources) {
-    channel = Network.initializeChannel(config, controller, resources);
+    TWSChannel twsChannel = Network.initializeChannel(config, controller, resources);
+    this.channel = new Communicator(config, twsChannel);
   }
 
   private void scheduleTasks() {
@@ -101,7 +97,7 @@ public class WordCountWorker implements IWorker {
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
         Thread mapThread = new Thread(new StreamingWordSource(config, keyGather, 1000,
-            new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 10));
+            noOfTasksPerExecutor * id + i, 10, taskPlan));
         mapThread.start();
       }
     }
@@ -112,7 +108,7 @@ public class WordCountWorker implements IWorker {
     while (true) {
       try {
         // communicationProgress the channel
-        channel.progress();
+        channel.getChannel().progress();
         // we should communicationProgress the communication directive
         keyGather.progress();
       } catch (Throwable t) {
