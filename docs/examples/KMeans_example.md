@@ -6,19 +6,138 @@ numerous datasets containing large numbers of records with high dimensions calls
 methods. Traditional sequential clustering algorithms are unable to handle it. They are not scalable
 in relation to larger sizes of data sets, and they are most often computationally expensive in 
 memory space and time complexities. Yet, the parallelization of data clustering algorithms is 
-paramount when dealing with big data. K-Means clustering is an iterative algorithm hence, it  
-requires a large number of iterative steps to find an optimal solution, and this procedure increases 
-the processing time of clustering. Twister2 provides a dataflow task graph based approach to 
-distribute the tasks in a parallel manner and aggregate the results which reduces the processing 
-time of K-Means Clustering process. 
+paramount when dealing with big data. K-Means clustering is an iterative algorithm hence, it  requires 
+a large number of iterative steps to find an optimal solution, and this procedure increases the 
+processing time of clustering. Twister2 provides a dataflow task graph based approach to distribute 
+the tasks in a parallel manner and aggregate the results which reduces the processing time of K-Means 
+Clustering process. 
 
-### Implementation
+### To run KMeans
 
-First, the KMeansSource is invoked to distribute the datapoints which is based on the number of 
-workers. For every iteration, the new centroid value is calculated and the calculated value is 
-distributed across all the task instances. This process repeats for ‘N’ number of iterations as 
-specified in the KMeans Constants file. At the end of every iteration, the centroid value is updated
-based on the calculated value and it will continue until the end of iteration. The PROBLEM_DIMENSION
-is used to set the features selected for the clustering analytics process. 
+./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /home/kgovind/input.txt -pointsfile /home/kgovind/kinput.txt -centersfile /home/kgovind/kcentroid.txt -points 100 -filesys local -minvalue 100 -maxvalue 500 -input generate
 
-### KMeans Constants
+### Implementation Details
+
+#### KMeansConstants
+    
+    public static final String ARGS_WORKERS = "workers";
+    
+    public static final String ARGS_ITR = "iter";
+    
+    public static final String ARGS_FNAME = "fname";
+    
+    public static final String ARGS_POINTS = "pointsfile";
+    
+    public static final String ARGS_CENTERS = "centersfile";
+    
+    public static final String ARGS_DIMENSIONS = "dim";
+    
+    public static final String ARGS_CLUSTERS = "clusters";
+    
+    public static final String ARGS_NUMBER_OF_POINTS = "points";
+      
+    public static final String ARGS_FILESYSTEM = "filesys"; // "local" or "hdfs"
+    
+    public static final String ARGS_MINVALUE = "minvalue"; //range for random data points generation
+    
+    public static final String ARGS_MAXVALUE = "maxvalue"; //range for random data points generation
+    
+    public static final String ARGS_DATA_INPUT = "input"; //"generate" or "read"
+    
+#### KMeansMainJob
+    
+The entry point for the K-Means clustering algorithm is implemented in KMeansMainJob
+
+    edu.iu.dsc.tws.examples.batch.kmeans.KMeansMainJob
+    
+It retrieves and parses the command line parameters submitted by the user for running the K-Means 
+Clustering algorithm. It sets the submitted variables in the Configuration object and put the object
+into the JobConfig and submit it to KMeansJob class. 
+
+#### KMeansJob
+It is the main class for the K-Means clustering which has the following classes namely KMeansSource, 
+KMeansAllReduceTask, and CentroidAggregator.First, the execute method in KMeansJob invokes the 
+KMeansDataGenerator to generate the datapoints file and centroid file, if the user has specified the
+option ARGS_DATA_INPUT as "generate". Then, it will invoke the KMeansFileReader to read the input 
+datafile/centroid file either from local filesystem or HDFS which is based on the option 
+ARGS_FILESYSTEM as "local" or "hdfs". 
+
+Next, the datapoints are stored in DataSet (0th object) and centroids are stored in DataSet (1st object) 
+and call the executor as given below:
+
+    taskExecutor.addInput(graph, plan, "source", "points", datapoints);
+    
+    taskExecutor.addInput(graph, plan, "source", "centroids", centroids);
+    
+    taskExecutor.execute(graph, plan);
+ 
+This process repeats for ‘N’ number of iterations as specified in the KMeansConstants . For every 
+iteration, the new centroid value is calculated and the calculated value is distributed across all 
+the task instances.
+
+    DataSet<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
+   
+    Set<Object> values = dataSet.getData();
+    
+    for (Object value : values) {
+      KMeansCenters kMeansCenters = (KMeansCenters) value;
+     centroid = kMeansCenters.getCenters();  
+    }
+ 
+At the end of every iteration, the centroid value is updated and the iteration continues with the 
+new centroid value.
+
+    datapoints.addPartition(0, dataPoint);
+    
+    centroids.addPartition(1, centroid); 
+
+#### KMeansSourceTask 
+The KMeansSourceTask retrieve the input data file and centroid file name, it first calculate 
+the start index and end index which is based on the total data points and the parallelism value as
+given below:
+
+    int startIndex = context.taskIndex() * datapoints.length / context.getParallelism();
+    
+    int endIndex = startIndex + datapoints.length / context.getParallelism();
+ 
+Then, it calls the KMeansCalculator class to calculate and get the centroid value for the task 
+instance.
+
+    kMeansCalculator = new KMeansCalculator(datapoints, centroid,
+            context.taskIndex(), 2, startIndex, endIndex);
+    
+    KMeansCenters kMeansCenters = kMeansCalculator.calculate();
+    
+Finally, each task instance write their calculated centroids value as given below:
+
+    context.writeEnd("all-reduce", kMeansCenters);
+    
+    
+#### KMeansAllReduce Task
+The KMeansAllReduceTask retrieve the calculated centroid value in the execute method
+
+      public boolean execute(IMessage message) {
+       centroids = ((KMeansCenters) message.getContent()).getCenters();
+      }
+
+and write the calculated centroid value without the number of datapoints fall into the particular
+cluster as given below: 
+      
+      @Override
+      public Partition<Object> get() {
+       return new Partition<>(context.taskIndex(), new KMeansCenters().setCenters(newCentroids));
+      }
+
+#### CentroidAggregator
+
+The CentroidAggregator implements the IFunction and the function OnMessage which accepts two objects 
+as an argument.
+
+    public Object onMessage(Object object1, Object object2)
+    
+It sums the corresponding centroid values and return the same.
+
+    ret.setCenters(newCentroids); 
+
+
+
