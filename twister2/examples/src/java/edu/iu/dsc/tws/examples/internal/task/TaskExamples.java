@@ -511,7 +511,7 @@ public class TaskExamples {
       boolean wrote = context.write(edge, "Hello");
       if (wrote) {
         count++;
-        if (count % 100 == 0) {
+        if (count % 1000 == 0) {
           LOG.info(String.format("%d %d Reduce sent count : %d", context.getWorkerId(),
               context.taskId(), count));
         }
@@ -525,7 +525,7 @@ public class TaskExamples {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 100 == 0) {
+      if (count % 1000 == 0) {
         LOG.info("Streaming Reduce receive count : " + count);
       }
       count++;
@@ -884,13 +884,13 @@ public class TaskExamples {
       source = new ReduceSourceTask(edge);
     }
     if ("allreduce".equals(example)) {
-      source = new AllReduceSourceTask(edge);
+      source = new ReduceSourceTask(edge);
     }
     if ("gather".equals(example)) {
       source = new GatherSourceTask(edge);
     }
     if ("allgather".equals(example)) {
-      source = new AllGatherSourceTask(edge);
+      source = new GatherSourceTask(edge);
     }
     if ("partition".equals(example)) {
       source = new PartitionSourceTask(edge);
@@ -916,13 +916,13 @@ public class TaskExamples {
       sink = new ReduceSinkTask();
     }
     if ("allreduce".equals(example)) {
-      sink = new AllReduceSinkTask();
+      sink = new ReduceSinkTask();
     }
     if ("gather".equals(example)) {
       sink = new GatherSinkTask();
     }
     if ("allgather".equals(example)) {
-      sink = new AllGatherSinkTask();
+      sink = new GatherSinkTask();
     }
     if ("partition".equals(example)) {
       sink = new PartitionSinkTask();
@@ -948,7 +948,7 @@ public class TaskExamples {
       source = new SReduceSourceTask(edge);
     }
     if ("allreduce".equals(example)) {
-      source = new SAllReduceSourceTask(edge);
+      source = new SReduceSourceTask(edge);
     }
     if ("gather".equals(example)) {
       source = new SGatherSourceTask(edge);
@@ -981,7 +981,7 @@ public class TaskExamples {
       sink = new SReduceSinkTask();
     }
     if ("allreduce".equals(example)) {
-      sink = new SAllReduceSinkTask();
+      sink = new SReduceSinkTask();
     }
     if ("gather".equals(example)) {
       sink = new SGatherSinkTask();
