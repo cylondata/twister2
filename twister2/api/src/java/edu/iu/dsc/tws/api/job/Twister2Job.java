@@ -117,6 +117,11 @@ public final class Twister2Job {
       return this;
     }
 
+    public BasicJobBuilder setWorkerClass(Class workerClass) {
+      twister2Job.workerClass = workerClass.getName();
+      return this;
+    }
+
     public BasicJobBuilder setRequestResource(WorkerComputeResource requestResource,
                                               int numberOfWorkers) {
       twister2Job.numberOfWorkers = numberOfWorkers;
