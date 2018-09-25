@@ -100,4 +100,21 @@ It is that simple!
 
 ## Communicating between workers
 
-Okay, the next step is to communicate between the workers we have created.
+Okay, the next step is to communicate between the workers we have created. There are many examples in
+Twister2 that use communication among workers and some of these can be found inside the directory 
+
+```bash
+examples/src/java/edu/iu/dsc/tws/examples/comms
+```
+
+You can run them with a simple command such as 
+
+```
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -op "reduce" -stages 8,1
+```
+
+Lets focus on a simple communication example where we try to do a word count.
+
+
+
+
