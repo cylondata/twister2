@@ -95,7 +95,7 @@ bazel build --config=ubuntu scripts/package:tarpkgs
 This will build twister2 distribution in the file
 
 ```bash
-bazel-bin/scripts/package/twister2-client.tar.gz
+bazel-bin/scripts/package/twister2-client-0.1.0.tar.gz
 ```
 
 If you would like to compile the twister2 without building the distribution
@@ -122,7 +122,7 @@ it to submit jobs.
 
 ```bash
 cd bazel-bin/scripts/package/
-tar -xvf twister2-client.tar.gz
+tar -xvf twister2-client-0.1.0.tar.gz
 ```
 
 ## Compiling OpenMPI
