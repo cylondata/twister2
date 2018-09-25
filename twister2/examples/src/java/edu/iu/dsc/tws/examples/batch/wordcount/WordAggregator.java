@@ -20,14 +20,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 
 public class WordAggregator implements BulkReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregator.class.getName());
-
-  private Config config;
-
-  private DataFlowOperation operation;
 
   private int totalCount = 0;
 

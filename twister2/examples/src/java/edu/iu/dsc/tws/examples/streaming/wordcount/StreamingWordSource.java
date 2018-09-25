@@ -63,8 +63,4 @@ public class StreamingWordSource implements Runnable {
       }
     }
   }
-
-  private String generateWord() {
-    return randomString.nextRandomSizeString();
-  }
 }
