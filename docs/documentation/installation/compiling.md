@@ -25,6 +25,15 @@ Twister2 build needs several software installed on your system.
     PATH=$JAVA_HOME/bin:$PATH
     export JAVA_HOME PATH
   ```
+  
+  
+  Note: If you get an error while compiling or building Twister2 saying "Java bindings requested but no Java support found"
+  please execute the following command to install Java using apt-get command
+  
+  ```bash
+  sudo apt install openjdk-8-jdk
+  ```
+
 3. Install the required tools
 
 ```bash
