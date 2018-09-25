@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.examples.internal.task.batch.PartitionBatchTask;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -101,8 +100,8 @@ public class WordCountTaskJob extends TaskWorker {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("wordcount-task");
-    jobBuilder.setWorkerClass(PartitionBatchTask.class.getName());
+    jobBuilder.setName("wordcount-batch-task");
+    jobBuilder.setWorkerClass(WordCountTaskJob.class);
     jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
