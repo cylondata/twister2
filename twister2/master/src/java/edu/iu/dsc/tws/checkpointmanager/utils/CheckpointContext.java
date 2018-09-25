@@ -26,6 +26,6 @@ public class CheckpointContext extends Context {
   }
 
   public static boolean getCheckpointRecovery(Config cfg) {
-    return cfg.getBooleanValue(CHECKPOINT_RECOVERY, true);
+    return cfg.getBooleanValue(CHECKPOINT_RECOVERY, false);
   }
 }
