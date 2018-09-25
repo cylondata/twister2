@@ -44,16 +44,16 @@ filegroup(
 filegroup(
     name = "tarpkgs",
     srcs = [
-        ":twister2-client-mpi",
-        ":twister2-core-mpi",
+        ":twister2-client",
+        ":twister2-core",
     ],
 )
 
 filegroup(
     name = "tarpkgs_no_mpi",
     srcs = [
-        ":twister2-client",
-        ":twister2-core",
+        ":twister2-client-no-mpi",
+        ":twister2-core-no-mpi",
     ],
 )
 
@@ -62,7 +62,7 @@ filegroup(
 ######################################################
 
 pkg_tar(
-    name = "twister2-core",
+    name = "twister2-core-no-mpi",
     extension = "tar.gz",
     # srcs = generated_release_files,
     package_dir = "twister2-core",
@@ -82,7 +82,7 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "twister2-core-mpi",
+    name = "twister2-core",
     extension = "tar.gz",
     # srcs = generated_release_files,
     package_dir = "twister2-core",
@@ -200,7 +200,7 @@ pkg_tar(
 ######################################################
 
 pkg_tar(
-    name = "twister2-client",
+    name = "twister2-client-no-mpi",
     extension = "tar.gz",
     # srcs = generated_release_files,
     package_dir = "twister2-dist",
@@ -230,7 +230,7 @@ pkg_tar(
 )
 
 pkg_tar(
-    name = "twister2-client-mpi",
+    name = "twister2-client",
     extension = "tar.gz",
     # srcs = generated_release_files,
     package_dir = "twister2-dist",

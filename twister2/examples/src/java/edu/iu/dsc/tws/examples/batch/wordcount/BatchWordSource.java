@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.batch.wordcount;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.op.batch.BPartition;
@@ -57,6 +58,7 @@ public class BatchWordSource implements Runnable {
         operation.progress();
       }
     }
+    LOG.log(Level.INFO, "Done sending: " + taskId);
     // we need to finish the operation
     operation.finish(taskId);
     done = true;

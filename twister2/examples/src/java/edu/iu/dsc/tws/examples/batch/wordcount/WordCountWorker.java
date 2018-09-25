@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.wordcount;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,6 +21,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
@@ -29,7 +32,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.batch.BPartition;
 import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
-import edu.iu.dsc.tws.examples.utils.WordCountUtils;
+import edu.iu.dsc.tws.examples.Utils;
 
 public class WordCountWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
@@ -42,12 +45,6 @@ public class WordCountWorker implements IWorker {
 
   private Config config;
 
-  private AllocatedResources resourcePlan;
-
-  private int id;
-
-  private int noOfTasksPerExecutor;
-
   private Set<Integer> sources;
   private Set<Integer> destinations;
   private TaskPlan taskPlan;
@@ -55,6 +52,8 @@ public class WordCountWorker implements IWorker {
   private Set<BatchWordSource> batchWordSources = new HashSet<>();
 
   private WordAggregator wordAggregator;
+  private List<Integer> taskStages = new ArrayList<>();
+  private int workerId;
 
   @Override
   public void execute(Config cfg, int workerID, AllocatedResources resources,
@@ -62,9 +61,15 @@ public class WordCountWorker implements IWorker {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
     this.config = cfg;
-    this.resourcePlan = resources;
-    this.id = workerID;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
+    this.workerId = workerID;
+
+    taskStages.add(NO_OF_TASKS);
+    taskStages.add(NO_OF_TASKS);
+
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    // lets create the task plan
+    this.taskPlan = Utils.createStageTaskPlan(
+        cfg, resources, taskStages, workerList);
 
     setupTasks();
     setupNetwork(workerController, resources);
@@ -79,14 +84,13 @@ public class WordCountWorker implements IWorker {
   }
 
   private void setupTasks() {
-    taskPlan = WordCountUtils.createWordCountPlan(config, resourcePlan, NO_OF_TASKS);
     sources = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS / 2; i++) {
+    for (int i = 0; i < NO_OF_TASKS; i++) {
       sources.add(i);
     }
     destinations = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS / 2; i++) {
-      destinations.add(NO_OF_TASKS / 2 + i);
+    for (int i = 0; i < NO_OF_TASKS; i++) {
+      destinations.add(NO_OF_TASKS + i);
     }
     LOG.fine(String.format("%d sources %s destinations %s",
         taskPlan.getThisExecutor(), sources, destinations));
@@ -98,15 +102,15 @@ public class WordCountWorker implements IWorker {
   }
 
   private void scheduleTasks() {
-    if (id < 2) {
-      for (int i = 0; i < noOfTasksPerExecutor; i++) {
-        // the map thread where data is produced
-        BatchWordSource target = new BatchWordSource(keyGather, 1000,
-            noOfTasksPerExecutor * id + i, 10);
-        batchWordSources.add(target);
-        Thread mapThread = new Thread(target);
-        mapThread.start();
-      }
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+        taskStages, 0);
+    // now initialize the workers
+    for (int t : tasksOfExecutor) {
+      // the map thread where data is produced
+      BatchWordSource target = new BatchWordSource(keyGather, 100, t, 10000);
+      batchWordSources.add(target);
+      Thread mapThread = new Thread(target);
+      mapThread.start();
     }
   }
 
@@ -118,9 +122,14 @@ public class WordCountWorker implements IWorker {
         done = true;
         // communicationProgress the channel
         channel.getChannel().progress();
+
         // we should communicationProgress the communication directive
         boolean needsProgress = keyGather.progress();
         if (needsProgress) {
+          done = false;
+        }
+
+        if (keyGather.hasPending()) {
           done = false;
         }
 

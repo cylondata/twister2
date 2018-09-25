@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -24,11 +26,9 @@ import edu.iu.dsc.tws.comms.api.MessageType;
  * Hashing selector, that does hash based selection for keys
  */
 public class HashingSelector implements DestinationSelector {
+  private static final Logger LOG = Logger.getLogger(HashingSelector.class.getName());
+
   private Map<Integer, List<Integer>> destination = new HashMap<>();
-
-  private Map<Integer, Integer> destinationIndexes = new HashMap<>();
-
-  private Map<Integer, Map<Integer, Integer>> invertedIndexes = new HashMap<>();
 
   @Override
   public void prepare(Set<Integer> sources, Set<Integer> destinations) {
@@ -39,12 +39,6 @@ public class HashingSelector implements DestinationSelector {
     for (int s : sources) {
       ArrayList<Integer> destList = new ArrayList<>(destinations);
       destination.put(s, destList);
-      destinationIndexes.put(s, 0);
-      HashMap<Integer, Integer> value = new HashMap<>();
-      invertedIndexes.put(s, value);
-      for (int i = 0; i < destinations.size(); i++) {
-        value.put(destList.get(i), i);
-      }
     }
   }
 
@@ -64,13 +58,10 @@ public class HashingSelector implements DestinationSelector {
   public int next(int source, Object first) {
     List<Integer> destinations = destination.get(source);
     int next = first.hashCode() % destinations.size();
+    LOG.log(Level.INFO, String.format("Next %d %d", next, destinations.get(next)));
     return destinations.get(next);
   }
 
   public void commit(int source, int dest) {
-    Map<Integer, Integer> invertedDests = invertedIndexes.get(source);
-    int index = invertedDests.get(dest);
-
-    destinationIndexes.put(source, index);
   }
 }
