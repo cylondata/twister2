@@ -15,6 +15,12 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
@@ -27,8 +33,8 @@ public class KMeansJobMain {
 
   private static final Logger LOG = Logger.getLogger(KMeansJobMain.class.getName());
 
-  public static void main(String[] args) {
-    LOG.log(Level.INFO, "KMeans job");
+  public static void main(String[] args) throws ParseException {
+    LOG.log(Level.INFO, "KMeans Clustering Job");
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
@@ -36,175 +42,71 @@ public class KMeansJobMain {
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
 
+    Options options = new Options();
+    options.addOption(KMeansConstants.ARGS_WORKERS, true, "workers");
+    options.addOption(KMeansConstants.ARGS_ITR, true, "iter");
+    options.addOption(KMeansConstants.ARGS_DIMENSIONS, true, "dim");
+
+    options.addOption(KMeansConstants.ARGS_FNAME, true, "fname");
+    options.addOption(KMeansConstants.ARGS_NUMBER_OF_POINTS, true, "points");
+    options.addOption(KMeansConstants.ARGS_POINTS, true, "pointsfile");
+    options.addOption(KMeansConstants.ARGS_CENTERS, true, "centersfile");
+    options.addOption(KMeansConstants.ARGS_FILESYSTEM, true, "filesystem");
+
+    options.addOption(KMeansConstants.ARGS_CLUSTERS, true, "clusters");
+    options.addOption(KMeansConstants.ARGS_MINVALUE, true, "minvalue");
+    options.addOption(KMeansConstants.ARGS_MAXVALUE, true, "maxvalue");
+    options.addOption(KMeansConstants.ARGS_DATA_INPUT, true, "generate");
+
+    @SuppressWarnings("deprecation")
+    CommandLineParser commandLineParser = new DefaultParser();
+    CommandLine commandLine = commandLineParser.parse(options, args);
+
+    String fileName = commandLine.getOptionValue(KMeansConstants.ARGS_FNAME);
+    String datapointsFile = commandLine.getOptionValue(KMeansConstants.ARGS_POINTS);
+    String centersFile = commandLine.getOptionValue(KMeansConstants.ARGS_CENTERS);
+    String fileSystem = commandLine.getOptionValue(KMeansConstants.ARGS_FILESYSTEM);
+    String dataInput = commandLine.getOptionValue(KMeansConstants.ARGS_DATA_INPUT);
+
+    int numberOfPoints = Integer.parseInt(commandLine.getOptionValue(
+        KMeansConstants.ARGS_NUMBER_OF_POINTS));
+    int workers = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_WORKERS));
+    int itr = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_ITR));
+    int dim = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_DIMENSIONS));
+    int numOfClusters = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_CLUSTERS));
+    int minValue = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_MINVALUE));
+    int maxValue = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_MAXVALUE));
+
+    LOG.info("workers:" + workers + "\titeration:" + itr + "\tdimension:" + dim
+        + "\tnumber of clusters:" + numOfClusters + "\tfilename:" + fileName
+        + "\tdatapoints file:" + datapointsFile + "\tcenters file:" + centersFile
+        + "\tfilesys:" + fileSystem);
+
+    configurations.put(KMeansConstants.ARGS_FNAME, fileName);
+    configurations.put(KMeansConstants.ARGS_POINTS, datapointsFile);
+    configurations.put(KMeansConstants.ARGS_CENTERS, centersFile);
+    configurations.put(KMeansConstants.ARGS_FILESYSTEM, fileSystem);
+    configurations.put(KMeansConstants.ARGS_DATA_INPUT, dataInput);
+
+    configurations.put(KMeansConstants.ARGS_NUMBER_OF_POINTS, Integer.toString(numberOfPoints));
+    configurations.put(KMeansConstants.ARGS_WORKERS, Integer.toString(workers));
+    configurations.put(KMeansConstants.ARGS_ITR, Integer.toString(itr));
+    configurations.put(KMeansConstants.ARGS_DIMENSIONS, Integer.toString(dim));
+    configurations.put(KMeansConstants.ARGS_CLUSTERS, Integer.toString(numOfClusters));
+    configurations.put(KMeansConstants.ARGS_MINVALUE, Integer.toString(minValue));
+    configurations.put(KMeansConstants.ARGS_MAXVALUE, Integer.toString(maxValue));
+
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("kmeans-job");
+    jobBuilder.setName("KMeans-job");
     jobBuilder.setWorkerClass(KMeansJob.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
     Twister2Submitter.submitJob(jobBuilder.build(), config);
-  }
-
-  private int size;
-
-  private int iterations;
-
-  private int col;
-
-  private int containers;
-
-  private String fileName;
-
-  private int outstanding = 0;
-
-  private boolean threads = false;
-
-  private int printInterval = 0;
-
-  private String dataType;
-
-  private int dimension;
-
-  private int k;
-
-  private int numPoints;
-
-  private String pointFile;
-
-  private String centerFile;
-
-  public KMeansJobMain(int size, int iterations, int col, int containers) {
-    this.size = size;
-    this.iterations = iterations;
-    this.col = col;
-    this.containers = containers;
-  }
-
-  /**
-   * This method is to build the job parameters.
-   */
-  public static KMeansJobMain build(Config cfg) {
-    int iterations = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_ITR));
-    int size = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_SIZE));
-    int col = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_COL));
-    int containers = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_CONTAINERS));
-    String fName = cfg.getStringValue(KMeansConstants.ARGS_FNAME);
-    int outstanding = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_OUTSTANDING));
-    Boolean threads = Boolean.parseBoolean(cfg.getStringValue(KMeansConstants.ARGS_THREADS));
-    int pi = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_PRINT_INTERVAL));
-    String type = cfg.getStringValue(KMeansConstants.ARGS_DATA_TYPE);
-
-    String pointFile = cfg.getStringValue(KMeansConstants.ARGS_POINT);
-    String centerFile = cfg.getStringValue(KMeansConstants.ARGS_CENTERS);
-    int points = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_N_POINTS));
-    int k = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_K));
-    int d = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DIMENSIONS));
-
-    LOG.info(String.format("Starting with arguments: "
-            + "iter %d size %d col %d containers "
-            + "%d file %s outstanding %d threads %b",
-        iterations, size, col, containers, fName, outstanding, threads));
-
-    KMeansJobMain jobParameters = new KMeansJobMain(size, iterations, col, containers);
-
-    jobParameters.fileName = fName;
-    jobParameters.outstanding = outstanding;
-    jobParameters.threads = threads;
-    jobParameters.printInterval = pi;
-    jobParameters.dataType = type;
-    jobParameters.k = k;
-    jobParameters.pointFile = pointFile;
-    jobParameters.centerFile = centerFile;
-    jobParameters.numPoints = points;
-    jobParameters.dimension = d;
-
-    return jobParameters;
-  }
-
-  public int getSize() {
-    return size;
-  }
-
-  public int getIterations() {
-    return iterations;
-  }
-
-  public int getCol() {
-    return col;
-  }
-
-  public int getContainers() {
-    return containers;
-  }
-
-  public String getFileName() {
-    return fileName;
-  }
-
-  public void setFileName(String fileName) {
-    this.fileName = fileName;
-  }
-
-  public int getOutstanding() {
-    return outstanding;
-  }
-
-  public void setOutstanding(int outstanding) {
-    this.outstanding = outstanding;
-  }
-
-  public boolean isThreads() {
-    return threads;
-  }
-
-  public void setThreads(boolean threads) {
-    this.threads = threads;
-  }
-
-  public int getPrintInterval() {
-    return printInterval;
-  }
-
-  public String getDataType() {
-    return dataType;
-  }
-
-  public int getDimension() {
-    return dimension;
-  }
-
-  public int getK() {
-    return k;
-  }
-
-  public int getNumPoints() {
-    return numPoints;
-  }
-
-  public String getPointFile() {
-    return pointFile;
-  }
-
-  public String getCenterFile() {
-    return centerFile;
-  }
-
-  @Override
-  public String toString() {
-    return "JobParameters{"
-        + "size="
-        + size
-        + ", iterations="
-        + iterations
-        + ", col="
-        + col
-        + ", containers="
-        + containers
-        + '}';
   }
 }
