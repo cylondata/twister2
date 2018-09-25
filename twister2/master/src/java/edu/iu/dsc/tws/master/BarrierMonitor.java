@@ -41,7 +41,15 @@ public class BarrierMonitor implements MessageHandler {
 
     if (message instanceof JobMasterAPI.BarrierRequest) {
       JobMasterAPI.BarrierRequest barrierRequest = (JobMasterAPI.BarrierRequest) message;
-      LOG.info("BarrierRequest message received:\n" + barrierRequest);
+
+      // log first and last workers messages as INFO, others as FINE
+      if (waitList.size() == 0) {
+        LOG.info("BarrierRequest message received from the first worker:\n" + barrierRequest);
+      } else if (waitList.size() == (numberOfWorkers - 1)) {
+        LOG.info("BarrierRequest message received from the last worker:\n" + barrierRequest);
+      } else {
+        LOG.fine("BarrierRequest message received:\n" + barrierRequest);
+      }
 
       waitList.put(barrierRequest.getWorkerID(), requestID);
 
@@ -59,13 +67,16 @@ public class BarrierMonitor implements MessageHandler {
    */
   private void sendBarrierResponseToWaitList() {
 
+    LOG.info("All workers reached the barrier. "
+        + "BarrierResponse message will be sent to all workers.");
+
     for (Map.Entry<Integer, RequestID> entry: waitList.entrySet()) {
       JobMasterAPI.BarrierResponse response = JobMasterAPI.BarrierResponse.newBuilder()
           .setWorkerID(entry.getKey())
           .build();
 
       rrServer.sendResponse(entry.getValue(), response);
-      LOG.info("BarrierResponse sent:\n" + response);
+      LOG.fine("BarrierResponse message sent:\n" + response);
     }
 
     waitList.clear();
