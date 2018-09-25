@@ -16,22 +16,19 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
  */
 public final class KMeansConstants {
 
-  public static final String ARGS_ITR = "itr";
-  public static final String ARGS_SIZE = "size";
-  public static final String ARGS_COL = "col";
-  public static final String ARGS_CONTAINERS = "con";
+  public static final String ARGS_WORKERS = "workers";
+  public static final String ARGS_ITR = "iter";
   public static final String ARGS_FNAME = "fname";
-  public static final String ARGS_OUTSTANDING = "outstanding";
-  public static final String ARGS_THREADS = "threads";
-  public static final String ARGS_PRINT_INTERVAL = "pi";
-  public static final String ARGS_DATA_TYPE = "type";
-  public static final String ARGS_POINT = "pointsFile";
-  public static final String ARGS_CENTERS = "centersFile";
+  public static final String ARGS_POINTS = "pointsfile";
+  public static final String ARGS_CENTERS = "centersfile";
   public static final String ARGS_DIMENSIONS = "dim";
-  public static final String ARGS_K = "k";
-  public static final String ARGS_N_POINTS = "np";
-  public static final String ARGS_FILESYSTEM = "local"; //"hdfs"
+  public static final String ARGS_CLUSTERS = "clusters";
+  public static final String ARGS_NUMBER_OF_POINTS = "points";
+  public static final String ARGS_FILESYSTEM = "filesys"; // "local" or "hdfs"
+  public static final String ARGS_MINVALUE = "minvalue";
+  public static final String ARGS_MAXVALUE = "maxvalue";
+  public static final String ARGS_DATA_INPUT = "input"; //"generate" or "read"
 
-  private KMeansConstants() {
+  protected KMeansConstants() {
   }
 }
