@@ -1,6 +1,6 @@
 # Task Scheduling in Twister2
 
-Task Scheduling is the process of scheduling the tasks into the cluster resources in a manner that
+Task Scheduling is the process of scheduling the tasks into the cluster resources in a manner that 
 minimizes the task completion time and utilizes the resources effectively. The other main functional 
 requirements of task scheduling are scalability, dynamism, time and cost efficiency, handling 
 different types of processing models, data, and jobs, etc. The main objective of the task scheduling 

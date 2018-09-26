@@ -1,10 +1,5 @@
-Twister2 Communication
+Twister2 Communication Model
 ======================
-
-.. toctree::
-   :maxdepth: 5
-   
-   communication-model
 
 TCP 
 ---
@@ -21,10 +16,9 @@ which communication.
 
 Each TCP message is preceded by the following header.
 
-.. code-block:: bash
-
+```bash
   4 byte integer length \ 4 byte integer edge 
-
+```
 
 Request Response Mode
 ----------------------
@@ -48,10 +42,9 @@ message header.
 
 So each message is preceded by
 
-.. code-block:: bash
-
+```bash
   4 byte integer length \ 4 byte integer edge | 32 bytes request id | 4 byte message name length | message name  
-
+```
 
 When we send a message, a callback is registered to receive the responses. The requests and responces
 are matched using the unique request id generated for each message.
@@ -64,21 +57,18 @@ fixed data buffers to transfer and reveive data.
 
 Each TCP message is preceded by the following header.
 
-.. code-block:: bash
-
+```bash
   4 byte integer length \ 4 byte integer edge 
+```
 
 
-
-In this mode, receiving buffers must be posted to the tranport and the when it receives a message, 
+In this mode, receiving buffers must be posted to the transport and the when it receives a message, 
 it will fill these posted buffers with content and return them. This means the size of the buffers
 are fixed for sending and receiving.
 
 Here is a psuedo code of how to use the messaging mode.
 
-.. code-block:: java
-   :linenos:
-
+```java
   TCPChannel channel = new TCPChannel(...)
   channel.startListening()
   
@@ -102,7 +92,7 @@ Here is a psuedo code of how to use the messaging mode.
   if (send.isComplete()) {
     // send message is complete
   }
-
+```
 
 Because of the additional information carried in Request/Response mode and the use of protocol
 buffers, the general messaging mode is better performing than request / response mode.
