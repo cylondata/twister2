@@ -17,10 +17,15 @@ import edu.iu.dsc.tws.common.config.Context;
 public class CheckpointContext extends Context {
 
   private static final String STATEBACKEND_DIRECTORY = "twister2.statebackend.directory";
+  private static final String CHECKPOINT_RECOVERY = "twister2.statebackend.recovery";
   private static final String STATEBACKEND_DIRECTORY_DEFAULT = System.getProperty("user.home")
       + "/statebackend/";
 
   public static String getStatebackendDirectoryDefault(Config cfg) {
     return cfg.getStringValue(STATEBACKEND_DIRECTORY, STATEBACKEND_DIRECTORY_DEFAULT);
+  }
+
+  public static boolean getCheckpointRecovery(Config cfg) {
+    return cfg.getBooleanValue(CHECKPOINT_RECOVERY, false);
   }
 }
