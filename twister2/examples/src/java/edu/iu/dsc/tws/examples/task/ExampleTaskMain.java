@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.task.batch.BTAllGatherExample;
