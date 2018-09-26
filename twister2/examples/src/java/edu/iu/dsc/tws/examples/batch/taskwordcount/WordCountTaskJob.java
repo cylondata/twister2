@@ -92,11 +92,11 @@ public class WordCountTaskJob extends TaskWorker {
       String word = sampleWords.get(random.nextInt(sampleWords.size()));
 
       if (count == NUMBER_MESSAGES - 1) {
-        if (context.writeEnd(EDGE, word, 1)) {
+        if (context.writeEnd(EDGE, word, new int[]{1})) {
           count++;
         }
       } else if (count < NUMBER_MESSAGES - 1) {
-        if (context.write(EDGE, word, 1)) {
+        if (context.write(EDGE, word, new int[]{1})) {
           count++;
         }
       }
@@ -111,7 +111,7 @@ public class WordCountTaskJob extends TaskWorker {
       if (message.getContent() instanceof KeyedContent) {
         KeyedContent kc = (KeyedContent) message.getContent();
         LOG.log(Level.INFO, String.format("%d Word %s count %s",
-            context.taskId(), kc.getKey(), kc.getValue()));
+            context.taskId(), kc.getKey(), ((int[]) kc.getValue())[0]));
       }
       return true;
     }

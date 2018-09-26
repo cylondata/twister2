@@ -54,7 +54,7 @@ public class StreamingWordSource implements Runnable {
     for (int i = 0; i < noOfWords; i++) {
       String word = sampleWords.get(random.nextInt(sampleWords.size()));
       // lets try to process if send doesn't succeed
-      while (!operation.reduce(taskId, word, 1, 0)) {
+      while (!operation.reduce(taskId, word, new int[]{1}, 0)) {
         operation.progress();
       }
     }

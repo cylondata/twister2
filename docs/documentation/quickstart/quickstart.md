@@ -127,6 +127,10 @@ You can run them with a simple command such as
 
 Lets focus on a simple communication example where we try to do a word count.
 
+### Word Count Example
+
+Lets look at a word count example. 
+
 
 
 

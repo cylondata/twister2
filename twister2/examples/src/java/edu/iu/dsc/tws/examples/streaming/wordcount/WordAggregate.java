@@ -40,7 +40,7 @@ public class WordAggregate implements SingularReceiver {
     if (message instanceof KeyedContent) {
       KeyedContent kc = (KeyedContent) message;
       LOG.log(Level.INFO, String.format("%d Word %s count %s",
-          target, kc.getKey(), kc.getValue()));
+          target, kc.getKey(), ((int[]) kc.getValue())[0]));
     }
     return true;
   }
