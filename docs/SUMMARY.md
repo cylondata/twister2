@@ -1,10 +1,10 @@
 # Table of contents
 
-* [Twister2](README.md)
 * [Documentation](documentation/README.md)
   * [Quickstart](documentation/quickstart/quickstart.md)
   * [Installation](documentation/installation/README.md)
     * [Overview](documentation/installation/installation.md)
+    * [Compiling](documentation/installation/compiling.md)
     * [Standalone](documentation/installation/standalone/README.md)
       * [Running Jobs](documentation/installation/standalone/running-jobs.md)
     * [Kubernetes](documentation/installation/kubernetes/README.md)
