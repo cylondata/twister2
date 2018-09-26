@@ -125,12 +125,51 @@ You can run them with a simple command such as
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -op "reduce" -stages 8,1
 ```
 
-Lets focus on a simple communication example where we try to do a word count.
+Now, lets focus on a simple communication example where we try to do a word count.
 
-### Word Count Example
+## Word Count Example
 
-Lets look at a word count example. 
+Lets look at a word count example. This is a standard example in every other big data system. 
+The code related to example can be found in
 
+```bash
+examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount
+```
 
+We are using a Keyed Reduce communication operation to calculate the global counts of words, which are emitted from parallel workers.
 
+The example has three main classes.
 
+WordCountWorker that implements the IWorker interface and runs the code.
+
+```java
+edu.iu.dsc.tws.examples.batch.wordcount.WordCountWorker
+```
+
+BatchWordSource, where we use a thread to generate words and put them into the communication.
+
+```java
+edu.iu.dsc.tws.examples.batch.wordcount.BatchWordSouce
+```
+
+WordAggregator, where it receives the counts of the words.
+
+```java
+edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator
+```
+
+The WordCountWorker sets up communications and task ids. Then it sets up the communication operation.
+
+```java
+    this.taskPlan = Utils.createStageTaskPlan(
+        cfg, resources, taskStages, workerList);
+
+    setupTasks();
+    setupNetwork(workerController, resources);
+
+    // create the communication
+    wordAggregator = new WordAggregator();
+    keyGather = new BKeyedReduce(channel, taskPlan, sources, destinations,
+        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
+        wordAggregator, MessageType.OBJECT, MessageType.INTEGER, new HashingSelector());
+```
