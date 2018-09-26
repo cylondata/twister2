@@ -35,9 +35,24 @@ public interface DestinationSelector {
 
   void prepare(MessageType type, Set<Integer> sources, Set<Integer> destinations);
 
-  int next(int source);
+  /**
+   * Get next destination using source and the data
+   * @param source source
+   * @param data data
+   * @return the next destination
+   */
+  int next(int source, Object data);
 
-  int next(int source, Object key);
+  /**
+   * Get next destination using source, key and data
+   * @param source source
+   * @param key key
+   * @param data data
+   * @return the next destination
+   */
+  default int next(int source, Object key, Object data) {
+    return 0;
+  }
 
   void commit(int source, int next);
 }

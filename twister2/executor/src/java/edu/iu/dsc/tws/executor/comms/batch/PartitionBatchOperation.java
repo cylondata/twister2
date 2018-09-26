@@ -33,17 +33,15 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
 
   protected BPartition op;
 
-  public PartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan) {
+  public PartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+                                 Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+                                 DataType dataType, String edgeName, boolean shuffle) {
     super(config, network, tPlan);
-  }
-
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
     this.edgeGenerator = e;
     //LOG.info("ParitionOperation Prepare 1");
     op = new BPartition(channel, taskPlan, srcs, dests,
         Utils.dataTypeToMessageType(dataType), new PartitionReceiver(),
-        new LoadBalanceSelector());
+        new LoadBalanceSelector(), shuffle);
     communicationEdge = e.generate(edgeName);
   }
 

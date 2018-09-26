@@ -55,6 +55,18 @@ public class HelloWorld implements IWorker {
     LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
             + "and I got a configuration value %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
+    
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    String workersStr = WorkerNetworkInfo.workerListAsString(workerList);
+    LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
+    
+    try {
+      LOG.info("I am sleeping for 1 minute and then exiting.");
+      Thread.sleep(60 * 1000);
+      LOG.info("I am done sleeping. Exiting.");
+    } catch (InterruptedException e) {
+      LOG.severe("Thread sleep interrupted.");
+    }
   }
 
   public static void main(String[] args) {
@@ -100,4 +112,21 @@ It is that simple!
 
 ## Communicating between workers
 
-Okay, the next step is to communicate between the workers we have created.
+Okay, the next step is to communicate between the workers we have created. There are many examples in
+Twister2 that use communication among workers and some of these can be found inside the directory 
+
+```bash
+examples/src/java/edu/iu/dsc/tws/examples/comms
+```
+
+You can run them with a simple command such as 
+
+```
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -op "reduce" -stages 8,1
+```
+
+Lets focus on a simple communication example where we try to do a word count.
+
+
+
+

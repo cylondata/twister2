@@ -47,7 +47,7 @@ public class RecordSave implements BulkReceiver {
       totalCount++;
       count++;
     }
-    LOG.info(String.format("Received message for targe: %d", count));
+    LOG.info(String.format("Received message for target: %d", count));
     return true;
   }
 }

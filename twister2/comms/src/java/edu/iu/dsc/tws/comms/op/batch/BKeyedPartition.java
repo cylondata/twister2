@@ -60,7 +60,7 @@ public class BKeyedPartition {
   }
 
   public boolean partition(int source, Object key, Object message, int flags) {
-    int destinations = destinationSelector.next(source, key);
+    int destinations = destinationSelector.next(source, key, message);
 
     boolean send = partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
         partition.getDataType()), flags, destinations);

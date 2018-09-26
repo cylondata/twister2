@@ -92,7 +92,10 @@ public class StandaloneLauncher implements ILauncher {
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       try {
         int port = JobMasterContext.jobMasterPort(config);
-        String hostAddress = InetAddress.getLocalHost().getHostAddress();
+        String hostAddress = JobMasterContext.jobMasterIP(config);
+        if (hostAddress == null) {
+          hostAddress = InetAddress.getLocalHost().getHostAddress();
+        }
         LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
         jobMaster =
             new JobMaster(config, hostAddress,

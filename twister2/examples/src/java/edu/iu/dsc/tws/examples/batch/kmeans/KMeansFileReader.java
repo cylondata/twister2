@@ -19,10 +19,21 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.logging.Logger;
 
+/**
+ * This class is responsible for reading the input datapoints and the centroid values from the local
+ * file system.
+ */
 public class KMeansFileReader {
 
   private static final Logger LOG = Logger.getLogger(KMeansFileReader.class.getName());
 
+  /**
+   * It reads the datapoints from the corresponding file and store the data in a two-dimensional
+   * array for the later processing.
+   * @param fName
+   * @param dimension
+   * @return
+   */
   public double[][] readDataPoints(String fName, int dimension) {
 
     BufferedReader bufferedReader = null;
@@ -57,6 +68,11 @@ public class KMeansFileReader {
     return dataPoints;
   }
 
+  /**
+   * It calculates the number of lines in the file name.
+   * @param fileName
+   * @return
+   */
   public int getNumberOfLines(String fileName) {
 
     int numberOfLines = 0;
@@ -72,7 +88,13 @@ public class KMeansFileReader {
     return numberOfLines;
   }
 
-
+  /**
+   * It reads the datapoints from the corresponding file and store the data in a two-dimensional
+   * array for the later processing.
+   * @param fileName
+   * @param dimension
+   * @return
+   */
   public double[][] readCentroids(String fileName, int dimension, int numberOfClusters) {
 
     double[][] centroids = new double[numberOfClusters][dimension];

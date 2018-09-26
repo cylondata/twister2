@@ -9,87 +9,113 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.internal.task.streaming;
+package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.streaming.BaseStreamCompute;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
-public class BroadCastStreamingTask implements IWorker {
-  private static final Logger LOG = Logger.getLogger(BroadCastStreamingTask.class.getName());
+public class MultiStageGraph extends TaskWorker {
+  private static final Logger LOG = Logger.getLogger(MultiStageGraph.class.getName());
 
   @Override
-  public void execute(Config config, int workerID, AllocatedResources resources,
-                      IWorkerController workerController,
-                      IPersistentVolume persistentVolume,
-                      IVolatileVolume volatileVolume) {
+  public void execute() {
     GeneratorTask g = new GeneratorTask();
-    RecevingTask r = new RecevingTask();
+    ReduceTask rt = new ReduceTask();
+    PartitionTask r = new PartitionTask();
 
-    GraphBuilder builder = GraphBuilder.newBuilder();
-    builder.addSource("source", g);
-    builder.setParallelism("source", 1);
-    builder.addSink("sink", r);
-    builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "broadcast-edge",
-        OperationNames.BROADCAST);
-    builder.operationMode(OperationMode.STREAMING);
+    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+    builder.addSource("source", g, 4);
+    ComputeConnection pc = builder.addCompute("compute", r, 4);
+    pc.partition("source", "partition-edge", DataType.OBJECT);
+    ComputeConnection rc = builder.addSink("sink", rt, 1);
+    rc.reduce("compute", "compute-edge", new IFunction() {
+      @Override
+      public Object onMessage(Object object1, Object object2) {
+        return object1;
+      }
+    });
+    builder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
-    TaskUtils.execute(config, resources, graph, workerController);
+    ExecutionPlan plan = taskExecutor.plan(graph);
+    taskExecutor.execute(graph, plan);
   }
 
   private static class GeneratorTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
+
     private int count = 0;
+
     @Override
     public void execute() {
-      boolean wrote = context.write("broadcast-edge", "Hello");
-      if (wrote) {
-        count++;
-        if (count % 1000 == 0) {
-          LOG.info(String.format("%d %d Message Partition sent count : %d", context.getWorkerId(),
-              context.taskId(), count));
+      if (count == 999) {
+        if (context.writeEnd("partition-edge", "Hello")) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (context.write("partition-edge", "Hello")) {
+          count++;
         }
       }
     }
   }
 
-  private static class RecevingTask extends BaseStreamSink {
-    private static final long serialVersionUID = -254264903510284798L;
-    private static int counter = 0;
+  private static class ReduceTask extends BaseStreamSink {
+    private static final long serialVersionUID = -254264903510284791L;
+    private int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
-      if (counter % 1000 == 0) {
-        System.out.println(context.taskId() + " Message Braodcasted : "
-            + message.getContent() + ", counter : " + counter);
+      count++;
+      LOG.info(String.format("%d %d Reduce received count: %d", context.getWorkerId(),
+          context.taskId(), count));
+      return true;
+    }
+  }
+
+  @SuppressWarnings("rawtypes")
+  private static class PartitionTask extends BaseStreamCompute {
+    private static final long serialVersionUID = -254264903510284798L;
+
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (message.getContent() instanceof Iterator) {
+        Iterator it = (Iterator) message.getContent();
+        while (it.hasNext()) {
+          count += 1;
+          context.write("compute-edge", it.next());
+        }
       }
-      counter++;
+      LOG.info(String.format("%d %d Partition Received count: %d", context.getWorkerId(),
+          context.taskId(), count));
       return true;
     }
   }
@@ -117,8 +143,8 @@ public class BroadCastStreamingTask implements IWorker {
     jobConfig.putAll(configurations);
 
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("broadcast-task");
-    jobBuilder.setWorkerClass(BroadCastStreamingTask.class.getName());
+    jobBuilder.setName(MultiStageGraph.class.getName());
+    jobBuilder.setWorkerClass(MultiStageGraph.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

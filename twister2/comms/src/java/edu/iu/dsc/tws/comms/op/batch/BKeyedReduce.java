@@ -58,7 +58,7 @@ public class BKeyedReduce {
   }
 
   public boolean reduce(int src, Object key, Object data, int flags) {
-    int dest = destinationSelector.next(src, key);
+    int dest = destinationSelector.next(src, key, data);
     return keyedReduce.send(src, new KeyedContent(key, data, keyType,
         dataType), flags, dest);
   }

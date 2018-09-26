@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public abstract class BenchWorker implements IWorker {
@@ -72,9 +73,6 @@ public abstract class BenchWorker implements IWorker {
     this.resourcePlan = allocatedResources;
     this.workerId = workerID;
     this.workerList = workerController.waitForAllWorkersToJoin(50000);
-    for (WorkerNetworkInfo w : workerList) {
-      LOG.log(Level.INFO, "WorkerNetworkInfo: " + w);
-    }
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(
         cfg, allocatedResources, jobParameters.getTaskStages(), workerList);
@@ -89,6 +87,8 @@ public abstract class BenchWorker implements IWorker {
     execute();
     // now communicationProgress
     progress();
+    // wait for the sync
+    workerController.waitOnBarrier(SchedulerContext.workerEndSyncWaitTime(config));
     // lets terminate the communicator
     communicator.close();
   }

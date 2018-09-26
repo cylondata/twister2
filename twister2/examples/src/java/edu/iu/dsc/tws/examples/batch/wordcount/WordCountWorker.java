@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.batch.wordcount;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,6 +21,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
@@ -27,31 +29,31 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
-import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchPartialReceiver;
-import edu.iu.dsc.tws.examples.utils.WordCountUtils;
+import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.batch.BPartition;
+import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
+import edu.iu.dsc.tws.examples.Utils;
 
 public class WordCountWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
 
-  private DataFlowMultiGather keyGather;
+  private BPartition keyGather;
 
-  private TWSChannel channel;
+  private Communicator channel;
 
-  private static final int NO_OF_TASKS = 16;
+  private static final int NO_OF_TASKS = 8;
 
   private Config config;
-
-  private AllocatedResources resourcePlan;
-
-  private int id;
-
-  private int noOfTasksPerExecutor;
 
   private Set<Integer> sources;
   private Set<Integer> destinations;
   private TaskPlan taskPlan;
+
+  private Set<BatchWordSource> batchWordSources = new HashSet<>();
+
+  private WordAggregator wordAggregator;
+  private List<Integer> taskStages = new ArrayList<>();
+  private int workerId;
 
   @Override
   public void execute(Config cfg, int workerID, AllocatedResources resources,
@@ -59,64 +61,88 @@ public class WordCountWorker implements IWorker {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
     this.config = cfg;
-    this.resourcePlan = resources;
-    this.id = workerID;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
+    this.workerId = workerID;
 
-    // set up the tasks
+    taskStages.add(NO_OF_TASKS);
+    taskStages.add(NO_OF_TASKS);
+
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    // lets create the task plan
+    this.taskPlan = Utils.createStageTaskPlan(
+        cfg, resources, taskStages, workerList);
+
     setupTasks();
-    // setup the network
     setupNetwork(workerController, resources);
+
     // create the communication
-    keyGather = new DataFlowMultiGather(channel, sources, destinations,
-        new GatherMultiBatchFinalReceiver(new WordAggregator()),
-        new GatherMultiBatchPartialReceiver(), destinations,
-        MessageType.OBJECT, MessageType.OBJECT);
-    // intialize the operation
-    keyGather.init(config, MessageType.OBJECT, taskPlan, 0);
-    // start the threads
+    wordAggregator = new WordAggregator();
+    keyGather = new BPartition(channel, taskPlan, sources, destinations,
+        MessageType.OBJECT, wordAggregator, new HashingSelector(), false);
+
     scheduleTasks();
-    // communicationProgress the work
     progress();
   }
 
   private void setupTasks() {
-    taskPlan = WordCountUtils.createWordCountPlan(config, resourcePlan, NO_OF_TASKS);
     sources = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS / 2; i++) {
+    for (int i = 0; i < NO_OF_TASKS; i++) {
       sources.add(i);
     }
     destinations = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS / 2; i++) {
-      destinations.add(NO_OF_TASKS / 2 + i);
+    for (int i = 0; i < NO_OF_TASKS; i++) {
+      destinations.add(NO_OF_TASKS + i);
     }
-  }
-
-  private void scheduleTasks() {
-    if (id < 2) {
-      for (int i = 0; i < noOfTasksPerExecutor; i++) {
-        // the map thread where data is produced
-        Thread mapThread = new Thread(new BatchWordSource(config, keyGather, 1000,
-            new ArrayList<>(destinations), noOfTasksPerExecutor * id + i, 200));
-        mapThread.start();
-      }
-    }
+    LOG.fine(String.format("%d sources %s destinations %s",
+        taskPlan.getThisExecutor(), sources, destinations));
   }
 
   private void setupNetwork(IWorkerController controller, AllocatedResources resources) {
-    channel = Network.initializeChannel(config, controller, resources);
+    TWSChannel twsChannel = Network.initializeChannel(config, controller, resources);
+    this.channel = new Communicator(config, twsChannel);
+  }
+
+  private void scheduleTasks() {
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+        taskStages, 0);
+    // now initialize the workers
+    for (int t : tasksOfExecutor) {
+      // the map thread where data is produced
+      BatchWordSource target = new BatchWordSource(keyGather, 100, t, 10000);
+      batchWordSources.add(target);
+      Thread mapThread = new Thread(target);
+      mapThread.start();
+    }
   }
 
   private void progress() {
     // we need to communicationProgress the communication
-    while (true) {
+    boolean done = false;
+    while (!done) {
       try {
+        done = true;
         // communicationProgress the channel
-        channel.progress();
+        channel.getChannel().progress();
+
         // we should communicationProgress the communication directive
-        keyGather.progress();
+        boolean needsProgress = keyGather.progress();
+        if (needsProgress) {
+          done = false;
+        }
+
+        if (keyGather.hasPending()) {
+          done = false;
+        }
+
+        for (BatchWordSource b : batchWordSources) {
+          if (!b.isDone()) {
+            done = false;
+          }
+        }
+        if (!wordAggregator.isDone()) {
+          done = false;
+        }
       } catch (Throwable t) {
-        LOG.log(Level.SEVERE, "Something bad happened", t);
+        LOG.log(Level.SEVERE, "Error", t);
       }
     }
   }

@@ -54,7 +54,7 @@ public class ResourceAllocator {
   private Config updatedConfig;
 
   /**
-   * loadConfig from config files and also from envirobnment variables
+   * loadConfig from config files and also from environment variables
    *
    * @param cfg the config values in this map will be put into returned Config
    */

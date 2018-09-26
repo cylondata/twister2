@@ -25,6 +25,15 @@ Twister2 build needs several software installed on your system.
     PATH=$JAVA_HOME/bin:$PATH
     export JAVA_HOME PATH
   ```
+  
+  
+  Note: If you get an error while compiling or building Twister2 saying "Java bindings requested but no Java support found"
+  please execute the following command to install Java using apt-get command
+  
+  ```bash
+  sudo apt install openjdk-8-jdk
+  ```
+
 3. Install the required tools
 
 ```bash
@@ -86,7 +95,7 @@ bazel build --config=ubuntu scripts/package:tarpkgs
 This will build twister2 distribution in the file
 
 ```bash
-bazel-bin/scripts/package/twister2-client.tar.gz
+bazel-bin/scripts/package/twister2-client-0.1.0.tar.gz
 ```
 
 If you would like to compile the twister2 without building the distribution
@@ -113,7 +122,7 @@ it to submit jobs.
 
 ```bash
 cd bazel-bin/scripts/package/
-tar -xvf twister2-client.tar.gz
+tar -xvf twister2-client-0.1.0.tar.gz
 ```
 
 ## Compiling OpenMPI
