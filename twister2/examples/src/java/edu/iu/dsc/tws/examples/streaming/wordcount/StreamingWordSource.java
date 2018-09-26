@@ -14,17 +14,16 @@ package edu.iu.dsc.tws.examples.streaming.wordcount;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.stream.SPartition;
+import edu.iu.dsc.tws.comms.op.stream.SKeyedReduce;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 
 public class StreamingWordSource implements Runnable {
   private static final Logger LOG = Logger.getLogger(StreamingWordSource.class.getName());
 
-  private SPartition operation;
+  private SKeyedReduce operation;
 
   private Random random = new Random();
 
@@ -34,19 +33,16 @@ public class StreamingWordSource implements Runnable {
 
   private int taskId;
 
-  private RandomString randomString;
-
-  private int executor;
-
   private List<String> sampleWords = new ArrayList<>();
 
-  public StreamingWordSource(Config config, SPartition operation, int words,
-                             int tId, int noOfSampleWords, TaskPlan taskPlan) {
+  private boolean done;
+
+  public StreamingWordSource(SKeyedReduce operation, int words,
+                             int tId, int noOfSampleWords) {
     this.operation = operation;
     this.noOfWords = words;
     this.taskId = tId;
-    this.randomString = new RandomString(MAX_CHARS, new Random(), RandomString.ALPHANUM);
-    this.executor = taskPlan.getThisExecutor();
+    RandomString randomString = new RandomString(MAX_CHARS, new Random(), RandomString.ALPHANUM);
 
     for (int i = 0; i < noOfSampleWords; i++) {
       sampleWords.add(randomString.nextRandomSizeString());
@@ -58,9 +54,16 @@ public class StreamingWordSource implements Runnable {
     for (int i = 0; i < noOfWords; i++) {
       String word = sampleWords.get(random.nextInt(sampleWords.size()));
       // lets try to process if send doesn't succeed
-      while (!operation.partition(taskId, word, 0)) {
+      while (!operation.reduce(taskId, word, 1, 0)) {
         operation.progress();
       }
     }
+    LOG.log(Level.INFO, "Done sending: " + taskId);
+    // we need to finish the operation
+    done = true;
+  }
+
+  public boolean isDone() {
+    return done;
   }
 }

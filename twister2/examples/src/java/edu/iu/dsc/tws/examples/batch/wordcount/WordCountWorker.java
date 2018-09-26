@@ -27,17 +27,19 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.batch.BPartition;
+import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
+import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
 import edu.iu.dsc.tws.examples.Utils;
 
 public class WordCountWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
 
-  private BPartition keyGather;
+  private BKeyedReduce keyGather;
 
   private Communicator channel;
 
@@ -76,8 +78,9 @@ public class WordCountWorker implements IWorker {
 
     // create the communication
     wordAggregator = new WordAggregator();
-    keyGather = new BPartition(channel, taskPlan, sources, destinations,
-        MessageType.OBJECT, wordAggregator, new HashingSelector(), false);
+    keyGather = new BKeyedReduce(channel, taskPlan, sources, destinations,
+        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
+        wordAggregator, MessageType.OBJECT, MessageType.INTEGER, new HashingSelector());
 
     scheduleTasks();
     progress();
