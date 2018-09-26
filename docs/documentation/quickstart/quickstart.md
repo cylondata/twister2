@@ -173,3 +173,19 @@ The WordCountWorker sets up communications and task ids. Then it sets up the com
         new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
         wordAggregator, MessageType.OBJECT, MessageType.INTEGER, new HashingSelector());
 ```
+
+We send the messages through this communication operation using the code in BatchWordSource
+
+```java
+
+      String word = sampleWords.get(random.nextInt(sampleWords.size()));
+      // lets try to process if send doesn't succeed
+      while (!operation.reduce(taskId, word, new int[]{1}, 0)) {
+        operation.progress();
+      }
+
+```
+
+We send 1 as the word count and it will be summed up for the each word.
+
+We receive the final word counts as an iteration in the WordAggregator.
