@@ -15,14 +15,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.Collector;
-import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.dataset.DataSet;
-import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchCompute;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
@@ -83,49 +78,6 @@ public class TaskExamples {
     }
   }
 
-  protected static class AllReduceSourceTask extends BaseBatchSource {
-    private static final long serialVersionUID = -254264903510284748L;
-    private int count = 0;
-    private String edge;
-
-    public AllReduceSourceTask() {
-
-    }
-
-    public AllReduceSourceTask(String e) {
-      this.edge = e;
-    }
-
-    @Override
-    public void execute() {
-      int[] val = {1};
-      if (count == 999) {
-        if (context.writeEnd(this.edge, val)) {
-          count++;
-        }
-      } else if (count < 999) {
-        if (context.write(this.edge, val)) {
-          count++;
-        }
-      }
-    }
-  }
-
-  protected static class AllReduceSinkTask extends BaseBatchSink {
-    private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
-
-    @Override
-    public boolean execute(IMessage message) {
-      count++;
-      Object object = message.getContent();
-      if (object instanceof int[]) {
-        LOG.info("Batch AllReduce Message Received : " + Arrays.toString((int[]) object));
-      }
-      return true;
-    }
-  }
-
   protected static class GatherSourceTask extends BaseBatchSource {
     private static final long serialVersionUID = -254264903510284748L;
     private int count = 0;
@@ -176,63 +128,6 @@ public class TaskExamples {
         }
 
         LOG.info("Batch Gather Message Received : " + out);
-      } else {
-        LOG.info("Class : " + object.getClass().getName());
-      }
-
-      return true;
-    }
-  }
-
-  protected static class AllGatherSourceTask extends BaseBatchSource {
-    private static final long serialVersionUID = -254264903510284748L;
-    private int count = 0;
-    private String edge;
-
-    public AllGatherSourceTask() {
-
-    }
-
-    public AllGatherSourceTask(String e) {
-      this.edge = e;
-    }
-
-    @Override
-    public void execute() {
-      int[] val = {1};
-      if (count == 999) {
-        if (context.writeEnd(this.edge, val)) {
-          count++;
-        }
-      } else if (count < 999) {
-        if (context.write(this.edge, val)) {
-          count++;
-        }
-      }
-    }
-  }
-
-  protected static class AllGatherSinkTask extends BaseBatchSink {
-    private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
-
-    @Override
-    public boolean execute(IMessage message) {
-      count++;
-
-      Object object = message.getContent();
-      if (object instanceof int[]) {
-        LOG.info("Batch AllGather Message Received : " + Arrays.toString((int[]) object));
-      } else if (object instanceof Iterator) {
-        Iterator<?> it = (Iterator<?>) object;
-        String out = "";
-        while (it.hasNext()) {
-          if (it.next() instanceof int[]) {
-            int[] a = (int[]) it.next();
-            out += Arrays.toString(a);
-          }
-        }
-        LOG.info("Batch AllGather Message Received : " + out);
       } else {
         LOG.info("Class : " + object.getClass().getName());
       }
@@ -415,84 +310,6 @@ public class TaskExamples {
     }
   }
 
-  /**
-   * Iterative Job Example
-   **/
-
-  protected static class IterativeSourceTask extends BaseBatchSource implements Receptor {
-    private static final long serialVersionUID = -254264120110286748L;
-
-    private DataSet<Object> input;
-
-    private int count = 0;
-
-    private String edge;
-
-    public IterativeSourceTask() {
-
-    }
-
-    public IterativeSourceTask(String e) {
-      this.edge = e;
-    }
-
-    @Override
-    public void execute() {
-      if (count == 999) {
-        if (context.writeEnd(edge, "Hello")) {
-          count++;
-        }
-      } else if (count < 999) {
-        if (context.write(edge, "Hello")) {
-          count++;
-        }
-      }
-    }
-
-    @Override
-    public void add(String name, DataSet<Object> data) {
-      LOG.log(Level.INFO, "Received input: " + name);
-      input = data;
-    }
-  }
-
-  protected static class IterativeSinkTask extends BaseBatchSink implements Collector<Object> {
-    private static final long serialVersionUID = -5190777711234234L;
-
-    private List<String> list = new ArrayList<>();
-
-    private int count;
-
-    @Override
-    public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received message: " + message.getContent());
-
-      if (message.getContent() instanceof Iterator) {
-        while (((Iterator) message.getContent()).hasNext()) {
-          Object ret = ((Iterator) message.getContent()).next();
-          count++;
-          list.add(ret.toString());
-        }
-        LOG.info("Message Partition Received : " + message.getContent()
-            + ", Count : " + count);
-      }
-      count++;
-      return true;
-    }
-
-    @Override
-    public Partition<Object> get() {
-      return new Partition<>(context.taskIndex(), list);
-    }
-  }
-
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////
-
-  /***
-   * Streaming Task Examples
-   * **/
-
   protected static class SReduceSourceTask extends BaseStreamSource {
     private static final long serialVersionUID = -254264903510284748L;
     private int count;
@@ -508,7 +325,8 @@ public class TaskExamples {
 
     @Override
     public void execute() {
-      boolean wrote = context.write(edge, "Hello");
+      int[] val = new int[]{1, 2};
+      boolean wrote = context.write(edge, val);
       if (wrote) {
         count++;
         if (count % 1000 == 0) {
@@ -904,9 +722,6 @@ public class TaskExamples {
     if ("bcast".equals(example)) {
       source = new BroadcastSourceTask(edge);
     }
-    if ("iterative-source".equals(example)) {
-      source = new IterativeSourceTask(edge);
-    }
     return source;
   }
 
@@ -936,9 +751,6 @@ public class TaskExamples {
     if ("bcast".equals(example)) {
       sink = new BroadcastSinkTask();
     }
-    if ("iterative-sink".equals(example)) {
-      sink = new IterativeSinkTask();
-    }
     return sink;
   }
 
@@ -965,13 +777,6 @@ public class TaskExamples {
     if ("keyed-reduce".equals(example)) {
       source = new SKeyedReduceSourceTask(edge);
     }
-
-    /*if ("keyed-gather".equals(example)) {
-      source = new SKeyedGatherSourceTask(edge);
-    }
-    if ("bcast".equals(example)) {
-      source = new SBroadcastSourceTask(edge);
-    }*/
     return source;
   }
 
@@ -998,12 +803,6 @@ public class TaskExamples {
     if ("keyed-reduce".equals(example)) {
       sink = new SKeyedReduceSinkTask();
     }
-    /*if ("keyed-gather".equals(example)) {
-      sink = new SKeyedGatherSinkTask();
-    }
-    if ("bcast".equals(example)) {
-      sink = new SBroadcastSinkTask();
-    }*/
     return sink;
   }
 
