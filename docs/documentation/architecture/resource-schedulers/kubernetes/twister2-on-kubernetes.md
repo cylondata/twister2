@@ -4,7 +4,7 @@ Twister2 on Kubernetes: Design, Features and Implementation
 This document explains the design, features and implementations for running Twister2 jobs 
 on Kubernetes clusters. We designed and developed components to run Twister2 workers and
 the Job Master in Kubernetes clusters. An overview of the mian components of Twister2 
-architecture can be found in [the document](../../main-components.rst).
+architecture can be found in [the document](../../main-components.md).
 
 First, we provide a general overview of Kubernetes system. We discuss its features from 
 Twister2 implementation perspective. Then, we explain the design decisions that we have made 
@@ -23,11 +23,11 @@ We discuss the following topics:
 
 In addition to running Twister2 jobs on Kubernetes clusters, We have implemented 
 the following APIs/services: 
-* [Worker Discovery](k8s-based-worker-discovery.rst)
-* [Persistent Storage](k8s-persistent-storage.rst)
-* [Services for Twister2 Jobs](k8s-services.rst) 
-* [Worker Binding and Mapping](k8s-worker-binding-mapping.rst)
-* [OpenMPI Support](open-mpi-support.rst)
+* [Worker Discovery](k8s-based-worker-discovery.md)
+* [Persistent Storage](k8s-persistent-storage.md)
+* [Services for Twister2 Jobs](k8s-services.md) 
+* [Worker Binding and Mapping](k8s-worker-binding-mapping.md)
+* [OpenMPI Support](open-mpi-support.md)
 
 Each one is explained in a separate document. 
 
@@ -527,4 +527,4 @@ the following command needs to be executed:
 When using OpenMPI communications in Twister2, pods need to have password-free SSH access 
 among them. This is accomplished by first generating an SSH key pair and 
 deploying them as a Kubernetes Secret object on the cluster. 
-Please check [the document](../../../installation/kubernetes/twister2-kubernetes-install.rst) for deploying the Secret object.
+Please check [the document](../../../installation/kubernetes/twister2-kubernetes-install.md) for deploying the Secret object.

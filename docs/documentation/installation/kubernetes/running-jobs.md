@@ -77,3 +77,12 @@ Configuration files for kubernetes clusters are under the directory:
 You can specify job related configurations either through client.yaml file or
 in your job java file. For example, job name can be specified in both those locations. 
 Java file has precedence over the conf files if you specify in both locations. 
+
+Job Names
+---------
+
+Since we are using job names as also StatefulSet names in Kubernetes, 
+job names must follow [Kubernetes resource naming rules](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/). 
+
+Job names should consist of lower case alphanumeric characters, dash(-), and dot(.).
+Otherwise job submission will fail. 
