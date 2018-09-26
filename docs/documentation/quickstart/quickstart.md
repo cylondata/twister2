@@ -55,6 +55,18 @@ public class HelloWorld implements IWorker {
     LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
             + "and I got a configuration value %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
+    
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    String workersStr = WorkerNetworkInfo.workerListAsString(workerList);
+    LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
+    
+    try {
+      LOG.info("I am sleeping for 1 minute and then exiting.");
+      Thread.sleep(60 * 1000);
+      LOG.info("I am done sleeping. Exiting.");
+    } catch (InterruptedException e) {
+      LOG.severe("Thread sleep interrupted.");
+    }
   }
 
   public static void main(String[] args) {
