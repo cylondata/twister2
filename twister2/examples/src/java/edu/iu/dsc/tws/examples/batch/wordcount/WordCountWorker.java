@@ -81,8 +81,9 @@ public class WordCountWorker implements IWorker {
     keyGather = new BKeyedReduce(channel, taskPlan, sources, destinations,
         new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
         wordAggregator, MessageType.OBJECT, MessageType.INTEGER, new HashingSelector());
-
+    // assign the task ids to the workers, and run them using threads
     scheduleTasks();
+    // progress the communication
     progress();
   }
 
