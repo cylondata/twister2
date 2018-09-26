@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.batch;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,9 +19,9 @@ import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
@@ -45,7 +46,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
     super(config, network, tPlan);
     this.edgeGenerator = e;
     op = new BKeyedReduce(channel, taskPlan, sources, dests, new ReduceFunctionImpl(function),
-        new SingularRecvrImpl(), Utils.dataTypeToMessageType(keyType),
+        new BulkReceiverImpl(), Utils.dataTypeToMessageType(keyType),
         Utils.dataTypeToMessageType(dataType), new HashingSelector());
     communicationEdge = e.generate(edgeName);
   }
@@ -79,12 +80,17 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
     }
   }
 
-  private class SingularRecvrImpl implements SingularReceiver {
+  private class BulkReceiverImpl implements BulkReceiver {
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override
+    public boolean receive(int target, Iterator<Object> it) {
+      //TODO : need to update code to use iterator
+      return false;
+    }
+
     public boolean receive(int target, Object object) {
       TaskMessage msg = new TaskMessage(object,
           edgeGenerator.getStringMapping(communicationEdge), target);

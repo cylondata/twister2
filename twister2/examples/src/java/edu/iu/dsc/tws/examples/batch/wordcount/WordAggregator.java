@@ -20,10 +20,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 
-public class WordAggregator implements SingularReceiver {
+public class WordAggregator implements BulkReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregator.class.getName());
 
   private boolean isDone;
@@ -33,7 +33,6 @@ public class WordAggregator implements SingularReceiver {
     isDone = false;
   }
 
-  @Override
   public boolean receive(int target, Object message) {
     if (message instanceof KeyedContent) {
       KeyedContent kc = (KeyedContent) message;
