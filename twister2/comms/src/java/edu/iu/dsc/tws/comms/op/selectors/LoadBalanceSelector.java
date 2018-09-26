@@ -51,10 +51,7 @@ public class LoadBalanceSelector implements DestinationSelector {
 
   @Override
   public int next(int source, Object key, Object data) {
-    int destIndex = destinationIndexes.get(source);
-    List<Integer> destinations = destination.get(source);
-    int next = increment(destIndex, destinations.size());
-    return destinations.get(next);
+    return next(source, data);
   }
 
   private int increment(int current, int max) {
@@ -67,8 +64,11 @@ public class LoadBalanceSelector implements DestinationSelector {
 
   @Override
   public int next(int source, Object data) {
-    throw new UnsupportedOperationException("Cannot use keys in this mode, "
-        + "please check configuration");
+    int destIndex = destinationIndexes.get(source);
+    List<Integer> destinations = destination.get(source);
+    int next = increment(destIndex, destinations.size());
+    return destinations.get(next);
+
   }
 
   public void commit(int source, int dest) {

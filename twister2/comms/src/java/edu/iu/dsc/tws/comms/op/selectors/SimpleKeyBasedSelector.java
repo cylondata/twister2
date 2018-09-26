@@ -46,7 +46,8 @@ public class SimpleKeyBasedSelector implements DestinationSelector {
 
   @Override
   public int next(int source, Object data) {
-    return 0;
+    throw new UnsupportedOperationException("Cannot use keys in this mode, "
+        + "please check configuration");
   }
 
   @Override
