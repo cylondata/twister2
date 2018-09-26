@@ -108,30 +108,23 @@ public class TaskExamples {
 
   protected static class GatherSinkTask extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
-      count++;
-
       Object object = message.getContent();
       if (object instanceof int[]) {
         LOG.info("Batch Gather Message Received : " + Arrays.toString((int[]) object));
       } else if (object instanceof Iterator) {
         Iterator<?> it = (Iterator<?>) object;
-        String out = "";
         while (it.hasNext()) {
           if (it.next() instanceof int[]) {
             int[] a = (int[]) it.next();
-            out += Arrays.toString(a);
           }
         }
-
-        LOG.info("Batch Gather Message Received : " + out);
+        LOG.info("Batch Gather Message Received");
       } else {
         LOG.info("Class : " + object.getClass().getName());
       }
-
       return true;
     }
   }

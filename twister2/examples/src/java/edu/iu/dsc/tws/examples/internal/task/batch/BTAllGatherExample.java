@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.internal.task.batch;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -22,8 +21,6 @@ import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
 public class BTAllGatherExample extends BenchTaskWorker {
-
-  private static final Logger LOG = Logger.getLogger(BTAllGatherExample.class.getName());
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {

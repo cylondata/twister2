@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.internal.task.streaming;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
@@ -24,7 +23,6 @@ import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STKeyedReduceExample extends BenchTaskWorker {
-  private static final Logger LOG = Logger.getLogger(STKeyedReduceExample.class.getName());
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {

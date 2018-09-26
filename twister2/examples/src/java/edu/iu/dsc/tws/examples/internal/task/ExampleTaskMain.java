@@ -41,6 +41,7 @@ import edu.iu.dsc.tws.examples.internal.task.streaming.STBroadCastExample;
 import edu.iu.dsc.tws.examples.internal.task.streaming.STGatherExample;
 import edu.iu.dsc.tws.examples.internal.task.streaming.STKeyedGatherExample;
 import edu.iu.dsc.tws.examples.internal.task.streaming.STKeyedReduceExample;
+import edu.iu.dsc.tws.examples.internal.task.streaming.STPartitionExample;
 import edu.iu.dsc.tws.examples.internal.task.streaming.STPartitionKeyedExample;
 import edu.iu.dsc.tws.examples.internal.task.streaming.STReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -184,7 +185,7 @@ public class ExampleTaskMain {
           submitJob(config, workers, jobConfig, STBroadCastExample.class.getName());
           break;
         case "partition":
-          submitJob(config, workers, jobConfig, STPartitionKeyedExample.class.getName());
+          submitJob(config, workers, jobConfig, STPartitionExample.class.getName());
           break;
         case "keyed-reduce":
           submitJob(config, workers, jobConfig, STKeyedReduceExample.class.getName());

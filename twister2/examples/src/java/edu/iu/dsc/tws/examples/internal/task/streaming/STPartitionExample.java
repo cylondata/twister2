@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.internal.task.streaming;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -22,7 +21,6 @@ import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STPartitionExample extends BenchTaskWorker {
-  private static final Logger LOG = Logger.getLogger(STPartitionExample.class.getName());
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
