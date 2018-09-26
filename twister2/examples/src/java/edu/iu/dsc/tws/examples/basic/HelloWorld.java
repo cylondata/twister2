@@ -53,7 +53,7 @@ public class HelloWorld implements IWorker {
     LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
 
     try {
-      LOG.info("I am sleeping for 1 minute and complete.");
+      LOG.info("I am sleeping for 1 minute and then exiting.");
       Thread.sleep(60 * 1000);
       LOG.info("I am done sleeping. Exiting.");
     } catch (InterruptedException e) {
