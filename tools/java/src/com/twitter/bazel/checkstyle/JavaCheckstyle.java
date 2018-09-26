@@ -99,8 +99,7 @@ public final class JavaCheckstyle {
 
     LOG.fine(files.length + " java files found by checkstyle");
 
-    String[] checkstyleArgs = (String[]) ArrayUtils.addAll(
-        new String[]{"-c", config}, files);
+    String[] checkstyleArgs = ArrayUtils.addAll(new String[]{"-c", config}, files);
 
     LOG.fine("checkstyle args: " + Joiner.on(" ").join(checkstyleArgs));
     com.puppycrawl.tools.checkstyle.Main.main(checkstyleArgs);
