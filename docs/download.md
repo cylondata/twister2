@@ -19,4 +19,4 @@ tarballs for convenience. The downloads are distributed via Github.
 
 ### License {#license}
 
-_The software licensed under_ [_Apache License 2.0_](https://www.apache.org/licenses/LICENSE-2.0)
+The software licensed under [_Apache License 2.0_](https://www.apache.org/licenses/LICENSE-2.0)

@@ -26,6 +26,10 @@ public class ReduceOperationFunction implements ReduceFunction {
   private Op operation;
 
   public ReduceOperationFunction(Op operation, MessageType dtype) {
+    if (dtype == MessageType.OBJECT || dtype == MessageType.STRING) {
+      throw new RuntimeException("We don't support this message type for reduce function: "
+          + dtype);
+    }
     this.operation = operation;
     this.messageType = dtype;
   }
