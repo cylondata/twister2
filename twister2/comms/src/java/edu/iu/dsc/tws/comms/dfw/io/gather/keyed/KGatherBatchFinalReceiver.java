@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 
 /**
- * Created by pulasthi on 9/20/18.
+ * Final receiver for keyed gather
  */
 public class KGatherBatchFinalReceiver extends KeyedReceiver {
   private static final Logger LOG = Logger.getLogger(KGatherBatchFinalReceiver.class.getName());

@@ -19,12 +19,12 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KeyedGatherBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
 
 public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
   private BulkReceiver bulkReceiver;
 
-  private Map<Integer, KeyedGatherBatchFinalReceiver> receiverMap = new HashMap<>();
+  private Map<Integer, KGatherBatchFinalReceiver> receiverMap = new HashMap<>();
 
   public GatherMultiBatchFinalReceiver(BulkReceiver receiver) {
     this.bulkReceiver = receiver;
@@ -34,8 +34,8 @@ public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      KeyedGatherBatchFinalReceiver finalReceiver = new KeyedGatherBatchFinalReceiver(
-          bulkReceiver);
+      KGatherBatchFinalReceiver finalReceiver = new KGatherBatchFinalReceiver(
+          bulkReceiver, 10);
       receiverMap.put(e.getKey(), finalReceiver);
 
       finalReceiver.init(cfg, op, e.getValue());
@@ -44,7 +44,7 @@ public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    KeyedGatherBatchFinalReceiver finalReceiver = receiverMap.get(path);
+    KGatherBatchFinalReceiver finalReceiver = receiverMap.get(path);
     return finalReceiver.onMessage(source, path, target, flags, object);
   }
 
@@ -52,7 +52,7 @@ public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
   public boolean progress() {
     boolean needsFurtherProgress = false;
 
-    for (Map.Entry<Integer, KeyedGatherBatchFinalReceiver> e : receiverMap.entrySet()) {
+    for (Map.Entry<Integer, KGatherBatchFinalReceiver> e : receiverMap.entrySet()) {
       needsFurtherProgress = needsFurtherProgress | e.getValue().progress();
     }
     return needsFurtherProgress;

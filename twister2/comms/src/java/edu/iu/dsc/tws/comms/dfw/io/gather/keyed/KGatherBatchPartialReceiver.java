@@ -12,6 +12,8 @@
 
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -24,6 +26,17 @@ import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 public class KGatherBatchPartialReceiver extends KeyedReceiver {
   private static final Logger LOG = Logger.getLogger(KGatherBatchPartialReceiver.class.getName());
 
+  /**
+   * List used to send data from the partial receiver. This is used because once we take elements
+   * from the send queue we cannot put them back in if the send fails. So the send messages are
+   * kept in the variable until the send method returns true.
+   */
+  private List<Object> sendList = new ArrayList<>();
+
+  /**
+   * Flags associated with the current sendList
+   */
+  private int flags = 0;
 
   public KGatherBatchPartialReceiver(int dest, int limitPerKey) {
     this.destination = dest;
@@ -54,30 +67,34 @@ public class KGatherBatchPartialReceiver extends KeyedReceiver {
       }
 
       if (!targetSendQueue.isEmpty() || sourcesFinished) {
-        int flags = 0;
 
-        //Used to make sure that the code is not stuck in this while loop if the send keeps getting
-        //rejected
-        boolean canProgress = true;
-        Object current;
-        while (canProgress && (current = targetSendQueue.peek()) != null) {
-          if (sourcesFinished && targetSendQueue.size() == 1) {
-            flags = MessageFlags.LAST;
+        // We only try to send new messages if the sendList is empty. If it still has values
+        // that means a previous senPartial call returned false. so we need to first send that
+        // data before processing new data
+        if (sendList.isEmpty()) {
+          while (!targetSendQueue.isEmpty()) {
+            if (sourcesFinished && targetSendQueue.size() == 1) {
+              flags = MessageFlags.LAST;
+            }
+            sendList.add(targetSendQueue.poll());
           }
 
-          if (dataFlowOperation.sendPartial(target, current, flags, destination)) {
-            targetSendQueue.poll();
+
+        }
+
+        if (!sendList.isEmpty()) {
+          if (dataFlowOperation.sendPartial(target, sendList, flags, destination)) {
+            sendList.clear();
+            flags = 0;
           } else {
-            canProgress = false;
             needsFurtherProgress = true;
           }
-
         }
       }
 
       //In reduce since we remove the key entry once we send it we only need to check if the map is
       //Empty
-      isAllQueuesEmpty = targetSendQueue.isEmpty();
+      isAllQueuesEmpty = targetSendQueue.isEmpty() && sendList.isEmpty();
       if (!isAllQueuesEmpty) {
         needsFurtherProgress = true;
       }
