@@ -12,25 +12,17 @@
 package edu.iu.dsc.tws.examples.internal.task.batch;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
@@ -86,22 +78,12 @@ public class ReduceBatchTask extends TaskWorker {
     public boolean execute(IMessage message) {
       count++;
       if (count % 1 == 0) {
-        LOG.info(String.format("Message Partition Received : %s", message.getContent()));
+        LOG.info(String.format("Message Reduce Received : %s", message.getContent()));
       }
 
       return true;
     }
   }
-
-  public static class IdentityFunction implements IFunction {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public Object onMessage(Object object1, Object object2) {
-      return object1;
-    }
-  }
-
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
     List<Worker> workers = new ArrayList<>();
@@ -111,26 +93,5 @@ public class ReduceBatchTask extends TaskWorker {
     }
 
     return new WorkerPlan(workers);
-  }
-
-
-  public static void main(String[] args) {
-    // first load the configurations from command line and config files
-    Config config = ResourceAllocator.loadConfig(new HashMap<>());
-    HashMap<String, Object> configurations = new HashMap<>();
-    configurations.put(SchedulerContext.THREADS_PER_WORKER, 1);
-
-    // build JobConfig
-    JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(configurations);
-
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("reduce-batch-task");
-    jobBuilder.setWorkerClass(ReduceBatchTask.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 1024), 4);
-    jobBuilder.setConfig(jobConfig);
-
-    // now submit the job
-    Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }
