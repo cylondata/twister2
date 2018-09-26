@@ -11,10 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
 
 /**
  * Created by pulasthi on 9/20/18.
@@ -25,16 +32,17 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
   /**
    * Final receiver that get the reduced values for the operation
    */
-  private SingularReceiver singularReceiver;
+  private BulkReceiver bulkReceiver;
 
-  public KReduceBatchFinalReceiver(ReduceFunction reduce, SingularReceiver receiver) {
+  public KReduceBatchFinalReceiver(ReduceFunction reduce, BulkReceiver receiver) {
     this.reduceFunction = reduce;
-    this.singularReceiver = receiver;
+    this.bulkReceiver = receiver;
     this.limitPerKey = 1;
     this.isFinalReceiver = true;
   }
 
   @Override
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public boolean progress() {
     boolean needsFurtherProgress = false;
     boolean sourcesFinished = false;
@@ -53,12 +61,36 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
       if (sourcesFinished && dataFlowOperation.isDelegeteComplete()) {
         batchDone.put(target, true);
         //TODO: check if we can simply remove the data, that is use messages.remove()
-        singularReceiver.receive(target, messages.get(target));
+        bulkReceiver.receive(target, new ReduceIterator(messages.get(target)));
       }
 
 
     }
 
     return needsFurtherProgress;
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private class ReduceIterator<T extends Pair> implements Iterator<Pair> {
+
+    private Map<Object, Queue<Object>> messageMap;
+    private Queue<Object> keyList = new LinkedList<>();
+
+    ReduceIterator(Map<Object, Queue<Object>> messageMap) {
+      this.messageMap = messageMap;
+      keyList.addAll(messageMap.keySet());
+    }
+
+    @Override
+    public boolean hasNext() {
+      return !keyList.isEmpty();
+    }
+
+    @Override
+    public ImmutablePair next() {
+      Object key = keyList.poll();
+      Object value = messageMap.remove(key);
+      return new ImmutablePair(key, value);
+    }
   }
 }
