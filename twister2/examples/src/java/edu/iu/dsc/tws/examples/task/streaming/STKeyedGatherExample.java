@@ -9,34 +9,33 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.internal.task.streaming;
+package edu.iu.dsc.tws.examples.task.streaming;
 
 import java.util.List;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.examples.internal.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.internal.task.TaskExamples;
+import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.task.TaskExamples;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
-public class STAllReduceExample extends BenchTaskWorker {
+public class STKeyedGatherExample extends BenchTaskWorker {
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int psource = taskStages.get(0);
     int psink = taskStages.get(1);
-    Op operation = Op.SUM;
+    DataType keyType = DataType.OBJECT;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseStreamSource g = taskExamples.getStreamSourceClass("allreduce", edge);
-    BaseStreamSink r = taskExamples.getStreamSinkClass("allreduce");
+    BaseStreamSource g = taskExamples.getStreamSourceClass("keyed-gather", edge);
+    BaseStreamSink r = taskExamples.getStreamSinkClass("keyed-gather");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.allreduce(SOURCE, edge, operation, dataType);
+    computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
 }

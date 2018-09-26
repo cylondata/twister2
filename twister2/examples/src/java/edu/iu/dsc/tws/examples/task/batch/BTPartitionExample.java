@@ -9,30 +9,31 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.internal.task.streaming;
+package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.List;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.examples.internal.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.internal.task.TaskExamples;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
+import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.task.TaskExamples;
+import edu.iu.dsc.tws.task.batch.BaseBatchSink;
+import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
-public class STBroadCastExample extends BenchTaskWorker {
-
+public class BTPartitionExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int psource = taskStages.get(0);
     int psink = taskStages.get(1);
+    DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseStreamSource g = taskExamples.getStreamSourceClass("bcast", edge);
-    BaseStreamSink r = taskExamples.getStreamSinkClass("bcast");
+    BaseBatchSource g = taskExamples.getBatchSourceClass("partition", edge);
+    BaseBatchSink r = taskExamples.getBatchSinkClass("partition");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.broadcast(SOURCE, edge);
+    computeConnection.partition(SOURCE, edge, dataType);
     return taskGraphBuilder;
   }
 }

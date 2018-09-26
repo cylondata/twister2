@@ -9,35 +9,32 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.internal.task.batch;
+package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.List;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.examples.internal.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.internal.task.TaskExamples;
+import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.task.TaskExamples;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
-public class BTReduceExample extends BenchTaskWorker {
+public class BTPartitionKeyedExample extends BenchTaskWorker {
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int psource = taskStages.get(0);
     int psink = taskStages.get(1);
-    Op operation = Op.SUM;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getBatchSourceClass("reduce", edge);
-    BaseBatchSink r = taskExamples.getBatchSinkClass("reduce");
+    BaseBatchSource g = taskExamples.getBatchSourceClass("keyed-partition", edge);
+    BaseBatchSink r = taskExamples.getBatchSinkClass("keyed-partition");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.reduce(SOURCE, edge, operation, dataType);
     return taskGraphBuilder;
+    //keyed partition not implemented yet
   }
-
 }

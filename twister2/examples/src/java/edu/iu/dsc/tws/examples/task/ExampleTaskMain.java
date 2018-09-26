@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.internal.task;
+package edu.iu.dsc.tws.examples.task;
 
 import java.util.HashMap;
 import java.util.logging.Logger;
@@ -25,25 +25,26 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.Constants;
-import edu.iu.dsc.tws.examples.internal.task.batch.BTAllGatherExample;
-import edu.iu.dsc.tws.examples.internal.task.batch.BTAllReduceExample;
-import edu.iu.dsc.tws.examples.internal.task.batch.BTBroadCastExample;
-import edu.iu.dsc.tws.examples.internal.task.batch.BTGatherExample;
-import edu.iu.dsc.tws.examples.internal.task.batch.BTKeyedGatherExample;
-import edu.iu.dsc.tws.examples.internal.task.batch.BTKeyedReduceExample;
-import edu.iu.dsc.tws.examples.internal.task.batch.BTPartitionKeyedExample;
-import edu.iu.dsc.tws.examples.internal.task.batch.BTReduceExample;
-import edu.iu.dsc.tws.examples.internal.task.streaming.STAllGatherExample;
-import edu.iu.dsc.tws.examples.internal.task.streaming.STAllReduceExample;
-import edu.iu.dsc.tws.examples.internal.task.streaming.STBroadCastExample;
-import edu.iu.dsc.tws.examples.internal.task.streaming.STGatherExample;
-import edu.iu.dsc.tws.examples.internal.task.streaming.STKeyedGatherExample;
-import edu.iu.dsc.tws.examples.internal.task.streaming.STKeyedReduceExample;
-import edu.iu.dsc.tws.examples.internal.task.streaming.STPartitionExample;
-import edu.iu.dsc.tws.examples.internal.task.streaming.STPartitionKeyedExample;
-import edu.iu.dsc.tws.examples.internal.task.streaming.STReduceExample;
+import edu.iu.dsc.tws.examples.task.batch.BTAllGatherExample;
+import edu.iu.dsc.tws.examples.task.batch.BTAllReduceExample;
+import edu.iu.dsc.tws.examples.task.batch.BTBroadCastExample;
+import edu.iu.dsc.tws.examples.task.batch.BTGatherExample;
+import edu.iu.dsc.tws.examples.task.batch.BTKeyedGatherExample;
+import edu.iu.dsc.tws.examples.task.batch.BTKeyedReduceExample;
+import edu.iu.dsc.tws.examples.task.batch.BTPartitionKeyedExample;
+import edu.iu.dsc.tws.examples.task.batch.BTReduceExample;
+import edu.iu.dsc.tws.examples.task.streaming.STAllGatherExample;
+import edu.iu.dsc.tws.examples.task.streaming.STAllReduceExample;
+import edu.iu.dsc.tws.examples.task.streaming.STBroadCastExample;
+import edu.iu.dsc.tws.examples.task.streaming.STGatherExample;
+import edu.iu.dsc.tws.examples.task.streaming.STKeyedGatherExample;
+import edu.iu.dsc.tws.examples.task.streaming.STKeyedReduceExample;
+import edu.iu.dsc.tws.examples.task.streaming.STPartitionExample;
+import edu.iu.dsc.tws.examples.task.streaming.STPartitionKeyedExample;
+import edu.iu.dsc.tws.examples.task.streaming.STReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 

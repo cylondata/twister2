@@ -9,18 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.internal.task.batch;
+package edu.iu.dsc.tws.examples.task.streaming;
 
 import java.util.List;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.examples.internal.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.internal.task.TaskExamples;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
+import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.task.TaskExamples;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
-public class BTPartitionExample extends BenchTaskWorker {
+public class STPartitionKeyedExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
@@ -29,11 +29,11 @@ public class BTPartitionExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getBatchSourceClass("partition", edge);
-    BaseBatchSink r = taskExamples.getBatchSinkClass("partition");
+    BaseStreamSource g = taskExamples.getStreamSourceClass("keyed-partition", edge);
+    BaseStreamSink r = taskExamples.getStreamSinkClass("keyed-partition");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.partition(SOURCE, edge, dataType);
+    //keyed partition not implemented yet
     return taskGraphBuilder;
   }
 }

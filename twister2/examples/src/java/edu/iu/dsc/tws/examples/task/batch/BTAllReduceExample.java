@@ -9,20 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.internal.task.streaming;
+package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.List;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.examples.internal.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.internal.task.TaskExamples;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
+import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.task.TaskExamples;
+import edu.iu.dsc.tws.task.batch.BaseBatchSink;
+import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
-public class STKeyedReduceExample extends BenchTaskWorker {
+public class BTAllReduceExample extends BenchTaskWorker {
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
@@ -30,20 +29,14 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     int psource = taskStages.get(0);
     int psink = taskStages.get(1);
     Op operation = Op.SUM;
-    DataType keyType = DataType.OBJECT;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseStreamSource g = taskExamples.getStreamSourceClass("keyed-reduce", edge);
-    BaseStreamSink r = taskExamples.getStreamSinkClass("keyed-reduce");
+    BaseBatchSource g = taskExamples.getBatchSourceClass("allreduce", edge);
+    BaseBatchSink r = taskExamples.getBatchSinkClass("allreduce");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.keyedReduce(SOURCE, edge, new IFunction() {
-      @Override
-      public Object onMessage(Object object1, Object object2) {
-        return object1;
-      }
-    }, keyType, dataType);
+    computeConnection.allreduce(SOURCE, edge, operation, dataType);
     return taskGraphBuilder;
   }
 }

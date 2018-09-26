@@ -9,20 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.internal.task.batch;
+package edu.iu.dsc.tws.examples.task.streaming;
 
 import java.util.List;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.examples.internal.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.internal.task.TaskExamples;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
+import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.task.TaskExamples;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
+import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
-public class BTAllReduceExample extends BenchTaskWorker {
-
+public class STReduceExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
@@ -32,11 +31,12 @@ public class BTAllReduceExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getBatchSourceClass("allreduce", edge);
-    BaseBatchSink r = taskExamples.getBatchSinkClass("allreduce");
+    BaseStreamSource g = taskExamples.getStreamSourceClass("sreduce", edge);
+    BaseStreamSink r = taskExamples.getStreamSinkClass("sreduce");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.allreduce(SOURCE, edge, operation, dataType);
+    computeConnection.reduce(SOURCE, edge, operation, dataType);
     return taskGraphBuilder;
   }
+
 }
