@@ -12,7 +12,14 @@
 
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
@@ -36,6 +43,7 @@ public class KGatherBatchFinalReceiver extends KeyedReceiver {
   }
 
   @Override
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public boolean progress() {
     boolean needsFurtherProgress = false;
     boolean sourcesFinished = false;
@@ -54,12 +62,36 @@ public class KGatherBatchFinalReceiver extends KeyedReceiver {
       if (sourcesFinished && dataFlowOperation.isDelegeteComplete()) {
         batchDone.put(target, true);
         //TODO: check if we can simply remove the data, that is use messages.remove()
-        //bulkReceiver.receive(target, messages.get(target));
+        bulkReceiver.receive(target, new GatherIterator(messages.get(target)));
       }
 
 
     }
 
     return needsFurtherProgress;
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private class GatherIterator<T extends Pair> implements Iterator<Pair> {
+
+    private Map<Object, Queue<Object>> messageMap;
+    private Queue<Object> keyList = new LinkedList<>();
+
+    GatherIterator(Map<Object, Queue<Object>> messageMap) {
+      this.messageMap = messageMap;
+      keyList.addAll(messageMap.keySet());
+    }
+
+    @Override
+    public boolean hasNext() {
+      return !keyList.isEmpty();
+    }
+
+    @Override
+    public ImmutablePair next() {
+      Object key = keyList.poll();
+      Object value = messageMap.remove(key);
+      return new ImmutablePair(key, value);
+    }
   }
 }
