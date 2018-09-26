@@ -49,6 +49,7 @@
   * [Developers](documentation/developers/README.md)
     * [Developer Environment](documentation/developers/developer-environment.md)
     * [Developer](documentation/developers/developer.md)
+    * [FAQ](documentation/developers/faq.md)
 * [Examples](examples/README.md)
   * [Communication](examples/communication.md)
   * [Examples](examples/examples.md)
