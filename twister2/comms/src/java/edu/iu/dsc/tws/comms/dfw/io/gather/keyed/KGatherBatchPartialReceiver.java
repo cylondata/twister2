@@ -18,7 +18,6 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 
 /**
@@ -78,15 +77,8 @@ public class KGatherBatchPartialReceiver extends KeyedReceiver {
             if (sourcesFinished && targetSendQueue.size() == 1) {
               flags = MessageFlags.LAST;
             }
-            KeyedContent current = (KeyedContent) targetSendQueue.poll();
-            if (current.getValue() instanceof List) {
-              sendList.addAll((ArrayList) current.getValue());
-            } else {
-              sendList.add(current);
-            }
+            sendList.add(targetSendQueue.poll());
           }
-
-
         }
 
         if (!sendList.isEmpty()) {
