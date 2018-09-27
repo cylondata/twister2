@@ -231,7 +231,8 @@ public abstract class KeyedReceiver implements MessageReceiver {
     } else {
       KeyedContent keyedContent = (KeyedContent) object;
       if (messagesPerTarget.containsKey(keyedContent.getKey())) {
-        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey || isFinalBatchReceiver) {
+        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey
+            || isFinalBatchReceiver) {
           return messagesPerTarget.get(keyedContent.getKey()).offer(keyedContent.getValue());
         } else {
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
