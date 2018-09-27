@@ -33,7 +33,6 @@ public class KReduceStreamingFinalReceiver extends KReduceStreamingReceiver {
     this.reduceFunction = reduce;
     this.singularReceiver = receiver;
     this.limitPerKey = 1;
-    this.isFinalReceiver = true;
     this.windowSize = window;
     this.localWindowCount = 0;
   }

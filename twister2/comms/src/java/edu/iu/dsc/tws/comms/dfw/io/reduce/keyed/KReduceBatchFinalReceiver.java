@@ -38,7 +38,7 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
     this.reduceFunction = reduce;
     this.bulkReceiver = receiver;
     this.limitPerKey = 1;
-    this.isFinalReceiver = true;
+    this.isFinalBatchReceiver = true;
   }
 
   @Override

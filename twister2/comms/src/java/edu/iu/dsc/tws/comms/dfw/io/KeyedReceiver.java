@@ -91,11 +91,11 @@ public abstract class KeyedReceiver implements MessageReceiver {
   protected Map<Integer, Boolean> isEmptySent = new HashMap<>();
 
   /**
-   * Indicates whether the receiver instance is a final receiver or not. The value is set to
-   * false by default. If the receiver is a final receiver the sendQueue data structure is not used
-   * the data is always kept in the messages data structure for efficiency
+   * Indicates whether the receiver instance is a final batch receiver or not. The value is set to
+   * false by default. If the receiver is a final batch receiver the sendQueue data structure
+   * is not used the data is always kept in the messages data structure for efficiency
    */
-  protected boolean isFinalReceiver = false;
+  protected boolean isFinalBatchReceiver = false;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -135,7 +135,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
 
     if ((flags & MessageFlags.END) == MessageFlags.END) {
       finishedMessages.put(source, true);
-      if (!isFinalReceiver && isSourcesFinished(target)) {
+      if (!isFinalBatchReceiver && isSourcesFinished(target)) {
         return moveMessagesToSendQueue(target, messages.get(target));
       }
       return true;
@@ -153,7 +153,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
         finishedMessages.put(source, true);
         //TODO: the finish of the move may not happen for LAST flags since the method to move
         //TODO: may return false
-        if (!isFinalReceiver && isSourcesFinished(target)) {
+        if (!isFinalBatchReceiver && isSourcesFinished(target)) {
           moveMessagesToSendQueue(target, messages.get(target));
         }
       }
@@ -174,7 +174,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
   @SuppressWarnings("rawtypes")
   protected boolean offerMessage(int target, Object object) {
     Map<Object, Queue<Object>> messagesPerTarget = messages.get(target);
-    if (!isFinalReceiver && messagesPerTarget.size() > keyLimit) {
+    if (!isFinalBatchReceiver && messagesPerTarget.size() > keyLimit) {
       LOG.fine(String.format("Executor %d Partial cannot add any further keys needs flush ",
           executor));
       moveMessagesToSendQueue(target, messagesPerTarget);
@@ -189,7 +189,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
         //If any of the keys are full the method returns false because partial objects cannot be
         //added to the messages data structure
         Object key = keyedContent.getKey();
-        if (!isFinalReceiver && messagesPerTarget.containsKey(key)
+        if (!isFinalBatchReceiver && messagesPerTarget.containsKey(key)
             && messagesPerTarget.get(key).size() >= limitPerKey) {
           moveMessageToSendQueue(target, messagesPerTarget, keyedContent.getKey());
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
@@ -231,7 +231,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
     } else {
       KeyedContent keyedContent = (KeyedContent) object;
       if (messagesPerTarget.containsKey(keyedContent.getKey())) {
-        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey || isFinalReceiver) {
+        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey || isFinalBatchReceiver) {
           return messagesPerTarget.get(keyedContent.getKey()).offer(keyedContent.getValue());
         } else {
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "

@@ -50,7 +50,7 @@ public abstract class KReduceBatchReceiver extends KeyedReceiver {
 
     Map<Object, Queue<Object>> messagesPerTarget = messages.get(target);
 
-    if (!isFinalReceiver && messagesPerTarget.size() > keyLimit) {
+    if (!isFinalBatchReceiver && messagesPerTarget.size() > keyLimit) {
       LOG.fine(String.format("Executor %d Partial cannot add any further keys needs flush ",
           executor));
       moveMessagesToSendQueue(target, messagesPerTarget);
