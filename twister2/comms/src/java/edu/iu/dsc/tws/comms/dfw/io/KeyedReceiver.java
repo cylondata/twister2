@@ -38,7 +38,8 @@ public abstract class KeyedReceiver implements MessageReceiver {
 
   /**
    * The buffer limit for single key. Messages are not buffered for a key after this limit is
-   * reached
+   * reached. The limit per key is not strictly enforced and the structure may store several more
+   * values past this limit for some edge cases.
    */
   protected int limitPerKey;
 
