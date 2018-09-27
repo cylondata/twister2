@@ -1,22 +1,13 @@
-# Introduction
+# Twister2
 
-Twister2 is a composable big data framework supporting streaming, data pipelines and analytics. Our vision is to build a robust, simple to use data analytics solution that can leverage both clouds and high performance computing infrastructure.
+Twister2 provides a data analytics hosting environment where it supports differet data analytcs including streaming, data pipelines and iterative computations. 
 
-We started the project with the vision described in the paper [Twister2 Design of a Big Data Toolkit](http://dsc.soic.indiana.edu/publications/twister2_design_big_data_toolkit.pdf).
+Unlike many other big data systems that are desinged around user APIs, Twister2 is built from bottom up to support different APIs and workloads. Our vision for Twister2 as a complete computuing environment for data analytics can be found in the figure below.
 
-## Contact
+![alt text](documentation/images/tws-architecture.png)
 
-We are a global open community welcoming contributions to the project in any form.
+The goal of the project is to build different layers as independent components that can be composed together depending on the requirements of the applications. Details about these components can be found in the table below.
 
-### Mailing List
+![alt text](documentation/images/twister2-architecture.png)
 
-Twister2 Google Groups: [twister2@googlegroups.com](https://groups.google.com/forum/#!forum/twister2)
-
-### Slack Channel
-
-Twister2 Slack Channel: [https://dsc-twister.slack.com](https://dsc-twister.slack.com)
-
-## License
-
-Licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
