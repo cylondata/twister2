@@ -12,15 +12,13 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
-import edu.iu.dsc.tws.data.utils.HdfsDataContext;
 import edu.iu.dsc.tws.data.utils.HdfsUtils;
 
 /**
@@ -32,79 +30,62 @@ public class KMeansHDFSFileReader {
 
   private Config config;
   private HdfsUtils hdfsUtils;
-  private HadoopFileSystem hadoopFileSystem;
 
   public KMeansHDFSFileReader(Config cfg) {
     this.config = cfg;
-    hdfsUtils = new HdfsUtils(this.config);
-    hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
   }
 
   /**
    * It reads the datapoints from the corresponding file and store the data in a two-dimensional
    * array for the later processing.
-   * @param fName
-   * @param dimension
-   * @return
    */
   public double[][] readDataPoints(String fName, int dimension) {
 
-    String fileName = HdfsDataContext.getHdfsDataDirectory(config) + "/" + fName;
-    String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + fileName;
-    Path path = new Path(directoryString);
+    hdfsUtils = new HdfsUtils(this.config, fName);
+    HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+    Path path = hdfsUtils.getPath();
 
-    BufferedReader bufferedReader = null;
-    File f = new File(fName);
-    try {
-      if (hadoopFileSystem.exists(path)) {
-        bufferedReader = new BufferedReader(new InputStreamReader(
-            hadoopFileSystem.open(path)));
-      }
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
-    }
-
-    String line = "";
-    int value = 0;
     int lengthOfFile = hdfsUtils.getLengthOfFile(fName);
-
     double[][] dataPoints = new double[lengthOfFile][dimension];
+    BufferedReader bufferedReader;
     try {
-      while ((line = bufferedReader.readLine()) != null) {
-        String[] data = line.split(",");
-        for (int i = 0; i < dimension; i++) {
-          dataPoints[value][i] = Double.parseDouble(data[i].trim());
+      int value = 0;
+      String line = "";
+      if (hadoopFileSystem.exists(path)) {
+        bufferedReader = new BufferedReader(new InputStreamReader(hadoopFileSystem.open(path)));
+        while ((line = bufferedReader.readLine()) != null) {
+          String[] data = line.split(",");
+          for (int i = 0; i < dimension; i++) {
+            dataPoints[value][i] = Double.parseDouble(data[i].trim());
+          }
+          value++;
         }
-        value++;
+        bufferedReader.close();
+      } else {
+        throw new FileNotFoundException("File Not Found In HDFS");
       }
     } catch (IOException e) {
       e.printStackTrace();
-    } finally {
-      try {
-        bufferedReader.close();
-        hadoopFileSystem.close();
-      } catch (IOException ioe) {
-        ioe.printStackTrace();
-      }
     }
     return dataPoints;
   }
 
   /**
-   *  It reads the centroids from the corresponding file and store the data in a two-dimensional
-   *  array for the later processing. The size of the two-dimensional array should be equal to the
-   *  number of clusters and the dimension considered for the clustering process.
-   * @param fileName
-   * @param dimension
-   * @param numberOfClusters
-   * @return
+   * It reads the centroids from the corresponding file and store the data in a two-dimensional
+   * array for the later processing. The size of the two-dimensional array should be equal to the
+   * number of clusters and the dimension considered for the clustering process.
    */
-  public double[][] readCentroids(String fileName, int dimension, int numberOfClusters) {
+  public double[][] readCentroids(String fName, int dimension, int numberOfClusters) {
+
+    hdfsUtils = new HdfsUtils(this.config, fName);
+    HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+    Path path = hdfsUtils.getPath();
+
     double[][] centroids = new double[numberOfClusters][dimension];
     BufferedReader bufferedReader = null;
     try {
       int value = 0;
-      bufferedReader = new BufferedReader(new FileReader(fileName));
+      bufferedReader = new BufferedReader(new InputStreamReader(hadoopFileSystem.open(path)));
       String line;
       while ((line = bufferedReader.readLine()) != null) {
         String[] data = line.split(",");
@@ -120,12 +101,15 @@ public class KMeansHDFSFileReader {
       e.printStackTrace();
     } finally {
       try {
-        bufferedReader.close();
+        if (bufferedReader != null) {
+          bufferedReader.close();
+        }
       } catch (IOException ioe) {
         ioe.printStackTrace();
       }
     }
     return centroids;
   }
+
 }
 

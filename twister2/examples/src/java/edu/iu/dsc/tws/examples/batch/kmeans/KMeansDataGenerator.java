@@ -13,7 +13,16 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.io.OutputStreamWriter;
 import java.util.Random;
+import java.util.StringTokenizer;
+import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.hdfs.HadoopDataOutputStream;
+import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
+import edu.iu.dsc.tws.data.utils.HdfsUtils;
 
 /**
  * This class is to generate the datapoints and centroid values in a random manner and write the
@@ -21,72 +30,167 @@ import java.util.Random;
  */
 public class KMeansDataGenerator {
 
+  private static final Logger LOG = Logger.getLogger(KMeansDataGenerator.class.getName());
+
   protected KMeansDataGenerator() {
   }
 
   /**
    * This method generates the datapoints which is based on the which is based on the number of data
    * points, required dimension, minimum and maximum value (for the random number generation).
-   * @param fileName
-   * @param numPoints
-   * @param dimension
-   * @param minValue
-   * @param maxValue
    */
   public static void generateDataPointsFile(String fileName, int numPoints, int dimension,
-                                            int minValue, int maxValue) {
+                                            int seedValue, Config config,
+                                            String fileSys) {
+
+    StringBuffer datapoints = new StringBuffer();
+    Random r = new Random(seedValue);
     try {
-      BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName));
       for (int i = 0; i < numPoints; i++) {
         String line = "";
         for (int j = 0; j < dimension; j++) {
-          Random r = new Random();
-          line += minValue + (maxValue - minValue) * r.nextDouble();
+          double randomValue = r.nextDouble();
+          line += randomValue;
           if (j == 0) {
             line += "," + "\t";
           }
         }
-        line += "\n";
-        bufferedWriter.write(line);
+        datapoints.append(line);
+        datapoints.append("\n");
       }
-      bufferedWriter.flush();
-      bufferedWriter.close();
     } catch (Exception e) {
       e.printStackTrace();
     }
+    writeToPointsFile(datapoints.toString(), fileName, config, fileSys);
   }
 
   /**
    * This method generates the datapoints which is based on the which is based on the number of
    * centroids, required dimension, minimum and maximum value (for the random number generation).
-   * @param fileName
-   * @param numCentroids
-   * @param dimension
-   * @param minValue
-   * @param maxValue
    */
-
   public static void generateCentroidFile(String fileName, int numCentroids, int dimension,
-                                          int minValue, int maxValue) {
+                                          int seedValue, Config config,
+                                          String fileSys) {
+
+    StringBuffer centroids = new StringBuffer();
+    Random r = new Random(seedValue);
     try {
-      BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName));
       for (int i = 0; i < numCentroids; i++) {
         String line = "";
         for (int j = 0; j < dimension; j++) {
-          Random r = new Random();
-          line += minValue + (maxValue - minValue) * r.nextDouble();
+          double randomValue = r.nextDouble();
+          line += randomValue;
           if (j == 0) {
             line += "," + "\t";
           }
         }
-        line += "\n";
-        bufferedWriter.write(line);
+        centroids.append(line);
+        centroids.append("\n");
       }
-      bufferedWriter.flush();
-      bufferedWriter.close();
     } catch (Exception e) {
       e.printStackTrace();
     }
+    writeToCentroidFile(centroids.toString(), fileName, config, fileSys);
   }
 
+  /**
+   * This method writes the data points into the local filesystem or HDFS which is based on the user
+   * submitted value.
+   */
+  private static void writeToPointsFile(String datapoints, String fileName, Config config,
+                                        String fileSystem) {
+
+    BufferedWriter bufferedWriter = null;
+    StringTokenizer stringTokenizer = new StringTokenizer(datapoints, "\n");
+
+    HadoopDataOutputStream dataOutputStream = null;
+    try {
+      if ("hdfs".equals(fileSystem)) {
+        HdfsUtils hdfsUtils = new HdfsUtils(config, fileName);
+        HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+        Path path = hdfsUtils.getPath();
+
+        if (!hadoopFileSystem.exists(path)) {
+          dataOutputStream = hadoopFileSystem.create(path);
+          bufferedWriter = new BufferedWriter(new OutputStreamWriter(dataOutputStream, "UTF-8"));
+          while (stringTokenizer.hasMoreTokens()) {
+            String out = stringTokenizer.nextToken().trim();
+            bufferedWriter.write(out);
+            bufferedWriter.write("\n");
+          }
+        } else {
+          throw new RuntimeException("File already exists in the hdfs, remove it from hdfs");
+        }
+      } else if ("local".equals(fileSystem)) {
+        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
+        while (stringTokenizer.hasMoreTokens()) {
+          bufferedWriter.write(stringTokenizer.nextToken().trim());
+          bufferedWriter.write("\n");
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        bufferedWriter.flush();
+        bufferedWriter.close();
+        if (dataOutputStream != null) {
+          dataOutputStream.close();
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+  }
+
+  /**
+   * This method writes the centroids into the local filesystem or HDFS which is based on the user
+   * submitted value.
+   */
+  private static void writeToCentroidFile(String datapoints, String fileName,
+                                          Config config, String fileSystem) {
+    BufferedWriter bufferedWriter = null;
+    StringTokenizer stringTokenizer = new StringTokenizer(datapoints, "\n");
+    HadoopDataOutputStream dataOutputStream = null;
+    try {
+      if ("hdfs".equals(fileSystem)) {
+        HdfsUtils hdfsUtils = new HdfsUtils(config, fileName);
+        HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+        Path path = hdfsUtils.getPath();
+
+        if (!hadoopFileSystem.exists(path)) {
+          dataOutputStream = hadoopFileSystem.create(path);
+          bufferedWriter = new BufferedWriter(new OutputStreamWriter(dataOutputStream, "UTF-8"));
+
+          while (stringTokenizer.hasMoreTokens()) {
+            String out = stringTokenizer.nextToken().trim();
+            bufferedWriter.write(out);
+            bufferedWriter.write("\n");
+          }
+        } else {
+          throw new RuntimeException("File already exists in the hdfs, remove it from hdfs");
+        }
+      } else if ("local".equals(fileSystem)) {
+        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
+        while (stringTokenizer.hasMoreTokens()) {
+          bufferedWriter.write(stringTokenizer.nextToken().trim());
+          bufferedWriter.write("\n");
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        bufferedWriter.flush();
+        bufferedWriter.close();
+        if (dataOutputStream != null) {
+          dataOutputStream.close();
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
 }
+

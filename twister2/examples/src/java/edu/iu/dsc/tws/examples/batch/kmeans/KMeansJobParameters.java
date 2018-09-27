@@ -39,7 +39,6 @@ public class KMeansJobParameters {
    */
   private int clusters;
 
-
   /**
    * Number of datapoints to be generated
    */
@@ -61,14 +60,14 @@ public class KMeansJobParameters {
   private String fileSystem;
 
   /**
-   * Minimum value for the random number generation
+   * Seed value for the data points random number generation
    */
-  private int minValue;
+  private int pointsSeedValue;
 
   /**
-   * Maximum value for the random number generation
+   * Seed value for the centroids random number generation
    */
-  private int maxValue;
+  private int centroidsSeedValue;
 
   /**
    * Data input value represents data to be generated or else to read it directly from
@@ -119,12 +118,12 @@ public class KMeansJobParameters {
     return fileSystem;
   }
 
-  public int getMinValue() {
-    return minValue;
+  public int getPointsSeedValue() {
+    return pointsSeedValue;
   }
 
-  public int getMaxValue() {
-    return maxValue;
+  public int getCentroidsSeedValue() {
+    return centroidsSeedValue;
   }
 
   public String getDataInput() {
@@ -159,8 +158,10 @@ public class KMeansJobParameters {
     int points = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_NUMBER_OF_POINTS));
 
     int numberOfClusters = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_CLUSTERS));
-    int minVal = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_MINVALUE));
-    int maxVal = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_MAXVALUE));
+    int pointsVal = Integer.parseInt(cfg.getStringValue(
+        KMeansConstants.ARGS_POINTS_SEED_VALUE));
+    int centroidsVal = Integer.parseInt(cfg.getStringValue(
+        KMeansConstants.ARGS_CENTERS_SEED_VALUE));
 
     KMeansJobParameters jobParameters = new KMeansJobParameters(iterations, workers);
 
@@ -176,8 +177,8 @@ public class KMeansJobParameters {
     jobParameters.dataInput = dataInput;
 
     jobParameters.clusters = numberOfClusters;
-    jobParameters.minValue = minVal;
-    jobParameters.maxValue = maxVal;
+    jobParameters.pointsSeedValue = pointsVal;
+    jobParameters.centroidsSeedValue = centroidsVal;
 
     return jobParameters;
   }
@@ -185,7 +186,7 @@ public class KMeansJobParameters {
   @Override
   public String toString() {
 
-    LOG.info("workers:" + workers + "\titeration:" + iterations + "\tdimension:" + dimension
+    LOG.fine("workers:" + workers + "\titeration:" + iterations + "\tdimension:" + dimension
         + "\tnumber of clusters:" + clusters + "\tfilename:" + fileName
         + "\tdatapoints file:" + pointsFile + "\tcenters file:" + centersFile
         + "\tfilesys:" + fileSystem);
