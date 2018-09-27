@@ -111,7 +111,7 @@ public class WordCountWorker implements IWorker {
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
-      BatchWordSource target = new BatchWordSource(keyGather, 100, t, 10000);
+      BatchWordSource target = new BatchWordSource(keyGather, 1000, t, 10);
       batchWordSources.add(target);
       Thread mapThread = new Thread(target);
       mapThread.start();
