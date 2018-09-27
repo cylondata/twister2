@@ -31,7 +31,7 @@ public class STReduceExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseStreamSource g = taskExamples.getStreamSourceClass("sreduce", edge);
+    BaseStreamSource g = new SourceStreamTask(edge);
     BaseStreamSink r = taskExamples.getStreamSinkClass("sreduce");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);

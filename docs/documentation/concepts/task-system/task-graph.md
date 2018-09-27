@@ -28,9 +28,9 @@ In directed task graph, the edges in the task graph that connects the task verte
 direction as shown in Fig.1 whereas in undirected task graph, the edges in the task graph that 
 connects the task vertexes have no direction as shown in Fig 2.
 
-![Alt text](https://github.com/DSC-SPIDAL/twister2/tree/master/docs/documents/architecture/tasksystem/taskgraph/directed.png)
+![Alt text](directed.png)
 
-![Alt text](https://github.com/DSC-SPIDAL/twister2/tree/master/docs/documents/architecture/tasksystem/taskgraph/undirected.png)
+![Alt text](undirected.png)
 
 The present taskgraph system is capable of generating/considering only directed dataflow task graph 
 which consists of task vertices and task edges. The directed dataflow task graph represents that

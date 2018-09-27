@@ -32,7 +32,7 @@ public class STAllReduceExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseStreamSource g = taskExamples.getStreamSourceClass("allreduce", edge);
+    BaseStreamSource g = new SourceStreamTask(edge);
     BaseStreamSink r = taskExamples.getStreamSinkClass("allreduce");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
