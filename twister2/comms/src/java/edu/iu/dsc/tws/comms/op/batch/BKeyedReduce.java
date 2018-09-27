@@ -14,10 +14,10 @@ package edu.iu.dsc.tws.comms.op.batch;
 import java.util.HashSet;
 import java.util.Set;
 
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowMultiReduce;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
@@ -40,7 +40,7 @@ public class BKeyedReduce {
 
   public BKeyedReduce(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> destinations, ReduceFunction fnc,
-                      SingularReceiver rcvr, MessageType kType, MessageType dType,
+                      BulkReceiver rcvr, MessageType kType, MessageType dType,
                       DestinationSelector destSelector) {
     this.keyType = kType;
     this.dataType = dType;
@@ -58,7 +58,7 @@ public class BKeyedReduce {
   }
 
   public boolean reduce(int src, Object key, Object data, int flags) {
-    int dest = destinationSelector.next(src, key);
+    int dest = destinationSelector.next(src, key, data);
     return keyedReduce.send(src, new KeyedContent(key, data, keyType,
         dataType), flags, dest);
   }

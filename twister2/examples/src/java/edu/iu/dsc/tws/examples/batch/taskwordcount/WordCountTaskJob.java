@@ -15,43 +15,48 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.api.task.function.ReduceFn;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.examples.internal.task.batch.PartitionBatchTask;
+import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 public class WordCountTaskJob extends TaskWorker {
+  private static final Logger LOG = Logger.getLogger(WordCountTaskJob.class.getName());
+
+  private static final int NUMBER_MESSAGES = 1000;
+
+  private static final String EDGE = "word-reduce";
+
   @Override
   public void execute() {
-    WordSource g = new WordSource();
-    WordAggregator r = new WordAggregator();
+    WordSource source = new WordSource();
+    WordAggregator counter = new WordAggregator();
 
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
-    builder.addSource("word-source", g, 4);
-
-    builder.addSink("word-aggregator", r, 4).keyedReduce("word-source", "reduce", new IFunction() {
-      @Override
-      public Object onMessage(Object object1, Object object2) {
-        return null;
-      }
-    }, DataType.OBJECT, DataType.INTEGER);
+    builder.addSource("word-source", source, 4);
+    builder.addSink("word-aggregator", counter, 4).keyedReduce("word-source", EDGE,
+        new ReduceFn(Op.SUM, DataType.INTEGER), DataType.OBJECT, DataType.INTEGER);
     builder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
@@ -63,46 +68,65 @@ public class WordCountTaskJob extends TaskWorker {
   private static class WordSource extends BaseBatchSource {
     private static final long serialVersionUID = -254264903510284748L;
 
+    private static final int MAX_CHARS = 5;
+    private static final int NO_OF_SAMPLE_WORDS = 100;
+
     private int count = 0;
+
+    private RandomString randomString;
+
+    private List<String> sampleWords = new ArrayList<>();
+
+    private Random random;
+
+    @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.random = new Random();
+      this.randomString = new RandomString(MAX_CHARS, new Random(), RandomString.ALPHANUM);
+      for (int i = 0; i < NO_OF_SAMPLE_WORDS; i++) {
+        sampleWords.add(randomString.nextRandomSizeString());
+      }
+    }
 
     @Override
     public void execute() {
-      if (count == 999) {
-        if (context.writeEnd("partition-edge", "Hello")) {
+      String word = sampleWords.get(random.nextInt(sampleWords.size()));
+
+      if (count == NUMBER_MESSAGES - 1) {
+        if (context.writeEnd(EDGE, word, new int[]{1})) {
           count++;
         }
-      } else if (count < 999) {
-        if (context.write("partition-edge", "Hello")) {
+      } else if (count < NUMBER_MESSAGES - 1) {
+        if (context.write(EDGE, word, new int[]{1})) {
           count++;
         }
       }
     }
   }
 
+  @SuppressWarnings({"unchecked", "rawtypes"})
   private static class WordAggregator extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
+      Iterator<Object> it;
       if (message.getContent() instanceof Iterator) {
-        while (((Iterator) message.getContent()).hasNext()) {
-          ((Iterator) message.getContent()).next();
-          count++;
+        it = (Iterator<Object>) message.getContent();
+
+        while (it.hasNext()) {
+          Object next = it.next();
+          if (next instanceof ImmutablePair) {
+            ImmutablePair kc = (ImmutablePair) next;
+            LOG.log(Level.INFO, String.format("%d Word %s count %s",
+                context.taskId(), kc.getKey(), ((int[]) kc.getValue())[0]));
+          }
         }
       }
+
       return true;
     }
-  }
-
-  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
-    List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
-      workers.add(w);
-    }
-
-    return new WorkerPlan(workers);
   }
 
   public static void main(String[] args) {
@@ -112,8 +136,8 @@ public class WordCountTaskJob extends TaskWorker {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("wordcount-task");
-    jobBuilder.setWorkerClass(PartitionBatchTask.class.getName());
+    jobBuilder.setName("wordcount-batch-task");
+    jobBuilder.setWorkerClass(WordCountTaskJob.class);
     jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 

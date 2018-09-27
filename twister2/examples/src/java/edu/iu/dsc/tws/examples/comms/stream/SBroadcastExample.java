@@ -53,7 +53,6 @@ public class SBroadcastExample extends BenchWorker {
     bcast = new SBroadCast(communicator, taskPlan, source, targets,
         MessageType.INTEGER, new BCastReceiver());
 
-
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 1);
     for (int t : tasksOfExecutor) {

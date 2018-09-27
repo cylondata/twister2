@@ -11,12 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.wordcount;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -31,32 +31,19 @@ public class WordAggregator implements BulkReceiver {
     isDone = false;
   }
 
-  @Override
+  @SuppressWarnings("rawtypes")
   public boolean receive(int target, Iterator<Object> it) {
-    Map<String, Integer> localwordCounts = new HashMap<>();
     while (it.hasNext()) {
       Object next = it.next();
-      if (next instanceof List) {
-        for (Object o : (List) next) {
-          addWord(localwordCounts, o);
-        }
-      } else {
-        addWord(localwordCounts, next);
+      if (next instanceof ImmutablePair) {
+        ImmutablePair kc = (ImmutablePair) next;
+        LOG.log(Level.INFO, String.format("%d Word %s count %s",
+            target, kc.getKey(), ((int[]) kc.getValue())[0]));
       }
     }
     isDone = true;
-    LOG.info(String.format("Task %d final words: %s", target, localwordCounts));
-    return true;
-  }
 
-  public void addWord(Map<String, Integer> localwordCounts, Object o) {
-    int count = 0;
-    String value = o.toString();
-    if (localwordCounts.containsKey(value)) {
-      count = localwordCounts.get(value);
-    }
-    count++;
-    localwordCounts.put(value, count);
+    return true;
   }
 
   public boolean isDone() {

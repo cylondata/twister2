@@ -24,17 +24,19 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
-import edu.iu.dsc.tws.comms.op.stream.SPartition;
+import edu.iu.dsc.tws.comms.op.stream.SKeyedReduce;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 
 public class WordCountWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
 
-  private SPartition keyGather;
+  private SKeyedReduce keyGather;
 
   private Communicator channel;
 
@@ -66,8 +68,10 @@ public class WordCountWorker implements IWorker {
     setupNetwork(workerController, resources);
 
     // create the communication
-    keyGather = new SPartition(channel, taskPlan, sources, destinations,
-        MessageType.OBJECT, new WordAggregate(), new HashingSelector());
+    keyGather = new SKeyedReduce(channel, taskPlan, sources, destinations,
+        MessageType.OBJECT, MessageType.INTEGER,
+        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
+        new WordAggregate(), new HashingSelector());
 
     scheduleTasks();
     progress();
@@ -96,8 +100,8 @@ public class WordCountWorker implements IWorker {
     if (id < 2) {
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
-        Thread mapThread = new Thread(new StreamingWordSource(config, keyGather, 1000,
-            noOfTasksPerExecutor * id + i, 10, taskPlan));
+        Thread mapThread = new Thread(new StreamingWordSource(keyGather, 1000,
+            noOfTasksPerExecutor * id + i, 10));
         mapThread.start();
       }
     }

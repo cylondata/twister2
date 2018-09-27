@@ -12,17 +12,18 @@
 package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
 import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
@@ -61,7 +62,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
     keyedReduce = new BKeyedReduce(communicator, taskPlan, sources, targets,
         new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
-        new FinalSingularReceiver(), MessageType.INTEGER, MessageType.INTEGER,
+        new FinalBulkReceiver(), MessageType.INTEGER, MessageType.INTEGER,
         new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -98,9 +99,6 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    if (reduceDone && sourcesDone && !keyedReduce.hasPending()) {
-      System.out.println(workerId + " is ............ Done");
-    }
     return reduceDone && sourcesDone && !keyedReduce.hasPending();
   }
 
@@ -113,39 +111,34 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     return true;
   }
 
-  public class FinalSingularReceiver implements SingularReceiver {
+  public class FinalBulkReceiver implements BulkReceiver {
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean receive(int target, Object object) {
 
-      if (object == null) {
+    public boolean receive(int target, Iterator<Object> it) {
+      if (it == null) {
         return true;
       }
-      HashMap<Object, Object> dataMap = (HashMap<Object, Object>) object;
-      for (Object kc : dataMap.values()) {
-        int[] data = (int[]) ((ArrayBlockingQueue) kc).poll();
-        LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
+      while (it.hasNext()) {
+        ImmutablePair<Object, Object> currentPair = (ImmutablePair) it.next();
+        Object key = currentPair.getKey();
+        int[] data = (int[]) currentPair.getValue();
+        LOG.log(Level.INFO, String.format("%d Results : key: %s value: %s", workerId, key,
             Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
-        LOG.log(Level.INFO, String.format("%d Received final input", workerId));
       }
-
-
       reduceDone = true;
-      experimentData.setOutput(object);
 
-      try {
-        verify();
-      } catch (VerificationException e) {
-        LOG.info("Message : " + e.getMessage());
-      }
-      /*LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
-          Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
-      LOG.log(Level.INFO, String.format("%d Received final input", workerId));*/
-
+      //TODO: need to update the verification code
+//      experimentData.setOutput(object);
+//      try {
+//        verify();
+//      } catch (VerificationException e) {
+//        LOG.info("Message : " + e.getMessage());
+//      }
       return true;
     }
   }

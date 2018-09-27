@@ -178,6 +178,9 @@ public class ExampleMain {
         case "gather":
           submitJob(config, workers, jobConfig, SGatherExample.class.getName());
           break;
+        case "keyedgather":
+//          submitJob(config, workers, jobConfig, SKeyedGatherExample.class.getName());
+          break;
         case "allreduce":
           submitJob(config, workers, jobConfig, SAllReduceExample.class.getName());
           break;

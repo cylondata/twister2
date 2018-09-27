@@ -16,23 +16,23 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchFinalReceiver;
 
 public class ReduceMultiBatchFinalReceiver implements MultiMessageReceiver {
   private ReduceFunction reduceFunction;
 
-  private SingularReceiver singularReceiver;
+  private BulkReceiver bulkReceiver;
 
   private Map<Integer, KReduceBatchFinalReceiver> receiverMap = new HashMap<>();
 
   public ReduceMultiBatchFinalReceiver(ReduceFunction reduceFn,
-                                           SingularReceiver reduceRcvr) {
+                                       BulkReceiver reduceRcvr) {
     this.reduceFunction = reduceFn;
-    this.singularReceiver = reduceRcvr;
+    this.bulkReceiver = reduceRcvr;
   }
 
   @Override
@@ -40,7 +40,7 @@ public class ReduceMultiBatchFinalReceiver implements MultiMessageReceiver {
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
       KReduceBatchFinalReceiver finalReceiver =
-          new KReduceBatchFinalReceiver(reduceFunction, singularReceiver);
+          new KReduceBatchFinalReceiver(reduceFunction, bulkReceiver);
       receiverMap.put(e.getKey(), finalReceiver);
       finalReceiver.init(cfg, op, e.getValue());
     }

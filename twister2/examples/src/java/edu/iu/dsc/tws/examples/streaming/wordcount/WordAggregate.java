@@ -14,14 +14,15 @@ package edu.iu.dsc.tws.examples.streaming.wordcount;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 
-public class WordAggregate implements MessageReceiver {
+public class WordAggregate implements SingularReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregate.class.getName());
 
   private int totalCount = 0;
@@ -31,13 +32,19 @@ public class WordAggregate implements MessageReceiver {
   private int executor;
 
   @Override
-  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    TaskPlan plan = op.getTaskPlan();
-    this.executor = op.getTaskPlan().getThisExecutor();
-    LOG.fine(String.format("%d final expected task ids %s", plan.getThisExecutor(), expectedIds));
+  public void init(Config cfg, Set<Integer> targets) {
   }
 
   @Override
+  public boolean receive(int target, Object message) {
+    if (message instanceof KeyedContent) {
+      KeyedContent kc = (KeyedContent) message;
+      LOG.log(Level.INFO, String.format("%d Word %s count %s",
+          target, kc.getKey(), ((int[]) kc.getValue())[0]));
+    }
+    return true;
+  }
+
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     if (object instanceof List) {
       for (Object o : (List) object) {
@@ -61,11 +68,5 @@ public class WordAggregate implements MessageReceiver {
     if (totalCount % 100 == 0) {
       LOG.info(String.format("%d Received words: %d map: %s", executor, totalCount, wordCounts));
     }
-  }
-
-  @Override
-  public boolean progress() {
-    // nothing to do here
-    return true;
   }
 }

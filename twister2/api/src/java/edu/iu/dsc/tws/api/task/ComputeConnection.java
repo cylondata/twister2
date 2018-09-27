@@ -64,6 +64,20 @@ public class ComputeConnection {
   }
 
   /**
+   * Create a broadcast connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @return the ComputeConnection
+   */
+  public ComputeConnection broadcast(String parent, String name) {
+    Edge edge = new Edge(name, OperationNames.BROADCAST);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
    * Create a reduce connection
    *
    * @param parent the parent to connection

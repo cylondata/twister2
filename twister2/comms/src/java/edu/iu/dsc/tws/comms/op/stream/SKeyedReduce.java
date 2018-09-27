@@ -93,7 +93,7 @@ public class SKeyedReduce {
    * @return true if the message is accepted
    */
   public boolean reduce(int src, Object key, Object message, int flags) {
-    int dest = destinationSelector.next(src, key);
+    int dest = destinationSelector.next(src, key, message);
     return keyedReduce.send(src, new KeyedContent(key, message, keyType, dataType), flags, dest);
   }
 
