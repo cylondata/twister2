@@ -11,10 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
-import java.util.Queue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 
 /**
@@ -28,71 +26,5 @@ public class KReduceBatchPartialReceiver extends KReduceBatchReceiver {
     this.reduceFunction = function;
     this.destination = dest;
     this.limitPerKey = 1;
-  }
-
-  @Override
-  public boolean progress() {
-    boolean needsFurtherProgress = false;
-    boolean sourcesFinished = false;
-    boolean isAllQueuesEmpty = false;
-    for (int target : messages.keySet()) {
-
-      //If the batch is done skip progress for this target
-      if (batchDone.get(target)) {
-        needsFurtherProgress = !checkIfEmptyIsSent(target);
-        continue;
-      }
-
-      // now check weather we have the messages for this source to be sent
-      Queue<Object> targetSendQueue = sendQueue.get(target);
-      sourcesFinished = isSourcesFinished(target);
-
-      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
-          && messages.get(target).isEmpty() && targetSendQueue.isEmpty())) {
-        needsFurtherProgress = true;
-      }
-
-      if (!targetSendQueue.isEmpty() || sourcesFinished) {
-        int flags = 0;
-
-        //Used to make sure that the code is not stuck in this while loop if the send keeps getting
-        //rejected
-        boolean canProgress = true;
-        Object current;
-        while (canProgress && (current = targetSendQueue.peek()) != null) {
-          if (sourcesFinished && targetSendQueue.size() == 1) {
-            flags = MessageFlags.LAST;
-          }
-
-          if (dataFlowOperation.sendPartial(target, current, flags, destination)) {
-            targetSendQueue.poll();
-          } else {
-            canProgress = false;
-            needsFurtherProgress = true;
-          }
-        }
-      }
-
-      //In reduce since we remove the key entry once we send it we only need to check if the map is
-      //Empty
-      isAllQueuesEmpty = targetSendQueue.isEmpty();
-      if (!isAllQueuesEmpty) {
-        needsFurtherProgress = true;
-      }
-
-      if (dataFlowOperation.isDelegeteComplete() && sourcesFinished && isAllQueuesEmpty) {
-        if (dataFlowOperation.sendPartial(target, new byte[0],
-            MessageFlags.END, destination)) {
-          isEmptySent.put(target, true);
-        } else {
-          needsFurtherProgress = true;
-        }
-        batchDone.put(target, true);
-        // we don'target want to go through the while loop for this one
-        break;
-      }
-    }
-
-    return needsFurtherProgress;
   }
 }

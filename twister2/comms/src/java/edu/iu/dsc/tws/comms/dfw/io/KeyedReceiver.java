@@ -363,4 +363,103 @@ public abstract class KeyedReceiver implements MessageReceiver {
     }
     return isSent;
   }
+
+  @Override
+  /**
+   * Default progress method for keyed receivers. This method is targeted at partial receivers
+   * which typically execute the same logic. For custom progress logic this method needs to be
+   * overwritten
+   */
+  public boolean progress() {
+    boolean needsFurtherProgress = false;
+    boolean sourcesFinished = false;
+    boolean isAllQueuesEmpty = false;
+    for (int target : messages.keySet()) {
+
+      //If the batch is done skip progress for this target
+      if (batchDone.get(target)) {
+        needsFurtherProgress = !checkIfEmptyIsSent(target);
+        continue;
+      }
+
+      // now check weather we have the messages for this source to be sent
+      Queue<Object> targetSendQueue = sendQueue.get(target);
+      sourcesFinished = isSourcesFinished(target);
+
+      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
+          && messages.get(target).isEmpty() && targetSendQueue.isEmpty())) {
+        needsFurtherProgress = true;
+      }
+
+      if (!targetSendQueue.isEmpty() || sourcesFinished) {
+        needsFurtherProgress = sendToTarget(needsFurtherProgress, sourcesFinished, target,
+            targetSendQueue);
+      }
+
+      //In reduce since we remove the key entry once we send it we only need to check if the map is
+      //Empty
+      isAllQueuesEmpty = isAllQueuesEmpty(targetSendQueue);
+      if (!isAllQueuesEmpty) {
+        needsFurtherProgress = true;
+      }
+
+      if (dataFlowOperation.isDelegeteComplete() && sourcesFinished && isAllQueuesEmpty) {
+        if (dataFlowOperation.sendPartial(target, new byte[0],
+            MessageFlags.END, destination)) {
+          isEmptySent.put(target, true);
+        } else {
+          needsFurtherProgress = true;
+        }
+        batchDone.put(target, true);
+        // we don'target want to go through the while loop for this one
+        break;
+      }
+    }
+
+    return needsFurtherProgress;
+  }
+
+  /**
+   * checks if the queue structures used to send data is empty. If Additional data structures are
+   * used this method needs to be overwritten to include them
+   *
+   * @param targetSendQueue message queue for the current target
+   * @return true if all the related queues and structures are empty
+   */
+  protected boolean isAllQueuesEmpty(Queue<Object> targetSendQueue) {
+    return targetSendQueue.isEmpty();
+  }
+
+  /**
+   * Called from the progress method to perform the communication calls to send the queued messages
+   *
+   * @param needsFurtherProgress current state of needsFurtherProgress value
+   * @param sourcesFinished specifies if the sources have completed
+   * @param target the target(which is a source in this instance) from which the messages are sent
+   * @param targetSendQueue the data structure that contains all the message data
+   * @return true if further progress is needed or false otherwise
+   */
+  protected boolean sendToTarget(boolean needsFurtherProgress, boolean sourcesFinished, int target,
+                                 Queue<Object> targetSendQueue) {
+    int flags = 0;
+
+    //Used to make sure that the code is not stuck in this while loop if the send keeps getting
+    //rejected
+    boolean needsProgress = needsFurtherProgress;
+    boolean canProgress = true;
+    Object current;
+    while (canProgress && (current = targetSendQueue.peek()) != null) {
+      if (sourcesFinished && targetSendQueue.size() == 1) {
+        flags = MessageFlags.LAST;
+      }
+
+      if (dataFlowOperation.sendPartial(target, current, flags, destination)) {
+        targetSendQueue.poll();
+      } else {
+        canProgress = false;
+        needsProgress = true;
+      }
+    }
+    return needsProgress;
+  }
 }
