@@ -1,6 +1,5 @@
 # Table of contents
 
-* [Twister2](introduction.md)
 * [Introduction](introduction.md)
 * [Quickstart](quickstart.md)
 * [Deployment](deployment/README.md)
