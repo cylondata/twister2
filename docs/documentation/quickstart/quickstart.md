@@ -187,3 +187,34 @@ while (!operation.reduce(taskId, word, new int[]{1}, 0)) {
 We send 1 as the word count and it will be summed up for the each word.
 
 We receive the final word counts as an iteration in the WordAggregator.
+
+```java
+public boolean receive(int target, Iterator<Object> it) {
+while (it.hasNext()) {
+  Object next = it.next();
+  if (next instanceof ImmutablePair) {
+    ImmutablePair kc = (ImmutablePair) next;
+    LOG.log(Level.INFO, String.format("%d Word %s count %s",
+        target, kc.getKey(), ((int[]) kc.getValue())[0]));
+  }
+}
+isDone = true;
+return true;
+}
+```
+
+### Running WordCount
+
+Here is the command to run this example
+
+```bash
+./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.WordCountJob
+```
+
+It will output the words and their counts on the console and below is an small sample.
+
+```bash
+[INFO] edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator: 12 Word MWf count 83
+[INFO] edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator: 12 Word mFu count 105
+[INFO] edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator: 12 Word JyDA count 105
+```
