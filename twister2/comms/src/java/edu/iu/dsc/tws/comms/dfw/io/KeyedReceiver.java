@@ -188,7 +188,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
         //If any of the keys are full the method returns false because partial objects cannot be
         //added to the messages data structure
         Object key = keyedContent.getKey();
-        if (messagesPerTarget.containsKey(key)
+        if (!isFinalReceiver && messagesPerTarget.containsKey(key)
             && messagesPerTarget.get(key).size() >= limitPerKey) {
           moveMessageToSendQueue(target, messagesPerTarget, keyedContent.getKey());
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
@@ -230,7 +230,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
     } else {
       KeyedContent keyedContent = (KeyedContent) object;
       if (messagesPerTarget.containsKey(keyedContent.getKey())) {
-        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey) {
+        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey || isFinalReceiver) {
           return messagesPerTarget.get(keyedContent.getKey()).offer(keyedContent.getValue());
         } else {
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
