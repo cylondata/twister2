@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
-import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -126,13 +125,12 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
         return true;
       }
       while (it.hasNext()) {
-        ImmutablePair<Object, Object> currentPair = (ImmutablePair) it.next();
+        ImmutablePair<Object, Object[]> currentPair = (ImmutablePair) it.next();
         Object key = currentPair.getKey();
-        int[] data = (int[]) ((ArrayDeque) currentPair.getValue()).poll();
+        int[] data = (int[]) currentPair.getValue()[0];
         LOG.log(Level.INFO, String.format("%d Results : key: %s value sample: %s num vals : %s",
             workerId, key, Arrays.toString(Arrays.copyOfRange(data,
-                0, Math.min(data.length, 10))),
-            ((ArrayDeque) currentPair.getValue()).size() + 1));
+                0, Math.min(data.length, 10))), currentPair.getValue().length));
       }
       gatherDone = true;
       return true;

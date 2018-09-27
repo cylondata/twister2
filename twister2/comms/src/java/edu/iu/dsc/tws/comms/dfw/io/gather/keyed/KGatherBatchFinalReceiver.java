@@ -72,7 +72,8 @@ public class KGatherBatchFinalReceiver extends KeyedReceiver {
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private class GatherIterator<T extends Pair> implements Iterator<Pair> {
+  private class GatherIterator<T extends Pair<Object, Object[]>>
+      implements Iterator<Pair<Object, Object[]>> {
 
     private Map<Object, Queue<Object>> messageMap;
     private Queue<Object> keyList = new LinkedList<>();
@@ -88,10 +89,10 @@ public class KGatherBatchFinalReceiver extends KeyedReceiver {
     }
 
     @Override
-    public ImmutablePair next() {
+    public ImmutablePair<Object, Object[]> next() {
       Object key = keyList.poll();
       Object value = messageMap.remove(key);
-      return new ImmutablePair(key, value);
+      return new ImmutablePair(key, ((Queue) value).toArray());
     }
   }
 }
