@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.executor.comms.streaming;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,10 +22,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.op.stream.SPartition;
@@ -60,12 +63,29 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
     }
 
     op = new SPartition(channel, taskPlan, srcs, dests, Utils.dataTypeToMessageType(dataType),
-        new PartitionReceiver(), new LoadBalanceSelector());
+        new PartitionStreamingFinalReceiver(new PartitionBulkReceiver()),
+        new LoadBalanceSelector());
     communicationEdge = e.generate(edgeName);
   }
 
   public boolean send(int source, IMessage message, int flags) {
     return op.partition(source, message.getContent(), flags);
+  }
+
+  public class PartitionBulkReceiver implements BulkReceiver {
+    @Override
+    public void init(Config cfg, Set<Integer> targets) {
+
+    }
+
+    @Override
+    public boolean receive(int target, Iterator<Object> it) {
+      BlockingQueue<IMessage> messages = outMessages.get(target);
+
+      TaskMessage msg = new TaskMessage(it,
+          edgeGenerator.getStringMapping(communicationEdge), target);
+      return messages.offer(msg);
+    }
   }
 
   public class PartitionReceiver implements MessageReceiver {
@@ -130,7 +150,6 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
           }
         }
       }
-
       return true;
     }
   }

@@ -2,7 +2,7 @@
 
 * [Documentation](documentation/README.md)
   * [Quickstart](documentation/quickstart/quickstart.md)
-  * [Installation](documentation/deployment/README.md)
+  * [Deployment](documentation/deployment/README.md)
     * [Overview](documentation/deployment/installation.md)
     * [Compiling](documentation/deployment/compiling.md)
     * [Standalone](documentation/deployment/standalone/README.md)
