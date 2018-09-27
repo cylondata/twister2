@@ -1,22 +1,12 @@
-# First steps with Twister2
+# Quickstart
 
-Lets look at how to setup Twister2 and run few examples. Twister2 is designed
-as in incremental distributed system to make it adaptable to different environments.
-Lets start with the simplest possible Twister2 job where we spawn set of workers
-and print a log.
+Lets look at how to setup Twister2 and run few examples. Twister2 is designed as in incremental distributed system to make it adaptable to different environments. Lets start with the simplest possible Twister2 job where we spawn set of workers and print a log.
 
 ## Starting parallel workers
 
-At the base of Twister2 is a resource manager that allocates resources for jobs.
-Unlike many big data projects that mixes all sorts of capabilities here,
-Twister2 resource manager only allocate resources and spawn set of parallel
-processes. It is upto the user to do anything with those parallel processes after
-they are spawned.
+At the base of Twister2 is a resource manager that allocates resources for jobs. Unlike many big data projects that mixes all sorts of capabilities here, Twister2 resource manager only allocate resources and spawn set of parallel processes. It is upto the user to do anything with those parallel processes after they are spawned.
 
-Okay lets exactly that and see how it works. There is a example called HelloWorld.java
-included with Twister2 examples package. Note that it implements the IWorker interface,
-which is the entry point to any Twister2 job. In the main method of this class
-we submit a job to Twister2 with this HelloWorld class as the job class.
+Okay lets exactly that and see how it works. There is a example called HelloWorld.java included with Twister2 examples package. Note that it implements the IWorker interface, which is the entry point to any Twister2 job. In the main method of this class we submit a job to Twister2 with this HelloWorld class as the job class.
 
 ```java
 package edu.iu.dsc.tws.examples.basic;
@@ -55,11 +45,11 @@ public class HelloWorld implements IWorker {
     LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
             + "and I got a configuration value %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
-    
+
     List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
     String workersStr = WorkerNetworkInfo.workerListAsString(workerList);
     LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
-    
+
     try {
       LOG.info("I am sleeping for 1 minute and then exiting.");
       Thread.sleep(60 * 1000);
@@ -95,8 +85,7 @@ public class HelloWorld implements IWorker {
 }
 ```
 
-Now lets run this class. Lets go inside the twister2 distibution and execute the following command
-from twister2 root directory.
+Now lets run this class. Lets go inside the twister2 distibution and execute the following command from twister2 root directory.
 
 ```bash
 ./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
@@ -112,16 +101,15 @@ It is that simple!
 
 ## Communicating between workers
 
-Okay, the next step is to communicate between the workers we have created. There are many examples in
-Twister2 that use communication among workers and some of these can be found inside the directory 
+Okay, the next step is to communicate between the workers we have created. There are many examples in Twister2 that use communication among workers and some of these can be found inside the directory
 
 ```bash
 examples/src/java/edu/iu/dsc/tws/examples/comms
 ```
 
-You can run them with a simple command such as 
+You can run them with a simple command such as
 
-```
+```text
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -op "reduce" -stages 8,1
 ```
 
@@ -129,8 +117,7 @@ Now, lets focus on a simple communication example where we try to do a word coun
 
 ## Word Count Example
 
-Lets look at a word count example. This is a standard example in every other big data system. 
-The code related to example can be found in
+Lets look at a word count example. This is a standard example in every other big data system. The code related to example can be found in
 
 ```bash
 examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount
@@ -218,3 +205,4 @@ It will output the words and their counts on the console and below is an small s
 [INFO] edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator: 12 Word mFu count 105
 [INFO] edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator: 12 Word JyDA count 105
 ```
+

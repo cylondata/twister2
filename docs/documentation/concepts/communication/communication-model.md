@@ -1,14 +1,6 @@
-Dataflow Communication Model
-============================
+# Communication Model
 
-Twister2 supports a dataflow communication model. A dataflow program models a computation as a 
-graph with nodes of the graph doing user-defined computations and edges representing the 
-communication links between the nodes. The data flowing through this graph is termed as 
-events or messages. It is important to note that even though by definition dataflow programming 
-means data is flowing through a graph, it may not necessarily be the case physically, especially 
-in batch applications. Big data systems employ different APIs for creating the dataflow graph. 
-For example, Flink and Spark provide distributed dataset-based APIs for creating the graph while 
-systems such as Storm and Hadoop provide task-level APIs.
+Twister2 supports a dataflow communication model. A dataflow program models a computation as a graph with nodes of the graph doing user-defined computations and edges representing the communication links between the nodes. The data flowing through this graph is termed as events or messages. It is important to note that even though by definition dataflow programming means data is flowing through a graph, it may not necessarily be the case physically, especially in batch applications. Big data systems employ different APIs for creating the dataflow graph. For example, Flink and Spark provide distributed dataset-based APIs for creating the graph while systems such as Storm and Hadoop provide task-level APIs.
 
 We support the following dataflow operations.
 
@@ -24,38 +16,29 @@ We support the following dataflow operations.
 
 Dataflow communications are overlaid on top of worker processes using logical ids.
 
-We suport both streaming and batch versions of these operations. 
+We suport both streaming and batch versions of these operations.
 
-TaskPlan
---------
+## TaskPlan
 
-Task plan represents how the IDs are overlyed on top of the workers. A worker process will have a 
-unique ID.
+Task plan represents how the IDs are overlyed on top of the workers. A worker process will have a unique ID.
 
-Streaming
----------
+## Streaming
 
-Streaming communication is a continuous flow of data. 
+Streaming communication is a continuous flow of data.
 
-Batch
------
+## Batch
 
-A batch operation works on a finite amount of data. Hence it terminates after the data sending is
-completed.
+A batch operation works on a finite amount of data. Hence it terminates after the data sending is completed.
 
-Shuffle Engine
---------------
+## Shuffle Engine
 
-In case of in-sufficient memory, we can persist the data to disk. 
+In case of in-sufficient memory, we can persist the data to disk.
 
-Communication Operation
------------------------
+## Communication Operation
 
-A communication operation is defined by, set of source IDs, set of target IDs, 
-a message receiver, a partial message receiver and set of edge IDs.
+A communication operation is defined by, set of source IDs, set of target IDs, a message receiver, a partial message receiver and set of edge IDs.
 
-Detecting termination
----------------------
+## Detecting termination
 
-Because we are working on a distributed setting with a communication having multiple steps, 
-termination of the operation needs to be detected.  
+Because we are working on a distributed setting with a communication having multiple steps, termination of the operation needs to be detected.
+
