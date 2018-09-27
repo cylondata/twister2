@@ -77,7 +77,6 @@ public abstract class HarpWorker implements IWorker {
 
     Server server;
     try {
-      //preparing nodes and rack info to match Harp's requirements
       server = new Server(
           workerNetworkInfo.getWorkerIP().getHostAddress(),
           harpPort,
@@ -146,7 +145,6 @@ public abstract class HarpWorker implements IWorker {
 
     return nodesOfRack;
   }
-
 
   /**
    * Harp expects rack ID to be a numeric value while Twister2 allows alphanumeric.
