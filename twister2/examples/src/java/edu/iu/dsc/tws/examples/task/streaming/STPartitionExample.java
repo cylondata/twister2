@@ -12,15 +12,18 @@
 package edu.iu.dsc.tws.examples.task.streaming;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.task.TaskExamples;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STPartitionExample extends BenchTaskWorker {
+
+  private static final Logger LOG = Logger.getLogger(STPartitionExample.class.getName());
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
@@ -29,12 +32,28 @@ public class STPartitionExample extends BenchTaskWorker {
     int psink = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    TaskExamples taskExamples = new TaskExamples();
     BaseStreamSource g = new SourceStreamTask(edge);
-    BaseStreamSink r = taskExamples.getStreamSinkClass("partition");
+    BaseStreamSink r = new PartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.partition(SOURCE, edge, dataType);
     return taskGraphBuilder;
+  }
+
+  protected static class PartitionSinkTask extends BaseStreamSink {
+    private static final long serialVersionUID = -254264903510284798L;
+
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (message.getContent() instanceof List) {
+        count += ((List) message.getContent()).size();
+      }
+      LOG.info(String.format("%d %d Streaming Message Partition Received count: %d",
+          context.getWorkerId(),
+          context.taskId(), count));
+      return true;
+    }
   }
 }

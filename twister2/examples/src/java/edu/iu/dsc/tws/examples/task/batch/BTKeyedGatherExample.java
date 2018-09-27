@@ -12,15 +12,18 @@
 package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.task.TaskExamples;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
 public class BTKeyedGatherExample extends BenchTaskWorker {
+
+  private static final Logger LOG = Logger.getLogger(BTKeyedGatherExample.class.getName());
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
@@ -30,12 +33,25 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
     DataType keyType = DataType.OBJECT;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    TaskExamples taskExamples = new TaskExamples();
     BaseBatchSource g = new SourceBatchTask(edge);
-    BaseBatchSink r = taskExamples.getBatchSinkClass("keyed-gather");
+    BaseBatchSink r = new KeyedGatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
+  }
+
+  protected static class KeyedGatherSinkTask extends BaseBatchSink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      LOG.info("Message Keyed-Gather : " + message.getContent()
+          + ", Count : " + count);
+      count++;
+
+      return true;
+    }
   }
 }

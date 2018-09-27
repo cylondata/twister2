@@ -12,15 +12,18 @@
 package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.task.TaskExamples;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
 public class BTPartitionKeyedExample extends BenchTaskWorker {
+
+  private static final Logger LOG = Logger.getLogger(BTBroadCastExample.class.getName());
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
@@ -29,12 +32,26 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     int psink = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    TaskExamples taskExamples = new TaskExamples();
     BaseBatchSource g = new KeyedSourceBatchTask(edge);
-    BaseBatchSink r = taskExamples.getBatchSinkClass("keyed-partition");
+    BaseBatchSink r = new KeyedReduceSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     return taskGraphBuilder;
     //keyed partition not implemented yet
+  }
+
+  protected static class KeyedReduceSinkTask extends BaseBatchSink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (count % 100 == 0) {
+        LOG.info("Batch Message Keyed-Reduced : " + message.getContent()
+            + ", Count : " + count);
+      }
+      count++;
+      return true;
+    }
   }
 }
