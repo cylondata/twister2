@@ -11,10 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
+import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
@@ -35,7 +35,7 @@ public abstract class KReduceBatchReceiver extends KeyedReceiver {
 
   /**
    * The reduce operation overrides the offer method because the reduce operation
-   * does not save all the incomming messages, it rather reduces messages with the same key and
+   * does not save all the incoming messages, it rather reduces messages with the same key and
    * saves only the reduced values. So the messages data structure will only have a single
    * entry for each target, key pair
    *
@@ -50,7 +50,7 @@ public abstract class KReduceBatchReceiver extends KeyedReceiver {
 
     Map<Object, Queue<Object>> messagesPerTarget = messages.get(target);
 
-    if (!isFinalReceiver && messagesPerTarget.size() > keyLimit) {
+    if (!isFinalBatchReceiver && messagesPerTarget.size() > keyLimit) {
       LOG.fine(String.format("Executor %d Partial cannot add any further keys needs flush ",
           executor));
       moveMessagesToSendQueue(target, messagesPerTarget);
@@ -85,7 +85,7 @@ public abstract class KReduceBatchReceiver extends KeyedReceiver {
     Object currentEntry;
     Object key = keyedContent.getKey();
     if (!messagesPerTarget.containsKey(key)) {
-      messagesPerTarget.put(key, new ArrayBlockingQueue<>(limitPerKey));
+      messagesPerTarget.put(key, new ArrayDeque<>());
       return messagesPerTarget.get(keyedContent.getKey()).offer(keyedContent.getValue());
     } else {
       currentEntry = messagesPerTarget.get(keyedContent.getKey()).poll();
@@ -107,7 +107,6 @@ public abstract class KReduceBatchReceiver extends KeyedReceiver {
   protected boolean moveMessagesToSendQueue(int target,
                                             Map<Object, Queue<Object>> messagesPerTarget) {
     Queue<Object> targetSendQueue = sendQueue.get(target);
-    //FIX
     messagesPerTarget.entrySet().removeIf(entry -> {
       KeyedContent send = new KeyedContent(entry.getKey(), entry.getValue().peek(),
           dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());

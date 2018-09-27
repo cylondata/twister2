@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.examples.Utils;
@@ -92,15 +93,19 @@ public class SPartitionExample extends BenchWorker {
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      expected = expectedIds.keySet().size() * jobParameters.getIterations();
+      int exp = 0;
+      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
+        exp += e.getValue().size();
+      }
+      DataFlowPartition p = (DataFlowPartition) op;
+      exp /= p.getDestinations().size();
+      expected = exp * jobParameters.getIterations();
     }
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       if (object instanceof List) {
-        for (Object o : (List) object) {
-          count++;
-        }
+        count += ((List) object).size();
         ArrayList<?> a = (ArrayList<?>) object;
         int[] b = (int[]) a.get(0);
         LOG.info(target + " : Response : " + Arrays.toString(b));
@@ -118,15 +123,11 @@ public class SPartitionExample extends BenchWorker {
 
     @Override
     public boolean progress() {
-//      return !partitionDone;
       return false;
     }
   }
 
   @Override
   protected void finishCommunication(int src) {
-//    partition.finish(src);
   }
-
-
 }

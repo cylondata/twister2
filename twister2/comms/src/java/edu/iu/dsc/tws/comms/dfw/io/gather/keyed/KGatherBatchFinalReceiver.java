@@ -39,7 +39,7 @@ public class KGatherBatchFinalReceiver extends KeyedReceiver {
                                    int limitPerKey) {
     this.bulkReceiver = receiver;
     this.limitPerKey = limitPerKey;
-    this.isFinalReceiver = true;
+    this.isFinalBatchReceiver = true;
   }
 
   @Override

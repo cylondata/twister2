@@ -56,40 +56,33 @@ public class KMeansJob extends TaskWorker {
 
     int workers = kMeansJobParameters.getWorkers();
     int iterations = kMeansJobParameters.getIterations();
-    int numberOfPoints = kMeansJobParameters.getNumberOfPoints();
+    int noOfPoints = kMeansJobParameters.getNumberOfPoints();
     int dimension = kMeansJobParameters.getDimension();
-    int minValue = kMeansJobParameters.getMinValue();
-    int maxValue = kMeansJobParameters.getMaxValue();
-    int numberOfClusters = kMeansJobParameters.getClusters();
+    int dataSeedValue = kMeansJobParameters.getPointsSeedValue();
+    int centroidSeedValue = kMeansJobParameters.getCentroidsSeedValue();
+    int noOfClusters = kMeansJobParameters.getClusters();
 
-    String datapointsFileName = kMeansJobParameters.getPointsFile();
-    String centroidFileName = kMeansJobParameters.getCentersFile();
+    String dataPointsFile = kMeansJobParameters.getPointsFile();
+    String centroidFile = kMeansJobParameters.getCentersFile();
     String fileSystem = kMeansJobParameters.getFileSystem();
     String inputData = kMeansJobParameters.getDataInput();
 
     LOG.info("workers:" + workers + "\titeration:" + iterations
-        + "\tnumber of datapoints:" + numberOfPoints + "\tdimension:" + dimension
-        + "\tnumber of clusters:" + numberOfClusters + "\tdatapoints file:" + datapointsFileName
-        + "\tcenters file:" + centroidFileName + "\tfilesys:" + fileSystem);
+        + "\tnumber of datapoints:" + noOfPoints + "\tdimension:" + dimension
+        + "\tnumber of clusters:" + noOfClusters + "\tdatapoints file:" + dataPointsFile
+        + "\tcenters file:" + centroidFile + "\tfilesys:" + fileSystem);
 
-    double[][] dataPoint;
-    double[][] centroid;
-
-    KMeansFileReader kMeansFileReader = new KMeansFileReader();
-
+    KMeansFileReader kMeansFileReader = new KMeansFileReader(config, fileSystem);
     if ("generate".equals(inputData)) {
       KMeansDataGenerator.generateDataPointsFile(
-          datapointsFileName, numberOfPoints, dimension, minValue, maxValue);
+          dataPointsFile, noOfPoints, dimension, dataSeedValue, config, fileSystem);
       KMeansDataGenerator.generateCentroidFile(
-          centroidFileName, numberOfClusters, dimension, minValue, maxValue);
-
-      dataPoint = kMeansFileReader.readDataPoints(datapointsFileName, dimension);
-      centroid = kMeansFileReader.readCentroids(centroidFileName, dimension, numberOfClusters);
-
-    } else {
-      dataPoint = kMeansFileReader.readDataPoints(datapointsFileName, dimension);
-      centroid = kMeansFileReader.readCentroids(centroidFileName, dimension, numberOfClusters);
+          centroidFile, noOfClusters, dimension, centroidSeedValue, config, fileSystem);
     }
+
+    double[][] dataPoint = kMeansFileReader.readDataPoints(dataPointsFile, dimension);
+    double[][] centroid = kMeansFileReader.readCentroids(centroidFile, dimension,
+        noOfClusters);
 
     DataFlowTaskGraph graph = graphBuilder.build();
 

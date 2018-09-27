@@ -1,17 +1,18 @@
 # Download
 
+## Download
+
 ### Source
 
-You can download the source from the [GitHub](https://github.com/DSC-SPIDAL/twister2) repo. 
+You can download the source from the [GitHub](https://github.com/DSC-SPIDAL/twister2) repo.
 
-### Binaries 
+### Binaries
 
-Download the latest binaries from here. 
+Download the latest binaries from here.
 
-Twister2 is released as source code tarballs with corresponding binary
-tarballs for convenience. The downloads are distributed via Github.
+Twister2 is released as source code tarballs with corresponding binary tarballs for convenience. The downloads are distributed via Github.
 
-# Download
+## Download
 
 | Version | Release Date | Binary Download | Source Release | Release Notes |
 | :--- | :--- | :--- | :--- | :--- |
@@ -20,3 +21,4 @@ tarballs for convenience. The downloads are distributed via Github.
 ### License {#license}
 
 The software licensed under [_Apache License 2.0_](https://www.apache.org/licenses/LICENSE-2.0)
+

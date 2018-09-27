@@ -10,8 +10,8 @@ def twister2_core_conf_files():
 
 def twister2_core_lib_files():
     return twister2_core_lib_resource_scheduler_files() + \
-        twister2_core_lib_task_scheduler_files() + \
-        twister2_core_lib_communication_files()
+           twister2_core_lib_task_scheduler_files() + \
+           twister2_core_lib_communication_files()
 
 def twister2_core_lib_resource_scheduler_files():
     return [
@@ -30,18 +30,18 @@ def twister2_core_lib_communication_files():
     ]
 
 def twister2_core_lib_connector_files():
-      return [
-          "//twister2/connectors/src/java:connector-java",
-          "@org_xerial_snappy_snappy_java//jar",
-          "@org_lz4_lz4_java//jar",
-          "@org_slf4j_slf4j_api//jar",
-          "@org_apache_kafka_kafka_clients//jar",
-      ]
+    return [
+        "//twister2/connectors/src/java:connector-java",
+        "@org_xerial_snappy_snappy_java//jar",
+        "@org_lz4_lz4_java//jar",
+        "@org_slf4j_slf4j_api//jar",
+        "@org_apache_kafka_kafka_clients//jar",
+    ]
 
 def twister2_client_lib_master_files():
-      return [
-          "//twister2/connectors/src/java:master-java"
-      ]
+    return [
+        "//twister2/connectors/src/java:master-java",
+    ]
 
 def twister2_core_lib_data_files():
     return [
@@ -79,4 +79,10 @@ def twister2_core_lib_data_lmdb_files():
         "@com_github_jnr_constants//jar",
         "@com_github_jnr_jffi//jar",
         "//third_party:com_github_jnr_jffi_native",
+    ]
+
+def twister2_harp_integration_files():
+    return [
+        "//third_party:harp_collective",
+        "@fast_utils//jar",
     ]

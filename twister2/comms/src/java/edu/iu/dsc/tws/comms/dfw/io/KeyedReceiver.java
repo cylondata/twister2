@@ -38,7 +38,8 @@ public abstract class KeyedReceiver implements MessageReceiver {
 
   /**
    * The buffer limit for single key. Messages are not buffered for a key after this limit is
-   * reached
+   * reached. The limit per key is not strictly enforced and the structure may store several more
+   * values past this limit for some edge cases.
    */
   protected int limitPerKey;
 
@@ -90,11 +91,11 @@ public abstract class KeyedReceiver implements MessageReceiver {
   protected Map<Integer, Boolean> isEmptySent = new HashMap<>();
 
   /**
-   * Indicates whether the receiver instance is a final receiver or not. The value is set to
-   * false by default. If the receiver is a final receiver the sendQueue data structure is not used
-   * the data is always kept in the messages data structure for efficiency
+   * Indicates whether the receiver instance is a final batch receiver or not. The value is set to
+   * false by default. If the receiver is a final batch receiver the sendQueue data structure
+   * is not used the data is always kept in the messages data structure for efficiency
    */
-  protected boolean isFinalReceiver = false;
+  protected boolean isFinalBatchReceiver = false;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -134,7 +135,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
 
     if ((flags & MessageFlags.END) == MessageFlags.END) {
       finishedMessages.put(source, true);
-      if (!isFinalReceiver && isSourcesFinished(target)) {
+      if (!isFinalBatchReceiver && isSourcesFinished(target)) {
         return moveMessagesToSendQueue(target, messages.get(target));
       }
       return true;
@@ -152,7 +153,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
         finishedMessages.put(source, true);
         //TODO: the finish of the move may not happen for LAST flags since the method to move
         //TODO: may return false
-        if (!isFinalReceiver && isSourcesFinished(target)) {
+        if (!isFinalBatchReceiver && isSourcesFinished(target)) {
           moveMessagesToSendQueue(target, messages.get(target));
         }
       }
@@ -173,7 +174,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
   @SuppressWarnings("rawtypes")
   protected boolean offerMessage(int target, Object object) {
     Map<Object, Queue<Object>> messagesPerTarget = messages.get(target);
-    if (!isFinalReceiver && messagesPerTarget.size() > keyLimit) {
+    if (!isFinalBatchReceiver && messagesPerTarget.size() > keyLimit) {
       LOG.fine(String.format("Executor %d Partial cannot add any further keys needs flush ",
           executor));
       moveMessagesToSendQueue(target, messagesPerTarget);
@@ -188,7 +189,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
         //If any of the keys are full the method returns false because partial objects cannot be
         //added to the messages data structure
         Object key = keyedContent.getKey();
-        if (!isFinalReceiver && messagesPerTarget.containsKey(key)
+        if (!isFinalBatchReceiver && messagesPerTarget.containsKey(key)
             && messagesPerTarget.get(key).size() >= limitPerKey) {
           moveMessageToSendQueue(target, messagesPerTarget, keyedContent.getKey());
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
@@ -230,7 +231,8 @@ public abstract class KeyedReceiver implements MessageReceiver {
     } else {
       KeyedContent keyedContent = (KeyedContent) object;
       if (messagesPerTarget.containsKey(keyedContent.getKey())) {
-        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey || isFinalReceiver) {
+        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey
+            || isFinalBatchReceiver) {
           return messagesPerTarget.get(keyedContent.getKey()).offer(keyedContent.getValue());
         } else {
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
@@ -341,5 +343,124 @@ public abstract class KeyedReceiver implements MessageReceiver {
       isDone &= isSourceDone;
     }
     return isDone;
+  }
+
+  /**
+   * checks if the Empty message was sent for this target and sends it if not sent and possible to
+   * send
+   *
+   * @param target target for which the check is done
+   * @return false if Empty is sent
+   */
+  protected boolean checkIfEmptyIsSent(int target) {
+    boolean isSent = true;
+    if (!isEmptySent.get(target)) {
+      if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(target,
+          new byte[0], MessageFlags.END, destination)) {
+        isEmptySent.put(target, true);
+      } else {
+        isSent = false;
+      }
+    }
+    return isSent;
+  }
+
+  @Override
+  /**
+   * Default progress method for keyed receivers. This method is targeted at partial receivers
+   * which typically execute the same logic. For custom progress logic this method needs to be
+   * overwritten
+   */
+  public boolean progress() {
+    boolean needsFurtherProgress = false;
+    boolean sourcesFinished = false;
+    boolean isAllQueuesEmpty = false;
+    for (int target : messages.keySet()) {
+
+      //If the batch is done skip progress for this target
+      if (batchDone.get(target)) {
+        needsFurtherProgress = !checkIfEmptyIsSent(target);
+        continue;
+      }
+
+      // now check weather we have the messages for this source to be sent
+      Queue<Object> targetSendQueue = sendQueue.get(target);
+      sourcesFinished = isSourcesFinished(target);
+
+      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
+          && messages.get(target).isEmpty() && targetSendQueue.isEmpty())) {
+        needsFurtherProgress = true;
+      }
+
+      if (!targetSendQueue.isEmpty() || sourcesFinished) {
+        needsFurtherProgress = sendToTarget(needsFurtherProgress, sourcesFinished, target,
+            targetSendQueue);
+      }
+
+      //In reduce since we remove the key entry once we send it we only need to check if the map is
+      //Empty
+      isAllQueuesEmpty = isAllQueuesEmpty(targetSendQueue);
+      if (!isAllQueuesEmpty) {
+        needsFurtherProgress = true;
+      }
+
+      if (dataFlowOperation.isDelegeteComplete() && sourcesFinished && isAllQueuesEmpty) {
+        if (dataFlowOperation.sendPartial(target, new byte[0],
+            MessageFlags.END, destination)) {
+          isEmptySent.put(target, true);
+        } else {
+          needsFurtherProgress = true;
+        }
+        batchDone.put(target, true);
+        // we don'target want to go through the while loop for this one
+        break;
+      }
+    }
+
+    return needsFurtherProgress;
+  }
+
+  /**
+   * checks if the queue structures used to send data is empty. If Additional data structures are
+   * used this method needs to be overwritten to include them
+   *
+   * @param targetSendQueue message queue for the current target
+   * @return true if all the related queues and structures are empty
+   */
+  protected boolean isAllQueuesEmpty(Queue<Object> targetSendQueue) {
+    return targetSendQueue.isEmpty();
+  }
+
+  /**
+   * Called from the progress method to perform the communication calls to send the queued messages
+   *
+   * @param needsFurtherProgress current state of needsFurtherProgress value
+   * @param sourcesFinished specifies if the sources have completed
+   * @param target the target(which is a source in this instance) from which the messages are sent
+   * @param targetSendQueue the data structure that contains all the message data
+   * @return true if further progress is needed or false otherwise
+   */
+  protected boolean sendToTarget(boolean needsFurtherProgress, boolean sourcesFinished, int target,
+                                 Queue<Object> targetSendQueue) {
+    int flags = 0;
+
+    //Used to make sure that the code is not stuck in this while loop if the send keeps getting
+    //rejected
+    boolean needsProgress = needsFurtherProgress;
+    boolean canProgress = true;
+    Object current;
+    while (canProgress && (current = targetSendQueue.peek()) != null) {
+      if (sourcesFinished && targetSendQueue.size() == 1) {
+        flags = MessageFlags.LAST;
+      }
+
+      if (dataFlowOperation.sendPartial(target, current, flags, destination)) {
+        targetSendQueue.poll();
+      } else {
+        canProgress = false;
+        needsProgress = true;
+      }
+    }
+    return needsProgress;
   }
 }
