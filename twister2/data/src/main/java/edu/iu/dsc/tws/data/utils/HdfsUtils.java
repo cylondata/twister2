@@ -130,9 +130,12 @@ public class HdfsUtils {
    */
   public int getLengthOfFile(String fName) {
     int length = 0;
-    String inputFileName = HdfsDataContext.getHdfsDataDirectory(config) + "/" + fName;
-    String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + "/" + inputFileName;
-    Path path = new Path(directoryString);
+
+    //String inputFileName = HdfsDataContext.getHdfsDataDirectory(config) + "/" + fName;
+    //String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + inputFileName;
+    //Path path = new Path(directoryString);
+
+    Path path = new Path(fName);
     HadoopFileSystem hadoopFileSystem = createHDFSFileSystem();
     try {
       if (hadoopFileSystem.exists(path)) {
