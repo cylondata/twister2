@@ -93,12 +93,12 @@ public class TaskExamples {
 
     @Override
     public void execute() {
-      int[] val = {1};
-      if (count == 999) {
+      int[] val = {0, 1, 2, 3, 4, 5, 6, 7};
+      if (count == 1) {
         if (context.writeEnd(this.edge, val)) {
           count++;
         }
-      } else if (count < 999) {
+      } else if (count < 1) {
         if (context.write(this.edge, val)) {
           count++;
         }
@@ -116,12 +116,18 @@ public class TaskExamples {
         LOG.info("Batch Gather Message Received : " + Arrays.toString((int[]) object));
       } else if (object instanceof Iterator) {
         Iterator<?> it = (Iterator<?>) object;
+        int[] a = {};
+        ArrayList<int[]> data = new ArrayList<>();
         while (it.hasNext()) {
           if (it.next() instanceof int[]) {
-            int[] a = (int[]) it.next();
+            a = (int[]) it.next();
+            LOG.info("Data : " + Arrays.toString(a));
+            data.add(a);
           }
         }
-        LOG.info("Batch Gather Message Received");
+
+        LOG.info("Batch Gather Task Message Receieved : " + data.size());
+
       } else {
         LOG.info("Class : " + object.getClass().getName());
       }

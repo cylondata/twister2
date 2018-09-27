@@ -108,15 +108,17 @@ public class BGatherExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      gatherDone = true;
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-      Object object = it.next();
-      experimentData.setOutput(object);
-      try {
-        verify();
-      } catch (VerificationException e) {
-        LOG.info("Exception Message : " + e.getMessage());
+      while (it.hasNext()) {
+        Object object = it.next();
+        experimentData.setOutput(object);
+        try {
+          verify();
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
+        }
       }
+      gatherDone = true;
       return true;
     }
   }
