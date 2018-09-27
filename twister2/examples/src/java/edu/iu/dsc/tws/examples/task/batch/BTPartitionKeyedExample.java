@@ -33,14 +33,14 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseBatchSource g = new KeyedSourceBatchTask(edge);
-    BaseBatchSink r = new KeyedReduceSinkTask();
+    BaseBatchSink r = new KeyedPartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     return taskGraphBuilder;
     //keyed partition not implemented yet
   }
 
-  protected static class KeyedReduceSinkTask extends BaseBatchSink {
+  protected static class KeyedPartitionSinkTask extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
