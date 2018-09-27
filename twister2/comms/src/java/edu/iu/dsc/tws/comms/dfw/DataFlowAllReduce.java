@@ -165,6 +165,11 @@ public class DataFlowAllReduce implements DataFlowOperation {
     return taskPlan;
   }
 
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(reduceEdge);
+  }
+
   private static class BCastReceiver implements MessageReceiver {
     private SingularReceiver singularReceiver;
 

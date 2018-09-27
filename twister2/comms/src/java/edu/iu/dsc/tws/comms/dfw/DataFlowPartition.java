@@ -447,6 +447,11 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return instancePlan;
   }
 
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edge);
+  }
+
   private RoutingParameters sendRoutingParameters(int source, int path) {
     if (routingParamCache.contains(source, path)) {
       return routingParamCache.get(source, path);
@@ -582,8 +587,4 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return dataType;
   }
 
-
-  public int getEdge() {
-    return edge;
-  }
 }

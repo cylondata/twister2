@@ -51,7 +51,7 @@ public class DataFlowAllGather implements DataFlowOperation {
 
   private int middleTask;
 
-  private int reduceEdge;
+  private int gatherEdge;
 
   private int broadCastEdge;
 
@@ -65,7 +65,7 @@ public class DataFlowAllGather implements DataFlowOperation {
     this.sources = sources;
     this.destinations = destination;
     this.finalReceiver = finalRecv;
-    this.reduceEdge = redEdge;
+    this.gatherEdge = redEdge;
     this.broadCastEdge = broadEdge;
     this.middleTask = middleTask;
     this.streaming = stream;
@@ -74,10 +74,6 @@ public class DataFlowAllGather implements DataFlowOperation {
 
   /**
    * Initialize
-   * @param config
-   * @param type
-   * @param instancePlan
-   * @param edge
    */
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     this.executor = instancePlan.getThisExecutor();
@@ -97,8 +93,8 @@ public class DataFlowAllGather implements DataFlowOperation {
     }
 
     gather = new DataFlowGather(channel, sources, middleTask,
-        finalRecvr, partialReceiver, 0, 0, config, type, instancePlan, edge);
-    gather.init(config, type, instancePlan, reduceEdge);
+        finalRecvr, partialReceiver, 0, 0, config, type, instancePlan, gatherEdge);
+    gather.init(config, type, instancePlan, gatherEdge);
   }
 
   @Override
@@ -149,6 +145,11 @@ public class DataFlowAllGather implements DataFlowOperation {
   @Override
   public TaskPlan getTaskPlan() {
     return null;
+  }
+
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(gatherEdge);
   }
 
   @SuppressWarnings("unchecked")

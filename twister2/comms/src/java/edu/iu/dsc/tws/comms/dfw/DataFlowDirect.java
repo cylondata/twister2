@@ -48,6 +48,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
       DataFlowDirect.class.getName());
   private int sourceId;
   private int targetId;
+  private int edgeValue;
   private DirectRouter router;
   private MessageReceiver finalReceiver;
   private ChannelDataFlowOperation delegete;
@@ -103,7 +104,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     if (this.finalReceiver != null && isLastReceiver()) {
       this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
     }
-
+    this.edgeValue = edge;
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
     Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource
@@ -200,6 +201,11 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   @Override
   public TaskPlan getTaskPlan() {
     return null;
+  }
+
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edgeValue);
   }
 
   private boolean isLastReceiver() {

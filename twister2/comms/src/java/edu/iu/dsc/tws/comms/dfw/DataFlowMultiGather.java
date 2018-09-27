@@ -137,6 +137,11 @@ public class DataFlowMultiGather implements DataFlowOperation {
     return plan;
   }
 
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edges.toArray()[0]);
+  }
+
   /**
    * Initialize
    */
