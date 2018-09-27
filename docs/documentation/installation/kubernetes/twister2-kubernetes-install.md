@@ -1,5 +1,4 @@
-Twister2 Installation in Kubernetes Clusters
-============================================
+# Twister2 Installation in Kubernetes Clusters
 
 ## Authorization of Pods
 Twister2 Worker pods need to get the IP address of the Job Master. 
@@ -11,7 +10,9 @@ First modify the namespace field in the twister2-auth.yaml.
 Change the value of this field to a namespace value, that users will use to submit Twister2 jobs.
 Then execute the following command:
 
+```bash
     $kubectl create -f twister2-auth.yaml
+```
 
 ## Persistent Storage Settings
 Twister2 expects that either a Persistent Storage Provisioner or statically configured 
@@ -19,7 +20,9 @@ PersistentVolume exists in the cluster.
 Persistent storage class needs to be specified in the client.yaml configuration file. 
 Configuration parameter is: 
 
+```bash
     kubernetes.persistent.storage.class
+```
 
 We used the default storage value as "twister2-nfs-storage". 
 Please set your persistent storage class name in your provisioner and in the client.yaml config file. 
@@ -41,27 +44,37 @@ deploying them as a Kubernetes Secret on the cluster.
 
 First, generate an SSH key pair by using:
 
+```bash
     $ssh-keygen
+```
 
 Second, create a Kubernetes Secret object for the namespace of Twister2 users: 
 
+```bash
     $kubectl create secret generic twister2-openmpi-ssh-key --from-file=id_rsa=/path/to/.ssh/id_rsa --from-file=id_rsa.pub=/path/to/.ssh/id_rsa.pub --from-file=authorized_keys=/path/to/.ssh/id_rsa.pub --namespace=default
+```
 
 The fifth parameter (twister2-openmpi-ssh-key) is the name of the Secret object to be generated. 
 That has to match the following configuration parameter in the network.yaml file: 
 
+```bash
     kubernetes.secret.name
+```
 
 You can retrieve the created Secret object in YAML form by executing the following command:
 
+```bash
     $kubectl get secret <secret-name> -o=yaml
+```
 
 Another possibility for deploying the Secret object is to use the [YAML file template](../../architecture/resource-schedulers/kubernetes/yaml-templates/secret.yaml). 
 You can edit that secret.yaml file. You can put the public and private keys to the corresponding fields.
 You can set the name and the namespace values. Then, you can create the Secret object by using
 kubectl method as:
 
+```bash
     $kubectl create secret -f /path/to/file/secret.yaml
+```
 
 ## Providing Rack and Datacenter information to Twister2
 Twister2 can use rack names and data center names of the nodes when scheduling tasks. 
@@ -73,6 +86,7 @@ In addition, they can provide the list of data centers with rack data in them.
 
 Here is an example configuration:
 
+```bash
     kubernetes.datacenters.list:
     - dc1: ['blue-rack', 'green-rack']
     - dc2: ['rack01', 'rack02']
@@ -82,6 +96,7 @@ Here is an example configuration:
     - green-rack: ['node11.ip', 'node12.ip', 'node13.ip']
     - rack01: ['node51.ip', 'node52.ip', 'node53.ip']
     - rack02: ['node61.ip', 'node62.ip', 'node63.ip']
+```
 
 **Labelling Nodes With Rack and Data Center Information**:  
 Administrators can label their nodes in the cluster for their rack and datacenter information. 
@@ -94,18 +109,24 @@ for the labels of nodes. It provides this list to all workers in the job.
 **Example Labelling Commands**: Administrators can use kubectl command to label the nodes
 in the cluster. The format of the label creation command is as follows:
 
-    >kubectl label node <node-name> <label-key>=<label-value>  
+```bash
+    >kubectl label node <node-name> <label-key>=<label-value>
+```
 
 Then, used rack and data center labels must be provided in the configuration files. 
 These configuration parameters are: 
 
+```bash
     kubernetes.rack.labey.key
     kubernetes.datacenter.labey.key
+```
 
 **Access Method**: Users must specify which method they use to provide rack and datacenter data. 
 They need to set the value of the configuration parameter: 
 
+```bash
     kubernetes.node.locations.from.config
+```
 
 If the value of this parameter is true, 
 Twister2 will try to get the rack and data center labels from the configuration files. 
