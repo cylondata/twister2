@@ -99,9 +99,6 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    if (reduceDone && sourcesDone && !keyedReduce.hasPending()) {
-      System.out.println(workerId + " is ............ Done");
-    }
     return reduceDone && sourcesDone && !keyedReduce.hasPending();
   }
 
