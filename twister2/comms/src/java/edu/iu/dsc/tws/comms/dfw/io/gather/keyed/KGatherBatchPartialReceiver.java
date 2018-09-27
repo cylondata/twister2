@@ -12,7 +12,9 @@
 
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
-import java.util.concurrent.BlockingQueue;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -24,97 +26,70 @@ import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 public class KGatherBatchPartialReceiver extends KeyedReceiver {
   private static final Logger LOG = Logger.getLogger(KGatherBatchPartialReceiver.class.getName());
 
+  /**
+   * List used to send data from the partial receiver. This is used because once we take elements
+   * from the send queue we cannot put them back in if the send fails. So the send messages are
+   * kept in the variable until the send method returns true.
+   */
+  private List<Object> sendList = new ArrayList<>();
+
+  /**
+   * Flags associated with the current sendList
+   */
+  private int flags = 0;
 
   public KGatherBatchPartialReceiver(int dest, int limitPerKey) {
     this.destination = dest;
     this.limitPerKey = limitPerKey;
   }
 
+  /**
+   * checks if the queue structures used to send data is empty. If Additional data structures are
+   * used this method needs to be overwritten to include them. This method overrides the default
+   * implementation and also checks to make sure the sendList is also empty
+   *
+   * @param targetSendQueue message queue for the current target
+   * @return true if all the related queues and structures are empty
+   */
   @Override
-  public boolean progress() {
-    boolean needsFurtherProgress = false;
-    boolean sourcesFinished = false;
-    boolean isAllQueuesEmpty = false;
-    for (int target : messages.keySet()) {
-
-      //If the batch is done skip progress for this target
-      if (batchDone.get(target)) {
-        needsFurtherProgress = !checkIfEmptyIsSent(target);
-        continue;
-      }
-
-
-      // now check weather we have the messages for this source to be sent
-      BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
-      sourcesFinished = isSourcesFinished(target);
-
-      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
-          && messages.get(target).isEmpty() && targetSendQueue.isEmpty())) {
-        needsFurtherProgress = true;
-      }
-
-      if (!targetSendQueue.isEmpty() || sourcesFinished) {
-        int flags = 0;
-
-        //Used to make sure that the code is not stuck in this while loop if the send keeps getting
-        //rejected
-        boolean canProgress = true;
-        Object current;
-        while (canProgress && (current = targetSendQueue.peek()) != null) {
-          if (sourcesFinished && targetSendQueue.size() == 1) {
-            flags = MessageFlags.LAST;
-          }
-
-          if (dataFlowOperation.sendPartial(target, current, flags, destination)) {
-            targetSendQueue.poll();
-          } else {
-            canProgress = false;
-            needsFurtherProgress = true;
-          }
-
-        }
-      }
-
-      //In reduce since we remove the key entry once we send it we only need to check if the map is
-      //Empty
-      isAllQueuesEmpty = targetSendQueue.isEmpty();
-      if (!isAllQueuesEmpty) {
-        needsFurtherProgress = true;
-      }
-
-      if (dataFlowOperation.isDelegeteComplete() && sourcesFinished && isAllQueuesEmpty) {
-        if (dataFlowOperation.sendPartial(target, new byte[0],
-            MessageFlags.END, destination)) {
-          isEmptySent.put(target, true);
-        } else {
-          needsFurtherProgress = true;
-        }
-        batchDone.put(target, true);
-        // we don'target want to go through the while loop for this one
-        break;
-      }
-    }
-
-    return needsFurtherProgress;
+  protected boolean isAllQueuesEmpty(Queue<Object> targetSendQueue) {
+    return targetSendQueue.isEmpty() && sendList.isEmpty();
   }
 
   /**
-   * checks if the Empty message was sent for this target and sends it if not sent and possible to
-   * send
+   * Called from the progress method to perform the communication calls to send the queued messages
    *
-   * @param target target for which the check is done
-   * @return false if Empty is sent
+   * @param needsFurtherProgress current state of needsFurtherProgress value
+   * @param sourcesFinished specifies if the sources have completed
+   * @param target the target(which is a source in this instance) from which the messages are sent
+   * @param targetSendQueue the data structure that contains all the message data
+   * @return true if further progress is needed or false otherwise
    */
-  private boolean checkIfEmptyIsSent(int target) {
-    boolean isSent = true;
-    if (!isEmptySent.get(target)) {
-      if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(target,
-          new byte[0], MessageFlags.END, destination)) {
-        isEmptySent.put(target, true);
-      } else {
-        isSent = false;
+  @Override
+  protected boolean sendToTarget(boolean needsFurtherProgress, boolean sourcesFinished, int target,
+                                 Queue<Object> targetSendQueue) {
+    // We only try to send new messages if the sendList is empty. If it still has values
+    // that means a previous senPartial call returned false. so we need to first send that
+    // data before processing new data
+    boolean needsProgress = needsFurtherProgress;
+    if (sendList.isEmpty()) {
+      while (!targetSendQueue.isEmpty()) {
+        if (sourcesFinished && targetSendQueue.size() == 1) {
+          flags = MessageFlags.LAST;
+        }
+        sendList.add(targetSendQueue.poll());
       }
     }
-    return isSent;
+
+    if (!sendList.isEmpty()) {
+      if (dataFlowOperation.sendPartial(target, sendList, flags, destination)) {
+        System.out.println("Sent Partial executor : " + executor + "size" + sendList.size());
+        sendList = new ArrayList<>();
+        flags = 0;
+      } else {
+        needsProgress = true;
+      }
+    }
+    return needsProgress;
   }
 }

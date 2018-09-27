@@ -101,16 +101,18 @@ public class BAllGatherExample extends BenchWorker {
     @Override
     public boolean receive(int target, Iterator<Object> it) {
       gatherDone = true;
-      Object object = it.next();
-      experimentData.setOutput(object);
-      experimentData.setWorkerId(workerId);
-      experimentData.setNumOfWorkers(jobParameters.getContainers());
-      try {
-        if (workerId == 0) {
-          verify();
+      while (it.hasNext()) {
+        Object object = it.next();
+        experimentData.setOutput(object);
+        experimentData.setWorkerId(workerId);
+        experimentData.setNumOfWorkers(jobParameters.getContainers());
+        try {
+          if (workerId == 0) {
+            verify();
+          }
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
         }
-      } catch (VerificationException e) {
-        LOG.info("Exception Message : " + e.getMessage());
       }
       return true;
     }

@@ -32,7 +32,7 @@ public class BTAllReduceExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getBatchSourceClass("allreduce", edge);
+    BaseBatchSource g = new SourceBatchTask(edge);
     BaseBatchSink r = taskExamples.getBatchSinkClass("allreduce");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);

@@ -28,7 +28,7 @@ public class BTBroadCastExample extends BenchTaskWorker {
     int psink = taskStages.get(1);
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getBatchSourceClass("bcast", edge);
+    BaseBatchSource g = new SourceBatchTask(edge);
     BaseBatchSink r = taskExamples.getBatchSinkClass("bcast");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);

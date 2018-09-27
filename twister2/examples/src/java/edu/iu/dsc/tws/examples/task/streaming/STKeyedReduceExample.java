@@ -34,7 +34,7 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseStreamSource g = taskExamples.getStreamSourceClass("keyed-reduce", edge);
+    BaseStreamSource g = new KeyedSourceStreamTask(edge);
     BaseStreamSink r = taskExamples.getStreamSinkClass("keyed-reduce");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);

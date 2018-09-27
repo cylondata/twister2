@@ -76,7 +76,7 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_WORKER_MAPPING_UNIFORM = "kubernetes.worker.mapping.uniform";
 
   // it can be either "webserver" or "client-to-pods"
-  public static final String K8S_UPLOADING_METHOD_DEFAULT = "webserver";
+  public static final String K8S_UPLOADING_METHOD_DEFAULT = "client-to-pods";
   public static final String K8S_UPLOADING_METHOD = "twister2.kubernetes.uploading.method";
 
   public static final String SECRET_NAME = "kubernetes.secret.name";

@@ -30,7 +30,7 @@ public class BTAllGatherExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseBatchSource g = taskExamples.getBatchSourceClass("allgather", edge);
+    BaseBatchSource g = new SourceBatchTask(edge);
     BaseBatchSink r = taskExamples.getBatchSinkClass("allgather");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);

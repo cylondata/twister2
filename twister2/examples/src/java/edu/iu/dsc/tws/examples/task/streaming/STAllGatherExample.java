@@ -30,7 +30,7 @@ public class STAllGatherExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseStreamSource g = taskExamples.getStreamSourceClass("allgather", edge);
+    BaseStreamSource g = new SourceStreamTask(edge);
     BaseStreamSink r = taskExamples.getStreamSinkClass("allgather");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);

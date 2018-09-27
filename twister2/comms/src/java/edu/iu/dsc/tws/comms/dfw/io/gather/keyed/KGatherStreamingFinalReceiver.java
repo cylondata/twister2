@@ -9,26 +9,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
+package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
 import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceStreamingReceiver;
 
 /**
  * Keyed reduce final receiver for streaming  mode
  */
-public class KReduceStreamingFinalReceiver extends KReduceStreamingReceiver {
-  private static final Logger LOG = Logger.getLogger(KReduceStreamingFinalReceiver.class.getName());
+public class KGatherStreamingFinalReceiver extends KReduceStreamingReceiver {
+  private static final Logger LOG = Logger.getLogger(KGatherStreamingFinalReceiver.class.getName());
 
   /**
    * Final receiver that get the reduced values for the operation
    */
   private SingularReceiver singularReceiver;
 
-  public KReduceStreamingFinalReceiver(ReduceFunction reduce, SingularReceiver receiver,
+  public KGatherStreamingFinalReceiver(ReduceFunction reduce, SingularReceiver receiver,
                                        int window) {
     this.reduceFunction = reduce;
     this.singularReceiver = receiver;

@@ -11,9 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.taskwordcount;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -25,9 +31,11 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -38,7 +46,7 @@ public class WordCountTaskJob extends TaskWorker {
 
   private static final int NUMBER_MESSAGES = 1000;
 
-  private static final String EDGE = "reduce";
+  private static final String EDGE = "word-reduce";
 
   @Override
   public void execute() {
@@ -60,35 +68,63 @@ public class WordCountTaskJob extends TaskWorker {
   private static class WordSource extends BaseBatchSource {
     private static final long serialVersionUID = -254264903510284748L;
 
+    private static final int MAX_CHARS = 5;
+    private static final int NO_OF_SAMPLE_WORDS = 100;
+
     private int count = 0;
+
+    private RandomString randomString;
+
+    private List<String> sampleWords = new ArrayList<>();
+
+    private Random random;
+
+    @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.random = new Random();
+      this.randomString = new RandomString(MAX_CHARS, new Random(), RandomString.ALPHANUM);
+      for (int i = 0; i < NO_OF_SAMPLE_WORDS; i++) {
+        sampleWords.add(randomString.nextRandomSizeString());
+      }
+    }
 
     @Override
     public void execute() {
+      String word = sampleWords.get(random.nextInt(sampleWords.size()));
+
       if (count == NUMBER_MESSAGES - 1) {
-        if (context.writeEnd(EDGE, "Hello")) {
+        if (context.writeEnd(EDGE, word, new int[]{1})) {
           count++;
         }
       } else if (count < NUMBER_MESSAGES - 1) {
-        if (context.write(EDGE, "Hello")) {
+        if (context.write(EDGE, word, new int[]{1})) {
           count++;
         }
       }
     }
   }
 
+  @SuppressWarnings({"unchecked", "rawtypes"})
   private static class WordAggregator extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
 
-    private int count = 0;
-
     @Override
     public boolean execute(IMessage message) {
+      Iterator<Object> it;
       if (message.getContent() instanceof Iterator) {
-        while (((Iterator) message.getContent()).hasNext()) {
-          ((Iterator) message.getContent()).next();
-          count++;
+        it = (Iterator<Object>) message.getContent();
+
+        while (it.hasNext()) {
+          Object next = it.next();
+          if (next instanceof ImmutablePair) {
+            ImmutablePair kc = (ImmutablePair) next;
+            LOG.log(Level.INFO, String.format("%d Word %s count %s",
+                context.taskId(), kc.getKey(), ((int[]) kc.getValue())[0]));
+          }
         }
       }
+
       return true;
     }
   }

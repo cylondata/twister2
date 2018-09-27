@@ -125,8 +125,96 @@ You can run them with a simple command such as
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -op "reduce" -stages 8,1
 ```
 
-Lets focus on a simple communication example where we try to do a word count.
+Now, lets focus on a simple communication example where we try to do a word count.
 
+## Word Count Example
 
+Lets look at a word count example. This is a standard example in every other big data system. 
+The code related to example can be found in
 
+```bash
+examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount
+```
 
+We are using a Keyed Reduce communication operation to calculate the global counts of words, which are emitted from parallel workers.
+
+The example has three main classes.
+
+WordCountWorker that implements the IWorker interface and runs the code.
+
+```java
+edu.iu.dsc.tws.examples.batch.wordcount.WordCountWorker
+```
+
+BatchWordSource, where we use a thread to generate words and put them into the communication.
+
+```java
+edu.iu.dsc.tws.examples.batch.wordcount.BatchWordSouce
+```
+
+WordAggregator, where it receives the counts of the words.
+
+```java
+edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator
+```
+
+The WordCountWorker sets up communications and task ids. Then it sets up the communication operation.
+
+```java
+this.taskPlan = Utils.createStageTaskPlan(
+    cfg, resources, taskStages, workerList);
+
+setupTasks();
+setupNetwork(workerController, resources);
+
+// create the communication
+wordAggregator = new WordAggregator();
+keyGather = new BKeyedReduce(channel, taskPlan, sources, destinations,
+    new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
+    wordAggregator, MessageType.OBJECT, MessageType.INTEGER, new HashingSelector());
+```
+
+We send the messages through this communication operation using the code in BatchWordSource
+
+```java
+String word = sampleWords.get(random.nextInt(sampleWords.size()));
+// lets try to process if send doesn't succeed
+while (!operation.reduce(taskId, word, new int[]{1}, 0)) {
+  operation.progress();
+}
+```
+
+We send 1 as the word count and it will be summed up for the each word.
+
+We receive the final word counts as an iteration in the WordAggregator.
+
+```java
+public boolean receive(int target, Iterator<Object> it) {
+while (it.hasNext()) {
+  Object next = it.next();
+  if (next instanceof ImmutablePair) {
+    ImmutablePair kc = (ImmutablePair) next;
+    LOG.log(Level.INFO, String.format("%d Word %s count %s",
+        target, kc.getKey(), ((int[]) kc.getValue())[0]));
+  }
+}
+isDone = true;
+return true;
+}
+```
+
+### Running WordCount
+
+Here is the command to run this example
+
+```bash
+./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.WordCountJob
+```
+
+It will output the words and their counts on the console and below is an small sample.
+
+```bash
+[INFO] edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator: 12 Word MWf count 83
+[INFO] edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator: 12 Word mFu count 105
+[INFO] edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator: 12 Word JyDA count 105
+```
