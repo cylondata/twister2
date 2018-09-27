@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
@@ -107,7 +106,7 @@ public abstract class KReduceBatchReceiver extends KeyedReceiver {
   @Override
   protected boolean moveMessagesToSendQueue(int target,
                                             Map<Object, Queue<Object>> messagesPerTarget) {
-    BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
+    Queue<Object> targetSendQueue = sendQueue.get(target);
     //FIX
     messagesPerTarget.entrySet().removeIf(entry -> {
       KeyedContent send = new KeyedContent(entry.getKey(), entry.getValue().peek(),
