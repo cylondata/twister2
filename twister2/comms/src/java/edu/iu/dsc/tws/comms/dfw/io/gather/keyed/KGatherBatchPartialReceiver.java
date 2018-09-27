@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
+import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -44,6 +44,7 @@ public class KGatherBatchPartialReceiver extends KeyedReceiver {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public boolean progress() {
     boolean needsFurtherProgress = false;
     boolean sourcesFinished = false;
@@ -58,7 +59,7 @@ public class KGatherBatchPartialReceiver extends KeyedReceiver {
 
 
       // now check weather we have the messages for this source to be sent
-      BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
+      Queue<Object> targetSendQueue = sendQueue.get(target);
       sourcesFinished = isSourcesFinished(target);
 
       if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
@@ -78,13 +79,12 @@ public class KGatherBatchPartialReceiver extends KeyedReceiver {
             }
             sendList.add(targetSendQueue.poll());
           }
-
-
         }
 
         if (!sendList.isEmpty()) {
           if (dataFlowOperation.sendPartial(target, sendList, flags, destination)) {
-            sendList.clear();
+            System.out.println("Sent Partial executor : " + executor + "size" + sendList.size());
+            sendList = new ArrayList<>();
             flags = 0;
           } else {
             needsFurtherProgress = true;

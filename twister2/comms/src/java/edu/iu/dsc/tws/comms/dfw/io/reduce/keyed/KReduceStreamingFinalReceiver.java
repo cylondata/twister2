@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
-import java.util.concurrent.BlockingQueue;
+import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
@@ -48,7 +48,7 @@ public class KReduceStreamingFinalReceiver extends KReduceStreamingReceiver {
         continue;
       }
 
-      BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
+      Queue<Object> targetSendQueue = sendQueue.get(target);
       sourcesFinished = isSourcesFinished(target);
       if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
           && messages.get(target).isEmpty())) {

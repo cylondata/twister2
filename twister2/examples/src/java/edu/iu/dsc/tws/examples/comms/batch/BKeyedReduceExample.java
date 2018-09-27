@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -130,7 +129,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
       while (it.hasNext()) {
         ImmutablePair<Object, Object> currentPair = (ImmutablePair) it.next();
         Object key = currentPair.getKey();
-        int[] data = (int[]) ((ArrayBlockingQueue) currentPair.getValue()).poll();
+        int[] data = (int[]) currentPair.getValue();
         LOG.log(Level.INFO, String.format("%d Results : key: %s value: %s", workerId, key,
             Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
       }

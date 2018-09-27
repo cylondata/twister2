@@ -23,11 +23,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
+import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
@@ -119,7 +118,7 @@ public abstract class KReduceStreamingReceiver extends KeyedReceiver {
     Object currentEntry;
     Object key = keyedContent.getKey();
     if (!messagesPerTarget.containsKey(key)) {
-      messagesPerTarget.put(key, new ArrayBlockingQueue<>(limitPerKey));
+      messagesPerTarget.put(key, new ArrayDeque<>());
       return messagesPerTarget.get(keyedContent.getKey()).offer(keyedContent.getValue());
     } else {
       currentEntry = messagesPerTarget.get(keyedContent.getKey()).poll();
@@ -140,7 +139,7 @@ public abstract class KReduceStreamingReceiver extends KeyedReceiver {
   @Override
   protected boolean moveMessagesToSendQueue(int target,
                                             Map<Object, Queue<Object>> messagesPerTarget) {
-    BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
+    Queue<Object> targetSendQueue = sendQueue.get(target);
     messagesPerTarget.entrySet().removeIf(entry -> {
       KeyedContent send = new KeyedContent(entry.getKey(), entry.getValue().peek(),
           dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());

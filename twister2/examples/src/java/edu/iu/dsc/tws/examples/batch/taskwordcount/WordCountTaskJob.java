@@ -13,10 +13,13 @@ package edu.iu.dsc.tws.examples.batch.taskwordcount;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -27,7 +30,6 @@ import edu.iu.dsc.tws.api.task.function.ReduceFn;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -44,7 +46,7 @@ public class WordCountTaskJob extends TaskWorker {
 
   private static final int NUMBER_MESSAGES = 1000;
 
-  private static final String EDGE = "reduce";
+  private static final String EDGE = "word-reduce";
 
   @Override
   public void execute() {
@@ -103,16 +105,26 @@ public class WordCountTaskJob extends TaskWorker {
     }
   }
 
+  @SuppressWarnings({"unchecked", "rawtypes"})
   private static class WordAggregator extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
 
     @Override
     public boolean execute(IMessage message) {
-      if (message.getContent() instanceof KeyedContent) {
-        KeyedContent kc = (KeyedContent) message.getContent();
-        LOG.log(Level.INFO, String.format("%d Word %s count %s",
-            context.taskId(), kc.getKey(), ((int[]) kc.getValue())[0]));
+      Iterator<Object> it;
+      if (message.getContent() instanceof Iterator) {
+        it = (Iterator<Object>) message.getContent();
+
+        while (it.hasNext()) {
+          Object next = it.next();
+          if (next instanceof ImmutablePair) {
+            ImmutablePair kc = (ImmutablePair) next;
+            LOG.log(Level.INFO, String.format("%d Word %s count %s",
+                context.taskId(), kc.getKey(), ((int[]) kc.getValue())[0]));
+          }
+        }
       }
+
       return true;
     }
   }

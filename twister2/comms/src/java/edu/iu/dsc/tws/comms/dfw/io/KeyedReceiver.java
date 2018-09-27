@@ -11,13 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -78,7 +77,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
    * the progress method removes items from this queue and sends them. The onMessage method inserts
    * objects into this queue
    */
-  protected Map<Integer, BlockingQueue<Object>> sendQueue = new HashMap<>();
+  protected Map<Integer, Queue<Object>> sendQueue = new HashMap<>();
 
   /**
    * Tracks if the partial receiver has completed processing for a given target
@@ -116,7 +115,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
       batchDone.put(expectedIdPerTarget.getKey(), false);
       isEmptySent.put(expectedIdPerTarget.getKey(), false);
       sendQueue.put(expectedIdPerTarget.getKey(),
-          new ArrayBlockingQueue<Object>(keyLimit * limitPerKey));
+          new ArrayDeque<Object>());
     }
   }
 
@@ -189,9 +188,11 @@ public abstract class KeyedReceiver implements MessageReceiver {
         //If any of the keys are full the method returns false because partial objects cannot be
         //added to the messages data structure
         Object key = keyedContent.getKey();
-        if (messagesPerTarget.containsKey(key)
+        if (!isFinalReceiver && messagesPerTarget.containsKey(key)
             && messagesPerTarget.get(key).size() >= limitPerKey) {
           moveMessageToSendQueue(target, messagesPerTarget, keyedContent.getKey());
+          LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
+              + "needs flush ", executor));
           return false;
         }
         if (tempList.containsKey(key)) {
@@ -203,22 +204,34 @@ public abstract class KeyedReceiver implements MessageReceiver {
         }
 
       }
-
+      boolean offerDone = true;
       for (Object key : tempList.keySet()) {
         if (messagesPerTarget.containsKey(key)) {
-          messagesPerTarget.get(key).add(tempList.get(key));
+          List<Object> values = tempList.get(key);
+          for (Object value : values) {
+            offerDone &= messagesPerTarget.get(key).offer(value);
+          }
         } else {
-          ArrayBlockingQueue<Object> messagesPerKey = new ArrayBlockingQueue<>(limitPerKey);
-          messagesPerKey.add(tempList.get(key));
+          ArrayDeque<Object> messagesPerKey = new ArrayDeque<>();
+          List<Object> values = tempList.get(key);
+          for (Object value : values) {
+            offerDone &= messagesPerKey.offer(value);
+          }
           messagesPerTarget.put(key, messagesPerKey);
         }
+      }
+
+      //If even one of the message offers failed we throw an exception since that message
+      //cannot be recovered
+      if (!offerDone) {
+        throw new RuntimeException("Message lost during processing");
       }
 
     } else {
       KeyedContent keyedContent = (KeyedContent) object;
       if (messagesPerTarget.containsKey(keyedContent.getKey())) {
-        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey) {
-          return messagesPerTarget.get(keyedContent.getKey()).add(keyedContent.getValue());
+        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey || isFinalReceiver) {
+          return messagesPerTarget.get(keyedContent.getKey()).offer(keyedContent.getValue());
         } else {
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
               + "needs flush ", executor));
@@ -226,7 +239,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
           return false;
         }
       } else {
-        ArrayBlockingQueue<Object> messagesPerKey = new ArrayBlockingQueue<>(limitPerKey);
+        ArrayDeque<Object> messagesPerKey = new ArrayDeque<>();
         messagesPerKey.add(keyedContent.getValue());
         messagesPerTarget.put(keyedContent.getKey(), messagesPerKey);
       }
@@ -258,10 +271,10 @@ public abstract class KeyedReceiver implements MessageReceiver {
    */
   protected boolean moveMessagesToSendQueue(int target,
                                             Map<Object, Queue<Object>> messagesPerTarget) {
-    BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
+    Queue<Object> targetSendQueue = sendQueue.get(target);
     messagesPerTarget.entrySet().removeIf(entry -> {
 
-      BlockingQueue<Object> entryQueue = (ArrayBlockingQueue<Object>) entry.getValue();
+      Queue<Object> entryQueue = entry.getValue();
       Object current;
 
       while ((current = entryQueue.peek()) != null) {
@@ -292,8 +305,8 @@ public abstract class KeyedReceiver implements MessageReceiver {
    */
   protected boolean moveMessageToSendQueue(int target, Map<Object, Queue<Object>> messagesPerTarget,
                                            Object key) {
-    BlockingQueue<Object> targetSendQueue = sendQueue.get(target);
-    BlockingQueue<Object> entryQueue = (ArrayBlockingQueue<Object>) messagesPerTarget.get(key);
+    Queue<Object> targetSendQueue = sendQueue.get(target);
+    Queue<Object> entryQueue = messagesPerTarget.get(key);
     Object current;
 
     while ((current = entryQueue.peek()) != null) {

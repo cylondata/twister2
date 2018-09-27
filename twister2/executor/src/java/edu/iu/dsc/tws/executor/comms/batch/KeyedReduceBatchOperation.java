@@ -87,8 +87,9 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      //TODO : need to update code to use iterator
-      return false;
+      TaskMessage msg = new TaskMessage(it,
+          edgeGenerator.getStringMapping(communicationEdge), target);
+      return outMessages.get(target).offer(msg);
     }
 
     public boolean receive(int target, Object object) {

@@ -89,8 +89,8 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
     @Override
     public ImmutablePair next() {
       Object key = keyList.poll();
-      Object value = messageMap.remove(key);
-      return new ImmutablePair(key, value);
+      Queue<Object> value = messageMap.remove(key);
+      return new ImmutablePair(key, value.poll());
     }
   }
 }

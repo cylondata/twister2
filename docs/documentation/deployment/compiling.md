@@ -25,14 +25,6 @@ Twister2 build needs several software installed on your system.
     PATH=$JAVA_HOME/bin:$PATH
     export JAVA_HOME PATH
   ```
-  
-  
-  Note: If you get an error while compiling or building Twister2 saying "Java bindings requested but no Java support found"
-  please execute the following command to install Java using apt-get command
-  
-  ```bash
-  sudo apt install openjdk-8-jdk
-  ```
 
 3. Install the required tools
 
@@ -154,3 +146,39 @@ you can compile OpenMPI using following instructions.
   ```
     mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_312/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.1.2
   ```
+
+## FAQ
+
+1. Build fails with ompi java binding errors
+
+Try to do one of these things
+
+  Note: If you get an error while compiling or building Twister2 saying "Java bindings requested but no Java support found"
+  please execute the following command to install Java using apt-get command
+
+  ```bash
+  sudo apt install openjdk-8-jdk
+  ```
+
+Or change line 385 of
+
+```bash
+third_party/ompi3/ompi.BUILD
+```
+
+From
+
+```bash
+'./configure --prefix=$$INSTALL_DIR --enable-mpi-java'
+```
+
+to
+
+```bash
+'./configure --prefix=$$INSTALL_DIR --enable-mpi-java --with-jdk-bindir=<jdk_home>/bin --with-jdk-headers=<jdk_home>/include',
+```bash
+
+Please replace <jdk_home> with your jdk location.
+
+
+
