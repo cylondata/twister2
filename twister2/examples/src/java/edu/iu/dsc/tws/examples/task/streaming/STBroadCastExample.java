@@ -28,7 +28,7 @@ public class STBroadCastExample extends BenchTaskWorker {
     int psink = taskStages.get(1);
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseStreamSource g = taskExamples.getStreamSourceClass("bcast", edge);
+    BaseStreamSource g = new SourceStreamTask(edge);
     BaseStreamSink r = taskExamples.getStreamSinkClass("bcast");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);

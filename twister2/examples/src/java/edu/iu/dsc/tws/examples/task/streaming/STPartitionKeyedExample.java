@@ -29,7 +29,7 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     TaskExamples taskExamples = new TaskExamples();
-    BaseStreamSource g = taskExamples.getStreamSourceClass("keyed-partition", edge);
+    BaseStreamSource g = new KeyedSourceStreamTask(edge);
     BaseStreamSink r = taskExamples.getStreamSinkClass("keyed-partition");
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
