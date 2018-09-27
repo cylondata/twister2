@@ -29,9 +29,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class PartitionBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
@@ -67,11 +65,6 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   private Map<Integer, Set<Integer>> onFinishedSources = new HashMap<>();
 
   /**
-   * Sources of this worker
-   */
-  private Set<Integer> thisWorkerSources = new HashSet<>();
-
-  /**
    * The worker id
    */
   private int thisWorker;
@@ -85,9 +78,6 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     executor = op.getTaskPlan().getThisExecutor();
-    TaskPlan taskPlan = op.getTaskPlan();
-    thisWorkerSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan,
-        ((DataFlowPartition) op).getSources());
     thisWorker = op.getTaskPlan().getThisExecutor();
     this.operation = op;
     this.sources = ((DataFlowPartition) op).getSources();

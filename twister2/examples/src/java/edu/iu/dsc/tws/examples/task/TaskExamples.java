@@ -255,6 +255,7 @@ public class TaskExamples {
   }
 
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class SPartitionSinkTask extends BaseStreamSink {
     private static final long serialVersionUID = -254264903510284798L;
 
@@ -262,8 +263,12 @@ public class TaskExamples {
 
     @Override
     public boolean execute(IMessage message) {
-      if (message.getContent() instanceof List) {
-        count += ((List) message.getContent()).size();
+      if (message.getContent() instanceof Iterator) {
+        Iterator it = (Iterator) message.getContent();
+        while (it.hasNext()) {
+          it.next();
+          count += 1;
+        }
       }
       LOG.info(String.format("%d %d Streaming Message Partition Received count: %d",
           context.getWorkerId(),
