@@ -1,5 +1,14 @@
 # Twister2 Installation in Kubernetes Clusters
 
+First, you can install Kubernetes project to a machine on your cluster or your personal machine. 
+You need to have kubectl running on the machine you installed the project. 
+
+To install Twister2 on a machine, please follow the steps in [installation document](../installation.md).
+To compile the project follow the instructions to the [compilation document](../compiling.md).
+You may also check [developer document](../../contributors/developer-environment.md) for setting up IDEs. 
+
+Here are the things that you need to do to run Twister2 jobs on Kubernetes clusters. 
+
 ## Authorization of Pods
 Twister2 Worker pods need to get the IP address of the Job Master. 
 In addition, Job Master needs to be able to delete used resources after the job has completed. 
@@ -132,4 +141,34 @@ If the value of this parameter is true,
 Twister2 will try to get the rack and data center labels from the configuration files. 
 Otherwise, it will try to get it from the Kubernetes master. 
 
-## Running Uploader Web Server
+## Job Package Uploader Settings
+When users submit a job to Kubernetes master, they first need to transfer the job package to workers. 
+Submitting client packs all job related files into a tar file. This archive files needs to be transferred
+to each worker that will be started. 
+
+We provide [two methods](../../architecture/resource-schedulers/kubernetes/twister2-on-kubernetes.md): 
+* Job Package Transfer Through a Web Server
+* Job Package Transfer Using kubectl file copy
+
+First method transfers the job package to a web server running in the cluster. 
+Workers download the job package from this web server. Second method transfers the job package 
+from client to workers directly by using kubectl copy method. 
+
+First, the uploder transfer type has to be selected by specifying the configuration parameter:
+
+```bash
+   twister2.kubernetes.uploading.method
+```
+The value of this parameter has to be either: "webserver" or "client-to-pods"
+By default, it is "client-to-pods". If you  use the default setting,
+it does not require any other settings. 
+
+For the transfer through a web server to work,
+a web server must exist in the cluster and submitting client must have write permission 
+to that directory. Then, you need to specify the web server directory and address 
+information the [configuration file](../../../../twister2/config/src/yaml/conf/kubernetes/uploader.yaml): 
+```bash
+   twister2.uploader.scp.command.connection: user@host
+   twister2.uploader.directory: "/path/to/web-server/directory/"
+   twister2.download.directory: "http://host:port/web-server-directory"
+```
