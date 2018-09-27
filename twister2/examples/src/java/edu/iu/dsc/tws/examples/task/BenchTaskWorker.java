@@ -187,6 +187,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
   }
 
   protected static Object generateEmpty() {
-    return DataGenerator.generateIntEmpty(jobParameters.getSize());
+    return DataGenerator.generateIntData(0);
   }
 }
