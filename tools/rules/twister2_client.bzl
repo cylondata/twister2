@@ -47,9 +47,9 @@ def twister2_client_mesos_files():
         "//twister2/config/src/yaml:conf-mesos-yaml",
     ]
 
-def twister2_client_standalone_files():
+def twister2_client_nomad_files():
     return [
-        "//twister2/config/src/yaml:conf-standalone-yaml",
+        "//twister2/config/src/yaml:conf-nomad-yaml",
     ]
 
 def twister2_client_lib_task_scheduler_files():

@@ -37,6 +37,6 @@ filegroup(
 )
 
 filegroup(
-    name = "conf-standalone-yaml",
-    srcs = glob(["conf/standalone/*"]),
+    name = "conf-nomad-yaml",
+    srcs = glob(["conf/nomad/*"]),
 )

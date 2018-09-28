@@ -15,7 +15,7 @@ First we need to start Nomad
 In order to submit a job, the following command can be used
 
 ```bash
-  ./twister2 submit standalone ...
+  ./twister2 submit nomad ...
 ```
 
 ## Log files
@@ -31,6 +31,6 @@ In order to view the logs of the nomad agent use the command
 Kill workers
 
 ```bash
-  kill $(ps ax | grep StandaloneWorkerStarter | awk '{print $1}')
+  kill $(ps ax | grep NomadWorkerStarter | awk '{print $1}')
 ```
 
