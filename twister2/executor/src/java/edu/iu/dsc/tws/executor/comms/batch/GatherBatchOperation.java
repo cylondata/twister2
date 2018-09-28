@@ -33,12 +33,12 @@ public class GatherBatchOperation extends AbstractParallelOperation {
 
   public GatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                               Set<Integer> srcs, int dest, EdgeGenerator e,
-                              DataType dataType, String edgeName) {
+                              DataType dataType, String edgeName, boolean shuffle) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
     communicationEdge = e.generate(edgeName);
     op = new BGather(channel, taskPlan, srcs, dest, Utils.dataTypeToMessageType(dataType),
-        new FinalGatherReceiver());
+        new FinalGatherReceiver(), shuffle);
   }
 
   @Override

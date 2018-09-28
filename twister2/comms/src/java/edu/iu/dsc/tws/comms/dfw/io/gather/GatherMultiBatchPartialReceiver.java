@@ -18,10 +18,10 @@ import java.util.Map;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KeyedGatherBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchPartialReceiver;
 
 public class GatherMultiBatchPartialReceiver implements MultiMessageReceiver {
-  private Map<Integer, KeyedGatherBatchPartialReceiver> receiverMap = new HashMap<>();
+  private Map<Integer, KGatherBatchPartialReceiver> receiverMap = new HashMap<>();
 
   public GatherMultiBatchPartialReceiver() {
   }
@@ -30,8 +30,8 @@ public class GatherMultiBatchPartialReceiver implements MultiMessageReceiver {
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      KeyedGatherBatchPartialReceiver partialReceiver = new KeyedGatherBatchPartialReceiver(
-          e.getKey());
+      KGatherBatchPartialReceiver partialReceiver = new KGatherBatchPartialReceiver(
+          e.getKey(), 10);
       receiverMap.put(e.getKey(), partialReceiver);
 
       partialReceiver.init(cfg, op, e.getValue());
@@ -40,14 +40,14 @@ public class GatherMultiBatchPartialReceiver implements MultiMessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    KeyedGatherBatchPartialReceiver partialReceiver = receiverMap.get(path);
+    KGatherBatchPartialReceiver partialReceiver = receiverMap.get(path);
     return partialReceiver.onMessage(source, path, target, flags, object);
   }
 
   @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;
-    for (Map.Entry<Integer, KeyedGatherBatchPartialReceiver> e : receiverMap.entrySet()) {
+    for (Map.Entry<Integer, KGatherBatchPartialReceiver> e : receiverMap.entrySet()) {
       needsFurtherProgress = needsFurtherProgress | e.getValue().progress();
     }
     return needsFurtherProgress;

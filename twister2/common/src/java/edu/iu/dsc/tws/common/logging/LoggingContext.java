@@ -31,6 +31,9 @@ public final class LoggingContext {
   public static final int MAX_LOG_FILES_DEFAULT = 5;
   public static final String MAX_LOG_FILES = "twister2.logging.maximum.files";
 
+  // the logging format property
+  public static final String LOG_FORMAT = "twister2.logging.format";
+
   // whether redirect System.out and System.err to log files
   public static final boolean REDIRECT_SYS_OUT_ERR_DEFAULT = false;
   public static final String REDIRECT_SYS_OUT_ERR = "twister2.logging.redirect.sysouterr";
@@ -57,5 +60,9 @@ public final class LoggingContext {
 
   public static boolean redirectSysOutErr(Config cfg) {
     return cfg.getBooleanValue(REDIRECT_SYS_OUT_ERR, REDIRECT_SYS_OUT_ERR_DEFAULT);
+  }
+
+  public static String loggingFormat(Config cfg) {
+    return cfg.getStringValue(LOG_FORMAT);
   }
 }

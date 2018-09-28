@@ -64,10 +64,13 @@ public class ParallelOperationFactory {
       //LOG.info("Batch Job Building ...");
       if (!edge.isKeyed()) {
         if (OperationNames.PARTITION.equals(edge.getOperation())) {
-          PartitionBatchOperation partitionOp
-              = new PartitionBatchOperation(config, channel, taskPlan);
-          partitionOp.prepare(sources, dests, edgeGenerator, edge.getDataType(), edge.getName());
-          return partitionOp;
+          Object shuffleProp = edge.getProperty("shuffle");
+          boolean shuffle = false;
+          if (shuffleProp != null && shuffleProp instanceof Boolean && (Boolean) shuffleProp) {
+            shuffle = true;
+          }
+          return new PartitionBatchOperation(config, channel, taskPlan, sources, dests,
+              edgeGenerator, edge.getDataType(), edge.getName(), shuffle);
         } else if (OperationNames.BROADCAST.equals(edge.getOperation())) {
           BroadcastBatchOperation bcastOp = new BroadcastBatchOperation(config, channel, taskPlan);
           // get the first as the source
@@ -75,9 +78,14 @@ public class ParallelOperationFactory {
               edge.getName());
           return bcastOp;
         } else if (OperationNames.GATHER.equals(edge.getOperation())) {
+          Object shuffleProp = edge.getProperty("shuffle");
+          boolean shuffle = false;
+          if (shuffleProp != null && shuffleProp instanceof Boolean && (Boolean) shuffleProp) {
+            shuffle = true;
+          }
           return new GatherBatchOperation(config, channel, taskPlan,
               sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
-              edge.getName());
+              edge.getName(), shuffle);
         } else if (OperationNames.ALLGATHER.equals(edge.getOperation())) {
           return new AllGatherBatchOperation(config, channel, taskPlan,
               sources, dests, edgeGenerator, edge.getDataType(),

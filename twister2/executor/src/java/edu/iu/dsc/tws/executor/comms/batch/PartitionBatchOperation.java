@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.batch;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -32,23 +30,18 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public class PartitionBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionBatchOperation.class.getName());
-  private HashMap<Integer, ArrayList<Integer>> barrierMap = new HashMap<>();
-  private HashMap<Integer, Integer> incomingMap = new HashMap<>();
-  private HashMap<Integer, ArrayList<Object>> incomingBuffer = new HashMap<>();
 
   protected BPartition op;
 
-  public PartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan) {
+  public PartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+                                 Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+                                 DataType dataType, String edgeName, boolean shuffle) {
     super(config, network, tPlan);
-  }
-
-  public void prepare(Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                      DataType dataType, String edgeName) {
     this.edgeGenerator = e;
     //LOG.info("ParitionOperation Prepare 1");
     op = new BPartition(channel, taskPlan, srcs, dests,
         Utils.dataTypeToMessageType(dataType), new PartitionReceiver(),
-        new LoadBalanceSelector());
+        new LoadBalanceSelector(), shuffle);
     communicationEdge = e.generate(edgeName);
   }
 

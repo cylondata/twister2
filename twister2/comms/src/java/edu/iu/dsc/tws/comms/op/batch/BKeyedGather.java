@@ -71,7 +71,7 @@ public class BKeyedGather {
   }
 
   public boolean gather(int source, Object key, Object data, int flags) {
-    int dest = destinationSelector.next(source, key);
+    int dest = destinationSelector.next(source, key, data);
     return keyedGather.send(source, new KeyedContent(key, data, keyType,
         dataType), flags, dest);
   }

@@ -1,4 +1,4 @@
-load("/tools/rules/java_tests", "java_tests")
+load("//tools:rules/java_tests.bzl", "java_tests")
 
 common_deps_files = [
     "//twister2/common/src/java:common-java",

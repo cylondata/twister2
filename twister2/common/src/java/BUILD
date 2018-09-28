@@ -3,6 +3,8 @@ package(default_visibility = ["//visibility:public"])
 common_deps_files = [
     "@org_yaml_snakeyaml//jar",
     "@com_google_protobuf_protobuf_java//jar",
+    "//third_party:harp_collective",
+    "@fast_utils//jar",
 ]
 
 java_library(
@@ -15,7 +17,7 @@ java_library(
     name = "config-java",
     srcs = glob(["**/config/*.java"]),
     deps = [
-        "@org_yaml_snakeyaml//jar",
         "@com_google_protobuf_protobuf_java//jar",
+        "@org_yaml_snakeyaml//jar",
     ],
 )

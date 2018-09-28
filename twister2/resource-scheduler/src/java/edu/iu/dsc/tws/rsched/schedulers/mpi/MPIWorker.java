@@ -11,8 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.mpi;
 
+import java.io.File;
 import java.nio.CharBuffer;
 import java.nio.IntBuffer;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -28,13 +30,16 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.logging.LoggingContext;
+import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.schedulers.mpi.master.IMasterStarter;
+import edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;
@@ -176,8 +181,18 @@ public final class MPIWorker {
     return updatedConfig;
   }
 
+  private static void master(Config config, int rank) {
+    // lets do a barrier here so everyone is synchronized at the start
+    // lets create the resource plan
+    createResourcePlan(config);
+  }
+
   private static void worker(Config config, int rank) {
     try {
+      String twister2Home = Context.twister2Home(config);
+      // initialize the logger
+      initLogger(config, rank, twister2Home);
+
       // lets create the resource plan
       Map<Integer, String> processNames = createResourcePlan(config);
       // now create the resource plan
@@ -186,57 +201,29 @@ public final class MPIWorker {
       IWorkerController controller = new MPIWorkerController(MPI.COMM_WORLD.getRank(),
           processNames);
 
-      boolean jobMaster = MPIContext.jobMasterEnabled(config);
-      if (jobMaster && rank == 0) {
-        executeMaster(config, rank, resourcePlan, controller);
-      } else {
-        executeWorker(config, rank, resourcePlan, controller);
+      String workerClass = MPIContext.workerClass(config);
+      try {
+        Object object = ReflectionUtils.newInstance(workerClass);
+        if (object instanceof IWorker) {
+          IWorker container = (IWorker) object;
+          // now initialize the container
+          container.execute(config, rank, resourcePlan, controller, null, null);
+        } else {
+          throw new RuntimeException("Cannot instantiate class: " + object.getClass());
+        }
+        LOG.log(Level.FINE, "loaded worker class: " + workerClass);
+      } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+        LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+            workerClass), e);
+        throw new RuntimeException(e);
       }
 
       // lets do a barrier here so everyone is synchronized at the end
+
       MPI.COMM_WORLD.barrier();
       LOG.log(Level.FINE, String.format("Worker %d: the cluster is ready...", rank));
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed to synchronize the workers at the start");
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static void executeMaster(Config config, int rank, AllocatedResources resourcePlan,
-                                    IWorkerController controller) {
-    String workerClass = MPIContext.jobMasterClass(config);
-    try {
-      Object object = ReflectionUtils.newInstance(workerClass);
-      if (object instanceof IWorker) {
-        IMasterStarter container = (IMasterStarter) object;
-        // now initialize the container
-        container.execute(config, rank, resourcePlan, controller);
-      } else {
-        throw new RuntimeException("Cannot instantiate class: " + object.getClass());
-      }
-      LOG.log(Level.FINE, "loaded worker class: " + workerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
-          workerClass), e);
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static void executeWorker(Config config, int rank, AllocatedResources resourcePlan, IWorkerController controller) {
-    String workerClass = MPIContext.workerClass(config);
-    try {
-      Object object = ReflectionUtils.newInstance(workerClass);
-      if (object instanceof IWorker) {
-        IWorker container = (IWorker) object;
-        // now initialize the container
-        container.execute(config, rank, resourcePlan, controller, null, null);
-      } else {
-        throw new RuntimeException("Cannot instantiate class: " + object.getClass());
-      }
-      LOG.log(Level.FINE, "loaded worker class: " + workerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
-          workerClass), e);
       throw new RuntimeException(e);
     }
   }
@@ -296,27 +283,56 @@ public final class MPIWorker {
     }
   }
 
-  private static AllocatedResources addContainers(Config cfg,
-                                                  Map<Integer, String> processes) {
+  public static AllocatedResources addContainers(Config cfg,
+                                    Map<Integer, String> processes) {
     int size = 0;
     try {
-      boolean jobMaster = MPIContext.jobMasterEnabled(cfg);
       size = MPI.COMM_WORLD.getSize();
       AllocatedResources resourcePlan = new AllocatedResources(
           MPIContext.clusterType(cfg), MPI.COMM_WORLD.getRank());
       for (int i = 0; i < size; i++) {
-        WorkerComputeResource wcr;
-        // job master gets -1 as the worker id
-        if (!jobMaster) {
-          wcr = new WorkerComputeResource(i);
-        } else {
-          wcr = new WorkerComputeResource(i - 1);
-        }
-        resourcePlan.addWorkerComputeResource(wcr);
+        WorkerComputeResource workerComputeResource = new WorkerComputeResource(i);
+        resourcePlan.addWorkerComputeResource(workerComputeResource);
       }
       return resourcePlan;
     } catch (MPIException e) {
       throw new RuntimeException("MPI Failure", e);
     }
+  }
+
+  /**
+   * Initialize the loggers to log into the task local directory
+   * @param cfg the configuration
+   * @param workerID worker id
+   */
+  private static void initLogger(Config cfg, int workerID, String logDirectory) {
+    // we can not initialize the logger fully yet,
+    // but we need to set the format as the first thing
+    LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
+
+    // set logging level
+    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
+
+    String persistentJobDir;
+    String jobWorkingDirectory = StandaloneContext.workingDirectory(cfg);
+    String jobName = StandaloneContext.jobName(cfg);
+    if (StandaloneContext.getLoggingSandbox(cfg)) {
+      persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
+    } else {
+      persistentJobDir = logDirectory;
+    }
+
+    // if no persistent volume requested, return
+    if (persistentJobDir == null) {
+      return;
+    }
+    String logDir = persistentJobDir + "/logs";
+    File directory = new File(logDir);
+    if (!directory.exists()) {
+      if (!directory.mkdirs()) {
+        throw new RuntimeException("Failed to create log directory: " + logDir);
+      }
+    }
+    LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
   }
 }

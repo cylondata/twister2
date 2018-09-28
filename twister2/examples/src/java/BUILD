@@ -38,6 +38,7 @@ common_deps_files = [
     "@log4j//jar",
     "@org_apache_htrace//jar",
     "@org_apache_hadoop//jar",
+    "//third_party:harp_collective"
 ]
 
 java_library(

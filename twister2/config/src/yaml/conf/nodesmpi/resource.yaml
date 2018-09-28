@@ -11,10 +11,10 @@ twister2.resource.scheduler.slurm.partition: ""
 # the mpirun command location
 twister2.resource.scheduler.mpi.home: ""
 # the package uri
-twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
+twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.1.0.tar.gz"
 # the launcher class
 twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mpi.MPILauncher"
 # the uplaoder class
 twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
-# weather to run job master as the 0th worker
-twister2.job.master.enable: true
+# mpi run file, this assumes a mpirun that is shipped with the product
+twister2.resource.scheduler.mpi.mpirun.file: "twister2-core/ompi/bin/mpirun"

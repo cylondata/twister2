@@ -86,9 +86,35 @@ public interface DataFlowOperation {
   }
 
   /**
+   * returns the key type that is associated with the data flow operation
+   *
+   * @return the MessageType or an UnsupportedOperationException
+   */
+  default MessageType getKeyType() {
+    throw new UnsupportedOperationException("method not supported");
+  }
+
+  /**
+   * returns the data type that is associated with the data flow operation
+   *
+   * @return the MessageType or an UnsupportedOperationException
+   */
+  default MessageType getDataType() {
+    throw new UnsupportedOperationException("method not supported");
+  }
+
+  /**
    * Task plan associated with this operation
    *
    * @return task plan
    */
   TaskPlan getTaskPlan();
+
+  /**
+   * Returns a unique id for this operation. This would in most case be the edge number for the
+   * given operation.
+   *
+   * @return an unique id as a String
+   */
+  String getUniqueId();
 }

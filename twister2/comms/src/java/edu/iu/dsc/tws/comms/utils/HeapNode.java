@@ -23,14 +23,53 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.utils;
 
+import java.util.Comparator;
+
 import edu.iu.dsc.tws.comms.shuffle.KeyValue;
 
-public class HeapNode {
-  public KeyValue data;
-  public int listNo;
+public class HeapNode<K, V> implements Comparable<HeapNode<K, V>> {
 
-  public HeapNode(KeyValue data, int listNo) {
+  public KeyValue<K, V> data;
+  public int listNo;
+  private Comparator<K> keyComparator;
+
+  public HeapNode(KeyValue<K, V> data, int listNo, Comparator<K> keyComparator) {
     this.data = data;
     this.listNo = listNo;
+    this.keyComparator = keyComparator;
+  }
+
+  public KeyValue<K, V> getData() {
+    return data;
+  }
+
+  /**
+   * Since KeyValue has been wrapped by this class, providing an easy to access method to get key
+   */
+  public K getKey() {
+    return this.data.getKey();
+  }
+
+  /**
+   * Since KeyValue has been wrapped by this class, providing and easy to access methods to get value
+   */
+  public V getValue() {
+    return this.data.getValue();
+  }
+
+  @Override
+  public String toString() {
+    return "HeapNode{"
+        + "data="
+        + data
+        + ", listNo="
+        + listNo
+        + '}';
+  }
+
+
+  @Override
+  public int compareTo(HeapNode<K, V> o) {
+    return this.keyComparator.compare(this.data.getKey(), o.getData().getKey());
   }
 }

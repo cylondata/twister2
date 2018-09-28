@@ -28,6 +28,7 @@ class MPIContext extends SchedulerContext {
   public static final String MPI_HOME = "twister2.resource.scheduler.mpi.home";
   public static final String MODE = "twsiter2.resource.scheduler.mpi.mode";
   public static final String NODES_FILE = "twister2.resource.scheduler.mpi.nodes.file";
+  public static final String MPIRUN_FILE = "twister2.resource.scheduler.mpi.mpirun.file";
   public static final String RUN_JOB_MASTER = "twister2.job.master.enable";
   public static final String MASTER_CLASS = "twister2.job.master.clazz";
 
@@ -58,6 +59,10 @@ class MPIContext extends SchedulerContext {
 
   public static String nodeFiles(Config cfg) {
     return cfg.getStringValue(NODES_FILE, "nodes");
+  }
+
+  public static String mpiRunFile(Config cfg) {
+    return cfg.getStringValue(MPIRUN_FILE, "mpirun");
   }
 
   public static boolean jobMasterEnabled(Config cfg) {

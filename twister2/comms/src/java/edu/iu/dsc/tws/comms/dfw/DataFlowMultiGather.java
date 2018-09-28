@@ -137,6 +137,11 @@ public class DataFlowMultiGather implements DataFlowOperation {
     return plan;
   }
 
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edges.toArray()[0]);
+  }
+
   /**
    * Initialize
    */
@@ -158,7 +163,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
         partialRcvr = new GatherPartialReceiver(dest);
         gather = new DataFlowGather(channel, sources, dest,
             finalRcvr, partialRcvr, count, dest, config, instancePlan,
-            true, keyType, dataType, edgeList.get(count));
+            true, dataType, dataType, keyType, edgeList.get(count));
       } else {
         gather = new DataFlowGather(channel, sources, dest,
             finalRcvr, count, dest, config, dType, instancePlan, edgeList.get(count));
@@ -210,6 +215,16 @@ public class DataFlowMultiGather implements DataFlowOperation {
       }
     }
     return isDone;
+  }
+
+  @Override
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  @Override
+  public MessageType getDataType() {
+    return dataType;
   }
 
   private class GatherPartialReceiver implements MessageReceiver {

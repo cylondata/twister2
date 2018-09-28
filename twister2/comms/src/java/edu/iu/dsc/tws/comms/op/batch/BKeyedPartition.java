@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
@@ -38,7 +38,7 @@ public class BKeyedPartition {
     this.destinationSelector = destSelector;
     String shuffleDir = comm.getPersistentDirectory();
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
-        new PartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
+        new DPartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
         new PartitionPartialReceiver(),
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
@@ -52,7 +52,7 @@ public class BKeyedPartition {
     this.destinationSelector = destSelector;
     String shuffleDir = comm.getPersistentDirectory();
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
-        new PartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
+        new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
         new PartitionPartialReceiver(),
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
@@ -60,7 +60,7 @@ public class BKeyedPartition {
   }
 
   public boolean partition(int source, Object key, Object message, int flags) {
-    int destinations = destinationSelector.next(source, key);
+    int destinations = destinationSelector.next(source, key, message);
 
     boolean send = partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
         partition.getDataType()), flags, destinations);

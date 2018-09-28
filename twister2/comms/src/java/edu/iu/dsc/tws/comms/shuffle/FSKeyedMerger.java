@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class FSKeyedMerger implements Shuffle {
   private static final Logger LOG = Logger.getLogger(FSKeyedMerger.class.getName());
 
@@ -121,8 +122,6 @@ public class FSKeyedMerger implements Shuffle {
 
   /**
    * Add the data to the file
-   * @param data
-   * @param length
    */
   public void add(Object key, byte[] data, int length) {
     if (status == FSStatus.READING) {
@@ -285,6 +284,7 @@ public class FSKeyedMerger implements Shuffle {
 
   /**
    * Get the file name to save the current part
+   *
    * @return the save file name
    */
   private String getSaveFolderName() {
@@ -294,6 +294,7 @@ public class FSKeyedMerger implements Shuffle {
 
   /**
    * Get the file name to save the current part
+   *
    * @param filePart file part index
    * @return the save file name
    */
