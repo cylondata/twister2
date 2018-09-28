@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Introduction](introduction.md)
+* [Introduction](README.md)
 * [Quickstart](quickstart.md)
 * [Deployment](deployment/installation.md)
   * [Compiling](deployment/compiling.md)
