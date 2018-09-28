@@ -55,6 +55,8 @@ public class NodeCommand extends MPICommand {
     mpiCommand.add(twister2Home);
     mpiCommand.add(Paths.get(configDirectoryName, nodesFileName).toString());
     mpiCommand.add(MPIContext.mpiRunFile(config));
+    mpiCommand.add("-Xmx" + getMemory(job) + "m");
+    mpiCommand.add("-Xms" + getMemory(job) + "m");
     return mpiCommand;
   }
 
