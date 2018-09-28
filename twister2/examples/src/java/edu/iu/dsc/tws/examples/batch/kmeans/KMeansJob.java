@@ -110,7 +110,10 @@ public class KMeansJob extends TaskWorker {
         centroid = kMeansCenters.getCenters();
       }
     }
+
     LOG.info("%%% Final Centroid Values Received: %%%" + Arrays.deepToString(centroid));
+    //To write the final value into the file or hdfs
+    KMeansOutputWriter.writeToOutputFile(centroid, outputFile, config, fileSystem);
   }
 
   private static class KMeansSourceTask extends BaseBatchSource implements Receptor {

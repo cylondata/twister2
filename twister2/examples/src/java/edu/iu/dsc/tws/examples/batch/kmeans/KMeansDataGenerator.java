@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.data.utils.HdfsUtils;
 
 /**
  * This class is to generate the datapoints and centroid values in a random manner and write the
- * datapoints and centroid values in the file.
+ * datapoints and centroid values in the local filesystem or distributed filesystem.
  */
 public class KMeansDataGenerator {
 
@@ -98,7 +98,6 @@ public class KMeansDataGenerator {
    */
   private static void writeToPointsFile(String datapoints, String fileName, Config config,
                                         String fileSystem) {
-
     BufferedWriter bufferedWriter = null;
     StringTokenizer stringTokenizer = new StringTokenizer(datapoints, "\n");
 

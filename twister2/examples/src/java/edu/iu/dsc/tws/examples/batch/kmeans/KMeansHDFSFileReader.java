@@ -47,7 +47,7 @@ public class KMeansHDFSFileReader {
 
     int lengthOfFile = hdfsUtils.getLengthOfFile(fName);
     double[][] dataPoints = new double[lengthOfFile][dimension];
-    BufferedReader bufferedReader;
+    BufferedReader bufferedReader = null;
     try {
       int value = 0;
       String line = "";
@@ -60,14 +60,21 @@ public class KMeansHDFSFileReader {
           }
           value++;
         }
-        bufferedReader.close();
-        hadoopFileSystem.close();
+
       } else {
         throw new FileNotFoundException("File Not Found In HDFS");
       }
     } catch (IOException e) {
       e.printStackTrace();
+    } finally {
+      try {
+        bufferedReader.close();
+        hadoopFileSystem.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
+
     return dataPoints;
   }
 
@@ -96,17 +103,14 @@ public class KMeansHDFSFileReader {
         }
         value++;
       }
-      bufferedReader.close();
-      hadoopFileSystem.close();
     } catch (IOException e) {
       e.printStackTrace();
     } finally {
       try {
-        if (bufferedReader != null) {
-          bufferedReader.close();
-        }
-      } catch (IOException ioe) {
-        ioe.printStackTrace();
+        bufferedReader.close();
+        hadoopFileSystem.close();
+      } catch (Exception e) {
+        e.printStackTrace();
       }
     }
     return centroids;
