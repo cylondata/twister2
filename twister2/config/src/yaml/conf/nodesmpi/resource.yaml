@@ -16,3 +16,5 @@ twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core.tar.gz"
 twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mpi.MPILauncher"
 # the uplaoder class
 twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+# weather to run job master as the 0th worker
+twister2.job.master.enable: true

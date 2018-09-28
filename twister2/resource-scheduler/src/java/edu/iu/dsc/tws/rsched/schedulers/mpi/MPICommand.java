@@ -72,7 +72,13 @@ public abstract class MPICommand {
                                                     JobAPI.Job job) {
     Map<String, Object> commands = new HashMap<>();
     // lets get the configurations
-    commands.put("procs", requestedResources.getNumberOfWorkers());
+    int numberOfWorkers = requestedResources.getNumberOfWorkers();
+    // if job master is enabled, increase the process count by 1
+    boolean jobMaster = MPIContext.jobMasterEnabled(cfg);
+    if (jobMaster) {
+      numberOfWorkers++;
+    }
+    commands.put("procs", numberOfWorkers);
 
     String jobClassPath = JobUtils.jobClassPath(cfg, job, workingDirectory);
     LOG.log(Level.INFO, "Job class path: " + jobClassPath);
