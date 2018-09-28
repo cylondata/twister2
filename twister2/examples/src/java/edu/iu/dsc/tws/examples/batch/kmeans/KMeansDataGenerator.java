@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.util.Random;
@@ -40,8 +41,7 @@ public class KMeansDataGenerator {
    * points, required dimension, minimum and maximum value (for the random number generation).
    */
   public static void generateDataPointsFile(String fileName, int numPoints, int dimension,
-                                            int seedValue, Config config,
-                                            String fileSys) {
+                                            int seedValue, Config config, String fileSys) {
 
     StringBuffer datapoints = new StringBuffer();
     Random r = new Random(seedValue);
@@ -69,8 +69,7 @@ public class KMeansDataGenerator {
    * centroids, required dimension, minimum and maximum value (for the random number generation).
    */
   public static void generateCentroidFile(String fileName, int numCentroids, int dimension,
-                                          int seedValue, Config config,
-                                          String fileSys) {
+                                          int seedValue, Config config, String fileSys) {
 
     StringBuffer centroids = new StringBuffer();
     Random r = new Random(seedValue);
@@ -103,11 +102,12 @@ public class KMeansDataGenerator {
     BufferedWriter bufferedWriter = null;
     StringTokenizer stringTokenizer = new StringTokenizer(datapoints, "\n");
 
+    HadoopFileSystem hadoopFileSystem = null;
     HadoopDataOutputStream dataOutputStream = null;
     try {
       if ("hdfs".equals(fileSystem)) {
         HdfsUtils hdfsUtils = new HdfsUtils(config, fileName);
-        HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+        hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
         Path path = hdfsUtils.getPath();
 
         if (!hadoopFileSystem.exists(path)) {
@@ -122,10 +122,14 @@ public class KMeansDataGenerator {
           throw new RuntimeException("File already exists in the hdfs, remove it from hdfs");
         }
       } else if ("local".equals(fileSystem)) {
-        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
-        while (stringTokenizer.hasMoreTokens()) {
-          bufferedWriter.write(stringTokenizer.nextToken().trim());
-          bufferedWriter.write("\n");
+        File file = new File(fileName);
+        if (!file.exists()) {
+          //file.createNewFile();
+          bufferedWriter = new BufferedWriter(new FileWriter(fileName));
+          while (stringTokenizer.hasMoreTokens()) {
+            bufferedWriter.write(stringTokenizer.nextToken().trim());
+            bufferedWriter.write("\n");
+          }
         }
       }
     } catch (Exception e) {
@@ -136,6 +140,9 @@ public class KMeansDataGenerator {
         bufferedWriter.close();
         if (dataOutputStream != null) {
           dataOutputStream.close();
+        }
+        if (hadoopFileSystem != null) {
+          hadoopFileSystem.close();
         }
       } catch (Exception e) {
         e.printStackTrace();
@@ -152,11 +159,12 @@ public class KMeansDataGenerator {
                                           Config config, String fileSystem) {
     BufferedWriter bufferedWriter = null;
     StringTokenizer stringTokenizer = new StringTokenizer(datapoints, "\n");
+    HadoopFileSystem hadoopFileSystem = null;
     HadoopDataOutputStream dataOutputStream = null;
     try {
       if ("hdfs".equals(fileSystem)) {
         HdfsUtils hdfsUtils = new HdfsUtils(config, fileName);
-        HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+        hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
         Path path = hdfsUtils.getPath();
 
         if (!hadoopFileSystem.exists(path)) {
@@ -172,10 +180,14 @@ public class KMeansDataGenerator {
           throw new RuntimeException("File already exists in the hdfs, remove it from hdfs");
         }
       } else if ("local".equals(fileSystem)) {
-        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
-        while (stringTokenizer.hasMoreTokens()) {
-          bufferedWriter.write(stringTokenizer.nextToken().trim());
-          bufferedWriter.write("\n");
+        File file = new File(fileName);
+        if (!file.exists()) {
+          //file.createNewFile();
+          bufferedWriter = new BufferedWriter(new FileWriter(fileName));
+          while (stringTokenizer.hasMoreTokens()) {
+            bufferedWriter.write(stringTokenizer.nextToken().trim());
+            bufferedWriter.write("\n");
+          }
         }
       }
     } catch (Exception e) {
@@ -186,6 +198,9 @@ public class KMeansDataGenerator {
         bufferedWriter.close();
         if (dataOutputStream != null) {
           dataOutputStream.close();
+        }
+        if (hadoopFileSystem != null) {
+          hadoopFileSystem.close();
         }
       } catch (Exception e) {
         e.printStackTrace();

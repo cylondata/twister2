@@ -61,6 +61,7 @@ public class KMeansHDFSFileReader {
           value++;
         }
         bufferedReader.close();
+        hadoopFileSystem.close();
       } else {
         throw new FileNotFoundException("File Not Found In HDFS");
       }
@@ -96,7 +97,7 @@ public class KMeansHDFSFileReader {
         value++;
       }
       bufferedReader.close();
-
+      hadoopFileSystem.close();
     } catch (IOException e) {
       e.printStackTrace();
     } finally {

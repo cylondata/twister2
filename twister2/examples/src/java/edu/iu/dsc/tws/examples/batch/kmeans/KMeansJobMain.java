@@ -81,7 +81,7 @@ public class KMeansJobMain {
     int cSeedValue = Integer.parseInt(commandLine.getOptionValue(
         KMeansConstants.ARGS_CENTERS_SEED_VALUE));
 
-    LOG.info("workers:" + workers + "\titeration:" + itr + "\tdimension:" + dim
+    LOG.fine("workers:" + workers + "\titeration:" + itr + "\tdimension:" + dim
         + "\tnumber of clusters:" + numOfClusters + "\tfilename:" + fileName
         + "\tnumber of datapoints:" + numberOfPoints + "\tdatapoints file:" + datapointsFile
         + "\tcenters file:" + centersFile + "\tfilesys:" + fileSystem);

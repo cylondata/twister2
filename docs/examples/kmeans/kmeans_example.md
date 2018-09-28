@@ -9,13 +9,13 @@ The need to process large amounts of continuously arriving information has led t
 ### To generate and write the datapoints and centroids in the local filesystem and run the K-Means
 
 ```bash
-./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /home/kgovind/input.txt -pointsfile /home/kgovind/kinput.txt -centersfile /home/kgovind/kcentroid.txt -points 100 -filesys local -minvalue 100 -maxvalue 500 -input generate
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /home/kgovind/output.txt -pointsfile /home/kgovind/kinput.txt -centersfile /home/kgovind/kcentroid.txt -points 100 -filesys local -minvalue 100 -maxvalue 500 -input generate
 ```
 
 ### To generate and write the datapoints and centroids in the HDFS and run the K-Means
 
 ```bash
-./bin/twister2 submit nodesmi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /home/kgovind/input.txt -pointsfile /home/kgovind/kinput.txt -centersfile /home/kgovind/kcentroid.txt -points 100 -filesys hdfs -pseedvalue 100 -cseedvalue 200 -input generate
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /home/kgovind/output.txt -pointsfile /home/kgovind/kinput.txt -centersfile /home/kgovind/kcentroid.txt -points 100 -filesys hdfs -pseedvalue 100 -cseedvalue 200 -input generate
 ```
 
 ## Implementation Details
@@ -60,7 +60,7 @@ It retrieves and parses the command line parameters submitted by the user for ru
 
 ### KMeansJob
 
-It is the main class for the K-Means clustering which has the following classes namely KMeansSource, KMeansAllReduceTask, and CentroidAggregator.First, the execute method in KMeansJob invokes the KMeansDataGenerator to generate the datapoints file and centroid file, if the user has specified the option ARGS\_DATA\_INPUT as "generate". First, it will invoke the KMeansDataGenerator class and store the generated datapoints and centroids in the respective filesystems which is based on the option ARGS\_FILESYSTEM as "local" or "hdfs". Then, it will invoke the KMeansFileReader to read the input datafile/centroid file either from local filesystem or HDFS.
+It is the main class for the K-Means clustering which has the following classes namely KMeansSource, KMeansAllReduceTask, and CentroidAggregator. First, the execute method in KMeansJob invokes the KMeansDataGenerator to generate the datapoints file and centroid file, if the user has specified the option ARGS\_DATA\_INPUT as "generate". Next, it will invoke the KMeansDataGenerator class and store the generated datapoints and centroids in each worker (locally) or in the distributed file system which is based on the option ARGS\_FILESYSTEM as "local" or "hdfs". Then, it will invoke the KMeansFileReader to read the input datafile/centroid file either from locally or HDFS.
 
 Next, the datapoints are stored in DataSet \(0th object\) and centroids are stored in DataSet \(1st object\) and call the executor as given below:
 
