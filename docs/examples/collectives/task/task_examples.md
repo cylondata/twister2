@@ -18,8 +18,6 @@ Twister2.
 6. KeyedGather
 7. Broadcast
 8. Partition
-9. KeyedPartition
-
 After building the project, you can run the batch mode examples as follows. 
 
 ```bash
