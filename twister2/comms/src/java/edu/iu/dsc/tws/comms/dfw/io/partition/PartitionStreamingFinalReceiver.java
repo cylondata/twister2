@@ -30,8 +30,6 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   // the receiver
   private BulkReceiver receiver;
 
-  private Map<Integer, List<Integer>> expIds;
-
   public PartitionStreamingFinalReceiver(BulkReceiver receiver) {
     this.receiver = receiver;
   }
@@ -39,11 +37,11 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   @Override
   public void init(Config cfg, DataFlowOperation operation,
                    Map<Integer, List<Integer>> expectedIds) {
-    this.expIds = expectedIds;
     int sendPendingMax = DataFlowContext.sendPendingMax(cfg);
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       messages.put(e.getKey(), new ArrayBlockingQueue<>(sendPendingMax));
     }
+    this.receiver.init(cfg, expectedIds.keySet());
   }
 
   @Override
@@ -54,6 +52,7 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   @SuppressWarnings({"unchecked", "rawtypes"})
   @Override
   public boolean progress() {
+    boolean needsFurtherProgress = false;
     // we always send messages from before barrier map
     for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
       Integer target = e.getKey();
@@ -64,10 +63,12 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
           boolean offer = receiver.receive(target, ((List<Object>) msg).iterator());
           if (offer) {
             inComingMessages.poll();
+          } else {
+            needsFurtherProgress = true;
           }
         }
       }
     }
-    return true;
+    return needsFurtherProgress;
   }
 }

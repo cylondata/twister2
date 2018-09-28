@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -45,10 +46,15 @@ public class STPartitionExample extends BenchTaskWorker {
 
     private int count = 0;
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public boolean execute(IMessage message) {
-      if (message.getContent() instanceof List) {
-        count += ((List) message.getContent()).size();
+      if (message.getContent() instanceof Iterator) {
+        Iterator it = (Iterator) message.getContent();
+        if (it.hasNext()) {
+          it.next();
+          count += 1;
+        }
       }
       LOG.info(String.format("%d %d Streaming Message Partition Received count: %d",
           context.getWorkerId(),

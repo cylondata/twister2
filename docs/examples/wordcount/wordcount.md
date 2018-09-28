@@ -1,15 +1,3 @@
-# Examples
-
-.. toctree:: :maxdepth: 5
-
-communication task\_examples
-
-We have developed many examples that uses both Twister2 core functions as well as higher level abstractions.
-
-This guide shows how to run Twister2 Examples
-
-Make sure to install Twister2 before running the examples. The installation insturctioncs can be found in [Installation Guide]()
-
 ## Streaming WordCount Example
 
 In this section we will run a streaming word count example from Twister2. This example only uses communication layer and resource scheduling layer. The threads are managed by the program.
