@@ -129,9 +129,8 @@ public class FSKeyedMerger implements Shuffle {
     }
 
     lock.lock();
-    Object keyArray = FileLoader.convertKeyToArray(keyType, key);
     try {
-      recordsInMemory.add(new KeyValue(keyArray, data));
+      recordsInMemory.add(new KeyValue(key, data));
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
