@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
@@ -122,31 +121,27 @@ public class WordCountWorker implements IWorker {
     // we need to communicationProgress the communication
     boolean done = false;
     while (!done) {
-      try {
-        done = true;
-        // communicationProgress the channel
-        channel.getChannel().progress();
+      done = true;
+      // communicationProgress the channel
+      channel.getChannel().progress();
 
-        // we should communicationProgress the communication directive
-        boolean needsProgress = keyGather.progress();
-        if (needsProgress) {
+      // we should communicationProgress the communication directive
+      boolean needsProgress = keyGather.progress();
+      if (needsProgress) {
+        done = false;
+      }
+
+      if (keyGather.hasPending()) {
+        done = false;
+      }
+
+      for (BatchWordSource b : batchWordSources) {
+        if (!b.isDone()) {
           done = false;
         }
-
-        if (keyGather.hasPending()) {
-          done = false;
-        }
-
-        for (BatchWordSource b : batchWordSources) {
-          if (!b.isDone()) {
-            done = false;
-          }
-        }
-        if (!wordAggregator.isDone()) {
-          done = false;
-        }
-      } catch (Throwable t) {
-        LOG.log(Level.SEVERE, "Error", t);
+      }
+      if (!wordAggregator.isDone()) {
+        done = false;
       }
     }
   }

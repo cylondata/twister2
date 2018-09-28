@@ -22,6 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 public final class KeyDeserializer {
   private static final Logger LOG = Logger.getLogger(KeyDeserializer.class.getName());
@@ -50,7 +51,6 @@ public final class KeyDeserializer {
       case INTEGER:
         currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
         ByteBuffer byteBuffer = buffers.get(currentIndex).getByteBuffer();
-//        LOG.info(String.format("Key deserialize position %d", byteBuffer.position()));
         key = byteBuffer.getInt();
         keyLength = 4;
         break;
@@ -202,5 +202,40 @@ public final class KeyDeserializer {
       keys.add(readBytes(buffers, singleKeyLength));
     }
     return keys;
+  }
+
+  /**
+   * Deserialize's the given data in the ByteBuffer based on the dataType
+   *
+   * @param dataType the type of the the object in the buffer
+   * @param deserializer the deserializer to be used for types other than primitives
+   * @param os the buffer that contains the data
+   * @return the deserialized object
+   */
+  public static Object deserialize(MessageType dataType, KryoMemorySerializer deserializer,
+                                   ByteBuffer os, int dataSize) {
+    Object data;
+    if (dataType == MessageType.OBJECT) {
+      byte[] bytes = new byte[dataSize];
+      os.get(bytes);
+      data = deserializer.deserialize(bytes);
+    } else if (dataType == MessageType.BYTE) {
+      data = os.get();
+    } else if (dataType == MessageType.DOUBLE) {
+      data = os.getDouble();
+    } else if (dataType == MessageType.INTEGER) {
+      data = os.getInt();
+    } else if (dataType == MessageType.LONG) {
+      data = os.getLong();
+    } else if (dataType == MessageType.SHORT) {
+      data = os.getShort();
+    } else if (dataType == MessageType.CHAR) {
+      data = os.getChar();
+    } else {
+      byte[] bytes = new byte[dataSize];
+      os.get(bytes);
+      data = deserializer.deserialize(bytes);
+    }
+    return data;
   }
 }
