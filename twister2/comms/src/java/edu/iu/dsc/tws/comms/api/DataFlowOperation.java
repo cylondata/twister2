@@ -109,4 +109,12 @@ public interface DataFlowOperation {
    * @return task plan
    */
   TaskPlan getTaskPlan();
+
+  /**
+   * Returns a unique id for this operation. This would in most case be the edge number for the
+   * given operation.
+   *
+   * @return an unique id as a String
+   */
+  String getUniqueId();
 }

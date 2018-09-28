@@ -405,19 +405,32 @@ public abstract class KeyedReceiver implements MessageReceiver {
       }
 
       if (dataFlowOperation.isDelegeteComplete() && sourcesFinished && isAllQueuesEmpty) {
-        if (dataFlowOperation.sendPartial(target, new byte[0],
-            MessageFlags.END, destination)) {
-          isEmptySent.put(target, true);
-        } else {
-          needsFurtherProgress = true;
-        }
-        batchDone.put(target, true);
-        // we don'target want to go through the while loop for this one
-        break;
+        needsFurtherProgress = finishProgress(needsFurtherProgress, target);
       }
     }
 
     return needsFurtherProgress;
+  }
+
+  /**
+   * Performs the final steps of the progress method in the receiver. If the method of finishing
+   * needs to be changed this method needs to be overwritten.
+   *
+   * @param needsFurtherProgress current state of needsFurtherProgress value
+   * @param target the target(which is a source in this instance) from which the messages are sent
+   * @return true if further progress is needed or false otherwise
+   */
+  protected boolean finishProgress(boolean needsFurtherProgress, int target) {
+
+    boolean needsProgress = needsFurtherProgress;
+    if (dataFlowOperation.sendPartial(target, new byte[0],
+        MessageFlags.END, destination)) {
+      isEmptySent.put(target, true);
+    } else {
+      needsProgress = true;
+    }
+    batchDone.put(target, true);
+    return needsProgress;
   }
 
   /**

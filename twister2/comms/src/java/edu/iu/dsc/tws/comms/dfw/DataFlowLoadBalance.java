@@ -45,6 +45,7 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
   private Set<Integer> sources;
   private Set<Integer> destinations;
   private PartitionRouter router;
+  private int edgeValue;
 
   private Map<Integer, Integer> destinationIndex;
   private Set<Integer> thisSources;
@@ -103,6 +104,7 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
     Map<Integer, Set<Integer>> external = router.getExternalSendTasks(0);
     this.instancePlan = taskPlan;
     this.type = t;
+    this.edgeValue = edge;
 
     LOG.info(String.format("%d adding internal/external routing", taskPlan.getThisExecutor()));
     try {
@@ -217,6 +219,11 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
   @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
+  }
+
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edgeValue);
   }
 
   private RoutingParameters sendRoutingParameters(int source, int path) {

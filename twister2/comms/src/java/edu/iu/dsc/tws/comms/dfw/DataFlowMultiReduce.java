@@ -161,6 +161,11 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     return taskPlan;
   }
 
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edges.toArray()[0]);
+  }
+
   /**
    * Initialize
    */

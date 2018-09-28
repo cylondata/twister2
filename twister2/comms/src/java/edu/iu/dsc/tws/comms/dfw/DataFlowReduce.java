@@ -53,6 +53,8 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   // the destination task
   protected int destination;
 
+  private int edgeValue;
+
   private InvertedBinaryTreeRouter router;
 
   private MessageReceiver finalReceiver;
@@ -249,6 +251,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     this.config = cfg;
     this.dataType = t;
     this.executor = instancePlan.getThisExecutor();
+    this.edgeValue = edge;
 
     // we only have one path
     this.router = new InvertedBinaryTreeRouter(cfg, taskPlan,
@@ -373,5 +376,10 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
+  }
+
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edgeValue);
   }
 }

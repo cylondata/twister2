@@ -370,7 +370,8 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     return instancePlan;
   }
 
-  public int getEdge() {
-    return edge;
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edge);
   }
 }

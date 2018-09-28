@@ -233,7 +233,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   }
 
   private String getOperationName(int target) {
-    int edge = partition.getEdge();
-    return "partition-" + edge + "-" + target + "-" + UUID.randomUUID().toString();
+    String uid = partition.getUniqueId();
+    return "partition-" + uid + "-" + target + "-" + UUID.randomUUID().toString();
   }
 }
