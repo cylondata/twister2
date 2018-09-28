@@ -56,6 +56,7 @@ public class SlurmCommand extends MPICommand {
     String twister2Home = Paths.get(workingDirectory, job.getJobName()).toString();
     String configDirectoryName = Paths.get(workingDirectory,
         job.getJobName(), SchedulerContext.clusterType(config)).toString();
+    String nodesFileName = MPIContext.nodeFiles(config);
 
     // lets construct the mpi command to launch
     List<String> mpiCommand = mpiCommand(getScriptPath(), 1);
@@ -68,6 +69,9 @@ public class SlurmCommand extends MPICommand {
     mpiCommand.add(job.getJobName());
     mpiCommand.add(twister2Home);
     mpiCommand.add(twister2Home);
+    mpiCommand.add(MPIContext.mpiRunFile(config));
+    mpiCommand.add("-Xmx" + getMemory(job) + "m");
+    mpiCommand.add("-Xms" + getMemory(job) + "m");
 
     return mpiCommand;
   }

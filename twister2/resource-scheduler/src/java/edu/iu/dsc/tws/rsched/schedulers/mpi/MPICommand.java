@@ -85,6 +85,18 @@ public abstract class MPICommand {
     return commands;
   }
 
+  int getMemory(JobAPI.Job job) {
+    int memory = 256;
+    List<JobAPI.JobResources.ResourceType> resources = job.getJobResources().getResourcesList();
+    if (resources != null && resources.size() >= 1) {
+      int mem = resources.get(0).getWorkerComputeResource().getRam();
+      if (mem > 0) {
+        memory = mem;
+      }
+    }
+    return memory;
+  }
+
   protected abstract List<String> mpiCommand(String wd,
                                              RequestedResources resourcePlan, JobAPI.Job job);
 }

@@ -14,4 +14,6 @@ fi
 profile=
 debug=
 
-java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nodesmpi/logger.properties $cp -cp $3 edu.iu.dsc.tws.rsched.schedulers.mpi.MPIWorker --container_class $4 --job_name $5 --twister2_home $6 --cluster_type nodesmpi --config_dir $7 &
+echo $10 $11
+
+java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp $10 $11 -Djava.util.logging.config.file=nodesmpi/logger.properties $cp -cp $3 edu.iu.dsc.tws.rsched.schedulers.mpi.MPIWorker --container_class $4 --job_name $5 --twister2_home $6 --cluster_type nodesmpi --config_dir $7 &
