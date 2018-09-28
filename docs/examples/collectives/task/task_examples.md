@@ -23,7 +23,7 @@ Twister2.
 After building the project, you can run the batch mode examples as follows. 
 
 ```bash
-./twister2-dist/bin/twister2 submit nodesmpi jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr <iterations> -workers <workers> -size <data_size> -op "<operation>" -stages <source_parallelsim>,<sink_parallelism> -<flag> -verify
+./twister2-dist/bin/twister2 submit standalone jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr <iterations> -workers <workers> -size <data_size> -op "<operation>" -stages <source_parallelsim>,<sink_parallelism> -<flag> -verify
 ```
 
 ### Running Option Definitions
@@ -132,7 +132,7 @@ Running a reduction operation on a size of 8 array with 4 workers iterating once
 and sink parallelism of 1, added with result verification. 
 
 ```bash
-./twister2-dist/bin/twister2 submit nodesmpi jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,1 -verify
+./twister2-dist/bin/twister2 submit standalone jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,1 -verify
 
 ```
 [Task based Batch Reduce Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/BTReduceExample.java)

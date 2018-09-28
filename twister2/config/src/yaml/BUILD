@@ -17,8 +17,8 @@ filegroup(
 
 
 filegroup(
-    name = "conf-nodesmpi-yaml",
-    srcs = glob(["conf/nodesmpi/*"]),
+    name = "conf-standalone-yaml",
+    srcs = glob(["conf/standalone/*"]),
 )
 
 filegroup(
