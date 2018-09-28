@@ -156,7 +156,7 @@ public final class MPIWorker {
     String jobName = cmd.getOptionValue("job_name");
 
     LOG.log(Level.FINE, String.format("Initializing process with "
-        + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
+            + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
@@ -284,7 +284,7 @@ public final class MPIWorker {
   }
 
   public static AllocatedResources addContainers(Config cfg,
-                                    Map<Integer, String> processes) {
+                                                 Map<Integer, String> processes) {
     int size = 0;
     try {
       size = MPI.COMM_WORLD.getSize();

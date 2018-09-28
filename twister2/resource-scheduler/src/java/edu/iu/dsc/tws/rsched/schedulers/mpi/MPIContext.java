@@ -25,12 +25,9 @@ class MPIContext extends SchedulerContext {
   public static final String SLURM_SHELL_SCRIPT = "twister2.resource.scheduler.mpi.shell.script";
 
   public static final String PARTITION = "twister2.resource.scheduler.slurm.partition";
-  public static final String MPI_HOME = "twister2.resource.scheduler.mpi.home";
   public static final String MODE = "twsiter2.resource.scheduler.mpi.mode";
   public static final String NODES_FILE = "twister2.resource.scheduler.mpi.nodes.file";
   public static final String MPIRUN_FILE = "twister2.resource.scheduler.mpi.mpirun.file";
-  public static final String RUN_JOB_MASTER = "twister2.job.master.enable";
-  public static final String MASTER_CLASS = "twister2.job.master.clazz";
 
   public static String workingDirectory(Config config) {
     return TokenSub.substitute(config, config.getStringValue(WORKING_DIRECTORY,
@@ -49,10 +46,6 @@ class MPIContext extends SchedulerContext {
     return cfg.getStringValue(PARTITION);
   }
 
-  public static String mpiExecFile(Config cfg) {
-    return cfg.getStringValue(MPI_HOME, "");
-  }
-
   public static String mpiMode(Config cfg) {
     return cfg.getStringValue(MODE, "node");
   }
@@ -63,13 +56,5 @@ class MPIContext extends SchedulerContext {
 
   public static String mpiRunFile(Config cfg) {
     return cfg.getStringValue(MPIRUN_FILE, "mpirun");
-  }
-
-  public static boolean jobMasterEnabled(Config cfg) {
-    return cfg.getBooleanValue(RUN_JOB_MASTER, false);
-  }
-
-  public static String jobMasterClass(Config cfg) {
-    return cfg.getStringValue(MASTER_CLASS);
   }
 }
