@@ -10,7 +10,7 @@ def twister2_client_conf_files():
     return [
         "//twister2/config/src/yaml:conf-yaml",
         "//twister2/config/src/yaml:conf-local-yaml",
-        "//twister2/config/src/yaml:conf-slurmmpi-yaml",
+        "//twister2/config/src/yaml:conf-slurm-yaml",
         "//twister2/config/src/yaml:conf-standalone-yaml",
         "//twister2/config/src/yaml:conf-aurora-yaml",
         "//twister2/config/src/yaml:conf-kubernetes-yaml",
@@ -27,9 +27,9 @@ def twister2_client_standalone_files():
         "//twister2/config/src/yaml:conf-standalone-yaml",
     ]
 
-def twister2_client_slurmmpi_files():
+def twister2_client_slurm_files():
     return [
-        "//twister2/config/src/yaml:conf-slurmmpi-yaml",
+        "//twister2/config/src/yaml:conf-slurm-yaml",
     ]
 
 def twister2_client_aurora_files():

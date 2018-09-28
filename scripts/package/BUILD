@@ -3,7 +3,7 @@ package(default_visibility = ["//visibility:public"])
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_deb", "pkg_tar")
 load("//tools:rules/twister2_client.bzl", "twister2_client_bin_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_conf_files")
-load("//tools:rules/twister2_client.bzl", "twister2_client_slurmmpi_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_slurm_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_standalone_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_aurora_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_kubernetes_files")
@@ -234,7 +234,7 @@ pack_tw2(
         ":twister2-conf-kubernetes",
         ":twister2-conf-mesos",
         ":twister2-conf-standalone",
-        ":twister2-conf-slurmmpi",
+        ":twister2-conf-slurm",
         ":twister2-conf-nomad",
         ":twister2-core-lib-executor",
         ":twister2-dist",
@@ -266,7 +266,7 @@ pack_tw2(
         ":twister2-conf-kubernetes",
         ":twister2-conf-mesos",
         ":twister2-conf-standalone",
-        ":twister2-conf-slurmmpi",
+        ":twister2-conf-slurm",
         ":twister2-conf-nomad",
         ":twister2-core-lib-executor",
         ":twister2-dist",
@@ -290,9 +290,9 @@ pack_tw2(
 )
 
 pack_tw2(
-    name = "twister2-conf-slurmmpi",
-    srcs = twister2_client_slurmmpi_files(),
-    package_dir = "conf/slurmmpi",
+    name = "twister2-conf-slurm",
+    srcs = twister2_client_slurm_files(),
+    package_dir = "conf/slurm",
     version = TW2_VERSION,
 )
 
