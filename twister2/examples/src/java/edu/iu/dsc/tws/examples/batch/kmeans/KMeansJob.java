@@ -66,22 +66,25 @@ public class KMeansJob extends TaskWorker {
     String centroidFile = kMeansJobParameters.getCentersFile();
     String fileSystem = kMeansJobParameters.getFileSystem();
     String inputData = kMeansJobParameters.getDataInput();
+    String outputFile = kMeansJobParameters.getFileName();
 
-    LOG.info("workers:" + workers + "\titeration:" + iterations
+    LOG.info("workers:" + workers + "\titeration:" + iterations + "\toutfile:" + outputFile
         + "\tnumber of datapoints:" + noOfPoints + "\tdimension:" + dimension
-        + "\tnumber of clusters:" + noOfClusters + "\tdatapoints file:" + dataPointsFile
-        + "\tcenters file:" + centroidFile + "\tfilesys:" + fileSystem);
+        + "\tnumber of clusters:" + noOfClusters + "\tdatapoints file:" + dataPointsFile + workerId
+        + "\tcenters file:" + centroidFile + workerId + "\tfilesys:" + fileSystem);
 
     KMeansFileReader kMeansFileReader = new KMeansFileReader(config, fileSystem);
     if ("generate".equals(inputData)) {
       KMeansDataGenerator.generateDataPointsFile(
-          dataPointsFile, noOfPoints, dimension, dataSeedValue, config, fileSystem);
+          dataPointsFile + workerId, noOfPoints, dimension, dataSeedValue, config,
+          fileSystem);
       KMeansDataGenerator.generateCentroidFile(
-          centroidFile, noOfClusters, dimension, centroidSeedValue, config, fileSystem);
+          centroidFile + workerId, noOfClusters, dimension, centroidSeedValue, config,
+          fileSystem);
     }
 
-    double[][] dataPoint = kMeansFileReader.readDataPoints(dataPointsFile, dimension);
-    double[][] centroid = kMeansFileReader.readCentroids(centroidFile, dimension,
+    double[][] dataPoint = kMeansFileReader.readDataPoints(dataPointsFile + workerId, dimension);
+    double[][] centroid = kMeansFileReader.readCentroids(centroidFile + workerId, dimension,
         noOfClusters);
 
     DataFlowTaskGraph graph = graphBuilder.build();
@@ -105,9 +108,9 @@ public class KMeansJob extends TaskWorker {
       for (Object value : values) {
         KMeansCenters kMeansCenters = (KMeansCenters) value;
         centroid = kMeansCenters.getCenters();
-        LOG.info("%%% New centroid Values Received: %%%" + Arrays.deepToString(centroid));
       }
     }
+    LOG.info("%%% Final Centroid Values Received: %%%" + Arrays.deepToString(centroid));
   }
 
   private static class KMeansSourceTask extends BaseBatchSource implements Receptor {
@@ -140,7 +143,7 @@ public class KMeansJob extends TaskWorker {
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataSet<Object> data) {
-      LOG.log(Level.INFO, "Received input: " + name);
+      LOG.log(Level.FINE, "Received input: " + name);
       input = data;
       int id = input.getId();
 
