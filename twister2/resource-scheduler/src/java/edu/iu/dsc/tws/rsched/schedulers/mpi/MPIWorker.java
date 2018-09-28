@@ -11,8 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.mpi;
 
+import java.io.File;
 import java.nio.CharBuffer;
 import java.nio.IntBuffer;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -28,12 +30,16 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.logging.LoggingContext;
+import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;
@@ -183,6 +189,10 @@ public final class MPIWorker {
 
   private static void worker(Config config, int rank) {
     try {
+      String twister2Home = Context.twister2Home(config);
+      // initialize the logger
+      initLogger(config, rank, twister2Home);
+
       // lets create the resource plan
       Map<Integer, String> processNames = createResourcePlan(config);
       // now create the resource plan
@@ -288,5 +298,41 @@ public final class MPIWorker {
     } catch (MPIException e) {
       throw new RuntimeException("MPI Failure", e);
     }
+  }
+
+  /**
+   * Initialize the loggers to log into the task local directory
+   * @param cfg the configuration
+   * @param workerID worker id
+   */
+  private static void initLogger(Config cfg, int workerID, String logDirectory) {
+    // we can not initialize the logger fully yet,
+    // but we need to set the format as the first thing
+    LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
+
+    // set logging level
+    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
+
+    String persistentJobDir;
+    String jobWorkingDirectory = StandaloneContext.workingDirectory(cfg);
+    String jobName = StandaloneContext.jobName(cfg);
+    if (StandaloneContext.getLoggingSandbox(cfg)) {
+      persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
+    } else {
+      persistentJobDir = logDirectory;
+    }
+
+    // if no persistent volume requested, return
+    if (persistentJobDir == null) {
+      return;
+    }
+    String logDir = persistentJobDir + "/logs";
+    File directory = new File(logDir);
+    if (!directory.exists()) {
+      if (!directory.mkdirs()) {
+        throw new RuntimeException("Failed to create log directory: " + logDir);
+      }
+    }
+    LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
   }
 }

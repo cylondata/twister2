@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,8 +56,8 @@ public class KMeansJobMain {
     options.addOption(KMeansConstants.ARGS_FILESYSTEM, true, "filesystem");
 
     options.addOption(KMeansConstants.ARGS_CLUSTERS, true, "clusters");
-    options.addOption(KMeansConstants.ARGS_MINVALUE, true, "minvalue");
-    options.addOption(KMeansConstants.ARGS_MAXVALUE, true, "maxvalue");
+    options.addOption(KMeansConstants.ARGS_POINTS_SEED_VALUE, true, "pseedvalue");
+    options.addOption(KMeansConstants.ARGS_CENTERS_SEED_VALUE, true, "cseedvalue");
     options.addOption(KMeansConstants.ARGS_DATA_INPUT, true, "generate");
 
     @SuppressWarnings("deprecation")
@@ -75,8 +76,10 @@ public class KMeansJobMain {
     int itr = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_ITR));
     int dim = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_DIMENSIONS));
     int numOfClusters = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_CLUSTERS));
-    int minValue = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_MINVALUE));
-    int maxValue = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_MAXVALUE));
+    int pSeedValue = Integer.parseInt(commandLine.getOptionValue(
+        KMeansConstants.ARGS_POINTS_SEED_VALUE));
+    int cSeedValue = Integer.parseInt(commandLine.getOptionValue(
+        KMeansConstants.ARGS_CENTERS_SEED_VALUE));
 
     LOG.info("workers:" + workers + "\titeration:" + itr + "\tdimension:" + dim
         + "\tnumber of clusters:" + numOfClusters + "\tfilename:" + fileName
@@ -94,8 +97,8 @@ public class KMeansJobMain {
     configurations.put(KMeansConstants.ARGS_ITR, Integer.toString(itr));
     configurations.put(KMeansConstants.ARGS_DIMENSIONS, Integer.toString(dim));
     configurations.put(KMeansConstants.ARGS_CLUSTERS, Integer.toString(numOfClusters));
-    configurations.put(KMeansConstants.ARGS_MINVALUE, Integer.toString(minValue));
-    configurations.put(KMeansConstants.ARGS_MAXVALUE, Integer.toString(maxValue));
+    configurations.put(KMeansConstants.ARGS_POINTS_SEED_VALUE, Integer.toString(pSeedValue));
+    configurations.put(KMeansConstants.ARGS_CENTERS_SEED_VALUE, Integer.toString(cSeedValue));
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();

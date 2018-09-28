@@ -25,8 +25,8 @@ public final class KMeansConstants {
   public static final String ARGS_CLUSTERS = "clusters";
   public static final String ARGS_NUMBER_OF_POINTS = "points";
   public static final String ARGS_FILESYSTEM = "filesys"; // "local" or "hdfs"
-  public static final String ARGS_MINVALUE = "minvalue";
-  public static final String ARGS_MAXVALUE = "maxvalue";
+  public static final String ARGS_POINTS_SEED_VALUE = "pseedvalue";
+  public static final String ARGS_CENTERS_SEED_VALUE = "cseedvalue";
   public static final String ARGS_DATA_INPUT = "input"; //"generate" or "read"
 
   protected KMeansConstants() {

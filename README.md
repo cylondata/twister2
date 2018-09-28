@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/DSC-SPIDAL/twister2.svg?branch=master)](https://travis-ci.org/DSC-SPIDAL/twister2)
 
-Twister2 is a composable big data framework supporting streaming, data pipelines and analytics. Our 
+Twister2 is a composable big data environment supporting streaming, data pipelines and analytics. Our 
 vision is to build robust, simple to use data analytics solutions that can leverage both clouds and
 high performance computing infrastructure. 
 
