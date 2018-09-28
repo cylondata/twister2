@@ -11,16 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.task.TaskExamples;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
 public class BTGatherExample extends BenchTaskWorker {
+
+  private static final Logger LOG = Logger.getLogger(BTGatherExample.class.getName());
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
@@ -29,12 +35,38 @@ public class BTGatherExample extends BenchTaskWorker {
     int psink = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    TaskExamples taskExamples = new TaskExamples();
     BaseBatchSource g = new SourceBatchTask(edge);
-    BaseBatchSink r = taskExamples.getBatchSinkClass("gather");
+    BaseBatchSink r = new GatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.gather(SOURCE, edge, dataType);
     return taskGraphBuilder;
+  }
+
+  protected static class GatherSinkTask extends BaseBatchSink {
+    private static final long serialVersionUID = -254264903510284798L;
+
+    @Override
+    public boolean execute(IMessage message) {
+      Object object = message.getContent();
+      if (object instanceof int[]) {
+        LOG.info("Batch Gather Task Message Received : " + Arrays.toString((int[]) object));
+      } else if (object instanceof Iterator) {
+        Iterator<?> it = (Iterator<?>) object;
+        int[] a = {};
+        ArrayList<int[]> data = new ArrayList<>();
+        while (it.hasNext()) {
+          if (it.next() instanceof int[]) {
+            a = (int[]) it.next();
+            LOG.info("Data : " + Arrays.toString(a));
+            data.add(a);
+          }
+        }
+        LOG.info("Batch Gather Task Message Receieved : " + data.size());
+      } else {
+        LOG.info("Class : " + object.getClass().getName());
+      }
+      return true;
+    }
   }
 }

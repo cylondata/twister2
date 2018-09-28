@@ -11,16 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.task.TaskExamples;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
 public class BTPartitionExample extends BenchTaskWorker {
+
+  private static final Logger LOG = Logger.getLogger(BTPartitionExample.class.getName());
+
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
@@ -28,12 +33,34 @@ public class BTPartitionExample extends BenchTaskWorker {
     int psink = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    TaskExamples taskExamples = new TaskExamples();
     BaseBatchSource g = new SourceBatchTask(edge);
-    BaseBatchSink r = taskExamples.getBatchSinkClass("partition");
+    BaseBatchSink r = new PartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.partition(SOURCE, edge, dataType);
     return taskGraphBuilder;
   }
+
+  protected static class PartitionSinkTask extends BaseBatchSink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+
+      if (message.getContent() instanceof Iterator) {
+        while (((Iterator) message.getContent()).hasNext()) {
+          ((Iterator) message.getContent()).next();
+          count++;
+        }
+        if (count % 1 == 0) {
+          LOG.info("Message Partition Received : " + message.getContent()
+              + ", Count : " + count);
+        }
+      }
+
+      return true;
+    }
+  }
+
 }
