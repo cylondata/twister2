@@ -12,17 +12,20 @@
 package edu.iu.dsc.tws.examples.task.streaming;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.task.TaskExamples;
 import edu.iu.dsc.tws.task.api.IFunction;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STKeyedReduceExample extends BenchTaskWorker {
+
+  private static final Logger LOG = Logger.getLogger(STKeyedReduceExample.class.getName());
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
@@ -33,9 +36,8 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     DataType keyType = DataType.OBJECT;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    TaskExamples taskExamples = new TaskExamples();
     BaseStreamSource g = new KeyedSourceStreamTask(edge);
-    BaseStreamSink r = taskExamples.getStreamSinkClass("keyed-reduce");
+    BaseStreamSink r = new KeyedReduceSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.keyedReduce(SOURCE, edge, new IFunction() {
@@ -46,4 +48,20 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     }, keyType, dataType);
     return taskGraphBuilder;
   }
+
+  protected static class KeyedReduceSinkTask extends BaseStreamSink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (count % 100 == 0) {
+        LOG.info("Streaming Message Keyed-Reduced : " + message.getContent()
+            + ", Count : " + count);
+      }
+      count++;
+      return true;
+    }
+  }
+
 }

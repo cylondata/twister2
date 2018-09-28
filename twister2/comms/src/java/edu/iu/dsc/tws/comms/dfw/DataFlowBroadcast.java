@@ -85,6 +85,11 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     return instancePlan;
   }
 
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edge);
+  }
+
   public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
     MessageHeader header = currentMessage.getHeader();
 

@@ -40,7 +40,6 @@ import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer;
-import edu.iu.dsc.tws.comms.op.EdgeGenerator;
 import edu.iu.dsc.tws.comms.op.OperationSemantics;
 import edu.iu.dsc.tws.comms.routing.PartitionRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -244,9 +243,9 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
                            PartitionStratergy strategy,
                            MessageType dType, MessageType rcvType,
                            OperationSemantics sem,
-                           EdgeGenerator eGenerator) {
+                           int e) {
     this(cfg, channel, tPlan, srcs, dests, finalRcvr, partialRcvr, strategy, dType, rcvType,
-        null, null, sem, eGenerator);
+        null, null, sem, e);
     this.isKeyed = false;
   }
 
@@ -257,7 +256,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
                            MessageType dType, MessageType rcvType,
                            MessageType kType, MessageType rcvKType,
                            OperationSemantics sem,
-                           EdgeGenerator eGenerator) {
+                           int e) {
     this.instancePlan = tPlan;
     this.config = cfg;
     this.sources = srcs;
@@ -270,7 +269,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     this.receiveType = rcvType;
     this.keyType = kType;
     this.receiveKeyType = rcvKType;
-    this.edge = eGenerator.nextEdge();
+    this.edge = e;
     this.opSemantics = sem;
 
     if (keyType != null) {
@@ -447,6 +446,11 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return instancePlan;
   }
 
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edge);
+  }
+
   private RoutingParameters sendRoutingParameters(int source, int path) {
     if (routingParamCache.contains(source, path)) {
       return routingParamCache.get(source, path);
@@ -582,8 +586,4 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return dataType;
   }
 
-
-  public int getEdge() {
-    return edge;
-  }
 }

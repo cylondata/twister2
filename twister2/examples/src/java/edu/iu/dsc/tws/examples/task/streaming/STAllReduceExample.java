@@ -11,17 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.task.TaskExamples;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STAllReduceExample extends BenchTaskWorker {
+
+  private static final Logger LOG = Logger.getLogger(STAllReduceExample.class.getName());
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
@@ -31,12 +35,28 @@ public class STAllReduceExample extends BenchTaskWorker {
     Op operation = Op.SUM;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    TaskExamples taskExamples = new TaskExamples();
     BaseStreamSource g = new SourceStreamTask(edge);
-    BaseStreamSink r = taskExamples.getStreamSinkClass("allreduce");
+    BaseStreamSink r = new AllReduceSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.allreduce(SOURCE, edge, operation, dataType);
     return taskGraphBuilder;
+  }
+
+  protected static class AllReduceSinkTask extends BaseStreamSink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      count++;
+      if (count % 1 == 0) {
+        Object object = message.getContent();
+        if (object instanceof int[]) {
+          LOG.info("Stream AllReduce Message Received : " + Arrays.toString((int[]) object));
+        }
+      }
+      return true;
+    }
   }
 }

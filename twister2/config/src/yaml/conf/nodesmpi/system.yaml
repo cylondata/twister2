@@ -24,6 +24,9 @@ twister2.logging.max.file.size.mb: 100
 # The maximum number of log files for each worker
 twister2.logging.maximum.files: 5
 
+# the java utils log file format to be used
+twister2.logging.format: "[%1$tF %1$tT] [%4$s] %3$s: %5$s %6$s %n"
+
 ###################################################################
 # Twister2 Job Master related settings
 ###################################################################

@@ -12,14 +12,17 @@
 package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.task.TaskExamples;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
 public class BTBroadCastExample extends BenchTaskWorker {
+
+  private static final Logger LOG = Logger.getLogger(BTBroadCastExample.class.getName());
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
@@ -27,12 +30,25 @@ public class BTBroadCastExample extends BenchTaskWorker {
     int psource = taskStages.get(0);
     int psink = taskStages.get(1);
     String edge = "edge";
-    TaskExamples taskExamples = new TaskExamples();
     BaseBatchSource g = new SourceBatchTask(edge);
-    BaseBatchSink r = taskExamples.getBatchSinkClass("bcast");
+    BaseBatchSink r = new BroadcastSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
     computeConnection.broadcast(SOURCE, edge);
     return taskGraphBuilder;
+  }
+
+  protected static class BroadcastSinkTask extends BaseBatchSink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      LOG.info(" Batch Message Broadcasted : "
+          + message.getContent() + ", counter : " + count);
+      count++;
+
+      return true;
+    }
   }
 }

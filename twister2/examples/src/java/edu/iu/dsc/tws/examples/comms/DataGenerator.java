@@ -25,6 +25,14 @@ public final class DataGenerator {
     return d;
   }
 
+  public static int[] generateIntEmpty(int size) {
+    int[] d = new int[size];
+    for (int i = 0; i < size; i++) {
+      d[i] = 0;
+    }
+    return d;
+  }
+
   public static byte[] generateByteData(int size) {
     byte[] b = new byte[size];
     new Random().nextBytes(b);
