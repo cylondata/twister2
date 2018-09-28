@@ -2,8 +2,7 @@
 
 * [Introduction](introduction.md)
 * [Quickstart](quickstart.md)
-* [Deployment](deployment/README.md)
-  * [Overview](deployment/installation.md)
+* [Deployment](deployment/installation.md)
   * [Compiling](deployment/compiling.md)
   * [Standalone](deployment/standalone/README.md)
     * [Running Jobs](deployment/standalone/running-jobs.md)

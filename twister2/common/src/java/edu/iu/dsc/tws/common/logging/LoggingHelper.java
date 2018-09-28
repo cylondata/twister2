@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.common.config.Config;
  */
 public final class LoggingHelper {
   private static final String FORMAT_PROP_KEY = "java.util.logging.SimpleFormatter.format";
-  public static final String DEFAULT_FORMAT = "[%1$tF %1$tT %1$tz] [%4$s] %3$s: %5$s %6$s %n";
+  public static final String DEFAULT_FORMAT = "[%1$tF %1$tT] [%4$s] %3$s: %5$s %6$s %n";
 
   private LoggingHelper() {
   }
@@ -170,7 +170,11 @@ public final class LoggingHelper {
     boolean appendToFile = false;
 
     try {
-      LoggingHelper.loggerInit(redirectStdOutAndStdErr);
+      String format = LoggingContext.loggingFormat(config);
+      if (format == null) {
+        format = DEFAULT_FORMAT;
+      }
+      LoggingHelper.loggerInit(redirectStdOutAndStdErr, format);
 
       LoggingHelper.addLoggingHandler(
           LoggingHelper.getFileHandler(logFile, logDir, appendToFile, maxFileSize, maxFiles));
@@ -179,7 +183,6 @@ public final class LoggingHelper {
       System.err.println("Exception when initializing the Logger. ");
       throw new RuntimeException(e);
     }
-//    LOG.info("Logging setup done.");
   }
 
 
