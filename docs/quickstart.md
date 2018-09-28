@@ -110,7 +110,7 @@ examples/src/java/edu/iu/dsc/tws/examples/comms
 You can run them with a simple command such as
 
 ```text
-./bin/twister2 submit nomad jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -op "reduce" -stages 8,1
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -op "reduce" -stages 8,1
 ```
 
 Now, lets focus on a simple communication example where we try to do a word count.
