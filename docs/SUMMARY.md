@@ -47,6 +47,7 @@
     * [Logging](architecture/common/logging.md)
 * [Developers](developers/README.md)
   * [Developer Environment](developers/developer-environment.md)
+  * [Debugging](developers/debugging.md)
   * [Developer](developers/developer.md)
   * [FAQ](developers/faq.md)
 * [Examples](examples/README.md)
