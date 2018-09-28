@@ -18,8 +18,8 @@ Make sure to install Twister2 before running the examples. The installation inst
 
 
 
-* [Communication API](examples/collectives/comms/communication.md)
-* [Task API](examples/collectives/task/task.md)
-* [Task Examples](examples/collectives/task/task_examples.md)
-* [Communication Examples](examples/collectives/comms/comms_examples.md)
-* [K-Means](examples/kmeans/kmeans_example.md)
+* [Communication API](collectives/comms/communication.md)
+* [Task API](collectives/task/task.md)
+* [Task Examples](collectives/task/task_examples.md)
+* [Communication Examples](collectives/comms/comms_examples.md)
+* [K-Means](kmeans/kmeans_example.md)
