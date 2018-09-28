@@ -54,6 +54,7 @@
   * [Communication](examples/communication.md)
   * [Examples](examples/examples.md)
   * [Task Examples](examples/task_examples.md)
+  * [Communication Examples](examples/comms_examples.md)
   * [K-Means](examples/kmeans_example.md)
 * [Download](download.md)
 * [Community](community/README.md)

@@ -27,6 +27,7 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -85,29 +86,23 @@ public final class FileLoader {
       if (keyType == MessageType.OBJECT) {
         for (KeyValue record : records) {
           byte[] data = serializer.serialize(record.getKey());
-          totalSize += data.length;
+          totalSize += data.length + 4;
           byteKeys.add(data);
         }
       } else {
         for (KeyValue record : records) {
           if (keyType == MessageType.BYTE) {
-            byte[] key = (byte[]) record.getKey();
-            totalSize += key.length;
+            totalSize += 1;
           } else if (keyType == MessageType.DOUBLE) {
-            double[] d = (double[]) record.getKey();
-            totalSize += d.length * 8;
+            totalSize += 8;
           } else if (keyType == MessageType.INTEGER) {
-            int[] d = (int[]) record.getKey();
-            totalSize += d.length * 4;
+            totalSize += 4;
           } else if (keyType == MessageType.LONG) {
-            long[] d = (long[]) record.getKey();
-            totalSize += d.length * 8;
+            totalSize += 8;
           } else if (keyType == MessageType.CHAR) {
-            char[] d = (char[]) record.getKey();
-            totalSize += d.length;
+            totalSize += 1;
           } else if (keyType == MessageType.SHORT) {
-            short[] d = (short[]) record.getKey();
-            totalSize += d.length * 2;
+            totalSize += 2;
           }
         }
       }
@@ -120,12 +115,11 @@ public final class FileLoader {
         LOG.log(Level.WARNING, "Sum doesn't equal size: " + sum + " != " + size);
       }
       // we need to write the data lengths and key lengths
-      totalSize += size + records.size() * 8;
+      totalSize += size + sum;
 
       Files.createDirectories(Paths.get(outFileName).getParent());
       FileChannel rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
       ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, totalSize);
-      int totalWritten = 0;
       for (int i = 0; i < records.size(); i++) {
         KeyValue keyValue = records.get(i);
         byte[] r = (byte[]) keyValue.getValue();
@@ -135,40 +129,23 @@ public final class FileLoader {
           os.putInt(src.length);
           os.put(src);
         } else if (keyType == MessageType.BYTE) {
-          byte[] key = (byte[]) keyValue.getKey();
-          os.putInt(key.length);
+          byte key = (byte) keyValue.getKey();
           os.put(key);
         } else if (keyType == MessageType.DOUBLE) {
-          double[] kd = (double[]) keyValue.getKey();
-          os.putInt(kd.length * 8);
-          for (double d : kd) {
-            os.putDouble(d);
-          }
+          double kd = (double) keyValue.getKey();
+          os.putDouble(kd);
         } else if (keyType == MessageType.INTEGER) {
-          int[] kd = (int[]) keyValue.getKey();
-          os.putInt(kd.length * 4);
-          for (int d : kd) {
-            os.putInt(d);
-            totalWritten += 4;
-          }
+          int kd = (int) keyValue.getKey();
+          os.putInt(kd);
         } else if (keyType == MessageType.LONG) {
-          long[] kd = (long[]) keyValue.getKey();
-          os.putInt(kd.length * 8);
-          for (long d : kd) {
-            os.putLong(d);
-          }
+          long kd = (long) keyValue.getKey();
+          os.putLong(kd);
         } else if (keyType == MessageType.CHAR) {
-          char[] kd = (char[]) keyValue.getKey();
-          os.putInt(kd.length);
-          for (char d : kd) {
-            os.putChar(d);
-          }
+          char kd = (char) keyValue.getKey();
+          os.putChar(kd);
         } else if (keyType == MessageType.SHORT) {
-          short[] kd = (short[]) keyValue.getKey();
-          os.putInt(kd.length * 2);
-          for (short d : kd) {
-            os.putShort(d);
-          }
+          short kd = (short) keyValue.getKey();
+          os.putShort(kd);
         }
         os.putInt(sizes.get(i));
         os.put(r, 0, sizes.get(i));
@@ -197,8 +174,10 @@ public final class FileLoader {
         Object key;
         Object value;
 
-        int keySize = os.getInt();
-        key = DataDeserializer.deserialize(keyType, deserializer, os, keySize);
+        // for object type we read the object bytes + 4
+        int keySize = getKeySize(keyType, os);
+        key = KeyDeserializer.deserialize(keyType, deserializer, os,
+            keySize - Integer.BYTES);
 
         int dataSize = os.getInt();
         value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
@@ -313,36 +292,37 @@ public final class FileLoader {
       ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_ONLY, startOffSet, size);
 
       int totalRead = 0;
-      int count = 0;
       while (totalRead < size) {
         Object key;
         Object value;
 
-        if (totalRead + 4 > size) {
+        // for object type we have to read the length of the bytes first
+        if (keyType == MessageType.OBJECT && totalRead + 4 > size) {
           break;
         }
 
-        int keySize = os.getInt();
+        // for object type we read the object bytes + 4
+        int keySize = getKeySize(keyType, os);
         // we cannot read further
-        if (totalRead + keySize + 4 > size) {
+        if (totalRead + keySize > size) {
           break;
         }
-        key = DataDeserializer.deserialize(keyType, deserializer, os, keySize);
+        key = KeyDeserializer.deserialize(keyType, deserializer, os,
+            keySize - Integer.BYTES);
 
-        if (totalRead + keySize + 8 > size) {
+        if (totalRead + keySize + 4 > size) {
           break;
         }
 
         int dataSize = os.getInt();
         // we cannot read further
-        if (totalRead + keySize + dataSize + 8 > size) {
+        if (totalRead + keySize + dataSize + 4 > size) {
           break;
         }
         value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
 
         keyValues.add(new KeyValue(key, value));
-        totalRead += 8 + keySize + dataSize;
-        count++;
+        totalRead += 4 + keySize + dataSize;
       }
       int size1 = (int) rwChannel.size();
       rwChannel.close();
@@ -351,6 +331,28 @@ public final class FileLoader {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private static int getKeySize(MessageType dataType, ByteBuffer os) {
+    int size;
+    if (dataType == MessageType.OBJECT) {
+      size = os.getInt() + Integer.BYTES;
+    } else if (dataType == MessageType.BYTE) {
+      size = Byte.BYTES;
+    } else if (dataType == MessageType.DOUBLE) {
+      size = Double.BYTES;
+    } else if (dataType == MessageType.INTEGER) {
+      size = Integer.BYTES;
+    } else if (dataType == MessageType.LONG) {
+      size = Long.BYTES;
+    } else if (dataType == MessageType.SHORT) {
+      size = Short.BYTES;
+    } else if (dataType == MessageType.CHAR) {
+      size = Character.BYTES;
+    } else {
+      size = os.getInt() + Integer.BYTES;
+    }
+    return size;
   }
 
   /**

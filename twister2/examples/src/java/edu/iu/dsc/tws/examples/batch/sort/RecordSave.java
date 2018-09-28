@@ -34,6 +34,7 @@ public class RecordSave implements BulkReceiver {
 
   private int executor;
 
+
   @Override
   public void init(Config cfg, Set<Integer> expectedIds) {
     LOG.fine(String.format("Final expected task ids %s", expectedIds));

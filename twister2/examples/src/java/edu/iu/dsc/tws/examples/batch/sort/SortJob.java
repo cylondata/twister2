@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
@@ -33,35 +34,31 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
-import edu.iu.dsc.tws.comms.op.EdgeGenerator;
-import edu.iu.dsc.tws.comms.op.OperationSemantics;
-import edu.iu.dsc.tws.examples.utils.WordCountUtils;
+import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
+import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
+import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class SortJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(SortJob.class.getName());
 
-  private DataFlowPartition partition;
+  private BKeyedPartition partition;
 
-  private TWSChannel channel;
+  private Communicator channel;
 
   private static final int NO_OF_TASKS = 4;
 
   private Config config;
 
-  private AllocatedResources resourcePlan;
-
-  private int id;
-
-  private int noOfTasksPerExecutor;
+  private int workerId;
 
   private Set<Integer> sources;
   private Set<Integer> destinations;
   private TaskPlan taskPlan;
+  private List<Integer> taskStages = new ArrayList<>();
+  private Set<RecordSource> recordSources = new HashSet<>();
 
   @Override
   public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
@@ -69,81 +66,90 @@ public class SortJob implements IWorker {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
     this.config = cfg;
-    this.resourcePlan = allocatedResources;
-    this.id = workerID;
+    this.workerId = workerID;
+
+    taskStages.add(NO_OF_TASKS);
+    taskStages.add(NO_OF_TASKS);
+    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    // lets create the task plan
+    this.taskPlan = Utils.createStageTaskPlan(cfg, allocatedResources, taskStages, workerList);
+
     // setup the network
-    setupNetwork(cfg, workerController, allocatedResources);
+    setupNetwork(workerController, allocatedResources);
     // set up the tasks
     setupTasks();
 
-    // we get the number of containers after initializing the network
-    this.noOfTasksPerExecutor = NO_OF_TASKS / allocatedResources.getNumberOfWorkers();
-
-    partition = new DataFlowPartition(config, channel, taskPlan, sources, destinations,
-        new DPartitionBatchFinalReceiver(new RecordSave(), false, "/tmp",
-            new IntegerComparator()),
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT,
+    partition = new BKeyedPartition(channel, taskPlan, sources, destinations,
         MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,
-        OperationSemantics.STREAMING_BATCH, new EdgeGenerator(0));
+        new RecordSave(), new HashingSelector(), new IntegerComparator());
 
     // start the threads
     scheduleTasks();
-    LOG.info("Scheduling tasks complete ------------------------------");
     progress();
   }
 
   private void setupTasks() {
-    taskPlan = WordCountUtils.createWordCountPlan(config, resourcePlan, NO_OF_TASKS);
     sources = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS / 2; i++) {
+    for (int i = 0; i < NO_OF_TASKS; i++) {
       sources.add(i);
     }
     destinations = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS / 2; i++) {
-      destinations.add(NO_OF_TASKS / 2 + i);
+    for (int i = 0; i < NO_OF_TASKS; i++) {
+      destinations.add(NO_OF_TASKS + i);
     }
+    LOG.fine(String.format("%d sources %s destinations %s",
+        taskPlan.getThisExecutor(), sources, destinations));
   }
 
   private void scheduleTasks() {
-    if (id < NO_OF_TASKS / 2) {
-      for (int i = 0; i < noOfTasksPerExecutor; i++) {
-        // the map thread where data is produced
-        Thread mapThread = new Thread(new RecordSource(config, partition,
-            new ArrayList<>(destinations), id, 1000, 10000,
-            NO_OF_TASKS / 2));
-        mapThread.start();
-      }
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan, taskStages, 0);
+    // now initialize the workers
+    for (int t : tasksOfExecutor) {
+      // the map thread where data is produced
+      RecordSource target = new RecordSource(workerId, partition, t, 1000, 10000);
+      // the map thread where data is produced
+      recordSources.add(target);
+      Thread mapThread = new Thread(target);
+      mapThread.start();
     }
   }
 
-  private void setupNetwork(Config cfg, IWorkerController controller, AllocatedResources rPlan) {
-    channel = Network.initializeChannel(cfg, controller, rPlan);
+  private void setupNetwork(IWorkerController controller, AllocatedResources resources) {
+    TWSChannel twsChannel = Network.initializeChannel(config, controller, resources);
+    this.channel = new Communicator(config, twsChannel);
   }
 
   private class IntegerComparator implements Comparator<Object> {
     @Override
     public int compare(Object o1, Object o2) {
-      int[] o11 = (int[]) o1;
-      int[] o21 = (int[]) o2;
-      try {
-        return Integer.compare(o11[0], o21[0]);
-      } catch (ArrayIndexOutOfBoundsException e) {
-        LOG.info("Sizes of keys: " + o11.length + " " + o21.length);
-        throw new RuntimeException("Err", e);
-      }
+      int o11 = (int) o1;
+      int o21 = (int) o2;
+      return Integer.compare(o11, o21);
     }
   }
 
   private void progress() {
     // we need to communicationProgress the communication
-    while (true) {
-      try {
-        // communicationProgress the channel
-        channel.progress();
-        // we should communicationProgress the communication directive
-        partition.progress();
-      } catch (Throwable t) {
-        LOG.log(Level.SEVERE, "Something bad happened", t);
+    boolean done = false;
+    while (!done) {
+      done = true;
+      // communicationProgress the channel
+      channel.getChannel().progress();
+
+      // we should communicationProgress the communication directive
+      boolean needsProgress = partition.progress();
+      if (needsProgress) {
+        done = false;
+      }
+
+      if (partition.hasPending()) {
+        done = false;
+      }
+
+      for (RecordSource b : recordSources) {
+        if (!b.isDone()) {
+          done = false;
+        }
       }
     }
   }
