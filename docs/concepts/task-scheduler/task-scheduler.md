@@ -82,14 +82,22 @@ message TaskSchedulePlanList {
 ## YAML file
 
 The task scheduler has task.yaml in the config directory. The task scheduler mode represents either 'roundrobin' or 'firstfit' or 'datalocalityaware'. The default task instances represents the default memory, disk, and cpu values assigned to the task instances. The default container padding values represents the percentage of values to be added to each container. The default container instance values represents the default size of memory, disk, and cpu of the container. The task parallelism represents the default parallelism value assigned to each task instance. The task type represents the streaming or batch task.
+The task scheduler dynamically loads the respective streaming and batch task schedulers based on the configuration values specified in the task.yaml.
 
 \`\`yaml
 
 ```text
-#Task Scheduler Mode
-twister2.class.task.taskscheduler: "roundrobin"
-#twister2.class.task.taskscheduler: "firstfit"
-#twister2.class.task.taskscheduler:  "datalocalityaware"
+#Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware"
+twister2.streaming.taskscheduler: "roundrobin"
+
+#Streaming Task Scheduler Class
+twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
+
+#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware"
+twister2.batch.taskscheduler: "roundrobin"
+
+#Batch Task Scheduler Class
+twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
 
 #Default Task Instance Values
 twister2.task.instances: 2
@@ -113,6 +121,50 @@ twister2.task.parallelism: 2
 
 #Default Task Type "streaming" or "batch"
 twister2.task.type: "streaming"
+```
+
+\`\`
+
+## User-Defined Task Scheduler
+
+The task scheduler in Twister2 supports the user-defined task scheduler. The user-defined task scheduler has to implement the ITaskScheduler interface.
+The user has to specify the task scheduler as "user-defined" with the corresponding "user-defined" task scheduler class name.
+
+\`\`yaml
+
+```text
+#User-defined Streaming Task Scheduler
+twister2.streaming.taskscheduler: "user-defined"
+
+#User-defined Streaming Task Scheduler Class
+twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.UserDefinedTaskScheduler"
+```
+
+\`\`
+
+## Other task schedulers and their respective class names
+
+The other task schedulers and their respective class names are given below. The user have to specify the respective scheduler mode and their corresponding class names.
+
+\`\`yaml
+
+```text
+#Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware"
+twister2.streaming.taskscheduler: "roundrobin"
+
+#Streaming Task Scheduler Class
+twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
+
+#twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler"
+#twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"
+
+#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware"
+#twister2.batch.taskscheduler: "roundrobin"
+twister2.batch.taskscheduler: "datalocalityaware"
+
+#Batch Task Scheduler Class
+twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler"
+#twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
 ```
 
 \`\`
