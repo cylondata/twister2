@@ -116,5 +116,5 @@ public interface DataFlowOperation {
    *
    * @return an unique id as a String
    */
-  String getUniqueId():
+  String getUniqueId();
 }

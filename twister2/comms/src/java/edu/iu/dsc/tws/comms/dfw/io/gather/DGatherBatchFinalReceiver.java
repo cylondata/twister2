@@ -71,6 +71,9 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
    */
   private DataFlowGather gather;
 
+  /**
+   * Serializer used to convert between objects and byte streams
+   */
   private KryoSerializer kryoSerializer;
 
   public DGatherBatchFinalReceiver(BulkReceiver bulkReceiver, String shuffleDir) {
@@ -197,7 +200,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
   }
 
   private String getOperationName(int target) {
-    int edge = gather.getEdge();
-    return "gather-" + edge + "-" + target + "-" + UUID.randomUUID().toString();
+    String uid = gather.getUniqueId();
+    return "gather-" + uid + "-" + target + "-" + UUID.randomUUID().toString();
   }
 }
