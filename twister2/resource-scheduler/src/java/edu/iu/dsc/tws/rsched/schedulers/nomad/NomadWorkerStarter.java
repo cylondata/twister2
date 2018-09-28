@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.standalone;
+package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -43,8 +43,8 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
-public final class StandaloneWorkerStarter {
-  private static final Logger LOG = Logger.getLogger(StandaloneWorkerStarter.class.getName());
+public final class NomadWorkerStarter {
+  private static final Logger LOG = Logger.getLogger(NomadWorkerStarter.class.getName());
 
   /**
    * The jobmaster client
@@ -61,7 +61,7 @@ public final class StandaloneWorkerStarter {
    */
   private IWorkerController workerController;
 
-  private StandaloneWorkerStarter(String[] args) {
+  private NomadWorkerStarter(String[] args) {
     Options cmdOptions = null;
     try {
       cmdOptions = setupOptions();
@@ -83,7 +83,7 @@ public final class StandaloneWorkerStarter {
   }
 
   public static void main(String[] args) {
-    StandaloneWorkerStarter starter = new StandaloneWorkerStarter(args);
+    NomadWorkerStarter starter = new NomadWorkerStarter(args);
     starter.run();
   }
 
@@ -239,7 +239,7 @@ public final class StandaloneWorkerStarter {
     String jobMasterIP = JobMasterContext.jobMasterIP(config);
     int jobMasterPort = JobMasterContext.jobMasterPort(config);
 
-    String jobName = StandaloneContext.jobName(config);
+    String jobName = NomadContext.jobName(config);
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
     int numberOfWorkers = job.getNumberOfWorkers();
@@ -280,7 +280,7 @@ public final class StandaloneWorkerStarter {
    * @return port name -> port map
    */
   private Map<String, Integer> getPorts(Config cfg) {
-    String portNamesConfig = StandaloneContext.networkPortNames(cfg);
+    String portNamesConfig = NomadContext.networkPortNames(cfg);
     String[] portNames = portNamesConfig.split(",");
     Map<String, Integer> ports = new HashMap<>();
     // now lets get these ports
@@ -311,9 +311,9 @@ public final class StandaloneWorkerStarter {
       return;
     }
 
-    String jobWorkingDirectory = StandaloneContext.workingDirectory(cfg);
-    String jobName = StandaloneContext.jobName(cfg);
-    if (StandaloneContext.getLoggingSandbox(cfg)) {
+    String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
+    String jobName = NomadContext.jobName(cfg);
+    if (NomadContext.getLoggingSandbox(cfg)) {
       persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
     }
 

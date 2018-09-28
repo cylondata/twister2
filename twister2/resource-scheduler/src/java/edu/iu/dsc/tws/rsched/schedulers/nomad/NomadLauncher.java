@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.standalone;
+package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -29,8 +29,8 @@ import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
-public class StandaloneLauncher implements ILauncher {
-  private static final Logger LOG = Logger.getLogger(StandaloneController.class.getName());
+public class NomadLauncher implements ILauncher {
+  private static final Logger LOG = Logger.getLogger(NomadController.class.getName());
 
   private Config config;
 
@@ -47,15 +47,15 @@ public class StandaloneLauncher implements ILauncher {
   @Override
   public boolean terminateJob(String jobName) {
     LOG.log(Level.INFO, "Terminating job for cluster: ",
-        StandaloneContext.clusterType(config));
+        NomadContext.clusterType(config));
 
     // get the job working directory
-    String jobWorkingDirectory = StandaloneContext.workingDirectory(config);
+    String jobWorkingDirectory = NomadContext.workingDirectory(config);
     Config newConfig = Config.newBuilder().putAll(config).put(
         SchedulerContext.WORKING_DIRECTORY, jobWorkingDirectory).build();
     // now start the controller, which will get the resources from
     // slurm and start the job
-    IController controller = new StandaloneController(true);
+    IController controller = new NomadController(true);
     controller.initialize(newConfig);
 
     jobWorkingDirectory = Paths.get(jobWorkingDirectory, jobName).toAbsolutePath().toString();
@@ -68,12 +68,12 @@ public class StandaloneLauncher implements ILauncher {
   @Override
   public boolean launch(RequestedResources resourcePlan, JobAPI.Job job) {
     LOG.log(Level.INFO, "Launching job for cluster {0}",
-        StandaloneContext.clusterType(config));
+        NomadContext.clusterType(config));
 
     // get the job working directory
-    String jobWorkingDirectory = StandaloneContext.workingDirectory(config);
+    String jobWorkingDirectory = NomadContext.workingDirectory(config);
 
-    if (StandaloneContext.sharedFileSystem(config)) {
+    if (NomadContext.sharedFileSystem(config)) {
       if (!setupWorkingDirectory(job, jobWorkingDirectory)) {
         throw new RuntimeException("Failed to setup the directory");
       }
@@ -83,7 +83,7 @@ public class StandaloneLauncher implements ILauncher {
         SchedulerContext.WORKING_DIRECTORY, jobWorkingDirectory).build();
     // now start the controller, which will get the resources from
     // slurm and start the job
-    IController controller = new StandaloneController(true);
+    IController controller = new NomadController(true);
     controller.initialize(newConfig);
 
     // start the Job Master locally
@@ -99,7 +99,7 @@ public class StandaloneLauncher implements ILauncher {
         LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
         jobMaster =
             new JobMaster(config, hostAddress,
-                new StandaloneTerminator(), job.getJobName(),
+                new NomadTerminator(), job.getJobName(),
                 port,  job.getNumberOfWorkers());
         jobMaster.addShutdownHook();
         jmThread = jobMaster.startJobMasterThreaded();
@@ -135,10 +135,10 @@ public class StandaloneLauncher implements ILauncher {
    */
   private boolean setupWorkingDirectory(JobAPI.Job job, String jobWorkingDirectory) {
     // get the path of core release URI
-    String corePackage = StandaloneContext.corePackageFileName(config);
+    String corePackage = NomadContext.corePackageFileName(config);
 
     // Form the job package's URI
-    String jobPackageURI = StandaloneContext.jobPackageUri(config).toString();
+    String jobPackageURI = NomadContext.jobPackageUri(config).toString();
 
     // copy the files to the working directory
     return ResourceSchedulerUtils.setupWorkingDirectory(

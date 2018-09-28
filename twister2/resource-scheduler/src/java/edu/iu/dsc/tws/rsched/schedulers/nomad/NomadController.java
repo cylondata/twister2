@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.standalone;
+package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -45,14 +45,14 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
-public class StandaloneController implements IController {
-  private static final Logger LOG = Logger.getLogger(StandaloneController.class.getName());
+public class NomadController implements IController {
+  private static final Logger LOG = Logger.getLogger(NomadController.class.getName());
 
   private Config config;
 
   private boolean isVerbose;
 
-  public StandaloneController(boolean isVerbose) {
+  public NomadController(boolean isVerbose) {
     this.isVerbose = isVerbose;
   }
 
@@ -63,7 +63,7 @@ public class StandaloneController implements IController {
 
   @Override
   public boolean start(RequestedResources requestedResources, JobAPI.Job job) {
-    String uri = StandaloneContext.nomadSchedulerUri(config);
+    String uri = NomadContext.nomadSchedulerUri(config);
     NomadApiClient nomadApiClient = new NomadApiClient(
         new NomadApiConfiguration.Builder().setAddress(uri).build());
 
@@ -87,7 +87,7 @@ public class StandaloneController implements IController {
   public boolean kill(JobAPI.Job job) {
     String jobName = job.getJobName();
 
-    String uri = StandaloneContext.nomadSchedulerUri(config);
+    String uri = NomadContext.nomadSchedulerUri(config);
     LOG.log(Level.INFO, "Killing Job " + jobName);
     NomadApiClient nomadApiClient = new NomadApiClient(
         new NomadApiConfiguration.Builder().setAddress(uri).build());
@@ -125,7 +125,7 @@ public class StandaloneController implements IController {
     nomadJob.setName(jobName);
     nomadJob.setType("batch");
     nomadJob.addTaskGroups(getTaskGroup(job, resources));
-    nomadJob.setDatacenters(Arrays.asList(StandaloneContext.NOMAD_DEFAULT_DATACENTER));
+    nomadJob.setDatacenters(Arrays.asList(NomadContext.NOMAD_DEFAULT_DATACENTER));
     nomadJob.setMeta(getMetaData(job));
     return nomadJob;
   }
@@ -171,7 +171,7 @@ public class StandaloneController implements IController {
   private static Map<String, String> getMetaData(JobAPI.Job job) {
     String jobName = job.getJobName();
     Map<String, String> metaData = new HashMap<>();
-    metaData.put(StandaloneContext.NOMAD_JOB_NAME, jobName);
+    metaData.put(NomadContext.NOMAD_JOB_NAME, jobName);
     return metaData;
   }
 
@@ -179,7 +179,7 @@ public class StandaloneController implements IController {
     String taskName = job.getJobName();
     Task task = new Task();
     // get the job working directory
-    String workingDirectory = StandaloneContext.workingDirectory(config);
+    String workingDirectory = NomadContext.workingDirectory(config);
     String jobWorkingDirectory = Paths.get(workingDirectory, job.getJobName()).toString();
     String configDirectoryName = Paths.get(workingDirectory,
         job.getJobName(), SchedulerContext.clusterType(config)).toString();
@@ -193,16 +193,16 @@ public class StandaloneController implements IController {
 
     task.setName(taskName);
     task.setDriver("raw_exec");
-    task.addConfig(StandaloneContext.NOMAD_TASK_COMMAND, StandaloneContext.SHELL_CMD);
+    task.addConfig(NomadContext.NOMAD_TASK_COMMAND, NomadContext.SHELL_CMD);
     String[] args = workerProcessCommand(workingDirectory, resources, job);
-    task.addConfig(StandaloneContext.NOMAD_TASK_COMMAND_ARGS, args);
+    task.addConfig(NomadContext.NOMAD_TASK_COMMAND_ARGS, args);
     Template template = new Template();
     template.setEmbeddedTmpl(nomadScriptContent);
-    template.setDestPath(StandaloneContext.NOMAD_HERON_SCRIPT_NAME);
+    template.setDestPath(NomadContext.NOMAD_HERON_SCRIPT_NAME);
     task.addTemplates(template);
 
     Resources resourceReqs = new Resources();
-    String portNamesConfig = StandaloneContext.networkPortNames(config);
+    String portNamesConfig = NomadContext.networkPortNames(config);
     String[] portNames = portNamesConfig.split(",");
     // configure nomad to allocate dynamic ports
     Port[] ports = new Port[portNames.length];
@@ -216,17 +216,17 @@ public class StandaloneController implements IController {
     resourceReqs.addNetworks(networkResource);
 
     Map<String, String> envVars = new HashMap<>();
-    envVars.put(StandaloneContext.WORKING_DIRECTORY_ENV,
-        StandaloneContext.workingDirectory(config));
+    envVars.put(NomadContext.WORKING_DIRECTORY_ENV,
+        NomadContext.workingDirectory(config));
 
-    if (!StandaloneContext.sharedFileSystem(config)) {
-      envVars.put(StandaloneContext.DOWNLOAD_PACKAGE_ENV, "false");
+    if (!NomadContext.sharedFileSystem(config)) {
+      envVars.put(NomadContext.DOWNLOAD_PACKAGE_ENV, "false");
     } else {
-      envVars.put(StandaloneContext.DOWNLOAD_PACKAGE_ENV, "true");
+      envVars.put(NomadContext.DOWNLOAD_PACKAGE_ENV, "true");
     }
     // we are putting the core packages as env variable
-    envVars.put(StandaloneContext.CORE_PACKAGE_ENV, corePackageFile);
-    envVars.put(StandaloneContext.JOB_PACKAGE_ENV, jobPackageFile);
+    envVars.put(NomadContext.CORE_PACKAGE_ENV, corePackageFile);
+    envVars.put(NomadContext.JOB_PACKAGE_ENV, jobPackageFile);
 
     task.setEnv(envVars);
     task.setResources(resourceReqs);
@@ -234,7 +234,7 @@ public class StandaloneController implements IController {
   }
 
   private String getScriptPath(Config cfg, String jWorkingDirectory) {
-    String shellScriptName = StandaloneContext.shellScriptName(cfg);
+    String shellScriptName = NomadContext.shellScriptName(cfg);
     return Paths.get(jWorkingDirectory, shellScriptName).toString();
   }
 
@@ -245,7 +245,7 @@ public class StandaloneController implements IController {
           shellDirectoryPath)), StandardCharsets.UTF_8);
     } catch (IOException e) {
       String msg = "Failed to read nomad script from "
-          + StandaloneContext.shellScriptName(cfg) + " . Please check file path! - "
+          + NomadContext.shellScriptName(cfg) + " . Please check file path! - "
           + shellDirectoryPath;
       LOG.log(Level.SEVERE, msg, e);
       throw new RuntimeException(msg, e);

@@ -1,7 +1,7 @@
 # working directory
 twister2.resource.scheduler.mpi.working.directory: "${HOME}/.twister2/jobs"
 # mode of the mpi scheduler
-twsiter2.resource.scheduler.mpi.mode: "node"
+twsiter2.resource.scheduler.mpi.mode: "slurm"
 # the job id file
 twister2.resource.scheduler.mpi.job.id: ""
 # slurm script to run
@@ -13,8 +13,6 @@ twister2.resource.scheduler.mpi.home: ""
 # the package uri
 twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.1.0.tar.gz"
 # the launcher class
-twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mpi.MPILauncher"
+twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher"
 # the uplaoder class
 twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
-# mpi run file, this assumes a mpirun that is shipped with the product
-twister2.resource.scheduler.mpi.mpirun.file: "twister2-core/ompi/bin/mpirun"

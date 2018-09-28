@@ -1,0 +1,7 @@
+twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel"
+
+network.mpi.buffer.size: 1024000
+network.mpi.sendBuffer.count: 1
+network.mpi.receiveBuffer.count: 1
+network.channel.mpi.pending.size: 2048
+network.mpi.send.pending.max: 1

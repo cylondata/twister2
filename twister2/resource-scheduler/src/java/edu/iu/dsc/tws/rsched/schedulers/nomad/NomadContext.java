@@ -9,14 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.standalone;
+package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.TokenSub;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
-public class StandaloneContext extends SchedulerContext {
+public class NomadContext extends SchedulerContext {
   // these are environment variables set in the shell script
   public static final String WORKING_DIRECTORY_ENV = "WORKING_DIRECTORY_ENV";
   public static final String DOWNLOAD_PACKAGE_ENV = "DOWNLOAD_PACKAGE_ENV";

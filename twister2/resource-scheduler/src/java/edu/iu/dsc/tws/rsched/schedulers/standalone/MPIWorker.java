@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.mpi;
+package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
 import java.nio.CharBuffer;
@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.schedulers.standalone.StandaloneContext;
+import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;
@@ -314,9 +314,9 @@ public final class MPIWorker {
     LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
 
     String persistentJobDir;
-    String jobWorkingDirectory = StandaloneContext.workingDirectory(cfg);
-    String jobName = StandaloneContext.jobName(cfg);
-    if (StandaloneContext.getLoggingSandbox(cfg)) {
+    String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
+    String jobName = NomadContext.jobName(cfg);
+    if (NomadContext.getLoggingSandbox(cfg)) {
       persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
     } else {
       persistentJobDir = logDirectory;
