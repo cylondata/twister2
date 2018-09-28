@@ -83,7 +83,7 @@ public class HdfsUtils {
   public Path getPath() {
     String directoryString = HdfsDataContext.getHdfsUrlDefault(this.config) + "/" + this.fileName;
     Path path = new Path(directoryString);
-    LOG.info("Directory String Is:" + directoryString + "\tpath:" + path);
+    LOG.fine("Directory String Is:" + directoryString + "\tpath:" + path);
     return path;
   }
 
