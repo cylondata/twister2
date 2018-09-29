@@ -39,11 +39,13 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
 
   public void prepare(int srcs, Set<Integer> dests, EdgeGenerator e,
                       DataType dataType, String edgeName) {
+    if (dests.size() == 0) {
+      throw new IllegalArgumentException("Targets should have more than 0 elements");
+    }
+
     this.edgeGenerator = e;
-    LOG.info(String.format("Srcs %d dests %s", srcs, dests));
     op = new DataFlowBroadcast(channel.getChannel(), srcs, dests, new BcastReceiver());
     communicationEdge = e.generate(edgeName);
-    LOG.info("===Communication Edge : " + communicationEdge);
     op.init(config, Utils.dataTypeToMessageType(dataType), taskPlan, communicationEdge);
   }
 
@@ -71,12 +73,7 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       TaskMessage msg = new TaskMessage(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
-      int remainingCap = outMessages.get(target).remainingCapacity();
-      //LOG.info("Remaining Capacity : " + remainingCap);
-      boolean status = outMessages.get(target).offer(msg);
-      /*LOG.info("Message from Communication : " + msg.getContent() + ", Status : "
-          + status + ", Rem Cap : " + remainingCap);*/
-      return true;
+      return outMessages.get(target).offer(msg);
     }
 
     @Override
