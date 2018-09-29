@@ -34,9 +34,9 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
 public class SGatherExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SGatherExample.class.getName());
 
-  private SGather reduce;
+  private SGather gather;
 
-  private boolean reduceDone = false;
+  private boolean gatherDone = false;
 
   @Override
   protected void execute() {
@@ -51,7 +51,7 @@ public class SGatherExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    reduce = new SGather(communicator, taskPlan, sources, target, MessageType.INTEGER,
+    gather = new SGather(communicator, taskPlan, sources, target, MessageType.INTEGER,
         new FinalReduceReceiver(jobParameters.getIterations()));
 
 
@@ -65,7 +65,7 @@ public class SGatherExample extends BenchWorker {
     }
 
     if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-      reduceDone = true;
+      gatherDone = true;
     }
 
     // now initialize the workers
@@ -78,23 +78,21 @@ public class SGatherExample extends BenchWorker {
 
   @Override
   protected void progressCommunication() {
-    reduce.progress();
+    gather.progress();
   }
 
   @Override
   protected boolean sendMessages(int task, Object data, int flag) {
-    while (!reduce.gather(task, data, flag)) {
+    while (!gather.gather(task, data, flag)) {
       // lets wait a litte and try again
-      reduce.progress();
+      gather.progress();
     }
     return true;
   }
 
   @Override
   protected boolean isDone() {
-//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-//        workerId, reduceDone, sourcesDone, reduce.hasPending()));
-    return reduceDone && sourcesDone && !reduce.hasPending();
+    return gatherDone && sourcesDone && !gather.hasPending();
   }
 
   public class FinalReduceReceiver implements MessageReceiver {
@@ -119,7 +117,7 @@ public class SGatherExample extends BenchWorker {
 
       if (count == expected) {
         LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
-        reduceDone = true;
+        gatherDone = true;
       }
 
       try {
