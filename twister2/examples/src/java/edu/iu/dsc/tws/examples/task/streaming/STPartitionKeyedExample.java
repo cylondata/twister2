@@ -30,13 +30,14 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int psource = taskStages.get(0);
     int psink = taskStages.get(1);
+    DataType keyType = DataType.INTEGER;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseStreamSource g = new KeyedSourceStreamTask(edge);
     BaseStreamSink r = new SKeyedPartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    //keyed partition not implemented yet
+    computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
 
