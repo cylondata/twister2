@@ -157,7 +157,7 @@ To check joined node:
 
 `docker node ls`
 
-![/Users/sakkas/Desktop/Screen Shot 2018-06-19 at
+![ 2018-06-19 at
 11.03.49.png](media/image1.png){width="6.291666666666667in"
 height="1.2291666666666667in"}
 
