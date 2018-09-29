@@ -198,6 +198,15 @@ public class ComputeConnection {
     return this;
   }
 
+  public ComputeConnection keyedReduce(String parent, String name,
+                                       Op op, DataType keyTpe, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
+        new ReduceFn(op, dataType));
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
   /**
    * Create a gather connection
    *

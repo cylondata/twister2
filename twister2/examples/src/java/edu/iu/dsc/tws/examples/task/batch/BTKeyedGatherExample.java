@@ -11,8 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -47,8 +51,30 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
+      Object object = message.getContent();
       LOG.info("Message Keyed-Gather : " + message.getContent()
           + ", Count : " + count);
+      if (object instanceof Iterator) {
+        Iterator<?> it = (Iterator<?>) object;
+        while (it.hasNext()) {
+          Object value = it.next();
+          if (value instanceof ImmutablePair) {
+            ImmutablePair<?, ?> l = (ImmutablePair<?, ?>) value;
+            Object key = l.getKey();
+            Object val = l.getValue();
+            LOG.info("Value : " + val.getClass().getName());
+            if (val instanceof Object[]) {
+              Object[] objects = (Object[]) val;
+              for (int i = 0; i < objects.length; i++) {
+                int[] a = (int[]) objects[i];
+                LOG.info("Message Received , Key : " + key + ", Value : "
+                    + Arrays.toString(a));
+              }
+            }
+
+          }
+        }
+      }
       count++;
 
       return true;

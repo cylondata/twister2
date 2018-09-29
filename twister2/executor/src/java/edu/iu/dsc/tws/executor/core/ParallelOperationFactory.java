@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.executor.comms.streaming.AllGatherStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.AllReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.BroadcastStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.GatherStreamingOperation;
+import edu.iu.dsc.tws.executor.comms.streaming.KeyedGatherStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.KeyedPartitionStreamOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.KeyedReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.PartitionStreamingOperation;
@@ -165,6 +166,9 @@ public class ParallelOperationFactory {
               config, channel, taskPlan, sources, dests,
               edgeGenerator, edge.getDataType(), edge.getKeyType(),
               edge.getName(), edge.getFunction());
+        } else if (OperationNames.KEYED_GATHER.equals(edge.getOperation())) {
+          return new KeyedGatherStreamingOperation(config, channel, taskPlan, sources,
+              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName());
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
           return new KeyedPartitionStreamOperation(config, channel, taskPlan, sources, dests,
               edgeGenerator, edge.getDataType(), edge.getKeyType(),
