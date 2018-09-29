@@ -12,15 +12,17 @@
 package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
@@ -42,12 +44,7 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     BaseBatchSink r = new KeyedReduceSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.keyedReduce(SOURCE, edge, new IFunction() {
-      @Override
-      public Object onMessage(Object object1, Object object2) {
-        return object1;
-      }
-    }, keyType, dataType);
+    computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
     return taskGraphBuilder;
   }
 
@@ -58,6 +55,23 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     @Override
     public boolean execute(IMessage message) {
       Object object = message.getContent();
+      LOG.info("Message received : " + object.getClass().getName());
+      if (object instanceof Iterator) {
+        Iterator<?> it = (Iterator<?>) object;
+        while (it.hasNext()) {
+          Object value = it.next();
+          if (value instanceof ImmutablePair) {
+            ImmutablePair<?, ?> l = (ImmutablePair<?, ?>) value;
+            Object key = l.getKey();
+            Object val = l.getValue();
+            if (val instanceof int[]) {
+              LOG.info("Message Received , Key : " + key + ", Value : "
+                  + Arrays.toString((int[]) val));
+            }
+
+          }
+        }
+      }
       if (object instanceof KeyedContent) {
         KeyedContent keyedContent = (KeyedContent) object;
         if (keyedContent.getValue() instanceof int[]) {
