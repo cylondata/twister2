@@ -24,22 +24,22 @@ import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STAllReduceExample extends BenchTaskWorker {
-
   private static final Logger LOG = Logger.getLogger(STAllReduceExample.class.getName());
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
-    Op operation = Op.SUM;
-    DataType dataType = DataType.INTEGER;
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
+
     String edge = "edge";
     BaseStreamSource g = new SourceStreamTask(edge);
     BaseStreamSink r = new AllReduceSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.allreduce(SOURCE, edge, operation, dataType);
+
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection.allreduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
+
     return taskGraphBuilder;
   }
 
@@ -50,7 +50,7 @@ public class STAllReduceExample extends BenchTaskWorker {
     @Override
     public boolean execute(IMessage message) {
       count++;
-      if (count % 1 == 0) {
+      if (count % jobParameters.getPrintInterval() == 0) {
         Object object = message.getContent();
         if (object instanceof int[]) {
           LOG.info("Stream AllReduce Message Received : " + Arrays.toString((int[]) object));
