@@ -51,8 +51,6 @@
   * [Developer](developers/developer.md)
   * [FAQ](developers/faq.md)
 * [Examples](examples/README.md)
-  * [Communication API](examples/collectives/comms/communication.md)
-  * [Task API](examples/collectives/task/task.md)
   * [Task Examples](examples/collectives/task/task_examples.md)
   * [Communication Examples](examples/collectives/comms/comms_examples.md)
   * [K-Means](examples/kmeans/kmeans_example.md)
