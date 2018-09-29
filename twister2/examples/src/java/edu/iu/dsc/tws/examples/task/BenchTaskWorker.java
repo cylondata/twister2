@@ -124,9 +124,9 @@ public abstract class BenchTaskWorker extends TaskWorker {
       Object val = generateData();
       Object last = generateEmpty();
       if (count < 1) {
-        context.write(edge, "" + count, val);
+        context.write(edge,  count, val);
       } else if (count > 1) {
-        context.writeEnd(edge, "" + count, last);
+        context.writeEnd(edge,  count, last);
       }
       count++;
     }
@@ -175,7 +175,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
       Object val = generateData();
       Object last = generateEmpty();
       if (count % 1 == 0) {
-        context.write(edge, "" + count, val);
+        context.write(edge,  count, val);
       }
       count++;
     }
@@ -187,6 +187,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
   }
 
   protected static Object generateEmpty() {
-    return DataGenerator.generateIntData(0);
+    return DataGenerator.generateIntData(jobParameters.getSize());
   }
 }

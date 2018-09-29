@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.executor.comms.batch.AllReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.BroadcastBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.GatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedGatherBatchOperation;
+import edu.iu.dsc.tws.executor.comms.batch.KeyedPartitionBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.PartitionBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.ReduceBatchOperation;
@@ -56,7 +57,7 @@ public class ParallelOperationFactory {
   /**
    * Building the parallel operation based on the batch or streaming tasks. And also
    * the sub cateogories depends on the communication used for each edge in the task graph.
-   * ***/
+   ***/
   public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
                                   OperationMode operationMode) {
 
@@ -117,9 +118,9 @@ public class ParallelOperationFactory {
         } else if (OperationNames.KEYED_GATHER.equals(edge.getOperation())) {
           return new KeyedGatherBatchOperation(config, channel, taskPlan, sources,
               dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName());
-        }  else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
-          return new KeyedGatherBatchOperation(config, channel, taskPlan, sources,
-              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName());
+        } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
+          return new KeyedPartitionBatchOperation(config, channel, taskPlan, sources,
+              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName(), false);
         }
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {
@@ -166,8 +167,8 @@ public class ParallelOperationFactory {
               edge.getName(), edge.getFunction());
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
           return new KeyedPartitionStreamOperation(config, channel, taskPlan, sources, dests,
-          edgeGenerator, edge.getDataType(), edge.getKeyType(),
-          edge.getName());
+              edgeGenerator, edge.getDataType(), edge.getKeyType(),
+              edge.getName());
         }
       }
     }

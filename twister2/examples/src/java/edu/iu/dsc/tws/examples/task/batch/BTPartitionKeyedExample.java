@@ -31,11 +31,13 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     int psource = taskStages.get(0);
     int psink = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
+    DataType keyType = DataType.INTEGER;
     String edge = "edge";
     BaseBatchSource g = new KeyedSourceBatchTask(edge);
     BaseBatchSink r = new KeyedPartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
     //keyed partition not implemented yet
   }
