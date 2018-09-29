@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -45,8 +46,12 @@ public class STBroadCastExample extends BenchTaskWorker {
     @Override
     public boolean execute(IMessage message) {
       if (counter % 1000 == 0) {
-        System.out.println(context.taskId() + " Message Broadcasted : "
-            + message.getContent() + ", counter : " + counter);
+        Object object = message.getContent();
+        if (object instanceof int[]) {
+          LOG.info(" Message Broadcasted : "
+              + Arrays.toString((int[]) object) + ", counter : " + counter);
+        }
+
       }
       counter++;
       return true;

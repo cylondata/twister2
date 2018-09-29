@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -40,14 +41,16 @@ public class BTBroadCastExample extends BenchTaskWorker {
 
   protected static class BroadcastSinkTask extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
+    private static int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.info(" Batch Message Broadcasted : "
-          + message.getContent() + ", counter : " + count);
-      count++;
-
+      Object object = message.getContent();
+      if (object instanceof int[]) {
+        LOG.info(" Batch Message Broadcasted : "
+            + Arrays.toString((int[]) object) + ", counter : " + count);
+        count++;
+      }
       return true;
     }
   }

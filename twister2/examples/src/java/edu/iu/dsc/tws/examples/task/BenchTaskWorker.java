@@ -94,9 +94,11 @@ public abstract class BenchTaskWorker extends TaskWorker {
       Object val = generateData();
       Object last = generateEmpty();
       if (count == 1) {
-        if (context.writeEnd(this.edge, last)) {
+        /*if (context.writeEnd(this.edge, last)) {
           count++;
-        }
+        }*/
+        context.end(this.edge);
+        count++;
       } else if (count < 1) {
         if (context.write(this.edge, val)) {
           count++;

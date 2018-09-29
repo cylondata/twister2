@@ -45,6 +45,7 @@ public class BTAllGatherExample extends BenchTaskWorker {
 
   protected static class AllGatherSinkTask extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
+    private static int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
