@@ -157,9 +157,7 @@ To check joined node:
 
 `docker node ls`
 
-![ 2018-06-19 at
-11.03.49.png](media/image1.png){width="6.291666666666667in"
-height="1.2291666666666667in"}
+![docker node](dockernode.png)
 
 **Creating Overlay Network on Docker Swarm**
 
@@ -172,6 +170,4 @@ To see Docker networks:
 
 `docker network ls`
 
-![ 2018-06-19 at
-11.08.14.png](media/image2.png){width="6.291666666666667in"
-height="1.625in"}
+![docker network](dockernetwork.png)

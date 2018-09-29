@@ -26,7 +26,7 @@ a list of &lt;agent ID, resource1: amount1, resource2: amount2, ...&gt;.
 
 ![Mesos Architecture](mesosarchitecture.png)
 
-Figure 1:Mesos Architecture\[mesos web page\]
+      Figure 1:Mesos Architecture\[mesos web page\]
 
 You can find more details on
 <http://mesos.apache.org/documentation/latest/>
@@ -60,7 +60,8 @@ to Mesos a description of the tasks it wants to run on them. In turn,
 Mesos launches the tasks on the corresponding agents.\[ mesos web page\]
 
 ![Mesos Framework](framework.png)
-Figure 2: How a framework gets scheduled
+
+     Figure 2: How a framework gets scheduled
 
 This is what happens in figure 2\[Mesos web page\]:
 
