@@ -24,7 +24,7 @@ enables fine-grained sharing of resources (CPU, RAM, ...) across
 frameworks by making them resource offers. Each resource offer contains
 a list of &lt;agent ID, resource1: amount1, resource2: amount2, ...&gt;.
 
-![Mesos Architecture](https://github.com/DSC-SPIDAL/twister2/tree/master/docs/architecture/resource-schedulers/mesos/mesosarchitecture.png)
+![Mesos Architecture](mesosarchitecture.png)
 
 Figure 1:Mesos Architecture\[mesos web page\]
 
@@ -59,7 +59,7 @@ resources to use. When a framework accepts offered resources, it passes
 to Mesos a description of the tasks it wants to run on them. In turn,
 Mesos launches the tasks on the corresponding agents.\[ mesos web page\]
 
-![Mesos Framework](https://github.com/DSC-SPIDAL/twister2/tree/master/docs/architecture/resource-schedulers/mesos/framework.png)
+![Mesos Framework](framework.png)
 Figure 2: How a framework gets scheduled
 
 This is what happens in figure 2\[Mesos web page\]:
