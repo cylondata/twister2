@@ -25,30 +25,33 @@ import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(STReduceExample.class.getName());
+
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
-    Op operation = Op.SUM;
-    DataType dataType = DataType.INTEGER;
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
+
     String edge = "edge";
     BaseStreamSource g = new SourceStreamTask(edge);
     BaseStreamSink r = new ReduceSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.reduce(SOURCE, edge, operation, dataType);
+
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection.reduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
+
     return taskGraphBuilder;
   }
 
   protected static class ReduceSinkTask extends BaseStreamSink {
     private static final long serialVersionUID = -254264903510284798L;
+
     private int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
       count++;
-      if (count % 1 == 0) {
+      if (count % jobParameters.getPrintInterval() == 0) {
         Object object = message.getContent();
         if (object instanceof int[]) {
           LOG.info("Stream Reduce Message Received : " + Arrays.toString((int[]) object));
@@ -57,5 +60,4 @@ public class STReduceExample extends BenchTaskWorker {
       return true;
     }
   }
-
 }

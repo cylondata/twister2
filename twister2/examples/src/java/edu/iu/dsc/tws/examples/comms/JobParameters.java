@@ -38,7 +38,7 @@ public class JobParameters {
 
   private boolean threads = false;
 
-  private int printInterval = 0;
+  private int printInterval = 1;
 
   private String dataType;
 
