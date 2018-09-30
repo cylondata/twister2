@@ -16,14 +16,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 public class PartitionStreamingFinalReceiver implements MessageReceiver {
+
+  private static final Logger LOG = Logger.getLogger(
+      PartitionStreamingFinalReceiver.class.getName());
   // messages before we have seen a barrier
   private Map<Integer, Queue<Object>> messages = new HashMap<>();
 
@@ -48,6 +53,9 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+      LOG.info("Barrier from : " + source + " to target: " + target);
+    }
     return messages.get(target).offer(object);
   }
 

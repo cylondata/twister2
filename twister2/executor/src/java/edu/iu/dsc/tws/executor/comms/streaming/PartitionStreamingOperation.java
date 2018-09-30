@@ -11,21 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.streaming;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -43,8 +35,6 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
  */
 public class PartitionStreamingOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionStreamingOperation.class.getName());
-
-  private boolean checkpointStarted = false;
 
   protected SPartition op;
 
@@ -85,56 +75,6 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
       TaskMessage msg = new TaskMessage(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return messages.offer(msg);
-    }
-  }
-
-  public class PartitionReceiver implements MessageReceiver {
-    private HashMap<Integer, Boolean> barrierMap = new HashMap<>();
-
-    private HashMap<Integer, ArrayList<Object>> incommingBuffer = new HashMap<>();
-    // keep track of the incoming messages
-    private Map<Integer, BlockingQueue<TaskMessage>> inComing = new HashMap<>();
-
-    @Override
-    public void init(Config cfg, DataFlowOperation operation,
-                     Map<Integer, List<Integer>> expectedIds) {
-      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-        inComing.put(e.getKey(), new LinkedBlockingQueue<>());
-      }
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      BlockingQueue<TaskMessage> messages = inComing.get(target);
-      if (messages.size() > 128) {
-        return false;
-      }
-      if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-        LOG.info("Barrier from : " + source + " to target: " + target);
-      }
-      if (object instanceof List) {
-        TaskMessage msg = new TaskMessage(object,
-            edgeGenerator.getStringMapping(communicationEdge), source, flags);
-        messages.offer(msg);
-      }
-      return true;
-    }
-
-    @Override
-    public boolean progress() {
-      for (Map.Entry<Integer, BlockingQueue<TaskMessage>> e : inComing.entrySet()) {
-        BlockingQueue<IMessage> messages = outMessages.get(e.getKey());
-        BlockingQueue<TaskMessage> inComingMessages = inComing.get(e.getKey());
-
-        TaskMessage msg = inComingMessages.peek();
-        if (msg != null) {
-          boolean offer = messages.offer(msg);
-          if (offer) {
-            inComingMessages.poll();
-          }
-        }
-      }
-      return true;
     }
   }
 
