@@ -92,11 +92,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
-      Object last = generateEmpty();
       if (count == 1) {
-        /*if (context.writeEnd(this.edge, last)) {
-          count++;
-        }*/
         context.end(this.edge);
         count++;
       } else if (count < 1) {
@@ -124,11 +120,10 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
-      Object last = generateEmpty();
       if (count < 1) {
         context.write(edge,  count, val);
       } else if (count > 1) {
-        context.writeEnd(edge,  count, last);
+        context.writeEnd(edge,  count, val);
       }
       count++;
     }
@@ -150,10 +145,8 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
-      if (count % 1 == 0) {
-        if (context.write(this.edge, val)) {
-          count++;
-        }
+      if (context.write(this.edge, val)) {
+        count++;
       }
     }
   }
@@ -175,10 +168,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
-      Object last = generateEmpty();
-      if (count % 1 == 0) {
-        context.write(edge,  count, val);
-      }
+      context.write(edge,  count, val);
       count++;
     }
   }
