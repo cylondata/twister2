@@ -28,15 +28,15 @@ public class STKeyedGatherExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     DataType keyType = DataType.OBJECT;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseStreamSource g = new KeyedSourceStreamTask(edge);
     BaseStreamSink r = new KeyedGatherSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
@@ -48,10 +48,11 @@ public class STKeyedGatherExample extends BenchTaskWorker {
     @Override
     public boolean execute(IMessage message) {
       Object object = message.getContent();
-      LOG.info("Message Keyed-Gather : " + object.getClass().getName()
-          + ", Count : " + count);
+      if (count % jobParameters.getPrintInterval() == 0) {
+        LOG.info("Message Keyed-Gather : " + object.getClass().getName()
+            + ", Count : " + count);
+      }
       count++;
-
       return true;
     }
   }

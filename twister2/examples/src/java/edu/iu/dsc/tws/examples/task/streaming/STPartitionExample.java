@@ -29,14 +29,14 @@ public class STPartitionExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseStreamSource g = new SourceStreamTask(edge);
     BaseStreamSink r = new PartitionSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
     return taskGraphBuilder;
   }
@@ -56,9 +56,11 @@ public class STPartitionExample extends BenchTaskWorker {
           count += 1;
         }
       }
-      LOG.info(String.format("%d %d Streaming Message Partition Received count: %d",
-          context.getWorkerId(),
-          context.taskId(), count));
+      if (count % jobParameters.getPrintInterval() == 0) {
+        LOG.info(String.format("%d %d Streaming Message Partition Received count: %d",
+            context.getWorkerId(),
+            context.taskId(), count));
+      }
       return true;
     }
   }

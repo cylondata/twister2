@@ -29,14 +29,14 @@ public class BTPartitionExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseBatchSource g = new SourceBatchTask(edge);
     BaseBatchSink r = new PartitionSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
     return taskGraphBuilder;
   }
@@ -53,7 +53,7 @@ public class BTPartitionExample extends BenchTaskWorker {
           ((Iterator) message.getContent()).next();
           count++;
         }
-        if (count % 1 == 0) {
+        if (count % jobParameters.getPrintInterval() == 0) {
           LOG.info("Message Partition Received : " + message.getContent()
               + ", Count : " + count);
         }

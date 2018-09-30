@@ -123,7 +123,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
       if (count < 1) {
         context.write(edge,  count, val);
       } else if (count > 1) {
-        context.writeEnd(edge,  count, val);
+        context.end(this.edge);
       }
       count++;
     }

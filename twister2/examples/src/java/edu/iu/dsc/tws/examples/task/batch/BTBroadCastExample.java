@@ -28,13 +28,13 @@ public class BTBroadCastExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     String edge = "edge";
     BaseBatchSource g = new SourceBatchTask(edge);
     BaseBatchSink r = new BroadcastSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
     return taskGraphBuilder;
   }
@@ -47,8 +47,10 @@ public class BTBroadCastExample extends BenchTaskWorker {
     public boolean execute(IMessage message) {
       Object object = message.getContent();
       if (object instanceof int[]) {
-        LOG.info(" Batch Message Broadcasted : "
-            + Arrays.toString((int[]) object) + ", counter : " + count);
+        if (count % jobParameters.getPrintInterval() == 0) {
+          LOG.info(" Batch Message Broadcasted : "
+              + Arrays.toString((int[]) object) + ", counter : " + count);
+        }
         count++;
       }
       return true;

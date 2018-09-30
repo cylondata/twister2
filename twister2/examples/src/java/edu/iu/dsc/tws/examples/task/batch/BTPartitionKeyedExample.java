@@ -28,15 +28,15 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     DataType keyType = DataType.INTEGER;
     String edge = "edge";
     BaseBatchSource g = new KeyedSourceBatchTask(edge);
     BaseBatchSink r = new KeyedPartitionSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
     //keyed partition not implemented yet
@@ -48,7 +48,7 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 100 == 0) {
+      if (count % jobParameters.getPrintInterval() == 0) {
         LOG.info("Batch Message Keyed-Reduced : " + message.getContent()
             + ", Count : " + count);
       }

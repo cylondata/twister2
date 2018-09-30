@@ -28,32 +28,32 @@ public class STBroadCastExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     String edge = "edge";
     BaseStreamSource g = new SourceStreamTask(edge);
     BaseStreamSink r = new BroadCastSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
     return taskGraphBuilder;
   }
 
   protected static class BroadCastSinkTask extends BaseStreamSink {
     private static final long serialVersionUID = -254264903510284798L;
-    private static int counter = 0;
+    private static int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
-      if (counter % 1000 == 0) {
+      if (count % jobParameters.getPrintInterval() == 0) {
         Object object = message.getContent();
         if (object instanceof int[]) {
           LOG.info(" Message Broadcasted : "
-              + Arrays.toString((int[]) object) + ", counter : " + counter);
+              + Arrays.toString((int[]) object) + ", counter : " + count);
         }
 
       }
-      counter++;
+      count++;
       return true;
     }
   }

@@ -34,16 +34,16 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelsim = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     Op operation = Op.SUM;
     DataType keyType = DataType.OBJECT;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseBatchSource g = new SourceBatchTask(edge);
     BaseBatchSink r = new KeyedReduceSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
     return taskGraphBuilder;
   }
@@ -64,11 +64,12 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
             ImmutablePair<?, ?> l = (ImmutablePair<?, ?>) value;
             Object key = l.getKey();
             Object val = l.getValue();
-            if (val instanceof int[]) {
-              LOG.info("Message Received , Key : " + key + ", Value : "
-                  + Arrays.toString((int[]) val));
+            if (count % jobParameters.getPrintInterval() == 0) {
+              if (val instanceof int[]) {
+                LOG.info("Message Received , Key : " + key + ", Value : "
+                    + Arrays.toString((int[]) val));
+              }
             }
-
           }
         }
       }

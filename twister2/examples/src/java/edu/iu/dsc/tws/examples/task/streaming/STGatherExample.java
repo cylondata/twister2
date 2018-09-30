@@ -48,7 +48,7 @@ public class STGatherExample extends BenchTaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 100 == 0) {
+      if (count % jobParameters.getPrintInterval() == 0) {
         Object object = message.getContent();
         if (object instanceof int[]) {
           LOG.info("Stream Message Gathered : " + Arrays.toString((int[]) object)

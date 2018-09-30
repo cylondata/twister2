@@ -45,6 +45,7 @@ public class BTGatherExample extends BenchTaskWorker {
 
   protected static class GatherSinkTask extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
+    private static int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
@@ -62,9 +63,11 @@ public class BTGatherExample extends BenchTaskWorker {
             data.add(a);
           }
         }
+        if (count % jobParameters.getPrintInterval() == 0) {
+
+        }
+        count++;
         LOG.info("Batch Gather Task Message Receieved : " + data.size());
-      } else {
-        LOG.info("Class : " + object.getClass().getName());
       }
       return true;
     }
