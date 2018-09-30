@@ -53,21 +53,22 @@ public class BTGatherExample extends BenchTaskWorker {
       if (object instanceof int[]) {
         LOG.info("Batch Gather Task Message Received : " + Arrays.toString((int[]) object));
       } else if (object instanceof Iterator) {
-        Iterator<?> it = (Iterator<?>) object;
-        int[] a = {};
-        ArrayList<int[]> data = new ArrayList<>();
-        while (it.hasNext()) {
-          if (it.next() instanceof int[]) {
-            a = (int[]) it.next();
-            LOG.info("Data : " + Arrays.toString(a));
-            data.add(a);
-          }
-        }
-        if (count % jobParameters.getPrintInterval() == 0) {
 
+        if (count % jobParameters.getPrintInterval() == 0) {
+          Iterator<?> it = (Iterator<?>) object;
+          int[] a = {};
+          ArrayList<int[]> data = new ArrayList<>();
+          while (it.hasNext()) {
+            if (it.next() instanceof int[]) {
+              a = (int[]) it.next();
+              LOG.info("Data : " + Arrays.toString(a));
+              data.add(a);
+            }
+          }
+          //LOG.info("Batch Gather Task Message Receieved : " + data.size());
         }
         count++;
-        LOG.info("Batch Gather Task Message Receieved : " + data.size());
+
       }
       return true;
     }
