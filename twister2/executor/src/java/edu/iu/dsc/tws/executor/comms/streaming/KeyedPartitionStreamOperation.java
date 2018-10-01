@@ -69,7 +69,7 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress();
+    return op.progress() || op.hasPending();
   }
 
   private class PartitionRecvrImpl implements MessageReceiver {

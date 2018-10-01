@@ -28,15 +28,16 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
+    DataType keyType = DataType.INTEGER;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseStreamSource g = new KeyedSourceStreamTask(edge);
     BaseStreamSink r = new SKeyedPartitionSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    //keyed partition not implemented yet
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
 
@@ -46,12 +47,12 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (message.getContent() instanceof List) {
-        count += ((List) message.getContent()).size();
+      if (count % jobParameters.getPrintInterval() == 0) {
+        LOG.info(String.format("%d %d Streaming Message Keyed Partition Received count: %d",
+            context.getWorkerId(),
+            context.taskId(), count));
       }
-      LOG.info(String.format("%d %d Streaming Message Keyed Partition Received count: %d",
-          context.getWorkerId(),
-          context.taskId(), count));
+      count++;
       return true;
     }
   }

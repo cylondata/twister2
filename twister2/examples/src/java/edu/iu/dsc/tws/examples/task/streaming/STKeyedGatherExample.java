@@ -12,30 +12,48 @@
 package edu.iu.dsc.tws.examples.task.streaming;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.task.TaskExamples;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STKeyedGatherExample extends BenchTaskWorker {
 
+  private static final Logger LOG = Logger.getLogger(STKeyedGatherExample.class.getName());
+
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     DataType keyType = DataType.OBJECT;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    TaskExamples taskExamples = new TaskExamples();
     BaseStreamSource g = new KeyedSourceStreamTask(edge);
-    BaseStreamSink r = taskExamples.getStreamSinkClass("keyed-gather");
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    BaseStreamSink r = new KeyedGatherSinkTask();
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
+  }
+
+  protected static class KeyedGatherSinkTask extends BaseStreamSink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      Object object = message.getContent();
+      if (count % jobParameters.getPrintInterval() == 0) {
+        LOG.info("Message Keyed-Gather : " + object.getClass().getName()
+            + ", Count : " + count);
+      }
+      count++;
+      return true;
+    }
   }
 }

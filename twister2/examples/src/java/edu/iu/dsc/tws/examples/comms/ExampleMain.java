@@ -99,7 +99,7 @@ public class ExampleMain {
       outstanding = cmd.getOptionValue(Constants.ARGS_OUTSTANDING);
     }
 
-    String printInt = "0";
+    String printInt = "1";
     if (cmd.hasOption(Constants.ARGS_PRINT_INTERVAL)) {
       printInt = cmd.getOptionValue(Constants.ARGS_PRINT_INTERVAL);
     }

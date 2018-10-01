@@ -11,14 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
@@ -30,22 +31,17 @@ public class STKeyedReduceExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     Op operation = Op.SUM;
     DataType keyType = DataType.OBJECT;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseStreamSource g = new KeyedSourceStreamTask(edge);
     BaseStreamSink r = new KeyedReduceSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.keyedReduce(SOURCE, edge, new IFunction() {
-      @Override
-      public Object onMessage(Object object1, Object object2) {
-        return object1;
-      }
-    }, keyType, dataType);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
     return taskGraphBuilder;
   }
 
@@ -55,9 +51,17 @@ public class STKeyedReduceExample extends BenchTaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 100 == 0) {
-        LOG.info("Streaming Message Keyed-Reduced : " + message.getContent()
-            + ", Count : " + count);
+      if (count % jobParameters.getPrintInterval() == 0) {
+        Object object = message.getContent();
+        if (object instanceof KeyedContent) {
+          KeyedContent content = (KeyedContent) object;
+          Object key = content.getKey();
+          Object value = content.getValue();
+          if (value instanceof int[]) {
+            LOG.info("Message Received, Key : " + key + ", Value : "
+                + Arrays.toString((int[]) value));
+          }
+        }
       }
       count++;
       return true;

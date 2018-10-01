@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,6 +21,9 @@ import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMOR
 
 public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
+
+  // max length for the user provided Twister2 job name
+  private static final int MAX_JOB_NAME_LENGTH = 200;
 
   private KubernetesUtils() {
   }
@@ -180,6 +184,61 @@ public final class KubernetesUtils {
       LOG.log(Level.SEVERE, "Exception when converting to IP adress: ", e);
       return null;
     }
+  }
+
+  /**
+   * Resource names in Kubernetes must be in the form of:
+   *   consist of lower case alphanumeric characters, dash(-), and dot(.).
+   *   at most 253 characters in length
+   * since we also add some prefixes or suffixes to job names such as:
+   *   "twister2-service-label-", "-job-master"
+   * we require that job names be at most 200 chars in length
+   * @param jobName
+   * @return
+   */
+  public static boolean jobNameConformsToK8sNamingRules(String jobName) {
+
+    // first we need to check the length of the job name
+    if (jobName.length() > MAX_JOB_NAME_LENGTH) {
+      LOG.warning("jobName is longer than " + MAX_JOB_NAME_LENGTH + " chars: " + jobName);
+      return false;
+    }
+
+    // make sure it only has:
+    // lowercase chars, digits, dots and dashes
+    if (jobName.matches("[a-z0-9\\.\\-]+")) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * we perform the following actions:
+   *   shorten the length of the job name if needed
+   *   replace underscore characters with dashes
+   *   convert to lower case characters
+   *   delete non-alphanumeric characters excluding dots and dashes
+   * @param jobName
+   * @return
+   */
+  public static String convertJobNameToK8sFormat(String jobName) {
+
+    // replace underscores with dashes if any
+    String modifiedJobName = jobName.replace("_", "-");
+
+    // convert to lower case
+    modifiedJobName = modifiedJobName.toLowerCase(Locale.ENGLISH);
+
+    // delete all non-alphanumeric characters excluding dots and dashes
+    modifiedJobName = modifiedJobName.replaceAll("[^a-z0-9\\.\\-]", "");
+
+    // shorten the job name if needed
+    if (modifiedJobName.length() > MAX_JOB_NAME_LENGTH) {
+      modifiedJobName = modifiedJobName.substring(0, MAX_JOB_NAME_LENGTH);
+    }
+
+    return modifiedJobName;
   }
 
 }

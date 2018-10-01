@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
@@ -43,28 +41,30 @@ public class BTGatherExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class GatherSinkTask extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
+    private static int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
-      Object object = message.getContent();
-      if (object instanceof int[]) {
-        LOG.info("Batch Gather Task Message Received : " + Arrays.toString((int[]) object));
-      } else if (object instanceof Iterator) {
-        Iterator<?> it = (Iterator<?>) object;
-        int[] a = {};
-        ArrayList<int[]> data = new ArrayList<>();
-        while (it.hasNext()) {
-          if (it.next() instanceof int[]) {
-            a = (int[]) it.next();
-            LOG.info("Data : " + Arrays.toString(a));
-            data.add(a);
+      if (message.getContent() instanceof Iterator) {
+        int numberOfElements = 0;
+        int totalValues = 0;
+        Iterator<Object> itr = (Iterator<Object>) message.getContent();
+        while (itr.hasNext()) {
+          Object data = itr.next();
+          numberOfElements++;
+          if (data instanceof int[]) {
+            totalValues += ((int[]) data).length;
           }
         }
-        LOG.info("Batch Gather Task Message Receieved : " + data.size());
-      } else {
-        LOG.info("Class : " + object.getClass().getName());
+        if (count % jobParameters.getPrintInterval() == 0) {
+          LOG.info("Gathered : " + message.getContent().getClass().getName()
+              + " numberOfElements: " + numberOfElements
+              + " total: " + totalValues);
+        }
+
       }
       return true;
     }

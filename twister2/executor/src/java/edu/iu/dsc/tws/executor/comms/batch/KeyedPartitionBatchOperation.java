@@ -13,14 +13,14 @@ package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.batch.BKeyedGather;
-import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
+import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
+import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
@@ -28,26 +28,30 @@ import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 
-public class KeyedGatherBatchOperation extends AbstractParallelOperation {
-  protected BKeyedGather op;
+public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
 
-  public KeyedGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                                   Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                   DataType dataType, DataType keyType,
-                                   String edgeName) {
+  private static final Logger LOG = Logger.getLogger(KeyedPartitionBatchOperation.class.getName());
+
+  protected BKeyedPartition op;
+
+  public KeyedPartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+                                      Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+                                      DataType dataType, DataType keyType, String edgeName,
+                                      boolean shuffle) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
-    op = new BKeyedGather(channel, taskPlan, sources, dests,
-        Utils.dataTypeToMessageType(keyType),
-        Utils.dataTypeToMessageType(dataType), new GatherRecvrImpl(), new LoadBalanceSelector());
-
+    op = new BKeyedPartition(channel, taskPlan, srcs, dests, Utils.dataTypeToMessageType(dataType),
+        Utils.dataTypeToMessageType(keyType), new PartitionReceiver(),
+        new SimpleKeyBasedSelector());
     communicationEdge = e.generate(edgeName);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
     TaskMessage taskMessage = (TaskMessage) message;
-    return op.gather(source, taskMessage.getKey(), taskMessage.getContent(), flags);
+    LOG.info("TaskMessage : " + taskMessage.getKey() + ", " + taskMessage.getContent());
+    LOG.info("Source : " + source);
+    return op.partition(source, taskMessage.getKey(), taskMessage.getContent(), flags);
   }
 
   @Override
@@ -55,7 +59,12 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
     return op.progress() || op.hasPending();
   }
 
-  private class GatherRecvrImpl implements BulkReceiver {
+  @Override
+  public void finish(int source) {
+    op.finish(source);
+  }
+
+  public class PartitionReceiver implements BulkReceiver {
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
     }
@@ -64,17 +73,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
     public boolean receive(int target, Iterator<Object> it) {
       TaskMessage msg = new TaskMessage(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
-      BlockingQueue<IMessage> messages = outMessages.get(target);
-      if (messages != null) {
-        return messages.offer(msg);
-      } else {
-        throw new RuntimeException("Un-expected message for target: " + target);
-      }
+      return outMessages.get(target).offer(msg);
     }
-  }
-
-  @Override
-  public void finish(int source) {
-    op.finish(source);
   }
 }

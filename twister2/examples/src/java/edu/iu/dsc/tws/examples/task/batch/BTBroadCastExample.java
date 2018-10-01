@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -27,27 +28,31 @@ public class BTBroadCastExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     String edge = "edge";
     BaseBatchSource g = new SourceBatchTask(edge);
     BaseBatchSink r = new BroadcastSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
     return taskGraphBuilder;
   }
 
   protected static class BroadcastSinkTask extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
+    private static int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.info(" Batch Message Broadcasted : "
-          + message.getContent() + ", counter : " + count);
-      count++;
-
+      Object object = message.getContent();
+      if (object instanceof int[]) {
+        if (count % jobParameters.getPrintInterval() == 0) {
+          LOG.info(" Batch Message Broadcasted : "
+              + Arrays.toString((int[]) object) + ", counter : " + count);
+        }
+        count++;
+      }
       return true;
     }
   }
