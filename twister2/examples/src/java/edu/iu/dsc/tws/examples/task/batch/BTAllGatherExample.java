@@ -60,7 +60,7 @@ public class BTAllGatherExample extends BenchTaskWorker {
           }
         }
         if (count % jobParameters.getPrintInterval() == 0) {
-          LOG.info("Stream Message AllGathered : " + message.getContent().getClass().getName()
+          LOG.info("AllGathered : " + message.getContent().getClass().getName()
               + " numberOfElements: " + numberOfElements
               + " total: " + totalValues);
         }
