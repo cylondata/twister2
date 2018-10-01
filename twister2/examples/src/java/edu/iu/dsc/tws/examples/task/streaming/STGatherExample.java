@@ -11,8 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -42,35 +41,30 @@ public class STGatherExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class GatherSinkTask extends BaseStreamSink {
     private int count = 0;
     private static final long serialVersionUID = -254264903510284798L;
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        if (object instanceof int[]) {
-          LOG.info("Stream Message Gathered : " + Arrays.toString((int[]) object)
-              + ", Count : " + count);
-        } else if (object instanceof ArrayList) {
-          ArrayList<?> a = (ArrayList<?>) object;
-          String out = "";
-          for (int i = 0; i < a.size(); i++) {
-            Object o = a.get(i);
-            if (o instanceof int[]) {
-              out += Arrays.toString((int[]) o);
-            }
+      if (message.getContent() instanceof Iterator) {
+        int numberOfElements = 0;
+        int totalValues = 0;
+        Iterator<Object> itr = (Iterator<Object>) message.getContent();
+        while (itr.hasNext()) {
+          count++;
+          Object data = itr.next();
+          numberOfElements++;
+          if (data instanceof int[]) {
+            totalValues += ((int[]) data).length;
           }
-          LOG.info("Stream Message Gathered : " + out + ", Count : " + count);
-        } else {
-          LOG.info("Stream Message Gathered : " + message.getContent().getClass().getName()
-              + ", Count : " + count);
         }
-
-      }
-      if (message.getContent() instanceof List) {
-        count += ((List) message.getContent()).size();
+        if (count % jobParameters.getPrintInterval() == 0) {
+          LOG.info("Gathered : " + message.getContent().getClass().getName()
+              + ", Count : " + count + " numberOfElements: " + numberOfElements
+              + " total: " + totalValues);
+        }
       }
       return true;
     }
