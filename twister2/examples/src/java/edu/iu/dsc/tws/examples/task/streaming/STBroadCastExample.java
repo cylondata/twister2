@@ -11,12 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
@@ -47,12 +48,21 @@ public class STBroadCastExample extends BenchTaskWorker {
     public boolean execute(IMessage message) {
       if (count % jobParameters.getPrintInterval() == 0) {
         Object object = message.getContent();
+        experimentData.setOutput(object);
+        try {
+          verify(OperationNames.BROADCAST);
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
+        }
+      }
+      /*if (count % jobParameters.getPrintInterval() == 0) {
+        Object object = message.getContent();
         if (object instanceof int[]) {
           LOG.info(" Message Broadcasted : "
               + Arrays.toString((int[]) object) + ", counter : " + count);
         }
 
-      }
+      }*/
       count++;
       return true;
     }

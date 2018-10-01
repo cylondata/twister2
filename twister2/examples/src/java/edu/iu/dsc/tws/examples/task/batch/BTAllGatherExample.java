@@ -18,6 +18,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
@@ -58,12 +60,21 @@ public class BTAllGatherExample extends BenchTaskWorker {
           if (data instanceof int[]) {
             totalValues += ((int[]) data).length;
           }
+          if (count % jobParameters.getPrintInterval() == 0) {
+            Object object = message.getContent();
+            experimentData.setOutput(data);
+            try {
+              verify(OperationNames.ALLGATHER);
+            } catch (VerificationException e) {
+              LOG.info("Exception Message : " + e.getMessage());
+            }
+          }
         }
-        if (count % jobParameters.getPrintInterval() == 0) {
+        /*if (count % jobParameters.getPrintInterval() == 0) {
           LOG.info("AllGathered : " + message.getContent().getClass().getName()
               + " numberOfElements: " + numberOfElements
               + " total: " + totalValues);
-        }
+        }*/
 
       }
       return true;

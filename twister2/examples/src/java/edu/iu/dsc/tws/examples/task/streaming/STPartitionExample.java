@@ -18,6 +18,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
@@ -49,18 +51,27 @@ public class STPartitionExample extends BenchTaskWorker {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public boolean execute(IMessage message) {
-      if (message.getContent() instanceof Iterator) {
-        Iterator it = (Iterator) message.getContent();
-        if (it.hasNext()) {
-          it.next();
-          count += 1;
+      if (count % jobParameters.getPrintInterval() == 0) {
+        if (message.getContent() instanceof Iterator) {
+          Iterator it = (Iterator) message.getContent();
+          if (it.hasNext()) {
+            Object object = it.next();
+            experimentData.setOutput(object);
+            try {
+              verify(OperationNames.PARTITION);
+            } catch (VerificationException e) {
+              LOG.info("Exception Message : " + e.getMessage());
+            }
+            LOG.info("Itr : " + object.getClass().getName());
+            count += 1;
+          }
         }
       }
-      if (count % jobParameters.getPrintInterval() == 0) {
+      /*if (count % jobParameters.getPrintInterval() == 0) {
         LOG.info(String.format("%d %d Streaming Message Partition Received count: %d",
             context.getWorkerId(),
             context.taskId(), count));
-      }
+      }*/
       return true;
     }
   }

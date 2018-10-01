@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -47,6 +48,14 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
+      Object object = message.getContent();
+      if (object instanceof ArrayList) {
+        ArrayList<?> data = (ArrayList<?>) object;
+        for (int i = 0; i < data.size(); i++) {
+          LOG.info("Object : " + data.get(i).getClass().getName());
+
+        }
+      }
       if (count % jobParameters.getPrintInterval() == 0) {
         LOG.info(String.format("%d %d Streaming Message Keyed Partition Received count: %d",
             context.getWorkerId(),

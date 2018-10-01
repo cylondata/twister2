@@ -47,6 +47,7 @@ public class STKeyedGatherExample extends BenchTaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
+      LOG.info("Message Keyed-Gathered : " + message.getContent().getClass().getName());
       Object object = message.getContent();
       if (count % jobParameters.getPrintInterval() == 0) {
         LOG.info("Message Keyed-Gather : " + object.getClass().getName()

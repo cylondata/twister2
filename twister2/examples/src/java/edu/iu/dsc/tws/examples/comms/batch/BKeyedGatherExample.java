@@ -57,9 +57,9 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
         MessageType.INTEGER, MessageType.INTEGER, new FinalReduceReceiver(),
         new SimpleKeyBasedSelector());
 
-
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
+
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }

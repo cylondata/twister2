@@ -48,14 +48,34 @@ public class BTPartitionExample extends BenchTaskWorker {
     @Override
     public boolean execute(IMessage message) {
 
+      Object object = message.getContent();
+
       if (message.getContent() instanceof Iterator) {
         while (((Iterator) message.getContent()).hasNext()) {
           ((Iterator) message.getContent()).next();
           count++;
         }
+        /*if (count % jobParameters.getPrintInterval() == 0) {
+          Object object = message.getContent();
+          experimentData.setOutput(object);
+          try {
+            verify(OperationNames.PARTITION);
+          } catch (VerificationException e) {
+            LOG.info("Exception Message : " + e.getMessage());
+          }
+        }*/
         if (count % jobParameters.getPrintInterval() == 0) {
-          LOG.info("Message Partition Received : " + message.getContent()
-              + ", Count : " + count);
+          LOG.info("Received : " + object.getClass().getName());
+          if (object instanceof Iterator<?>) {
+            Iterator<?> itr = (Iterator<?>) object;
+            LOG.info("INstance : " + itr.getClass().getName());
+            LOG.info("ITr next : " + itr.hasNext());
+            while (itr.hasNext()) {
+              Object res = itr.next();
+              LOG.info("Message Partition Received : " + res.getClass().getName()
+                  + ", Count : " + count);
+            }
+          }
         }
       }
 

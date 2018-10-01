@@ -142,17 +142,23 @@ public class ExperimentVerification implements IVerification {
 
 
       if (OperationNames.KEYED_REDUCE.equals(this.operationNames)) {
-        KeyedContent keyedOutput = (KeyedContent) experimentData.getOutput();
+        Object keyedOutput = null;
+        Object response = experimentData.getOutput();
+        if (response instanceof KeyedContent) {
+          keyedOutput = (KeyedContent) response;
+        } else {
+          keyedOutput = response;
+        }
         if (experimentData.getInput() instanceof int[]
-            && keyedOutput.getValue() instanceof int[]) {
+            && keyedOutput instanceof int[]) {
           int sourceCount = experimentData.getTaskStages().get(0);
           int sinkCount = experimentData.getTaskStages().get(1);
-          if (sourceCount > sinkCount && sinkCount == 1) {
+          if (sourceCount < sinkCount && sinkCount != 1) {
             throw new VerificationException("Invalid task stages : "
                 + sourceCount + "," + sinkCount);
           } else {
             int[] input = (int[]) experimentData.getInput();
-            int[] output = (int[]) keyedOutput.getValue();
+            int[] output = (int[]) keyedOutput;
             Object[] res = Arrays.stream(input)
                 .map(i -> i * sourceCount * experimentData.getIterations())
                 .boxed()
@@ -190,6 +196,33 @@ public class ExperimentVerification implements IVerification {
                 .toString(Arrays.copyOfRange(res, 0, res.length));
             String outputRes = Arrays
                 .toString(Arrays.copyOfRange(output, 0, res.length));
+            LOG.info("Expected Result : " + resString);
+            LOG.info("Generated Result : " + outputRes);
+          }
+        }
+      }
+
+      if (OperationNames.PARTITION.equals(this.operationNames)) {
+        if (experimentData.getInput() instanceof int[]
+            && experimentData.getOutput() instanceof int[]) {
+          int sourceCount = experimentData.getTaskStages().get(0);
+          int sinkCount = experimentData.getTaskStages().get(1);
+          if ((sourceCount > sinkCount) && (sinkCount < 2)) {
+            throw new VerificationException("Invalid task stages : "
+                + sourceCount + "," + sinkCount);
+          } else {
+            LOG.info("Current Worker : " + experimentData.getWorkerId()
+                + "/" + experimentData.getNumOfWorkers());
+            LOG.info("Task Id : " + experimentData.getTaskId());
+            int[] input = (int[]) experimentData.getInput();
+            int[] output = (int[]) experimentData.getOutput();
+            int[] res = input;
+            //isVerified = Arrays.equals(input, output);
+            String resString = Arrays
+                .toString(Arrays.copyOfRange(res, 0, res.length));
+            String outputRes = Arrays
+                .toString(Arrays.copyOfRange(output, 0, res.length));
+            isVerified = resString.equals(outputRes);
             LOG.info("Expected Result : " + resString);
             LOG.info("Generated Result : " + outputRes);
           }
@@ -392,6 +425,33 @@ public class ExperimentVerification implements IVerification {
       }
 
       if (OperationNames.PARTITION.equals(this.operationNames)) {
+        if (experimentData.getInput() instanceof int[]
+            && experimentData.getOutput() instanceof int[]) {
+          int sourceCount = experimentData.getTaskStages().get(0);
+          int sinkCount = experimentData.getTaskStages().get(1);
+          if ((sourceCount > sinkCount) && (sinkCount < 2)) {
+            throw new VerificationException("Invalid task stages : "
+                + sourceCount + "," + sinkCount);
+          } else {
+            LOG.info("Current Worker : " + experimentData.getWorkerId()
+                + "/" + experimentData.getNumOfWorkers());
+            LOG.info("Task Id : " + experimentData.getTaskId());
+            int[] input = (int[]) experimentData.getInput();
+            int[] output = (int[]) experimentData.getOutput();
+            int[] res = input;
+            //isVerified = Arrays.equals(input, output);
+            String resString = Arrays
+                .toString(Arrays.copyOfRange(res, 0, res.length));
+            String outputRes = Arrays
+                .toString(Arrays.copyOfRange(output, 0, res.length));
+            isVerified = resString.equals(outputRes);
+            LOG.info("Expected Result : " + resString);
+            LOG.info("Generated Result : " + outputRes);
+          }
+        }
+      }
+
+      if (OperationNames.KEYED_PARTITION.equals(this.operationNames)) {
         if (experimentData.getInput() instanceof int[]
             && experimentData.getOutput() instanceof int[]) {
           int sourceCount = experimentData.getTaskStages().get(0);
