@@ -23,6 +23,8 @@ import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
@@ -65,11 +67,19 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
             Object key = l.getKey();
             Object val = l.getValue();
             if (count % jobParameters.getPrintInterval() == 0) {
+              experimentData.setOutput(val);
+              try {
+                verify(OperationNames.KEYED_REDUCE);
+              } catch (VerificationException e) {
+                LOG.info("Exception Message : " + e.getMessage());
+              }
+            }
+            /*if (count % jobParameters.getPrintInterval() == 0) {
               if (val instanceof int[]) {
                 LOG.info("Message Received , Key : " + key + ", Value : "
                     + Arrays.toString((int[]) val));
               }
-            }
+            }*/
           }
         }
       }

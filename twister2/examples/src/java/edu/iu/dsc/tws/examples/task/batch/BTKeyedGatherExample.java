@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
@@ -21,6 +20,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
@@ -68,8 +69,16 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
                 Object[] objects = (Object[]) val;
                 for (int i = 0; i < objects.length; i++) {
                   int[] a = (int[]) objects[i];
-                  LOG.info("Keyed-Gathered Message , Key : " + key + ", Value : "
-                      + Arrays.toString(a));
+                  if (count % jobParameters.getPrintInterval() == 0) {
+                    experimentData.setOutput(a);
+                    try {
+                      verify(OperationNames.KEYED_GATHER);
+                    } catch (VerificationException e) {
+                      LOG.info("Exception Message : " + e.getMessage());
+                    }
+                  }
+                  /*LOG.info("Keyed-Gathered Message , Key : " + key + ", Value : "
+                      + Arrays.toString(a));*/
                 }
               }
             }

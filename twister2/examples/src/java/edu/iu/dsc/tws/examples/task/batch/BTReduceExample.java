@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -19,6 +18,8 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
@@ -52,8 +53,11 @@ public class BTReduceExample extends BenchTaskWorker {
       count++;
       if (count % jobParameters.getPrintInterval() == 0) {
         Object object = message.getContent();
-        if (object instanceof int[]) {
-          LOG.info("Batch Reduce Message Received : " + Arrays.toString((int[]) object));
+        experimentData.setOutput(object);
+        try {
+          verify(OperationNames.REDUCE);
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
         }
       }
       return true;

@@ -11,12 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
@@ -45,14 +46,22 @@ public class BTBroadCastExample extends BenchTaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      Object object = message.getContent();
-      if (object instanceof int[]) {
+      if (count % jobParameters.getPrintInterval() == 0) {
+        Object object = message.getContent();
+        experimentData.setOutput(object);
+        try {
+          verify(OperationNames.BROADCAST);
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
+        }
+      }
+      /*if (object instanceof int[]) {
         if (count % jobParameters.getPrintInterval() == 0) {
           LOG.info(" Batch Message Broadcasted : "
               + Arrays.toString((int[]) object) + ", counter : " + count);
         }
         count++;
-      }
+      }*/
       return true;
     }
   }

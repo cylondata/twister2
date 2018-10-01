@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.examples.task.batch.BTBroadCastExample;
 import edu.iu.dsc.tws.examples.task.batch.BTGatherExample;
 import edu.iu.dsc.tws.examples.task.batch.BTKeyedGatherExample;
 import edu.iu.dsc.tws.examples.task.batch.BTKeyedReduceExample;
+import edu.iu.dsc.tws.examples.task.batch.BTPartitionExample;
 import edu.iu.dsc.tws.examples.task.batch.BTPartitionKeyedExample;
 import edu.iu.dsc.tws.examples.task.batch.BTReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllGatherExample;
@@ -155,7 +156,7 @@ public class ExampleTaskMain {
           submitJob(config, workers, jobConfig, BTBroadCastExample.class.getName());
           break;
         case "partition":
-          submitJob(config, workers, jobConfig, BTPartitionKeyedExample.class.getName());
+          submitJob(config, workers, jobConfig, BTPartitionExample.class.getName());
           break;
         case "keyed-reduce":
           submitJob(config, workers, jobConfig, BTKeyedReduceExample.class.getName());
