@@ -60,7 +60,6 @@ public class KMeansHDFSFileReader {
           }
           value++;
         }
-
       } else {
         throw new FileNotFoundException("File Not Found In HDFS");
       }
