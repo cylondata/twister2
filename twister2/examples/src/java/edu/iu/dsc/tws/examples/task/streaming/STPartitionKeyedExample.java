@@ -18,6 +18,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
@@ -52,8 +54,14 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
       if (object instanceof ArrayList) {
         ArrayList<?> data = (ArrayList<?>) object;
         for (int i = 0; i < data.size(); i++) {
-          LOG.info("Object : " + data.get(i).getClass().getName());
-
+          Object value = data.get(i);
+          LOG.info("Value type : " + value.getClass().getName());
+          experimentData.setOutput(value);
+          try {
+            verify(OperationNames.KEYED_PARTITION);
+          } catch (VerificationException e) {
+            LOG.info("Exception Message : " + e.getMessage());
+          }
         }
       }
       if (count % jobParameters.getPrintInterval() == 0) {

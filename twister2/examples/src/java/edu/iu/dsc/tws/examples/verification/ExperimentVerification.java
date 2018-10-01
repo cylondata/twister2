@@ -228,6 +228,42 @@ public class ExperimentVerification implements IVerification {
           }
         }
       }
+
+      if (OperationNames.KEYED_PARTITION.equals(this.operationNames)) {
+        Object response = experimentData.getOutput();
+        Object outputMessage = null;
+        if (response instanceof KeyedContent) {
+          KeyedContent keyedContent = (KeyedContent) response;
+          outputMessage = keyedContent.getValue();
+        } else {
+          outputMessage = response;
+        }
+        if (experimentData.getInput() instanceof int[]
+            && outputMessage instanceof int[]) {
+          int sourceCount = experimentData.getTaskStages().get(0);
+          int sinkCount = experimentData.getTaskStages().get(1);
+          if ((sourceCount > sinkCount) && (sinkCount < 2)) {
+            throw new VerificationException("Invalid task stages : "
+                + sourceCount + "," + sinkCount);
+          } else {
+            LOG.info("Current Worker : " + experimentData.getWorkerId()
+                + "/" + experimentData.getNumOfWorkers());
+            LOG.info("Task Id : " + experimentData.getTaskId());
+            int[] input = (int[]) experimentData.getInput();
+            int[] output = (int[]) outputMessage;
+            int[] res = input;
+            //isVerified = Arrays.equals(input, output);
+            String resString = Arrays
+                .toString(Arrays.copyOfRange(res, 0, res.length));
+            String outputRes = Arrays
+                .toString(Arrays.copyOfRange(output, 0, res.length));
+            isVerified = resString.equals(outputRes);
+            LOG.info("Expected Result : " + resString);
+            LOG.info("Generated Result : " + outputRes);
+          }
+        }
+      }
+
     }
 
     if (experimentData.getOperationMode() == OperationMode.BATCH) {
@@ -452,8 +488,16 @@ public class ExperimentVerification implements IVerification {
       }
 
       if (OperationNames.KEYED_PARTITION.equals(this.operationNames)) {
+        Object response = experimentData.getOutput();
+        Object outputMessage = null;
+        if (response instanceof KeyedContent) {
+          KeyedContent keyedContent = (KeyedContent) response;
+          outputMessage = keyedContent.getValue();
+        } else {
+          outputMessage = response;
+        }
         if (experimentData.getInput() instanceof int[]
-            && experimentData.getOutput() instanceof int[]) {
+            && outputMessage instanceof int[]) {
           int sourceCount = experimentData.getTaskStages().get(0);
           int sinkCount = experimentData.getTaskStages().get(1);
           if ((sourceCount > sinkCount) && (sinkCount < 2)) {
