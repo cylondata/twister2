@@ -61,7 +61,7 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-      LOG.info("barrier map : " + barrierMap );
+      LOG.info("barrier map : " + barrierMap);
       LOG.info("buffer msgs : " + bufferMessage);
       barrierMap.putIfAbsent(source, true);
       if (barrierMap.keySet().size() == expIds.get(target).size()) {
