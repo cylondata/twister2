@@ -11,17 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.stream;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.stream.SGather;
@@ -95,7 +92,7 @@ public class SGatherExample extends BenchWorker {
     return gatherDone && sourcesDone && !gather.hasPending();
   }
 
-  public class FinalReduceReceiver implements MessageReceiver {
+  public class FinalReduceReceiver implements BulkReceiver {
     private int count = 0;
     private int expected;
 
@@ -104,16 +101,15 @@ public class SGatherExample extends BenchWorker {
     }
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      if (object instanceof List) {
-        count += ((List) object).size();
-        ArrayList<?> a = (ArrayList<?>) object;
-        experimentData.setOutput(a.get(0));
+    public boolean receive(int target, Iterator<Object> object) {
+      while (object.hasNext()) {
+        experimentData.setOutput(object.next());
       }
+      count += 1;
 
       if (count == expected) {
         LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
@@ -126,11 +122,6 @@ public class SGatherExample extends BenchWorker {
         LOG.info("Exception Message : " + e.getMessage());
       }
 
-      return true;
-    }
-
-    @Override
-    public boolean progress() {
       return true;
     }
   }

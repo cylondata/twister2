@@ -19,4 +19,4 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSyste
 # mpi run file, this assumes a mpirun that is shipped with the product
 # change this to just mpirun if you are using a system wide installation of OpenMPI
 # or complete path of OpenMPI in case you have something custom
-twister2.resource.scheduler.mpi.mpirun.file: "twister2-core/ompi/bin/mpirun"
+twister2.resource.scheduler.mpi.mpirun.file: "mpirun"

@@ -44,6 +44,7 @@ public class STGatherExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class GatherSinkTask extends BaseStreamSink {
     private int count = 0;
     private static final long serialVersionUID = -254264903510284798L;
@@ -75,12 +76,13 @@ public class STGatherExample extends BenchTaskWorker {
           //LOG.info("Stream Message Gathered : " + out + ", Count : " + count);
         } else {
           /*LOG.info("Stream Message Gathered : " + message.getContent().getClass().getName()
-              + ", Count : " + count);*/
+             + ", Count : " + count);*/
         }
-
-      }
-      if (message.getContent() instanceof List) {
-        count += ((List) message.getContent()).size();
+        /*if (count % jobParameters.getPrintInterval() == 0) {
+          LOG.info("Gathered : " + message.getContent().getClass().getName()
+              + ", Count : " + count + " numberOfElements: " + numberOfElements
+              + " total: " + totalValues);
+        }*/
       }
       return true;
     }
