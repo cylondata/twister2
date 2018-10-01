@@ -53,7 +53,7 @@
 * [Developers](developers/README.md)
   * [Developer Environment](developers/developer-environment.md)
   * [Debugging](developers/debugging.md)
-  * [Developer](developers/developer.md)
+  * [Contributors](developers/contributors.md)
   * [FAQ](developers/faq.md)
 * [Examples](examples/README.md)
   * [Task Examples](examples/collectives/task/task_examples.md)
