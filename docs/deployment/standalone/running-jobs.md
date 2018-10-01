@@ -34,7 +34,8 @@ By default we ship the following nodes file.
 localhost slots=16
 ```
 
-Here it says the we can run upto 16 workers in the local machine.
+Here it says we can run up to 16 workers in the local machine. You can add more machines with their capacity
+to this file in order to run the job on them.
 
 ## Installing OpenMPI
 
@@ -55,4 +56,5 @@ You can follow the [Compiling Guide](../compiling.md) to get instructions on how
 
 ## How it works
 
-Standalone uses OpenMPI to start the job.
+Standalone uses OpenMPI to start the job. Underneath it uses mpirun command to execute the job. You can change the parameters
+of mpirun inside the ```conf/standalone/exp.sh``` script.
