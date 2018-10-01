@@ -13,6 +13,7 @@
   * [Mesos](deployment/mesos/README.md)
       * [Running Jobs](deployment/mesos/running-jobs.md)
       * [Twister2 Mesos Install](deployment/mesos/twister2-mesos-install.md)
+  * [Slurm](deployment/slurm/running-jobs.md)    
 * [Concepts](concepts/README.md)
   * [Task Scheduler](concepts/task-scheduler/README.md)
     * [Streaming](concepts/task-scheduler/streaming/README.md)

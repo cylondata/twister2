@@ -57,4 +57,4 @@ You can follow the [Compiling Guide](../compiling.md) to get instructions on how
 ## How it works
 
 Standalone uses OpenMPI to start the job. Underneath it uses mpirun command to execute the job. You can change the parameters
-of mpirun inside the ```conf/standalone/exp.sh``` script.
+of mpirun inside the ```conf/standalone/mpi.sh``` script.
