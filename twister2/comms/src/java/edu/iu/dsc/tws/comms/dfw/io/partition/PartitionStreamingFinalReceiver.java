@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -37,6 +38,11 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
 
   private Map<Integer, List<Integer>> expIds;
 
+  private Map<Integer, Boolean> barrierMap;
+
+  private BlockingQueue<MessageObject> bufferMessage = new ArrayBlockingQueue<>(2000);
+
+
   public PartitionStreamingFinalReceiver(BulkReceiver receiver) {
     this.receiver = receiver;
   }
@@ -45,6 +51,7 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   public void init(Config cfg, DataFlowOperation operation,
                    Map<Integer, List<Integer>> expectedIds) {
     this.expIds = expectedIds;
+    this.barrierMap = new HashMap<>();
     int sendPendingMax = DataFlowContext.sendPendingMax(cfg);
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       messages.put(e.getKey(), new ArrayBlockingQueue<>(sendPendingMax));
@@ -54,9 +61,27 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-      LOG.info("Barrier from : " + source + " to target: " + target);
+      LOG.info("barrier map : " + barrierMap );
+      LOG.info("buffer msgs : " + bufferMessage);
+      barrierMap.putIfAbsent(source, true);
+      if (barrierMap.keySet().size() == expIds.get(target).size()) {
+        if (receiver.sync(target, MessageFlags.BARRIER, object)) {
+          for (MessageObject messageObject : bufferMessage) {
+            messages.get(messageObject.getTarget()).offer(messageObject.getMessage());
+          }
+          barrierMap.clear();
+          bufferMessage = new ArrayBlockingQueue<>(2000);
+        }
+      }
+      return true;
+    } else {
+      if (barrierMap.containsKey(source)) {
+        bufferMessage.add(new MessageObject(target, object));
+        return true;
+      } else {
+        return messages.get(target).offer(object);
+      }
     }
-    return messages.get(target).offer(object);
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -77,5 +102,24 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
       }
     }
     return true;
+  }
+
+
+  public class MessageObject {
+    private int target;
+    private Object message;
+
+    public MessageObject(int target, Object message) {
+      this.target = target;
+      this.message = message;
+    }
+
+    public int getTarget() {
+      return target;
+    }
+
+    public Object getMessage() {
+      return message;
+    }
   }
 }

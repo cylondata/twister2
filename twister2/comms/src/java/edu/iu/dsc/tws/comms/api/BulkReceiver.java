@@ -41,7 +41,7 @@ public interface BulkReceiver {
    * @param data data
    * @return true if sync event is accepted
    */
-  default boolean sync(int target, MessageFlags flag, Object data) {
+  default boolean sync(int target, int flag, Object data) {
     return true;
   }
 }
