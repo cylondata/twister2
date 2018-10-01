@@ -47,7 +47,7 @@ The scheduleStreamingTask and scheduleBatchTask call the generateTaskSchedulePla
 
 ## Proto file
 
-The task scheduler has the protobuf file named taskscheduleplan.proto in the proto directory. The proto file consists of the following details as follows. The resource object represents the values of cpu, memory, and disk of the resources. The task instance plan holds the task id, task name, task index, and container object. The container plan consists of container id, task instance plan, required and scheduled resource of the container. The task schedule plan holds the jobid or the taskgraph id and the container plan. The task schedule plan list is mainly responsible for holding the taskschedule of the batch tasks.
+The task scheduler has the protobuf file named taskscheduleplan.proto in the proto directory. It considers both the soft (CPU, disk) and hard (RAM) constraints which generates the task schedule plan in the format of Google Protobuf object. The proto file consists of the following details as follows. The resource object represents the values of cpu, memory, and disk of the resources. The task instance plan holds the task id, task name, task index, and container object. The container plan consists of container id, task instance plan, required and scheduled resource of the container. The task schedule plan holds the jobid or the taskgraph id and the container plan. The task schedule plan list is mainly responsible for holding the taskschedule of the batch tasks.
 
 \`\`bash message Resource { double availableCPU = 1; double availableMemory = 2; double availableDisk = 3; }
 
