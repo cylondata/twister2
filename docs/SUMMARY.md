@@ -4,6 +4,7 @@
 * [Quickstart](quickstart.md)
 * [Deployment](deployment/installation.md)
   * [Compiling](deployment/compiling.md)
+  * [Running a Job](deployment/job-submit.md)
   * [Nomad](deployment/nomad/README.md)
     * [Running Jobs](deployment/nomad/running-jobs.md)
   * [Kubernetes](deployment/kubernetes/README.md)
