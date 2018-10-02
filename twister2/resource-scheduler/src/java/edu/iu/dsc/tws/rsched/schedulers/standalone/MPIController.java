@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.mpi;
+package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -36,7 +36,7 @@ public class MPIController implements IController {
 
   private Config config;
   private String workingDirectory;
-  private boolean node = true;
+  private boolean standalone = true;
   private MPICommand command;
 
   @Override
@@ -48,11 +48,11 @@ public class MPIController implements IController {
     LOG.log(Level.INFO, "Working directory: " + workingDirectory);
 
     // lets set the mode
-    this.node = "node".equals(MPIContext.mpiMode(mConfig));
+    this.standalone = "standalone".equals(MPIContext.mpiMode(mConfig));
 
     // lets creaete the command accordingly
-    if (node) {
-      command = new NodeCommand(mConfig, workingDirectory);
+    if (standalone) {
+      command = new StandaloneCommand(mConfig, workingDirectory);
     } else {
       command = new SlurmCommand(mConfig, workingDirectory);
     }

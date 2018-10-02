@@ -16,6 +16,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
@@ -27,28 +29,41 @@ public class STBroadCastExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     String edge = "edge";
     BaseStreamSource g = new SourceStreamTask(edge);
     BaseStreamSink r = new BroadCastSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
     return taskGraphBuilder;
   }
 
   protected static class BroadCastSinkTask extends BaseStreamSink {
     private static final long serialVersionUID = -254264903510284798L;
-    private static int counter = 0;
+    private static int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
-      if (counter % 1000 == 0) {
-        System.out.println(context.taskId() + " Message Broadcasted : "
-            + message.getContent() + ", counter : " + counter);
+      if (count % jobParameters.getPrintInterval() == 0) {
+        Object object = message.getContent();
+        experimentData.setOutput(object);
+        try {
+          verify(OperationNames.BROADCAST);
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
+        }
       }
-      counter++;
+      /*if (count % jobParameters.getPrintInterval() == 0) {
+        Object object = message.getContent();
+        if (object instanceof int[]) {
+          LOG.info(" Message Broadcasted : "
+              + Arrays.toString((int[]) object) + ", counter : " + count);
+        }
+
+      }*/
+      count++;
       return true;
     }
   }

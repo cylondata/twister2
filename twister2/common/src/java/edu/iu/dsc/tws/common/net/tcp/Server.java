@@ -137,10 +137,10 @@ public class Server implements SelectHandler {
       pending = false;
       for (BaseNetworkChannel channel : connectedChannels.values()) {
         if (channel.isPending()) {
-          progress.loop();
           pending = true;
         }
       }
+      progress.loop();
       elapsed = System.currentTimeMillis() - start;
     } while (pending && elapsed < waitTime);
 

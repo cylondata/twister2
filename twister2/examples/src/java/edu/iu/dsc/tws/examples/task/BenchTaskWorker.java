@@ -22,6 +22,9 @@ import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
+import edu.iu.dsc.tws.examples.verification.ExperimentData;
+import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -45,16 +48,23 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   protected ComputeConnection computeConnection;
 
+  protected static ExperimentData experimentData;
+
   protected static JobParameters jobParameters;
 
   @Override
   public void execute() {
+    experimentData = new ExperimentData();
     jobParameters = JobParameters.build(config);
+    experimentData.setTaskStages(jobParameters.getTaskStages());
+    experimentData.setIterations(jobParameters.getIterations());
     taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     if (jobParameters.isStream()) {
       taskGraphBuilder.setMode(OperationMode.STREAMING);
+      experimentData.setOperationMode(OperationMode.STREAMING);
     } else {
       taskGraphBuilder.setMode(OperationMode.BATCH);
+      experimentData.setOperationMode(OperationMode.BATCH);
     }
     buildTaskGraph();
     dataFlowTaskGraph = taskGraphBuilder.build();
@@ -92,12 +102,11 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
-      Object last = generateEmpty();
       if (count == 1) {
-        if (context.writeEnd(this.edge, last)) {
-          count++;
-        }
+        context.end(this.edge);
+        count++;
       } else if (count < 1) {
+        experimentData.setInput(val);
         if (context.write(this.edge, val)) {
           count++;
         }
@@ -122,11 +131,11 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
-      Object last = generateEmpty();
       if (count < 1) {
-        context.write(edge, "" + count, val);
+        experimentData.setInput(val);
+        context.write(edge,  count, val);
       } else if (count > 1) {
-        context.writeEnd(edge, "" + count, last);
+        context.end(this.edge);
       }
       count++;
     }
@@ -148,10 +157,9 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
-      if (count % 1 == 0) {
-        if (context.write(this.edge, val)) {
-          count++;
-        }
+      experimentData.setInput(val);
+      if (context.write(this.edge, val)) {
+        count++;
       }
     }
   }
@@ -173,10 +181,8 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
-      Object last = generateEmpty();
-      if (count % 1 == 0) {
-        context.write(edge, "" + count, val);
-      }
+      experimentData.setInput(val);
+      context.write(edge,  count, val);
       count++;
     }
   }
@@ -187,6 +193,22 @@ public abstract class BenchTaskWorker extends TaskWorker {
   }
 
   protected static Object generateEmpty() {
-    return DataGenerator.generateIntData(0);
+    return DataGenerator.generateIntData(jobParameters.getSize());
+  }
+
+  public static void verify(String operationNames) throws VerificationException {
+    boolean doVerify = jobParameters.isDoVerify();
+    boolean isVerified = false;
+    if (doVerify) {
+      LOG.info("Verifying results ...");
+      ExperimentVerification experimentVerification
+          = new ExperimentVerification(experimentData, operationNames);
+      isVerified = experimentVerification.isVerified();
+      if (isVerified) {
+        LOG.info("Results generated from the experiment are verified.");
+      } else {
+        throw new VerificationException("Results do not match");
+      }
+    }
   }
 }

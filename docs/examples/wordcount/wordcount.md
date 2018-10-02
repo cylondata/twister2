@@ -12,7 +12,7 @@ When we install Twister2, it will compile the examples. Lets go to the installti
 
 ```text
 cd bazel-bin/scripts/package/twister2-dist/
-./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.WordCountJob
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.WordCountJob
 ```
 
 After running the streaming example, your terminal will show the following set of lines :
@@ -40,7 +40,7 @@ When we install Twister2, it will compile the examples. Lets go to the installti
 
 ```text
 cd bazel-bin/scripts/package/twister2-dist/
-./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.WordCountJob
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.WordCountJob
 ```
 
 This will run 4 executors with 8 tasks. So each executor will have two tasks. At the first phase, the 0-3 tasks running in each executor will generate words and after they are finished, 5-8 tasks will consume those words and create a count.

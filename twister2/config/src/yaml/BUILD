@@ -11,14 +11,14 @@ filegroup(
 )
 
 filegroup(
-    name = "conf-slurmmpi-yaml",
-    srcs = glob(["conf/slurmmpi/*"]),
+    name = "conf-slurm-yaml",
+    srcs = glob(["conf/slurm/*"]),
 )
 
 
 filegroup(
-    name = "conf-nodesmpi-yaml",
-    srcs = glob(["conf/nodesmpi/*"]),
+    name = "conf-standalone-yaml",
+    srcs = glob(["conf/standalone/*"]),
 )
 
 filegroup(

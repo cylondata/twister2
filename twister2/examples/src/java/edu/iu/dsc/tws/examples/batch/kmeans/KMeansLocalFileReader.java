@@ -67,7 +67,8 @@ public class KMeansLocalFileReader {
 
   /**
    * It reads the datapoints from the corresponding file and store the data in a two-dimensional
-   * array for the later processing.
+   * array for the later processing. The size of the two-dimensional array should be equal to the
+   * number of clusters and the dimension considered for the clustering process.
    */
   public double[][] readCentroids(String fileName, int dimension, int numberOfClusters) {
 

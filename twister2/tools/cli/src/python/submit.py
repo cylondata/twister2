@@ -36,7 +36,7 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         'submit',
         help='Submit a job',
-        usage="%(prog)s [options] cluster " + \
+        usage="%(prog)s cluster " + \
               "job-type job-file-name job-class-name [job-args]",
         add_help=True
     )

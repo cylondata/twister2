@@ -31,9 +31,9 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
 public class SAllGatherExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
 
-  private SAllGather reduce;
+  private SAllGather gather;
 
-  private boolean reduceDone = false;
+  private boolean gatherDone = false;
 
   @Override
   protected void execute() {
@@ -51,7 +51,7 @@ public class SAllGatherExample extends BenchWorker {
       targets.add(i);
     }
     // create the communication
-    reduce = new SAllGather(communicator, taskPlan, sources, targets,
+    gather = new SAllGather(communicator, taskPlan, sources, targets,
         new FinalReduceReceiver(jobParameters.getIterations()),
         MessageType.OBJECT);
 
@@ -75,21 +75,21 @@ public class SAllGatherExample extends BenchWorker {
 
   @Override
   protected void progressCommunication() {
-    reduce.progress();
+    gather.progress();
   }
 
   @Override
   protected boolean sendMessages(int task, Object data, int flag) {
-    while (!reduce.gather(task, data, flag)) {
+    while (!gather.gather(task, data, flag)) {
       // lets wait a litte and try again
-      reduce.progress();
+      gather.progress();
     }
     return true;
   }
 
   @Override
   protected boolean isDone() {
-    return reduceDone && sourcesDone && !reduce.hasPending();
+    return gatherDone && sourcesDone && !gather.hasPending();
   }
 
   public class FinalReduceReceiver implements BulkReceiver {
@@ -110,7 +110,7 @@ public class SAllGatherExample extends BenchWorker {
       count++;
       if (count == expected) {
         LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
-        reduceDone = true;
+        gatherDone = true;
       }
       Object object = it.next();
       experimentData.setOutput(object);

@@ -18,6 +18,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
@@ -29,14 +31,14 @@ public class STPartitionExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseStreamSource g = new SourceStreamTask(edge);
     BaseStreamSink r = new PartitionSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
     return taskGraphBuilder;
   }
@@ -49,16 +51,27 @@ public class STPartitionExample extends BenchTaskWorker {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public boolean execute(IMessage message) {
-      if (message.getContent() instanceof Iterator) {
-        Iterator it = (Iterator) message.getContent();
-        if (it.hasNext()) {
-          it.next();
-          count += 1;
+      if (count % jobParameters.getPrintInterval() == 0) {
+        if (message.getContent() instanceof Iterator) {
+          Iterator it = (Iterator) message.getContent();
+          if (it.hasNext()) {
+            Object object = it.next();
+            experimentData.setOutput(object);
+            try {
+              verify(OperationNames.PARTITION);
+            } catch (VerificationException e) {
+              LOG.info("Exception Message : " + e.getMessage());
+            }
+            LOG.info("Itr : " + object.getClass().getName());
+            count += 1;
+          }
         }
       }
-      LOG.info(String.format("%d %d Streaming Message Partition Received count: %d",
-          context.getWorkerId(),
-          context.taskId(), count));
+      /*if (count % jobParameters.getPrintInterval() == 0) {
+        LOG.info(String.format("%d %d Streaming Message Partition Received count: %d",
+            context.getWorkerId(),
+            context.taskId(), count));
+      }*/
       return true;
     }
   }

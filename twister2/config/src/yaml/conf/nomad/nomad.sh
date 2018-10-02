@@ -22,7 +22,7 @@ tar -xvf twister2-core-0.1.0.tar.gz
 tar -xvf twister2-job.tar.gz --strip 1
 
 profile=
-#debug=
+debug=
 
 ls
 
@@ -34,8 +34,8 @@ echo "3" $3
 echo "4" $4
 echo "5" $5
 echo "6" $6
-#echo "java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nodesmpi/logger.properties -cp $2 edu.iu.dsc.tws.rsched.schedulers.nomad.NomadWorkerStarter --container_class $3 --job_name $4 --twister2_home $5 --cluster_type nodesmpi --config_dir $6"
-java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nomad/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.nomad.NomadeWorkerStarter --container_class $4 --job_name $5 --twister2_home $6 --cluster_type nomad --config_dir $7 2>&1 | tee out.txt
+#echo "java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nomad/logger.properties -cp $2 edu.iu.dsc.tws.rsched.schedulers.nomad.NomadWorkerStarter --container_class $3 --job_name $4 --twister2_home $5 --cluster_type nomad --config_dir $6"
+java $debug $profile -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.util.logging.config.file=nomad/logger.properties -cp $cp edu.iu.dsc.tws.rsched.schedulers.nomad.NomadWorkerStarter --container_class $4 --job_name $5 --twister2_home $6 --cluster_type nomad --config_dir $7 2>&1 | tee out.txt
 
 cat out.txt
 

@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerUtils;
-import edu.iu.dsc.tws.rsched.schedulers.mpi.MPIWorker;
+import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;

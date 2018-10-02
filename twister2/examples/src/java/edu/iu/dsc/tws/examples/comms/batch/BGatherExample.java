@@ -91,8 +91,6 @@ public class BGatherExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-//        workerId, gatherDone, sourcesDone, gather.hasPending()));
     return gatherDone && sourcesDone && !gather.hasPending();
   }
 

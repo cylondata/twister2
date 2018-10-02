@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.mpi;
+package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -23,9 +23,9 @@ import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
-public class NodeCommand extends MPICommand {
-  private static final Logger LOG = Logger.getLogger(NodeCommand.class.getName());
-  public NodeCommand(Config cfg, String workingDirectory) {
+public class StandaloneCommand extends MPICommand {
+  private static final Logger LOG = Logger.getLogger(StandaloneCommand.class.getName());
+  public StandaloneCommand(Config cfg, String workingDirectory) {
     super(cfg, workingDirectory);
   }
 

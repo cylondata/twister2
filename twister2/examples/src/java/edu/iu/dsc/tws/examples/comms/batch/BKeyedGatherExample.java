@@ -57,9 +57,9 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
         MessageType.INTEGER, MessageType.INTEGER, new FinalReduceReceiver(),
         new SimpleKeyBasedSelector());
 
-
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
+
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
@@ -91,8 +91,6 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-//        workerId, gatherDone, sourcesDone, keyedGather.hasPending()));
     return gatherDone && sourcesDone && !keyedGather.hasPending();
   }
 

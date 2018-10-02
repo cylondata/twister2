@@ -1,5 +1,4 @@
-Debugging Twister2
-==================
+# Debugging Twister2
 
 Because Twister2 is a distributed framework debuging the code to pin point bugs can be challenging.
 The guide below describes how you can debug the Twister2 using a remote debugger. This guide is for
@@ -9,15 +8,15 @@ an Twister2 which is running in a different server or machine.
 ## Editing the scripts
 In the distribution you will find a ```conf``` folder. Under the conf folder you will see separate
 directories for each type of resource managers that are supported. If you are running on your local
-machine you would most proberbly be using  ```nodesmpi```. Which means you are running your application
+machine you would most probably be using  ```standalone```. Which means you are running your application
 with a command like below (which is for the hello world example)
 
 ```bash
-./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
 ```
 
-Notice that it has ```submit nodempi``` which indicate that you are using the ```nodesmpi``` resource
-allocation mechanism. Once you go into the ```nodesmpi``` folder (The folder structure and the files
+Notice that it has ```submit nodempi``` which indicate that you are using the ```standalone``` resource
+allocation mechanism. Once you go into the ```standalone``` folder (The folder structure and the files
 should be the same for each resource manager), you will see a file nameed ```exp.sh```. This file has
 the following segment of script in it.
 

@@ -19,6 +19,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
@@ -42,13 +44,14 @@ public class STGatherExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class GatherSinkTask extends BaseStreamSink {
     private int count = 0;
     private static final long serialVersionUID = -254264903510284798L;
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 100 == 0) {
+      if (count % jobParameters.getPrintInterval() == 0) {
         Object object = message.getContent();
         if (object instanceof int[]) {
           LOG.info("Stream Message Gathered : " + Arrays.toString((int[]) object)
@@ -61,16 +64,25 @@ public class STGatherExample extends BenchTaskWorker {
             if (o instanceof int[]) {
               out += Arrays.toString((int[]) o);
             }
+            if (count % jobParameters.getPrintInterval() == 0) {
+              experimentData.setOutput(o);
+              try {
+                verify(OperationNames.GATHER);
+              } catch (VerificationException e) {
+                LOG.info("Exception Message : " + e.getMessage());
+              }
+            }
           }
-          LOG.info("Stream Message Gathered : " + out + ", Count : " + count);
+          //LOG.info("Stream Message Gathered : " + out + ", Count : " + count);
         } else {
-          LOG.info("Stream Message Gathered : " + message.getContent().getClass().getName()
-              + ", Count : " + count);
+          /*LOG.info("Stream Message Gathered : " + message.getContent().getClass().getName()
+             + ", Count : " + count);*/
         }
-
-      }
-      if (message.getContent() instanceof List) {
-        count += ((List) message.getContent()).size();
+        /*if (count % jobParameters.getPrintInterval() == 0) {
+          LOG.info("Gathered : " + message.getContent().getClass().getName()
+              + ", Count : " + count + " numberOfElements: " + numberOfElements
+              + " total: " + totalValues);
+        }*/
       }
       return true;
     }
