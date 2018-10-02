@@ -400,6 +400,25 @@ and sink parallelism of 8.
 [Task based Batch Keyed-Partition Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/BTKeyedPartitionExample.java)
 
 
+## Streaming Examples
+
+To run the stream examples for each of the collective communication model, please use the -stream
+tag. 
+
+#### Example
+
+Running a reduce streaming example using 4 workers, with a single iteration, source parallelism
+as 8 and sink parallelism as one. 
+
+```bash
+./twister2-dist/bin/twister2 submit nodesmpi jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,1 -verify -stream
+
+```
+
+You can use the same running commands used for batch examples, but use the -stream tag.
+
+
+
 
 
 
