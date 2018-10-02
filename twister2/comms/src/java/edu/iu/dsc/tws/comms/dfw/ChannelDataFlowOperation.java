@@ -198,7 +198,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     this.messageSerializer = serializer;
     this.messageDeSerializer = deSerializer;
 
-    int noOfSendBuffers = DataFlowContext.broadcastBufferCount(config);
+    int noOfSendBuffers = DataFlowContext.sendBuffersCount(config);
     int sendBufferSize = DataFlowContext.bufferSize(config);
 
     this.sendBuffers = new ArrayBlockingQueue<DataBuffer>(noOfSendBuffers);
