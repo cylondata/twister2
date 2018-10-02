@@ -2,7 +2,7 @@
 
 * [Introduction](README.md)
 * [Quickstart](quickstart.md)
-* [Deployment](deployment/installation.md)
+* [Deployment](deployment/README.md)
   * [Compiling](deployment/compiling.md)
   * [Running a Job](deployment/job-submit.md)
   * [Standalone](deployment/standalone/running-jobs.md)
@@ -31,7 +31,6 @@
     * [Task Graph](concepts/task-graph/task-graph.md)
   * [Executor](concepts/executor/README.md)
     * [Executor](concepts/executor/executor.md)
-  * [Concepts](concepts/concepts.md)
 * [Architecture](architecture/README.md)
   * [Discovery](architecture/discovery/README.md)
     * [ZK Based Worker Discovery](architecture/discovery/zk-based-worker-discovery.md)

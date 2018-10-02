@@ -21,15 +21,12 @@ import edu.iu.dsc.tws.comms.core.CommunicationContext;
  * Read the configuration options
  */
 public class DataFlowContext extends CommunicationContext {
-  private static final String BUFFER_SIZE = "network.mpi.buffer.size";
+  private static final String BUFFER_SIZE = "network.buffer.size";
 
-  private static final String SEND_BUFFERS_COUNT = "network.mpi.sendBuffer.count";
-  private static final String BCAST_BUFFERS_COUNT = "network.mpi.bcast.sendBuffer.count";
-  private static final String RECEIVE_BUFFERS_COUNT = "network.mpi.receiveBuffer.count";
-  private static final String DISTINCT_ROUTS = "network.mpi.routing.distinct.routes";
-  private static final String SEND_PENDING_MAX = "network.mpi.send.pending.max";
-  private static final String NETWORK_CHANNEL_PENDING_SIZE = "network.channel.mpi.pending.size";
-  private static final String NETWORK_STORAGE_PATH = "network.storage.path";
+  private static final String SEND_BUFFERS_COUNT = "network.sendBuffer.count";
+  private static final String RECEIVE_BUFFERS_COUNT = "network.receiveBuffer.count";
+  private static final String SEND_PENDING_MAX = "network.send.pending.max";
+  private static final String NETWORK_CHANNEL_PENDING_SIZE = "network.channel.pending.size";
   private static final String NETWORK_PARTITION_MESSAGE_GROUP_LOW_WATERMARK =
       "network.partition.message.group.low_water_mark";
   private static final String NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK =
@@ -50,11 +47,6 @@ public class DataFlowContext extends CommunicationContext {
     return cfg.getIntegerValue(SEND_BUFFERS_COUNT, 32);
   }
 
-  public static int broadcastBufferCount(Config cfg) {
-    int sendBufferCount = sendBuffersCount(cfg);
-    return cfg.getIntegerValue(BCAST_BUFFERS_COUNT, sendBufferCount);
-  }
-
   public static int receiveBufferCount(Config cfg) {
     return cfg.getIntegerValue(RECEIVE_BUFFERS_COUNT, 32);
   }
@@ -65,10 +57,6 @@ public class DataFlowContext extends CommunicationContext {
 
   public static int networkChannelPendingSize(Config cfg) {
     return cfg.getIntegerValue(NETWORK_CHANNEL_PENDING_SIZE, 1024);
-  }
-
-  public static String networkStoragePath(Config cfg) {
-    return cfg.getStringValue(NETWORK_STORAGE_PATH);
   }
 
   public static int getNetworkPartitionMessageGroupLowWaterMark(Config cfg) {

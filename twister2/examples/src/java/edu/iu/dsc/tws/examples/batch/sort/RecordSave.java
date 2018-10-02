@@ -11,29 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.sort;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 
 public class RecordSave implements BulkReceiver {
   private static final Logger LOG = Logger.getLogger(RecordSave.class.getName());
-
-  private Config config;
-
-  private DataFlowOperation operation;
-
-  private int totalCount = 0;
-
-  private Map<String, Integer> wordCounts = new HashMap<>();
-
-  private int executor;
-
 
   @Override
   public void init(Config cfg, Set<Integer> expectedIds) {
@@ -45,7 +31,6 @@ public class RecordSave implements BulkReceiver {
     int count = 0;
     while (it.hasNext()) {
       Object next = it.next();
-      totalCount++;
       count++;
     }
     LOG.info(String.format("Received message for target: %d", count));

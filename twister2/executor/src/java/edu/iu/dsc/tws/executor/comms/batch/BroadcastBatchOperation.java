@@ -78,7 +78,7 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean progress() {
-      return true;
+      return false;
     }
   }
 }

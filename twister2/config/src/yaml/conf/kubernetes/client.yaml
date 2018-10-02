@@ -35,7 +35,7 @@ twister2.worker.instances: 6
 # number of workers (containers) per pod
 # default is 1
 # twister2.worker.instances must be divisible by kubernetes.workers.per.pod
-kubernetes.workers.per.pod: 2
+kubernetes.workers.per.pod: 1
 
 ########################################################################
 # Node locations related settings

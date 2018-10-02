@@ -1,14 +1,14 @@
-# Main Components
+# Architecture
 
 Goal of Twister2 is to provide a layered approach for big data with independent components at each level to compose an application. The layers include: 1. Resource allocations 2. Data Access 3. Communication 4. Task System 5. Distributed Data
 
 Among these communications, task system and data management are the core components of the system with the others providing auxiliary services. On top of these layers, one can develop higher-level APIs such as SQL interfaces. The following figure shows the runtime architecture of Twister2 with various components. Even though shows all the components in a single diagram, one can mix and match various components according to their needs. Fault tolerance and security are two aspects that affect all these components.
 
-![Title](https://github.com/DSC-SPIDAL/twister2/tree/39dfd3e2a3e2b9057cee091a96fc929466d593cc/docs/documentation/images/tws_architecture.png?raw=true)
+![Title](https://github.com/DSC-SPIDAL/twister2/tree/39dfd3e2a3e2b9057cee091a96fc929466d593cc/docs/images/tws_architecture.png?raw=true)
 
 The following table gives a summary of various components, APIs, and implementation choices.
 
-![Title](https://github.com/DSC-SPIDAL/twister2/tree/39dfd3e2a3e2b9057cee091a96fc929466d593cc/docs/documentation/images/twister2_architecture.png?raw=true)
+![Title](https://github.com/DSC-SPIDAL/twister2/tree/39dfd3e2a3e2b9057cee091a96fc929466d593cc/docs/images/twister2_architecture.png?raw=true)
 
 ## Twister2 Runtime
 
@@ -34,3 +34,8 @@ The processes that perform the computations in a job.
 
 This will present the job related data to users through a web page. Users will be able to monitor their jobs on that web page. Only one instance will run in the cluster and it will provide data for all jobs running in the cluster.
 
+This section describes some of these components in detail.
+
+* [Common](common/logging.md)
+* [Discovery](discovery/worker-discovery.md)
+* [Discovery](job-master/job-master.md)

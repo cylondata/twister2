@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
@@ -42,26 +43,21 @@ public class BTBroadCastExample extends BenchTaskWorker {
 
   protected static class BroadcastSinkTask extends BaseBatchSink {
     private static final long serialVersionUID = -254264903510284798L;
-    private static int count = 0;
+    private int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
+      count++;
       if (count % jobParameters.getPrintInterval() == 0) {
         Object object = message.getContent();
         experimentData.setOutput(object);
+        LOG.log(Level.INFO, String.format("Received messages to %d: %d", context.taskId(), count));
         try {
           verify(OperationNames.BROADCAST);
         } catch (VerificationException e) {
           LOG.info("Exception Message : " + e.getMessage());
         }
       }
-      /*if (object instanceof int[]) {
-        if (count % jobParameters.getPrintInterval() == 0) {
-          LOG.info(" Batch Message Broadcasted : "
-              + Arrays.toString((int[]) object) + ", counter : " + count);
-        }
-        count++;
-      }*/
       return true;
     }
   }

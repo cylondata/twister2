@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
-import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
@@ -42,15 +42,13 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
     this.edgeGenerator = e;
     op = new BKeyedPartition(channel, taskPlan, srcs, dests, Utils.dataTypeToMessageType(dataType),
         Utils.dataTypeToMessageType(keyType), new PartitionReceiver(),
-        new SimpleKeyBasedSelector());
+        new HashingSelector());
     communicationEdge = e.generate(edgeName);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
     TaskMessage taskMessage = (TaskMessage) message;
-    LOG.info("TaskMessage : " + taskMessage.getKey() + ", " + taskMessage.getContent());
-    LOG.info("Source : " + source);
     return op.partition(source, taskMessage.getKey(), taskMessage.getContent(), flags);
   }
 
