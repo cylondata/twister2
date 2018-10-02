@@ -80,7 +80,8 @@ public abstract class HarpWorker implements IWorker {
     Map<String, Integer> rackToIntegerMap = this.getRackToIntegerMap(workerController);
     LinkedList<Integer> nodeRackIDs = new LinkedList<>(rackToIntegerMap.values());
     int noOfPhysicalNodes = nodeRackIDs.size(); //todo check the suitability
-    Map<Integer, List<String>> nodesOfRackMap = this.getNodesOfRackMap(workerController);
+    Map<Integer, List<String>> nodesOfRackMap = this.getNodesOfRackMap(workerController,
+        rackToIntegerMap);
 
     Workers workers = new Workers(nodesOfRackMap, nodeRackIDs, noOfPhysicalNodes, workerID);
     DataMap dataMap = new DataMap();
@@ -144,14 +145,13 @@ public abstract class HarpWorker implements IWorker {
     }
   }
 
-  private Map<Integer, List<String>> getNodesOfRackMap(IWorkerController workerController) {
-    Map<String, Integer> racks = this.getRackToIntegerMap(workerController);
-
+  private Map<Integer, List<String>> getNodesOfRackMap(IWorkerController workerController,
+                                                       Map<String, Integer> racks) {
     Map<Integer, List<String>> nodesOfRack = new HashMap<>();
 
     workerController.getWorkerList().forEach(worker -> {
       Integer rackKey = racks.get(getRackKey(worker.getNodeInfo()));
-      nodesOfRack.computeIfAbsent(rackKey, ArrayList::new);
+      nodesOfRack.computeIfAbsent(rackKey, integer -> new ArrayList<>());
       nodesOfRack.get(rackKey).add(worker.getWorkerIP().getHostAddress());
     });
 
@@ -174,7 +174,7 @@ public abstract class HarpWorker implements IWorker {
         .map(this::getRackKey)
         .distinct()
         .sorted()
-        .collect(Collectors.toMap(k -> k, v -> counter.getAndDecrement()));
+        .collect(Collectors.toMap(k -> k, v -> counter.getAndIncrement()));
   }
 
   /**
