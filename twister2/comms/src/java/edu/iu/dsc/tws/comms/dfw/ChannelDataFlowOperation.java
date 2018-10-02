@@ -151,7 +151,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private ProgressionTracker receiveProgressTracker;
 
   /**
-   * Deserialize communicationProgress tracke
+   * Deserialize communicationProgress track
    */
   private ProgressionTracker deserializeProgressTracker;
 
@@ -504,6 +504,13 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
               message.setOutCountUpdated(true);
             }
             for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
+
+              if (message.getChannelMessage().getHeader().getLength() + 16
+                  != message.getChannelMessage().getCurrentSize()) {
+                LOG.info(String.format("%d incorrect headers hlen %d and buffer sizes %d",
+                    executor, message.getChannelMessage().getHeader().getLength(),
+                    message.getChannelMessage().getCurrentSize()));
+              }
               boolean sendAccepted = sendMessageToTarget(message.getChannelMessage(),
                   exRoutes.get(i));
               // if no longer accepts stop
@@ -535,23 +542,31 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           int startOfExternalRouts = message.getAcceptedExternalSends();
 
           //making a copy to send
-          ChannelMessage sendCopy = createChannelMessageCopy(message.getChannelMessage());
           lock.lock();
+
+          ChannelMessage sendCopy = createChannelMessageCopy(message.getChannelMessage());
           try {
             if (!message.isOutCountUpdated()) {
               sendCopy.incrementRefCount(
                   message.getExternalSends().size());
               message.setOutCountUpdated(true);
             }
-
+            //TODO make sure messages are sent
             for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
+              if (sendCopy.getHeader().getLength() + 16
+                  != sendCopy.getCurrentSize()) {
+                LOG.info(String.format("%d incorrect headers hlen %d and buffer sizes %d",
+                    executor, sendCopy.getHeader().getLength(),
+                    sendCopy.getCurrentSize()));
+              }
               boolean sendAccepted = sendMessageToTarget(sendCopy, exRoutes.get(i));
               // if no longer accepts stop
               if (!sendAccepted) {
                 canProgress = false;
-
                 break;
               } else {
+                //remove the buffers from the original message
+                message.getChannelMessage().removeAllBuffers();
                 externalSendsPending.incrementAndGet();
               }
             }
@@ -583,8 +598,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     copy.addBuffers(channelMessage.getNormalBuffers());
     copy.addOverFlowBuffers(channelMessage.getOverflowBuffers());
 
-    //remove the buffers from the original message
-    channelMessage.removeAllBuffers();
     return copy;
   }
 
@@ -592,7 +605,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (currentMessage == null) {
       return;
     }
-
     int id = currentMessage.getOriginatingId();
     MessageHeader header = currentMessage.getHeader();
     Object object = DataFlowContext.EMPTY_OBJECT;
