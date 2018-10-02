@@ -400,7 +400,7 @@ and sink parallelism of 8.
 [Task based Batch Keyed-Partition Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/BTKeyedPartitionExample.java)
 
 
-## Stream Examples
+## Streaming Examples
 
 To run the stream examples for each of the collective communication model, please use the -stream
 tag. 
