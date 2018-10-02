@@ -1,4 +1,4 @@
-# Main Components
+# Architecture
 
 Goal of Twister2 is to provide a layered approach for big data with independent components at each level to compose an application. The layers include: 1. Resource allocations 2. Data Access 3. Communication 4. Task System 5. Distributed Data
 
@@ -34,3 +34,8 @@ The processes that perform the computations in a job.
 
 This will present the job related data to users through a web page. Users will be able to monitor their jobs on that web page. Only one instance will run in the cluster and it will provide data for all jobs running in the cluster.
 
+This section describes some of these components in detail.
+
+* [Common](common/logging.md)
+* [Discovery](discovery/worker-discovery.md)
+* [Discovery](job-master/job-master.md)
