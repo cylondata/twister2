@@ -16,7 +16,7 @@ We support the following dataflow operations.
 
 Dataflow communications are overlaid on top of worker processes using logical ids.
 
-We suport both streaming and batch versions of these operations.
+We support both streaming and batch versions of these operations.
 
 ## TaskPlan
 
