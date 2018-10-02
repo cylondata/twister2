@@ -74,13 +74,15 @@ public abstract class HarpWorker implements IWorker {
   public void execute(Config config, int workerID, AllocatedResources allocatedResources,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
+    List<WorkerNetworkInfo> workersList = workerController.waitForAllWorkersToJoin(50000);
+
     WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
 
     //Building Harp Specific parameters
-    Map<String, Integer> rackToIntegerMap = this.getRackToIntegerMap(workerController);
+    Map<String, Integer> rackToIntegerMap = this.getRackToIntegerMap(workersList);
     LinkedList<Integer> nodeRackIDs = new LinkedList<>(rackToIntegerMap.values());
     int noOfPhysicalNodes = nodeRackIDs.size(); //todo check the suitability
-    Map<Integer, List<String>> nodesOfRackMap = this.getNodesOfRackMap(workerController,
+    Map<Integer, List<String>> nodesOfRackMap = this.getNodesOfRackMap(workersList,
         rackToIntegerMap);
 
     Workers workers = new Workers(nodesOfRackMap, nodeRackIDs, noOfPhysicalNodes, workerID);
@@ -111,6 +113,13 @@ public abstract class HarpWorker implements IWorker {
     SyncClient syncClient = new SyncClient(workers);
     LOG.info(String.format("Starting harp server on port : %d", harpPort));
     server.start();
+
+    LOG.info(String.format("Harp server started. %s:%d "
+            + "on twister worker %s:%d",
+        workerNetworkInfo.getWorkerIP().getHostAddress(),
+        harpPort,
+        workerNetworkInfo.getWorkerIP().getHostAddress(),
+        workerNetworkInfo.getWorkerPort()));
 
     LOG.info("Starting Harp Sync client");
     syncClient.start();
@@ -145,11 +154,11 @@ public abstract class HarpWorker implements IWorker {
     }
   }
 
-  private Map<Integer, List<String>> getNodesOfRackMap(IWorkerController workerController,
+  private Map<Integer, List<String>> getNodesOfRackMap(List<WorkerNetworkInfo> workerList,
                                                        Map<String, Integer> racks) {
     Map<Integer, List<String>> nodesOfRack = new HashMap<>();
 
-    workerController.getWorkerList().forEach(worker -> {
+    workerList.forEach(worker -> {
       Integer rackKey = racks.get(getRackKey(worker.getNodeInfo()));
       nodesOfRack.computeIfAbsent(rackKey, integer -> new ArrayList<>());
       nodesOfRack.get(rackKey).add(worker.getWorkerIP().getHostAddress());
@@ -163,11 +172,9 @@ public abstract class HarpWorker implements IWorker {
    * This method create a mapping from possibly alphanumeric rack id to numeric rack id that
    * can be fed to Harp
    *
-   * @param workerController instance of Twister2 {@link IWorkerController}
    * @return Alphanumeric to numeric mapping of rack IDs
    */
-  private Map<String, Integer> getRackToIntegerMap(IWorkerController workerController) {
-    List<WorkerNetworkInfo> workerList = workerController.getWorkerList();
+  private Map<String, Integer> getRackToIntegerMap(List<WorkerNetworkInfo> workerList) {
     AtomicInteger counter = new AtomicInteger();
     return workerList.stream()
         .map(WorkerNetworkInfo::getNodeInfo)
