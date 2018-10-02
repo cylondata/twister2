@@ -17,9 +17,9 @@ kubernetes.secret.name: "twister2-openmpi-ssh-key"
 # Worker port settings
 #############################################################################
 # the base port number workers will use internally to communicate with each other
-# when there are multiple workers in a pod, first worker will get this port number, 
+# when there are multiple workers in a pod, first worker will get this port number,
 # second worker will get the next port, and so on.
-# default value is 9999, 
+# default value is 9999,
 # kubernetes.worker.base.port: 9999
 
 # transport protocol for the worker. TCP or UDP
@@ -41,4 +41,25 @@ kubernetes.secret.name: "twister2-openmpi-ssh-key"
 # by default Kubernetes uses the range: 30000-32767 for NodePorts
 # Kubernetes admins can change this range
 # kubernetes.service.node.port: 30003
+
+# the buffer size to be used
+network.buffer.size: 1024000
+# number of send buffers to be used
+network.sendBuffer.count: 4
+# number of receive buffers to be used
+network.receiveBuffer.count: 4
+# channel pending messages
+network.channel.pending.size: 2048
+# the send pending messages
+network.send.pending.max: 4
+
+# group up to 8 ~ 16 messages
+network.partition.message.group.low_water_mark: 8
+# this is the max number of messages to group
+network.partition.message.group.high_water_mark: 16
+
+# the maximum amount of bytes kept in memory for operations that goes to disk
+shuffle.memory.bytes.max: 1024000
+# the maximum number of records kept in memory for operations that goes to dist
+shuffle.memory.records.max: 10240
 
