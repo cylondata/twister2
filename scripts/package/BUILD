@@ -82,7 +82,8 @@ pack_tw2(
         ":twister2-core-lib-task",
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-third_party",
-        ":twister2-master-lib"
+        ":twister2-master-lib",
+        ":twister2-core-lib-executor",
     ],
 )
 
@@ -103,6 +104,7 @@ pack_tw2(
         ":twister2-core-lib-task",
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-third_party",
+        ":twister2-core-lib-executor",
         ":twister2-master-lib",
         ":twister2-ompi-bin",
         ":twister2-ompi-etc",
