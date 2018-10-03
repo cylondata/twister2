@@ -76,6 +76,11 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
           edgeGenerator.getStringMapping(communicationEdge), target);
       return messages.offer(msg);
     }
+
+    @Override
+    public boolean sync(int target, int flag, Object data) {
+      return true;
+    }
   }
 
   public boolean progress() {
