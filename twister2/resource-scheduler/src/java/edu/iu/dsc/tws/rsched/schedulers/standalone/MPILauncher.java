@@ -11,8 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
@@ -21,9 +29,12 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
+import edu.iu.dsc.tws.rsched.utils.FileUtils;
+import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
 public class MPILauncher implements ILauncher {
+
   private static final Logger LOG = Logger.getLogger(MPILauncher.class.getName());
 
   private Config config;
@@ -49,13 +60,110 @@ public class MPILauncher implements ILauncher {
     return false;
   }
 
+  private void distributeJobFiles(JobAPI.Job job) throws IOException {
+    File localSourceRoot = new File(
+        this.config.getStringValue(SchedulerContext.TEMPORARY_PACKAGES_PATH)
+    );
+
+    File jobFile = new File(
+        localSourceRoot,
+        "twister2-job.tar.gz"
+    );
+
+    //finding twister2 core
+    FileFilter fileFilter = new WildcardFileFilter("twister2-core-*.*.*.tar.gz");
+    File[] files = localSourceRoot.listFiles(fileFilter);
+
+    if (files == null || files.length == 0) {
+      throw new RuntimeException("Couldn't find twister2 core at "
+          + localSourceRoot.getAbsolutePath());
+    }
+
+    File coreFile = files[0];
+
+    String jobFileMD5 = FileUtils.md5(jobFile);
+    String coreFileMD5 = FileUtils.md5(coreFile);
+
+    LOG.info(String.format("Found Job file : %s", jobFile.getAbsolutePath()));
+    LOG.info(String.format("Found Core file : %s", coreFile.getAbsolutePath()));
+
+    Path tempHotsFile = Files.createTempFile("hosts-" + job.getJobName(), "");
+    int np = this.createOneSlotPerNodeFile(tempHotsFile);
+
+    StringBuilder stringBuilder = new StringBuilder();
+    int status = ProcessUtils.runSyncProcess(
+        false,
+        new String[]{
+            "mpirun",
+            "-np", Integer.toString(np),
+            "-hostfile",
+            tempHotsFile.toAbsolutePath().toString(),
+            "java",
+            "-cp", "lib/*",
+            "edu.iu.dsc.tws.rsched.schedulers.standalone.bootstrap.MPIBootstrap",
+            job.getJobName(),
+            this.jobWorkingDirectory,
+            jobFile.getAbsolutePath(),
+            jobFileMD5,
+            coreFile.getAbsolutePath(),
+            coreFileMD5
+        },
+        stringBuilder,
+        new File("."),
+        true
+    );
+
+    if (status != 0) {
+      LOG.severe("Failed to execute bootstrap procedure : " + status);
+    } else {
+      LOG.info("Bootstrap procedure executed successfully");
+      if (stringBuilder.length() != 0) {
+        LOG.info("The error output of bootstrap procedure:\n " + stringBuilder.toString());
+      }
+    }
+    LOG.info(String.format("File distribution completed. %s", stringBuilder.toString()));
+  }
+
+  private int createOneSlotPerNodeFile(Path tempHostFile) throws IOException {
+    List<String> hosts = Files.readAllLines(new File("./conf/standalone/nodes").toPath());
+    StringBuilder hostFileBuilder = new StringBuilder();
+    int ipCount = 0;
+    for (String host : hosts) {
+      String[] parts = host.split(" ");
+      if (parts.length > 0) {
+        ipCount++;
+        hostFileBuilder
+            .append(parts[0])
+            .append(" ")
+            .append("slots=1")
+            .append(System.getProperty("line.separator"));
+      }
+    }
+    Files.write(tempHostFile, hostFileBuilder.toString().getBytes());
+    return ipCount;
+  }
+
   @Override
   public boolean launch(RequestedResources resourcePlan, JobAPI.Job job) {
     LOG.log(Level.INFO, "Launching job for cluster {0}",
         MPIContext.clusterType(config));
 
-    if (!setupWorkingDirectory(job)) {
-      throw new RuntimeException("Failed to setup the directory");
+    //distributing bundle if not running in shared file system
+    if (!MPIContext.isSharedFs(config)) {
+      LOG.info("Configured as NON SHARED file system. "
+          + "Running bootstrap procedure to distribute files...");
+      try {
+        this.distributeJobFiles(job);
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Error in distributing job files", e);
+        throw new RuntimeException("Error in distributing job files");
+      }
+    } else {
+      LOG.info("Configured as SHARED file system. "
+          + "Skipping bootstrap procedure & setting up working directory");
+      if (!setupWorkingDirectory(job.getJobName())) {
+        throw new RuntimeException("Failed to setup the directory");
+      }
     }
 
     Config newConfig = Config.newBuilder().putAll(config).put(
@@ -70,9 +178,10 @@ public class MPILauncher implements ILauncher {
   /**
    * setup the working directory mainly it downloads and extracts the heron-core-release
    * and job package to the working directory
+   *
    * @return false if setup fails
    */
-  protected boolean setupWorkingDirectory(JobAPI.Job job) {
+  protected boolean setupWorkingDirectory(String jobName) {
     // get the path of core release URI
     String corePackage = MPIContext.corePackageFileName(config);
 
@@ -81,7 +190,7 @@ public class MPILauncher implements ILauncher {
 
     // copy the files to the working directory
     return ResourceSchedulerUtils.setupWorkingDirectory(
-        job.getJobName(),
+        jobName,
         jobWorkingDirectory,
         corePackage,
         jobPackageURI,
