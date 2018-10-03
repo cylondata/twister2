@@ -38,7 +38,7 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
 
   private Map<Integer, List<Integer>> expIds;
 
-  private Map<Integer, Boolean> barrierMap;
+  private Map<Integer, Map<Integer, Boolean>> barrierMap;
 
   private BlockingQueue<MessageObject> bufferMessage = new ArrayBlockingQueue<>(2000);
 
@@ -61,10 +61,13 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-      LOG.info("barrier map : " + barrierMap );
-      LOG.info("buffer msgs : " + bufferMessage);
-      barrierMap.putIfAbsent(source, true);
-      if (barrierMap.keySet().size() == expIds.get(target).size()) {
+      if (barrierMap.containsKey(target)) {
+        barrierMap.get(target).putIfAbsent(source, true);
+      } else {
+        barrierMap.put(target, new HashMap<Integer, Boolean>());
+        barrierMap.get(target).put(source, true);
+      }
+      if (barrierMap.get(target).keySet().size() == expIds.get(target).size()) {
         if (receiver.sync(target, MessageFlags.BARRIER, object)) {
           for (MessageObject messageObject : bufferMessage) {
             messages.get(messageObject.getTarget()).offer(messageObject.getMessage());
@@ -75,9 +78,13 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
       }
       return true;
     } else {
-      if (barrierMap.containsKey(source)) {
-        bufferMessage.add(new MessageObject(target, object));
-        return true;
+      if (barrierMap.containsKey(target)) {
+        if (barrierMap.get(target).containsKey(source)) {
+          bufferMessage.add(new MessageObject(target, object));
+          return true;
+        } else {
+          return messages.get(target).offer(object);
+        }
       } else {
         return messages.get(target).offer(object);
       }

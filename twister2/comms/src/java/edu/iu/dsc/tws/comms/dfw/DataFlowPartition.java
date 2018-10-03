@@ -387,26 +387,16 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean sendPartial(int source, Object message, int flags) {
-    if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
-      int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
-      return delegete.sendMessagePartial(source, message, 0,
-          newFlags, sendPartialRoutingParameters(source, 0));
-    } else {
-      return delegete.sendMessagePartial(source, message, 0,
-          flags, sendPartialRoutingParameters(source, 0));
-    }
+    int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
+    return delegete.sendMessagePartial(source, message, 0,
+        newFlags, sendPartialRoutingParameters(source, 0));
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags, int target) {
-    if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
-      int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
-      return delegete.sendMessagePartial(source, message, target, newFlags,
-          sendPartialRoutingParameters(source, target));
-    } else  {
-      return delegete.sendMessagePartial(source, message, target, flags,
-          sendPartialRoutingParameters(source, target));
-    }
+    int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
+    return delegete.sendMessagePartial(source, message, target, newFlags,
+        sendPartialRoutingParameters(source, target));
   }
 
   @Override
@@ -417,14 +407,9 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean send(int source, Object message, int flags, int target) {
-    if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
-      int newFlags = flags | MessageFlags.ORIGIN_SENDER;
-      return delegete.sendMessage(source, message, target, newFlags,
-          sendRoutingParameters(source, target));
-    } else  {
-      return delegete.sendMessage(source, message, target, MessageFlags.BARRIER,
-          sendRoutingParameters(source, target));
-    }
+    int newFlags = flags | MessageFlags.ORIGIN_SENDER;
+    return delegete.sendMessage(source, message, target, newFlags,
+        sendRoutingParameters(source, target));
   }
 
   public boolean isComplete() {
