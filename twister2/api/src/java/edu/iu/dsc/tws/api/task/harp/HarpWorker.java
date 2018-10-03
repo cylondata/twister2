@@ -140,9 +140,12 @@ public abstract class HarpWorker implements IWorker {
         volatileVolume, dataMap, workers);
 
     //stopping servers, releasing resources
-    LOG.info("Execution completed. Shutting harp server down...");
-    server.stop();
+    LOG.info("Execution completed. Shutting harp Sync Client down....");
     syncClient.stop();
+    LOG.info("Harp Sync Client stopped.");
+    LOG.info("Shutting harp server down....");
+    server.stop();
+    LOG.info("Harp server stopped.");
   }
 
   private void doMasterBarrier(String contextName, String operationName,
