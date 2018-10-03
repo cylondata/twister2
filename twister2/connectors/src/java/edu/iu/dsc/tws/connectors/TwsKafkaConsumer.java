@@ -114,4 +114,9 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
 
   public TwsKafkaConsumer() {
   }
+
+
+  public void saveCheckpoint() {
+
+  }
 }

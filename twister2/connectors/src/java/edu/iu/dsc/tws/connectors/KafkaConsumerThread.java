@@ -34,7 +34,7 @@ public class KafkaConsumerThread<T>  {
   private volatile boolean isOffsetsToCommit = false;
   private volatile boolean isCommitCommenced = false;
   private Map<TopicPartition, OffsetAndMetadata> offsetsToCommit;
-  private Map<TopicPartition, Long> offsetsToSubscribe;
+  private Map<TopicPartition, OffsetAndMetadata> offsetsToSubscribe;
   private List<TopicPartition> topicPartitions;
   private List<KafkaTopicPartitionState> topicPartitionStates;
   private volatile boolean active = true;
@@ -110,12 +110,14 @@ public class KafkaConsumerThread<T>  {
     if (isCommitCommenced) {
       return;
     }
+
     isCommitCommenced = true;
     isOffsetsToCommit = false;
     consumer.commitAsync(offsetsToCommit, new OffsetCommitCallback() {
       @Override
       public void onComplete(Map<TopicPartition, OffsetAndMetadata> offsets, Exception exception) {
         isCommitCommenced = false;
+        setOffsetsToSubscribe(offsets);
       }
     });
   }
@@ -129,8 +131,12 @@ public class KafkaConsumerThread<T>  {
   public void setSeek() {
     initiateConnection();
     for (TopicPartition topicPartition : offsetsToSubscribe.keySet()) {
-      consumer.seek(topicPartition, offsetsToSubscribe.get(topicPartition));
+      consumer.seek(topicPartition, (offsetsToSubscribe.get(topicPartition)).offset());
     }
+  }
+
+  public void setOffsetsToSubscribe(Map<TopicPartition, OffsetAndMetadata> committedOffset) {
+    this.offsetsToSubscribe = committedOffset;
   }
 
   public void setSeekToBeginning() {
@@ -154,7 +160,12 @@ public class KafkaConsumerThread<T>  {
   public void emitRecord(String value, KafkaTopicPartitionState tps, Long offset) {
     LOG.info("emitting record {} from the partition {}", value, offset);
     tps.setPositionOffset(offset);
+    offsetsToCommit.put(tps.getTopicPartition(), new OffsetAndMetadata(offset));
     taskContext.write(this.edge, value);
+  }
+
+  public Map<TopicPartition, OffsetAndMetadata> getOffsetsToSubscribe() {
+    return this.offsetsToSubscribe;
   }
 
 }
