@@ -176,8 +176,8 @@ public class MPILauncher implements ILauncher {
   }
 
   /**
-   * setup the working directory mainly it downloads and extracts the heron-core-release
-   * and job package to the working directory
+   * setup the working directory mainly it downloads and extracts the job package
+   * to the working directory
    *
    * @return false if setup fails
    */

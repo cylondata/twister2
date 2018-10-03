@@ -24,7 +24,7 @@ twister2 submit cluster job-type job-file-name job-class-name [job-args]
 Here is an example command
 
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jardu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 80 -workers 4 -size 1000 -op "allgather" -stages 8,1
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 80 -workers 4 -size 1000 -op "allgather" -stages 8,1
 ```
 
 In this command, cluster is standalone and has program arguments.

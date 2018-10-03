@@ -303,7 +303,7 @@ public class GatherCommunication implements IWorker {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-gather")
         .setWorkerClass(GatherCommunication.class.getName())
-        .setRequestResource(new WorkerComputeResource(2, 1024), 4)
+        .setRequestResource(new WorkerComputeResource(1, 512), 4)
         .setConfig(jobConfig)
         .build();
 

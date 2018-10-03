@@ -170,7 +170,8 @@ public class KMeansJob extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.FINE, "Received message: " + message.getContent());
+      LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
+          + ":" + context.taskId());
       centroids = ((KMeansCenters) message.getContent()).getCenters();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {
