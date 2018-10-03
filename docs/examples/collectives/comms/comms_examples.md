@@ -27,7 +27,7 @@ create the following collective communications.
 After building the project, you can run the batch mode examples as follows. 
 
 ```bash
-./twister2-dist/bin/twister2 submit standalone jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -itr <iterations> -workers <workers> -size <data_size> -op "<operation>" -stages <source_parallelsim>,<sink_parallelism> -<flag> -verify
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -itr <iterations> -workers <workers> -size <data_size> -op "<operation>" -stages <source_parallelsim>,<sink_parallelism> -<flag> -verify
 ```
 
 ### Running Option Definitions
@@ -141,7 +141,7 @@ Running a reduction operation on an array of size 8 array with 4 workers iterati
 and sink parallelism of 1, added with result verification. 
 
 ```bash
-./twister2-dist/bin/twister2 submit standalone jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,1 -verify
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,1 -verify
 ```
 
 [Communication based Batch Reduce Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/comms/batch/BReduceExample.java)
@@ -165,7 +165,7 @@ Running a allreduction operation on an array of size 8 array with 4 workers iter
 and sink parallelism of 8, added with result verification. 
 
 ```bash
-./twister2-dist/bin/twister2 submit standalone jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,8 -verify
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,8 -verify
 ```
 
 [Communication based Batch AllReduce Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/comms/batch/BAllReduceExample.java)
@@ -188,7 +188,7 @@ Running a gather operation on an array of size 8 with 4 workers iterating once w
 and sink parallelism of 1, added with result verification. 
 
 ```bash
-./twister2-dist/bin/twister2 submit standalone jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "gather" -stages 8,1 -verify
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "gather" -stages 8,1 -verify
 ```
 
 [Communication based Batch Gather Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/comms/batch/BGatherExample.java)
@@ -211,7 +211,7 @@ Running a gather operation on an array of size 8 with 4 workers iterating once w
 and sink parallelism of 8, added with result verification. 
 
 ```bash
-./twister2-dist/bin/twister2 submit standalone jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "allgather" -stages 8,8 -verify
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "allgather" -stages 8,8 -verify
 ```
 
 [Communication based Batch AllGather Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/comms/batch/BAllGatherExample.java)
@@ -235,7 +235,7 @@ Running a gather operation on an array of size 8 with 4 workers iterating once w
 and sink parallelism of 8, added with result verification. 
 
 ```bash
-./twister2-dist/bin/twister2 submit standalone jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "partition" -stages 8,8 -verify
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "partition" -stages 8,8 -verify
 ```
 
 [Communication based Batch Partition Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/comms/batch/BPartitionExample.java)
@@ -260,7 +260,7 @@ Running a reduction operation on an array of size 8 with 4 workers iterating onc
 and sink parallelism of 1, added with result verification. 
 
 ```bash
-./twister2-dist/bin/twister2 submit standalone jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "keyedreduce" -stages 8,1 -verify
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "keyedreduce" -stages 8,1 -verify
 ```
 
 [Communication based Batch Keyed-Reduce Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/comms/batch/BKeyedReduceExample.java)
@@ -285,7 +285,7 @@ Running a reduction operation on an array of size 8 with 4 workers iterating onc
 and sink parallelism of 1, added with result verification. 
 
 ```bash
-./twister2-dist/bin/twister2 submit standalone jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "keyedgather" -stages 8,1 -verify
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "keyedgather" -stages 8,1 -verify
 ```
 
 [Communication based Batch Keyed-Gather Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/comms/batch/BKeyedGatherExample.java)
@@ -309,7 +309,7 @@ Running a reduction operation on an array of size 8 with 4 workers iterating onc
 and sink parallelism of 8, added with result verification. 
 
 ```bash
-./twister2-dist/bin/twister2 submit standalone jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "keyedpartition" -stages 8,8 -verify
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExamplekMain -itr 1 -workers 4 -size 8 -op "keyedpartition" -stages 8,8 -verify
 ```
 
 [Communication based Batch Keyed-Partition Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/comms/batch/BKeyedPartitionExample.java)
@@ -327,7 +327,7 @@ Running a reduce streaming example using 4 workers, with a single iteration, sou
 as 8 and sink parallelism as one. 
 
 ```bash
-./twister2-dist/bin/twister2 submit nodesmpi jar twister2-dist/examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,1 -verify -stream
+./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,1 -verify -stream
 
 ```
 
