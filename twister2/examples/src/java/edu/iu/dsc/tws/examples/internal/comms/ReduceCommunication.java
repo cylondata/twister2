@@ -382,7 +382,7 @@ public class ReduceCommunication implements IWorker {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-reduce")
         .setWorkerClass(ReduceCommunication.class.getName())
-        .setRequestResource(new WorkerComputeResource(2, 1024), 4)
+        .setRequestResource(new WorkerComputeResource(1, 512), 4)
         .setConfig(jobConfig)
         .build();
 
