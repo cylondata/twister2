@@ -88,7 +88,7 @@ public class HelloHarp extends HarpWorker {
         .setName("hello-harp-job")
         .setWorkerClass(HelloHarp.class)
         .setRequestResource(
-            new WorkerComputeResource(2, 1024),
+            new WorkerComputeResource(1, 512),
             numberOfWorkers
         )
         .setConfig(jobConfig)

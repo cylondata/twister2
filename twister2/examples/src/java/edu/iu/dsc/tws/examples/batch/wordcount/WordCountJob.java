@@ -34,7 +34,7 @@ public final class WordCountJob {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("batch-wordcount");
     jobBuilder.setWorkerClass(WordCountWorker.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

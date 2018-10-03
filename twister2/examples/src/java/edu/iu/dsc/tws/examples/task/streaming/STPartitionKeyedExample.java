@@ -55,7 +55,6 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
         ArrayList<?> data = (ArrayList<?>) object;
         for (int i = 0; i < data.size(); i++) {
           Object value = data.get(i);
-          LOG.info("Value type : " + value.getClass().getName());
           experimentData.setOutput(value);
           try {
             verify(OperationNames.KEYED_PARTITION);
@@ -64,11 +63,11 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
           }
         }
       }
-      if (count % jobParameters.getPrintInterval() == 0) {
+     /* if (count % jobParameters.getPrintInterval() == 0) {
         LOG.info(String.format("%d %d Streaming Message Keyed Partition Received count: %d",
             context.getWorkerId(),
             context.taskId(), count));
-      }
+      }*/
       count++;
       return true;
     }
