@@ -51,6 +51,7 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
     taskClient = new RRClient("localhost", 6789, cfg, taskLooper,
         context.taskId(), new ClientConnectHandler());
 
+    taskClient.registerMessage(Checkpoint.CheckpointComplete.newBuilder());
     taskClient.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
         new ClientMessageHandler());
 

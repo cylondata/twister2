@@ -159,11 +159,14 @@ public class PartitionPartialReceiver implements MessageReceiver {
         return false;
       }
       if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+        ArrayList<Object> barrierMessage = new ArrayList<>();
+        barrierMessage.add(object);
         if (readyToSend.isEmpty()) {
           if (!dests.isEmpty()) {
             operation.sendPartial(representSource, new ArrayList<>(dests), 0, target);
           }
-          operation.sendPartial(representSource, new ArrayList<>(), MessageFlags.BARRIER, target);
+
+          operation.sendPartial(representSource, barrierMessage, MessageFlags.BARRIER, target);
         } else {
           Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
           while (it.hasNext()) {
@@ -180,7 +183,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
           if (!dests.isEmpty()) {
             operation.sendPartial(representSource, new ArrayList<>(dests), 0, target);
           }
-          operation.sendPartial(representSource, new ArrayList<>(), MessageFlags.BARRIER, target);
+          operation.sendPartial(representSource, barrierMessage, MessageFlags.BARRIER, target);
         }
       } else {
         dests.add(object);
