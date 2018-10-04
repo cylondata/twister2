@@ -43,34 +43,33 @@ public class KMeansOutputWriter {
         hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
         Path path = hdfsUtils.getPath();
 
-        if (!hadoopFileSystem.exists(path)) {
-          dataOutputStream = hadoopFileSystem.create(path);
-          bufferedWriter = new BufferedWriter(new OutputStreamWriter(dataOutputStream, "UTF-8"));
-
-          for (int i = 0; i < finalValue.length; i++) {
-            for (int j = 0; j < finalValue[0].length; j++) {
-              bufferedWriter.write(finalValue[i][j] + "\t");
-            }
-            bufferedWriter.write("\n");
+        if (hadoopFileSystem.exists(path)) {
+          hadoopFileSystem.delete(path, false);
+        }
+        dataOutputStream = hadoopFileSystem.create(path);
+        bufferedWriter = new BufferedWriter(new OutputStreamWriter(dataOutputStream, "UTF-8"));
+        for (int i = 0; i < finalValue.length; i++) {
+          for (int j = 0; j < finalValue[0].length; j++) {
+            bufferedWriter.write(finalValue[i][j] + "\t");
           }
-        } else {
-          throw new RuntimeException("File already exists in the hdfs, remove it from hdfs");
+          bufferedWriter.write("\n");
         }
       } else if ("local".equals(fileSystem)) {
         File file = new File(fileName);
-        if (!file.exists()) {
-          //file.createNewFile();
-          bufferedWriter = new BufferedWriter(new FileWriter(fileName));
-          for (int i = 0; i < finalValue.length; i++) {
-            for (int j = 0; j < finalValue[0].length; j++) {
-              bufferedWriter.write(finalValue[i][j] + "\t");
-            }
-            bufferedWriter.write("\n");
-          }
+        if (file.exists()) {
+          file.delete();
         }
+        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
+        for (int i = 0; i < finalValue.length; i++) {
+          for (int j = 0; j < finalValue[0].length; j++) {
+            bufferedWriter.write(finalValue[i][j] + "\t");
+          }
+          bufferedWriter.write("\n");
+        }
+
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      throw new RuntimeException("Failed to write centroids file", e);
     } finally {
       try {
         bufferedWriter.flush();
@@ -82,7 +81,7 @@ public class KMeansOutputWriter {
           hadoopFileSystem.close();
         }
       } catch (Exception e) {
-        e.printStackTrace();
+        throw new RuntimeException("Failed to close file", e);
       }
     }
   }

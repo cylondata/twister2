@@ -209,7 +209,7 @@ public class ExampleTaskMain {
     twister2Job = Twister2Job.newBuilder()
         .setName(clazz)
         .setWorkerClass(clazz)
-        .setRequestResource(new WorkerComputeResource(2, 1024), containers)
+        .setRequestResource(new WorkerComputeResource(1, 512), containers)
         .setConfig(jobConfig)
         .build();
     // now submit the job

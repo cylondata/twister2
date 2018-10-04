@@ -71,6 +71,7 @@ public class HdfsUtils {
   public HadoopFileSystem createHDFSFileSystem() {
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
+    conf.set("fs.defaultFS", HdfsDataContext.getHdfsUrlDefault(config));
     HadoopFileSystem hadoopFileSystem = null;
     try {
       hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));

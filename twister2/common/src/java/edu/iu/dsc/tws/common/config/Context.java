@@ -39,17 +39,17 @@ public class Context {
   public static final ConfigEntry CLIENT_YAML = new ConfigEntry(
       "twister2.config.file.client.yaml", "${TWISTER2_CONF}/client.yaml");
   public static final ConfigEntry TASK_YAML = new ConfigEntry(
-      "twister2.config.file.packing.yaml",   "${TWISTER2_CONF}/task.yaml");
+      "twister2.config.file.packing.yaml", "${TWISTER2_CONF}/task.yaml");
   public static final ConfigEntry RESOURCE_SCHEDULER_YAML = new ConfigEntry(
       "twister2.config.file.scheduler.yaml", "${TWISTER2_CONF}/resource.yaml");
   public static final ConfigEntry NETWORK_YAML = new ConfigEntry(
-      "twister2.config.file.network.yaml",    "${TWISTER2_CONF}/network.yaml");
+      "twister2.config.file.network.yaml", "${TWISTER2_CONF}/network.yaml");
   public static final ConfigEntry UPLOADER_YAML = new ConfigEntry(
-      "twister2.config.file.uploader.yaml",  "${TWISTER2_CONF}/uploader.yaml");
+      "twister2.config.file.uploader.yaml", "${TWISTER2_CONF}/uploader.yaml");
   public static final ConfigEntry SYSTEM_YAML = new ConfigEntry(
-      "twister2.config.file.system.yaml",  "${TWISTER2_CONF}/system.yaml");
+      "twister2.config.file.system.yaml", "${TWISTER2_CONF}/system.yaml");
   public static final ConfigEntry OVERRIDE_YAML = new ConfigEntry(
-      "twister2.config.file.override.yaml",  "${TWISTER2_CONF}/override.yaml");
+      "twister2.config.file.override.yaml", "${TWISTER2_CONF}/override.yaml");
   public static final ConfigEntry CLUSTER_HOME = new ConfigEntry(
       "twister2.directory.cluster.home", "./core");
   public static final ConfigEntry CLUSTER_CONF = new ConfigEntry(
@@ -92,6 +92,8 @@ public class Context {
 
   public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
   public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
+
+  public static final String TWISTER2_VERSION = "0.1.0";
 
 
   static {
@@ -193,7 +195,6 @@ public class Context {
    * CPU as double.
    * Can be any value more than 0.0
    * Examples: 0.2, 2.5, etc
-   * @return
    */
   public static double workerCPU(Config cfg) {
     return cfg.getDoubleValue(TWISTER2_WORKER_CPU, TWISTER2_WORKER_CPU_DEFAULT);
@@ -201,7 +202,6 @@ public class Context {
 
   /**
    * RAM in Mega Bytes
-   * @return
    */
   public static int workerRAM(Config cfg) {
     return cfg.getIntegerValue(TWISTER2_WORKER_RAM, TWISTER2_WORKER_RAM_DEFAULT);
@@ -209,7 +209,6 @@ public class Context {
 
   /**
    * Disk in Giga Bytes
-   * @return
    */
   public static double workerVolatileDisk(Config cfg) {
     return cfg.getDoubleValue(WORKER_VOLATILE_DISK, WORKER_VOLATILE_DISK_DEFAULT);

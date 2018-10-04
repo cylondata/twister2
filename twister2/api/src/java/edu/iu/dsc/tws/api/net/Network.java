@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
 import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
@@ -80,10 +79,8 @@ public final class Network {
       networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getWorkerPort());
       networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP().getHostAddress());
       nInfos.add(networkInfo);
-
-      WorkerComputeResource container = new WorkerComputeResource(w.getWorkerID());
-      resourcePlan.addWorkerComputeResource(container);
     }
+
     // start the connections
     channel.startConnections(nInfos);
     // now lets wait for connections to be established

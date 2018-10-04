@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.task.streaming;
 
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
@@ -31,9 +32,11 @@ public class STBroadCastExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
+
     String edge = "edge";
     BaseStreamSource g = new SourceStreamTask(edge);
     BaseStreamSink r = new BroadCastSinkTask();
+
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
@@ -42,28 +45,21 @@ public class STBroadCastExample extends BenchTaskWorker {
 
   protected static class BroadCastSinkTask extends BaseStreamSink {
     private static final long serialVersionUID = -254264903510284798L;
-    private static int count = 0;
+    private int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
+      count++;
       if (count % jobParameters.getPrintInterval() == 0) {
         Object object = message.getContent();
         experimentData.setOutput(object);
+        LOG.log(Level.INFO, String.format("Received messages to %d: %d", context.taskId(), count));
         try {
           verify(OperationNames.BROADCAST);
         } catch (VerificationException e) {
           LOG.info("Exception Message : " + e.getMessage());
         }
       }
-      /*if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        if (object instanceof int[]) {
-          LOG.info(" Message Broadcasted : "
-              + Arrays.toString((int[]) object) + ", counter : " + count);
-        }
-
-      }*/
-      count++;
       return true;
     }
   }

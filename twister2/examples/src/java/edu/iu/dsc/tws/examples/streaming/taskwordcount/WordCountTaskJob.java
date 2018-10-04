@@ -121,7 +121,7 @@ public class WordCountTaskJob extends TaskWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("wordcount-streaming-task");
     jobBuilder.setWorkerClass(WordCountTaskJob.class);
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

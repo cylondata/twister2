@@ -79,7 +79,7 @@ public class HelloWorld implements IWorker {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("hello-world-job")
         .setWorkerClass(HelloWorld.class)
-        .setRequestResource(new WorkerComputeResource(2, 1024), numberOfWorkers)
+        .setRequestResource(new WorkerComputeResource(1, 512), numberOfWorkers)
         .setConfig(jobConfig)
         .build();
     // now submit the job

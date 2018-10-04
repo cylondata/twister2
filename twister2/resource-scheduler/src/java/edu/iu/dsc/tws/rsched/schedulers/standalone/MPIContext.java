@@ -16,7 +16,7 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.TokenSub;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
-class MPIContext extends SchedulerContext {
+public class MPIContext extends SchedulerContext {
   public static final String WORKING_DIRECTORY =
       "twister2.resource.scheduler.mpi.working.directory";
 
@@ -28,6 +28,8 @@ class MPIContext extends SchedulerContext {
   public static final String MODE = "twsiter2.resource.scheduler.mpi.mode";
   public static final String NODES_FILE = "twister2.resource.scheduler.mpi.nodes.file";
   public static final String MPIRUN_FILE = "twister2.resource.scheduler.mpi.mpirun.file";
+
+  public static final String NODES_ON_SHARED_FS = "twister2.resource.sharedfs";
 
   public static String workingDirectory(Config config) {
     return TokenSub.substitute(config, config.getStringValue(WORKING_DIRECTORY,
@@ -56,5 +58,9 @@ class MPIContext extends SchedulerContext {
 
   public static String mpiRunFile(Config cfg) {
     return cfg.getStringValue(MPIRUN_FILE, "mpirun");
+  }
+
+  public static boolean isSharedFs(Config cfg) {
+    return cfg.getBooleanValue(NODES_ON_SHARED_FS, true);
   }
 }
