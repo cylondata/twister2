@@ -4,11 +4,11 @@ Goal of Twister2 is to provide a layered approach for big data with independent 
 
 Among these communications, task system and data management are the core components of the system with the others providing auxiliary services. On top of these layers, one can develop higher-level APIs such as SQL interfaces. The following figure shows the runtime architecture of Twister2 with various components. Even though shows all the components in a single diagram, one can mix and match various components according to their needs. Fault tolerance and security are two aspects that affect all these components.
 
-![Twister2 Components](../images/tws-architecture.png)
+![Twister2 Architecture](../images/tws-architecture.png)
 
 The following table gives a summary of various components, APIs, and implementation choices.
 
-![Twister2 Architecture](../images/twister2-architecture.png)
+![Twister2 Components](../images/twister2-architecture.png)
 
 ## Twister2 Runtime
 
