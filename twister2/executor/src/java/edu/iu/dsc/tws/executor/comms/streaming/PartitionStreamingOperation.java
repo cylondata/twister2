@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -79,7 +80,10 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean sync(int target, int flag, Object data) {
-      return true;
+      BlockingQueue<IMessage> messages = outMessages.get(target);
+      TaskMessage msg = new TaskMessage(data,
+          edgeGenerator.getStringMapping(communicationEdge), target, MessageFlags.SYNC);
+      return messages.offer(msg);
     }
   }
 
