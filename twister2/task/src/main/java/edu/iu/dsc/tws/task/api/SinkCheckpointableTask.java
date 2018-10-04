@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.task.api;
 
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -146,17 +147,25 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
    */
   public void receivedValidBarrier(IMessage message) {
 
-    Checkpoint.CheckpointBarrier checkpointBarrier
-        = (Checkpoint.CheckpointBarrier) message.getContent();
+//    Checkpoint.CheckpointBarrier checkpointBarrier
+//        = (Checkpoint.CheckpointBarrier) message.getContent();
 
-    Checkpoint.CheckpointComplete checkpointCompleteMessage
-        = Checkpoint.CheckpointComplete.newBuilder()
-        .setCheckpointComplete(true)
-        .setCurrentBarrierID(checkpointBarrier.getCurrentBarrierID())
-        .setSinkID(ctx.taskId())
-        .build();
+    Object messageContent = message.getContent();
 
-    taskClient.sendRequest(checkpointCompleteMessage);
-    taskLooper.loop();
+    if (messageContent instanceof ArrayList) {
+
+      @SuppressWarnings("unchecked")
+      ArrayList<Integer> messageArray = (ArrayList<Integer>) messageContent;
+
+      Checkpoint.CheckpointComplete checkpointCompleteMessage
+          = Checkpoint.CheckpointComplete.newBuilder()
+          .setCheckpointComplete(true)
+          .setCurrentBarrierID(messageArray.get(0))
+          .setSinkID(ctx.taskId())
+          .build();
+
+      taskClient.sendRequest(checkpointCompleteMessage);
+      taskLooper.loop();
+    }
   }
 }
