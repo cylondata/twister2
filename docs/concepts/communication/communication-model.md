@@ -50,10 +50,10 @@ from tasks `0,1,2,4`. To further optimize the operation each task will perform p
 before sending out data to the next destination. So the data that each task sends to the sink task will be as follows
 for this example
 
-* 0 - 8 {1,2,3}
-* 1 - 8 {2,4,6}
-* 2 - 8 {4,8,12}
-* 4 - 8 {1,2,3}
+* 0 -> 8 : `{1,2,3}`
+* 1 -> 8 : `{2,4,6}`
+* 2 -> 8 : `{4,8,12}`
+* 4 -> 8 : `{1,2,3}`
 
 Dataflow communications are overlaid on top of worker processes using logical ids.
 
