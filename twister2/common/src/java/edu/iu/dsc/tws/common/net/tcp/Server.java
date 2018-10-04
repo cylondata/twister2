@@ -158,7 +158,7 @@ public class Server implements SelectHandler {
 
     channel.enableWriting();
 
-    TCPMessage request = new TCPMessage(buffer, edge, size);
+    TCPMessage request = new TCPMessage(buffer.duplicate(), edge, size);
     // we need to handle the false
     channel.addWriteRequest(request);
 

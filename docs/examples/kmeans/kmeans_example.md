@@ -9,7 +9,7 @@ The need to process large amounts of continuously arriving information has led t
 ### To generate and write the datapoints and centroids in the local filesystem and run the K-Means
 
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /home/kgovind/output.txt -pointsfile /home/kgovind/kinput.txt -centersfile /home/kgovind/kcentroid.txt -points 100 -filesys local -pseedvalue 100 -cseedvalue 500 -input generate
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys local -pseedvalue 100 -cseedvalue 500 -input generate
 ```
 
 ### To generate and write the datapoints and centroids in the HDFS and run the K-Means
