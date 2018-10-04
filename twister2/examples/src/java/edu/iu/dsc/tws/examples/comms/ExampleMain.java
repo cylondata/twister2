@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.batch.BAllGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BAllReduceExample;
+import edu.iu.dsc.tws.examples.comms.batch.BDKeyedGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BKeyedGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BKeyedPartitionExample;

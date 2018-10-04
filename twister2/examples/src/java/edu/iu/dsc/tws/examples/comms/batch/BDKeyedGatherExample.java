@@ -9,6 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.Arrays;
@@ -29,8 +30,8 @@ import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 
-public class BKeyedGatherExample extends KeyedBenchWorker {
-  private static final Logger LOG = Logger.getLogger(BKeyedGatherExample.class.getName());
+public class BDKeyedGatherExample extends KeyedBenchWorker {
+  private static final Logger LOG = Logger.getLogger(BDKeyedGatherExample.class.getName());
 
   private BKeyedGather keyedGather;
 
@@ -55,7 +56,7 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
     // create the communication
     keyedGather = new BKeyedGather(communicator, taskPlan, sources, targets,
         MessageType.INTEGER, MessageType.INTEGER, new FinalReduceReceiver(),
-        new SimpleKeyBasedSelector(), false);
+        new SimpleKeyBasedSelector(), true);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
