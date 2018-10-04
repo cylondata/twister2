@@ -4,14 +4,9 @@ twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel"
 #############################################################################
 # OpenMPI settings
 #############################################################################
-# By default, OpenMPI is not enabled
-# To use OpenMPI, set this to true
-kubernetes.workers.use.openmpi: false
-
 # A Secret object must be present in Kubernetes master
 # Its name must be specified here
 kubernetes.secret.name: "twister2-openmpi-ssh-key"
-
 
 #############################################################################
 # Worker port settings
