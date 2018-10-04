@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
@@ -124,7 +125,7 @@ public class SourceStreamingInstance implements INodeInstance {
         LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
         this.streamingTask = fsStateBackend.readFromStateBackend(config, streamingTaskId, workerId);
       } catch (Exception e) {
-        System.out.println(e);
+        LOG.log(Level.WARNING, "Could not read checkpoint", e);
       }
     }
   }
@@ -197,21 +198,15 @@ public class SourceStreamingInstance implements INodeInstance {
   }
 
 
-  private void writeToStatebackend() {
-    sleeper++;
-    if (sleeper > 300000) {
-      try {
-        LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-        fsStateBackend.writeToStateBackend(config, streamingTaskId, workerId, streamingTask);
-      } catch (Exception e) {
-        System.out.println(e);
-      }
-      sleeper = 0;
-    }
-  }
-
   public boolean storeSnapshot() {
-    return true;
+    try {
+      LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+      fsStateBackend.writeToStateBackend(config, streamingTaskId, workerId, streamingTask);
+      return true;
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, "Could not store checkpoint", e);
+    }
+    return false;
 
   }
 
