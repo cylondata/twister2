@@ -71,7 +71,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("datalocality-batchexample");
     jobBuilder.setWorkerClass(DataLocalityBatchTaskExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 2);
+    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 2);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

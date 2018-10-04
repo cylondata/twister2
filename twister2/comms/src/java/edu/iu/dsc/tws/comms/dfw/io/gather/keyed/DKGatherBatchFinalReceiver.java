@@ -129,7 +129,6 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
       KeyedContent kc = (KeyedContent) targetSendQueue.poll();
       Object data = kc.getValue();
       byte[] d = DataSerializer.serialize(data, kryoSerializer);
-
       sortedMerger.add(kc.getKey(), d, d.length);
 
     }
@@ -154,5 +153,18 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
     bulkReceiver.receive(target, itr);
 
     return needsFurtherProgress;
+  }
+
+  /**
+   * checks if the Empty message was sent for this target and sends it if not sent and possible to
+   * send. Since this is the final receiver we do not need any functionality to send empty message
+   * so the method is overwritten to simply return true
+   *
+   * @param target target for which the check is done
+   * @return false if Empty is sent
+   */
+  @Override
+  protected boolean checkIfEmptyIsSent(int target) {
+    return true;
   }
 }

@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -81,7 +80,7 @@ public class KMeansJobMain {
     int cSeedValue = Integer.parseInt(commandLine.getOptionValue(
         KMeansConstants.ARGS_CENTERS_SEED_VALUE));
 
-    LOG.info("workers:" + workers + "\titeration:" + itr + "\tdimension:" + dim
+    LOG.fine("workers:" + workers + "\titeration:" + itr + "\tdimension:" + dim
         + "\tnumber of clusters:" + numOfClusters + "\tfilename:" + fileName
         + "\tnumber of datapoints:" + numberOfPoints + "\tdatapoints file:" + datapointsFile
         + "\tcenters file:" + centersFile + "\tfilesys:" + fileSystem);
@@ -107,7 +106,7 @@ public class KMeansJobMain {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("KMeans-job");
     jobBuilder.setWorkerClass(KMeansJob.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(2, 512), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

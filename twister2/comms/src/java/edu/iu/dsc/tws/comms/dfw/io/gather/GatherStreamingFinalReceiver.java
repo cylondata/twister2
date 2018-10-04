@@ -17,29 +17,29 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
 public class GatherStreamingFinalReceiver extends GatherStreamingPartialReceiver {
   private static final Logger LOG = Logger.getLogger(GatherStreamingFinalReceiver.class.getName());
 
-  private MessageReceiver receiver;
+  private BulkReceiver receiver;
 
-  public GatherStreamingFinalReceiver(MessageReceiver receiver) {
+  public GatherStreamingFinalReceiver(BulkReceiver receiver) {
     this.receiver = receiver;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
-    receiver.init(cfg, op, expectedIds);
+    receiver.init(cfg, expectedIds.keySet());
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   @Override
   protected boolean handleMessage(int task, Object message, int flags, int dest) {
     if (message instanceof List) {
-      return receiver.onMessage(task, 0, dest, flags, message);
+      return receiver.receive(task, ((List) message).iterator());
     } else {
       LOG.log(Level.WARNING, "Messages should be in list format");
       return false;

@@ -57,7 +57,8 @@ public final class ConfigLoader {
         .putAll(loadConfig(Context.networkConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.systemConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.dataConfigurationFile(localConfig)))
-        .putAll(loadConfig(Context.checkpointConfigurationFile(localConfig)));
+        .putAll(loadConfig(Context.dataConfigurationFile(localConfig)));
+
     Config config = cb.build();
     return Config.transform(config);
   }

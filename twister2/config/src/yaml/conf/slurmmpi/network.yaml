@@ -1,2 +1,0 @@
-twister2.network.dataflow.class: "edu.iu.dsc.tws.comms.dfw.DataFlowCommunication"
-twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.DataFlowCommunication"

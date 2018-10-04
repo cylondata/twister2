@@ -41,16 +41,23 @@ ITaskGraph is the main interface consists of multiple methods which is mainly re
 
 ### BaseDataflowTaskGraph
 
-It is the base class for the dataflow task graph which implements the IDataflowTaskGraph interface. This is the main interface for the directed dataflow task graph which consists of methods to find out the inward and outward task edges and incoming and outgoing task edges. It validates the task vertexes and creates the directed dataflow edge between the source and target task vertexes. Some of the main methods available in this class are
+It is the base class for the dataflow task graph which implements the IDataflowTaskGraph interface. This is the main interface for the directed dataflow task graph which consists of methods to find out the inward and outward task edges and incoming and outgoing task edges. It validates the task vertexes and creates the directed dataflow edge between the source and target task vertexes. Also, it performs the validation such as duplicate names for the task, duplicate edges between same two tasks, self-loop in the task graph, and cycles in the task graph.
+Some of the main methods available in this class are
 
-```java
+```text
             addTaskVertex(TV sourceTaskVertex, TV targetTaskVertex)
 
             addTaskEge(TV sourceTaskVertex, TV targetTaskVertex, TE taskEges)
 
             removeTaskVertex(TV taskVertex), removeTaskEdge(TE taskEdge)
 
-            validateTaskVertex(TV source/target vertex).
+            validateTaskVertex(TV source/target vertex)
+            
+            boolean detectSelfLoop(Set<TV> taskVertex)
+            
+            detectCycle(TV vertex, Set<TV> taskVertexSet, Set<TV> sourceTaskSet, Set<TV> targetTaskSet)
+            
+            boolean containsTaskEdge(TE taskEdge)
 ```
 
 ### DataflowTaskGraph

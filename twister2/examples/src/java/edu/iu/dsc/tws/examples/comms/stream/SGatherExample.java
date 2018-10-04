@@ -11,17 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.stream;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.stream.SGather;
@@ -34,9 +31,9 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
 public class SGatherExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SGatherExample.class.getName());
 
-  private SGather reduce;
+  private SGather gather;
 
-  private boolean reduceDone = false;
+  private boolean gatherDone = false;
 
   @Override
   protected void execute() {
@@ -51,7 +48,7 @@ public class SGatherExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    reduce = new SGather(communicator, taskPlan, sources, target, MessageType.INTEGER,
+    gather = new SGather(communicator, taskPlan, sources, target, MessageType.INTEGER,
         new FinalReduceReceiver(jobParameters.getIterations()));
 
 
@@ -65,7 +62,7 @@ public class SGatherExample extends BenchWorker {
     }
 
     if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-      reduceDone = true;
+      gatherDone = true;
     }
 
     // now initialize the workers
@@ -78,26 +75,24 @@ public class SGatherExample extends BenchWorker {
 
   @Override
   protected void progressCommunication() {
-    reduce.progress();
+    gather.progress();
   }
 
   @Override
   protected boolean sendMessages(int task, Object data, int flag) {
-    while (!reduce.gather(task, data, flag)) {
+    while (!gather.gather(task, data, flag)) {
       // lets wait a litte and try again
-      reduce.progress();
+      gather.progress();
     }
     return true;
   }
 
   @Override
   protected boolean isDone() {
-//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-//        workerId, reduceDone, sourcesDone, reduce.hasPending()));
-    return reduceDone && sourcesDone && !reduce.hasPending();
+    return gatherDone && sourcesDone && !gather.hasPending();
   }
 
-  public class FinalReduceReceiver implements MessageReceiver {
+  public class FinalReduceReceiver implements BulkReceiver {
     private int count = 0;
     private int expected;
 
@@ -106,20 +101,19 @@ public class SGatherExample extends BenchWorker {
     }
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      if (object instanceof List) {
-        count += ((List) object).size();
-        ArrayList<?> a = (ArrayList<?>) object;
-        experimentData.setOutput(a.get(0));
+    public boolean receive(int target, Iterator<Object> object) {
+      while (object.hasNext()) {
+        experimentData.setOutput(object.next());
       }
+      count += 1;
 
       if (count == expected) {
         LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
-        reduceDone = true;
+        gatherDone = true;
       }
 
       try {
@@ -128,11 +122,6 @@ public class SGatherExample extends BenchWorker {
         LOG.info("Exception Message : " + e.getMessage());
       }
 
-      return true;
-    }
-
-    @Override
-    public boolean progress() {
       return true;
     }
   }

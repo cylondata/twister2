@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.batch.BAllGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BAllReduceExample;
+import edu.iu.dsc.tws.examples.comms.batch.BDKeyedGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BKeyedGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BKeyedPartitionExample;
@@ -99,7 +100,7 @@ public class ExampleMain {
       outstanding = cmd.getOptionValue(Constants.ARGS_OUTSTANDING);
     }
 
-    String printInt = "0";
+    String printInt = "1";
     if (cmd.hasOption(Constants.ARGS_PRINT_INTERVAL)) {
       printInt = cmd.getOptionValue(Constants.ARGS_PRINT_INTERVAL);
     }
@@ -157,6 +158,9 @@ public class ExampleMain {
         case "keyedgather":
           submitJob(config, workers, jobConfig, BKeyedGatherExample.class.getName());
           break;
+        case "dkeyedgather":
+          submitJob(config, workers, jobConfig, BDKeyedGatherExample.class.getName());
+          break;
       }
     } else {
       switch (operation) {
@@ -198,7 +202,7 @@ public class ExampleMain {
     twister2Job = Twister2Job.newBuilder()
         .setName(clazz)
         .setWorkerClass(clazz)
-        .setRequestResource(new WorkerComputeResource(2, 1024), containers)
+        .setRequestResource(new WorkerComputeResource(1, 512), containers)
         .setConfig(jobConfig)
         .build();
     // now submit the job

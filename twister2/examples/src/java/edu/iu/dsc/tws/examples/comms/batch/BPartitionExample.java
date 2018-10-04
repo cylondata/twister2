@@ -72,8 +72,6 @@ public class BPartitionExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-//        workerId, partitionDone, sourcesDone, partition.hasPending()));
     return partitionDone && sourcesDone && !partition.hasPending();
   }
 

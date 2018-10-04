@@ -99,7 +99,7 @@ After you've build the Twister2 distribution, you can extract it and use it to s
 
 ```bash
 cd bazel-bin/scripts/package/
-tar -xvf twister2-client-0.1.0.tar.gz
+tar -xvf twister2-0.1.0.tar.gz
 ```
 
 ## Compiling OpenMPI
@@ -161,9 +161,9 @@ From
 
 to
 
-\`\`\`bash './configure --prefix=$$INSTALL\_DIR --enable-mpi-java --with-jdk-bindir=/bin --with-jdk-headers=/include',
-
-\`\`\`bash
+```bash
+'./configure --prefix=$$INSTALL\_DIR --enable-mpi-java --with-jdk-bindir=/bin --with-jdk-headers=/include',
+```
 
 Please replace  with your jdk location.
 

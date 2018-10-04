@@ -39,7 +39,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
     this.edgeGenerator = e;
     op = new BKeyedGather(channel, taskPlan, sources, dests,
         Utils.dataTypeToMessageType(keyType),
-        Utils.dataTypeToMessageType(dataType), new GatherRecvrImpl(), new HashingSelector());
+        Utils.dataTypeToMessageType(dataType), new GatherRecvrImpl(), new HashingSelector(), false);
 
     communicationEdge = e.generate(edgeName);
   }
