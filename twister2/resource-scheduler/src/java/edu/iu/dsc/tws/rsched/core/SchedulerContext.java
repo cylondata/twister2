@@ -42,7 +42,7 @@ public class SchedulerContext extends Context {
 
   public static final String WORKING_DIRECTORY = "twister2.working_directory";
 
-  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core.tar.gz";
+  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core-0.1.0.tar.gz";
   public static final String CORE_PACKAGE_FILENAME = "twister2.package.core";
 
   public static final String JOB_PACKAGE_FILENAME_DEFAULT = "twister2-job.tar.gz";
@@ -59,6 +59,7 @@ public class SchedulerContext extends Context {
   // persistent volume per worker in GB
   public static final double PERSISTENT_VOLUME_PER_WORKER_DEFAULT = 0.0;
   public static final String PERSISTENT_VOLUME_PER_WORKER = "persistent.volume.per.worker";
+  public static final String WORKER_END_SYNC_TIME = "twister2.worker.end.sync.wait.time.ms";
 
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
@@ -82,7 +83,7 @@ public class SchedulerContext extends Context {
 
   public static String systemPackageUrl(Config cfg) {
     return TokenSub.substitute(cfg, cfg.getStringValue(SYSTEM_PACKAGE_URI,
-        "${TWISTER2_DIST}/twister2-core.tar.gz"), Context.substitutions);
+        "${TWISTER2_DIST}/twister2-core-0.1.0.tar.gz"), Context.substitutions);
   }
 
   public static URI jobPackageUri(Config cfg) {
@@ -134,5 +135,15 @@ public class SchedulerContext extends Context {
   public static String createJobDescriptionFileName(String jobName) {
     return jobName + ".job";
   }
+
+  public static int workerEndSyncWaitTime(Config cfg) {
+    return cfg.getIntegerValue("twister2.worker.end.sync.time.ms", 30000);
+  }
+
+  public static boolean useOpenMPI(Config cfg) {
+    return cfg.getStringValue("twister2.network.channel.class")
+        .equals("edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel");
+  }
+
 
 }

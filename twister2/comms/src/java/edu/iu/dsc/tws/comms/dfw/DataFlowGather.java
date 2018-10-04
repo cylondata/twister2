@@ -69,12 +69,14 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   private int executor;
   private MessageType dataType;
   private MessageType keyType;
+  private MessageType rcvDataType;
   private boolean isKeyed;
   private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
   private Table<Integer, Integer, RoutingParameters> partialRoutingParamCache
       = HashBasedTable.create();
   private Lock lock = new ReentrantLock();
   private Lock partialLock = new ReentrantLock();
+  private int edge;
 
   public DataFlowGather(TWSChannel channel, Set<Integer> sources, int destination,
                         MessageReceiver finalRcvr,
@@ -89,7 +91,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
                         MessageReceiver partialRcvr, int indx, int p,
                         Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this(channel, sources, destination, finalRcvr, partialRcvr,
-        indx, p, cfg, taskPlan, false, t, null, edge);
+        indx, p, cfg, taskPlan, false, t, t, null, edge);
     this.isKeyed = false;
   }
 
@@ -97,7 +99,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
                         MessageReceiver finalRcvr,
                         MessageReceiver partialRcvr, int indx, int p,
                         Config cfg, TaskPlan taskPlan, boolean keyed, MessageType dType,
-                        MessageType kType, int edge) {
+                        MessageType rcvDType, MessageType kType, int edge) {
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
@@ -108,7 +110,8 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     this.dataType = dType;
     this.instancePlan = taskPlan;
     this.isKeyed = keyed;
-
+    this.rcvDataType = rcvDType;
+    this.edge = edge;
     this.delegete = new ChannelDataFlowOperation(channel);
   }
 
@@ -241,10 +244,11 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   /**
    * Initialize
    */
-  public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
+  public void init(Config cfg, MessageType t, TaskPlan taskPlan, int ed) {
     this.dataType = t;
     this.instancePlan = taskPlan;
     this.executor = taskPlan.getThisExecutor();
+    this.edge = ed;
     // we only have one path
     this.router = new InvertedBinaryTreeRouter(cfg, taskPlan,
         destination, sources, index);
@@ -298,7 +302,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
       partialSendRoutingParameters(s, pathToUse);
     }
 
-    delegete.init(cfg, t, t, keyType, keyType, taskPlan, edge,
+    delegete.init(cfg, t, rcvDataType, keyType, keyType, taskPlan, ed,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
@@ -315,7 +319,6 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     boolean done = delegete.isComplete();
     boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
         partialLock, partialReceiver);
-//    LOG.log(Level.INFO, String.format("Done %b needsFurther %b", done, needsFurtherProgress));
     return done && !needsFurtherProgress;
   }
 
@@ -353,7 +356,22 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  @Override
+  public MessageType getDataType() {
+    return dataType;
+  }
+
+  @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
+  }
+
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edge);
   }
 }

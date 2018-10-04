@@ -25,7 +25,7 @@ set +e
 # Build everything
 DIR=`dirname $0`
 source ${DIR}/detect_os_type.sh
-bazel build --config=`platform` {twister2,integration-test,tools/java}/...
+bazel build --config=`platform` {twister2,tools/java}/...
 result=$?
 if [ "${result}" -eq "0" ] ; then
   echo "Bazel build successful!!"
@@ -67,7 +67,7 @@ function get_package_of() {
 }
 
 function get_twister2_java_paths() {
-  local java_paths=$(find {twister2,tools,integration-test,contrib} -name "*.java" | sed "s|/src/test/java/.*$|/src/test/java|" | sed "s|/src/main/java/.*$|/src/main/java|" | sed "s|/src/java/.*$|/src/java|"| sed "s|/java/src/.*$|/java/src|" |  sed "s|/tests/java/.*$|/tests/java|" | sort -u | fgrep -v "twister2/scheduler/" | fgrep -v "twister2/scheduler/" )
+  local java_paths=$(find {twister2,tools} -name "*.java" | sed "s|/src/test/java/.*$|/src/test/java|" | sed "s|/src/main/java/.*$|/src/main/java|" | sed "s|/src/java/.*$|/src/java|"| sed "s|/java/src/.*$|/java/src|" |  sed "s|/tests/java/.*$|/tests/java|" | sort -u | fgrep -v "twister2/scheduler/" | fgrep -v "twister2/scheduler/" )
   if [ "$(uname -s | tr 'A-Z' 'a-z')" != "darwin" ]; then
     java_paths=$(echo "${java_paths}" | fgrep -v "/objc_tools/")
   fi

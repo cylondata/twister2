@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
@@ -139,12 +140,21 @@ public class TaskStreamingInstance implements INodeInstance {
     inParOps.put(edge, op);
   }
 
+  /**
+   * Execution Method calls the SourceTasks run method to get context
+   **/
   public boolean execute() {
     // execute if there are incoming messages
     while (!inQueue.isEmpty() && outQueue.size() < lowWaterMark) {
-      IMessage m = inQueue.poll();
-      if (m != null) {
-        task.execute(m);
+      IMessage message = inQueue.poll();
+      if (message != null) {
+        if ((message.getFlag() & MessageFlags.SYNC) != MessageFlags.SYNC) {
+          task.execute(message);
+        } else {
+          if (storeSnapshot()) {
+            outQueue.add(message);
+          }
+        }
       }
     }
 
@@ -157,6 +167,10 @@ public class TaskStreamingInstance implements INodeInstance {
         // invoke the communication operation
         IParallelOperation op = outParOps.get(edge);
         int flags = 0;
+        if ((message.getFlag() & MessageFlags.SYNC) == MessageFlags.SYNC) {
+          message.setFlag(MessageFlags.BARRIER);
+          flags = MessageFlags.BARRIER;
+        }
         // if we successfully send remove
         if (op.send(taskId, message, flags)) {
           outQueue.poll();
@@ -188,5 +202,9 @@ public class TaskStreamingInstance implements INodeInstance {
 
   public BlockingQueue<IMessage> getOutQueue() {
     return outQueue;
+  }
+
+  public boolean storeSnapshot() {
+    return true;
   }
 }

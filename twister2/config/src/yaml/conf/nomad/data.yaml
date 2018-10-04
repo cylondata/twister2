@@ -1,0 +1,16 @@
+twister2.hadoop.home: "${HADOOP_HOME}"
+
+twister2.hdfs.url: "hdfs://hairy.soic.indiana.edu:9000//"
+
+twister2.hdfs.class: "org.apache.hadoop.hdfs.DistributedFileSystem"
+
+twister2.hdfs.implementation.key: "fs.hdfs.impl"
+
+twister2.hdfs.config.directory: "${HADOOP_HOME}/etc/hadoop/core-site.xml"
+
+twister2.hdfs.data.directory: "/user/kgovind/"
+
+twister2.hdfs.namenode: "hairy.soic.indiana.edu"
+
+twister2.hdfs.namenode.port: "9000"
+

@@ -45,12 +45,13 @@ public class SimpleKeyBasedSelector implements DestinationSelector {
   }
 
   @Override
-  public int next(int source) {
-    return 0;
+  public int next(int source, Object data) {
+    throw new UnsupportedOperationException("Cannot use keys in this mode, "
+        + "please check configuration");
   }
 
   @Override
-  public int next(int source, Object key) {
+  public int next(int source, Object key, Object data) {
     if (key instanceof Integer) {
       return getIntegerKeyBasedId((Integer) key);
     }

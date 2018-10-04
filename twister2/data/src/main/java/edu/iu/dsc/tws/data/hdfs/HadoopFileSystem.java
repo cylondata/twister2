@@ -210,17 +210,6 @@ public class HadoopFileSystem extends FileSystem {
     return new FileStatus[0];
   }
 
-  public Class<?> getHadoopWrapperClassNameForFileSystem(String scheme) {
-    Configuration hadoopConf = getHadoopConfiguration();
-    Class<? extends org.apache.hadoop.fs.FileSystem> clazz = null;
-    try {
-      clazz = org.apache.hadoop.fs.FileSystem.getFileSystemClass(scheme, hadoopConf);
-    } catch (IOException e) {
-      LOG.info("Could not load the Hadoop File system implementation for scheme " + scheme);
-    }
-    return clazz;
-  }
-
   public void close() throws IOException {
     this.fileSystem.close();
   }

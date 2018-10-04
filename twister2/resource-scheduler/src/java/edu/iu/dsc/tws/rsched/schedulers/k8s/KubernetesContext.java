@@ -46,9 +46,6 @@ public class KubernetesContext extends SchedulerContext {
   public static final int SERVICE_NODE_PORT_DEFAULT = 0;
   public static final String SERVICE_NODE_PORT = "kubernetes.service.node.port";
 
-  public static final boolean WORKERS_USE_OPENMPI_DEFAULT = false;
-  public static final String WORKERS_USE_OPENMPI = "kubernetes.workers.use.openmpi";
-
   public static final String WORKER_TRANSPORT_PROTOCOL_DEFAULT = "TCP";
   public static final String WORKER_TRANSPORT_PROTOCOL = "kubernetes.worker.transport.protocol";
 
@@ -76,7 +73,7 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_WORKER_MAPPING_UNIFORM = "kubernetes.worker.mapping.uniform";
 
   // it can be either "webserver" or "client-to-pods"
-  public static final String K8S_UPLOADING_METHOD_DEFAULT = "webserver";
+  public static final String K8S_UPLOADING_METHOD_DEFAULT = "client-to-pods";
   public static final String K8S_UPLOADING_METHOD = "twister2.kubernetes.uploading.method";
 
   public static final String SECRET_NAME = "kubernetes.secret.name";
@@ -103,10 +100,6 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String datacenterLabelKeyForK8s(Config cfg) {
     return cfg.getStringValue(KUBERNETES_DATACENTER_LABEL_KEY);
-  }
-
-  public static boolean workersUseOpenMPI(Config cfg) {
-    return cfg.getBooleanValue(WORKERS_USE_OPENMPI, WORKERS_USE_OPENMPI_DEFAULT);
   }
 
   public static boolean nodePortServiceRequested(Config cfg) {

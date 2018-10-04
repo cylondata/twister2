@@ -72,7 +72,7 @@ public class FixedBufferChannel extends BaseNetworkChannel {
         // either we didnt read fully or we had an error
         // we had an error
         if (retval < 0) {
-          channelHandler.onError(channel);
+          selectHandler.handleError(channel);
         }
         return null;
       }
@@ -108,7 +108,7 @@ public class FixedBufferChannel extends BaseNetworkChannel {
         readStatus = DataStatus.INIT;
         LOG.log(Level.SEVERE, "Failed to read");
         // we had an error
-        channelHandler.onError(channel);
+        selectHandler.handleError(channel);
         // handle the error
         return null;
       } else if (retVal == 0) {
@@ -122,7 +122,6 @@ public class FixedBufferChannel extends BaseNetworkChannel {
         LOG.finest(String.format("READ Body %d", buffer.limit()));
         return ret;
       } else {
-        LOG.log(Level.INFO, String.format("READ Body not COMPLETE %d %d", buffer.limit(), retVal));
         return null;
       }
     }

@@ -64,27 +64,28 @@ public class SPartition {
   /**
    * Send a message to be partitioned
    *
-   * @param source source
+   * @param src source
    * @param message message
    * @param flags message flag
    * @return true if the message is accepted
    */
-  public boolean partition(int source, Object message, int flags) {
+  public boolean partition(int src, Object message, int flags) {
+//    final int dest = destinationSelector.next(src, message);
 
     if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
-      final int dest = destinationSelector.next(source);
+      final int dest = destinationSelector.next(src, message);
 
-      boolean send = partition.send(source, message, flags, dest);
+      boolean send = partition.send(src, message, flags, dest);
       if (send) {
-        destinationSelector.commit(source, dest);
+        destinationSelector.commit(src, dest);
       }
       return send;
 
     } else {
-      List<Integer> destinations = destinationSelector.getDestinations(source);
+      List<Integer> destinations = destinationSelector.getDestinations(src);
 
       for (int dest : destinations) {
-        partition.send(source, message, flags, dest);
+        partition.send(src, message, flags, dest);
       }
       return true;
     }

@@ -20,14 +20,13 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.op.OperationSemantics;
 
 public class BKeyedPartition {
   private DataFlowPartition partition;
-
-  private Communicator comm;
 
   private DestinationSelector destinationSelector;
 
@@ -38,7 +37,7 @@ public class BKeyedPartition {
     this.destinationSelector = destSelector;
     String shuffleDir = comm.getPersistentDirectory();
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
-        new PartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
+        new DPartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
         new PartitionPartialReceiver(),
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
@@ -52,19 +51,54 @@ public class BKeyedPartition {
     this.destinationSelector = destSelector;
     String shuffleDir = comm.getPersistentDirectory();
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
-        new PartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
+        new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
         new PartitionPartialReceiver(),
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
   }
 
-  public boolean partition(int source, Object key, Object message, int flags) {
-    int destinations = destinationSelector.next(source, key);
+  public BKeyedPartition(Communicator comm, TaskPlan plan,
+                         Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
+                         MessageType keyType, MessageType recvDataType,
+                         MessageType recvKeyType, BulkReceiver rcvr,
+                         DestinationSelector destSelector, Comparator<Object> comparator) {
+    this.destinationSelector = destSelector;
+    String shuffleDir = comm.getPersistentDirectory();
+    int e = comm.nextEdge();
+    this.partition = new DataFlowPartition(comm.getConfig(), comm.getChannel(), plan,
+        sources, destinations,
+        new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
+        new PartitionPartialReceiver(),
+        DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType, recvKeyType,
+        recvDataType, OperationSemantics.STREAMING_BATCH, e);
+    this.partition.init(comm.getConfig(), dataType, plan, e);
+    this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
+  }
 
-    boolean send = partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
+  public BKeyedPartition(Communicator comm, TaskPlan plan,
+                         Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
+                         MessageType keyType, MessageType recvDataType,
+                         MessageType recvKeyType, BulkReceiver rcvr,
+                         DestinationSelector destSelector) {
+    this.destinationSelector = destSelector;
+    String shuffleDir = comm.getPersistentDirectory();
+    int e = comm.nextEdge();
+    this.partition = new DataFlowPartition(comm.getConfig(), comm.getChannel(), plan,
+        sources, destinations,
+        new DPartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
+        new PartitionPartialReceiver(),
+        DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType, recvKeyType,
+        recvDataType, OperationSemantics.STREAMING_BATCH, e);
+    this.partition.init(comm.getConfig(), dataType, plan, e);
+    this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
+  }
+
+  public boolean partition(int source, Object key, Object message, int flags) {
+    int destinations = destinationSelector.next(source, key, message);
+
+    return partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
         partition.getDataType()), flags, destinations);
-    return send;
   }
 
   public boolean hasPending() {

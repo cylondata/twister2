@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.gather;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,32 +20,75 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KeyedGatherBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.DKGatherBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
 
 public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
+
+  /**
+   * The final receiver specified by the user
+   */
   private BulkReceiver bulkReceiver;
 
-  private Map<Integer, KeyedGatherBatchFinalReceiver> receiverMap = new HashMap<>();
+  /**
+   * Specifies if the gather operation uses disk for saving. if shuffle is true it indicates that
+   * the results will be saved to the disk and retrieved when needed.
+   */
+  private boolean shuffle;
 
-  public GatherMultiBatchFinalReceiver(BulkReceiver receiver) {
+  /**
+   * Map that keeps final receivers for each target
+   */
+  private Map<Integer, KeyedReceiver> receiverMap = new HashMap<>();
+
+  /**
+   * Shuffler directory
+   */
+  private String shuffleDirectory;
+
+  /**
+   * weather we need to sort the records according to key
+   */
+  private boolean sorted;
+
+  /**
+   * Comparator for sorting records
+   */
+  private Comparator<Object> comparator;
+
+  public GatherMultiBatchFinalReceiver(BulkReceiver receiver, boolean shuffle, boolean sorted,
+                                       String shuffleDir, Comparator<Object> comparator) {
     this.bulkReceiver = receiver;
+    this.shuffle = shuffle;
+    this.sorted = sorted;
+    this.shuffleDirectory = shuffleDir;
+    this.comparator = comparator;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op,
                    Map<Integer, Map<Integer, List<Integer>>> expectedIds) {
     for (Map.Entry<Integer, Map<Integer, List<Integer>>> e : expectedIds.entrySet()) {
-      KeyedGatherBatchFinalReceiver finalReceiver = new KeyedGatherBatchFinalReceiver(
-          bulkReceiver);
-      receiverMap.put(e.getKey(), finalReceiver);
+      if (!shuffle) {
+        KGatherBatchFinalReceiver finalReceiver = new KGatherBatchFinalReceiver(
+            bulkReceiver, 10);
+        receiverMap.put(e.getKey(), finalReceiver);
+        finalReceiver.init(cfg, op, e.getValue());
+      } else {
+        DKGatherBatchFinalReceiver finalReceiver = new DKGatherBatchFinalReceiver(
+            bulkReceiver, sorted, 10, shuffleDirectory, comparator);
+        receiverMap.put(e.getKey(), finalReceiver);
+        finalReceiver.init(cfg, op, e.getValue());
+      }
 
-      finalReceiver.init(cfg, op, e.getValue());
+
     }
   }
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    KeyedGatherBatchFinalReceiver finalReceiver = receiverMap.get(path);
+    KeyedReceiver finalReceiver = receiverMap.get(path);
     return finalReceiver.onMessage(source, path, target, flags, object);
   }
 
@@ -52,7 +96,7 @@ public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
   public boolean progress() {
     boolean needsFurtherProgress = false;
 
-    for (Map.Entry<Integer, KeyedGatherBatchFinalReceiver> e : receiverMap.entrySet()) {
+    for (Map.Entry<Integer, KeyedReceiver> e : receiverMap.entrySet()) {
       needsFurtherProgress = needsFurtherProgress | e.getValue().progress();
     }
     return needsFurtherProgress;

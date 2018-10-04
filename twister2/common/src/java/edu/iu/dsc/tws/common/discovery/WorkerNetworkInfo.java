@@ -44,11 +44,11 @@ public class WorkerNetworkInfo {
   private NodeInfo nodeInfo;
 
   public WorkerNetworkInfo(String ipStr, int port, int workerID) {
-    this(convertStringToIP(ipStr), port, workerID, new NodeInfo(null, null, null));
+    this(convertStringToIP(ipStr), port, workerID, new NodeInfo(ipStr, null, null));
   }
 
   public WorkerNetworkInfo(InetAddress ip, int port, int workerID) {
-    this(ip, port, workerID, new NodeInfo(null, null, null));
+    this(ip, port, workerID, new NodeInfo(ip.getHostAddress(), null, null));
   }
 
   public WorkerNetworkInfo(String ipStr, int port, int workerID, NodeInfo nodeInfo) {
@@ -97,11 +97,6 @@ public class WorkerNetworkInfo {
       LOG.log(Level.SEVERE, "Can not convert the given string to IP: " + ipStr, e);
       throw new RuntimeException(e);
     }
-  }
-
-  @Override
-  public String toString() {
-    return getWorkerIpAndPort() + " workerID: " + workerID;
   }
 
   @Override
@@ -180,5 +175,15 @@ public class WorkerNetworkInfo {
     }
 
     return buffer.toString();
+  }
+
+  @Override
+  public String toString() {
+    return "WorkerNetworkInfo{"
+        + "workerID=" + workerID
+        + ", ip=" + ip.getHostAddress()
+        + ", port=" + port
+        + ", nodeInfo=" + nodeInfo
+        + '}';
   }
 }

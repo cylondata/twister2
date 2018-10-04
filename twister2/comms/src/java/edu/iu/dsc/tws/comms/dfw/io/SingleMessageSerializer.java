@@ -191,7 +191,8 @@ public class SingleMessageSerializer implements MessageSerializer {
                                 OutMessage sendMessage, DataBuffer targetBuffer) {
     MessageType type = sendMessage.getChannelMessage().getType();
     if ((sendMessage.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-      return serializeData(payload, sendMessage.getSerializationState(), targetBuffer, type);
+      return serializeData(
+          payload, sendMessage.getSerializationState(), targetBuffer, MessageType.OBJECT);
     } else {
       if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
           || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING

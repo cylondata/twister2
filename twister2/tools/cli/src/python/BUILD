@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("/tools/rules/pex/pex_rules", "pex_library", "pex_binary")
+load("//tools/rules/pex:pex_rules.bzl", "pex_binary", "pex_library")
 
 pex_library(
     name = "cli-py",
@@ -8,13 +8,13 @@ pex_library(
         ["**/*.py"],
         exclude = ["main.py"],
     ),
-    deps = [
-    ],
     reqs = [
         "pyyaml==3.10",
         "enum34==1.1.6",
-        'psutil==4.3.1',
+        "psutil==4.3.1",
         "colorlog==2.6.1",
+    ],
+    deps = [
     ],
 )
 

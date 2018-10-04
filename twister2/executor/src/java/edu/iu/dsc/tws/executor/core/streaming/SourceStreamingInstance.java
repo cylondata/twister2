@@ -159,10 +159,12 @@ public class SourceStreamingInstance implements INodeInstance {
             break;
           }
         } else {
-          for (String edge : outEdges) {
-            IParallelOperation op = outStreamingParOps.get(edge);
-            if (op.send(streamingTaskId, message, message.getFlag())) {
-              outStreamingQueue.poll();
+          if (storeSnapshot()) {
+            for (String edge : outEdges) {
+              IParallelOperation op = outStreamingParOps.get(edge);
+              if (op.send(streamingTaskId, message, message.getFlag())) {
+                outStreamingQueue.poll();
+              }
             }
           }
         }
@@ -172,9 +174,10 @@ public class SourceStreamingInstance implements INodeInstance {
     for (Map.Entry<String, IParallelOperation> e : outStreamingParOps.entrySet()) {
       e.getValue().progress();
     }
-    writeToStatebackend();
+
     return true;
   }
+
 
   @Override
   public INode getNode() {
@@ -193,6 +196,7 @@ public class SourceStreamingInstance implements INodeInstance {
     outStreamingParOps.put(edge, op);
   }
 
+
   private void writeToStatebackend() {
     sleeper++;
     if (sleeper > 300000) {
@@ -205,5 +209,11 @@ public class SourceStreamingInstance implements INodeInstance {
       sleeper = 0;
     }
   }
+
+  public boolean storeSnapshot() {
+    return true;
+
+  }
+
 
 }

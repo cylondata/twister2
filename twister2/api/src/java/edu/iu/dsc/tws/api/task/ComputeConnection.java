@@ -64,6 +64,20 @@ public class ComputeConnection {
   }
 
   /**
+   * Create a broadcast connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @return the ComputeConnection
+   */
+  public ComputeConnection broadcast(String parent, String name) {
+    Edge edge = new Edge(name, OperationNames.BROADCAST);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
    * Create a reduce connection
    *
    * @param parent the parent to connection
@@ -135,7 +149,6 @@ public class ComputeConnection {
    * @param name name of the edge
    * @param op the reduce function.
    * @param dataType the data type
-   *
    * @return the ComputeConnection
    */
   public ComputeConnection reduce(String parent, String name, Op op, DataType dataType) {
@@ -157,7 +170,6 @@ public class ComputeConnection {
    * @param name name of the edge
    * @param function the reduce function
    * @param dataType the data type
-   *
    * @return the ComputeConnection
    */
   public ComputeConnection reduce(String parent, String name,
@@ -176,12 +188,20 @@ public class ComputeConnection {
    * @param function the reduce function
    * @param keyTpe the key data type
    * @param dataType the data type
-   *
    * @return the ComputeConnection
    */
   public ComputeConnection keyedReduce(String parent, String name,
                                        IFunction function, DataType keyTpe, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe, function);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  public ComputeConnection keyedReduce(String parent, String name,
+                                       Op op, DataType keyTpe, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
+        new ReduceFn(op, dataType));
     inputs.put(parent, edge);
 
     return this;
@@ -236,7 +256,6 @@ public class ComputeConnection {
    * @param name name of the edge
    * @param keyTpe the key data type
    * @param dataType the data type
-   *
    * @return the ComputeConnection
    */
   public ComputeConnection keyedGather(String parent, String name,
@@ -257,6 +276,25 @@ public class ComputeConnection {
    */
   public ComputeConnection gather(String parent, String name, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.GATHER, dataType);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+
+  /**
+   * Create a gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param dataType data type
+   * @param props map of properties
+   * @return the ComputeConnection
+   */
+  public ComputeConnection gather(String parent, String name, DataType dataType,
+                                  Map<String, Object> props) {
+    Edge edge = new Edge(name, OperationNames.GATHER, dataType);
+    edge.addProperties(props);
     inputs.put(parent, edge);
 
     return this;
@@ -313,6 +351,14 @@ public class ComputeConnection {
    */
   public ComputeConnection partition(String parent, String name, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.PARTITION, dataType);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  public ComputeConnection keyedPartition(String parent, String name,
+                                          DataType keyTpe, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.KEYED_PARTITION, dataType, keyTpe);
     inputs.put(parent, edge);
 
     return this;
@@ -390,7 +436,6 @@ public class ComputeConnection {
    * @param name name of the edge
    * @param op the reduce function.
    * @param dataType the data type
-   *
    * @return the ComputeConnection
    */
   public ComputeConnection allreduce(String parent, String name, Op op, DataType dataType) {
@@ -411,7 +456,6 @@ public class ComputeConnection {
    * @param name name of the edge
    * @param function the reduce function
    * @param dataType the data type
-   *
    * @return the ComputeConnection
    */
   public ComputeConnection allreduce(String parent, String name,

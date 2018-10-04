@@ -56,7 +56,7 @@ public class DynamicBufferChannel extends BaseNetworkChannel {
       if (retval != 0) {
         // we had an error
         if (retval < 0) {
-          channelHandler.onError(channel);
+          selectHandler.handleError(channel);
         }
         return null;
       }
@@ -90,7 +90,7 @@ public class DynamicBufferChannel extends BaseNetworkChannel {
         LOG.severe("Failed to read");
 
         // we had an error
-        channelHandler.onError(channel);
+        selectHandler.handleError(channel);
         // handle the error
         return null;
       } else if (retVal == 0) {

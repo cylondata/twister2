@@ -18,9 +18,15 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 
+/**
+ * The reduce function wrapping the operation and data type.
+ */
 public class ReduceFn implements IFunction {
   private static final long serialVersionUID = -123142353453456L;
 
+  /**
+   * The actual reduce function
+   */
   private ReduceFunction reduceFunction;
 
   public ReduceFn(Op op, DataType dataType) {

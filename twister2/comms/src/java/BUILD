@@ -26,31 +26,29 @@ java_library(
 java_binary(
     name = "comms-java-bin",
     srcs = glob(["**/*.java"]),
-    deps = common_deps_files,
-    main_class = "edu.iu.dsc.tws.comms.mpi.io.Test",
     jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"],
+    main_class = "edu.iu.dsc.tws.comms.mpi.io.Test",
+    deps = common_deps_files,
 )
 
 java_binary(
     name = "comms-java-master",
     srcs = glob(["**/*.java"]),
     deps = common_deps_files,
-    main_class = "edu.iu.dsc.tws.comms.tcp.master.TCPMaster",
-    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -Djava.util.logging.config.file=twister2/config/src/yaml/conf/nodesmpi/logger.properties"],
 )
 
 java_binary(
     name = "comms-java-channel-1",
     srcs = glob(["**/*.java"]),
-    deps = common_deps_files,
+    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006 -Djava.util.logging.config.file=twister2/config/src/yaml/conf/standalone/logger.properties"],
     main_class = "edu.iu.dsc.tws.comms.tcp.net.TCPChannel",
-    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006 -Djava.util.logging.config.file=twister2/config/src/yaml/conf/nodesmpi/logger.properties"],
+    deps = common_deps_files,
 )
 
 java_binary(
     name = "comms-java-channel-2",
     srcs = glob(["**/*.java"]),
-    deps = common_deps_files,
+    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5007 -Djava.util.logging.config.file=twister2/config/src/yaml/conf/standalone/logger.properties"],
     main_class = "edu.iu.dsc.tws.comms.tcp.net.TCPChannel",
-    jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5007 -Djava.util.logging.config.file=twister2/config/src/yaml/conf/nodesmpi/logger.properties"],
+    deps = common_deps_files,
 )

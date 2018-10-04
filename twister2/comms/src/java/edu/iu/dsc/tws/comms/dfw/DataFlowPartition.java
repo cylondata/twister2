@@ -40,7 +40,6 @@ import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer;
-import edu.iu.dsc.tws.comms.op.EdgeGenerator;
 import edu.iu.dsc.tws.comms.op.OperationSemantics;
 import edu.iu.dsc.tws.comms.routing.PartitionRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -244,9 +243,9 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
                            PartitionStratergy strategy,
                            MessageType dType, MessageType rcvType,
                            OperationSemantics sem,
-                           EdgeGenerator eGenerator) {
+                           int e) {
     this(cfg, channel, tPlan, srcs, dests, finalRcvr, partialRcvr, strategy, dType, rcvType,
-        null, null, sem, eGenerator);
+        null, null, sem, e);
     this.isKeyed = false;
   }
 
@@ -257,7 +256,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
                            MessageType dType, MessageType rcvType,
                            MessageType kType, MessageType rcvKType,
                            OperationSemantics sem,
-                           EdgeGenerator eGenerator) {
+                           int e) {
     this.instancePlan = tPlan;
     this.config = cfg;
     this.sources = srcs;
@@ -270,7 +269,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     this.receiveType = rcvType;
     this.keyType = kType;
     this.receiveKeyType = rcvKType;
-    this.edge = eGenerator.nextEdge();
+    this.edge = e;
     this.opSemantics = sem;
 
     if (keyType != null) {
@@ -388,26 +387,16 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean sendPartial(int source, Object message, int flags) {
-    if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
-      int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
-      return delegete.sendMessagePartial(source, message, 0,
-          newFlags, sendPartialRoutingParameters(source, 0));
-    } else {
-      return delegete.sendMessagePartial(source, message, 0,
-          flags, sendPartialRoutingParameters(source, 0));
-    }
+    int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
+    return delegete.sendMessagePartial(source, message, 0,
+        newFlags, sendPartialRoutingParameters(source, 0));
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags, int target) {
-    if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
-      int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
-      return delegete.sendMessagePartial(source, message, target, newFlags,
-          sendPartialRoutingParameters(source, target));
-    } else  {
-      return delegete.sendMessagePartial(source, message, target, flags,
-          sendPartialRoutingParameters(source, target));
-    }
+    int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
+    return delegete.sendMessagePartial(source, message, target, newFlags,
+        sendPartialRoutingParameters(source, target));
   }
 
   @Override
@@ -418,14 +407,9 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean send(int source, Object message, int flags, int target) {
-    if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
-      int newFlags = flags | MessageFlags.ORIGIN_SENDER;
-      return delegete.sendMessage(source, message, target, newFlags,
-          sendRoutingParameters(source, target));
-    } else  {
-      return delegete.sendMessage(source, message, target, MessageFlags.BARRIER,
-          sendRoutingParameters(source, target));
-    }
+    int newFlags = flags | MessageFlags.ORIGIN_SENDER;
+    return delegete.sendMessage(source, message, target, newFlags,
+        sendRoutingParameters(source, target));
   }
 
   public boolean isComplete() {
@@ -460,6 +444,11 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   @Override
   public TaskPlan getTaskPlan() {
     return instancePlan;
+  }
+
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edge);
   }
 
   private RoutingParameters sendRoutingParameters(int source, int path) {
@@ -587,15 +576,14 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return destinations;
   }
 
-  public MessageType getDataType() {
-    return dataType;
-  }
-
+  @Override
   public MessageType getKeyType() {
     return keyType;
   }
 
-  public int getEdge() {
-    return edge;
+  @Override
+  public MessageType getDataType() {
+    return dataType;
   }
+
 }

@@ -1,4 +1,4 @@
-load("/tools/rules/java_tests", "java_tests")
+load("//tools:rules/java_tests.bzl", "java_tests")
 
 comms_deps_files = [
     "//twister2/common/src/java:common-java",
@@ -21,9 +21,9 @@ java_tests(
         "edu.iu.dsc.tws.comms.shuffle.FSMergerTest",
         "edu.iu.dsc.tws.comms.shuffle.FSKeyedMergerTest",
         "edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMergerTest",
+        "edu.iu.dsc.tws.comms.utils.HeapTest",
     ],
     runtime_deps = [
         ":comms-tests",
     ],
-    size =  "small",
 )

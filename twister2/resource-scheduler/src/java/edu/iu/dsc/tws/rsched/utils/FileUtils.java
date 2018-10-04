@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.rsched.utils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
@@ -127,5 +128,11 @@ public final class FileUtils {
       return false;
     }
     return true;
+  }
+
+  public static String md5(File file) throws IOException {
+    try (FileInputStream fis = new FileInputStream(file)) {
+      return org.apache.commons.codec.digest.DigestUtils.md5Hex(fis);
+    }
   }
 }

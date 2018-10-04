@@ -144,8 +144,8 @@ public class RRClient {
       return null;
     }
     String messageType = message.getDescriptorForType().getFullName();
-    if (!responseHandlers.containsKey(messageType)) {
-      throw new RuntimeException("Message without a response handler");
+    if (!messageBuilders.containsKey(messageType)) {
+      throw new RuntimeException("Message without a message builder");
     }
 
     RequestID id = RequestID.generate();

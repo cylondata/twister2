@@ -113,6 +113,7 @@ public class Server implements SelectHandler {
       SocketChannel channel = connections.getKey();
       progress.removeAllInterest(channel);
 
+      channelHandler.onClose(channel);
       connections.getValue().clear();
     }
 
@@ -136,10 +137,10 @@ public class Server implements SelectHandler {
       pending = false;
       for (BaseNetworkChannel channel : connectedChannels.values()) {
         if (channel.isPending()) {
-          progress.loop();
           pending = true;
         }
       }
+      progress.loop();
       elapsed = System.currentTimeMillis() - start;
     } while (pending && elapsed < waitTime);
 
@@ -157,7 +158,7 @@ public class Server implements SelectHandler {
 
     channel.enableWriting();
 
-    TCPMessage request = new TCPMessage(buffer, edge, size);
+    TCPMessage request = new TCPMessage(buffer.duplicate(), edge, size);
     // we need to handle the false
     channel.addWriteRequest(request);
 
@@ -232,7 +233,8 @@ public class Server implements SelectHandler {
   @Override
   public void handleError(SelectableChannel ch) {
     SocketAddress channelAddress = ((SocketChannel) ch).socket().getRemoteSocketAddress();
-    LOG.finest("Connection is closed: " + channelAddress);
+    LOG.info("Connection is closed: " + channelAddress);
+
     BaseNetworkChannel channel = connectedChannels.get(ch);
     if (channel == null) {
       LOG.warning("Error occurred in non-existing channel");

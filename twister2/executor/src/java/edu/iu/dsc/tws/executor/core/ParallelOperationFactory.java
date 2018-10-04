@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.executor.comms.batch.AllReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.BroadcastBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.GatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedGatherBatchOperation;
+import edu.iu.dsc.tws.executor.comms.batch.KeyedPartitionBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.PartitionBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.ReduceBatchOperation;
@@ -29,6 +30,7 @@ import edu.iu.dsc.tws.executor.comms.streaming.AllGatherStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.AllReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.BroadcastStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.GatherStreamingOperation;
+import edu.iu.dsc.tws.executor.comms.streaming.KeyedGatherStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.KeyedPartitionStreamOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.KeyedReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.PartitionStreamingOperation;
@@ -56,33 +58,49 @@ public class ParallelOperationFactory {
   /**
    * Building the parallel operation based on the batch or streaming tasks. And also
    * the sub cateogories depends on the communication used for each edge in the task graph.
-   * ***/
+   ***/
   public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
                                   OperationMode operationMode) {
 
     if (operationMode.equals(OperationMode.BATCH)) {
-      //LOG.info("Batch Job Building ...");
       if (!edge.isKeyed()) {
         if (OperationNames.PARTITION.equals(edge.getOperation())) {
-          PartitionBatchOperation partitionOp
-              = new PartitionBatchOperation(config, channel, taskPlan);
-          partitionOp.prepare(sources, dests, edgeGenerator, edge.getDataType(), edge.getName());
-          return partitionOp;
+          Object shuffleProp = edge.getProperty("shuffle");
+          boolean shuffle = false;
+          if (shuffleProp != null && shuffleProp instanceof Boolean && (Boolean) shuffleProp) {
+            shuffle = true;
+          }
+          return new PartitionBatchOperation(config, channel, taskPlan, sources, dests,
+              edgeGenerator, edge.getDataType(), edge.getName(), shuffle);
         } else if (OperationNames.BROADCAST.equals(edge.getOperation())) {
           BroadcastBatchOperation bcastOp = new BroadcastBatchOperation(config, channel, taskPlan);
+          if (sources.size() > 1) {
+            throw new RuntimeException("Broadcast can have only one source: " + sources);
+          }
           // get the first as the source
           bcastOp.prepare(sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
               edge.getName());
           return bcastOp;
         } else if (OperationNames.GATHER.equals(edge.getOperation())) {
+          if (dests.size() > 1) {
+            throw new RuntimeException("Gather can only have one target: " + dests);
+          }
+          Object shuffleProp = edge.getProperty("shuffle");
+          boolean shuffle = false;
+          if (shuffleProp != null && shuffleProp instanceof Boolean && (Boolean) shuffleProp) {
+            shuffle = true;
+          }
           return new GatherBatchOperation(config, channel, taskPlan,
               sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
-              edge.getName());
+              edge.getName(), shuffle);
         } else if (OperationNames.ALLGATHER.equals(edge.getOperation())) {
           return new AllGatherBatchOperation(config, channel, taskPlan,
               sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName());
         } else if (OperationNames.REDUCE.equals(edge.getOperation())) {
+          if (dests.size() > 1) {
+            throw new RuntimeException("Reduce can only have one target: " + dests);
+          }
           ReduceBatchOperation reduceBatchOperation = new ReduceBatchOperation(config, channel,
               taskPlan);
           reduceBatchOperation.prepare(sources, dests.iterator().next(), edgeGenerator,
@@ -101,26 +119,34 @@ public class ParallelOperationFactory {
         } else if (OperationNames.KEYED_GATHER.equals(edge.getOperation())) {
           return new KeyedGatherBatchOperation(config, channel, taskPlan, sources,
               dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName());
-        }  else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
-          return new KeyedGatherBatchOperation(config, channel, taskPlan, sources,
-              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName());
+        } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
+          return new KeyedPartitionBatchOperation(config, channel, taskPlan, sources,
+              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName(), false);
         }
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {
-      //LOG.info("Streaming Job Building ...");
       if (!edge.isKeyed()) {
         if (OperationNames.PARTITION.equals(edge.getOperation())) {
           return new PartitionStreamingOperation(config, channel,
               taskPlan, sources, dests, edgeGenerator, edge.getDataType(), edge.getName());
         } else if (OperationNames.BROADCAST.equals(edge.getOperation())) {
+          if (sources.size() > 1) {
+            throw new RuntimeException("Broadcast can have only one source: " + sources);
+          }
           return new BroadcastStreamingOperation(config, channel,
               taskPlan, sources.iterator().next(), dests, edgeGenerator, edge.getDataType(),
               edge.getName());
         } else if (OperationNames.GATHER.equals(edge.getOperation())) {
+          if (dests.size() > 1) {
+            throw new RuntimeException("Gather can only have one target: " + dests);
+          }
           return new GatherStreamingOperation(config, channel,
               taskPlan, sources, dests.iterator().next(), edgeGenerator, edge.getDataType(),
               edge.getName(), taskPlan);
         } else if (OperationNames.REDUCE.equals(edge.getOperation())) {
+          if (dests.size() > 1) {
+            throw new RuntimeException("Reduce can only have one target: " + dests);
+          }
           return new ReduceStreamingOperation(config,
               channel, taskPlan, edge.getFunction(), sources,
               dests.iterator().next(), edgeGenerator, edge.getDataType(), edge.getName());
@@ -140,10 +166,13 @@ public class ParallelOperationFactory {
               config, channel, taskPlan, sources, dests,
               edgeGenerator, edge.getDataType(), edge.getKeyType(),
               edge.getName(), edge.getFunction());
+        } else if (OperationNames.KEYED_GATHER.equals(edge.getOperation())) {
+          return new KeyedGatherStreamingOperation(config, channel, taskPlan, sources,
+              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName());
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
           return new KeyedPartitionStreamOperation(config, channel, taskPlan, sources, dests,
-          edgeGenerator, edge.getDataType(), edge.getKeyType(),
-          edge.getName());
+              edgeGenerator, edge.getDataType(), edge.getKeyType(),
+              edge.getName());
         }
       }
     }

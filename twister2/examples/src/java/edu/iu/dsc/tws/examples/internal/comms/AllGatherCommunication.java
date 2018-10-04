@@ -286,7 +286,7 @@ public class AllGatherCommunication implements IWorker {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-all-gather")
         .setWorkerClass(AllGatherCommunication.class.getName())
-        .setRequestResource(new WorkerComputeResource(2, 1024), 4)
+        .setRequestResource(new WorkerComputeResource(2, 512), 4)
         .setConfig(jobConfig)
         .build();
 

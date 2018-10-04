@@ -11,15 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.partition;
 
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,212 +29,135 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
-import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
-import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
-import edu.iu.dsc.tws.comms.shuffle.FSMerger;
-import edu.iu.dsc.tws.comms.shuffle.Shuffle;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
-/**
- * A receiver that goes to disk
- */
 public class PartitionBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
 
   /**
-   * The receiver
+   * The receiver to be used to deliver the message
    */
-  private BulkReceiver bulkReceiver;
+  private BulkReceiver receiver;
 
   /**
-   * Sort mergers for each target
+   * The executor
    */
-  private Map<Integer, Shuffle> sortedMergers = new HashMap<>();
+  protected int executor;
 
   /**
-   * weather we need to sort the records according to key
+   * Keep the destination messages
    */
-  private boolean sorted;
+  private Map<Integer, List<Object>> targetMessages = new HashMap<>();
 
   /**
-   * Comparator for sorting records
+   * The dataflow operation
    */
-  private Comparator<Object> comparator;
+  private DataFlowOperation operation;
 
   /**
-   * The operation
+   * The lock for excluding onMessage and communicationProgress
    */
-  private DataFlowPartition partition;
+  private Lock lock = new ReentrantLock();
 
   /**
-   * Weather a keyed operation is used
+   * These sources called onFinished
    */
-  private boolean keyed;
-
-  private KryoSerializer kryoSerializer;
+  private Map<Integer, Set<Integer>> onFinishedSources = new HashMap<>();
 
   /**
    * The worker id
    */
-  private int thisWorker = 0;
+  private int thisWorker;
 
-  /**
-   * Keep track of totals for debug purposes
-   */
-  private Map<Integer, Integer> totalReceives = new HashMap<>();
+  private Set<Integer> sources;
 
-  /**
-   * Finished workers per target (target -> finished workers)
-   */
-  private Map<Integer, Set<Integer>> finishedSources = new HashMap<>();
-
-  /**
-   * After all the sources finished for a target we add to this set
-   */
-  private Set<Integer> finishedTargets = new HashSet<>();
-
-  /**
-   * We add to this set after calling receive
-   */
-  private Set<Integer> finishedTargetsCompleted = new HashSet<>();
-
-  /**
-   * Weather everyone finished
-   */
-  private Set<Integer> targets = new HashSet<>();
-
-  /**
-   * The directory in which we will be saving the shuffle objects
-   */
-  private String shuffleDirectory;
-
-  public PartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
-                                     String shuffleDir, Comparator<Object> com) {
-    this.bulkReceiver = receiver;
-    this.sorted = srt;
-    this.kryoSerializer = new KryoSerializer();
-    this.comparator = com;
-    this.shuffleDirectory = shuffleDir;
-  }
-
-  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    int maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
-    int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
-
-    thisWorker = op.getTaskPlan().getThisExecutor();
-    finishedSources = new HashMap<>();
-    partition = (DataFlowPartition) op;
-    keyed = partition.getKeyType() != null;
-    targets = new HashSet<>(expectedIds.keySet());
-
-    for (Integer target : expectedIds.keySet()) {
-      Map<Integer, Boolean> perTarget = new ConcurrentHashMap<>();
-      for (Integer exp : expectedIds.get(target)) {
-        perTarget.put(exp, false);
-      }
-
-      Shuffle sortedMerger;
-      if (partition.getKeyType() == null) {
-        sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
-            getOperationName(target), partition.getDataType());
-      } else {
-        if (sorted) {
-          sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory,
-              shuffleDirectory, getOperationName(target), partition.getKeyType(),
-              partition.getDataType(), comparator, target);
-        } else {
-          sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
-              getOperationName(target), partition.getKeyType(), partition.getDataType());
-        }
-      }
-      sortedMergers.put(target, sortedMerger);
-      totalReceives.put(target, 0);
-      finishedSources.put(target, new HashSet<>());
-    }
-    this.bulkReceiver.init(cfg, expectedIds.keySet());
+  public PartitionBatchFinalReceiver(BulkReceiver receiver) {
+    this.receiver = receiver;
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    Shuffle sortedMerger = sortedMergers.get(target);
-    if (sortedMerger == null) {
-      throw new RuntimeException("Un-expected target id: " + target);
-    }
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    executor = op.getTaskPlan().getThisExecutor();
+    thisWorker = op.getTaskPlan().getThisExecutor();
+    this.operation = op;
+    this.sources = ((DataFlowPartition) op).getSources();
 
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
-      Set<Integer> finished = finishedSources.get(target);
-      if (finished.contains(source)) {
-        LOG.log(Level.WARNING,
-            String.format("%d Duplicate finish from source id %d", this.thisWorker, source));
+    // lists to keep track of messages for destinations
+    for (int d : expectedIds.keySet()) {
+      targetMessages.put(d, new ArrayList<>());
+      onFinishedSources.put(d, new HashSet<>());
+    }
+  }
+
+  /**
+   * All message that come to the partial receiver are handled by this method. Since we currently
+   * do not have a need to know the exact source at the receiving end for the parition operation
+   * this method uses a representative source that is used when forwarding the message to its true
+   * target
+   *
+   * @param src the source of the message
+   * @param path the path that is taken by the message, that is intermediate targets
+   * @param target the target of this receiver
+   * @param flags the communication flags
+   * @param object the actual message
+   * @return true if the message was successfully forwarded or queued.
+   */
+  @Override
+  public boolean onMessage(int src, int path, int target, int flags, Object object) {
+    lock.lock();
+    try {
+      Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(target);
+      if ((flags & MessageFlags.END) == MessageFlags.END) {
+        if (onFinishedSrcsTarget.contains(src)) {
+          LOG.log(Level.WARNING,
+              String.format("%d Duplicate finish from source id %d", this.thisWorker, src));
+        } else {
+          onFinishedSrcsTarget.add(src);
+        }
+        return true;
+      }
+
+      List<Object> targetMsgList = targetMessages.get(target);
+      if (targetMsgList == null) {
+        throw new RuntimeException(String.format("%d target not exisits %d", executor, target));
+      }
+      if (object instanceof List) {
+        targetMsgList.addAll((Collection<?>) object);
       } else {
-        finished.add(source);
+        targetMsgList.add(object);
       }
-      if (finished.size() == partition.getSources().size()) {
-        finishedTargets.add(target);
-      }
-      return true;
-    }
-
-    // add the object to the map
-    if (keyed) {
-      List<KeyedContent> keyedContents = (List<KeyedContent>) object;
-      for (KeyedContent kc : keyedContents) {
-        Object data = kc.getValue();
-        byte[] d = DataSerializer.serialize(data, kryoSerializer);
-
-        sortedMerger.add(kc.getKey(), d, d.length);
-      }
-      int total = totalReceives.get(target);
-      total += keyedContents.size();
-      totalReceives.put(target, total);
-    } else {
-      List<Object> contents = (List<Object>) object;
-      for (Object kc : contents) {
-        byte[] d = DataSerializer.serialize(kc, kryoSerializer);
-        sortedMerger.add(d, d.length);
-      }
-      int total = totalReceives.get(target);
-      total += contents.size();
-      totalReceives.put(target, total);
+    } finally {
+      lock.unlock();
     }
     return true;
   }
 
   @Override
   public boolean progress() {
-    for (Shuffle sorts : sortedMergers.values()) {
-      sorts.run();
-    }
+    boolean needsFurtherProgress = false;
+    lock.lock();
+    try {
+      for (Map.Entry<Integer, Set<Integer>> entry : onFinishedSources.entrySet()) {
+        Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(entry.getKey());
 
-    for (int i : finishedTargets) {
-      if (!finishedTargetsCompleted.contains(i)) {
-        finishTarget(i);
-        finishedTargetsCompleted.add(i);
+        if (operation.isDelegeteComplete()
+            && onFinishedSrcsTarget.equals(sources)) {
+          Iterator<Map.Entry<Integer, List<Object>>> it = targetMessages.entrySet().iterator();
+          while (it.hasNext()) {
+            Map.Entry<Integer, List<Object>> e = it.next();
+            if (receiver.receive(e.getKey(), e.getValue().iterator())) {
+              it.remove();
+            } else {
+              needsFurtherProgress = true;
+            }
+          }
+        } else {
+          needsFurtherProgress = true;
+        }
       }
+    } finally {
+      lock.unlock();
     }
-
-    return !finishedTargets.equals(targets);
-  }
-
-  private void finishTarget(int target) {
-    Shuffle sortedMerger = sortedMergers.get(target);
-    sortedMerger.switchToReading();
-    Iterator<Object> itr = sortedMerger.readIterator();
-    bulkReceiver.receive(target, itr);
-    onFinish(target);
-  }
-
-  @Override
-  public void onFinish(int source) {
-  }
-
-  private String getOperationName(int target) {
-    int edge = partition.getEdge();
-    return "partition-" + edge + "-" + target + "-" + UUID.randomUUID().toString();
+    return needsFurtherProgress;
   }
 }

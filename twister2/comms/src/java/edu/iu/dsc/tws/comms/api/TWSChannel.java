@@ -65,4 +65,9 @@ public interface TWSChannel {
    * @return the byte buffer
    */
   ByteBuffer createBuffer(int capacity);
+
+  /**
+   * Close the channel
+   */
+  void close();
 }

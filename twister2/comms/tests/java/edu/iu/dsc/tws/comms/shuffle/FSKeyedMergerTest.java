@@ -28,6 +28,7 @@ import org.junit.Test;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class FSKeyedMergerTest {
   private static final Logger LOG = Logger.getLogger(FSMergerTest.class.getName());
 

@@ -15,7 +15,7 @@ java_library(
     name = "config-java",
     srcs = glob(["**/config/*.java"]),
     deps = [
-        "@org_yaml_snakeyaml//jar",
         "@com_google_protobuf_protobuf_java//jar",
+        "@org_yaml_snakeyaml//jar",
     ],
 )

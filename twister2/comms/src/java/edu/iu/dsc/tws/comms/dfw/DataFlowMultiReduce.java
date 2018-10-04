@@ -161,6 +161,11 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     return taskPlan;
   }
 
+  @Override
+  public String getUniqueId() {
+    return String.valueOf(edges.toArray()[0]);
+  }
+
   /**
    * Initialize
    */
@@ -196,6 +201,16 @@ public class DataFlowMultiReduce implements DataFlowOperation {
   public boolean sendPartial(int source, Object message, int flags) {
     // now what we need to do
     throw new RuntimeException("Not implemented");
+  }
+
+  @Override
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  @Override
+  public MessageType getDataType() {
+    return dataType;
   }
 
   private class ReducePartialReceiver implements MessageReceiver {

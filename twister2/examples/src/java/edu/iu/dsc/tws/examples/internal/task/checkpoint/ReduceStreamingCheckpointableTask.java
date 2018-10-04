@@ -90,7 +90,7 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
           LOG.info(String.format("%d %d Reduce sent count : %d", ctx.getWorkerId(),
               ctx.taskId(), count));
         }
-        if (count % 100000 == 0) {
+        if (count % 10000 == 0) {
           checkForBarrier();
         }
       }

@@ -140,7 +140,7 @@ public class Client implements SelectHandler {
     buffer.position(0);
 
     channel.enableWriting();
-    TCPMessage request = new TCPMessage(buffer, edge, size);
+    TCPMessage request = new TCPMessage(buffer.duplicate(), edge, size);
     if (channel.addWriteRequest(request)) {
       return request;
     }
@@ -172,7 +172,7 @@ public class Client implements SelectHandler {
     try {
       socketChannel.close();
       // we call the onclose with null value
-      channelHandler.onClose(null);
+      channelHandler.onClose(socketChannel);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to stop Client", e);
     }

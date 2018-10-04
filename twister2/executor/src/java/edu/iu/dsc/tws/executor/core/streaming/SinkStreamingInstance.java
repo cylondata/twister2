@@ -105,14 +105,15 @@ public class SinkStreamingInstance  implements INodeInstance {
     while (!streamingInQueue.isEmpty()) {
       IMessage message = streamingInQueue.poll();
       if (message != null) {
-        if ((message.getFlag() & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
+        if ((message.getFlag() & MessageFlags.SYNC) != MessageFlags.SYNC) {
           streamingTask.execute(message);
         } else {
           //Send acknowledge message to jobmaster
           LOG.info("Barrier message received in Sink " + streamingTaskId
               + " from source " + message.sourceTask());
-
-          ((SinkCheckpointableTask) streamingTask).receivedValidBarrier(message);
+          if (storeSnapshot()) {
+            ((SinkCheckpointableTask) streamingTask).receivedValidBarrier(message);
+          }
         }
       }
 
@@ -136,5 +137,9 @@ public class SinkStreamingInstance  implements INodeInstance {
 
   public BlockingQueue<IMessage> getstreamingInQueue() {
     return streamingInQueue;
+  }
+
+  public boolean storeSnapshot() {
+    return true;
   }
 }

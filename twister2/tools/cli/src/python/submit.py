@@ -36,7 +36,7 @@ def create_parser(subparsers):
     parser = subparsers.add_parser(
         'submit',
         help='Submit a job',
-        usage="%(prog)s [options] cluster " + \
+        usage="%(prog)s cluster " + \
               "job-type job-file-name job-class-name [job-args]",
         add_help=True
     )
@@ -102,8 +102,7 @@ def submit_fatjar(cl_args, unknown_args):
 
     if not res.is_successful():
         err_context = ("Failed to create job definition " \
-                       "file when executing class '%s' of file '%s', Incorrect class file or build"
-                       " issue") % (main_class, job_file)
+                       "Please check logs for more information")
         res.add_context(err_context)
         return res
 
