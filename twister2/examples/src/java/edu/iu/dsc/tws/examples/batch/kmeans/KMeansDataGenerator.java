@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.util.Random;
@@ -26,7 +27,7 @@ import edu.iu.dsc.tws.data.utils.HdfsUtils;
 
 /**
  * This class is to generate the datapoints and centroid values in a random manner and write the
- * datapoints and centroid values in the file.
+ * datapoints and centroid values in the local filesystem or distributed filesystem.
  */
 public class KMeansDataGenerator {
 
@@ -40,8 +41,7 @@ public class KMeansDataGenerator {
    * points, required dimension, minimum and maximum value (for the random number generation).
    */
   public static void generateDataPointsFile(String fileName, int numPoints, int dimension,
-                                            int seedValue, Config config,
-                                            String fileSys) {
+                                            int seedValue, Config config, String fileSys) {
 
     StringBuffer datapoints = new StringBuffer();
     Random r = new Random(seedValue);
@@ -69,8 +69,7 @@ public class KMeansDataGenerator {
    * centroids, required dimension, minimum and maximum value (for the random number generation).
    */
   public static void generateCentroidFile(String fileName, int numCentroids, int dimension,
-                                          int seedValue, Config config,
-                                          String fileSys) {
+                                          int seedValue, Config config, String fileSys) {
 
     StringBuffer centroids = new StringBuffer();
     Random r = new Random(seedValue);
@@ -99,29 +98,32 @@ public class KMeansDataGenerator {
    */
   private static void writeToPointsFile(String datapoints, String fileName, Config config,
                                         String fileSystem) {
-
     BufferedWriter bufferedWriter = null;
     StringTokenizer stringTokenizer = new StringTokenizer(datapoints, "\n");
 
+    HadoopFileSystem hadoopFileSystem = null;
     HadoopDataOutputStream dataOutputStream = null;
     try {
       if ("hdfs".equals(fileSystem)) {
         HdfsUtils hdfsUtils = new HdfsUtils(config, fileName);
-        HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+        hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
         Path path = hdfsUtils.getPath();
 
-        if (!hadoopFileSystem.exists(path)) {
-          dataOutputStream = hadoopFileSystem.create(path);
-          bufferedWriter = new BufferedWriter(new OutputStreamWriter(dataOutputStream, "UTF-8"));
-          while (stringTokenizer.hasMoreTokens()) {
-            String out = stringTokenizer.nextToken().trim();
-            bufferedWriter.write(out);
-            bufferedWriter.write("\n");
-          }
-        } else {
-          throw new RuntimeException("File already exists in the hdfs, remove it from hdfs");
+        if (hadoopFileSystem.exists(path)) {
+          hadoopFileSystem.delete(path, false);
+        }
+        dataOutputStream = hadoopFileSystem.create(path);
+        bufferedWriter = new BufferedWriter(new OutputStreamWriter(dataOutputStream, "UTF-8"));
+        while (stringTokenizer.hasMoreTokens()) {
+          String out = stringTokenizer.nextToken().trim();
+          bufferedWriter.write(out);
+          bufferedWriter.write("\n");
         }
       } else if ("local".equals(fileSystem)) {
+        File file = new File(fileName);
+        if (file.exists()) {
+          file.delete();
+        }
         bufferedWriter = new BufferedWriter(new FileWriter(fileName));
         while (stringTokenizer.hasMoreTokens()) {
           bufferedWriter.write(stringTokenizer.nextToken().trim());
@@ -129,7 +131,7 @@ public class KMeansDataGenerator {
         }
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      throw new RuntimeException("Failed to write to file", e);
     } finally {
       try {
         bufferedWriter.flush();
@@ -137,11 +139,13 @@ public class KMeansDataGenerator {
         if (dataOutputStream != null) {
           dataOutputStream.close();
         }
+        if (hadoopFileSystem != null) {
+          hadoopFileSystem.close();
+        }
       } catch (Exception e) {
-        e.printStackTrace();
+        throw new RuntimeException("Failed to close file'", e);
       }
     }
-
   }
 
   /**
@@ -152,26 +156,29 @@ public class KMeansDataGenerator {
                                           Config config, String fileSystem) {
     BufferedWriter bufferedWriter = null;
     StringTokenizer stringTokenizer = new StringTokenizer(datapoints, "\n");
+    HadoopFileSystem hadoopFileSystem = null;
     HadoopDataOutputStream dataOutputStream = null;
     try {
       if ("hdfs".equals(fileSystem)) {
         HdfsUtils hdfsUtils = new HdfsUtils(config, fileName);
-        HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+        hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
         Path path = hdfsUtils.getPath();
 
-        if (!hadoopFileSystem.exists(path)) {
-          dataOutputStream = hadoopFileSystem.create(path);
-          bufferedWriter = new BufferedWriter(new OutputStreamWriter(dataOutputStream, "UTF-8"));
-
-          while (stringTokenizer.hasMoreTokens()) {
-            String out = stringTokenizer.nextToken().trim();
-            bufferedWriter.write(out);
-            bufferedWriter.write("\n");
-          }
-        } else {
-          throw new RuntimeException("File already exists in the hdfs, remove it from hdfs");
+        if (hadoopFileSystem.exists(path)) {
+          hadoopFileSystem.delete(path, false);
+        }
+        dataOutputStream = hadoopFileSystem.create(path);
+        bufferedWriter = new BufferedWriter(new OutputStreamWriter(dataOutputStream, "UTF-8"));
+        while (stringTokenizer.hasMoreTokens()) {
+          String out = stringTokenizer.nextToken().trim();
+          bufferedWriter.write(out);
+          bufferedWriter.write("\n");
         }
       } else if ("local".equals(fileSystem)) {
+        File file = new File(fileName);
+        if (file.exists()) {
+          file.delete();
+        }
         bufferedWriter = new BufferedWriter(new FileWriter(fileName));
         while (stringTokenizer.hasMoreTokens()) {
           bufferedWriter.write(stringTokenizer.nextToken().trim());
@@ -179,7 +186,7 @@ public class KMeansDataGenerator {
         }
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      throw new RuntimeException("Failed to write centroids file", e);
     } finally {
       try {
         bufferedWriter.flush();
@@ -187,8 +194,11 @@ public class KMeansDataGenerator {
         if (dataOutputStream != null) {
           dataOutputStream.close();
         }
+        if (hadoopFileSystem != null) {
+          hadoopFileSystem.close();
+        }
       } catch (Exception e) {
-        e.printStackTrace();
+        throw new RuntimeException("Failed to close file", e);
       }
     }
   }

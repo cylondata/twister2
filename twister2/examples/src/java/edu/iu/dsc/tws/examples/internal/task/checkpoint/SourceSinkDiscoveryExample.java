@@ -170,7 +170,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("source-sink-discovery-example");
     jobBuilder.setWorkerClass(SourceSinkDiscoveryExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

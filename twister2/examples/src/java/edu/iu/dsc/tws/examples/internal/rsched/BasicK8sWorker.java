@@ -23,6 +23,11 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
@@ -73,6 +78,7 @@ public class BasicK8sWorker implements IWorker {
 
     printWorkersPerNode(workersPerNode);
 
+//    listHdfsDir();
 //    sleepSomeTime(50);
     echoServer(workerController.getWorkerNetworkInfo());
   }
@@ -151,4 +157,39 @@ public class BasicK8sWorker implements IWorker {
     LOG.info("Workers per node: " + toPrint.toString());
   }
 
+  /**
+   * a method to test hdfs access from workers
+   */
+  public void listHdfsDir() {
+
+    String directory = "/user/hadoop/kmeans/";
+//    String directory = ".";
+    LOG.info("************************************ Will list hdfs directory: " + directory);
+
+    System.setProperty("HADOOP_USER_NAME", "hadoop");
+    String hdfsPath = "hdfs://149.165.150.81:9000";
+    Configuration conf = new Configuration();
+    conf.set("fs.defaultFS", hdfsPath);
+    conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+    conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+
+    try {
+      FileSystem fileSystem = FileSystem.get(conf);
+
+      Path path = new Path(directory);
+      if (!fileSystem.exists(path)) {
+        LOG.info("Directory [" + directory + "] does not exists");
+        return;
+      }
+      LOG.info("Files in the directory: " + path.getName());
+      int i = 0;
+
+      for (FileStatus fileStatus: fileSystem.listStatus(path)) {
+        LOG.info(i++ + ": " + fileStatus.getPath().toUri() + "\t" + fileStatus.getLen() + " bytes");
+      }
+      fileSystem.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
 }

@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -102,7 +101,7 @@ public class TaskExecutor {
    */
   public void execute(DataFlowTaskGraph graph, ExecutionPlan plan) {
     Executor executor = new Executor(config, workerID, plan, communicator.getChannel(),
-        OperationMode.BATCH);
+        graph.getOperationMode());
     executor.execute();
   }
 

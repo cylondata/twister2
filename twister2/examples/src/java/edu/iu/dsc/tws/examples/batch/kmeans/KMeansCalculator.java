@@ -50,7 +50,6 @@ public class KMeansCalculator {
   /**
    * This method invokes the findnearestcenter method to find the datapoints closer to the centroid
    * values. The calculated value is assigned to the KMeansCenters object and return the same.
-   * @return
    */
   public KMeansCenters calculate() {
     findNearestCenter(dimension, points, centroids);
@@ -63,10 +62,6 @@ public class KMeansCalculator {
    * data points assigned to the task (i.e from start index to end index) and the centroid values.
    * The calculated centroid values and the number of data points closer to the particular centroid
    * values assigned to the centerSums array object.
-   * @param dim
-   * @param datapoints
-   * @param centers
-   * @return
    */
   public double[][] findNearestCenter(int dim, double[][] datapoints,
                                       double[][] centers) {
@@ -99,10 +94,6 @@ public class KMeansCalculator {
 
   /**
    * This method calculates the distance between the datapoint and the centroid value.
-   * @param value1
-   * @param value2
-   * @param length
-   * @return
    */
   public double calculateEuclideanDistance(double[] value1, double[] value2, int length) {
     double sum = 0;

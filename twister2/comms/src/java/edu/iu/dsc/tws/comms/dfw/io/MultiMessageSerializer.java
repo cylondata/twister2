@@ -113,11 +113,9 @@ public class MultiMessageSerializer implements MessageSerializer {
           sendMessage.getSerializationState().setTotalBytes(0);
         } else {
           // first we need to serialize the body if needed
-          if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED
-              && sendMessage.getSerializationState().getData() == null) {
-            if (!channelMessage.isHeaderSent()) {
+          if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+            if (sendMessage.getChannelMessage().getBuffers().size() == 0) {
               buildHeader(buffer, sendMessage);
-              channelMessage.setPartial(true);
             }
           }
           serializeBody(message, sendMessage, buffer);
@@ -130,11 +128,13 @@ public class MultiMessageSerializer implements MessageSerializer {
         SerializeState state = sendMessage.getSerializationState();
 
         int totalBytes = state.getTotalBytes();
+        int currentSize = channelMessage.getBuffers().get(0).getByteBuffer().getInt(
+            HEADER_SIZE - Integer.BYTES);
         channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
-            totalBytes);
+            currentSize + totalBytes);
 
         MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-            sendMessage.getEdge(), totalBytes);
+            sendMessage.getEdge(), currentSize + totalBytes);
         builder.destination(sendMessage.getPath());
         channelMessage.setHeader(builder.build());
         state.setTotalBytes(0);
@@ -145,25 +145,32 @@ public class MultiMessageSerializer implements MessageSerializer {
         SerializeState state = sendMessage.getSerializationState();
 
         if (channelMessage.isPartial()) {
-          if (!channelMessage.isHeaderSent()) {
-            int totalBytes = state.getCurretHeaderLength();
-            channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
-                totalBytes);
-
-            MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-                sendMessage.getEdge(), totalBytes);
-            builder.destination(sendMessage.getPath());
-            channelMessage.setHeader(builder.build());
-            channelMessage.setHeaderSent(true);
-          }
+          throw new UnsupportedOperationException("Code trying to break large single object into"
+              + "multiple messages, this is not supported currently please increase"
+              + " network buffer sizes");
+//          if (!channelMessage.isHeaderSent()) {
+//            int totalBytes = state.getCurretHeaderLength();
+//            int currentSize = channelMessage.getBuffers().get(0).getByteBuffer().getInt(
+//                HEADER_SIZE - Integer.BYTES);
+//            channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
+//                currentSize + totalBytes);
+//
+//            MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+//                sendMessage.getEdge(), currentSize + totalBytes);
+//            builder.destination(sendMessage.getPath());
+//            channelMessage.setHeader(builder.build());
+//            channelMessage.setHeaderSent(true);
+//          }
         } else {
           int totalBytes = state.getTotalBytes();
           //Need to calculate the true total bites since a part of the message may come separately
+          int currentSize = channelMessage.getBuffers().get(0).getByteBuffer().getInt(
+              HEADER_SIZE - Integer.BYTES);
           channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
-              totalBytes);
+              currentSize + totalBytes);
 
           MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-              sendMessage.getEdge(), totalBytes);
+              sendMessage.getEdge(), currentSize + totalBytes);
           builder.destination(sendMessage.getPath());
           channelMessage.setHeader(builder.build());
         }

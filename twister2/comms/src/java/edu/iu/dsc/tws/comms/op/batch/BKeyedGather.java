@@ -37,7 +37,7 @@ public class BKeyedGather {
   public BKeyedGather(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> destinations,
                       MessageType kType, MessageType dType,
-                      BulkReceiver rcvr, DestinationSelector destSelector) {
+                      BulkReceiver rcvr, DestinationSelector destSelector, boolean shuffle) {
     this.keyType = kType;
     this.dataType = dType;
     Set<Integer> edges = new HashSet<>();
@@ -45,8 +45,9 @@ public class BKeyedGather {
       edges.add(comm.nextEdge());
     }
     this.keyedGather = new DataFlowMultiGather(comm.getChannel(), sources, destinations,
-        new GatherMultiBatchFinalReceiver(rcvr), new GatherMultiBatchPartialReceiver(), edges,
-        kType, dType);
+        new GatherMultiBatchFinalReceiver(rcvr, shuffle, false, comm.getPersistentDirectory(),
+            null), new GatherMultiBatchPartialReceiver(),
+        edges, kType, dType);
     this.keyedGather.init(comm.getConfig(), dType, plan, comm.nextEdge());
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(sources, destinations);
@@ -55,7 +56,8 @@ public class BKeyedGather {
   public BKeyedGather(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> destinations,
                       MessageType kType, MessageType dType, BulkReceiver rcvr,
-                      Comparator<Object> comparator, DestinationSelector destSelector) {
+                      Comparator<Object> comparator, DestinationSelector destSelector,
+                      boolean shuffle) {
     this.keyType = kType;
     this.dataType = dType;
     Set<Integer> edges = new HashSet<>();
@@ -63,7 +65,8 @@ public class BKeyedGather {
       edges.add(comm.nextEdge());
     }
     this.keyedGather = new DataFlowMultiGather(comm.getChannel(), sources, destinations,
-        new GatherMultiBatchFinalReceiver(rcvr), new GatherMultiBatchPartialReceiver(), edges,
+        new GatherMultiBatchFinalReceiver(rcvr, shuffle, true, comm.getPersistentDirectory(),
+            comparator), new GatherMultiBatchPartialReceiver(), edges,
         kType, dType);
     this.keyedGather.init(comm.getConfig(), dType, plan, comm.nextEdge());
     this.destinationSelector = destSelector;

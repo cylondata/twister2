@@ -162,7 +162,7 @@ public final class RequestObjectBuilder {
     }
 
     // if openmpi is used, we initialize a Secret volume on each pod
-    if (KubernetesContext.workersUseOpenMPI(config)) {
+    if (SchedulerContext.useOpenMPI(config)) {
       String secretName = KubernetesContext.secretName(config);
       V1Volume secretVolume = createSecretVolumeObject(secretName);
       volumes.add(secretVolume);
@@ -173,7 +173,7 @@ public final class RequestObjectBuilder {
     int containersPerPod = KubernetesContext.workersPerPod(config);
 
     // if openmpi is used, we initialize only one container for each pod
-    if (KubernetesContext.workersUseOpenMPI(config)) {
+    if (SchedulerContext.useOpenMPI(config)) {
       containersPerPod = 1;
     }
 
@@ -267,7 +267,7 @@ public final class RequestObjectBuilder {
     double cpuPerContainer = Context.workerCPU(config);
     int ramPerContainer = Context.workerRAM(config);
 
-    if (KubernetesContext.workersUseOpenMPI(config)) {
+    if (SchedulerContext.useOpenMPI(config)) {
       startScript = "./init_openmpi.sh";
       cpuPerContainer = cpuPerContainer * KubernetesContext.workersPerPod(config);
       ramPerContainer = ramPerContainer * KubernetesContext.workersPerPod(config);
@@ -307,7 +307,7 @@ public final class RequestObjectBuilder {
     }
 
     // mount Secret object as a volume
-    if (KubernetesContext.workersUseOpenMPI(config)) {
+    if (SchedulerContext.useOpenMPI(config)) {
       V1VolumeMount persVolumeMount = new V1VolumeMount();
       persVolumeMount.setName(KubernetesConstants.SECRET_VOLUME_NAME);
       persVolumeMount.setMountPath(KubernetesConstants.SECRET_VOLUME_MOUNT);
@@ -379,7 +379,7 @@ public final class RequestObjectBuilder {
         .name(K8sEnvVariables.JOB_MASTER_IP + "")
         .value(masterAddress));
 
-    if (KubernetesContext.workersUseOpenMPI(config)) {
+    if (SchedulerContext.useOpenMPI(config)) {
 
       envVars.add(new V1EnvVar()
           .name(K8sEnvVariables.CLASS_TO_RUN + "")

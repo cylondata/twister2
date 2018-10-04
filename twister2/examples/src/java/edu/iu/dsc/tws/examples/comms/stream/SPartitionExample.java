@@ -11,21 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.stream;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.op.stream.SPartition;
 import edu.iu.dsc.tws.examples.Utils;
@@ -56,7 +52,8 @@ public class SPartitionExample extends BenchWorker {
 
     // create the communication
     partition = new SPartition(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector());
+        MessageType.INTEGER, new PartitionStreamingFinalReceiver(new PartitionReceiver()),
+        new LoadBalanceSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -87,28 +84,21 @@ public class SPartitionExample extends BenchWorker {
     return true;
   }
 
-  public class PartitionReceiver implements MessageReceiver {
+  public class PartitionReceiver implements BulkReceiver {
     private int count = 0;
     private int expected;
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      int exp = 0;
-      for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-        exp += e.getValue().size();
-      }
-      DataFlowPartition p = (DataFlowPartition) op;
-      exp /= p.getDestinations().size();
-      expected = exp * jobParameters.getIterations();
+    public void init(Config cfg, Set<Integer> targets) {
+      expected = jobParameters.getTaskStages().get(0)
+          * jobParameters.getIterations() / jobParameters.getTaskStages().get(1);
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      if (object instanceof List) {
-        count += ((List) object).size();
-        ArrayList<?> a = (ArrayList<?>) object;
-        int[] b = (int[]) a.get(0);
-        LOG.info(target + " : Response : " + Arrays.toString(b));
+    public boolean receive(int target, Iterator<Object> it) {
+      while (it.hasNext()) {
+        Object object = it.next();
+        count += 1;
       }
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, count, expected));
@@ -119,11 +109,6 @@ public class SPartitionExample extends BenchWorker {
       }
 
       return true;
-    }
-
-    @Override
-    public boolean progress() {
-      return false;
     }
   }
 

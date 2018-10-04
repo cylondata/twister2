@@ -212,7 +212,7 @@ public class AllReduceCommunication implements IWorker {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-all-reduce")
         .setWorkerClass(AllReduceCommunication.class.getName())
-        .setRequestResource(new WorkerComputeResource(2, 1024), 4)
+        .setRequestResource(new WorkerComputeResource(2, 512), 4)
         .setConfig(jobConfig)
         .build();
 

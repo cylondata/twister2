@@ -56,6 +56,7 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       messages.put(e.getKey(), new ArrayBlockingQueue<>(sendPendingMax));
     }
+    this.receiver.init(cfg, expectedIds.keySet());
   }
 
   @Override
@@ -94,6 +95,7 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   @SuppressWarnings({"unchecked", "rawtypes"})
   @Override
   public boolean progress() {
+    boolean needsFurtherProgress = false;
     // we always send messages from before barrier map
     for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
       Integer target = e.getKey();
@@ -104,11 +106,13 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
           boolean offer = receiver.receive(target, ((List<Object>) msg).iterator());
           if (offer) {
             inComingMessages.poll();
+          } else {
+            needsFurtherProgress = true;
           }
         }
       }
     }
-    return true;
+    return needsFurtherProgress;
   }
 
 

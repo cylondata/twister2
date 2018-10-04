@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
-import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
+import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
@@ -47,7 +47,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
     this.edgeGenerator = e;
     op = new BKeyedReduce(channel, taskPlan, sources, dests, new ReduceFunctionImpl(function),
         new BulkReceiverImpl(), Utils.dataTypeToMessageType(keyType),
-        Utils.dataTypeToMessageType(dataType), new HashingSelector());
+        Utils.dataTypeToMessageType(dataType), new LoadBalanceSelector());
     communicationEdge = e.generate(edgeName);
   }
 

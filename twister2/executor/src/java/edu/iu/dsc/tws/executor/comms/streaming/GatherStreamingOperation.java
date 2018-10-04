@@ -11,15 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.streaming;
 
-import java.util.List;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.stream.SGather;
@@ -61,29 +58,18 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
   }
 
 
-  private class GatherRcvr implements MessageReceiver {
-    // lets keep track of the messages
-    // for each task we need to keep track of incoming messages
+  private class GatherRcvr implements BulkReceiver {
     @Override
-    public void init(Config cfg, DataFlowOperation operation,
-                     Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> targets) {
+
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      TaskMessage msg = new TaskMessage(object,
+    public boolean receive(int target, Iterator<Object> it) {
+
+      TaskMessage msg = new TaskMessage(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
-      BlockingQueue<IMessage> messages = outMessages.get(target);
-      if (messages != null) {
-        return messages.offer(msg);
-      } else {
-        throw new RuntimeException("Un-expected target message: " + target);
-      }
-    }
-
-    @Override
-    public boolean progress() {
-      return false;
+      return outMessages.get(target).offer(msg);
     }
   }
 }

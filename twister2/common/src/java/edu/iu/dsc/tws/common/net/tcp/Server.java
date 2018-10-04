@@ -137,10 +137,10 @@ public class Server implements SelectHandler {
       pending = false;
       for (BaseNetworkChannel channel : connectedChannels.values()) {
         if (channel.isPending()) {
-          progress.loop();
           pending = true;
         }
       }
+      progress.loop();
       elapsed = System.currentTimeMillis() - start;
     } while (pending && elapsed < waitTime);
 
@@ -158,7 +158,7 @@ public class Server implements SelectHandler {
 
     channel.enableWriting();
 
-    TCPMessage request = new TCPMessage(buffer, edge, size);
+    TCPMessage request = new TCPMessage(buffer.duplicate(), edge, size);
     // we need to handle the false
     channel.addWriteRequest(request);
 

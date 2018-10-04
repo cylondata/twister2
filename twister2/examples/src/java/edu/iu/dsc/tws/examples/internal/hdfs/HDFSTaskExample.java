@@ -68,7 +68,7 @@ public class HDFSTaskExample implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("hdfstask-example");
     jobBuilder.setWorkerClass(HDFSTaskExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 2);
+    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 2);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

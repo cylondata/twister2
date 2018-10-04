@@ -43,18 +43,18 @@ public class SBroadcastExample extends BenchWorker {
         jobParameters.getTaskStages(), workerList);
 
     Set<Integer> targets = new HashSet<>();
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
+    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
+    for (int i = 1; i < noOfTargetTasks + 1; i++) {
       targets.add(i);
     }
-    int source = noOfSourceTasks;
+    int source = 0;
 
     // create the communication
     bcast = new SBroadCast(communicator, taskPlan, source, targets,
         MessageType.INTEGER, new BCastReceiver());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
-        jobParameters.getTaskStages(), 1);
+        jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
@@ -76,8 +76,6 @@ public class SBroadcastExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-//    LOG.log(Level.INFO, String.format("%d Reduce %b sources %b pending %b",
-//        workerId, bCastDone, sourcesDone, bcast.hasPending()));
     return bCastDone && sourcesDone && !bcast.hasPending();
   }
 
@@ -102,7 +100,7 @@ public class SBroadcastExample extends BenchWorker {
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
       count++;
-      if (count % 10 == 0) {
+      if (count % jobParameters.getPrintInterval() == 0) {
         LOG.log(Level.INFO, String.format("%d Received message to %d - %d",
             workerId, target, count));
       }

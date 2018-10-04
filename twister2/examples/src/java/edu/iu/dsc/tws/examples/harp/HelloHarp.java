@@ -17,13 +17,13 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.task.harp.HarpWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.harp.HarpWorker;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.harp.collective.BcastCollective;
 import edu.iu.harp.combiner.ByteArrCombiner;
@@ -88,7 +88,7 @@ public class HelloHarp extends HarpWorker {
         .setName("hello-harp-job")
         .setWorkerClass(HelloHarp.class)
         .setRequestResource(
-            new WorkerComputeResource(2, 1024),
+            new WorkerComputeResource(1, 512),
             numberOfWorkers
         )
         .setConfig(jobConfig)

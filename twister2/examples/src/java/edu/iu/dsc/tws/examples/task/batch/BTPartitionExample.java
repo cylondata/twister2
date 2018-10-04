@@ -29,14 +29,14 @@ public class BTPartitionExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseBatchSource g = new SourceBatchTask(edge);
     BaseBatchSink r = new PartitionSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
     return taskGraphBuilder;
   }
@@ -48,14 +48,34 @@ public class BTPartitionExample extends BenchTaskWorker {
     @Override
     public boolean execute(IMessage message) {
 
+      Object object = message.getContent();
+
       if (message.getContent() instanceof Iterator) {
         while (((Iterator) message.getContent()).hasNext()) {
           ((Iterator) message.getContent()).next();
           count++;
         }
-        if (count % 1 == 0) {
-          LOG.info("Message Partition Received : " + message.getContent()
-              + ", Count : " + count);
+        /*if (count % jobParameters.getPrintInterval() == 0) {
+          Object object = message.getContent();
+          experimentData.setOutput(object);
+          try {
+            verify(OperationNames.PARTITION);
+          } catch (VerificationException e) {
+            LOG.info("Exception Message : " + e.getMessage());
+          }
+        }*/
+        if (count % jobParameters.getPrintInterval() == 0) {
+          LOG.info("Received : " + object.getClass().getName());
+          if (object instanceof Iterator<?>) {
+            Iterator<?> itr = (Iterator<?>) object;
+            LOG.info("INstance : " + itr.getClass().getName());
+            LOG.info("ITr next : " + itr.hasNext());
+            while (itr.hasNext()) {
+              Object res = itr.next();
+              LOG.info("Message Partition Received : " + res.getClass().getName()
+                  + ", Count : " + count);
+            }
+          }
         }
       }
 

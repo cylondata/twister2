@@ -88,7 +88,7 @@ public class HelloWorld implements IWorker {
 Now lets run this class. Lets go inside the twister2 distibution and execute the following command from twister2 root directory.
 
 ```bash
-./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
 ```
 
 When this runs it will print a logs like this in to the console.
@@ -195,7 +195,7 @@ return true;
 Here is the command to run this example
 
 ```bash
-./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.WordCountJob
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.WordCountJob
 ```
 
 It will output the words and their counts on the console and below is an small sample.

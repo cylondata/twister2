@@ -30,9 +30,6 @@ public class KMeansLocalFileReader {
   /**
    * It reads the datapoints from the corresponding file and store the data in a two-dimensional
    * array for the later processing.
-   * @param fName
-   * @param dimension
-   * @return
    */
   public double[][] readDataPoints(String fName, int dimension) {
 
@@ -69,31 +66,9 @@ public class KMeansLocalFileReader {
   }
 
   /**
-   * It calculates the number of lines in the file name.
-   * @param fileName
-   * @return
-   */
-  public int getNumberOfLines(String fileName) {
-
-    int numberOfLines = 0;
-    try {
-      File file = new File(fileName);
-      LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(file));
-      lineNumberReader.skip(Long.MAX_VALUE);
-      numberOfLines = lineNumberReader.getLineNumber();
-      lineNumberReader.close();
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
-    }
-    return numberOfLines;
-  }
-
-  /**
    * It reads the datapoints from the corresponding file and store the data in a two-dimensional
-   * array for the later processing.
-   * @param fileName
-   * @param dimension
-   * @return
+   * array for the later processing. The size of the two-dimensional array should be equal to the
+   * number of clusters and the dimension considered for the clustering process.
    */
   public double[][] readCentroids(String fileName, int dimension, int numberOfClusters) {
 
@@ -111,8 +86,6 @@ public class KMeansLocalFileReader {
         }
         value++;
       }
-      bufferedReader.close();
-
     } catch (IOException e) {
       e.printStackTrace();
     } finally {
@@ -124,5 +97,24 @@ public class KMeansLocalFileReader {
     }
     return centroids;
   }
+
+  /**
+   * It calculates the number of lines in the file name.
+   */
+  private int getNumberOfLines(String fileName) {
+
+    int noOfLines = 0;
+    try {
+      File file = new File(fileName);
+      LineNumberReader numberReader = new LineNumberReader(new FileReader(file));
+      numberReader.skip(Long.MAX_VALUE);
+      noOfLines = numberReader.getLineNumber();
+      numberReader.close();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+    return noOfLines;
+  }
+
 }
 

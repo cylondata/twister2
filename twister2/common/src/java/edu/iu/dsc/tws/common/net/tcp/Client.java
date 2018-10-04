@@ -140,7 +140,7 @@ public class Client implements SelectHandler {
     buffer.position(0);
 
     channel.enableWriting();
-    TCPMessage request = new TCPMessage(buffer, edge, size);
+    TCPMessage request = new TCPMessage(buffer.duplicate(), edge, size);
     if (channel.addWriteRequest(request)) {
       return request;
     }

@@ -17,8 +17,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 
 /**
- * This class is responsible for reading the input datapoints and the centroid values from the local
- * file system.
+ * This class acts as an interface for reading the input datapoints and centroid values from
+ * the local file system or from the distributed file system (HDFS).
  */
 public class KMeansFileReader {
 
@@ -33,11 +33,8 @@ public class KMeansFileReader {
   }
 
   /**
-   * It reads the datapoints from the corresponding file and store the data in a two-dimensional
-   * array for the later processing.
-   * @param fName
-   * @param dimension
-   * @return
+   * It reads the datapoints from the corresponding file system and store the data in a two
+   * -dimensional array for the later processing.
    */
   public double[][] readDataPoints(String fName, int dimension) {
 
@@ -50,17 +47,13 @@ public class KMeansFileReader {
       KMeansHDFSFileReader kMeansHDFSFileReader = new KMeansHDFSFileReader(this.config);
       dataPoints = kMeansHDFSFileReader.readDataPoints(fName, dimension);
     }
-
     LOG.fine("%%%% Datapoints:" + Arrays.deepToString(dataPoints));
     return dataPoints;
   }
 
   /**
-   * It reads the datapoints from the corresponding file and store the data in a two-dimensional
-   * array for the later processing.
-   * @param fileName
-   * @param dimension
-   * @return
+   * It reads the datapoints from the corresponding file system and store the data in a two
+   * -dimensional array for the later processing.
    */
   public double[][] readCentroids(String fileName, int dimension, int numberOfClusters) {
 
@@ -73,7 +66,6 @@ public class KMeansFileReader {
       KMeansHDFSFileReader kMeansHDFSFileReader = new KMeansHDFSFileReader(this.config);
       centroids = kMeansHDFSFileReader.readCentroids(fileName, dimension, numberOfClusters);
     }
-
     LOG.fine("%%%% Centroids:" + Arrays.deepToString(centroids));
     return centroids;
   }

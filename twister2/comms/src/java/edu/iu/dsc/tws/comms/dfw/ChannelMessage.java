@@ -231,6 +231,13 @@ public class ChannelMessage {
       }
 //      LOG.info(String.format("Current size %d length %d", currentSize,
 //          header.getLength()));
+      if (currentSize > header.getLength()) {
+        throw new RuntimeException(String.format("source %d target %d ChannelMessage data"
+                + " length %d exceeded expected"
+                + " length in header %d buffer count %d overflow count %d",
+            header.getSourceId(), header.getDestinationIdentifier(), currentSize,
+            header.getLength(), buffers.size(), overflowBuffers.size()));
+      }
       if (currentSize == header.getLength()) {
         complete = true;
         return true;
@@ -241,6 +248,14 @@ public class ChannelMessage {
 
   public boolean isComplete() {
     return complete;
+  }
+
+  public int getCurrentSize() {
+    int currentSize = 0;
+    for (DataBuffer buffer : getBuffers()) {
+      currentSize += buffer.getByteBuffer().position();
+    }
+    return currentSize;
   }
 
   public void setComplete(boolean complete) {

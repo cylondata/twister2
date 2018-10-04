@@ -91,8 +91,6 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
           String datanodeName = hdfsUtils.getDFSCK(fName);
 
           dataNodes.add(datanodeName);
-          dataNodes.add("samplenode"); //just for testing
-
           LOG.fine("HDFS URL:" + fileURL + "\tDataNode:" + datanodeName);
         }
       } catch (IOException e) {

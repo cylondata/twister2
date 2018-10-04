@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.comms.op.stream;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
@@ -45,7 +45,7 @@ public class SGather {
    */
   public SGather(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, int target, MessageType dataType,
-                 MessageReceiver rcvr) {
+                 BulkReceiver rcvr) {
     gather = new DataFlowGather(comm.getChannel(), sources, target,
         new GatherStreamingFinalReceiver(rcvr),
         new GatherStreamingPartialReceiver(), 0, 0,
