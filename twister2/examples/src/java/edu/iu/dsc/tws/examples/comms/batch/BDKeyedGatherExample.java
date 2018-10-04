@@ -12,14 +12,13 @@
 
 package edu.iu.dsc.tws.examples.comms.batch;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
+import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -123,14 +122,16 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
       if (it == null) {
         return true;
       }
-      while (it.hasNext()) {
-        ImmutablePair<Object, Object[]> currentPair = (ImmutablePair) it.next();
-        Object key = currentPair.getKey();
-        int[] data = (int[]) currentPair.getValue()[0];
-        LOG.log(Level.INFO, String.format("%d Results : key: %s value sample: %s num vals : %s",
-            workerId, key, Arrays.toString(Arrays.copyOfRange(data,
-                0, Math.min(data.length, 10))), currentPair.getValue().length));
-      }
+      LOG.log(Level.INFO, String.format("%d Received message %d count %d",
+          workerId, target, Iterators.size(it)));
+//      while (it.hasNext()) {
+//        ImmutablePair<Object, Object[]> currentPair = (ImmutablePair) it.next();
+//        Object key = currentPair.getKey();
+//        int[] data = (int[]) currentPair.getValue()[0];
+//        LOG.log(Level.INFO, String.format("%d Results : key: %s value sample: %s num vals : %s",
+//            workerId, key, Arrays.toString(Arrays.copyOfRange(data,
+//                0, Math.min(data.length, 10))), currentPair.getValue().length));
+//      }
       gatherDone = true;
       return true;
     }
