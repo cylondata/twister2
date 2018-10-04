@@ -140,6 +140,9 @@ public class TaskStreamingInstance implements INodeInstance {
     inParOps.put(edge, op);
   }
 
+  /**
+   * Execution Method calls the SourceTasks run method to get context
+   **/
   public boolean execute() {
     // execute if there are incoming messages
     while (!inQueue.isEmpty() && outQueue.size() < lowWaterMark) {
@@ -201,7 +204,7 @@ public class TaskStreamingInstance implements INodeInstance {
     return outQueue;
   }
 
-  public boolean storeSnapshot(){
+  public boolean storeSnapshot() {
     return true;
   }
 }
