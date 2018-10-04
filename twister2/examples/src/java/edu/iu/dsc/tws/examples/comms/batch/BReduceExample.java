@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -102,6 +103,7 @@ public class BReduceExample extends BenchWorker {
     @Override
     public boolean receive(int target, Object object) {
       experimentData.setOutput(object);
+      LOG.info("Reduced value : " + Arrays.toString((int[]) object));
       reduceDone = true;
       try {
         verify();
