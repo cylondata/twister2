@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
@@ -30,6 +31,8 @@ import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceStreamingInstance implements INodeInstance {
+
+  private static final long serialVersionUID = -8783744683896503488L;
 
   private static final Logger LOG = Logger.getLogger(SourceStreamingInstance.class.getName());
   /**
@@ -94,6 +97,8 @@ public class SourceStreamingInstance implements INodeInstance {
 
   private Set<String> outEdges;
 
+  private int sleeper = 0;
+
   /**
    * The high water mark for messages
    */
@@ -114,6 +119,14 @@ public class SourceStreamingInstance implements INodeInstance {
     this.outEdges = outEdges;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
+    if (CheckpointContext.getCheckpointRecovery(config)) {
+      try {
+        LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+        this.streamingTask = fsStateBackend.readFromStateBackend(config, streamingTaskId, workerId);
+      } catch (Exception e) {
+        System.out.println(e);
+      }
+    }
   }
 
   public void prepare() {
@@ -146,7 +159,7 @@ public class SourceStreamingInstance implements INodeInstance {
             break;
           }
         } else {
-          for (String edge: outEdges) {
+          for (String edge : outEdges) {
             IParallelOperation op = outStreamingParOps.get(edge);
             if (op.send(streamingTaskId, message, message.getFlag())) {
               outStreamingQueue.poll();
@@ -159,7 +172,7 @@ public class SourceStreamingInstance implements INodeInstance {
     for (Map.Entry<String, IParallelOperation> e : outStreamingParOps.entrySet()) {
       e.getValue().progress();
     }
-
+    writeToStatebackend();
     return true;
   }
 
@@ -179,4 +192,18 @@ public class SourceStreamingInstance implements INodeInstance {
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
     outStreamingParOps.put(edge, op);
   }
+
+  private void writeToStatebackend() {
+    sleeper++;
+    if (sleeper > 300000) {
+      try {
+        LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+        fsStateBackend.writeToStateBackend(config, streamingTaskId, workerId, streamingTask);
+      } catch (Exception e) {
+        System.out.println(e);
+      }
+      sleeper = 0;
+    }
+  }
+
 }
