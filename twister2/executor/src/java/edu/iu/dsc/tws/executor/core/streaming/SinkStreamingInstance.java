@@ -105,7 +105,7 @@ public class SinkStreamingInstance  implements INodeInstance {
     while (!streamingInQueue.isEmpty()) {
       IMessage message = streamingInQueue.poll();
       if (message != null) {
-        if ((message.getFlag() & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
+        if ((message.getFlag() & MessageFlags.SYNC) != MessageFlags.SYNC) {
           streamingTask.execute(message);
         } else {
           //Send acknowledge message to jobmaster
