@@ -4,7 +4,7 @@ Lets look at how to setup Twister2 and run few examples. Twister2 is designed as
 
 ## Building Twister2
 
-First we need to build Twister2. [Compiling Twister2](deployment/compiling.md) guide for this explains how to compile it.
+First we need to build Twister2. [Compiling Twister2](deployment/compiling.md) explains how to build it.
 
 ## Starting parallel workers
 
