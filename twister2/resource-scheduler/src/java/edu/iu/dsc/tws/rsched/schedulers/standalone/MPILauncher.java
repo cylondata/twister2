@@ -60,6 +60,16 @@ public class MPILauncher implements ILauncher {
     return false;
   }
 
+  /**
+   * This method performs following tasks in order to distribute file among worker nodes
+   * <li>Picks job file and core file from local source root</li>
+   * <li>Calculate MD5s of both files</li>
+   * <li>Create a temporary hostfile to submit with mpirun command. This host file grantees to
+   * spawn just 1 process per worker node (setting slots=1). This prevents concurrent writes
+   * to the disk of the worker nodes</li>
+   * <li>Spawn a new mpi job by calling bootstrap.sh. This job runs
+   * {@link edu.iu.dsc.tws.rsched.schedulers.standalone.bootstrap.MPIBootstrap} on all workers</li>
+   */
   private void distributeJobFiles(JobAPI.Job job) throws IOException {
     File localSourceRoot = new File(
         this.config.getStringValue(SchedulerContext.TEMPORARY_PACKAGES_PATH)
@@ -94,13 +104,9 @@ public class MPILauncher implements ILauncher {
     int status = ProcessUtils.runSyncProcess(
         false,
         new String[]{
-            "mpirun",
-            "-np", Integer.toString(np),
-            "-hostfile",
+            "conf/standalone/bootstrap.sh",
+            Integer.toString(np),
             tempHotsFile.toAbsolutePath().toString(),
-            "java",
-            "-cp", "lib/*",
-            "edu.iu.dsc.tws.rsched.schedulers.standalone.bootstrap.MPIBootstrap",
             job.getJobName(),
             this.jobWorkingDirectory,
             jobFile.getAbsolutePath(),
@@ -115,13 +121,16 @@ public class MPILauncher implements ILauncher {
 
     if (status != 0) {
       LOG.severe("Failed to execute bootstrap procedure : " + status);
+      throw new RuntimeException("Bootstrap procedure failed with status " + status);
     } else {
-      LOG.info("Bootstrap procedure executed successfully");
       if (stringBuilder.length() != 0) {
-        LOG.info("The error output of bootstrap procedure:\n " + stringBuilder.toString());
+        LOG.severe("Bootstrap procedure failed with error : " + stringBuilder.toString());
+        throw new RuntimeException("Bootstrap procedure failed with error "
+            + stringBuilder.toString());
+      } else {
+        LOG.info("Bootstrap procedure executed successfully.");
       }
     }
-    LOG.info(String.format("File distribution completed. %s", stringBuilder.toString()));
   }
 
   private int createOneSlotPerNodeFile(Path tempHostFile) throws IOException {
@@ -130,7 +139,7 @@ public class MPILauncher implements ILauncher {
     int ipCount = 0;
     for (String host : hosts) {
       String[] parts = host.split(" ");
-      if (parts.length > 0) {
+      if (parts.length > 0 && !parts[0].trim().isEmpty()) {
         ipCount++;
         hostFileBuilder
             .append(parts[0])

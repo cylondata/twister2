@@ -89,7 +89,7 @@ public final class MPIBootstrap {
 
     LOG.info(String.format("%d has the resource files. Starting broadcast...", resourceProvider));
 
-    byte[] buff;
+    byte[] buff = new byte[0];
     int[] bufferSize = new int[1];
 
     for (File srcFile : srcFiles) {
@@ -102,7 +102,9 @@ public final class MPIBootstrap {
       LOG.info(String.format("Exchanging buffer size of %s", srcFile.getName()));
       MPI.COMM_WORLD.bcast(bufferSize, 1, MPI.INT, resourceProvider);
 
-      buff = new byte[bufferSize[0]];
+      if (rank != resourceProvider) {
+        buff = new byte[bufferSize[0]];
+      }
       LOG.info(String.format("Exchanging file %s", srcFile.getName()));
       MPI.COMM_WORLD.bcast(buff, bufferSize[0], MPI.BYTE, resourceProvider);
 
