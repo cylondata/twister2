@@ -95,6 +95,9 @@ public class Context {
 
   public static final String TWISTER2_VERSION = "0.1.0";
 
+  public static final ConfigEntry CHECKPOINT_YAML = new ConfigEntry(
+      "twister2.config.file.checkpoint.yaml",  "${TWISTER2_CONF}/checkpoint.yaml");
+
 
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
@@ -122,6 +125,7 @@ public class Context {
     defaults.put(UPLOADER_YAML.getKey(), UPLOADER_YAML.getDefaultValue());
     defaults.put(AURORA_SCRIPT.getKey(), AURORA_SCRIPT.getDefaultValue());
     defaults.put(DATA_YAML.getKey(), DATA_YAML.getDefaultValue());
+    defaults.put(CHECKPOINT_YAML.getKey(), CHECKPOINT_YAML.getDefaultValue());
   }
 
   protected Context() {
@@ -189,6 +193,10 @@ public class Context {
 
   public static String twister2Home(Config cfg) {
     return cfg.getStringValue(TWISTER2_HOME);
+  }
+
+  public static String checkpointConfigurationFile(Config cfg) {
+    return cfg.getStringValue(CHECKPOINT_YAML);
   }
 
   /**
