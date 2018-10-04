@@ -157,6 +157,9 @@ public class ExampleMain {
         case "keyedgather":
           submitJob(config, workers, jobConfig, BKeyedGatherExample.class.getName());
           break;
+        case "dkeyedgather":
+          submitJob(config, workers, jobConfig, BDKeyedGatherExample.class.getName());
+          break;
       }
     } else {
       switch (operation) {
