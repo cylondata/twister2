@@ -139,4 +139,11 @@ public class SchedulerContext extends Context {
   public static int workerEndSyncWaitTime(Config cfg) {
     return cfg.getIntegerValue("twister2.worker.end.sync.time.ms", 30000);
   }
+
+  public static boolean useOpenMPI(Config cfg) {
+    return cfg.getStringValue("twister2.network.channel.class")
+        .equals("edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel");
+  }
+
+
 }
