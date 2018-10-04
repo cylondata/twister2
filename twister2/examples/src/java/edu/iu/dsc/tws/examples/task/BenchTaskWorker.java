@@ -102,13 +102,15 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
-      if (count == 1) {
-        context.end(this.edge);
-        count++;
-      } else if (count < 1) {
-        experimentData.setInput(val);
-        if (context.write(this.edge, val)) {
-          count++;
+      int iterations = jobParameters.getIterations();
+      while (count <= iterations) {
+        if (count == iterations) {
+          context.end(this.edge);
+        } else if (count < iterations) {
+          experimentData.setInput(val);
+          if (context.write(this.edge, val)) {
+            count++;
+          }
         }
       }
     }
@@ -131,13 +133,17 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
-      if (count < 1) {
-        experimentData.setInput(val);
-        context.write(edge,  count, val);
-      } else if (count > 1) {
-        context.end(this.edge);
+      int iterations = jobParameters.getIterations();
+      while (count <= iterations) {
+        if (count == iterations) {
+          context.end(this.edge);
+        } else if (count < iterations) {
+          experimentData.setInput(val);
+          if (context.write(edge, count, val)) {
+            count++;
+          }
+        }
       }
-      count++;
     }
   }
 
@@ -157,9 +163,12 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
-      experimentData.setInput(val);
-      if (context.write(this.edge, val)) {
-        count++;
+      int iterations = jobParameters.getIterations();
+      while (count <= iterations) {
+        experimentData.setInput(val);
+        if (context.write(this.edge, val)) {
+          count++;
+        }
       }
     }
   }
@@ -181,9 +190,13 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
-      experimentData.setInput(val);
-      context.write(edge,  count, val);
-      count++;
+      int iterations = jobParameters.getIterations();
+      while (count <= iterations) {
+        experimentData.setInput(val);
+        if (context.write(edge, count, val)) {
+          count++;
+        }
+      }
     }
   }
 

@@ -107,7 +107,7 @@ public class StreamingTaskExampleKafka implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("task-example");
     jobBuilder.setWorkerClass(StreamingTaskExampleKafka.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

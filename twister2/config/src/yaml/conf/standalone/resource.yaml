@@ -20,3 +20,7 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSyste
 # change this to just mpirun if you are using a system wide installation of OpenMPI
 # or complete path of OpenMPI in case you have something custom
 twister2.resource.scheduler.mpi.mpirun.file: "mpirun"
+# Indicates whether bootstrap process needs to be run and distribute job file and core
+# between MPI nodes. Twister2 assumes job file is accessible to all nodes if this property is set
+# to true, else it will run the bootstrap process
+twister2.resource.sharedfs: true

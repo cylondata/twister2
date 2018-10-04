@@ -10,6 +10,4 @@ debug="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
 
 $9 -np $1 --hostfile $8 sh `pwd`/standalone/exp.sh "$@"
 
-echo $SLURM_JOB_ID > slurm-job.pid
-
 wait
