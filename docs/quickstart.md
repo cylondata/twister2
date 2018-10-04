@@ -2,6 +2,10 @@
 
 Lets look at how to setup Twister2 and run few examples. Twister2 is designed as in incremental distributed system to make it adaptable to different environments. Lets start with the simplest possible Twister2 job where we spawn set of workers and print a log.
 
+## Building Twister2
+
+First we need to build Twister2. [Compiling Twister2](deployment/compiling.md) guide for this explains how to compile it.
+
 ## Starting parallel workers
 
 At the base of Twister2 is a resource manager that allocates resources for jobs. Unlike many big data projects that mixes all sorts of capabilities here, Twister2 resource manager only allocate resources and spawn set of parallel processes. It is upto the user to do anything with those parallel processes after they are spawned.
