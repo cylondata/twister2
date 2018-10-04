@@ -92,6 +92,10 @@ public class TaskMessage implements IMessage {
     return flag;
   }
 
+  public void setFlag(int flag) {
+    this.flag = flag;
+  }
+
   public void setContent(Object content) {
     this.content = content;
   }
