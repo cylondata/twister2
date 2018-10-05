@@ -15,12 +15,11 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 
 /**
  * Keyed reduce final receiver for streaming  mode
  */
-public class KGatherStreamingFinalReceiver extends KeyedReceiver {
+public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
   private static final Logger LOG = Logger.getLogger(KGatherStreamingFinalReceiver.class.getName());
 
   /**
