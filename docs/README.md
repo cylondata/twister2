@@ -41,9 +41,9 @@ Twister2 performs against Apache Spark and MPI. Please note that Spark KMeans ex
 while Twister2 and MPI implementations are communication level applications. However it is clear that Twister2 performs on the same
 level as OpenMPI which is an highly optimized communication library in the HPC world. And it out performs Spark by roughly a factor of x10.
 
-Notation : 
-`DFW` refers to Twister2
-`BSP` refers to MPI (OpenMPI)
+Notation :   
+`DFW` refers to Twister2  
+`BSP` refers to MPI (OpenMPI)  
 
 ![Kmeans Performance Comparison](images/kmeans_comparison.png)
 ## Things we are working on
