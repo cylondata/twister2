@@ -1,6 +1,27 @@
 # Communication
 
-## TCP
+Twister2 supports both BSP style and DataFlow style communications. It supports BSP style using
+MPI and Harp while it can use Twister:Net data flow communication for dat analysis.
+
+## DataFlow Communication
+
+DataFlow communication in Twister2 is implemented using MPI and Java NIO sockets. These operations 
+are geared towards batch data processing and streaming analytics. 
+
+### OpenMPI Implementation
+
+We use OpenMPI underneath for transferring messages between nodes in this mode. 
+
+### TCP Socket Implementation
+
+TCP socket implementation uses, Java NIO sockets for transferring messages between nodes.
+
+## BSP Communication
+
+BSP Communications are supported using Harp and MPI. Harp uses TCP sockets while MPI can use advanced hardware
+for communications.
+
+## TCP Socket
 
 TCP functionality is implemented in the common package. It is based on non blocking network IO model with Java NIO.
 
