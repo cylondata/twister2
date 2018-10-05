@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedGather;
-import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
+import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
@@ -39,7 +39,8 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
     this.edgeGenerator = e;
     op = new BKeyedGather(channel, taskPlan, sources, dests,
         Utils.dataTypeToMessageType(keyType),
-        Utils.dataTypeToMessageType(dataType), new GatherRecvrImpl(), new HashingSelector(), false);
+        Utils.dataTypeToMessageType(dataType), new GatherRecvrImpl(),
+        new LoadBalanceSelector(), false);
 
     communicationEdge = e.generate(edgeName);
   }
