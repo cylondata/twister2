@@ -73,6 +73,12 @@ public class TaskStatebackendCountExample implements IWorker {
     runtime.setFileSystem(localFileSystem);
     Config newconfig = runtime.updateConfig(config);
 
+    if (CheckpointContext.getCheckpointRecovery(config)) {
+      System.out.println("it is working okey");
+    } else {
+      System.out.println("don't worry be happy");
+    }
+
     if (workerID == 1) {
       System.out.println("Statebackend directory is created for job: " + runtime.getJobName());
       FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path, path,
