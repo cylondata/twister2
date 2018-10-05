@@ -32,22 +32,37 @@ This release includes the core components of realizing the above goals.
 6. API for creating Task Graph and Communication
     1. Communication API
     2. Task based API
-
+7. Support for storage systems
+    1. HDFS
+    2. Local file systems
+    3. NFS for persistent storage
+    
 These features translates to running following types of applications natively with high performance.
 
 1. Streaming computations
 2. Data operations in batch mode
 3. Iterative computations
 
-We achieve all these feature while supporting both cloud and HPC environments. When deployed in an
-HPC environment, Twister2 can use features such as advanced hardware to optimize its performance while
-for cloud deployments we use high performance techniques to optimize our performance.
+## Examples
 
-## Next Release
+With this release we include several examples to demonstrate various features of Twister2.
+
+1. A Hello World example
+2. Communication examples - how to use communications for streaming and batch
+3. Task examples - how to create task graphs with different operators for streaming and batch
+4. K-Means 
+5. Sorting of records
+6. Word count 
+7. Iterative examples
+8. Harp example
+
+## Road map
 
 We have started working on our next major release that will connect the core components we have developed 
 into a full data analytics environment. In particular it will focus on providing APIs around the core
 capabilities of Twister2 and integration of applications in a single dataflow. 
+
+### Next release (End of December 2018)
 
 1. Hierarchical task scheduling - Ability to run different types of jobs in a single dataflow
 2. Fault tolerance
@@ -57,6 +72,14 @@ capabilities of Twister2 and integration of applications in a single dataflow.
 5. Web UI for monitoring Twister2 Jobs
 6. More resource managers - Pilot Jobs, Yarn
 7. More example applications
+
+### Beyond next release
+
+1. Implementing core parts of Twister2 with C/C++ for high performance 
+2. Python APIs
+3. Direct use of RDMA
+4. FaaS APIs 
+5. SQL interface 
 
 
 
