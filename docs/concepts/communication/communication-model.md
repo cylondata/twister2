@@ -1,4 +1,4 @@
-# Communication Model
+# Communication Model 
 
 Twister2 supports a dataflow communication model. A dataflow program models a computation as a graph with nodes of the graph doing user-defined computations and edges representing the communication links between the nodes. The data flowing through this graph is termed as events or messages. It is important to note that even though by definition dataflow programming means data is flowing through a graph, it may not necessarily be the case physically, especially in batch applications. Big data systems employ different APIs for creating the dataflow graph. For example, Flink and Spark provide distributed dataset-based APIs for creating the graph while systems such as Storm and Hadoop provide task-level APIs.
 
@@ -59,6 +59,30 @@ for this example
 * 2 -> 8 : `{4,8,12}`
 * 4 -> 8 : `{1,2,3}`
 
+### Gather
+
+The gather operation is similar in construct to the reduce operation. However unlike the reduce operation
+which uses an reduction function to reduce collected values, the gather operation simply bundles them together.
+The structure in which the gather communication happens is similar to reduce which is done using an 
+inverted binary tree. 
+
+Example:
+
+Lets take the same example discussed in the Reduce operation. In the reduce example the final result at
+the sink task with logical id `8 ` was `{8,16,24}`. In the gather since we collect all the data tht is sent from each
+source task the final results received at the sink task would be a set of arrays, 1 array for each source task.
+
+Final result at `8` -> `{{1,2,3},{1,2,3},{1,2,3},{1,2,3},{1,2,3},{1,2,3},{1,2,3},{1,2,3}}`  
+
+If you look at what each of the tasks that actually send messages to sink `8` they would be as follows.
+Notice that the results are similar to the reduce operation.
+
+* 0 -> 8 : `{1,2,3}`  
+* 1 -> 8 : `{{1,2,3},{1,2,3}}`  
+* 2 -> 8 : `{{1,2,3},{1,2,3},{1,2,3},{1,2,3}}`  
+* 4 -> 8 : `{1,2,3}`  
+
+
 ### Partition
 
 The partition operation as the name implies partitions data. The operation will break data into smaller
@@ -91,6 +115,10 @@ distributes the data. And example assigment might look as follows.
 `{2,3,4}` -> `6`  
 `{3,4,5}` -> `6`  
 
+### Broadcast
+
+The broadcast operation sends out messages from a single task to 1 or more tasks. Messages are send directly to each
+receiving task. 
 
 ## TaskPlan
 
