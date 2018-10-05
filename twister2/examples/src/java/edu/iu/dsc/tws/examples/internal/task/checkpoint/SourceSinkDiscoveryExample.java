@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task.checkpoint;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
+import edu.iu.dsc.tws.checkpointmanager.state_backend.FsCheckpointStorage;
+import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -29,8 +32,11 @@ import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
+import edu.iu.dsc.tws.executor.core.Runtime;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -57,6 +63,24 @@ public class SourceSinkDiscoveryExample implements IWorker {
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
+
+    Path path = new Path(new File(CheckpointContext
+        .getStatebackendDirectoryDefault(config)).toURI());
+    path.getParent();
+
+    Runtime runtime = new Runtime();
+    runtime.setParentpath(path);
+
+    LocalFileSystem localFileSystem = new LocalFileSystem();
+    runtime.setFileSystem(localFileSystem);
+    Config newconfig = runtime.updateConfig(config);
+
+    if (workerID == 1) {
+      System.out.println("Statebackend directory is created for job: " + runtime.getJobName());
+      FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path, path,
+          runtime.getJobName(), 0);
+
+    }
     GeneratorTask g = new GeneratorTask();
 
     ReceivingTask r = new ReceivingTask();
@@ -70,9 +94,9 @@ public class SourceSinkDiscoveryExample implements IWorker {
         Operations.PARTITION);
     builder.operationMode(OperationMode.STREAMING);
 
-    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
-    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
-    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
+    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(newconfig));
+    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(newconfig));
+    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(newconfig));
 
     List<String> sourceInputDataset = new ArrayList<>();
     sourceInputDataset.add("dataset1.txt");
@@ -83,16 +107,16 @@ public class SourceSinkDiscoveryExample implements IWorker {
     DataFlowTaskGraph graph = builder.build();
 
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
-    roundRobinTaskScheduler.initialize(config);
+    roundRobinTaskScheduler.initialize(newconfig);
 
     WorkerPlan workerPlan = createWorkerPlan(resources);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSChannel network = Network.initializeChannel(config, workerController, resources);
+    TWSChannel network = Network.initializeChannel(newconfig, workerController, resources);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
-        new Communicator(config, network));
-    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, workerID, plan, network);
+        new Communicator(newconfig, network));
+    ExecutionPlan plan = executionPlanBuilder.build(newconfig, graph, taskSchedulePlan);
+    Executor executor = new Executor(newconfig, workerID, plan, network);
     executor.execute();
   }
 
@@ -110,6 +134,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
       }
       if (count % 1000000 == 0) {
         ctx.write("partition-edge", "Hello");
+        System.out.println("count is " + count);
       }
 
       count++;
@@ -134,6 +159,8 @@ public class SourceSinkDiscoveryExample implements IWorker {
     @Override
     public boolean execute(IMessage message) {
       System.out.println(message.getContent() + " from Sink Task " + ctx.taskId());
+      count++;
+      System.out.println("count in sink is " + count);
 
       return true;
     }
