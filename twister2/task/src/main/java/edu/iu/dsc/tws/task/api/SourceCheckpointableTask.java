@@ -216,11 +216,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
   private void emitBarrier() {
     LOG.info("Sending barrier from source task ID : " + ctx.taskId());
 
-//    Checkpoint.CheckpointBarrier checkpointBarrierMessage
-//        = Checkpoint.CheckpointBarrier.newBuilder()
-//        .setCurrentBarrierID(currentBarrierID)
-//        .build();
-
     ctx.writeBarrier("keyed-edge", currentBarrierID);
 
   }

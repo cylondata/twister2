@@ -29,7 +29,7 @@ Here is an example command
 
 In this command, cluster is standalone and has program arguments.
 
-## Killing a job
+## Terminating a job
 
 To kill a job, ```twister2 kill`` command is used.
 

@@ -7,7 +7,7 @@ We assume that you have a running Kubernetes cluster. In your machine, kubectl i
 Please first familiarize yourself with [HelloWorld job](../../quickstart.md). You can submit jobs to Kubernetes cluster by using twister2 executable:
 
 ```text
-bin/twister2
+./bin/twister2
 ```
 
 When submitting jobs to Kubernetes clusters, you need to specify the cluster name as "kubernetes". You can submit HelloWorld job in examples package with 8 workers as:

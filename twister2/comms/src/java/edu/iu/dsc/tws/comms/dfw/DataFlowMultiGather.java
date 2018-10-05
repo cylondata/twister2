@@ -145,7 +145,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
   /**
    * Initialize
    */
-  public void init(Config config, MessageType dType, TaskPlan instancePlan, int edge) {
+  public void init(Config config, MessageType dType, TaskPlan instancePlan) {
     executor = instancePlan.getThisExecutor();
     this.dataType = dType;
     this.plan = instancePlan;
