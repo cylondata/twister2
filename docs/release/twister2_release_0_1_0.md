@@ -16,22 +16,22 @@ This release includes the core components of realizing the above goals.
     4. Slurm 
     5. Nomad
 2. Parallel and Distributed Communications
-  1. Dataflow communications
-     * Twister2:Net - a dataflow communication library for streaming and large scale batch analysis including iterative computations, working on top of both OpenMPI and TCP sockets.
-  2. Bulk Synchronous Parallel Communication
-     * Harp - a BSP collective framework for parallel applications and machine learning
-     * OpenMPI - MPI Collectives for HPC applications
+    1. Dataflow communications
+         * Twister2:Net - a dataflow communication library for streaming and large scale batch analysis including iterative computations, working on top of both OpenMPI and TCP sockets.
+    2. Bulk Synchronous Parallel Communication
+         * Harp - a BSP collective framework for parallel applications and machine learning
+         * OpenMPI - MPI Collectives for HPC applications
 3. Task Graph - Create dataflow graphs for streaming and batch analysis including iterative computations
 4. Task Scheduler - Schedule the task graph into cluster resources supporting different scheduling algorithms
-  1. Datalocality Scheduling
-  2. Roundrobin scheduling
-  3. First fit scheduling
+    1. Datalocality Scheduling
+    2. Roundrobin scheduling
+    3. First fit scheduling
 5. Executor - Execution of task graph     
-  1. Batch executor
-  2. Streaming executor
+    1. Batch executor
+    2. Streaming executor
 6. API for creating Task Graph and Communication
-  1. Communication API
-  2. Task based API
+    1. Communication API
+    2. Task based API
 
 These features translates to running following types of applications natively with high performance.
 
