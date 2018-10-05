@@ -78,6 +78,7 @@ capabilities of Twister2 and integration of applications in a single dataflow.
 3. Direct use of RDMA
 4. FaaS APIs 
 5. SQL interface 
+6. Native MPI support for cloud deployements
 
 
 
