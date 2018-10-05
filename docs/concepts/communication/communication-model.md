@@ -82,6 +82,18 @@ Notice that the results are similar to the reduce operation.
 * 2 -> 8 : `{{1,2,3},{1,2,3},{1,2,3},{1,2,3}}`  
 * 4 -> 8 : `{1,2,3}`  
 
+### AllReduce
+
+The operation AllReduce is a version of the reduce operation where the results are sent to multiple destination tasks.
+The semantics of the AllReduce operation is similar to the reduce operation, The AllReduce operation performs a reduce operation
+and then internally executes and broadcast operation to send the results to all the destinations. The two step method of using
+an reduce and the a broadcast is efficient than performing seperate reduce operations to each destination.
+
+### AllGather
+
+The operation AllGather is a version of gather operation where the results are sent to multiple destination tasks.
+Similar to AllReduce the AllGather operation first performs a gather operation and then performs an broadcast to all the 
+destination tasks.
 
 ### Partition
 
@@ -113,7 +125,7 @@ distributes the data. And example assigment might look as follows.
 `{0,1,2}` -> `4`  
 `{1,2,3}` -> `5`  
 `{2,3,4}` -> `6`  
-`{3,4,5}` -> `6`  
+`{3,4,5}` -> `7`  
 
 ### Broadcast
 
