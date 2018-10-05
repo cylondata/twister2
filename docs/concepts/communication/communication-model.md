@@ -14,6 +14,10 @@ We support the following dataflow operations.
 8. Keyed Partition
 9. Keyed Gather
 
+Dataflow communications are overlaid on top of worker processes using logical ids.
+
+We support both streaming and batch versions of these operations.
+
 ### Reduce
 
 The reduce operation collects data and performs and reduces them in a manner specified by the reduce
@@ -55,9 +59,38 @@ for this example
 * 2 -> 8 : `{4,8,12}`
 * 4 -> 8 : `{1,2,3}`
 
-Dataflow communications are overlaid on top of worker processes using logical ids.
+### Partition
 
-We support both streaming and batch versions of these operations.
+The partition operation as the name implies partitions data. The operation will break data into smaller
+units and divide them among tasks that are involved in the partition communication. For each partition
+the operation will select an destination based on the destination selector. The destination selector can be user specified or
+the user can select an internal destination selector such as the "LoadBalanceSelector" which makes sure the data is
+evenly distributed. 
+
+Unlike in the reduce communication where a complex tree structure is used to perform the communication
+the partition operations performs direct communications between tasks. That is if task `0` wants to send a parition to task 
+`4` it will be sent directly to task `4`. (The direct communication between tasks is only a logical link, the 
+actual communication happens at worker level and messages are internally passed-down to the correct task)
+
+Example:
+
+In this example we assume that there are 4 source tasks with logical is from `0` to `3` and 4 sink tasks with logical ids
+from `4` to `7`. Lets assume that task `0` generates the following set of data arrays.
+
+`{0,1,2}`
+`{1,2,3}`
+`{2,3,4}`
+`{3,4,5}`
+
+If the partition operation is using the "LoadBalanceSelector" for destination selection then each of the 
+sink tasks will receive a single data array. The assigment of data arrays will depend on how the "LoadBalanceSelector"
+distributes the data. And example assigment might look as follows.
+
+`{0,1,2}` -> `4`
+`{1,2,3}` -> `5`
+`{2,3,4}` -> `6`
+`{3,4,5}` -> `6`
+
 
 ## TaskPlan
 
