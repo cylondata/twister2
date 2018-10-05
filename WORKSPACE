@@ -510,3 +510,15 @@ maven_jar(
     name = "org_apache_htrace",
     artifact = "org.apache.htrace:htrace-core4:4.2.0-incubating",
 )
+
+maven_jar(
+    name = "fast_utils",
+    artifact = "it.unimi.dsi:fastutil:7.0.13",
+)
+
+new_http_archive(
+    name = "ompi3",
+    build_file = "third_party/ompi3/ompi.BUILD",
+    strip_prefix = "openmpi-3.1.2",
+    urls = ["https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.2.tar.gz"],
+)
