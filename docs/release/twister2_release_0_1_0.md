@@ -1,9 +1,11 @@
 # Twister2 Release 0.1.0
 
-Twister2 0.1.0 is the first public release of Twister2. We are excited to bring a high performance data analytics
+Twister2 0.1.0 is the first open source public release of Twister2. We are excited to bring a high performance data analytics
 hosting environment that can work in both cloud and HPC environments. This is the first step towards 
 building a complete end to end high performance solution for data analytics ranging from streaming to batch analysis to 
 machine learning applications. Our vision is to make the system work seamlessly both in cloud and HPC environments ranging from single machines to large clusters.
+
+You can download source code from [Github](https://github.com/DSC-SPIDAL/twister2/releases)
 
 ## Major Features
 
@@ -79,6 +81,12 @@ capabilities of Twister2 and integration of applications in a single dataflow.
 4. FaaS APIs 
 5. SQL interface 
 6. Native MPI support for cloud deployements
+
+## License
+
+Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
+
+
 
 
 
