@@ -34,18 +34,33 @@ You can find more details on
 After installing Mesos master and clients you can use the following
 methods to start and test them.
 
-    #Starting mesos-master
-    sudo service mesos-master start
+**Starting mesos-master**
 
-    #Starting mesos slaves
-    sudo service mesos-slave
+```bash
+sudo service mesos-master start
+```
 
-    #Checking if the servises are running
-    systemctl status <servis_name>  -l
-    #example: systemctl status mesos-master -l
+**Starting mesos slaves**
 
-    #Monitoring 
-    Mesos Master can be monitored on port 5050 of the machine it is installed.
+```bash
+sudo service mesos-slave
+```
+
+**Checking if the services are running**
+
+```bash
+systemctl status <service_name>  -l
+```
+
+```text 
+example: systemctl status mesos-master -l
+```
+
+**Monitoring**
+```text 
+Mesos Master can be monitored on port 5050 of the machine it is installed.
+```
+   
 
 **Mesos Framework**
 
@@ -90,27 +105,35 @@ follows;
 
 Necessary values are retrieved from the config file.
 
-    •  int cpus = MesosContext.cpusPerContainer(config);
-    •  int ramMegaBytes = MesosContext.ramPerContainer(config);
-    •  int diskMegaBytes = MesosContext.diskPerContainer(config);
-    •  int containers = MesosContext.numberOfContainers(config);
+```text 
+int cpus = MesosContext.cpusPerContainer(config);
+int ramMegaBytes = MesosContext.ramPerContainer(config);
+int diskMegaBytes = MesosContext.diskPerContainer(config);
+int containers = MesosContext.numberOfContainers(config);
+``` 
 
 Then we create a ResourceContainer with these resources.
 
-    •  ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes); 
+```text
+ResourceContainer resourceContainer = new ResourceContainer(cpus, ramMegaBytes, diskMegaBytes);
+``` 
 
 The we create the Job as follows;
 
-    •  BasicJob basicJob = BasicJob.newBuilder()
+```text
+BasicJob basicJob = BasicJob.newBuilder()
         .setName(jobName)
         .setContainerClass(containerClass)
         .setRequestResource(resourceContainer, containers)
         .setConfig(jobConfig)
         .build();
+```
 
 The last thing we do is to submit this job.
 
-    •  Twister2Submitter.submitContainerJob(basicJob, config);
+```text
+Twister2Submitter.submitContainerJob(basicJob, config);
+```
 
 Mesos we can run more than one workers(tasks) in Executors. The choice
 is left to the user and can be configured through configuration files.
@@ -123,8 +146,10 @@ Possible configuration options are;
     file.
 
 <!-- -->
-    # container per mesos executor
-    twister2.container_per_worker: "1"
+```text
+# container per mesos executor
+twister2.container_per_worker: "1"
+```
 
 Initialization of Executors are slower in Mesos. So running more workers
 in executors will be a faster solution.

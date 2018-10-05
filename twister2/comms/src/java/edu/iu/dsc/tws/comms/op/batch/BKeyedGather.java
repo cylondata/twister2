@@ -48,7 +48,7 @@ public class BKeyedGather {
         new GatherMultiBatchFinalReceiver(rcvr, shuffle, false, comm.getPersistentDirectory(),
             null), new GatherMultiBatchPartialReceiver(),
         edges, kType, dType);
-    this.keyedGather.init(comm.getConfig(), dType, plan, comm.nextEdge());
+    this.keyedGather.init(comm.getConfig(), dType, plan);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(sources, destinations);
   }
@@ -68,7 +68,7 @@ public class BKeyedGather {
         new GatherMultiBatchFinalReceiver(rcvr, shuffle, true, comm.getPersistentDirectory(),
             comparator), new GatherMultiBatchPartialReceiver(), edges,
         kType, dType);
-    this.keyedGather.init(comm.getConfig(), dType, plan, comm.nextEdge());
+    this.keyedGather.init(comm.getConfig(), dType, plan);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(sources, destinations);
   }
