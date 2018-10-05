@@ -32,7 +32,6 @@ import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
-import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 
 public class CheckpointManager extends Thread {
