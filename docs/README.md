@@ -46,9 +46,9 @@ Notation :
 `BSP` refers to MPI (OpenMPI)  
 
 ![Kmeans Performance Comparison](images/kmeans_comparison.png)
-## Things we are working on
+## Future plans
 
-These are things we are actively working on and planning to work on.
+Twister2 is an evolving project and we are focused on the following developments
 
 1. Hierarchical task scheduling - Ability to run different types of jobs in a single dataflow
 2. Fault tolerance
