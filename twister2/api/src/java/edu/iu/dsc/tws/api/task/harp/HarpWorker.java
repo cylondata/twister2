@@ -144,7 +144,7 @@ public abstract class HarpWorker implements IWorker {
     syncClient.stop();
     LOG.info("Harp Sync Client stopped.");
     LOG.info("Shutting harp server down....");
-    server.stop();
+    server.stop(true);
     LOG.info("Harp server stopped.");
   }
 
