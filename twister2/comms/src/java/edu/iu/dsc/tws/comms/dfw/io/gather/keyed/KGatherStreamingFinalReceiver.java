@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.logging.Logger;
 
@@ -49,6 +51,7 @@ public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public boolean progress() {
     boolean needsFurtherProgress = false;
     boolean sourcesFinished = false;
@@ -66,10 +69,13 @@ public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
       }
 
       if (!targetSendQueue.isEmpty()) {
+        List<Object> results = new ArrayList<Object>();
         Object current;
         while ((current = targetSendQueue.poll()) != null) {
-//          bulkReceiver.receive(target, current);
+          results.add(current);
         }
+        bulkReceiver.receive(target, results.iterator());
+
       }
 
       if (sourcesFinished && dataFlowOperation.isDelegeteComplete()

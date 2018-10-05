@@ -36,7 +36,9 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
 
   private SKeyedGather keyedGather;
 
-  private boolean reduceDone;
+  private boolean gatherDone;
+
+  private int count;
 
   @Override
   protected void execute() {
@@ -85,7 +87,7 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return reduceDone && sourcesDone && !keyedGather.hasPending();
+    return gatherDone && sourcesDone && !keyedGather.hasPending();
   }
 
   @Override
@@ -108,8 +110,11 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      LOG.log(Level.INFO, String.format("%d Received message %d count %d",
-          workerId, target, Iterators.size(it)));
+      int size = Iterators.size(it);
+      count += size;
+      LOG.log(Level.INFO, String.format("%d Received message %d count %d totalCount %d",
+          workerId, target, size, count));
+//      gatherDone = true;
       return true;
     }
   }
