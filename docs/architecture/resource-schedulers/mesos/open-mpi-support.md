@@ -23,43 +23,55 @@ that we use.
 
 **Open mpi install**
 
-    RUN wget https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz
+```bash
+ wget https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz
+ 
+ tar -zxvf openmpi-3.0.0.tar.gz -C
+ 
+ ENV OMPI\_BUILD="/openmpi-build"
+ 
+ ENV OMPI\_300="/openmpi-3.0.0"
+ 
+ ENV PATH="${OMPI\_BUILD}/bin:${PATH}"
+ 
+ ENV LD\_LIBRARY\_PATH="${OMPI\_BUILD}/lib:${LD\_LIBRARY\_PATH}"
+ 
+ export OMPI\_BUILD OMPI\_300 PATH LD\_LIBRARY\_PATH
+```
 
-    RUN tar -zxvf openmpi-3.0.0.tar.gz -C 
-
-    ENV OMPI\_BUILD="/openmpi-build"
-
-    ENV OMPI\_300="/openmpi-3.0.0"
-
-    ENV PATH="${OMPI\_BUILD}/bin:${PATH}"
-
-    ENV LD\_LIBRARY\_PATH="${OMPI\_BUILD}/lib:${LD\_LIBRARY\_PATH}"
-
-    RUN export OMPI\_BUILD OMPI\_300 PATH LD\_LIBRARY\_PATH
-
-    RUN cd /openmpi-3.0.0 && ls -la && ./configure --prefix=$OMPI\_BUILD
+```bash
+cd /openmpi-3.0.0 && ls -la && ./configure --prefix=$OMPI\_BUILD
     --enable-mpi-java --enable-mpirun-prefix-by-default
     --enable-orterun-prefix-by-default && make;make install
+rm openmpi-3.0.0.tar.gz
+```
 
-    RUN rm openmpi-3.0.0.tar.gz
+**OpenSSH install**
+  
+Set root password and change it
+ 
+```bash
+echo 'root:screencast' | chpasswd
+sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+```
 
-**OpenSSH install **
+SSH login fix. Otherwise user is kicked off after login
 
-    # Set root password Change it 
-    RUN echo 'root:screencast' | chpasswd
-    RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+```bash
+sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+```
 
-    # SSH login fix. Otherwise user is kicked off after login
-    RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+Install ssh and basic dependencies
 
-    # install ssh and basic dependencies
-    RUN apt-get update && \
-        apt-get install -yq --no-install-recommends \
-        locales wget ca-certificates ssh build-essential && \
-        apt-get install -y g++ && \
-        apt-get install -y maven && \
-        apt-get clean && apt-get purge && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
-        rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+```bash
+apt-get update && \
+apt-get install -yq --no-install-recommends \
+locales wget ca-certificates ssh build-essential && \
+apt-get install -y g++ && \
+apt-get install -y maven && \
+apt-get clean && apt-get purge && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+```
 
 **Password-free SSH Among Pods**
 
@@ -73,7 +85,9 @@ file called the hostfile. Therefore we need to create the host file
 before running the OpenMPI run command. This file is created in the
 class called MesosMPIMasterStarter.
 
--   *edu.iu.dsc.tws.rsched.schedulers.Mesos.mpi.MesosMPIMasterStarter*
+```text
+edu.iu.dsc.tws.rsched.schedulers.Mesos.mpi.MesosMPIMasterStarter
+```
 
 *Getting the IP addresses of Workers*
 
@@ -88,11 +102,13 @@ MPI master.
 MPI command is generated on the worker which runs as a MPI master. This
 command is;
 
-    String[] command = {"mpirun", "-allow-run-as-root", "-npernode",
+```text
+String[] command = {"mpirun", "-allow-run-as-root", "-npernode",
         "1", "--mca", "btl_tcp_if_include", "eth0",
         "--hostfile", "/twister2/hostFile", "java", "-cp",
         "twister2-job/libexamples-java.jar:twister2-core/lib/*",
         mpiClassNameToRun, mpiMaster.jobName, jobMasterIP};
+```
 
 Meaning of some of the parameters;
 
@@ -112,8 +128,10 @@ start the MPI job in this class as explained below.
 This class is used to run an MPI job on each MPI worker. MPI
 initialization and getting the ranking for the workers are done here.
 
-    MPI.Init(args);
-    workerID = MPI.COMM_WORLD.getRank();
+```text
+MPI.Init(args);
+workerID = MPI.COMM_WORLD.getRank();
+```
 
 After the initialization, logging and jobmaster client are initialized.
 The last thing is the starting MPI job by creating the resource plan and
@@ -128,14 +146,18 @@ The parameters are:
 
 In resource.yaml;
 
-    #overlay network name for docker containers
-    twister2.mesos.overlay.network.name: "mesos-overlay"
+```yaml
+#overlay network name for docker containers
+twister2.mesos.overlay.network.name: "mesos-overlay"
 
-    #Docker image name
-    twister2.docker.image.name: "twister2/twister2-mesos:docker-mpi"
+#Docker image name
+twister2.docker.image.name: "twister2/twister2-mesos:docker-mpi"
+```
 
 In client.yaml;
 
-    #Mesos will use docker container if the value is true.
-    twister2.use_docker_container: "true"
+```yaml
+#Mesos will use docker container if the value is true.
+twister2.use_docker_container: "true"
+```
 

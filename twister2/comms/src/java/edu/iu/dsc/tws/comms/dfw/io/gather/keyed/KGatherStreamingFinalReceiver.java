@@ -11,34 +11,47 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceStreamingReceiver;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 
 /**
  * Keyed reduce final receiver for streaming  mode
  */
-public class KGatherStreamingFinalReceiver extends KReduceStreamingReceiver {
+public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
   private static final Logger LOG = Logger.getLogger(KGatherStreamingFinalReceiver.class.getName());
 
   /**
    * Final receiver that get the reduced values for the operation
    */
-  private SingularReceiver singularReceiver;
+  private BulkReceiver bulkReceiver;
 
-  public KGatherStreamingFinalReceiver(ReduceFunction reduce, SingularReceiver receiver,
+  /**
+   * Streaming messages are only kept until the window size is met. by default the window size
+   * is 1, so all messages are forwarded as they arrive.
+   */
+  protected int windowSize = 1;
+
+  /**
+   * variable used to keep track of the current local window count. This value is always reset
+   * to 0 after it reaches the windowSize
+   */
+  protected int localWindowCount;
+
+
+  public KGatherStreamingFinalReceiver(BulkReceiver receiver,
                                        int window) {
-    this.reduceFunction = reduce;
-    this.singularReceiver = receiver;
+    this.bulkReceiver = receiver;
     this.limitPerKey = 1;
     this.windowSize = window;
     this.localWindowCount = 0;
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public boolean progress() {
     boolean needsFurtherProgress = false;
     boolean sourcesFinished = false;
@@ -56,10 +69,13 @@ public class KGatherStreamingFinalReceiver extends KReduceStreamingReceiver {
       }
 
       if (!targetSendQueue.isEmpty()) {
+        List<Object> results = new ArrayList<Object>();
         Object current;
         while ((current = targetSendQueue.poll()) != null) {
-          singularReceiver.receive(target, current);
+          results.add(current);
         }
+        bulkReceiver.receive(target, results.iterator());
+
       }
 
       if (sourcesFinished && dataFlowOperation.isDelegeteComplete()

@@ -41,6 +41,7 @@ import edu.iu.dsc.tws.examples.comms.stream.SAllGatherExample;
 import edu.iu.dsc.tws.examples.comms.stream.SAllReduceExample;
 import edu.iu.dsc.tws.examples.comms.stream.SBroadcastExample;
 import edu.iu.dsc.tws.examples.comms.stream.SGatherExample;
+import edu.iu.dsc.tws.examples.comms.stream.SKeyedGatherExample;
 import edu.iu.dsc.tws.examples.comms.stream.SKeyedPartitionExample;
 import edu.iu.dsc.tws.examples.comms.stream.SKeyedReduceExample;
 import edu.iu.dsc.tws.examples.comms.stream.SPartitionExample;
@@ -183,7 +184,7 @@ public class ExampleMain {
           submitJob(config, workers, jobConfig, SGatherExample.class.getName());
           break;
         case "keyedgather":
-//          submitJob(config, workers, jobConfig, SKeyedGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, SKeyedGatherExample.class.getName());
           break;
         case "allreduce":
           submitJob(config, workers, jobConfig, SAllReduceExample.class.getName());

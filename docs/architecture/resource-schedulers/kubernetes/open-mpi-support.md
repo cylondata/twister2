@@ -53,17 +53,15 @@ When using OpenMPI, since openMPI is assigning unique IDs to each worker, we use
 
 ## Configuration Parameters
 
-Since OpenMPI jobs are started differently than regular Twister2 jobs, a configuration parameter is used to tell whether a job will use OpenMPI.
-
-The parameter name is:
+OpenMPI jobs are started when users specify OpenMPI channel as their network channel in configuration as: 
 
 ```text
-kubernetes.workers.use.openmpi
+twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel"
 ```
 
-The value of this parameter has to be "true" to enable OpenMPI. By default, the value of this parameter is false.
-
-A second parameter specifies the name of Kubernetes Secret object. Secret object can ne either created by the administrator when Twister2 is installed or created by a user. However, its name must be specified as a parameter. Parameter name:
+A second parameter specifies the name of Kubernetes Secret object. 
+Secret object can be either created by the administrator when Twister2 is installed or created by a user. 
+However, its name must be specified as a parameter. Parameter name:
 
 ```text
 kubernetes.secret.name

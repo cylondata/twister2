@@ -12,8 +12,7 @@ The task graphs can be defined in two ways namely
 
 1. static task graph - the structure of the task graph known at compile time
 2. dynamic task graph - the structure of the task graph not known at compile time and the program
-
-   could define the structure of the task graph during runtime.
+ could define the structure of the task graph during runtime.
 
 The following three essential points should be considered while creating and scheduling the task instances of the task graph.
 
@@ -27,9 +26,7 @@ The following three essential points should be considered while creating and sch
 
 There are two types of task graphs namely directed task graph and undirected task graph. In directed task graph, the edges in the task graph that connects the task vertexes have a direction as shown in Fig.1 whereas in undirected task graph, the edges in the task graph that connects the task vertexes have no direction as shown in Fig 2.
 
-![Alt text](../../../.gitbook/assets/directed.png)
-
-![Alt text](../../../.gitbook/assets/undirected.png)
+![Directed Graph](directed.png)  ![UnDirected Graph](undirected.png)
 
 The present taskgraph system is capable of generating/considering only directed dataflow task graph which consists of task vertices and task edges. The directed dataflow task graph represents that there is no loops or self-loops. The task vertices represent the source and target task vertex and the task edge represent the edges to connect the task vertices.
 
