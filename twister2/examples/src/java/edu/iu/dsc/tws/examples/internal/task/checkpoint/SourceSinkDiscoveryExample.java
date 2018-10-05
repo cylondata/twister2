@@ -74,12 +74,6 @@ public class SourceSinkDiscoveryExample implements IWorker {
     builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
     builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
 
-    List<String> sourceInputDataset = new ArrayList<>();
-    sourceInputDataset.add("dataset1.txt");
-    sourceInputDataset.add("dataset2.txt");
-
-    builder.addConfiguration("source", "inputdataset", sourceInputDataset);
-
     DataFlowTaskGraph graph = builder.build();
 
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
