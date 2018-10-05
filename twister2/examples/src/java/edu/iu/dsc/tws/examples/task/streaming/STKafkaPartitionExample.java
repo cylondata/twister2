@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
-public class STPartitionExample extends BenchTaskWorker {
+public class STKafkaPartitionExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(STPartitionExample.class.getName());
 
