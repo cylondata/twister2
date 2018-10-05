@@ -45,10 +45,10 @@ Notation :
 `DFW` refers to Twister2  
 `BSP` refers to MPI (OpenMPI)  
 
-![Kmeans Performance Comparison](images/kmeans_comparison.png)
-## Future plans
+![Kmeans Performance Comparison](images/kmeans_comparison.png =250x100)
+## Things we are working on
 
-Twister2 is an evolving project and we are focused on the following developments
+These are things we are actively working on and planning to work on.
 
 1. Hierarchical task scheduling - Ability to run different types of jobs in a single dataflow
 2. Fault tolerance
