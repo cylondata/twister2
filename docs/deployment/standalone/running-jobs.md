@@ -58,3 +58,19 @@ You can follow the [Compiling Guide](../compiling.md) to get instructions on how
 
 Standalone uses OpenMPI to start the job. Underneath it uses mpirun command to execute the job. You can change the parameters
 of mpirun inside the ```conf/standalone/mpi.sh``` script.
+
+## Deploying and Running on a MPI cluster
+
+Follow the [Guid on Running an MPI Cluster within a LAN](http://mpitutorial.com/tutorials/running-an-mpi-cluster-within-a-lan/) to setup your MPI cluster. 
+
+Twister2 when running in standalone mode, picks the [hostfile](https://www.open-mpi.org/faq/?category=running#mpirun-hostfile) from ```conf/standalone/nodes```
+
+Twister2 by default assumes that all the nodes in MPI cluster have access to a [NFS(Network File System)](https://en.wikipedia.org/wiki/Network_File_System)
+This default behaviour can be changed by setting ``twister2.resource.sharedfs`` of `conf/standalone/resource.yml` to ``false``
+
+### Troubleshooting common errors
+
+* Make sure you are running the same MPI version in all nodes. 
+* Make sure your executables are residing at the same location on all nodes
+* If you have multiple network interfaces in each node, make sure you [specify which interfaces](https://www.open-mpi.org/faq/?category=tcp#tcp-connection-errors) to use by specifying them explicitly
+in ``conf/standalone/bootstrap.sh`` and ``conf/standalone/mpi.sh`` 
