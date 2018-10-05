@@ -45,7 +45,7 @@ Notation :
 `DFW` refers to Twister2  
 `BSP` refers to MPI (OpenMPI)  
 
-![Kmeans Performance Comparison](images/kmeans_comparison.png =250x100)
+![Kmeans Performance Comparison](images/kmeans_comparison.png)
 ## Things we are working on
 
 These are things we are actively working on and planning to work on.
