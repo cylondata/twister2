@@ -109,9 +109,10 @@ public abstract class BenchTaskWorker extends TaskWorker {
         } else if (count < iterations) {
           experimentData.setInput(val);
           if (context.write(this.edge, val)) {
-            count++;
+            //
           }
         }
+        count++;
       }
     }
   }
@@ -140,9 +141,10 @@ public abstract class BenchTaskWorker extends TaskWorker {
         } else if (count < iterations) {
           experimentData.setInput(val);
           if (context.write(edge, count, val)) {
-            count++;
+            //
           }
         }
+        count++;
       }
     }
   }
@@ -163,12 +165,13 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
+      experimentData.setInput(val);
       int iterations = jobParameters.getIterations();
       while (count <= iterations) {
-        experimentData.setInput(val);
         if (context.write(this.edge, val)) {
-          count++;
+          //
         }
+        count++;
       }
     }
   }
@@ -178,7 +181,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
     private String edge;
 
-    private int count;
+    private int count = 0;
 
     public KeyedSourceStreamTask() {
     }
@@ -194,8 +197,9 @@ public abstract class BenchTaskWorker extends TaskWorker {
       while (count <= iterations) {
         experimentData.setInput(val);
         if (context.write(edge, count, val)) {
-          count++;
+          //
         }
+        count++;
       }
     }
   }
