@@ -168,10 +168,11 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
         ArrayDeque<Object> messagesPerKey = new ArrayDeque<>();
         messagesPerKey.add(keyedContent.getValue());
         messagesPerTarget.put(keyedContent.getKey(), messagesPerKey);
+        localWindowCount++;
       }
     }
-
     if (localWindowCount > windowSize) {
+
       if (moveMessagesToSendQueue(target, messagesPerTarget)) {
         //TODO: what if the move returns false, do we still set the localWindowCount to zero?
         localWindowCount = 0;

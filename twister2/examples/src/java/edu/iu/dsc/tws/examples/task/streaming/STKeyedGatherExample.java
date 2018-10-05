@@ -11,12 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
@@ -31,7 +35,7 @@ public class STKeyedGatherExample extends BenchTaskWorker {
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     DataType keyType = DataType.OBJECT;
-    DataType dataType = DataType.INTEGER;
+    DataType dataType = DataType.OBJECT;
     String edge = "edge";
     BaseStreamSource g = new KeyedSourceStreamTask(edge);
     BaseStreamSink r = new KeyedGatherSinkTask();
@@ -47,14 +51,40 @@ public class STKeyedGatherExample extends BenchTaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.info("Message Keyed-Gathered : " + message.getContent().getClass().getName());
       Object object = message.getContent();
-      if (count % jobParameters.getPrintInterval() == 0) {
-        LOG.info("Message Keyed-Gather : " + object.getClass().getName()
-            + ", Count : " + count);
+      LOG.info("Message Keyed-Gather : " + message.getContent()
+          + ", Count : " + count);
+      if (object instanceof Iterator) {
+        Iterator<?> it = (Iterator<?>) object;
+        while (it.hasNext()) {
+          Object value = it.next();
+          LOG.info("Value : " + value.getClass().getName());
+          if (value instanceof KeyedContent) {
+            KeyedContent l = (KeyedContent) value;
+            Object key = l.getKey();
+            Object val = l.getValue();
+            LOG.info("Value : " + val.getClass().getName());
+            if (count % jobParameters.getPrintInterval() == 0) {
+              if (val instanceof int[]) {
+                int[] objects = (int[]) val;
+                if (count % jobParameters.getPrintInterval() == 0) {
+                  experimentData.setOutput(objects);
+                  try {
+                    verify(OperationNames.KEYED_GATHER);
+                  } catch (VerificationException e) {
+                    LOG.info("Exception Message : " + e.getMessage());
+                  }
+                }
+                  /*LOG.info("Keyed-Gathered Message , Key : " + key + ", Value : "
+                      + Arrays.toString(a));*/
+              }
+            }
+          }
+        }
+
       }
-      count++;
       return true;
     }
+
   }
 }

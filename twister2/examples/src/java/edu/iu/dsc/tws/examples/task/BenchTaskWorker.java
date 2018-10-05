@@ -57,14 +57,17 @@ public abstract class BenchTaskWorker extends TaskWorker {
     experimentData = new ExperimentData();
     jobParameters = JobParameters.build(config);
     experimentData.setTaskStages(jobParameters.getTaskStages());
-    experimentData.setIterations(jobParameters.getIterations());
     taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     if (jobParameters.isStream()) {
       taskGraphBuilder.setMode(OperationMode.STREAMING);
       experimentData.setOperationMode(OperationMode.STREAMING);
+      //streaming application doesn't consider iteration as a looping of the action on the
+      //same data set. It's rather producing an streaming of data
+      experimentData.setIterations(1);
     } else {
       taskGraphBuilder.setMode(OperationMode.BATCH);
       experimentData.setOperationMode(OperationMode.BATCH);
+      experimentData.setIterations(jobParameters.getIterations());
     }
     buildTaskGraph();
     dataFlowTaskGraph = taskGraphBuilder.build();
