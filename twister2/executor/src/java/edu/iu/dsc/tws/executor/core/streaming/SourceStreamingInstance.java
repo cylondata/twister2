@@ -33,8 +33,6 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceStreamingInstance implements INodeInstance {
 
-  private static final long serialVersionUID = -8783744683896503488L;
-
   private static final Logger LOG = Logger.getLogger(SourceStreamingInstance.class.getName());
   /**
    * The actual streamingTask executing
@@ -123,7 +121,8 @@ public class SourceStreamingInstance implements INodeInstance {
     if (CheckpointContext.getCheckpointRecovery(config)) {
       try {
         LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-        this.streamingTask = fsStateBackend.readFromStateBackend(config, streamingTaskId, workerId);
+//        this.streamingTask = (ISource) fsStateBackend.readFromStateBackend(config,
+//            streamingTaskId, workerId);
       } catch (Exception e) {
         LOG.log(Level.WARNING, "Could not read checkpoint", e);
       }
@@ -205,10 +204,8 @@ public class SourceStreamingInstance implements INodeInstance {
       return true;
     } catch (Exception e) {
       LOG.log(Level.WARNING, "Could not store checkpoint", e);
+      return false;
     }
-    return false;
-
   }
-
 
 }

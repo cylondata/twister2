@@ -21,12 +21,12 @@ import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.local.LocalDataInputStream;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 import edu.iu.dsc.tws.executor.core.Runtime;
-import edu.iu.dsc.tws.task.api.ISource;
+import edu.iu.dsc.tws.task.api.INode;
 
 public class LocalStreamingStateBackend {
 
-  public ISource readFromStateBackend(Config config, int streamingTaskId,
-                                      int workerId) throws IOException {
+  public Object readFromStateBackend(Config config, int streamingTaskId,
+                                     int workerId) throws IOException {
 
     Runtime runtime = (Runtime) config.get(Runtime.RUNTIME);
     Path path1 = new Path(runtime.getParentpath(), runtime.getJobName());
@@ -45,18 +45,19 @@ public class LocalStreamingStateBackend {
     KryoSerializer kryoSerializer = new KryoSerializer();
     System.out.println(String.valueOf(streamingTaskId) + "_" + String.valueOf(workerId)
         + " StreamTask is resumed");
-    return (ISource) kryoSerializer.deserialize(checkpoint);
+    return kryoSerializer.deserialize(checkpoint);
   }
 
   public void writeToStateBackend(Config config, int streamingTaskId,
-                                  int workerId, ISource streamingTask) throws Exception {
+                                  int workerId, INode streamingTask) throws Exception {
     Runtime runtime = (Runtime) config.get(Runtime.RUNTIME);
     Path path1 = new Path(runtime.getParentpath(), runtime.getJobName());
     LocalFileSystem localFileSystem = (LocalFileSystem) runtime.getFileSystem();
     FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path1, path1,
         0, localFileSystem);
     KryoSerializer kryoSerializer = new KryoSerializer();
-    byte[] checkpoint = kryoSerializer.serialize(streamingTask);
+//    byte[] checkpoint = kryoSerializer.serialize(streamingTask);
+    byte[] checkpoint = kryoSerializer.serialize(streamingTaskId);
 
     FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
         fs.createCheckpointStateOutputStream();

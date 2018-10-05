@@ -15,8 +15,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
@@ -27,7 +29,7 @@ import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class SinkStreamingInstance  implements INodeInstance {
+public class SinkStreamingInstance implements INodeInstance {
 
   private static final Logger LOG = Logger.getLogger(SinkStreamingInstance.class.getName());
 
@@ -94,6 +96,15 @@ public class SinkStreamingInstance  implements INodeInstance {
     this.nodeConfigs = cfgs;
     this.workerId = wId;
     this.taskName = tName;
+    if (CheckpointContext.getCheckpointRecovery(config)) {
+      try {
+        LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+//        this.streamingTask = (ISink) fsStateBackend.readFromStateBackend(config,
+//            streamingTaskId, workerId);
+      } catch (Exception e) {
+        LOG.log(Level.WARNING, "Could not read checkpoint", e);
+      }
+    }
   }
 
   public void prepare() {
@@ -140,6 +151,13 @@ public class SinkStreamingInstance  implements INodeInstance {
   }
 
   public boolean storeSnapshot() {
-    return true;
+    try {
+      LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+      fsStateBackend.writeToStateBackend(config, streamingTaskId, workerId, streamingTask);
+      return true;
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, "Could not store checkpoint ", e);
+      return false;
+    }
   }
 }
