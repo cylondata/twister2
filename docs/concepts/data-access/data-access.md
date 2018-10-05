@@ -7,7 +7,7 @@ which consists of namenode and datanode.
 Twister2 provides the support for both local file system and distributed file system. The main configuration file for integrating Twister2 with HDFS
 is data.yaml configuration file. The main contents of data.yaml are given below. 
 
-## data.yaml configuration file
+## data.yaml file
 
 The user has to specify their HDFS cluster namenode in twister2.hdfs.url and twister2.hdfs.namenode. Also, they have to
 specify the respective data directory name as twister2.hdfs.data.directory.
