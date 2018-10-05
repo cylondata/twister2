@@ -59,9 +59,13 @@ Notation :
 
 ![Kmeans Performance Comparison](images/kmeans_comparison_low.png)
 
-## Things we are working on
+## Road map
 
-These are things we are actively working on and planning to work on.
+We have started working on our next major release that will connect the core components we have developed 
+into a full data analytics environment. In particular it will focus on providing APIs around the core
+capabilities of Twister2 and integration of applications in a single dataflow. 
+
+### Next release (End of December 2018)
 
 1. Hierarchical task scheduling - Ability to run different types of jobs in a single dataflow
 2. Fault tolerance
@@ -72,6 +76,15 @@ These are things we are actively working on and planning to work on.
 6. More resource managers - Pilot Jobs, Yarn
 7. More example applications
 
+### Beyond next release
+
+1. Implementing core parts of Twister2 with C/C++ for high performance 
+2. Python APIs
+3. Direct use of RDMA
+4. FaaS APIs 
+5. SQL interface 
+6. Native MPI support for cloud deployements
+
 ## Important Links
 
 Harp is a separate project and its documentation can be found in [website](https://dsc-spidal.github.io/harp/)
@@ -79,3 +92,7 @@ Harp is a separate project and its documentation can be found in [website](https
 We use OpenMPI for HP communications [OpenMPI](https://www.open-mpi.org/)
   
 Twister2 started as a research project at Indiana University [Digital Science Center](https://www.dsc.soic.indiana.edu/).
+
+## License
+
+Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
