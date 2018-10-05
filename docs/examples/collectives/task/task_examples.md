@@ -18,7 +18,10 @@ Twister2.
 6. KeyedGather
 7. Broadcast
 8. Partition
-After building the project, you can run the batch mode examples as follows. 
+After building the project, you can run the batch mode examples as follows. First you need
+to extract the twister2-0.1.0-no-mpi.tar.gz located within the bazel-bin/scripts/package,
+if you have already installed Open MPI separately and not using the project built Open MPI
+version. 
 
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr <iterations> -workers <workers> -size <data_size> -op "<operation>" -stages <source_parallelsim>,<sink_parallelism> -<flag> -verify
@@ -81,7 +84,7 @@ After creating the source and sink task, depending on the collective operation u
 create the task graph as stated in the following examples. The created source and 
 sink tasks must be added to the task graph with source and sink names with unique identities.
 
-The following graph building refers to a reduction based example, which will be elaborated
+The following [task graph](../../../concepts/task-graph/task-graph.md)  building refers to a reduction based example, which will be elaborated
 in the following sections.  
 
 ```java
@@ -100,20 +103,22 @@ sum, product or division.
 
 ```java  
 
-public TaskGraphBuilder buildTaskGraph() {
+@Override
+  public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
-    Op operation = Op.SUM;
-    DataType dataType = DataType.INTEGER;
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
+
     String edge = "edge";
     BaseBatchSource g = new SourceBatchTask(edge);
     BaseBatchSink r = new ReduceSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.reduce(SOURCE, edge, operation, dataType);
+
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection.reduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
     return taskGraphBuilder;
-}
+  }
+
 ```
 In the buildTaskGraph method we specify the task graph that we are going to build.
 This is a very simple task graph which has a source and a sink task with a user defined
@@ -138,14 +143,15 @@ protected static class SourceBatchTask extends BaseBatchSource {
     @Override
     public void execute() {
       Object val = generateData();
-      Object last = generateEmpty();
-      if (count == 1) {
-        if (context.writeEnd(this.edge, last)) {
-          count++;
-        }
-      } else if (count < 1) {
-        if (context.write(this.edge, val)) {
-          count++;
+      int iterations = jobParameters.getIterations();
+      while (count <= iterations) {
+        if (count == iterations) {
+          context.end(this.edge);
+        } else if (count < iterations) {
+          experimentData.setInput(val);
+          if (context.write(this.edge, val)) {
+            count++;
+          }
         }
       }
     }
@@ -167,16 +173,16 @@ and sink parallelism of 1, added with result verification.
 
 public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
-    Op operation = Op.SUM;
-    DataType dataType = DataType.INTEGER;
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
+
     String edge = "edge";
     BaseBatchSource g = new SourceBatchTask(edge);
     BaseBatchSink r = new AllReduceSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.allreduce(SOURCE, edge, operation, dataType);
+
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection.allreduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
     return taskGraphBuilder;
   }
 ```
@@ -198,14 +204,14 @@ one, added with result verification.
 
 public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseBatchSource g = new SourceBatchTask(edge);
     BaseBatchSink r = new GatherSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
     return taskGraphBuilder;
   }
@@ -225,16 +231,16 @@ and sink parallelism of 1.
 
 ```java  
 
-public TaskGraphBuilder buildTaskGraph() {
+ public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseBatchSource g = new SourceBatchTask(edge);
     BaseBatchSink r = new AllGatherSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.allgather(SOURCE, edge, dataType);
     return taskGraphBuilder;
   }
@@ -254,17 +260,17 @@ and sink parallelism of 8.
 ```java  
 
  public TaskGraphBuilder buildTaskGraph() {
-    List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
-    String edge = "edge";
-    BaseBatchSource g = new SourceBatchTask(edge);
-    BaseBatchSink r = new BroadcastSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.broadcast(SOURCE, edge);
-    return taskGraphBuilder;
-  }
+     List<Integer> taskStages = jobParameters.getTaskStages();
+     int sourceParallelism = taskStages.get(0);
+     int sinkParallelism = taskStages.get(1);
+     String edge = "edge";
+     BaseBatchSource g = new SourceBatchTask(edge);
+     BaseBatchSink r = new BroadcastSinkTask();
+     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+     computeConnection.broadcast(SOURCE, edge);
+     return taskGraphBuilder;
+   }
 ```
 
 Running a broadcast operation on a size of 8 array with 4 workers iterating once with source parallelism of 1
@@ -282,14 +288,14 @@ and sink parallelism of 8.
 ```java  
  public TaskGraphBuilder buildTaskGraph() {
      List<Integer> taskStages = jobParameters.getTaskStages();
-     int psource = taskStages.get(0);
-     int psink = taskStages.get(1);
+     int sourceParallelism = taskStages.get(0);
+     int sinkParallelism = taskStages.get(1);
      DataType dataType = DataType.INTEGER;
      String edge = "edge";
      BaseBatchSource g = new SourceBatchTask(edge);
      BaseBatchSink r = new PartitionSinkTask();
-     taskGraphBuilder.addSource(SOURCE, g, psource);
-     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
      computeConnection.partition(SOURCE, edge, dataType);
      return taskGraphBuilder;
    }
@@ -309,25 +315,20 @@ and sink parallelism of 8.
 
 ```java  
   public TaskGraphBuilder buildTaskGraph() {
-     List<Integer> taskStages = jobParameters.getTaskStages();
-     int psource = taskStages.get(0);
-     int psink = taskStages.get(1);
-     Op operation = Op.SUM;
-     DataType keyType = DataType.OBJECT;
-     DataType dataType = DataType.INTEGER;
-     String edge = "edge";
-     BaseBatchSource g = new SourceBatchTask(edge);
-     BaseBatchSink r = new KeyedReduceSinkTask();
-     taskGraphBuilder.addSource(SOURCE, g, psource);
-     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-     computeConnection.keyedReduce(SOURCE, edge, new IFunction() {
-       @Override
-       public Object onMessage(Object object1, Object object2) {
-         return object1;
-       }
-     }, keyType, dataType);
-     return taskGraphBuilder;
-   }
+      List<Integer> taskStages = jobParameters.getTaskStages();
+      int sourceParallelsim = taskStages.get(0);
+      int sinkParallelism = taskStages.get(1);
+      Op operation = Op.SUM;
+      DataType keyType = DataType.OBJECT;
+      DataType dataType = DataType.INTEGER;
+      String edge = "edge";
+      BaseBatchSource g = new SourceBatchTask(edge);
+      BaseBatchSink r = new KeyedReduceSinkTask();
+      taskGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
+      computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+      computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
+      return taskGraphBuilder;
+    }
 ```
 
 Running a keyed reduce operation on a size of 8 array with 4 workers iterating once with source parallelism of 8
@@ -346,15 +347,15 @@ and sink parallelism of 1.
 ```java  
   public TaskGraphBuilder buildTaskGraph() {
       List<Integer> taskStages = jobParameters.getTaskStages();
-      int psource = taskStages.get(0);
-      int psink = taskStages.get(1);
+      int sourceParallelism = taskStages.get(0);
+      int sinkParallelism = taskStages.get(1);
       DataType keyType = DataType.OBJECT;
       DataType dataType = DataType.INTEGER;
       String edge = "edge";
       BaseBatchSource g = new SourceBatchTask(edge);
       BaseBatchSink r = new KeyedGatherSinkTask();
-      taskGraphBuilder.addSource(SOURCE, g, psource);
-      computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+      taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+      computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
       computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
       return taskGraphBuilder;
     }
@@ -374,19 +375,19 @@ and sink parallelism of 1.
 ### KeyedPartition Example
 
 ```java  
-  public TaskGraphBuilder buildTaskGraph() {
+   public TaskGraphBuilder buildTaskGraph() {
       List<Integer> taskStages = jobParameters.getTaskStages();
-      int psource = taskStages.get(0);
-      int psink = taskStages.get(1);
-      DataType keyType = DataType.OBJECT;
+      int sourceParallelism = taskStages.get(0);
+      int sinkParallelism = taskStages.get(1);
       DataType dataType = DataType.INTEGER;
+      DataType keyType = DataType.INTEGER;
       String edge = "edge";
-      BaseBatchSource g = new SourceBatchTask(edge);
-      BaseBatchSink r = new KeyedGatherSinkTask();
-      taskGraphBuilder.addSource(SOURCE, g, psource);
-      computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-      computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
-      return taskGraphBuilder;
+      BaseBatchSource g = new KeyedSourceBatchTask(edge);
+      BaseBatchSink r = new KeyedPartitionSinkTask();
+      taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+      computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+      computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
+      return taskGraphBuilder;      
     }
 ```
 
