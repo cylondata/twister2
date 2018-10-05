@@ -29,7 +29,23 @@ We support the following components in Twister2
 Twister2 can be deployed both in HPC and cloud environments. When deployed in a HPC environment, it 
 can use OpenMPI for its communications. It can be programmed at different levels depending on the 
 application types giving the user the flexibility to use underlying features.
-     
+
+## High performance communication layer
+
+Because of the bottom up approach taken when designing and implementing Twister2 the communication 
+layer performs extremely well. A complete study on the Twister2 communication layer can be found at
+[Twister2:Net](https://www.computer.org/csdl/proceedings/cloud/2018/7235/00/723501a383-abs.html). 
+
+The image below which is extracted from [Twister2:Net](https://www.computer.org/csdl/proceedings/cloud/2018/7235/00/723501a383-abs.html) show how
+Twister2 performs against Apache Spark and MPI. Please note that Spark KMeans example is written using the data level API 
+while Twister2 and MPI implementations are communication level applications. However it is clear that Twister2 performs on the same
+level as OpenMPI which is an highly optimized communication library in the HPC world. And it out performs Spark by roughly a factor of x10.
+
+Notation : 
+`DFW` refers to Twister2
+`BSP` refers to MPI (OpenMPI)
+
+![Kmeans Performance Comparison](images/kmeans_comparison.png)
 ## Things we are working on
 
 These are things we are actively working on and planning to work on.
