@@ -77,19 +77,19 @@ Example:
 In this example we assume that there are 4 source tasks with logical is from `0` to `3` and 4 sink tasks with logical ids
 from `4` to `7`. Lets assume that task `0` generates the following set of data arrays.
 
-`{0,1,2}`
-`{1,2,3}`
-`{2,3,4}`
-`{3,4,5}`
+`{0,1,2}`  
+`{1,2,3}`  
+`{2,3,4}`  
+`{3,4,5}`  
 
 If the partition operation is using the "LoadBalanceSelector" for destination selection then each of the 
 sink tasks will receive a single data array. The assigment of data arrays will depend on how the "LoadBalanceSelector"
 distributes the data. And example assigment might look as follows.
 
-`{0,1,2}` -> `4`
-`{1,2,3}` -> `5`
-`{2,3,4}` -> `6`
-`{3,4,5}` -> `6`
+`{0,1,2}` -> `4`  
+`{1,2,3}` -> `5`  
+`{2,3,4}` -> `6`  
+`{3,4,5}` -> `6`  
 
 
 ## TaskPlan
