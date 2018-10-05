@@ -52,7 +52,6 @@ public class STGatherExample extends BenchTaskWorker {
     @Override
     public boolean execute(IMessage message) {
       Object object = message.getContent();
-      LOG.info("Object Type : " + object.getClass().getName());
       if (count % jobParameters.getPrintInterval() == 0) {
 
         if (object instanceof Iterator) {
