@@ -63,15 +63,14 @@ public class Context {
   public static final ConfigEntry AURORA_SCRIPT = new ConfigEntry(
       "twister2.resource.scheduler.aurora.script", "${TWISTER2_CONF}/twister2.aurora");
 
+  public static final ConfigEntry CHECKPOINT_YAML = new ConfigEntry(
+      "twister2.config.file.checkpoint.yaml", "${TWISTER2_CONF}/checkpoint.yaml");
+
   public static final ConfigEntry DATA_YAML = new ConfigEntry(
       "twister2.config.file.data.yaml", "${TWISTER2_CONF}/data.yaml");
 
   public static final ConfigEntry HADOOP_HOME = new ConfigEntry(
       "twister2.hadoop.home", "${HADOOP_HOME}", null, "HADOOP_HOME");
-
-
-  public static final ConfigEntry CHECKPOINT_YAML = new ConfigEntry(
-      "twister2.config.file.checkpoint.yaml", "${TWISTER2_CONF}/checkpoint.yaml");
 
 
   public static final String JOB_NAME = "twister2.job.name";
@@ -101,8 +100,6 @@ public class Context {
   public static final String TWISTER2_VERSION = "0.1.0";
 
 
-
-
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
     substitutions.put("HOME", HOME);
@@ -128,8 +125,8 @@ public class Context {
     defaults.put(SYSTEM_YAML.getKey(), SYSTEM_YAML.getDefaultValue());
     defaults.put(UPLOADER_YAML.getKey(), UPLOADER_YAML.getDefaultValue());
     defaults.put(AURORA_SCRIPT.getKey(), AURORA_SCRIPT.getDefaultValue());
-    defaults.put(DATA_YAML.getKey(), DATA_YAML.getDefaultValue());
     defaults.put(CHECKPOINT_YAML.getKey(), CHECKPOINT_YAML.getDefaultValue());
+    defaults.put(DATA_YAML.getKey(), DATA_YAML.getDefaultValue());
   }
 
   protected Context() {
@@ -165,6 +162,10 @@ public class Context {
 
   public static String dataConfigurationFile(Config cfg) {
     return cfg.getStringValue(DATA_YAML);
+  }
+
+  public static String checkpointCofigurationFile(Config cfg) {
+    return cfg.getStringValue(CHECKPOINT_YAML);
   }
 
   public static String clusterType(Config cfg) {
