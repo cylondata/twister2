@@ -1,6 +1,7 @@
 # Table of contents
 
 * [Introduction](README.md)
+* [Download](download.md)
 * [Quickstart](quickstart.md)
 * [Deployment](deployment/README.md)
   * [Compiling](deployment/compiling.md)
@@ -56,7 +57,6 @@
   * [Task Examples](examples/collectives/task/task_examples.md)
   * [Communication Examples](examples/collectives/comms/comms_examples.md)
   * [K-Means](examples/kmeans/kmeans_example.md)
-* [Download](download.md)
 * [Community](community/README.md)
   * [Mailing List & Resources](community/mailing-list-and-resources.md)
   * [Contributing to Twister2](community/contributing-to-twister2.md)
