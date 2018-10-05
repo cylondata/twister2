@@ -21,6 +21,8 @@ These concepts are widely discussed in the following papers.
 This section describes those components in more details.
 
 * [Communication](communication/communication-model.md)
+* [Task System](task-system/task-system.md)
 * [Task Graph](task-graph/task-graph.md)
 * [Task Scheduler](task-scheduler/task-scheduler.md)
 * [Executor](executor/executor.md)
+* [Data Access](data-access/data-access.md)
