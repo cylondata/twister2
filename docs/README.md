@@ -96,3 +96,7 @@ Twister2 started as a research project at Indiana University [Digital Science Ce
 ## License
 
 Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
+
+## Acknowledgements
+
+This work was partially supported by NSF CIF21 DIBBS 1443054 and the Indiana University Precision Health initiative.
