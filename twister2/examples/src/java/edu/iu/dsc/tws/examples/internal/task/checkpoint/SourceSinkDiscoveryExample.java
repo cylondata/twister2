@@ -15,6 +15,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -43,6 +44,7 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
+import edu.iu.dsc.tws.task.api.Snapshot;
 import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -76,11 +78,11 @@ public class SourceSinkDiscoveryExample implements IWorker {
     Config newconfig = runtime.updateConfig(config);
 
     if (workerID == 1) {
-      System.out.println("Statebackend directory is created for job: " + runtime.getJobName());
+      LOG.log(Level.INFO, "Statebackend directory is created for job: " + runtime.getJobName());
       FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path, path,
           runtime.getJobName(), 0);
-
     }
+
     GeneratorTask g = new GeneratorTask();
 
     ReceivingTask r = new ReceivingTask();
@@ -125,20 +127,26 @@ public class SourceSinkDiscoveryExample implements IWorker {
     public void execute() {
       if (count % 1000000 == 0) {
         checkForBarrier();
+        this.addState("count", count);
       }
       if (count % 1000000 == 0) {
         ctx.write("partition-edge", "Hello");
-        System.out.println("count is " + count);
+        LOG.log(Level.INFO, "count for source is " + count);
       }
 
       count++;
     }
 
-
     @Override
     public void prepare(Config cfg, TaskContext context) {
       connect(cfg, context);
       this.ctx = context;
+    }
+
+    @Override
+    public void restoreSnapshot(Snapshot snapshot) {
+      super.restoreSnapshot(snapshot);
+      count = (int) this.getState("count");
     }
   }
 
@@ -154,17 +162,24 @@ public class SourceSinkDiscoveryExample implements IWorker {
     public boolean execute(IMessage message) {
       System.out.println(message.getContent() + " from Sink Task " + ctx.taskId());
       count++;
-      System.out.println("count in sink is " + count);
-
+      LOG.log(Level.INFO, "count in sink is " + count);
+      this.addState("count", count);
       return true;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
-
       connect(cfg, context);
     }
+
+    @Override
+    public void restoreSnapshot(Snapshot snapshot) {
+      super.restoreSnapshot(snapshot);
+      count = (int) this.getState("count");
+    }
+
+
   }
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
