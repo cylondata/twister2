@@ -202,7 +202,12 @@ public final class K8sWorkerUtils {
       LOG.fine("Decoded NodeInfo list, size: " + nodeInfoList.size()
           + "\n" + NodeInfo.listToString(nodeInfoList));
 
-      nodeInfo = nodeInfoList.get(nodeInfoList.indexOf(nodeInfo));
+      int index = nodeInfoList.indexOf(nodeInfo);
+      if (index < 0) {
+        LOG.warning("nodeIP does not exist in received encodedNodeInfoList. Using local value.");
+        return nodeInfo;
+      }
+      nodeInfo = nodeInfoList.get(index);
     }
 
     return nodeInfo;

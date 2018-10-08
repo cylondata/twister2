@@ -88,6 +88,7 @@ public final class K8sWorkerStarter {
     String podName = localHost.getHostName();
 
     String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podName);
+    LOG.fine("nodeIP: " + nodeIP + "\nencodedNodeInfoList: " + encodedNodeInfoList);
     NodeInfo thisNodeInfo = null;
     if (nodeIP == null) {
       LOG.warning("Could not get nodeIP for this pod. Using podIP as nodeIP.");
