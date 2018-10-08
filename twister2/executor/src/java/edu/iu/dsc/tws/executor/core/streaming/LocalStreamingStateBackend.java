@@ -13,6 +13,8 @@
 package edu.iu.dsc.tws.executor.core.streaming;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.state_backend.FsCheckpointStreamFactory;
 import edu.iu.dsc.tws.common.config.Config;
@@ -21,9 +23,11 @@ import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.local.LocalDataInputStream;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 import edu.iu.dsc.tws.executor.core.Runtime;
-import edu.iu.dsc.tws.task.api.INode;
+import edu.iu.dsc.tws.task.api.ICheckPointable;
 
 public class LocalStreamingStateBackend {
+
+  private static final Logger LOG = Logger.getLogger(LocalStreamingStateBackend.class.getName());
 
   public Object readFromStateBackend(Config config, int streamingTaskId,
                                      int workerId) throws IOException {
@@ -43,22 +47,20 @@ public class LocalStreamingStateBackend {
     byte[] checkpoint = stream.readCheckpoint(localDataReadStream);
 
     KryoSerializer kryoSerializer = new KryoSerializer();
-    System.out.println(String.valueOf(streamingTaskId) + "_" + String.valueOf(workerId)
+    LOG.log(Level.INFO, String.valueOf(streamingTaskId) + "_" + String.valueOf(workerId)
         + " StreamTask is resumed");
     return kryoSerializer.deserialize(checkpoint);
   }
 
   public void writeToStateBackend(Config config, int streamingTaskId,
-                                  int workerId, INode streamingTask) throws Exception {
+                                  int workerId, ICheckPointable streamingTask) throws Exception {
     Runtime runtime = (Runtime) config.get(Runtime.RUNTIME);
     Path path1 = new Path(runtime.getParentpath(), runtime.getJobName());
     LocalFileSystem localFileSystem = (LocalFileSystem) runtime.getFileSystem();
     FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path1, path1,
         0, localFileSystem);
     KryoSerializer kryoSerializer = new KryoSerializer();
-//    byte[] checkpoint = kryoSerializer.serialize(streamingTask);
-    byte[] checkpoint = kryoSerializer.serialize(streamingTaskId);
-
+    byte[] checkpoint = kryoSerializer.serialize(streamingTask.getSnapshot());
     FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
         fs.createCheckpointStateOutputStream();
     stream.initialize(String.valueOf(streamingTaskId), String.valueOf(workerId));
