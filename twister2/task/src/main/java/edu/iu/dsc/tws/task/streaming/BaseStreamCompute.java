@@ -12,19 +12,44 @@
 package edu.iu.dsc.tws.task.streaming;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.api.ICheckPointable;
 import edu.iu.dsc.tws.task.api.ICompute;
+import edu.iu.dsc.tws.task.api.Snapshot;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public abstract class BaseStreamCompute implements ICompute {
+public abstract class BaseStreamCompute implements ICompute, ICheckPointable {
   private static final long serialVersionUID = -254264120110286748L;
 
   protected Config config;
 
   protected TaskContext context;
 
+  public Snapshot snapshot;
+
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     this.config = cfg;
     this.context = ctx;
+  }
+
+  public void addState(String key, Object value) {
+    if (snapshot == null) {
+      snapshot = new Snapshot();
+    }
+    snapshot.addState(key, value);
+  }
+
+  public Object getState(String key) {
+    return snapshot.getState(key);
+  }
+
+  @Override
+  public Snapshot getSnapshot() {
+    return snapshot;
+  }
+
+  @Override
+  public void restoreSnapshot(Snapshot newsnapshot) {
+    this.snapshot = newsnapshot;
   }
 }
