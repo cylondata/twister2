@@ -88,9 +88,15 @@ public final class K8sWorkerStarter {
     String podName = localHost.getHostName();
 
     String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podName);
-    NodeInfo thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
-        ? KubernetesContext.getNodeInfo(config, nodeIP)
-        : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
+    NodeInfo thisNodeInfo = null;
+    if (nodeIP == null) {
+      LOG.warning("Could not get nodeIP for this pod. Using podIP as nodeIP.");
+      thisNodeInfo = new NodeInfo(podIP, null, null);
+    } else {
+      thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
+          ? KubernetesContext.getNodeInfo(config, nodeIP)
+          : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
+    }
 
     LOG.info("NodeInfo for this worker: " + thisNodeInfo);
 
