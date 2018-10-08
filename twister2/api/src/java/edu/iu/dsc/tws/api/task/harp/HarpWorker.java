@@ -76,6 +76,10 @@ public abstract class HarpWorker implements IWorker {
                       IVolatileVolume volatileVolume) {
     List<WorkerNetworkInfo> workersList = workerController.waitForAllWorkersToJoin(50000);
 
+    LOG.info(String.format("Worker %s starting with %d workers, "
+            + "after waiting for all to start. \n %s",
+        workerID, workersList.size(), workersList.toString()));
+
     WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
 
     //Building Harp Specific parameters
