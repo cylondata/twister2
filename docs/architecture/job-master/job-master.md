@@ -6,26 +6,21 @@ Currently, we implemented the following services: 1. Ping Service 2. Worker life
 
 ## Possibilities for Job Master Architecture
 
-There are three architectural alternatives for the design of the Job Master. 1. **Long Running Singleton Job Master**: A single Job master process may serve all Twister2 jobs in a cluster. It runs as a a long running service in a dedicated machine on the cluster. All jobs can be tracked by this single Job manager.
+There are three architectural alternatives for the design of the Job Master. 
 
-* A disadvantage of this solution is that it puts too much pressure on a single process to manage all jobs.
-  1. **Job submission client becomes the Job master**: When a user submits a Twister2 job, 
-
+1. **Long Running Singleton Job Master**: A single Job master process may serve all Twister2 jobs in a cluster. It runs as a a long running service in a dedicated machine on the cluster. All jobs can be tracked by this single Job manager.
+   * A disadvantage of this solution is that it puts too much pressure on a single process to manage all jobs.
+2. **Job submission client becomes the Job master**: When a user submits a Twister2 job, 
      its process continues to run and become the job master. It means each job will have 
-
      a different job master.
-* One disadvantage might be that the job submitting client can not run outside of the cluster, 
-
-  since all workers need to connect to the Job Master. Submitting client has to run in one of 
-
-  the cluster machines. 
-
-* Another disadvantage is that this solution is not really suitable for long running jobs. 
-  1. **A separate Job Master for each Job**: Submitting client instantiates a separate Job master 
-
+   * One disadvantage might be that the job submitting client can not run outside of the cluster, 
+   since all workers need to connect to the Job Master. Submitting client has to run in one of 
+   the cluster machines. 
+   * Another disadvantage is that this solution is not really suitable for long running jobs. 
+3. **A separate Job Master for each Job**: Submitting client instantiates a separate Job master 
      for each job on a cluster machine. 
-* This may increase the job initialization times, since the job master needs to be started as a separate entity for each job. 
-* A separate entity is introduced to the system. This increases the overall complexity of Twister2 ecosystem. 
+   * This may increase the job initialization times, since the job master needs to be started as a separate entity for each job. 
+   * A separate entity is introduced to the system. This increases the overall complexity of Twister2 ecosystem. 
 
 ## Job Master in Other Systems
 
