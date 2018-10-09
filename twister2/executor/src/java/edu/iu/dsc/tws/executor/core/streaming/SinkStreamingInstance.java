@@ -125,12 +125,19 @@ public class SinkStreamingInstance implements INodeInstance {
           //Send acknowledge message to jobmaster
           LOG.info("Barrier message received in Sink " + streamingTaskId
               + " from source " + message.sourceTask());
-          if (storeSnapshot()) {
+
+          Object messageContent = message.getContent();
+
+          if (messageContent instanceof ArrayList) {
+            @SuppressWarnings("unchecked")
+            ArrayList<Integer> messageArray = (ArrayList<Integer>) messageContent;
+          }
+
+          if (storeSnapshot(messageArray.get(0))) {
             ((SinkCheckpointableTask) streamingTask).receivedValidBarrier(message);
           }
         }
       }
-
     }
 
     for (Map.Entry<String, IParallelOperation> e : streamingInParOps.entrySet()) {
@@ -153,7 +160,7 @@ public class SinkStreamingInstance implements INodeInstance {
     return streamingInQueue;
   }
 
-  public boolean storeSnapshot() {
+  public boolean storeSnapshot(int checkpointID) {
     try {
       LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
       fsStateBackend.writeToStateBackend(config, streamingTaskId, workerId,
