@@ -20,7 +20,6 @@ public enum K8sEnvVariables {
   JOB_PACKAGE_FILENAME,
   JOB_PACKAGE_FILE_SIZE, // file size of tar.gz file
   CONTAINER_NAME,
-  POD_IP,
   POD_NAME,
   HOST_IP, // node ip
   HOST_NAME, // node name

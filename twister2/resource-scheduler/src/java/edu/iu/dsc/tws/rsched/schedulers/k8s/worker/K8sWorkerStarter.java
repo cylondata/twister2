@@ -56,7 +56,6 @@ public final class K8sWorkerStarter {
     // all environment variables
     int workerPort = Integer.parseInt(System.getenv(K8sEnvVariables.WORKER_PORT + ""));
     String containerName = System.getenv(K8sEnvVariables.CONTAINER_NAME + "");
-//    String podIP = System.getenv(K8sEnvVariables.POD_IP + "");
     String podName = System.getenv(K8sEnvVariables.POD_NAME + "");
     String hostIP = System.getenv(K8sEnvVariables.HOST_IP + "");
     String hostName = System.getenv(K8sEnvVariables.HOST_NAME + "");
@@ -89,15 +88,6 @@ public final class K8sWorkerStarter {
     }
 
     String podIP = localHost.getHostAddress();
-//    String podName = localHost.getHostName();
-
-//    String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podIP);
-//    LOG.fine("nodeIP: " + nodeIP + "\nencodedNodeInfoList: " + encodedNodeInfoList);
-//    NodeInfo thisNodeInfo = null;
-//    if (nodeIP == null) {
-//      LOG.warning("Could not get nodeIP for this pod. Using podIP as nodeIP.");
-//      thisNodeInfo = new NodeInfo(podIP, null, null);
-//    } else {
     NodeInfo thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
         ? KubernetesContext.getNodeInfo(config, hostIP)
         : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, hostIP);

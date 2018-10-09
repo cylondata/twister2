@@ -361,20 +361,10 @@ public final class RequestObjectBuilder {
         .name(K8sEnvVariables.USER_JOB_JAR_FILE + "")
         .value(SchedulerContext.userJobJarFile(config)));
 
-    // POD_IP with downward API
-    V1ObjectFieldSelector fieldSelector = new V1ObjectFieldSelector();
-    fieldSelector.setFieldPath("status.podIP");
-    V1EnvVarSource varSource = new V1EnvVarSource();
-    varSource.setFieldRef(fieldSelector);
-
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.POD_IP + "")
-        .valueFrom(varSource));
-
     // POD_NAME with downward API
-    fieldSelector = new V1ObjectFieldSelector();
+    V1ObjectFieldSelector fieldSelector = new V1ObjectFieldSelector();
     fieldSelector.setFieldPath("metadata.name");
-    varSource = new V1EnvVarSource();
+    V1EnvVarSource varSource = new V1EnvVarSource();
     varSource.setFieldRef(fieldSelector);
 
     envVars.add(new V1EnvVar()
