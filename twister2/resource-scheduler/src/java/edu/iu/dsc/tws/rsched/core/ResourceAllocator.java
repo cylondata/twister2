@@ -22,6 +22,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.logging.LoggingContext;
+import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -89,9 +91,13 @@ public class ResourceAllocator {
       configDir = twister2Home + "/conf";
     }
 
-    LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
-        + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+
+    // set log level
+    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(config));
+
+    LOG.log(Level.INFO, String.format("Loaded configuration with twister2_home: %s and "
+        + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));
 
     // if this is a Kubernetes cluster and Kubernetes upload method is set as client-to-pods
     // do not use a regular uploader
