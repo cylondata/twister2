@@ -132,10 +132,10 @@ public class SinkStreamingInstance implements INodeInstance {
           if (messageContent instanceof ArrayList) {
             @SuppressWarnings("unchecked")
             ArrayList<Integer> messageArray = (ArrayList<Integer>) messageContent;
-          }
 
-          if (storeSnapshot(messageArray.get(0))) {
-            ((SinkCheckpointableTask) streamingTask).receivedValidBarrier(message);
+            if (storeSnapshot(messageArray.get(0))) {
+              ((SinkCheckpointableTask) streamingTask).receivedValidBarrier(message);
+            }
           }
         }
       }
