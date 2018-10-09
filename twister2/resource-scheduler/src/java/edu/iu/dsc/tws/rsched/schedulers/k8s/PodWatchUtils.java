@@ -322,7 +322,7 @@ public final class PodWatchUtils {
    * @param namespace
    * @return
    */
-  public static String getNodeIP(String namespace, String jobName, String podName) {
+  public static String getNodeIP(String namespace, String jobName, String podIP) {
 
     if (apiClient == null || coreApi == null) {
       createApiInstances();
@@ -340,8 +340,8 @@ public final class PodWatchUtils {
     }
 
     for (V1Pod pod : podList.getItems()) {
-      LOG.info("a podIP: " + pod.getStatus().getPodIP());
-      if (podName.equals(pod.getMetadata().getName())) {
+      LOG.info("a podIP in the job: " + pod.getStatus().getPodIP());
+      if (podIP.equals(pod.getStatus().getPodIP())) {
         return pod.getStatus().getHostIP();
       }
     }

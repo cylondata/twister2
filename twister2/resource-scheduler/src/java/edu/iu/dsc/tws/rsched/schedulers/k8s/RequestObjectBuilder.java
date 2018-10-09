@@ -371,6 +371,36 @@ public final class RequestObjectBuilder {
         .name(K8sEnvVariables.POD_IP + "")
         .valueFrom(varSource));
 
+    // POD_NAME with downward API
+    fieldSelector = new V1ObjectFieldSelector();
+    fieldSelector.setFieldPath("metadata.name");
+    varSource = new V1EnvVarSource();
+    varSource.setFieldRef(fieldSelector);
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.POD_NAME + "")
+        .valueFrom(varSource));
+
+    // HOST_IP (node-ip) with downward API
+    fieldSelector = new V1ObjectFieldSelector();
+    fieldSelector.setFieldPath("status.hostIP");
+    varSource = new V1EnvVarSource();
+    varSource.setFieldRef(fieldSelector);
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.HOST_IP + "")
+        .valueFrom(varSource));
+
+    // HOST_NAME (node-name) with downward API
+    fieldSelector = new V1ObjectFieldSelector();
+    fieldSelector.setFieldPath("spec.nodeName");
+    varSource = new V1EnvVarSource();
+    varSource.setFieldRef(fieldSelector);
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.HOST_NAME + "")
+        .valueFrom(varSource));
+
     String masterAddress = null;
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       masterAddress = KubernetesUtils.getLocalAddress();
