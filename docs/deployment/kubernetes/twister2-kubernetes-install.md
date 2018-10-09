@@ -13,7 +13,7 @@ Twister2 Worker pods need to get the IP address of the Job Master. In addition, 
 First modify the namespace field in the twister2-auth.yaml. Change the value of this field to a namespace value, that users will use to submit Twister2 jobs. Then execute the following command:
 
 ```bash
-    $kubectl create -f twister2-auth.yaml
+    $kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/docs/deployment/kubernetes/twister2-auth.yaml
 ```
 
 ## Persistent Storage Settings
