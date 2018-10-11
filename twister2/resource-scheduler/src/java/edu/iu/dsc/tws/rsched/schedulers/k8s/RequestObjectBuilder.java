@@ -506,14 +506,6 @@ public final class RequestObjectBuilder {
     return createHeadlessServiceObject(serviceName, serviceLabel);
   }
 
-  public static V1Service createJobMasterServiceObject(String jobName) {
-
-    String serviceName = KubernetesUtils.createJobMasterServiceName(jobName);
-    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobName);
-
-    return createHeadlessServiceObject(serviceName, serviceLabel);
-  }
-
   public static V1Service createHeadlessServiceObject(String serviceName, String serviceLabel) {
 
     V1Service service = new V1Service();

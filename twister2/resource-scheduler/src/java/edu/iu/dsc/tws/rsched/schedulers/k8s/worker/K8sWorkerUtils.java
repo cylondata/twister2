@@ -12,6 +12,8 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -21,19 +23,15 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 
 public final class K8sWorkerUtils {
@@ -135,47 +133,6 @@ public final class K8sWorkerUtils {
   }
 
   /**
-   * we assume jobName, Kubernetes namespace, exist in the incoming config object
-   * if jobMasterIP exists in the config object,
-   * it uses that IP.
-   * Otherwise, it tries to get the jobMasterIP from Kubernetes master
-   */
-  public static JobMasterClient startJobMasterClient(Config cnfg, WorkerNetworkInfo networkInfo) {
-
-    String jobMasterIP = JobMasterContext.jobMasterIP(cnfg);
-    Config cnf = cnfg;
-
-    // if jobMaster does not run in client,
-    // job master runs as a separate pod
-    // get its IP address first
-    if (jobMasterIP == null || jobMasterIP.trim().length() == 0) {
-      String jobName = SchedulerContext.jobName(cnfg);
-      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-
-      String namespace = KubernetesContext.namespace(cnfg);
-      jobMasterIP = PodWatchUtils.getJobMasterIP(jobMasterPodName, jobName, namespace, 100);
-      if (jobMasterIP == null) {
-        throw new RuntimeException("Can not get JobMaster IP address. Aborting ...........");
-      }
-
-      cnf = Config.newBuilder()
-          .putAll(cnfg)
-          .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
-          .build();
-    }
-
-    LOG.info("JobMasterIP: " + jobMasterIP);
-
-    JobMasterClient jobMasterClient = new JobMasterClient(cnf, networkInfo);
-    Thread clientThread = jobMasterClient.startThreaded();
-    if (clientThread == null) {
-      return null;
-    }
-
-    return jobMasterClient;
-  }
-
-  /**
    * calculate the workerID from the given parameters
    */
   public static int calculateWorkerID(String podName, String containerName, int workersPerPod) {
@@ -232,6 +189,20 @@ public final class K8sWorkerUtils {
     }
 
     return allocatedResources;
+  }
+
+  /**
+   * get job master service IP from job master service name
+   * @param jobName
+   * @return
+   */
+  public static String getJobMasterIP(String jobName) {
+    String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobName);
+    try {
+      return InetAddress.getByName(jobMasterServiceName).getHostAddress();
+    } catch (UnknownHostException e) {
+      throw new RuntimeException("Cannot get Job master IP from service name.", e);
+    }
   }
 
 
