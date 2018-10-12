@@ -64,6 +64,8 @@ public final class MPIMasterStarter {
 
     String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
     String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
+    String podName = System.getenv(K8sEnvVariables.POD_NAME + "");
+
     jobName = System.getenv(K8sEnvVariables.JOB_NAME + "");
     if (jobName == null) {
       throw new RuntimeException("JobName is null");
@@ -102,7 +104,6 @@ public final class MPIMasterStarter {
       throw new RuntimeException("Cannot get localHost.", e);
     }
 
-    String podName = localHost.getHostName();
     String podIP = localHost.getHostAddress();
 
     LOG.info("MPIMaster information summary: \n"
@@ -129,8 +130,7 @@ public final class MPIMasterStarter {
     }
 
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
-      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-      jobMasterIP = podNamesIPs.remove(jobMasterPodName);
+      jobMasterIP = K8sWorkerUtils.getJobMasterIP(jobName);
     }
     LOG.info("Job Master IP address: " + jobMasterIP);
 
@@ -210,11 +210,6 @@ public final class MPIMasterStarter {
     for (int i = 1; i < numberOfPods; i++) {
       String podName = KubernetesUtils.podNameFromJobName(jobName, i);
       podNames.add(podName);
-    }
-
-    if (!JobMasterContext.jobMasterRunsInClient(config)) {
-      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-      podNames.add(jobMasterPodName);
     }
 
     return podNames;

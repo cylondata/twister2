@@ -21,6 +21,9 @@ import java.util.logging.Logger;
 
 import com.google.gson.reflect.TypeToken;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Configuration;
@@ -60,13 +63,14 @@ public final class PodWatchUtils {
    * watch pods until getting the Running event for Job Master pod
    * return its IP address
    */
-  public static String getJobMasterIP(String jobMasterName,
-                                      String jobName,
-                                      String namespace,
-                                      int timeout) {
+  public static String getJobMasterIP(Config cnfg, int timeout) {
+
+    String jobName = SchedulerContext.jobName(cnfg);
+    String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
+    String namespace = KubernetesContext.namespace(cnfg);
 
     ArrayList<String> jobMasterNameAsList = new ArrayList<>();
-    jobMasterNameAsList.add(jobMasterName);
+    jobMasterNameAsList.add(jobMasterPodName);
 
     String serviceLabel = KubernetesUtils.createJobMasterServiceLabelWithKey(jobName);
 
@@ -77,7 +81,7 @@ public final class PodWatchUtils {
       return null;
     }
 
-    return nameAndIP.get(jobMasterName);
+    return nameAndIP.get(jobMasterPodName);
   }
 
   /**
@@ -322,7 +326,7 @@ public final class PodWatchUtils {
    * @param namespace
    * @return
    */
-  public static String getNodeIP(String namespace, String jobName, String podName) {
+  public static String getNodeIP(String namespace, String jobName, String podIP) {
 
     if (apiClient == null || coreApi == null) {
       createApiInstances();
@@ -340,8 +344,8 @@ public final class PodWatchUtils {
     }
 
     for (V1Pod pod : podList.getItems()) {
-      LOG.info("a podIP: " + pod.getStatus().getPodIP());
-      if (podName.equals(pod.getMetadata().getName())) {
+      LOG.info("a podIP in the job: " + pod.getStatus().getPodIP());
+      if (podIP.equals(pod.getStatus().getPodIP())) {
         return pod.getStatus().getHostIP();
       }
     }

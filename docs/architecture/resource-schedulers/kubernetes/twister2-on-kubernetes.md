@@ -1,6 +1,6 @@
 # Twister2 On Kubernetes
 
-This document explains the design, features and implementations for running Twister2 jobs on Kubernetes clusters. We designed and developed components to run Twister2 workers and the Job Master in Kubernetes clusters. An overview of the mian components of Twister2 architecture can be found in [the document](../../main-components.md).
+This document explains the design, features and implementations for running Twister2 jobs on Kubernetes clusters. We designed and developed components to run Twister2 workers and the Job Master in Kubernetes clusters. An overview of the mian components of Twister2 architecture can be found in [the document](../../README.md).
 
 First, we provide a general overview of Kubernetes system. We discuss its features from Twister2 implementation perspective. Then, we explain the design decisions that we have made when implementing each aspect of Twister2 on Kubernetes. We provide the implementation details and explain the features. In addition, we explain the limitations of each feature and point out the future works.
 

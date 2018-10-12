@@ -124,12 +124,17 @@ public final class MPIWorkerStarter {
 
       int workerPort = KubernetesContext.workerBasePort(config) + workerID;
 
-      String nodeIP =
-          PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podName);
+      String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podIP);
+      NodeInfo thisNodeInfo = null;
+      if (nodeIP == null) {
+        LOG.warning("Could not get nodeIP for this pod. Using podIP as nodeIP.");
+        thisNodeInfo = new NodeInfo(podIP, null, null);
+      } else {
 
-      NodeInfo thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
-          ? KubernetesContext.getNodeInfo(config, nodeIP)
-          : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
+        thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
+            ? KubernetesContext.getNodeInfo(config, nodeIP)
+            : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
+      }
 
       LOG.info("NodeInfo for this worker: " + thisNodeInfo);
 
@@ -150,7 +155,13 @@ public final class MPIWorkerStarter {
         .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
         .build();
 
-    jobMasterClient = K8sWorkerUtils.startJobMasterClient(config, workerNetworkInfo);
+    // start JobMasterClient
+    jobMasterClient = new JobMasterClient(config, workerNetworkInfo);
+    Thread clientThread = jobMasterClient.startThreaded();
+    if (clientThread == null) {
+      throw new RuntimeException("Can not start JobMasterClient thread.");
+    }
+
     // we need to make sure that the worker starting message went through
     jobMasterClient.sendWorkerStartingMessage();
 

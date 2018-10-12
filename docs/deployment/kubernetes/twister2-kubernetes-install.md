@@ -2,7 +2,7 @@
 
 First, you can install Kubernetes project to a machine on your cluster or your personal machine. You need to have kubectl running on the machine you installed the project.
 
-To install Twister2 on a machine, please follow the steps in [installation document](../installation.md). To compile the project follow the instructions to the [compilation document](../compiling.md). You may also check [developer document](../../developers/developer-environment.md) for setting up IDEs.
+To compile & install Twister2 on a machine, please follow the steps in [compiling document](../compiling.md). You may also check [developer document](../../developers/developer-environment.md) for setting up IDEs.
 
 Here are the things that you need to do to run Twister2 jobs on Kubernetes clusters.
 
@@ -13,7 +13,7 @@ Twister2 Worker pods need to get the IP address of the Job Master. In addition, 
 First modify the namespace field in the twister2-auth.yaml. Change the value of this field to a namespace value, that users will use to submit Twister2 jobs. Then execute the following command:
 
 ```bash
-    $kubectl create -f twister2-auth.yaml
+    $kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/docs/deployment/kubernetes/twister2-auth.yaml
 ```
 
 ## Persistent Storage Settings

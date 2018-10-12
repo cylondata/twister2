@@ -31,7 +31,6 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
@@ -57,9 +56,13 @@ public final class K8sWorkerStarter {
     // all environment variables
     int workerPort = Integer.parseInt(System.getenv(K8sEnvVariables.WORKER_PORT + ""));
     String containerName = System.getenv(K8sEnvVariables.CONTAINER_NAME + "");
+    String podName = System.getenv(K8sEnvVariables.POD_NAME + "");
+    String hostIP = System.getenv(K8sEnvVariables.HOST_IP + "");
+    String hostName = System.getenv(K8sEnvVariables.HOST_NAME + "");
     String jobMasterIP = System.getenv(K8sEnvVariables.JOB_MASTER_IP + "");
     String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
     jobName = System.getenv(K8sEnvVariables.JOB_NAME + "");
+
     if (jobName == null) {
       throw new RuntimeException("JobName is null");
     }
@@ -69,12 +72,7 @@ public final class K8sWorkerStarter {
         + KUBERNETES_CLUSTER_TYPE;
 
     config = K8sWorkerUtils.loadConfig(configDir);
-
-    // update config with jobMasterIP
-    config = Config.newBuilder()
-        .putAll(config)
-        .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
-        .build();
+    addJobMasterToInConfig(jobMasterIP);
 
     // get podName and podIP from localhost
     InetAddress localHost = null;
@@ -85,12 +83,9 @@ public final class K8sWorkerStarter {
     }
 
     String podIP = localHost.getHostAddress();
-    String podName = localHost.getHostName();
-
-    String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podName);
     NodeInfo thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
-        ? KubernetesContext.getNodeInfo(config, nodeIP)
-        : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
+        ? KubernetesContext.getNodeInfo(config, hostIP)
+        : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, hostIP);
 
     LOG.info("NodeInfo for this worker: " + thisNodeInfo);
 
@@ -129,12 +124,15 @@ public final class K8sWorkerStarter {
         + "POD_IP: " + podIP + "\n"
         + "HOSTNAME(podname): " + podName + "\n"
         + "workerPort: " + workerPort + "\n"
+        + "hostName(nodeName): " + hostName + "\n"
+        + "hostIP(nodeIP): " + hostIP + "\n"
     );
 
     // start JobMasterClient
-    jobMasterClient = K8sWorkerUtils.startJobMasterClient(config, workerNetworkInfo);
-    if (jobMasterClient == null) {
-      return;
+    jobMasterClient = new JobMasterClient(config, workerNetworkInfo);
+    Thread clientThread = jobMasterClient.startThreaded();
+    if (clientThread == null) {
+      throw new RuntimeException("Can not start JobMasterClient thread.");
     }
 
     // we need to make sure that the worker starting message went through
@@ -148,6 +146,37 @@ public final class K8sWorkerStarter {
 
     // close the worker
     closeWorker();
+  }
+
+  /**
+   * update jobMasterIP in config
+   * if job master runs in client, jobMasterIP has to be provided as an environment variable
+   * that variable must be provided as a parameter to this method
+   * if job master runs as a separate pod,
+   * we get the job master service IP address from its service name
+   * @param jobMasterIP
+   */
+  @SuppressWarnings("ParameterAssignment")
+  public static void addJobMasterToInConfig(String jobMasterIP) {
+
+    // if job master runs in client, jobMasterIP has to be provided as an environment variable
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      if (jobMasterIP == null || jobMasterIP.trim().length() == 0) {
+        throw new RuntimeException("Job master running in the client, but "
+            + "this worker got job master IP as empty from environment variables.");
+      }
+
+      // get job master service ip from job master service name and use it as Job master IP
+    } else {
+      jobMasterIP = K8sWorkerUtils.getJobMasterIP(jobName);
+      LOG.info("Job master service IP from service name: " + jobMasterIP);
+    }
+
+    // update config with jobMasterIP
+    config = Config.newBuilder()
+        .putAll(config)
+        .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
+        .build();
   }
 
   /**
