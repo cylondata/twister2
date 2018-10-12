@@ -172,7 +172,7 @@ public class SinkStreamingInstance implements INodeInstance {
     try {
       LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
       fsStateBackend.writeToStateBackend(config, streamingTaskId, workerId,
-          (ICheckPointable) streamingTask);
+          (ICheckPointable) streamingTask, checkpointID);
       return true;
     } catch (Exception e) {
       LOG.log(Level.WARNING, "Could not store checkpoint ", e);
