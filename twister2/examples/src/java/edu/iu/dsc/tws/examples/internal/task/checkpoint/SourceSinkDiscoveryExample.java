@@ -139,7 +139,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-      connect(cfg, context);
+//      connect(cfg, context);
       this.ctx = context;
     }
 
@@ -170,7 +170,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
-      connect(cfg, context);
+//      connect(cfg, context);
     }
 
     @Override

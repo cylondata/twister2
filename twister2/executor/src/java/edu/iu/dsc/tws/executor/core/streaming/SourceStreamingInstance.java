@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.Snapshot;
+import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceStreamingInstance implements INodeInstance {
@@ -134,9 +135,15 @@ public class SourceStreamingInstance implements INodeInstance {
 
   public void prepare() {
     outputStreamingCollection = new DefaultOutputCollection(outStreamingQueue);
+    TaskContext taskContext = new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
+        parallelism, workerId, outputStreamingCollection, nodeConfigs);
 
-    streamingTask.prepare(config, new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
-        parallelism, workerId, outputStreamingCollection, nodeConfigs));
+    streamingTask.prepare(config, taskContext);
+
+    if (streamingTask instanceof SourceCheckpointableTask) {
+      ((SourceCheckpointableTask) streamingTask).connect(config, taskContext);
+    }
+
   }
 
   /**
