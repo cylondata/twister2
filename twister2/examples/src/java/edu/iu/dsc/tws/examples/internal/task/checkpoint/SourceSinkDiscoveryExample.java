@@ -126,7 +126,6 @@ public class SourceSinkDiscoveryExample implements IWorker {
     @Override
     public void execute() {
       if (count % 1000000 == 0) {
-        checkForBarrier();
         this.addState("count", count);
       }
       if (count % 1000000 == 0) {
