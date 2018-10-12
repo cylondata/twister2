@@ -130,7 +130,8 @@ public final class MPIMasterStarter {
     }
 
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
-      jobMasterIP = K8sWorkerUtils.getJobMasterIP(jobName);
+      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
+      jobMasterIP = podNamesIPs.remove(jobMasterPodName);
     }
     LOG.info("Job Master IP address: " + jobMasterIP);
 
@@ -210,6 +211,11 @@ public final class MPIMasterStarter {
     for (int i = 1; i < numberOfPods; i++) {
       String podName = KubernetesUtils.podNameFromJobName(jobName, i);
       podNames.add(podName);
+    }
+
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
+      podNames.add(jobMasterPodName);
     }
 
     return podNames;

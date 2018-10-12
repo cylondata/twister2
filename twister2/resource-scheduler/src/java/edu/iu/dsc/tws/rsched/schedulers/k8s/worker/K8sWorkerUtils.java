@@ -196,8 +196,9 @@ public final class K8sWorkerUtils {
    * @param jobName
    * @return
    */
-  public static String getJobMasterIP(String jobName) {
+  public static String getJobMasterServiceIP(String jobName, String namespace) {
     String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobName);
+    jobMasterServiceName = jobMasterServiceName + "." + namespace + ".svc.cluster.local";
     try {
       return InetAddress.getByName(jobMasterServiceName).getHostAddress();
     } catch (UnknownHostException e) {
