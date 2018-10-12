@@ -224,7 +224,7 @@ public class TaskStreamingInstance implements INodeInstance {
   public boolean storeSnapshot() {
     try {
       LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-      fsStateBackend.writeToStateBackend(config, taskId, workerId, (ICheckPointable) task);
+      fsStateBackend.writeToStateBackend(config, taskId, workerId, (ICheckPointable) task, 1);
       return true;
     } catch (Exception e) {
       LOG.log(Level.WARNING, " Could not store checkpoint", e);
