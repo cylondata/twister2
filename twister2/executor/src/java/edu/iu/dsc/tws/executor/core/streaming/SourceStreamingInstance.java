@@ -228,24 +228,5 @@ public class SourceStreamingInstance implements INodeInstance {
     }
   }
 
-  private void writeToStateBackend(Config config1, int streamingTaskId1,
-                                   int workerId1, ICheckPointable streamingTask1,
-                                   int checkpointID) throws Exception {
-    Runtime runtime = (Runtime) config1.get(Runtime.RUNTIME);
-    Path path1 = new Path(runtime.getParentpath(), runtime.getJobName());
-    Path path2 = new Path(path1, String.valueOf(checkpointID));
-    LocalFileSystem localFileSystem = (LocalFileSystem) runtime.getFileSystem();
-    System.out.println("path is " + path2.toString());
-    FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
-        0, localFileSystem);
-    KryoSerializer kryoSerializer = new KryoSerializer();
-    byte[] checkpoint = kryoSerializer.serialize(streamingTask1.getSnapshot());
-    FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
-        fs.createCheckpointStateOutputStream();
-    stream.initialize(String.valueOf(streamingTaskId1), String.valueOf(workerId1));
-    stream.write(checkpoint);
-    stream.closeWriting();
-  }
-
 
 }
