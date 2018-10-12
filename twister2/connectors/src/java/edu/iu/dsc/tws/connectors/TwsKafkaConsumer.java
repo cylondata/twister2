@@ -42,8 +42,7 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
   @Override
   public void execute() {
     try {
-      int messageCount = kafkaConsumerThread.run();
-      updateMessageCount(messageCount);
+      kafkaConsumerThread.run();
     } catch (IllegalThreadStateException e) {
       log.info(e.toString());
     }

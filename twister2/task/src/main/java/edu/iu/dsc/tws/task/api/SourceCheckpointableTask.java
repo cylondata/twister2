@@ -40,8 +40,8 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
 
   private int currentBarrierID = 1;
   private int intermediateMessageCount;
-  private long currentCheckpointInterval = 5000;
-  private long globalCheckpointInterval = 5000;
+  private long currentCheckpointInterval = 10000;
+  private long globalCheckpointInterval = 10000;
   private long overallMessageCount = 0;
   private final long startedTime = System.currentTimeMillis();
   private long lastCheckpointTime;
@@ -91,15 +91,16 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
   }
 
   public void checkForTimeInterval() {
-    if (getResponsePending()) {
-      currentCheckpointInterval = (long) (currentCheckpointInterval * 1.25);
-      return;
-    }
     long interval = System.currentTimeMillis() - lastCheckpointTime;
     if (interval >= currentCheckpointInterval) {
+//      if (getResponsePending()) {
+//        currentCheckpointInterval = (long) (currentCheckpointInterval * 1.25);
+//        return;
+//      }
+      LOG.info("checking for barrier: interval: " + interval);
       checkForBarrier();
+      currentCheckpointInterval += globalCheckpointInterval;
     }
-
   }
 
   public void checkForBarrier() {
@@ -153,15 +154,15 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
     return false;
   }
 
-  private synchronized void setResponsePending() {
+  private void setResponsePending() {
     this.responsePending = true;
   }
 
-  private synchronized void resetResponsePending() {
+  private void resetResponsePending() {
     this.responsePending = false;
   }
 
-  private synchronized boolean getResponsePending() {
+  private boolean getResponsePending() {
     return this.responsePending;
   }
 
@@ -195,7 +196,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
   public class BarrierClientMessageHandler implements MessageHandler {
     @Override
     public void onMessage(RequestID id, int workerId, Message message) {
-
       if (message instanceof Checkpoint.BarrierSend) {
         Checkpoint.BarrierSend barrierSend = (Checkpoint.BarrierSend) message;
 
@@ -231,7 +231,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
         .setCurrentBarrierID(currentBarrierID)
         .setTaskID(ctx.taskId())
         .build();
-
+    LOG.info("sending barrier sync message");
     taskClient.sendRequest(message);
     taskLooper.loop();
   }
