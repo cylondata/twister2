@@ -34,8 +34,9 @@ public class LocalStreamingStateBackend {
 
     Runtime runtime = (Runtime) config.get(Runtime.RUNTIME);
     Path path1 = new Path(runtime.getParentpath(), runtime.getJobName());
+    Path path2 = new Path(path1, String.valueOf(2));
     LocalFileSystem localFileSystem = (LocalFileSystem) runtime.getFileSystem();
-    FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path1, path1,
+    FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
         0, localFileSystem);
     FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
         fs.createCheckpointStateOutputStream();
@@ -43,9 +44,10 @@ public class LocalStreamingStateBackend {
     LocalDataInputStream localDataReadStream = (LocalDataInputStream)
         stream.openStateHandle(String.valueOf(streamingTaskId),
             String.valueOf(workerId)).openInputStream();
-
-    byte[] checkpoint = stream.readCheckpoint(localDataReadStream);
-
+    byte[] checkpoint;
+    synchronized (this) {
+      checkpoint = stream.readCheckpoint(localDataReadStream);
+    }
     KryoSerializer kryoSerializer = new KryoSerializer();
     LOG.log(Level.INFO, String.valueOf(streamingTaskId) + "_" + String.valueOf(workerId)
         + " StreamTask is resumed");
@@ -53,19 +55,23 @@ public class LocalStreamingStateBackend {
   }
 
   public void writeToStateBackend(Config config, int streamingTaskId,
-                                  int workerId, ICheckPointable streamingTask) throws Exception {
-    Runtime runtime = (Runtime) config.get(Runtime.RUNTIME);
-    Path path1 = new Path(runtime.getParentpath(), runtime.getJobName());
-    LocalFileSystem localFileSystem = (LocalFileSystem) runtime.getFileSystem();
-    FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path1, path1,
-        0, localFileSystem);
-    KryoSerializer kryoSerializer = new KryoSerializer();
-    byte[] checkpoint = kryoSerializer.serialize(streamingTask.getSnapshot());
-    FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
-        fs.createCheckpointStateOutputStream();
-    stream.initialize(String.valueOf(streamingTaskId), String.valueOf(workerId));
-    stream.write(checkpoint);
-    stream.closeWriting();
+                                  int workerId, ICheckPointable streamingTask,
+                                  int checkpointID) throws Exception {
+    synchronized (this) {
+      Runtime runtime = (Runtime) config.get(Runtime.RUNTIME);
+      Path path1 = new Path(runtime.getParentpath(), runtime.getJobName());
+      Path path2 = new Path(path1, String.valueOf(checkpointID));
+      LocalFileSystem localFileSystem = (LocalFileSystem) runtime.getFileSystem();
+      FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
+          0, localFileSystem);
+      KryoSerializer kryoSerializer = new KryoSerializer();
+      byte[] checkpoint = kryoSerializer.serialize(streamingTask.getSnapshot());
+      FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
+          fs.createCheckpointStateOutputStream();
+      stream.initialize(String.valueOf(streamingTaskId), String.valueOf(workerId));
+      stream.write(checkpoint);
+      stream.closeWriting();
+    }
   }
 
 }
