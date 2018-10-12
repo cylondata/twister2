@@ -18,13 +18,18 @@ import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointmanager.state_backend.FsCheckpointStreamFactory;
 import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.Runtime;
 import edu.iu.dsc.tws.task.api.ICheckPointable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
@@ -124,6 +129,7 @@ public class SourceStreamingInstance implements INodeInstance {
     if (CheckpointContext.getCheckpointRecovery(config)) {
       try {
         LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+        System.out.println("currently reading" + streamingTaskId + "_" + workerId);
         Snapshot snapshot = (Snapshot) fsStateBackend.readFromStateBackend(config,
             streamingTaskId, workerId);
         ((ICheckPointable) this.streamingTask).restoreSnapshot(snapshot);
@@ -169,7 +175,9 @@ public class SourceStreamingInstance implements INodeInstance {
             break;
           }
         } else {
-          if (storeSnapshot()) {
+          Object messageContent = message.getContent();
+
+          if (storeSnapshot((int) messageContent)) {
             for (String edge : outEdges) {
               IParallelOperation op = outStreamingParOps.get(edge);
               if (op.send(streamingTaskId, message, message.getFlag())) {
@@ -177,6 +185,7 @@ public class SourceStreamingInstance implements INodeInstance {
               }
             }
           }
+
         }
       }
     }
@@ -207,16 +216,35 @@ public class SourceStreamingInstance implements INodeInstance {
   }
 
 
-  public boolean storeSnapshot() {
+  public boolean storeSnapshot(int checkpointID) {
     try {
       LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
       fsStateBackend.writeToStateBackend(config, streamingTaskId, workerId,
-          (ICheckPointable) streamingTask);
+          (ICheckPointable) streamingTask, checkpointID);
       return true;
     } catch (Exception e) {
       LOG.log(Level.WARNING, "Could not store checkpoint", e);
       return false;
     }
+  }
+
+  private void writeToStateBackend(Config config1, int streamingTaskId1,
+                                   int workerId1, ICheckPointable streamingTask1,
+                                   int checkpointID) throws Exception {
+    Runtime runtime = (Runtime) config1.get(Runtime.RUNTIME);
+    Path path1 = new Path(runtime.getParentpath(), runtime.getJobName());
+    Path path2 = new Path(path1, String.valueOf(checkpointID));
+    LocalFileSystem localFileSystem = (LocalFileSystem) runtime.getFileSystem();
+    System.out.println("path is " + path2.toString());
+    FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
+        0, localFileSystem);
+    KryoSerializer kryoSerializer = new KryoSerializer();
+    byte[] checkpoint = kryoSerializer.serialize(streamingTask1.getSnapshot());
+    FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
+        fs.createCheckpointStateOutputStream();
+    stream.initialize(String.valueOf(streamingTaskId1), String.valueOf(workerId1));
+    stream.write(checkpoint);
+    stream.closeWriting();
   }
 
 
