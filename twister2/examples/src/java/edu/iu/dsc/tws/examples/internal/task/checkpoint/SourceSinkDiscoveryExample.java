@@ -79,7 +79,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     if (workerID == 1) {
       LOG.log(Level.INFO, "Statebackend directory is created for job: " + runtime.getJobName());
-      FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path, path,
+      FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path,
           runtime.getJobName(), 0);
     }
 
@@ -146,7 +146,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
     @Override
     public void restoreSnapshot(Snapshot snapshot) {
       super.restoreSnapshot(snapshot);
-      count = (int) this.getState("count");
+      count = (Integer) this.getState("count");
     }
   }
 
@@ -176,7 +176,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
     @Override
     public void restoreSnapshot(Snapshot snapshot) {
       super.restoreSnapshot(snapshot);
-      count = (int) this.getState("count");
+      count = (Integer) this.getState("count");
     }
 
 

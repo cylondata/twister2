@@ -81,7 +81,7 @@ public class TaskStatebackendCountExample implements IWorker {
 
     if (workerID == 1) {
       System.out.println("Statebackend directory is created for job: " + runtime.getJobName());
-      FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path, path,
+      FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path,
           runtime.getJobName(), 0);
 
     }
