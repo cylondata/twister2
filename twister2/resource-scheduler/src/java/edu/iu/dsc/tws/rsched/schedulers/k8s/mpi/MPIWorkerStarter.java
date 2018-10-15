@@ -155,7 +155,13 @@ public final class MPIWorkerStarter {
         .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
         .build();
 
-    jobMasterClient = K8sWorkerUtils.startJobMasterClient(config, workerNetworkInfo);
+    // start JobMasterClient
+    jobMasterClient = new JobMasterClient(config, workerNetworkInfo);
+    Thread clientThread = jobMasterClient.startThreaded();
+    if (clientThread == null) {
+      throw new RuntimeException("Can not start JobMasterClient thread.");
+    }
+
     // we need to make sure that the worker starting message went through
     jobMasterClient.sendWorkerStartingMessage();
 
