@@ -1,5 +1,15 @@
 package(default_visibility = ["//visibility:public"])
 
+
+load("//tools:maven.bzl", "POM_VERSION", "pom_file")
+
+pom_file(
+    name = "pom",
+    artifact_id = "api",
+    artifact_name = "API",
+    targets = [":api-java"],
+)
+
 java_library(
     name = "api-java",
     srcs = glob(["**/*.java"]),
