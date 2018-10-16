@@ -115,18 +115,17 @@ public abstract class HarpWorker implements IWorker {
     }
 
     SyncClient syncClient = new SyncClient(workers);
+    LOG.info("Starting Harp Sync client");
+    syncClient.start();
+
     LOG.info(String.format("Starting harp server on port : %d", harpPort));
     server.start();
-
     LOG.info(String.format("Harp server started. %s:%d "
             + "on twister worker %s:%d",
         workerNetworkInfo.getWorkerIP().getHostAddress(),
         harpPort,
         workerNetworkInfo.getWorkerIP().getHostAddress(),
         workerNetworkInfo.getWorkerPort()));
-
-    LOG.info("Starting Harp Sync client");
-    syncClient.start();
 
     try {
       LOG.info("Trying master barrier");
