@@ -12,13 +12,14 @@
 
 package edu.iu.dsc.tws.examples.comms.batch;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.collect.Iterators;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -106,11 +107,28 @@ public class BKeyedPartitionBasedReduceExample extends KeyedBenchWorker {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+
     public boolean receive(int target, Iterator<Object> it) {
-      LOG.log(Level.INFO, String.format("%d Received message %d count %d",
-          workerId, target, Iterators.size(it)));
+      if (it == null) {
+        return true;
+      }
+      while (it.hasNext()) {
+        ImmutablePair<Object, Object> currentPair = (ImmutablePair) it.next();
+        Object key = currentPair.getKey();
+        int[] data = (int[]) currentPair.getValue();
+        LOG.log(Level.INFO, String.format("%d Results : key: %s value: %s", workerId, key,
+            Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
+      }
       partitionDone = true;
 
+      //TODO: need to update the verification code
+//      experimentData.setOutput(object);
+//      try {
+//        verify();
+//      } catch (VerificationException e) {
+//        LOG.info("Message : " + e.getMessage());
+//      }
       return true;
     }
   }
