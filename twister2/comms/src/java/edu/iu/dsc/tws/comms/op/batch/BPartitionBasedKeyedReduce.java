@@ -20,8 +20,8 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.PartitionBasedReducePartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
 public class BPartitionBasedKeyedReduce {
@@ -38,7 +38,7 @@ public class BPartitionBasedKeyedReduce {
     this.destinationSelector = destSelector;
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
         new KReduceBatchFinalReceiver(reduceFunction, rcvr),
-        new PartitionPartialReceiver(),
+        new PartitionBasedReducePartialReceiver(reduceFunction),
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
