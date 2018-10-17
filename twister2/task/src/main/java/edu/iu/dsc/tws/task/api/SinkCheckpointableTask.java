@@ -148,9 +148,6 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink {
    */
   public void receivedValidBarrier(IMessage message) {
 
-//    Checkpoint.CheckpointBarrier checkpointBarrier
-//        = (Checkpoint.CheckpointBarrier) message.getContent();
-
     Object messageContent = message.getContent();
 
     if (messageContent instanceof ArrayList) {

@@ -60,6 +60,10 @@ public class TaskContext {
    */
   private Map<String, Boolean> isDone = new HashMap<>();
 
+  public TaskContext() {
+
+  }
+
   public TaskContext(int taskIndex, int taskId, String taskName,
                      int parallelism, int wId, Map<String, Object> configs) {
     this.taskIndex = taskIndex;
@@ -90,6 +94,7 @@ public class TaskContext {
 
   /**
    * The task index
+   *
    * @return index
    */
   public int taskIndex() {
@@ -98,6 +103,7 @@ public class TaskContext {
 
   /**
    * Task id
+   *
    * @return the task id
    */
   public int taskId() {
@@ -113,6 +119,7 @@ public class TaskContext {
 
   /**
    * Get the parallism of the task
+   *
    * @return number of parallel instances
    */
   public int getParallelism() {
@@ -121,6 +128,7 @@ public class TaskContext {
 
   /**
    * Get the worker id this task is running
+   *
    * @return worker id
    */
   public int getWorkerId() {
@@ -129,6 +137,7 @@ public class TaskContext {
 
   /**
    * Get the task specific configurations
+   *
    * @return map of configurations
    */
   public Map<String, Object> getConfigurations() {
@@ -137,6 +146,7 @@ public class TaskContext {
 
   /**
    * Write a message with a key
+   *
    * @param edge the edge
    * @param key key
    * @param message message
@@ -151,6 +161,7 @@ public class TaskContext {
 
   /**
    * Write a message to the destination
+   *
    * @param edge edge
    * @param message message
    */
@@ -163,6 +174,7 @@ public class TaskContext {
 
   /**
    * Write a barrier message to the destination
+   *
    * @param edge edge
    * @param message message
    */
@@ -172,6 +184,7 @@ public class TaskContext {
 
   /**
    * Write the last message
+   *
    * @param edge edge
    * @param message message
    */
@@ -186,6 +199,7 @@ public class TaskContext {
 
   /**
    * Write the last message
+   *
    * @param edge edge
    * @param key key
    * @param message message
@@ -201,6 +215,7 @@ public class TaskContext {
 
   /**
    * End the current writing
+   *
    * @param edge edge
    */
   public void end(String edge) {
@@ -209,6 +224,7 @@ public class TaskContext {
 
   /**
    * Return true, if this task is done
+   *
    * @param edge edge name
    * @return boolean
    */

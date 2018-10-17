@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.checkpointmanager.state_backend;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.logging.Level;
@@ -18,6 +19,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.state.FileStateHandle;
 import edu.iu.dsc.tws.checkpointmanager.state.StreamStateHandle;
+import edu.iu.dsc.tws.data.fs.FSDataInputStream;
 import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
@@ -279,11 +281,21 @@ public class FsCheckpointStreamFactory {
       throw new IOException("Could not open output stream for state backend", latestException);
     }
 
-    public StreamStateHandle readData(String checkpointid, String vertexid) {
+    public StreamStateHandle openStateHandle(String checkpointid, String vertexid) {
 
       Path readPath = createStatePath(checkpointid, vertexid);
       return new FileStateHandle(readPath, 1L);
 
+    }
+
+    public byte[] readCheckpoint(FSDataInputStream fsDataInputStream) throws IOException {
+      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+      int nRead;
+      while ((nRead = fsDataInputStream.read()) != -1) {
+        buffer.write(nRead);
+      }
+      buffer.flush();
+      return buffer.toByteArray();
     }
 
     public void initialize(String checkpointid, String vertexid) {

@@ -15,18 +15,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.task.api.ICheckPointable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
+import edu.iu.dsc.tws.task.api.Snapshot;
+import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceStreamingInstance implements INodeInstance {
@@ -94,6 +99,8 @@ public class SourceStreamingInstance implements INodeInstance {
 
   private Set<String> outEdges;
 
+  private int sleeper = 0;
+
   /**
    * The high water mark for messages
    */
@@ -114,19 +121,39 @@ public class SourceStreamingInstance implements INodeInstance {
     this.outEdges = outEdges;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
+    if (CheckpointContext.getCheckpointRecovery(config)) {
+      try {
+        LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+        System.out.println("currently reading" + streamingTaskId + "_" + workerId);
+        Snapshot snapshot = (Snapshot) fsStateBackend.readFromStateBackend(config,
+            streamingTaskId, workerId);
+        ((ICheckPointable) this.streamingTask).restoreSnapshot(snapshot);
+      } catch (Exception e) {
+        LOG.log(Level.WARNING, "Could not read checkpoint", e);
+      }
+    }
   }
 
   public void prepare() {
     outputStreamingCollection = new DefaultOutputCollection(outStreamingQueue);
+    TaskContext taskContext = new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
+        parallelism, workerId, outputStreamingCollection, nodeConfigs);
 
-    streamingTask.prepare(config, new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
-        parallelism, workerId, outputStreamingCollection, nodeConfigs));
+    streamingTask.prepare(config, taskContext);
+
+    if (streamingTask instanceof SourceCheckpointableTask) {
+      ((SourceCheckpointableTask) streamingTask).connect(config, taskContext);
+    }
+
   }
 
   /**
    * Execution Method calls the SourceTasks run method to get context
    **/
   public boolean execute() {
+    if (streamingTask instanceof SourceCheckpointableTask) {
+      ((SourceCheckpointableTask) streamingTask).checkForTimeInterval();
+    }
     if (outStreamingQueue.size() < lowWaterMark) {
       // lets execute the task
       streamingTask.execute();
@@ -146,7 +173,9 @@ public class SourceStreamingInstance implements INodeInstance {
             break;
           }
         } else {
-          if (storeSnapshot()) {
+          Object messageContent = message.getContent();
+
+          if (storeSnapshot((int) messageContent)) {
             for (String edge : outEdges) {
               IParallelOperation op = outStreamingParOps.get(edge);
               if (op.send(streamingTaskId, message, message.getFlag())) {
@@ -154,6 +183,7 @@ public class SourceStreamingInstance implements INodeInstance {
               }
             }
           }
+
         }
       }
     }
@@ -164,6 +194,7 @@ public class SourceStreamingInstance implements INodeInstance {
 
     return true;
   }
+
 
   @Override
   public INode getNode() {
@@ -182,8 +213,18 @@ public class SourceStreamingInstance implements INodeInstance {
     outStreamingParOps.put(edge, op);
   }
 
-  public boolean storeSnapshot() {
-    return true;
+
+  public boolean storeSnapshot(int checkpointID) {
+    try {
+      LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+      fsStateBackend.writeToStateBackend(config, streamingTaskId, workerId,
+          (ICheckPointable) streamingTask, checkpointID);
+      return true;
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, "Could not store checkpoint", e);
+      return false;
+    }
   }
+
 
 }

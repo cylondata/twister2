@@ -15,17 +15,22 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.task.api.ICheckPointable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.OutputCollection;
+import edu.iu.dsc.tws.task.api.Snapshot;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 /**
@@ -36,6 +41,8 @@ public class TaskStreamingInstance implements INodeInstance {
    * The actual task executing
    */
   private ICompute task;
+
+  private static final Logger LOG = Logger.getLogger(TaskStreamingInstance.class.getName());
 
   /**
    * All the inputs will come through a single queue, otherwise we need to look
@@ -124,6 +131,16 @@ public class TaskStreamingInstance implements INodeInstance {
     this.workerId = wId;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
+    if (CheckpointContext.getCheckpointRecovery(config)) {
+      try {
+        LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+        Snapshot snapshot = (Snapshot) fsStateBackend.readFromStateBackend(config,
+            taskId, workerId);
+        ((ICheckPointable) this.task).restoreSnapshot(snapshot);
+      } catch (Exception e) {
+        LOG.log(Level.WARNING, "Could not read checkpoint", e);
+      }
+    }
   }
 
   public void prepare() {
@@ -205,6 +222,13 @@ public class TaskStreamingInstance implements INodeInstance {
   }
 
   public boolean storeSnapshot() {
-    return true;
+    try {
+      LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+      fsStateBackend.writeToStateBackend(config, taskId, workerId, (ICheckPointable) task, 1);
+      return true;
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, " Could not store checkpoint", e);
+      return false;
+    }
   }
 }

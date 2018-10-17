@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
-import static java.lang.Math.max;
+//import static java.lang.Math.max;
 
 public abstract class SourceCheckpointableTask extends BaseStreamSource {
   private static final long serialVersionUID = -254264903510214728L;
@@ -40,10 +40,12 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
 
   private int currentBarrierID = 1;
   private int intermediateMessageCount;
-  private int currentCheckpointInterval = 50;
-  private int globalCheckpointInterval = 50;
+  private long currentCheckpointInterval = 10000;
+  private long globalCheckpointInterval = 10000;
   private long overallMessageCount = 0;
-
+  private final long startedTime = System.currentTimeMillis();
+  private long lastCheckpointTime;
+  private boolean responsePending;
   /**
    * to control the connection error when we repeatedly try connecting
    */
@@ -53,6 +55,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
     this.ctx = context;
     this.config = cfg;
     this.intermediateMessageCount = 0;
+    this.lastCheckpointTime = startedTime;
     taskLooper = new Progress();
 
     taskClient = new RRClient("localhost", 6789, cfg, taskLooper,
@@ -83,16 +86,25 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
               " currentCheckpointInterval: " + currentCheckpointInterval
       );
       checkForBarrier();
-      intermediateMessageCount = 0;
-      currentCheckpointInterval = max(
-          (int) (currentCheckpointInterval - currentCheckpointInterval * 0.5),
-          1);
     }
 
   }
 
+  public void checkForTimeInterval() {
+    long interval = System.currentTimeMillis() - lastCheckpointTime;
+    if (interval >= currentCheckpointInterval) {
+//      if (getResponsePending()) {
+//        currentCheckpointInterval = (long) (currentCheckpointInterval * 1.25);
+//        return;
+//      }
+      LOG.info("checking for barrier: interval: " + interval);
+      checkForBarrier();
+      currentCheckpointInterval += globalCheckpointInterval;
+    }
+  }
 
   public void checkForBarrier() {
+    setResponsePending();
     sendBarrierSyncMessage();
   }
 
@@ -142,6 +154,18 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
     return false;
   }
 
+  private void setResponsePending() {
+    this.responsePending = true;
+  }
+
+  private void resetResponsePending() {
+    this.responsePending = false;
+  }
+
+  private boolean getResponsePending() {
+    return this.responsePending;
+  }
+
   public class TaskClientConnectHandler implements ConnectHandler {
     @Override
     public void onError(SocketChannel channel) {
@@ -172,7 +196,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
   public class BarrierClientMessageHandler implements MessageHandler {
     @Override
     public void onMessage(RequestID id, int workerId, Message message) {
-
       if (message instanceof Checkpoint.BarrierSend) {
         Checkpoint.BarrierSend barrierSend = (Checkpoint.BarrierSend) message;
 
@@ -182,8 +205,11 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
 
           emitBarrier();
           currentCheckpointInterval = globalCheckpointInterval;
-          intermediateMessageCount = 0;
+          lastCheckpointTime = System.currentTimeMillis();
+          resetResponsePending();
           currentBarrierID++;
+        } else {
+          resetResponsePending();
         }
       }
     }
@@ -205,7 +231,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
         .setCurrentBarrierID(currentBarrierID)
         .setTaskID(ctx.taskId())
         .build();
-
+    LOG.info("sending barrier sync message");
     taskClient.sendRequest(message);
     taskLooper.loop();
   }
@@ -215,11 +241,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
    */
   private void emitBarrier() {
     LOG.info("Sending barrier from source task ID : " + ctx.taskId());
-
-//    Checkpoint.CheckpointBarrier checkpointBarrierMessage
-//        = Checkpoint.CheckpointBarrier.newBuilder()
-//        .setCurrentBarrierID(currentBarrierID)
-//        .build();
 
     ctx.writeBarrier("keyed-edge", currentBarrierID);
 

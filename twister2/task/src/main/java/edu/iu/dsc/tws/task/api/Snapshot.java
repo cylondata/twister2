@@ -10,23 +10,27 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
+package edu.iu.dsc.tws.task.api;
 
-import java.util.logging.Logger;
+import java.util.HashMap;
+import java.util.Map;
 
+public class Snapshot {
 
-/**
- * Abstract class that is extended by keyed reduce batch receivers
- */
-public class KGatherStreamingPartialReceiver extends KGatherStreamingReceiver {
-  private static final Logger LOG = Logger.getLogger(
-      KGatherStreamingPartialReceiver.class.getName());
+  private final Map<String, Object> states = new HashMap<>();
 
-  public KGatherStreamingPartialReceiver(int dest, int limitPerKey, int windowSize) {
-    this.destination = dest;
-    this.limitPerKey = limitPerKey;
-    this.windowSize = windowSize;
-    this.localWindowCount = 0;
+  public void addState(String key, Object value) {
+    this.states.put(key, value);
+
   }
+
+  public Object getState(String key) {
+    return this.states.get(key);
+  }
+
+  public Map<String, Object> getAllStates() {
+    return this.states;
+  }
+
 
 }

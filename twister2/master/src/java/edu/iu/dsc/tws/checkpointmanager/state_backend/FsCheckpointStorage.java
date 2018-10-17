@@ -36,7 +36,6 @@ public class FsCheckpointStorage extends AbstractFsCheckpointStorage {
   public FsCheckpointStorage(
       FileSystem fs,
       Path checkpointBaseDirectory,
-      Path defaultSavepointDirectory,
       String jobName,
       int fileSizeThreshold) {
 
@@ -54,8 +53,8 @@ public class FsCheckpointStorage extends AbstractFsCheckpointStorage {
     // initialize the dedicated directories
     try {
       fileSystem.mkdirs(checkpointsDirectory);
-      fileSystem.mkdirs(sharedStateDirectory);
-      fileSystem.mkdirs(taskOwnedStateDirectory);
+//      fileSystem.mkdirs(sharedStateDirectory);
+//      fileSystem.mkdirs(taskOwnedStateDirectory);
     } catch (IOException e) {
       LOG.log(Level.WARNING, "checkpoint storage location is not initialized", e);
     }

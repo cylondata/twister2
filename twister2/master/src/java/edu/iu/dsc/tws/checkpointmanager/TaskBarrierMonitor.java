@@ -41,7 +41,6 @@ public class TaskBarrierMonitor implements MessageHandler {
 
   private static final Logger LOG = Logger.getLogger(TaskBarrierMonitor.class.getName());
 
-  private CheckpointManager checkpointManager;
   private Config config;
   private RRServer rrServer;
 
@@ -60,9 +59,9 @@ public class TaskBarrierMonitor implements MessageHandler {
 
   private boolean allTaskGotRegistered;
 
-  public TaskBarrierMonitor(Config cfg, CheckpointManager checkpointManager, RRServer server) {
+  public TaskBarrierMonitor(Config cfg, RRServer server) {
     this.config = cfg;
-    this.checkpointManager = checkpointManager;
+
     this.rrServer = server;
     this.sourceTaskList = new ArrayList<>();
     this.sinkTaskList = new ArrayList<>();

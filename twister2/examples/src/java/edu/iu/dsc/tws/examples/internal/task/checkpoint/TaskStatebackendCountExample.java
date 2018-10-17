@@ -37,6 +37,7 @@ import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.executor.core.Runtime;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -54,20 +55,34 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 
-public class TaskStatebackendExample implements IWorker {
+public class TaskStatebackendCountExample implements IWorker {
   @Override
   public void execute(Config config, int workerID, AllocatedResources resources,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
+    Path path = new Path(new File(CheckpointContext
+        .getStatebackendDirectoryDefault(config)).toURI());
+    path.getParent();
+
+    Runtime runtime = new Runtime();
+    runtime.setParentpath(path);
+
+    LocalFileSystem localFileSystem = new LocalFileSystem();
+    runtime.setFileSystem(localFileSystem);
+    Config newconfig = runtime.updateConfig(config);
+
+    if (CheckpointContext.getCheckpointRecovery(config)) {
+      System.out.println("it is working okey");
+    } else {
+      System.out.println("don't worry be happy");
+    }
+
     if (workerID == 1) {
-      Path path = new Path(new File(CheckpointContext
-          .getStatebackendDirectoryDefault(config)).toURI());
-      LocalFileSystem localFileSystem = new LocalFileSystem();
-      System.out.println("statebackend directory is created");
-      FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path, path,
-          "task-statebackend-example", 0);
+      System.out.println("Statebackend directory is created for job: " + runtime.getJobName());
+      FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path,
+          runtime.getJobName(), 0);
 
     }
 
@@ -82,9 +97,9 @@ public class TaskStatebackendExample implements IWorker {
         OperationNames.PARTITION);
     builder.operationMode(OperationMode.STREAMING);
 
-    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
-    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
-    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
+    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(newconfig));
+    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(newconfig));
+    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(newconfig));
 
     List<String> sourceInputDataset = new ArrayList<>();
     sourceInputDataset.add("dataset1.txt");
@@ -95,17 +110,17 @@ public class TaskStatebackendExample implements IWorker {
     DataFlowTaskGraph graph = builder.build();
 
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
-    roundRobinTaskScheduler.initialize(config);
+    roundRobinTaskScheduler.initialize(newconfig);
 
     WorkerPlan workerPlan = createWorkerPlan(resources);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSChannel network = Network.initializeChannel(config, workerController, resources);
+    TWSChannel network = Network.initializeChannel(newconfig, workerController, resources);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
-        new Communicator(config, network));
-    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, workerID, plan, network);
+        new Communicator(newconfig, network));
+    ExecutionPlan plan = executionPlanBuilder.build(newconfig, graph, taskSchedulePlan);
+    Executor executor = new Executor(newconfig, workerID, plan, network);
     executor.execute();
   }
 
@@ -113,12 +128,21 @@ public class TaskStatebackendExample implements IWorker {
     private static final long serialVersionUID = -254264903510284748L;
     private TaskContext ctx;
     private Config config;
+    private int sleeper = 0;
+    private int counter = 0;
 
     @Override
     public void execute() {
-      ctx.write("partition-edge", "Hello");
-    }
+      sleeper++;
+      if (sleeper % 1000 == 0) {
+        counter++;
+      }
+      if (sleeper > 200000) {
+        ctx.write("partition-edge", counter);
+        sleeper = 0;
+      }
 
+    }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
@@ -132,10 +156,7 @@ public class TaskStatebackendExample implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 1000000 == 0) {
-        System.out.println(message.getContent());
-      }
-      count++;
+      System.out.println("Count received is :" + message.getContent());
       return true;
     }
 
@@ -157,7 +178,6 @@ public class TaskStatebackendExample implements IWorker {
 
   public static void main(String[] args) throws IOException {
 
-
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
@@ -169,20 +189,11 @@ public class TaskStatebackendExample implements IWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("task-statebackend-example");
-    jobBuilder.setWorkerClass(TaskStatebackendExample.class.getName());
+    jobBuilder.setName("task-statebackend-count-example");
+    jobBuilder.setWorkerClass(TaskStatebackendCountExample.class.getName());
     jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
     jobBuilder.setConfig(jobConfig);
 
-//    Path path = new Path(new File(CheckpointContext
-//        .getStatebackendDirectoryDefault(config)).toURI());
-//    LocalFileSystem localFileSystem = new LocalFileSystem();
-//
-//    FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path, path,
-//        "task-statebackend-example", 0);
-//
-//    System.out.println("statebackend directory created");
-    // now submit the job
     Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }
