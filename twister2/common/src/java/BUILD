@@ -19,3 +19,12 @@ java_library(
         "@org_yaml_snakeyaml//jar",
     ],
 )
+
+load("//tools:maven.bzl", "POM_VERSION", "pom_file")
+
+pom_file(
+    name = "pom",
+    artifact_id = "common",
+    artifact_name = "common",
+    targets = [":common-java"],
+)

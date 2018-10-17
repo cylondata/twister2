@@ -302,11 +302,11 @@ maven_jar(
     artifact = "com.github.jnr:jffi:1.2.16",
 )
 
-http_archive(
-    name = "com_google_protobuf",
-    strip_prefix = "protobuf-3.4.1",
-    urls = ["https://github.com/google/protobuf/archive/v3.4.1.tar.gz"],
-)
+#http_archive(
+#    name = "com_google_protobuf",
+#    strip_prefix = "protobuf-3.4.1",
+#    urls = ["https://github.com/google/protobuf/archive/v3.4.1.tar.gz"],
+#)
 
 PEX_SRC = "https://pypi.python.org/packages/3a/1d/cd41cd3765b78a4353bbf27d18b099f7afbcd13e7f2dc9520f304ec8981c/pex-1.2.15.tar.gz"
 
@@ -522,3 +522,14 @@ new_http_archive(
     strip_prefix = "openmpi-3.1.2",
     urls = ["https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.2.tar.gz"],
 )
+
+
+http_archive(
+    name = "google_bazel_common",
+    strip_prefix = "bazel-common-aafb9b64f25f66b5ab6b9b991331160ef4130626",
+    urls = ["https://github.com/google/bazel-common/archive/aafb9b64f25f66b5ab6b9b991331160ef4130626.zip"],
+)
+
+load("@google_bazel_common//:workspace_defs.bzl", "google_common_workspace_rules")
+
+google_common_workspace_rules()

@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.examples.comms.batch.BAllReduceExample;
 import edu.iu.dsc.tws.examples.comms.batch.BDKeyedGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BKeyedGatherExample;
+import edu.iu.dsc.tws.examples.comms.batch.BKeyedPartitionBasedReduceExample;
 import edu.iu.dsc.tws.examples.comms.batch.BKeyedPartitionExample;
 import edu.iu.dsc.tws.examples.comms.batch.BKeyedReduceExample;
 import edu.iu.dsc.tws.examples.comms.batch.BPartitionExample;
@@ -143,6 +144,9 @@ public class ExampleMain {
           break;
         case "keyedreduce":
           submitJob(config, workers, jobConfig, BKeyedReduceExample.class.getName());
+          break;
+        case "pkeyedreduce":
+          submitJob(config, workers, jobConfig, BKeyedPartitionBasedReduceExample.class.getName());
           break;
         case "partition":
           submitJob(config, workers, jobConfig, BPartitionExample.class.getName());
