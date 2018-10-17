@@ -18,8 +18,11 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
@@ -30,8 +33,10 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
   protected ReduceFunction reduceFunction;
   // lets keep track of the messages
   // for each task we need to keep track of incoming messages
-  protected Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
+
+  protected Map<Integer, Map<Integer, Queue<Pair<Object, Integer>>>> messages = new HashMap<>();
   protected Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
+  protected Map<Integer, Object> barrierMap = new HashMap<>();
   protected int executor;
   protected int count = 0;
   protected DataFlowOperation operation;
@@ -56,7 +61,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
     this.sendPendingMax = DataFlowContext.sendPendingMax(cfg);
 
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-      Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
+      Map<Integer, Queue<Pair<Object, Integer>>> messagesPerTask = new HashMap<>();
       Map<Integer, Integer> countsPerTask = new HashMap<>();
       Map<Integer, Integer> totalCountsPerTask = new HashMap<>();
 
@@ -80,12 +85,12 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     // add the object to the map
     boolean canAdd = true;
-    Queue<Object> m = messages.get(target).get(source);
+    Queue<Pair<Object, Integer>> m = messages.get(target).get(source);
     Integer c = counts.get(target).get(source);
     if (m.size() >= sendPendingMax) {
       canAdd = false;
     } else {
-      m.offer(object);
+      m.offer(Pair.of(object, flags));
       counts.get(target).put(source, c + 1);
 
       Integer tc = totalCounts.get(target).get(source);
@@ -101,14 +106,14 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
     for (int t : messages.keySet()) {
       boolean canProgress = true;
       // now check weather we have the messages for this source
-      Map<Integer, Queue<Object>> messagePerTarget = messages.get(t);
+      Map<Integer, Queue<Pair<Object, Integer>>> messagePerTarget = messages.get(t);
       Map<Integer, Integer> countsPerTarget = counts.get(t);
       Queue<Object> reducedValues = this.reducedValuesMap.get(t);
 
       while (canProgress) {
         boolean found = true;
         boolean moreThanOne = false;
-        for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+        for (Map.Entry<Integer, Queue<Pair<Object, Integer>>>  e : messagePerTarget.entrySet()) {
           if (e.getValue().size() == 0) {
             found = false;
             canProgress = false;
@@ -123,12 +128,34 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
 
         if (found && reducedValues.size() < sendPendingMax) {
           Object previous = null;
-          for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
-            if (previous == null) {
-              previous = e.getValue().poll();
-            } else {
-              Object current = e.getValue().poll();
-              previous = reduceFunction.reduce(previous, current);
+          Pair<Object, Integer> currentPair;
+          int flags;
+          for (Map.Entry<Integer, Queue<Pair<Object, Integer>>>  e : messagePerTarget.entrySet()) {
+            if (!barrierMap.containsKey(e.getKey())) {
+              if (previous == null) {
+                currentPair = e.getValue().poll();
+                flags = currentPair.getRight();
+                if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
+                  previous = currentPair.getLeft();
+                } else {
+                  barrierMap.putIfAbsent(e.getKey(), currentPair.getLeft());
+                  LOG.info("map" + barrierMap);
+                }
+              } else {
+                currentPair = e.getValue().poll();
+                flags = currentPair.getRight();
+                if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
+                  Object current = currentPair.getLeft();
+                  previous = reduceFunction.reduce(previous, current);
+                } else {
+                  barrierMap.putIfAbsent(e.getKey(), currentPair.getLeft());
+                  LOG.info("map" + barrierMap);
+                }
+              }
+            }
+            if (messagePerTarget.keySet().size() == barrierMap.keySet().size()) {
+              handleMessage(t, previous, MessageFlags.BARRIER, destination);
+              barrierMap.clear();
             }
           }
           if (previous != null) {

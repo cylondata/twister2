@@ -86,11 +86,11 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
       boolean wrote = ctx.write("reduce-edge", "Hello");
       if (wrote) {
         count++;
-        if (count % 10000 == 0) {
+        if (count % 5000 == 0) {
           LOG.info(String.format("%d %d Reduce sent count : %d", ctx.getWorkerId(),
               ctx.taskId(), count));
         }
-        if (count % 10000 == 0) {
+        if (count % 5000 == 0) {
           checkForBarrier();
         }
       }
@@ -142,7 +142,7 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("reduce-checkpointable-task");
     jobBuilder.setWorkerClass(ReduceStreamingCheckpointableTask.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 1024), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
