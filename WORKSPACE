@@ -74,17 +74,17 @@ maven_jar(
 
 maven_jar(
     name = "io_kubernetes_client_java",
-    artifact = "io.kubernetes:client-java:2.0.0",
+    artifact = "io.kubernetes:client-java:3.0.0-beta2",
 )
 
 maven_jar(
     name = "io_kubernetes_client_java_api",
-    artifact = "io.kubernetes:client-java-api:2.0.0",
+    artifact = "io.kubernetes:client-java-api:3.0.0-beta2",
 )
 
 maven_jar(
     name = "io_kubernetes_client_java_proto",
-    artifact = "io.kubernetes:client-java-proto:2.0.0",
+    artifact = "io.kubernetes:client-java-proto:3.0.0-beta2",
 )
 
 maven_jar(
