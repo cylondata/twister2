@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.tsched.builder.ContainerIdScorer;
 import edu.iu.dsc.tws.tsched.builder.TaskSchedulePlanBuilder;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
@@ -60,7 +61,7 @@ public class ResourceAwareRoundRobinTaskScheduler implements ITaskScheduler {
   private Config config;
 
   //Number of containers
-  private int numberOfContainers;
+  private int numberOfContainers = 0;
 
   private int containerId;
 
@@ -77,14 +78,6 @@ public class ResourceAwareRoundRobinTaskScheduler implements ITaskScheduler {
 
   @Override
   public void initialize(Config cfg) {
-    /*this.config = cfg;
-    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(config);
-    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(config);
-    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(config);
-
-    this.defaultResourceValue = new Resource(instanceRAM, this.instanceDisk, this.instanceCPU);
-    this.defaultNoOfTaskInstances = TaskSchedulerContext.defaultTaskInstancesPerContainer(
-        this.config);*/
 
     this.config = cfg;
 
@@ -92,8 +85,9 @@ public class ResourceAwareRoundRobinTaskScheduler implements ITaskScheduler {
     this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
     this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
 
-    this.paddingPercentage = TaskSchedulerContext.containerPaddingPercentage(this.config);
     this.defaultResourceValue = new Resource(instanceRAM, this.instanceDisk, this.instanceCPU);
+
+    this.paddingPercentage = TaskSchedulerContext.containerPaddingPercentage(this.config);
     this.defaultNoOfTaskInstances = TaskSchedulerContext.defaultTaskInstancesPerContainer(
         this.config);
 
@@ -101,10 +95,17 @@ public class ResourceAwareRoundRobinTaskScheduler implements ITaskScheduler {
     instanceDisk = this.defaultResourceValue.getDisk() * defaultNoOfTaskInstances;
     instanceCPU = this.defaultResourceValue.getCpu() * defaultNoOfTaskInstances;
 
+    //this.maxContainerResourceValue = new Resource(6096.0, 5000.0, 8.0);
+
     this.maxContainerResourceValue = new Resource(
-        (double) Math.round(TaskScheduleUtils.increaseBy(instanceRAM, 100)),
-        (double) Math.round(TaskScheduleUtils.increaseBy(instanceDisk, 100)),
-        (double) Math.round(TaskScheduleUtils.increaseBy(instanceCPU, 100)));
+        (double) Math.round(TaskScheduleUtils.increaseBy(instanceRAM, paddingPercentage)),
+        (double) Math.round(TaskScheduleUtils.increaseBy(instanceDisk, paddingPercentage)),
+        (double) Math.round(TaskScheduleUtils.increaseBy(instanceCPU, paddingPercentage)));
+
+    /*this.maxContainerResourceValue = new Resource(
+        (double) this.workerplan.getWorker(0).getRam(),
+        (double) this.workerplan.getWorker(0).getDisk(),
+        (double) this.workerplan.getWorker(0).getCpu());*/
 
     LOG.info("Instance default values:" + "RamValue:" + instanceRAM + "\t"
         + "DiskValue:" + instanceDisk + "\t" + "CPUValue:" + instanceCPU);
@@ -124,9 +125,9 @@ public class ResourceAwareRoundRobinTaskScheduler implements ITaskScheduler {
    */
   private TaskSchedulePlanBuilder TaskSchedulingPlanBuilder(TaskSchedulePlan previousTaskPlan) {
     return new TaskSchedulePlanBuilder(1, previousTaskPlan)
-        .setContainerMaximumResourceValue(maxContainerResourceValue)
-        .setInstanceDefaultResourceValue(defaultResourceValue)
-        .setRequestedContainerPadding(paddingPercentage)
+        .setContainerMaximumResourceValue(this.maxContainerResourceValue)
+        .setInstanceDefaultResourceValue(this.defaultResourceValue)
+        .setRequestedContainerPadding(this.paddingPercentage)
         .setTaskRamMap(taskAttributes.getTaskRamMap(this.taskVertexSet))
         .setTaskDiskMap(taskAttributes.getTaskDiskMap(this.taskVertexSet))
         .setTaskCpuMap(taskAttributes.getTaskCPUMap(this.taskVertexSet));
@@ -141,7 +142,7 @@ public class ResourceAwareRoundRobinTaskScheduler implements ITaskScheduler {
     try {
       taskSchedulePlanBuilder = TaskSchedulingPlanBuilder(null);
       taskSchedulePlanBuilder.updateNumContainers(numberOfContainers);
-      taskSchedulePlanBuilder = resourceAwareTaskSchedule(taskSchedulePlanBuilder);
+      taskSchedulePlanBuilder = getResourceAwareTaskSchedule(taskSchedulePlanBuilder);
       //return taskSchedulePlanBuilder.build();
     } catch (TaskSchedulerException tse) {
       LOG.info(String.format("%s Increase the number of containers %s",
@@ -149,25 +150,15 @@ public class ResourceAwareRoundRobinTaskScheduler implements ITaskScheduler {
       increaseNumberOfContainers(1);
       resetToFirstContainer();
     }
+
     return taskSchedulePlanBuilder.build();
   }
 
-  private void increaseNumberOfContainers(int additionalContainers) {
-    this.numberOfContainers += additionalContainers;
-  }
-
-  private void resetToFirstContainer() {
-    this.containerId = 1;
-  }
-
-  private TaskSchedulePlanBuilder resourceAwareTaskSchedule(
+  private TaskSchedulePlanBuilder getResourceAwareTaskSchedule(
       TaskSchedulePlanBuilder taskSchedulePlanBuilder) throws TaskSchedulerException {
 
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(this.taskVertexSet);
     int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(this.taskVertexSet);
-
-    LOG.info("Number of containers:" + numberOfContainers
-        + "\tTotal Task Instances:" + totalTaskInstances);
 
     if (numberOfContainers > totalTaskInstances) {
       LOG.warning(String.format(
@@ -182,10 +173,10 @@ public class ResourceAwareRoundRobinTaskScheduler implements ITaskScheduler {
 
   private void assignInstancesToContainers(TaskSchedulePlanBuilder taskSchedulePlanBuilder,
                                            Map<String, Integer> parallelTaskMap)
-                                           throws TaskSchedulerException {
+      throws TaskSchedulerException {
     for (String taskName : parallelTaskMap.keySet()) {
       int numberOfInstances = parallelTaskMap.get(taskName);
-      for (int j = 0; j < numberOfInstances; j++) {
+      for (int j = 0; j < numberOfInstances; ++j) {
         assignTaskInstances(taskSchedulePlanBuilder, taskName);
       }
     }
@@ -193,9 +184,20 @@ public class ResourceAwareRoundRobinTaskScheduler implements ITaskScheduler {
 
   private void assignTaskInstances(TaskSchedulePlanBuilder taskSchedulePlanBuilder,
                                    String taskName) throws TaskSchedulerException {
-    LOG.info("Container Id:" + this.containerId);
-    taskSchedulePlanBuilder.addInstance(this.containerId, taskName);
-    this.containerId = nextContainerId(this.containerId);
+    //taskSchedulePlanBuilder.addInstance(this.containerId, taskName);
+    //this.containerId = nextContainerId(this.containerId);
+    ContainerIdScorer containerIdScorer = new ContainerIdScorer(
+        this.containerId, this.numberOfContainers);
+    this.containerId = nextContainerId(
+        taskSchedulePlanBuilder.addInstance(containerIdScorer, taskName));
+  }
+
+  private void increaseNumberOfContainers(int additionalContainers) {
+    this.numberOfContainers += additionalContainers;
+  }
+
+  private void resetToFirstContainer() {
+    this.containerId = 1;
   }
 
   private int nextContainerId(int afterId) {
