@@ -36,7 +36,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
   // the destination task
   private Set<Integer> destinations;
 
-  // one reduce for each destination
+  // one gather for each destination
   private Map<Integer, DataFlowGather> gatherMap;
 
   // the final receiver
