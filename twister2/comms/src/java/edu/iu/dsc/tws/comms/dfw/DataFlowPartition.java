@@ -382,7 +382,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
-    delegete.setKeyType(keyType);
   }
 
   @Override
