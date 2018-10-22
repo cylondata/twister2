@@ -73,6 +73,8 @@ public final class K8sWorkerStarter {
         + KUBERNETES_CLUSTER_TYPE;
 
     config = K8sWorkerUtils.loadConfig(configDir);
+    // test method
+    PodWatchUtils.testGetPodList(KubernetesContext.namespace(config));
     addJobMasterToInConfig(jobMasterIP);
 
     // get podName and podIP from localhost
@@ -171,6 +173,11 @@ public final class K8sWorkerStarter {
     } else {
 //      jobMasterIP = K8sWorkerUtils.getJobMasterIP(jobName);
       jobMasterIP = PodWatchUtils.getJobMasterIP(config, 100);
+      if (jobMasterIP == null) {
+        throw new RuntimeException("Job master is running in a separate pod, but "
+            + "this worker can not get the job master IP address from Kubernetes master.\n"
+            + "Job master address: " + jobMasterIP);
+      }
       LOG.info("Job master address: " + jobMasterIP);
     }
 

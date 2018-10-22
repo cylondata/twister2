@@ -353,4 +353,42 @@ public final class PodWatchUtils {
     return null;
   }
 
+  /**
+   * a test method to see whether kubernetes java client can connect to kubernetes master
+   * and get the pod list
+   */
+  public static void testGetPodList(String namespace) {
+    if (apiClient == null || coreApi == null) {
+      createApiInstances();
+    }
+
+//    ApiClient client = null;
+//    try {
+//      client = io.kubernetes.client.util.Config.defaultClient();
+//    } catch (IOException e) {
+//      LOG.severe("Can not get io.kubernetes.client.util.Config.defaultClient");
+//      throw new RuntimeException(e);
+//    }
+//    Configuration.setDefaultApiClient(client);
+//    CoreV1Api api = new CoreV1Api();
+
+    LOG.info("Getting the pod list for the namespace: " + namespace);
+    V1PodList list = null;
+    try {
+      list = coreApi.listNamespacedPod(
+          namespace, null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      String logMessage = "Exception when getting the pod list: \n"
+          + "exCode: " + e.getCode() + "\n"
+          + "responseBody: " + e.getResponseBody();
+      LOG.log(Level.SEVERE, logMessage, e);
+      throw new RuntimeException(e);
+    }
+
+    LOG.info("Number of pods in the received list: " + list.getItems().size());
+    for (V1Pod item : list.getItems()) {
+      LOG.info(item.getMetadata().getName());
+    }
+  }
+
 }
