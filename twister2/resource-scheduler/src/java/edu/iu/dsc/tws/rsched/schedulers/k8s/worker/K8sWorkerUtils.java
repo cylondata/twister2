@@ -196,7 +196,7 @@ public final class K8sWorkerUtils {
    * @param jobName
    * @return
    */
-  public static String getJobMasterServiceIP(String jobName, String namespace) {
+  public static String getJobMasterServiceIP(String namespace, String jobName) {
     String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobName);
     jobMasterServiceName = jobMasterServiceName + "." + namespace + ".svc.cluster.local";
     try {
