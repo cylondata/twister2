@@ -130,7 +130,7 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
   @Override
   public boolean onMessage(int source, int path, int target, int flags, int tag, Object object) {
 
-    if (tag != 0 || tag != 1) {
+    if (tag != 0 && tag != 1) {
       throw new RuntimeException("Tag value must be either 0(left) or 1(right) for join operation");
     }
 

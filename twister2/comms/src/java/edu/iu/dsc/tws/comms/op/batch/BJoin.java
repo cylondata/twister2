@@ -96,7 +96,7 @@ public class BJoin {
    * @return true if the data is accepted
    */
   public boolean partition(int source, Object key, Object data, int flags, int tag) {
-    int dest = destinationSelector.next(source, data);
+    int dest = destinationSelector.next(source, key, data);
 
     boolean send;
     KeyedContent message = new KeyedContent(key, data, partitionLeft.getKeyType(),
