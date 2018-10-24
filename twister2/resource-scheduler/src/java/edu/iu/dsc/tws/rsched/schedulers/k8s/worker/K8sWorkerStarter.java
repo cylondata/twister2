@@ -74,8 +74,8 @@ public final class K8sWorkerStarter {
 
     config = K8sWorkerUtils.loadConfig(configDir);
     // test method
-    PodWatchUtils.testGetPodList(KubernetesContext.namespace(config));
-    PodWatchUtils.testWatchPods(KubernetesContext.namespace(config), jobName, 100);
+//    PodWatchUtils.testGetPodList(KubernetesContext.namespace(config));
+//    PodWatchUtils.testWatchPods(KubernetesContext.namespace(config), jobName, 100);
 
     addJobMasterIpToConfig(jobMasterIP);
 
@@ -176,6 +176,10 @@ public final class K8sWorkerStarter {
 //      jobMasterIP =
 //          K8sWorkerUtils.getJobMasterServiceIP(KubernetesContext.namespace(config), jobName);
       jobMasterIP = PodWatchUtils.getJobMasterIP(config, 100);
+//      jobMasterIP = PodWatchUtils.getIpByWatchingPodToRunning(
+//          KubernetesContext.namespace(config),
+//          KubernetesUtils.createJobMasterPodName(jobName),
+//          100);
 //      jobMasterIP = PodWatchUtils.getJobMasterIP(KubernetesContext.namespace(config), jobName);
       if (jobMasterIP == null) {
         throw new RuntimeException("Job master is running in a separate pod, but "

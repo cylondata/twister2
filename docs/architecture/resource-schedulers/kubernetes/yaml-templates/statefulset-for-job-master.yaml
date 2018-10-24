@@ -12,6 +12,7 @@ metadata:
   labels:
     app: twister2-service-label-<job-name>-<job-master>
     twister2-job-pods: twister2-<job-name>
+    twister2-role: <job-name>-job-master
 
 spec:
   replicas: 1

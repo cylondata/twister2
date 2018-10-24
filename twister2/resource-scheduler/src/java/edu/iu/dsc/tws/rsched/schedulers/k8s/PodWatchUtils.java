@@ -72,7 +72,8 @@ public final class PodWatchUtils {
     ArrayList<String> jobMasterNameAsList = new ArrayList<>();
     jobMasterNameAsList.add(jobMasterPodName);
 
-    String serviceLabel = KubernetesUtils.createJobMasterServiceLabelWithKey(jobName);
+    String serviceLabel = KubernetesUtils.createJobMasterRoleLabelWithKey(jobName);
+//    String serviceLabel = KubernetesUtils.createJobMasterServiceLabelWithKey(jobName);
 
     HashMap<String, String> nameAndIP =
         discoverRunningPodIPs(jobMasterNameAsList, namespace, serviceLabel, timeout);
@@ -511,6 +512,69 @@ public final class PodWatchUtils {
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Exception closing watcher.", e);
     }
+  }
+
+  /**
+   * watch the given pod until it is Running and get its IP
+   * we assume that the pod is constructed as a StatefulSet
+   */
+  public static String getIpByWatchingPodToRunning(String namespace, String podName, int timeout) {
+
+    if (apiClient == null || coreApi == null) {
+      createApiInstances();
+    }
+
+    String podNameLabel = "statefulset.kubernetes.io/pod-name=" + podName;
+    String podPhase = "Running";
+
+    LOG.info("Starting the watcher for: " + namespace + ", " + podName);
+    Integer timeoutSeconds = timeout;
+    Watch<V1Pod> watch = null;
+
+    try {
+      watch = Watch.createWatch(
+          apiClient,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, podNameLabel,
+              null, null, timeoutSeconds, Boolean.TRUE, null, null),
+          new TypeToken<Watch.Response<V1Pod>>() {
+          }.getType());
+
+    } catch (ApiException e) {
+      String logMessage = "Exception when watching the pods to get the IPs: \n"
+          + "exCode: " + e.getCode() + "\n"
+          + "responseBody: " + e.getResponseBody();
+      LOG.log(Level.SEVERE, logMessage, e);
+      throw new RuntimeException(e);
+    }
+
+    int eventCounter = 0;
+    LOG.info("Getting watcher events.");
+    String podIP = null;
+
+    for (Watch.Response<V1Pod> item : watch) {
+      if (item.object != null) {
+        LOG.info(eventCounter++ + "-Received watch event: "
+            + item.object.getMetadata().getName() + ", "
+            + item.object.getStatus().getPodIP() + ", "
+            + item.object.getStatus().getPhase());
+        if (podPhase.equalsIgnoreCase(item.object.getStatus().getPhase())) {
+          podIP = item.object.getStatus().getPodIP();
+          break;
+        }
+
+      } else {
+        LOG.info("Received an event with item.object null.");
+      }
+
+    }
+
+    try {
+      watch.close();
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception closing watcher.", e);
+    }
+
+    return podIP;
   }
 
 }
