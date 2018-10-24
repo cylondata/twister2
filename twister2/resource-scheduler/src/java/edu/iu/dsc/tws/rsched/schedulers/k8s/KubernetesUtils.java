@@ -113,6 +113,10 @@ public final class KubernetesUtils {
     return KubernetesConstants.SERVICE_LABEL_PREFIX + jobName + "-job-master";
   }
 
+  public static String createJobMasterRoleLabel(String jobName) {
+    return jobName + "-job-master";
+  }
+
   public static String createJobPodsLabel(String jobName) {
     return KubernetesConstants.TWISTER2_JOB_PODS_PREFIX + jobName;
   }
@@ -137,6 +141,10 @@ public final class KubernetesUtils {
 
   public static String createJobPodsLabelWithKey(String jobName) {
     return KubernetesConstants.TWISTER2_JOB_PODS_KEY + "=" + createJobPodsLabel(jobName);
+  }
+
+  public static String createJobMasterRoleLabelWithKey(String jobName) {
+    return KubernetesConstants.TWISTER2_PODS_ROLE_KEY + "=" + createJobMasterRoleLabel(jobName);
   }
 
   /**
