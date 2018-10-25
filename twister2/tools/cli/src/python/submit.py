@@ -62,6 +62,8 @@ def setup_java_system_properties(cl_args):
     java_system_props.append("twister2_home=" + twister2_home)
     # set the cluster name property
     java_system_props.append("cluster_type=" + cl_args["cluster"])
+    # set the job type
+    java_system_props.append("job_type=" + cl_args["job-type"])
     # set the job file
     java_system_props.append("job_file=" + cl_args['job-file-name'])
     return java_system_props
@@ -109,6 +111,31 @@ def submit_fatjar(cl_args, unknown_args):
     return res
 
 ################################################################################
+def submit_zip(cl_args, unknown_args):
+    java_system_props = setup_java_system_properties(cl_args)
+    # execute main of the job to create the job definition
+    job_file = cl_args['job-file-name']
+
+    main_class = cl_args['job-class-name']
+
+    res = execute.twister2_zip(
+        class_name=main_class,
+        lib_jars=config.get_twister2_libs(jars.job_jars()),
+        args=tuple(unknown_args),
+        job_file=job_file,
+        java_defines=java_system_props)
+
+    result.render(res)
+
+    if not res.is_successful():
+        err_context = ("Failed to create job definition " \
+                       "Please check logs for more information")
+        res.add_context(err_context)
+        return res
+
+    return res
+
+################################################################################
 # pylint: disable=unused-argument
 def run(command, parser, cl_args, unknown_args):
     '''
@@ -136,13 +163,15 @@ def run(command, parser, cl_args, unknown_args):
         return SimpleResult(Status.InvocationError, err_context)
 
     # check if it is a valid file type
-    if not job_type or job_type not in ['jar']:
-        err_context = "Unknown file type '%s'. Please use jar" \
+    if not job_type or job_type not in ['jar', 'zip']:
+        err_context = "Unknown file type '%s'. Please use jar/zip" \
                       % job_type
         return SimpleResult(Status.InvocationError, err_context)
 
     # check the extension of the file name to see if it is tar/jar file.
     if job_type == "jar":
         return submit_fatjar(cl_args, unknown_args)
+    elif job_type == "zip":
+        return submit_zip(cl_args, unknown_args)
     else:
         return False

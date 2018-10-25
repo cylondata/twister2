@@ -18,6 +18,7 @@ import subprocess
 import tarfile
 import tempfile
 import traceback
+import zipfile
 
 from twister2.tools.cli.src.python.log import Log
 from twister2.tools.cli.src.python.result import SimpleResult, ProcessResult, Status
@@ -105,4 +106,21 @@ def twister2_tar(class_name, topology_tar, arguments, tmpdir_root, java_defines)
     # Now execute the class
     return twister2_class(class_name, lib_jars, extra_jars, arguments, java_defines)
 
+def twister2_zip(class_name, lib_jars, args, job_file, java_defines):
+    sys_temp = tempfile.gettempdir()
+    temp_zip = os.path.join(sys_temp,'temp_zip')
 
+    if not os.path.exists(temp_zip):
+        os.makedirs(temp_zip)
+
+    tmpdir = tempfile.mkdtemp(dir=temp_zip)
+    with contextlib.closing(zipfile.ZipFile(job_file, 'r')) as zip:
+        zip.extractall(path=tmpdir)
+    extra_jars = []
+
+    for (dirpath, dirnames, filenames) in os.walk(tmpdir):
+        for file in filenames:
+            if file.endswith(".jar"):
+                extra_jars.append(os.path.join(tmpdir, file))
+
+    return twister2_class(class_name, lib_jars, extra_jars, args, java_defines)

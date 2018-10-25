@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.core;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -19,6 +22,8 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
@@ -65,6 +70,7 @@ public class ResourceAllocator {
     String twister2Home = System.getProperty(SchedulerContext.TWISTER_2_HOME);
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
     String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
+    String jobType = System.getProperty(SchedulerContext.JOB_TYPE);
     // lets get the job jar file from system properties or environment
     String jobJar = System.getProperty(SchedulerContext.USER_JOB_JAR_FILE);
 
@@ -81,6 +87,10 @@ public class ResourceAllocator {
 
     if (environmentProperties.containsKey(SchedulerContext.CLUSTER_TYPE)) {
       clusterType = (String) environmentProperties.get(SchedulerContext.CLUSTER_TYPE);
+    }
+
+    if (environmentProperties.containsKey(SchedulerContext.JOB_TYPE)) {
+      configDir = (String) environmentProperties.get(SchedulerContext.JOB_TYPE);
     }
 
     if (environmentProperties.containsKey(SchedulerContext.USER_JOB_JAR_FILE)) {
@@ -124,6 +134,53 @@ public class ResourceAllocator {
         build();
   }
 
+  private String unzipJobFiles(Config config, JobAPI.Job job, String tempDir, String zipFilePath) {
+    Path tempDirPath = null;
+    try {
+      tempDirPath = Files.createTempDirectory(Paths.get(tempDir), job.getJobName() + "_unzipped");
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to create temp directory for job file: " + tempDir, e);
+    }
+
+    String tempDirPathString = tempDirPath.toString();
+
+    FileInputStream fileInStream;
+    // buffer for read and write data to file
+    byte[] buffer = new byte[1024];
+    try {
+      ZipInputStream zipInStream = new ZipInputStream(new FileInputStream(zipFilePath));
+      ZipEntry zipEntry = zipInStream.getNextEntry();
+      while (zipEntry != null) {
+        String fileName = zipEntry.getName();
+        File newFile = new File(tempDirPathString + File.separator + fileName);
+        // create directories for subdirectories in zip
+        new File(newFile.getParent()).mkdirs();
+        FileOutputStream fileOutStream = new FileOutputStream(newFile);
+        int len;
+        while ((len = zipInStream.read(buffer)) > 0) {
+          fileOutStream.write(buffer, 0, len);
+        }
+        fileOutStream.close();
+        zipInStream.closeEntry();
+        zipEntry = zipInStream.getNextEntry();
+      }
+      zipInStream.closeEntry();
+      zipInStream.close();
+    } catch (IOException e) {
+      throw  new RuntimeException("Failed to unzip the job file for job", e);
+    }
+
+    File tempUnzippedDir = new File(tempDirPathString);
+    File[] jarFiles = FileUtils.filterFilesByExtension(tempDirPathString, ".jar");
+    String jobJarFile = null;
+    if (jarFiles.length == 0) {
+      throw new RuntimeException("Job .jar file not found in zip");
+    } else {
+      jobJarFile = jarFiles[0].toString();
+    }
+    return createJobFiles(config, job, tempDir, jobJarFile);
+  }
+
   /**
    * Create the job files to be uploaded into the cluster
    */
@@ -137,16 +194,26 @@ public class ResourceAllocator {
       throw new RuntimeException("Failed to create the base temp directory for job", e);
     }
 
-    String jobJarFile = SchedulerContext.userJobJarFile(config);
-    if (jobJarFile == null) {
+    String jobFile = SchedulerContext.userJobJarFile(config);
+    String jobFileName = Paths.get(jobFile).getFileName().toString();
+    if (jobFile == null) {
       throw new RuntimeException("Job file cannot be null");
+    } else if (jobFileName.substring(jobFileName.lastIndexOf('.')).equals(".zip")) {
+      return unzipJobFiles(config, job, tempDirectory, jobFile);
+    } else {
+      return createJobFiles(config, job, tempDirectory, jobFile);
     }
+  }
 
+  /**
+   * Create the job files to be uploaded into the cluster
+   */
+  private String createJobFiles(Config config, JobAPI.Job job, String tempDir, String jobJarFile) {
     Path tempDirPath = null;
     try {
-      tempDirPath = Files.createTempDirectory(Paths.get(tempDirectory), job.getJobName());
+      tempDirPath = Files.createTempDirectory(Paths.get(tempDir), job.getJobName());
     } catch (IOException e) {
-      throw new RuntimeException("Failed to create temp directory: " + tempDirectory, e);
+      throw new RuntimeException("Failed to create temp directory: " + tempDir, e);
     }
 
     // temp directory to put archive files
@@ -177,10 +244,9 @@ public class ResourceAllocator {
     }
 
     // first update the job description
+    JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
     // get file name without directory
     String jobJarFileName = Paths.get(jobJarFile).getFileName().toString();
-    JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
-//    format.setType(JobAPI.JobFormatType.SHUFFLE);
     format.setJobFile(jobJarFileName);
     updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
 

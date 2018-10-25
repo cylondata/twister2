@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 /**
  * This is a basic job with only communication available
@@ -73,6 +74,17 @@ public final class Twister2Job {
 
     // set the job resources
     jobBuilder.setJobResources(jobResourceBuilder.build());
+
+    // set the job format
+    JobAPI.JobFormat.Builder jobFormatBuilder = JobAPI.JobFormat.newBuilder();
+    if (System.getProperty(SchedulerContext.JOB_TYPE).equals("jar")) {
+      jobFormatBuilder.setType(JobAPI.JobFormatType.JAR);
+    } else if (System.getProperty(SchedulerContext.JOB_TYPE).equals("zip")) {
+      jobFormatBuilder.setType(JobAPI.JobFormatType.ZIP);
+    } else {
+      throw new RuntimeException("Unrecognized job type");
+    }
+    jobBuilder.setJobFormat(jobFormatBuilder.build());
 
     return jobBuilder.build();
   }

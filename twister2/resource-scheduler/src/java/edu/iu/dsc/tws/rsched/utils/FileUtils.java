@@ -135,4 +135,17 @@ public final class FileUtils {
       return org.apache.commons.codec.digest.DigestUtils.md5Hex(fis);
     }
   }
+
+  public static File[] filterFilesByExtension(String directory, String extension) {
+    File fileDir = new File(directory);
+    File[] fileList = null;
+    if (!fileDir.exists()) {
+      return fileList;
+    } else {
+      fileList = fileDir.listFiles((dir, name) -> {
+        return name.toLowerCase().endsWith(extension);
+      });
+      return fileList;
+    }
+  }
 }
