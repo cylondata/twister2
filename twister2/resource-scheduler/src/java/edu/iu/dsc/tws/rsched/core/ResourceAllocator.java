@@ -134,6 +134,33 @@ public class ResourceAllocator {
         build();
   }
 
+  /**
+   * Create the job files to be uploaded into the cluster
+   */
+  private String prepareJobFiles(Config config, JobAPI.Job job) {
+    // lets first save the job file
+    // lets write the job into file, this will be used for job creation
+    String tempDirectory = SchedulerContext.jobClientTempDirectory(config) + "/" + job.getJobName();
+    try {
+      Files.createDirectories(Paths.get(tempDirectory));
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to create the base temp directory for job", e);
+    }
+
+    String jobFile = SchedulerContext.userJobJarFile(config);
+    String jobFileName = Paths.get(jobFile).getFileName().toString();
+    if (jobFile == null) {
+      throw new RuntimeException("Job file cannot be null");
+    } else if (jobFileName.substring(jobFileName.lastIndexOf('.')).equals(".zip")) {
+      return unzipJobFiles(config, job, tempDirectory, jobFile);
+    } else {
+      return createJobFiles(config, job, tempDirectory, jobFile);
+    }
+  }
+
+  /**
+   * Extract job file given as a zip
+   */
   private String unzipJobFiles(Config config, JobAPI.Job job, String tempDir, String zipFilePath) {
     Path tempDirPath = null;
     try {
@@ -179,30 +206,6 @@ public class ResourceAllocator {
       jobJarFile = jarFiles[0].toString();
     }
     return createJobFiles(config, job, tempDir, jobJarFile);
-  }
-
-  /**
-   * Create the job files to be uploaded into the cluster
-   */
-  private String prepareJobFiles(Config config, JobAPI.Job job) {
-    // lets first save the job file
-    // lets write the job into file, this will be used for job creation
-    String tempDirectory = SchedulerContext.jobClientTempDirectory(config) + "/" + job.getJobName();
-    try {
-      Files.createDirectories(Paths.get(tempDirectory));
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to create the base temp directory for job", e);
-    }
-
-    String jobFile = SchedulerContext.userJobJarFile(config);
-    String jobFileName = Paths.get(jobFile).getFileName().toString();
-    if (jobFile == null) {
-      throw new RuntimeException("Job file cannot be null");
-    } else if (jobFileName.substring(jobFileName.lastIndexOf('.')).equals(".zip")) {
-      return unzipJobFiles(config, job, tempDirectory, jobFile);
-    } else {
-      return createJobFiles(config, job, tempDirectory, jobFile);
-    }
   }
 
   /**
