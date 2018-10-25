@@ -15,13 +15,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -29,6 +35,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 
 public class JoinBatchFinalReceiver implements MessageReceiver {
 
@@ -174,6 +181,7 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
   }
 
   @Override
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public boolean progress() {
     boolean needsFurtherProgress = false;
     for (int target : targetDone.keySet()) {
@@ -183,8 +191,12 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
       lock.lock();
       try {
         if (checkIfFinished(target)) {
-          List<Object> results = innerJoin(targetMessagesLeft.get(target),
+          Map<Object, List<Object>> results = innerJoin(targetMessagesLeft.get(target),
               targetMessagesRight.get(target));
+          receiver.receive(target, new JoinIterator(results));
+          targetDone.put(target, true);
+        } else {
+          needsFurtherProgress = true;
         }
       } finally {
         lock.unlock();
@@ -203,11 +215,28 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
    * @param right right partition of the join
    * @return the joined list of values
    */
-  private List<Object> innerJoin(List<Object> left, List<Object> right) {
-    List<Object> results = new ArrayList<>();
-    System.out.println(left.size());
-    System.out.println(right.size());
-    return results;
+  private Map<Object, List<Object>> innerJoin(List<Object> left, List<Object> right) {
+    Map<Object, List<Object>> joined = new HashMap<>();
+    for (Object entry : left) {
+      Object key = ((KeyedContent) entry).getKey();
+      if (joined.containsKey(key)) {
+        joined.get(key).add(((KeyedContent) entry).getValue());
+      } else {
+        joined.put(key, new ArrayList<Object>());
+        joined.get(key).add(((KeyedContent) entry).getValue());
+      }
+    }
+
+    for (Object entry : right) {
+      Object key = ((KeyedContent) entry).getKey();
+      if (joined.containsKey(key)) {
+        joined.get(key).add(((KeyedContent) entry).getValue());
+      } else {
+        joined.put(key, new ArrayList<Object>());
+        joined.get(key).add(((KeyedContent) entry).getValue());
+      }
+    }
+    return joined;
   }
 
   /**
@@ -220,5 +249,29 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
     return operationLeft.isDelegeteComplete() && operationRight.isDelegeteComplete()
         && onFinishedSourcesLeft.get(target).equals(sources)
         && onFinishedSourcesRight.get(target).equals(sources);
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private class JoinIterator<T extends Pair> implements Iterator<Pair> {
+
+    private Map<Object, List<Object>> messageMap;
+    private Queue<Object> keyList = new LinkedList<>();
+
+    JoinIterator(Map<Object, List<Object>> messageMap) {
+      this.messageMap = messageMap;
+      keyList.addAll(messageMap.keySet());
+    }
+
+    @Override
+    public boolean hasNext() {
+      return !keyList.isEmpty();
+    }
+
+    @Override
+    public ImmutablePair next() {
+      Object key = keyList.poll();
+      List<Object> value = messageMap.remove(key);
+      return new ImmutablePair(key, value);
+    }
   }
 }

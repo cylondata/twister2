@@ -145,7 +145,8 @@ public class BJoin {
    * @return true if further progress is needed
    */
   public boolean progress() {
-    return partitionLeft.progress() && partitionRight.progress();
+
+    return partitionLeft.progress() | partitionRight.progress();
   }
 
   public void close() {
