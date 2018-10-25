@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
@@ -57,8 +58,8 @@ public class BJoin {
    * @param destSelector destination selector
    */
   public BJoin(Communicator comm, TaskPlan plan,
-               Set<Integer> sources, Set<Integer> targets, MessageType dataType,
-               BulkReceiver rcvr,
+               Set<Integer> sources, Set<Integer> targets, MessageType keyType,
+               MessageType dataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle) {
     this.destinationSelector = destSelector;
     String shuffleDir = comm.getPersistentDirectory();
@@ -74,11 +75,11 @@ public class BJoin {
 
     this.partitionLeft = new DataFlowPartition(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(0, finalRcvr), new PartitionPartialReceiver(),
-        DataFlowPartition.PartitionStratergy.DIRECT, dataType);
+        DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
 
     this.partitionRight = new DataFlowPartition(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
-        DataFlowPartition.PartitionStratergy.DIRECT, dataType);
+        DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
 
     this.partitionLeft.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.partitionRight.init(comm.getConfig(), dataType, plan, comm.nextEdge());
@@ -86,18 +87,20 @@ public class BJoin {
   }
 
   /**
-   * Send a message to be partitioned
+   * Send a data to be partitioned
    *
    * @param source source
-   * @param message message
-   * @param flags message flag
-   * @return true if the message is accepted
+   * @param key key for the data
+   * @param data data
+   * @param flags data flag
+   * @return true if the data is accepted
    */
-  public boolean partition(int source, Object message, int flags, int tag) {
-    int dest = destinationSelector.next(source, message);
+  public boolean partition(int source, Object key, Object data, int flags, int tag) {
+    int dest = destinationSelector.next(source, key, data);
 
     boolean send;
-
+    KeyedContent message = new KeyedContent(key, data, partitionLeft.getKeyType(),
+        partitionLeft.getDataType());
     if (tag == 0) {
       send = partitionLeft.send(source, message, flags, dest);
     } else if (tag == 1) {
@@ -142,7 +145,8 @@ public class BJoin {
    * @return true if further progress is needed
    */
   public boolean progress() {
-    return partitionLeft.progress() && partitionRight.progress();
+
+    return partitionLeft.progress() | partitionRight.progress();
   }
 
   public void close() {

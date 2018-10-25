@@ -69,6 +69,10 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
    */
   private int thisWorker;
 
+
+  /**
+   * sources for this operation
+   */
   private Set<Integer> sources;
 
   public PartitionBatchFinalReceiver(BulkReceiver receiver) {

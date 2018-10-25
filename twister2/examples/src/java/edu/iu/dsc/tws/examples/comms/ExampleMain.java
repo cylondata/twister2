@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.examples.comms.batch.BAllGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BAllReduceExample;
 import edu.iu.dsc.tws.examples.comms.batch.BDKeyedGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BGatherExample;
+import edu.iu.dsc.tws.examples.comms.batch.BJoinExample;
 import edu.iu.dsc.tws.examples.comms.batch.BKeyedGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BKeyedPartitionBasedReduceExample;
 import edu.iu.dsc.tws.examples.comms.batch.BKeyedPartitionExample;
@@ -165,6 +166,9 @@ public class ExampleMain {
           break;
         case "dkeyedgather":
           submitJob(config, workers, jobConfig, BDKeyedGatherExample.class.getName());
+          break;
+        case "join":
+          submitJob(config, workers, jobConfig, BJoinExample.class.getName());
           break;
       }
     } else {
