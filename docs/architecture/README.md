@@ -38,4 +38,4 @@ This section describes some of these components in detail.
 
 * [Common](common/logging.md)
 * [Discovery](discovery/worker-discovery.md)
-* [Discovery](job-master/job-master.md)
+* [JobMaster](job-master/job-master.md)

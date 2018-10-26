@@ -1,6 +1,27 @@
 # Communication
 
-## TCP
+Twister2 supports both BSP style and DataFlow style communications. It supports BSP style using
+MPI and Harp while it can use Twister:Net data flow communication for dat analysis.
+
+## DataFlow Communication
+
+DataFlow communication in Twister2 is implemented using MPI and Java NIO sockets. These operations 
+are geared towards batch data processing and streaming analytics. 
+
+### OpenMPI Implementation
+
+We use OpenMPI underneath for transferring messages between nodes in this mode. 
+
+### TCP Socket Implementation
+
+TCP socket implementation uses, Java NIO sockets for transferring messages between nodes.
+
+## BSP Communication
+
+BSP Communication is supported using Harp and MPI. Harp uses TCP sockets while MPI can use advanced hardware
+for communications.
+
+## TCP Socket
 
 TCP functionality is implemented in the common package. It is based on non blocking network IO model with Java NIO.
 
@@ -14,7 +35,7 @@ Each TCP message is preceded by the following header.
   4 byte integer length \ 4 byte integer edge
 ```
 
-## Request Response Mode
+### Request Response Mode
 
 In Request/Response model, we have a TCP Server and a TCP client which works using requests and responses. Requests and responses are always protocol buffer messages.
 
@@ -34,7 +55,7 @@ So each message is preceded by
 
 When we send a message, a callback is registered to receive the responses. The requests and responces are matched using the unique request id generated for each message.
 
-## Messaging Mode
+### Messaging Mode
 
 In messaging mode, the tcp network sends data buffers in Java ByteBuffer objects. It uses set of fixed data buffers to transfer and reveive data.
 

@@ -57,14 +57,17 @@ public abstract class BenchTaskWorker extends TaskWorker {
     experimentData = new ExperimentData();
     jobParameters = JobParameters.build(config);
     experimentData.setTaskStages(jobParameters.getTaskStages());
-    experimentData.setIterations(jobParameters.getIterations());
     taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     if (jobParameters.isStream()) {
       taskGraphBuilder.setMode(OperationMode.STREAMING);
       experimentData.setOperationMode(OperationMode.STREAMING);
+      //streaming application doesn't consider iteration as a looping of the action on the
+      //same data set. It's rather producing an streaming of data
+      experimentData.setIterations(1);
     } else {
       taskGraphBuilder.setMode(OperationMode.BATCH);
       experimentData.setOperationMode(OperationMode.BATCH);
+      experimentData.setIterations(jobParameters.getIterations());
     }
     buildTaskGraph();
     dataFlowTaskGraph = taskGraphBuilder.build();
@@ -109,9 +112,10 @@ public abstract class BenchTaskWorker extends TaskWorker {
         } else if (count < iterations) {
           experimentData.setInput(val);
           if (context.write(this.edge, val)) {
-            count++;
+            //
           }
         }
+        count++;
       }
     }
   }
@@ -140,9 +144,10 @@ public abstract class BenchTaskWorker extends TaskWorker {
         } else if (count < iterations) {
           experimentData.setInput(val);
           if (context.write(edge, count, val)) {
-            count++;
+            //
           }
         }
+        count++;
       }
     }
   }
@@ -163,12 +168,13 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       Object val = generateData();
+      experimentData.setInput(val);
       int iterations = jobParameters.getIterations();
       while (count <= iterations) {
-        experimentData.setInput(val);
         if (context.write(this.edge, val)) {
-          count++;
+          //
         }
+        count++;
       }
     }
   }
@@ -178,7 +184,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
     private String edge;
 
-    private int count;
+    private int count = 0;
 
     public KeyedSourceStreamTask() {
     }
@@ -194,8 +200,9 @@ public abstract class BenchTaskWorker extends TaskWorker {
       while (count <= iterations) {
         experimentData.setInput(val);
         if (context.write(edge, count, val)) {
-          count++;
+          //
         }
+        count++;
       }
     }
   }

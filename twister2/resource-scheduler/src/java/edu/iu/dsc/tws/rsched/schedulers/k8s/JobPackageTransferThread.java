@@ -27,7 +27,7 @@ public class JobPackageTransferThread extends Thread {
 
   public static final long SLEEP_INTERVAL_BETWEEN_POD_STATUS_CHECKS = 30;
   public static final long SLEEP_INTERVAL_BETWEEN_TRANSFER_ATTEMPTS = 200;
-  public static final long MAX_FILE_TRANSFER_TRY_COUNT = 50;
+  public static final long MAX_FILE_TRANSFER_TRY_COUNT = 100;
 
   private String podName;
   private String[] copyCommand;
@@ -97,10 +97,10 @@ public class JobPackageTransferThread extends Thread {
 
         tryCount++;
 
-        if (tryCount == 5 || tryCount == (MAX_FILE_TRANSFER_TRY_COUNT - 1)) {
+        if (tryCount == 10 || tryCount == (MAX_FILE_TRANSFER_TRY_COUNT - 1)) {
           LOG.warning("Job Package: " + jobPackageFile + " could not be transferred to "
               + "the pod: " + podName + ". Sleeping and will try again ... " + tryCount
-              + "\nFailed command: " + copyCommandAsString());
+              + "\nExecuted command: " + copyCommandAsString());
         }
 
         try {

@@ -162,7 +162,7 @@ From
 to
 
 ```bash
-'./configure --prefix=$$INSTALL\_DIR --enable-mpi-java --with-jdk-bindir=/bin --with-jdk-headers=/include',
+'./configure --prefix=$$INSTALL_DIR --enable-mpi-java --with-jdk-bindir=/bin --with-jdk-headers=/include',
 ```
 
 Please replace  with your jdk location.

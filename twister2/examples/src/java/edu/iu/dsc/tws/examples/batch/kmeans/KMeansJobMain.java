@@ -15,12 +15,6 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
@@ -28,6 +22,11 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 public class KMeansJobMain {
 
@@ -58,6 +57,7 @@ public class KMeansJobMain {
     options.addOption(KMeansConstants.ARGS_POINTS_SEED_VALUE, true, "pseedvalue");
     options.addOption(KMeansConstants.ARGS_CENTERS_SEED_VALUE, true, "cseedvalue");
     options.addOption(KMeansConstants.ARGS_DATA_INPUT, true, "generate");
+    options.addOption(KMeansConstants.ARGS_PARALLELISM_VALUE, true, "4");
 
     @SuppressWarnings("deprecation")
     CommandLineParser commandLineParser = new DefaultParser();
@@ -70,20 +70,23 @@ public class KMeansJobMain {
     String dataInput = commandLine.getOptionValue(KMeansConstants.ARGS_DATA_INPUT);
 
     int numberOfPoints = Integer.parseInt(commandLine.getOptionValue(
-        KMeansConstants.ARGS_NUMBER_OF_POINTS));
+            KMeansConstants.ARGS_NUMBER_OF_POINTS));
     int workers = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_WORKERS));
     int itr = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_ITR));
     int dim = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_DIMENSIONS));
     int numOfClusters = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_CLUSTERS));
-    int pSeedValue = Integer.parseInt(commandLine.getOptionValue(
-        KMeansConstants.ARGS_POINTS_SEED_VALUE));
-    int cSeedValue = Integer.parseInt(commandLine.getOptionValue(
-        KMeansConstants.ARGS_CENTERS_SEED_VALUE));
+    int pSeedValue =
+            Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_POINTS_SEED_VALUE));
+    int cSeedValue =
+            Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_CENTERS_SEED_VALUE));
+    int parallelismValue =
+            Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_PARALLELISM_VALUE));
 
     LOG.fine("workers:" + workers + "\titeration:" + itr + "\tdimension:" + dim
-        + "\tnumber of clusters:" + numOfClusters + "\tfilename:" + fileName
-        + "\tnumber of datapoints:" + numberOfPoints + "\tdatapoints file:" + datapointsFile
-        + "\tcenters file:" + centersFile + "\tfilesys:" + fileSystem);
+            + "\tnumber of clusters:" + numOfClusters + "\tfilename:" + fileName
+            + "\tnumber of datapoints:" + numberOfPoints + "\tdatapoints file:" + datapointsFile
+            + "\tcenters file:" + centersFile + "\tfilesys:" + fileSystem
+            + "\tparllelism:" + parallelismValue);
 
     configurations.put(KMeansConstants.ARGS_FNAME, fileName);
     configurations.put(KMeansConstants.ARGS_POINTS, datapointsFile);
@@ -98,6 +101,7 @@ public class KMeansJobMain {
     configurations.put(KMeansConstants.ARGS_CLUSTERS, Integer.toString(numOfClusters));
     configurations.put(KMeansConstants.ARGS_POINTS_SEED_VALUE, Integer.toString(pSeedValue));
     configurations.put(KMeansConstants.ARGS_CENTERS_SEED_VALUE, Integer.toString(cSeedValue));
+    configurations.put(KMeansConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
@@ -106,7 +110,7 @@ public class KMeansJobMain {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("KMeans-job");
     jobBuilder.setWorkerClass(KMeansJob.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 512), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(2, 512), workers);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

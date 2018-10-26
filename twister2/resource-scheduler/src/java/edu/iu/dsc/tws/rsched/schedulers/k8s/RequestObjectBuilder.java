@@ -361,14 +361,34 @@ public final class RequestObjectBuilder {
         .name(K8sEnvVariables.USER_JOB_JAR_FILE + "")
         .value(SchedulerContext.userJobJarFile(config)));
 
-    // POD_IP with downward API
+    // POD_NAME with downward API
     V1ObjectFieldSelector fieldSelector = new V1ObjectFieldSelector();
-    fieldSelector.setFieldPath("status.podIP");
+    fieldSelector.setFieldPath("metadata.name");
     V1EnvVarSource varSource = new V1EnvVarSource();
     varSource.setFieldRef(fieldSelector);
 
     envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.POD_IP + "")
+        .name(K8sEnvVariables.POD_NAME + "")
+        .valueFrom(varSource));
+
+    // HOST_IP (node-ip) with downward API
+    fieldSelector = new V1ObjectFieldSelector();
+    fieldSelector.setFieldPath("status.hostIP");
+    varSource = new V1EnvVarSource();
+    varSource.setFieldRef(fieldSelector);
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.HOST_IP + "")
+        .valueFrom(varSource));
+
+    // HOST_NAME (node-name) with downward API
+    fieldSelector = new V1ObjectFieldSelector();
+    fieldSelector.setFieldPath("spec.nodeName");
+    varSource = new V1EnvVarSource();
+    varSource.setFieldRef(fieldSelector);
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.HOST_NAME + "")
         .valueFrom(varSource));
 
     String masterAddress = null;
@@ -482,14 +502,6 @@ public final class RequestObjectBuilder {
 
     String serviceName = KubernetesUtils.createServiceName(jobName);
     String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
-
-    return createHeadlessServiceObject(serviceName, serviceLabel);
-  }
-
-  public static V1Service createJobMasterServiceObject(String jobName) {
-
-    String serviceName = KubernetesUtils.createJobMasterServiceName(jobName);
-    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobName);
 
     return createHeadlessServiceObject(serviceName, serviceLabel);
   }

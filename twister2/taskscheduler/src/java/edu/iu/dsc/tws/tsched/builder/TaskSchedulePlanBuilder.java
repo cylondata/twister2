@@ -52,7 +52,7 @@ public class TaskSchedulePlanBuilder {
   private TreeSet<Integer> taskIds;
   private HashMap<String, TreeSet<Integer>> taskIndexes;
   private int requestedContainerPadding;
-  private int numContainers;
+  private int numberOfContainers;
   private int id;
 
   public TaskSchedulePlanBuilder(int id) {
@@ -62,18 +62,16 @@ public class TaskSchedulePlanBuilder {
   public TaskSchedulePlanBuilder(int scheduleId, TaskSchedulePlan previousTaskSchedulePlan) {
     this.id = scheduleId;
     this.previousTaskSchedulePlan = previousTaskSchedulePlan;
-    this.numContainers = 0;
+    this.numberOfContainers = 0;
     this.requestedContainerPadding = 0;
     this.taskRamMap = new HashMap<>();
     this.taskDiskMap = new HashMap<>();
     this.taskCpuMap = new HashMap<>();
   }
 
-
   public void setTaskIds(TreeSet<Integer> taskIds) {
     this.taskIds = taskIds;
   }
-
 
   public Map<Integer, Container> getContainers() {
     return containers;
@@ -99,10 +97,6 @@ public class TaskSchedulePlanBuilder {
   public TaskSchedulePlanBuilder setTaskDiskMap(Map<String, Double> taskdiskMap) {
     this.taskDiskMap = taskdiskMap;
     return this;
-  }
-
-  public Map<String, Double> getTaskCpuMap() {
-    return taskCpuMap;
   }
 
   public TaskSchedulePlanBuilder setTaskCpuMap(Map<String, Double> taskcpuMap) {
@@ -159,34 +153,20 @@ public class TaskSchedulePlanBuilder {
   }
 
   public int getNumContainers() {
-    return numContainers;
+    return numberOfContainers;
   }
 
   public void setNumContainers(int numContainers) {
-    this.numContainers = numContainers;
+    this.numberOfContainers = numContainers;
   }
 
   public TaskSchedulePlanBuilder updateNumContainers(int numOfContainers) {
-    this.numContainers = numOfContainers;
+    this.numberOfContainers = numOfContainers;
     return this;
   }
 
-  @VisibleForTesting
-  static List<Container> sortContainers(List<Scorer<Container>> scorers,
-                                        Collection<Container> containers) {
-    List<Container> sorted = new ArrayList<>(containers);
-    sorted.sort(new ChainedContainerComparator<>(scorers));
-    return sorted;
-  }
-
-
   /**
    * It add the instance plan to the container and update the task indexes and task ids indexes.
-   * @param container
-   * @param taskInstancePlan
-   * @param taskIndexes
-   * @param taskIds
-   * @throws TaskSchedulerException
    */
   private static void addToContainer(Container container,
                                      TaskSchedulePlan.TaskInstancePlan taskInstancePlan,
@@ -205,11 +185,13 @@ public class TaskSchedulePlanBuilder {
 
   public TaskSchedulePlanBuilder addInstance(Integer containerId, String taskName)
       throws TaskSchedulerException {
-    initContainer(containerId);
 
+    initContainer(containerId);
     Integer taskId = taskIds.isEmpty() ? 1 : taskIds.last() + 1;
     Integer taskIndex = taskIndexes.get(taskName) != null
         ? taskIndexes.get(taskName).last() + 1 : 0;
+
+
     TaskInstanceId taskInstanceId = new TaskInstanceId(taskName, taskId, taskIndex);
     Resource resource = TaskScheduleUtils.getResourceRequirement(
         taskName, this.taskRamMap, this.instanceDefaultResourceValue,
@@ -224,17 +206,14 @@ public class TaskSchedulePlanBuilder {
           "Insufficient container resources to add instance %s with resources %s to container %d.",
           taskInstanceId, resource, containerId), e);
     }
-    LOG.fine(String.format("Added to container %d task instance %s task index %s ", containerId,
-        taskInstanceId.getTaskName(), taskInstanceId.getTaskIndex()));
+
+    LOG.fine("Task id, index, name:" + taskId + "\t" + taskIndex + "\t" + taskName
+        + "\tadded to Container:" + containers.get(containerId));
     return this;
   }
 
   /**
    * It will add the task instance to the container based on the container score value.
-   * @param scorer
-   * @param taskName
-   * @return
-   * @throws TaskSchedulerException
    */
   public int addInstance(Scorer<Container> scorer, String taskName)
       throws TaskSchedulerException {
@@ -246,10 +225,6 @@ public class TaskSchedulePlanBuilder {
   /**
    * This method first initialize the container value then add the task instance in the sorted
    * container score values.
-   * @param scorers
-   * @param taskName
-   * @return
-   * @throws TaskSchedulerException
    */
   private int addInstance(List<Scorer<Container>> scorers, String taskName)
       throws TaskSchedulerException {
@@ -269,8 +244,6 @@ public class TaskSchedulePlanBuilder {
 
   /**
    * This method first initialize the containers and add the task instance to the containers.
-   * @param taskName
-   * @return
    */
   public int addInstance(String taskName) {
     initContainers();
@@ -282,28 +255,34 @@ public class TaskSchedulePlanBuilder {
     return containerId;
   }
 
+  @VisibleForTesting
+  static List<Container> sortContainers(List<Scorer<Container>> scorers,
+                                        Collection<Container> containers) {
+    List<Container> sorted = new ArrayList<>(containers);
+    sorted.sort(new ChainedContainerComparator<>(scorers));
+    return sorted;
+  }
+
   /**
    * This method first validates the available resource settings and invoke the build container
    * plans method to build the container based on the task instance ram, disk, and cpu map values.
-   * @return
    */
   public TaskSchedulePlan build() {
     assertResourceSettings();
-    Set<TaskSchedulePlan.ContainerPlan> containerPlans = buildContainerPlans(
-        this.containers, this.taskRamMap, this.taskDiskMap, this.taskCpuMap,
-        this.instanceDefaultResourceValue, this.requestedContainerPadding);
     /*Set<TaskSchedulePlan.ContainerPlan> containerPlans = buildContainerPlans(
+        this.containers, this.taskRamMap, this.taskDiskMap, this.taskCpuMap,
+        this.instanceDefaultResourceValue, this.requestedContainerPadding);*/
+    Set<TaskSchedulePlan.ContainerPlan> containerPlans = buildContainerPlans(
         this.containers, this.taskRamMap, this.instanceDefaultResourceValue,
-        this.requestedContainerPadding);*/
+        this.requestedContainerPadding);
     return new TaskSchedulePlan(id, containerPlans);
   }
 
   /**
    * This method first initialize the container map values, task index values, and task id sets.
-   *
    */
   private void initContainers() {
-    assertResourceSettings();
+    //assertResourceSettings();
     Map<Integer, Container> containerMap = this.containers;
     HashMap<String, TreeSet<Integer>> taskindexes = this.taskIndexes;
     TreeSet<Integer> taskids = this.taskIds;
@@ -319,7 +298,7 @@ public class TaskSchedulePlanBuilder {
     if (containerMap == null) {
       if (this.previousTaskSchedulePlan == null) {
         containerMap = new HashMap<>();
-        for (int containerId = 1; containerId <= numContainers; containerId++) {
+        for (int containerId = 0; containerId < numberOfContainers; containerId++) {
           containerMap.put(containerId, new Container(containerId,
               this.containerMaximumResourceValue, this.requestedContainerPadding));
         }
@@ -327,14 +306,13 @@ public class TaskSchedulePlanBuilder {
         try {
           containerMap = getContainers(this.previousTaskSchedulePlan,
               this.requestedContainerPadding, taskindexes, taskids);
-          LOG.info("Container Map Size Is:" + containerMap.size());
         } catch (TaskSchedulerException e) {
           throw new TaskSchedulerException(
               "Could not initialize containers using existing packing plan", e);
         }
       }
     }
-    if (this.numContainers > containerMap.size()) {
+    if (this.numberOfContainers > containerMap.size()) {
       List<Scorer<Container>> scorers = new ArrayList<>();
       scorers.add(new ContainerIdScorer());
       List<Container> sortedContainers = sortContainers(scorers, containerMap.values());
@@ -343,7 +321,7 @@ public class TaskSchedulePlanBuilder {
       Resource capacity =
           containerMap.get(sortedContainers.get(0).getContainerId()).getResource();
 
-      for (int i = 0; i < numContainers - containerMap.size(); i++) {
+      for (int i = 0; i < numberOfContainers - containerMap.size(); i++) {
         containerMap.put(nextContainerId,
             new Container(nextContainerId, capacity, this.requestedContainerPadding));
         nextContainerId++;
@@ -353,6 +331,8 @@ public class TaskSchedulePlanBuilder {
     this.taskIds = taskids;
     this.taskIndexes = taskindexes;
     this.containers = containerMap;
+
+    LOG.fine("TaskDetails:" + this.taskIds + "\t" + this.taskIndexes + "\t" + this.containers);
   }
 
   private void initContainer(int containerId) {
@@ -377,7 +357,7 @@ public class TaskSchedulePlanBuilder {
   private Set<TaskSchedulePlan.ContainerPlan> buildContainerPlans(
       Map<Integer, Container> containerValue,
       Map<String, Double> taskramMap,
-      Resource instdefaultresourceValue,
+      Resource instdefaultresourcevalue,
       int containerPadding) {
 
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new LinkedHashSet<>();
@@ -385,12 +365,6 @@ public class TaskSchedulePlanBuilder {
       for (Integer containerId : containerValue.keySet()) {
 
         Container container = containerValue.get(containerId);
-
-        LOG.fine("Container Resource Value:" + containerId + "\t"
-            + container.getResource().getRam() + "\t"
-            + container.getResource().getDisk() + "\t"
-            + container.getResource().getCpu());
-
         if (container.getTaskInstances().size() == 0) {
           continue;
         }
@@ -409,14 +383,14 @@ public class TaskSchedulePlanBuilder {
           if (taskramMap.containsKey(instanceId.getTaskName())) {
             instanceRAMValue = taskramMap.get(instanceId.getTaskName());
           } else {
-            instanceRAMValue = instdefaultresourceValue.getRam();
+            instanceRAMValue = instdefaultresourcevalue.getRam();
           }
           containerRAMValue += instanceRAMValue;
 
-          double instanceDiskValue = instdefaultresourceValue.getDisk();
+          double instanceDiskValue = instdefaultresourcevalue.getDisk();
           containerDiskValue += instanceDiskValue;
 
-          double instanceCPUValue = instdefaultresourceValue.getCpu();
+          double instanceCPUValue = instdefaultresourcevalue.getCpu();
           containerCPUValue += instanceCPUValue;
 
           LOG.fine("Resource Container Values:" + "Ram Value:" + containerRAMValue + "\t"
@@ -443,12 +417,9 @@ public class TaskSchedulePlanBuilder {
   }
 
   private Set<TaskSchedulePlan.ContainerPlan> buildContainerPlans(
-      Map<Integer, Container> containerValue,
-      Map<String, Double> taskramMap,
-      Map<String, Double> taskdiskMap,
-      Map<String, Double> taskcpuMap,
-      Resource instdefaultresourceValue,
-      int containerPadding) {
+      Map<Integer, Container> containerValue, Map<String, Double> taskramMap,
+      Map<String, Double> taskdiskMap, Map<String, Double> taskcpuMap,
+      Resource instdefaultresourceValue, int containerPadding) {
 
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new LinkedHashSet<>();
     try {
@@ -515,7 +486,7 @@ public class TaskSchedulePlanBuilder {
         //containerRAMValue = containerRAMValue.increaseBy(requestedContainerPadding);
         //containerDiskValue = containerDiskValue.increaseBy(requestedContainerPadding);
 
-        LOG.fine("Container" + "\t" + containerId + "Values After Padding:"
+        LOG.info("Container" + "\t" + containerId + "Values After Padding:"
             + "Ram Value:" + containerRAMValue + "\t"
             + "Disk Value:" + containerDiskValue + "\t"
             + "Cpu Value:" + containerCPUValue);

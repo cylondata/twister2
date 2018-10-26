@@ -28,6 +28,7 @@ public final class KMeansConstants {
   public static final String ARGS_POINTS_SEED_VALUE = "pseedvalue";
   public static final String ARGS_CENTERS_SEED_VALUE = "cseedvalue";
   public static final String ARGS_DATA_INPUT = "input"; //"generate" or "read"
+  public static final String ARGS_PARALLELISM_VALUE = "parallelism";
 
   protected KMeansConstants() {
   }

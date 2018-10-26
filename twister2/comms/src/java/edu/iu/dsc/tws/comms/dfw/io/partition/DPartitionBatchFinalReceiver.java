@@ -18,8 +18,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,6 +28,7 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
@@ -131,23 +130,20 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     targets = new HashSet<>(expectedIds.keySet());
 
     for (Integer target : expectedIds.keySet()) {
-      Map<Integer, Boolean> perTarget = new ConcurrentHashMap<>();
-      for (Integer exp : expectedIds.get(target)) {
-        perTarget.put(exp, false);
-      }
 
       Shuffle sortedMerger;
       if (partition.getKeyType() == null) {
         sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
-            getOperationName(target), partition.getDataType());
+            DFWIOUtils.getOperationName(target, partition), partition.getDataType());
       } else {
         if (sorted) {
           sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory,
-              shuffleDirectory, getOperationName(target), partition.getKeyType(),
-              partition.getDataType(), comparator, target);
+              shuffleDirectory, DFWIOUtils.getOperationName(target, partition),
+              partition.getKeyType(), partition.getDataType(), comparator, target);
         } else {
           sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
-              getOperationName(target), partition.getKeyType(), partition.getDataType());
+              DFWIOUtils.getOperationName(target, partition), partition.getKeyType(),
+              partition.getDataType());
         }
       }
       sortedMergers.put(target, sortedMerger);
@@ -230,10 +226,5 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
 
   @Override
   public void onFinish(int source) {
-  }
-
-  private String getOperationName(int target) {
-    String uid = partition.getUniqueId();
-    return "partition-" + uid + "-" + target + "-" + UUID.randomUUID().toString();
   }
 }

@@ -6,16 +6,17 @@ The need to process large amounts of continuously arriving information has led t
 
 ## To run K-Means
 
-### To generate and write the datapoints and centroids in the local filesystem and run the K-Means
+This command generate and write the datapoints and centroids in the local filesystem and run the K-Means algorithm. 
 
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys local -pseedvalue 100 -cseedvalue 500 -input generate
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys local -pseedvalue 100 -cseedvalue 500 -input generate -parallelism 4
+
 ```
 
-### To generate and write the datapoints and centroids in the HDFS and run the K-Means
+This command generate and write the datapoints and centroids in the HDFS and run the K-Means algorithm.
 
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /home/kgovind/output.txt -pointsfile /home/kgovind/kinput.txt -centersfile /home/kgovind/kcentroid.txt -points 100 -filesys hdfs -pseedvalue 100 -cseedvalue 200 -input generate
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys hdfs -pseedvalue 100 -cseedvalue 200 -input generate -parallelism 4
 ```
 
 ## Implementation Details
@@ -46,6 +47,8 @@ public static final String ARGS_POINTS_SEED_VALUE = "pseedvalue"; //range for ra
 public static final String ARGS_CENTERS_SEED_VALUE = "cseedvalue"; //range for centroids generation
 
 public static final String ARGS_DATA_INPUT = "input"; //"generate" or "read"
+
+public static final String ARGS_PARALLELISM_VALUE = "parallelism";
 ```
 
 ### KMeansMainJob
@@ -151,6 +154,10 @@ It sums the corresponding centroid values and return the same.
 ret.setCenters(newCentroids); 
 ```
 
+### Sample Output
 
+```text
+[2018-10-05 10:44:18 -0400] [INFO] edu.iu.dsc.tws.examples.batch.kmeans.KMeansJob: %%% Final Centroid Values Received: %%%[[0.6476253753699173, 0.8468354813977953], [0.2687721020384673, 0.5083954227865372], [0.7860664115708306, 0.5381449347446825], [0.6675069260759725, 0.17798022472253153]]  
+```
 
 

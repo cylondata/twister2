@@ -6,13 +6,10 @@ will be Mesos agents. In order to run Mesos in your cluster, you need to
 have Zookeeper running somewhere. Please refer to Mesos and Zookeeper
 webpages for more information on installing them.
 
-To install Twister2 on a machine, please follow the steps
-in [installation
-document](https://github.com/DSC-SPIDAL/twister2/blob/master/docs/deployment/installation.md).
-To compile the project follow the instructions to the [compilation
-document](https://github.com/DSC-SPIDAL/twister2/blob/master/docs/deployment/compiling.md).
+To compile  and install Twister2 on a machine, please follow the steps
+in [compiling document](../compiling.md).
 You may also check [developer
-document](https://github.com/DSC-SPIDAL/twister2/blob/master/docs/developers/developer-environment.md) for
+document](../../developers/developer-environment.md) for
 setting up IDEs.
 
 Here are the few things you need to do to run Twister2 jobs on Mesos

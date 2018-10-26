@@ -6,3 +6,5 @@ In the examples section, we discuss the following.
 * [Collective Task Examples](collectives/task/task_examples.md)
 * [KMeans Examples](kmeans/kmeans_example.md)
 * [Wordcount Examples](wordcount/wordcount.md)
+* [IterativeJob Examples](iterative/iterative_examples.md)
+* [MultiStage Examples](multistage/multistage_examples.md)

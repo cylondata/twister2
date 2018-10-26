@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -32,14 +32,14 @@ public class STGatherExample extends BenchTaskWorker {
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
-    int psource = taskStages.get(0);
-    int psink = taskStages.get(1);
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseStreamSource g = new SourceStreamTask(edge);
     BaseStreamSink r = new GatherSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
     return taskGraphBuilder;
   }
@@ -51,33 +51,26 @@ public class STGatherExample extends BenchTaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
+      Object object = message.getContent();
       if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        if (object instanceof int[]) {
-          LOG.info("Stream Message Gathered : " + Arrays.toString((int[]) object)
-              + ", Count : " + count);
-        } else if (object instanceof ArrayList) {
-          ArrayList<?> a = (ArrayList<?>) object;
-          String out = "";
-          for (int i = 0; i < a.size(); i++) {
-            Object o = a.get(i);
-            if (o instanceof int[]) {
-              out += Arrays.toString((int[]) o);
+
+        if (object instanceof Iterator) {
+          Iterator<?> itr = (Iterator<?>) object;
+          while (itr.hasNext()) {
+            Object res = itr.next();
+            if (res instanceof int[]) {
+              int[] a = (int[]) res;
+              experimentData.setOutput(a);
+              LOG.info("Message Gathered : " + Arrays.toString(a));
             }
-            if (count % jobParameters.getPrintInterval() == 0) {
-              experimentData.setOutput(o);
-              try {
-                verify(OperationNames.GATHER);
-              } catch (VerificationException e) {
-                LOG.info("Exception Message : " + e.getMessage());
-              }
+            try {
+              verify(OperationNames.GATHER);
+            } catch (VerificationException e) {
+              e.printStackTrace();
             }
           }
-          //LOG.info("Stream Message Gathered : " + out + ", Count : " + count);
-        } else {
-          /*LOG.info("Stream Message Gathered : " + message.getContent().getClass().getName()
-             + ", Count : " + count);*/
         }
+
         /*if (count % jobParameters.getPrintInterval() == 0) {
           LOG.info("Gathered : " + message.getContent().getClass().getName()
               + ", Count : " + count + " numberOfElements: " + numberOfElements

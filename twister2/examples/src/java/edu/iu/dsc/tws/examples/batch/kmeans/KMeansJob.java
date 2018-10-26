@@ -46,13 +46,16 @@ public class KMeansJob extends TaskWorker {
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
 
+    this.kMeansJobParameters = KMeansJobParameters.build(config);
+
+    int parallelismValue = kMeansJobParameters.getParallelismValue();
+
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
-    graphBuilder.addSource("source", kMeansSourceTask, 4);
-    ComputeConnection computeConnection = graphBuilder.addSink("sink", kMeansAllReduceTask, 4);
+    graphBuilder.addSource("source", kMeansSourceTask, parallelismValue);
+    ComputeConnection computeConnection = graphBuilder.addSink("sink", kMeansAllReduceTask,
+            parallelismValue);
     computeConnection.allreduce("source", "all-reduce", new CentroidAggregator(), DataType.OBJECT);
     graphBuilder.setMode(OperationMode.BATCH);
-
-    this.kMeansJobParameters = KMeansJobParameters.build(config);
 
     int workers = kMeansJobParameters.getWorkers();
     int iterations = kMeansJobParameters.getIterations();
@@ -69,23 +72,24 @@ public class KMeansJob extends TaskWorker {
     String outputFile = kMeansJobParameters.getFileName();
 
     LOG.info("workers:" + workers + "\titeration:" + iterations + "\toutfile:" + outputFile
-        + "\tnumber of datapoints:" + noOfPoints + "\tdimension:" + dimension
-        + "\tnumber of clusters:" + noOfClusters + "\tdatapoints file:" + dataPointsFile + workerId
-        + "\tcenters file:" + centroidFile + workerId + "\tfilesys:" + fileSystem);
+            + "\tnumber of datapoints:" + noOfPoints + "\tdimension:" + dimension
+            + "\tnumberofclusters:" + noOfClusters + "\tdatapointsfile:" + dataPointsFile + workerId
+            + "\tcenters file:" + centroidFile + workerId + "\tfilesys:" + fileSystem
+            + "\tparallelism value:" + parallelismValue);
 
     KMeansFileReader kMeansFileReader = new KMeansFileReader(config, fileSystem);
     if ("generate".equals(inputData)) {
       KMeansDataGenerator.generateDataPointsFile(
-          dataPointsFile + workerId, noOfPoints, dimension, dataSeedValue, config,
-          fileSystem);
+              dataPointsFile + workerId, noOfPoints, dimension, dataSeedValue, config,
+              fileSystem);
       KMeansDataGenerator.generateCentroidFile(
-          centroidFile + workerId, noOfClusters, dimension, centroidSeedValue, config,
-          fileSystem);
+              centroidFile + workerId, noOfClusters, dimension, centroidSeedValue, config,
+              fileSystem);
     }
 
     double[][] dataPoint = kMeansFileReader.readDataPoints(dataPointsFile + workerId, dimension);
     double[][] centroid = kMeansFileReader.readCentroids(centroidFile + workerId, dimension,
-        noOfClusters);
+            noOfClusters);
 
     DataFlowTaskGraph graph = graphBuilder.build();
 
@@ -135,11 +139,11 @@ public class KMeansJob extends TaskWorker {
       LOG.fine("Original Centroid Value::::" + Arrays.deepToString(centroid));
 
       kMeansCalculator = new KMeansCalculator(datapoints, centroid,
-          context.taskIndex(), 2, startIndex, endIndex);
+              context.taskIndex(), 2, startIndex, endIndex);
       KMeansCenters kMeansCenters = kMeansCalculator.calculate();
 
       LOG.fine("Task Index:::" + context.taskIndex() + "\t"
-          + "Calculated Centroid Value::::" + Arrays.deepToString(centroid));
+              + "Calculated Centroid Value::::" + Arrays.deepToString(centroid));
       context.writeEnd("all-reduce", kMeansCenters);
     }
 
@@ -171,7 +175,7 @@ public class KMeansJob extends TaskWorker {
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
-          + ":" + context.taskId());
+              + ":" + context.taskId());
       centroids = ((KMeansCenters) message.getContent()).getCenters();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {
@@ -214,11 +218,11 @@ public class KMeansJob extends TaskWorker {
       KMeansCenters ret = new KMeansCenters();
 
       double[][] newCentroids = new double[kMeansCenters.getCenters().length]
-          [kMeansCenters.getCenters()[0].length];
+              [kMeansCenters.getCenters()[0].length];
 
       if (kMeansCenters.getCenters().length != kMeansCenters1.getCenters().length) {
         throw new RuntimeException("Center sizes not equal " + kMeansCenters.getCenters().length
-            + " != " + kMeansCenters1.getCenters().length);
+                + " != " + kMeansCenters1.getCenters().length);
       }
 
       for (int j = 0; j < kMeansCenters.getCenters().length; j++) {

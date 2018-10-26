@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
 
+import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1ContainerPort;
@@ -49,6 +50,9 @@ import io.kubernetes.client.models.V1ObjectMeta;
 import io.kubernetes.client.models.V1PodSpec;
 import io.kubernetes.client.models.V1PodTemplateSpec;
 import io.kubernetes.client.models.V1ResourceRequirements;
+import io.kubernetes.client.models.V1Service;
+import io.kubernetes.client.models.V1ServicePort;
+import io.kubernetes.client.models.V1ServiceSpec;
 import io.kubernetes.client.models.V1Volume;
 import io.kubernetes.client.models.V1VolumeMount;
 import io.kubernetes.client.models.V1beta2StatefulSet;
@@ -110,6 +114,9 @@ public final class JobMasterRequestObject {
 
     String jobPodsLabel = KubernetesUtils.createJobPodsLabel(Context.jobName(config));
     labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
+
+    String jobMasterRoleLabel = KubernetesUtils.createJobMasterRoleLabel(jobName);
+    labels.put(KubernetesConstants.TWISTER2_PODS_ROLE_KEY, jobMasterRoleLabel);
 
     templateMetaData.setLabels(labels);
     template.setMetadata(templateMetaData);
@@ -269,5 +276,39 @@ public final class JobMasterRequestObject {
 
     return envVars;
   }
+
+  public static V1Service createJobMasterServiceObject(Config config, String jobName) {
+
+    String serviceName = KubernetesUtils.createJobMasterServiceName(jobName);
+    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobName);
+
+    V1Service service = new V1Service();
+    service.setKind("Service");
+    service.setApiVersion("v1");
+
+    // construct and set metadata
+    V1ObjectMeta meta = new V1ObjectMeta();
+    meta.setName(serviceName);
+    service.setMetadata(meta);
+
+    // construct and set service spec
+    V1ServiceSpec serviceSpec = new V1ServiceSpec();
+    // set selector
+    HashMap<String, String> selectors = new HashMap<String, String>();
+    selectors.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
+    serviceSpec.setSelector(selectors);
+    // set port
+    V1ServicePort servicePort = new V1ServicePort();
+    servicePort.setName("job-master-port");
+    servicePort.setPort(JobMasterContext.jobMasterPort(config));
+    servicePort.setTargetPort(new IntOrString(JobMasterContext.jobMasterPort(config)));
+    servicePort.setProtocol("TCP");
+    serviceSpec.setPorts(Arrays.asList(servicePort));
+
+    service.setSpec(serviceSpec);
+
+    return service;
+  }
+
 
 }
