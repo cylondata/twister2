@@ -112,10 +112,15 @@ def submit_fatjar(cl_args, unknown_args):
 
 ################################################################################
 def submit_zip(cl_args, unknown_args):
+    '''
+    :param cl_args:
+    :param unknown_args:
+    :return:
+    '''
+    # set-up java system properties
     java_system_props = setup_java_system_properties(cl_args)
-    # execute main of the job to create the job definition
-    job_file = cl_args['job-file-name']
 
+    job_file = cl_args['job-file-name']
     main_class = cl_args['job-class-name']
 
     res = execute.twister2_zip(

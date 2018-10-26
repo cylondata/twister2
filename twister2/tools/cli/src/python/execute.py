@@ -107,6 +107,15 @@ def twister2_tar(class_name, topology_tar, arguments, tmpdir_root, java_defines)
     return twister2_class(class_name, lib_jars, extra_jars, arguments, java_defines)
 
 def twister2_zip(class_name, lib_jars, args, job_file, java_defines):
+    '''
+    Extract the zip job file to a temporary directory and submit the jars to twister2_class
+    :param class_name:
+    :param lib_jars:
+    :param args:
+    :param job_file:
+    :param java_defines:
+    :return:
+    '''
     sys_temp = tempfile.gettempdir()
     temp_zip = os.path.join(sys_temp,'temp_zip')
 

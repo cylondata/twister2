@@ -200,7 +200,7 @@ public class ResourceAllocator {
     File tempUnzippedDir = new File(tempDirPathString);
     File[] jarFiles = FileUtils.filterFilesByExtension(tempDirPathString, ".jar");
     String jobJarFile = null;
-    if (jarFiles.length == 0) {
+    if (jarFiles == null) {
       throw new RuntimeException("Job .jar file not found in zip");
     } else {
       jobJarFile = jarFiles[0].toString();
