@@ -34,7 +34,7 @@ public interface SingularReceiver {
    * @param object object
    * @return true if the receive is accepted
    */
-  boolean receive(int target, Object object);
+  boolean receive(int target, Object object, int flags);
 
   /**
    * A sync event has occurred

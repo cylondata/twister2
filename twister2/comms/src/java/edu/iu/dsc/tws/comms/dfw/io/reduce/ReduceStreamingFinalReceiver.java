@@ -35,6 +35,6 @@ public class ReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
 
   @Override
   public boolean handleMessage(int source, Object message, int flags, int dest) {
-    return singularReceiver.receive(source, message);
+    return singularReceiver.receive(source, message, flags);
   }
 }

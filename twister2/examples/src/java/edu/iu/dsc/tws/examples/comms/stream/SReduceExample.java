@@ -108,7 +108,7 @@ public class SReduceExample extends BenchWorker {
     }
 
     @Override
-    public boolean receive(int target, Object object) {
+    public boolean receive(int target, Object object, int flags) {
       count++;
       if (count == expected) {
         LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));

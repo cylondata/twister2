@@ -112,7 +112,7 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
     }
 
     @Override
-    public boolean receive(int target, Object object) {
+    public boolean receive(int target, Object object, int flags) {
       count++;
       LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
       reduceDone = true;

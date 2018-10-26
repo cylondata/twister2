@@ -139,7 +139,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
                   previous = currentPair.getLeft();
                 } else {
                   barrierMap.putIfAbsent(e.getKey(), currentPair.getLeft());
-                  LOG.info("map" + barrierMap);
+                  continue;
                 }
               } else {
                 currentPair = e.getValue().poll();
@@ -149,12 +149,11 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
                   previous = reduceFunction.reduce(previous, current);
                 } else {
                   barrierMap.putIfAbsent(e.getKey(), currentPair.getLeft());
-                  LOG.info("map" + barrierMap);
                 }
               }
             }
             if (messagePerTarget.keySet().size() == barrierMap.keySet().size()) {
-              handleMessage(t, previous, MessageFlags.BARRIER, destination);
+              handleMessage(t, new Object(), MessageFlags.BARRIER, destination);
               barrierMap.clear();
             }
           }

@@ -100,7 +100,7 @@ public class BAllReduceExample extends BenchWorker {
     }
 
     @Override
-    public boolean receive(int target, Object object) {
+    public boolean receive(int target, Object object, int flags) {
       reduceDone = true;
       experimentData.setOutput(object);
       experimentData.setWorkerId(workerId);
