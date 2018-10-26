@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.task.api.ICompute;
+import edu.iu.dsc.tws.common.config.Config;
 
 /**
  * This class extends the base data flow task graph which is mainly responsible for building the
@@ -39,6 +39,23 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     this.operationMode = mode;
   }
 
+  //Newly added for Hierarchical Task Graph
+  private String pOperation;
+  private String taskGraphName;
+  private DataFlowTaskGraph dataFlowTaskGraph;
+
+  private Config config;
+
+  public DataFlowTaskGraph(String name, DataFlowTaskGraph dataflowTaskGraph) {
+    this.taskGraphName = name;
+    this.dataFlowTaskGraph = dataflowTaskGraph;
+    config = Config.newBuilder().build();
+  }
+
+  public String getTaskGraphName() {
+    return taskGraphName;
+  }//End
+
   /**
    * This method is responsible for storing the directed edges between the source and target task
    * vertex in a map.
@@ -46,8 +63,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   @Override
   public void build() {
     validate();
-
-    Set<ICompute> ret = new HashSet<>();
     for (DirectedEdge<Vertex, Edge> de : directedEdges) {
       taskMap.put(de.sourceTaskVertex.getName(), de.sourceTaskVertex);
       taskMap.put(de.targetTaskVertex.getName(), de.targetTaskVertex);
@@ -56,9 +71,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
 
   /**
    * This method is responsible for adding the task vertex to the task map.
-   * @param name
-   * @param taskVertex
-   * @return
    */
   public boolean addTaskVertex(String name, Vertex taskVertex) {
     if (!validateTaskVertex(name)) {
@@ -70,8 +82,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
 
   /**
    * This method is to identify the duplicate names for the tasks in the taskgraph.
-   * @param taskName
-   * @return
    */
   private boolean validateTaskVertex(String taskName) {
     boolean flag = false;
@@ -161,7 +171,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
 
   /**
    * This is the getter method to get the property of operation mode "STREAMING" or "BATCH".
-   * @return
    */
   public OperationMode getOperationMode() {
     return operationMode;
@@ -170,7 +179,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   /**
    * This is the setter method to set the property of the operation mode which is either
    * "STREAMING" or "BATCH"
-   * @param operationMode
    */
   public void setOperationMode(OperationMode operationMode) {
     this.operationMode = operationMode;
