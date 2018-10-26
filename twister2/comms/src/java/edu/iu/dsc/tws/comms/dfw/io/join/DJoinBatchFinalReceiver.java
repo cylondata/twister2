@@ -24,7 +24,6 @@
 package edu.iu.dsc.tws.comms.dfw.io.join;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -189,6 +188,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
    * @return true if message was successfully processed.
    */
   @Override
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public boolean onMessage(int source, int path, int target, int flags, int tag, Object object) {
     Shuffle sortedMerger = sortedMergers.get(target);
     if (sortedMerger == null) {
@@ -258,38 +258,6 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
     }
 
     return needsFurtherProgress;
-  }
-
-  /**
-   * Performs an inner join on the two data lists that have been provided.
-   * The join is performed using the key value.
-   *
-   * @param left left partition of the join
-   * @param right right partition of the join
-   * @return the joined list of values
-   */
-  private Map<Object, List<Object>> innerJoin(List<Object> left, List<Object> right) {
-    Map<Object, List<Object>> joined = new HashMap<>();
-    for (Object entry : left) {
-      Object key = ((KeyedContent) entry).getKey();
-      if (joined.containsKey(key)) {
-        joined.get(key).add(((KeyedContent) entry).getValue());
-      } else {
-        joined.put(key, new ArrayList<Object>());
-        joined.get(key).add(((KeyedContent) entry).getValue());
-      }
-    }
-
-    for (Object entry : right) {
-      Object key = ((KeyedContent) entry).getKey();
-      if (joined.containsKey(key)) {
-        joined.get(key).add(((KeyedContent) entry).getValue());
-      } else {
-        joined.put(key, new ArrayList<Object>());
-        joined.get(key).add(((KeyedContent) entry).getValue());
-      }
-    }
-    return joined;
   }
 
   /**
