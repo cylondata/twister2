@@ -32,7 +32,7 @@ Kubernetes provides some mechanisms to map pods to nodes in a cluster. When subm
 
 In the first step, node labels are created for cluster machines. In the second step, users request their worker pods to be started based on those labels. Node labeling is performed by using kubectl command line tool. We assume that node labeling is performed prior to creating Twister2 jobs. The format of the label creation command is as follows:
 
-> kubectl label node  =
+> kubectl label nodes <node-name> <label-key>=<label-value>
 
 **Predefined Labels**: There are also some predefined labels in Kubernetes for each node. Users can request mapping based on these labels also. Some of these labels are as follows:
 

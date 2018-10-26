@@ -1,4 +1,4 @@
-# Communication Model
+# Communication Model 
 
 Twister2 supports a dataflow communication model. A dataflow program models a computation as a graph with nodes of the graph doing user-defined computations and edges representing the communication links between the nodes. The data flowing through this graph is termed as events or messages. It is important to note that even though by definition dataflow programming means data is flowing through a graph, it may not necessarily be the case physically, especially in batch applications. Big data systems employ different APIs for creating the dataflow graph. For example, Flink and Spark provide distributed dataset-based APIs for creating the graph while systems such as Storm and Hadoop provide task-level APIs.
 
@@ -13,6 +13,10 @@ We support the following dataflow operations.
 7. Keyed Reduce
 8. Keyed Partition
 9. Keyed Gather
+
+Dataflow communications are overlaid on top of worker processes using logical ids.
+
+We support both streaming and batch versions of these operations.
 
 ### Reduce
 
@@ -55,9 +59,78 @@ for this example
 * 2 -> 8 : `{4,8,12}`
 * 4 -> 8 : `{1,2,3}`
 
-Dataflow communications are overlaid on top of worker processes using logical ids.
+### Gather
 
-We support both streaming and batch versions of these operations.
+The gather operation is similar in construct to the reduce operation. However unlike the reduce operation
+which uses an reduction function to reduce collected values, the gather operation simply bundles them together.
+The structure in which the gather communication happens is similar to reduce which is done using an 
+inverted binary tree. 
+
+Example:
+
+Lets take the same example discussed in the Reduce operation. In the reduce example the final result at
+the sink task with logical id `8 ` was `{8,16,24}`. In the gather since we collect all the data tht is sent from each
+source task the final results received at the sink task would be a set of arrays, 1 array for each source task.
+
+Final result at `8` -> `{{1,2,3},{1,2,3},{1,2,3},{1,2,3},{1,2,3},{1,2,3},{1,2,3},{1,2,3}}`  
+
+If you look at what each of the tasks that actually send messages to sink `8` they would be as follows.
+Notice that the results are similar to the reduce operation.
+
+* 0 -> 8 : `{1,2,3}`  
+* 1 -> 8 : `{{1,2,3},{1,2,3}}`  
+* 2 -> 8 : `{{1,2,3},{1,2,3},{1,2,3},{1,2,3}}`  
+* 4 -> 8 : `{1,2,3}`  
+
+### AllReduce
+
+The operation AllReduce is a version of the reduce operation where the results are sent to multiple destination tasks.
+The semantics of the AllReduce operation is similar to the reduce operation, The AllReduce operation performs a reduce operation
+and then internally executes and broadcast operation to send the results to all the destinations. The two step method of using
+an reduce and the a broadcast is efficient than performing seperate reduce operations to each destination.
+
+### AllGather
+
+The operation AllGather is a version of gather operation where the results are sent to multiple destination tasks.
+Similar to AllReduce the AllGather operation first performs a gather operation and then performs an broadcast to all the 
+destination tasks.
+
+### Partition
+
+The partition operation as the name implies partitions data. The operation will break data into smaller
+units and divide them among tasks that are involved in the partition communication. For each partition
+the operation will select an destination based on the destination selector. The destination selector can be user specified or
+the user can select an internal destination selector such as the "LoadBalanceSelector" which makes sure the data is
+evenly distributed. 
+
+Unlike in the reduce communication where a complex tree structure is used to perform the communication
+the partition operations performs direct communications between tasks. That is if task `0` wants to send a parition to task 
+`4` it will be sent directly to task `4`. (The direct communication between tasks is only a logical link, the 
+actual communication happens at worker level and messages are internally passed-down to the correct task)
+
+Example:
+
+In this example we assume that there are 4 source tasks with logical is from `0` to `3` and 4 sink tasks with logical ids
+from `4` to `7`. Lets assume that task `0` generates the following set of data arrays.
+
+`{0,1,2}`  
+`{1,2,3}`  
+`{2,3,4}`  
+`{3,4,5}`  
+
+If the partition operation is using the "LoadBalanceSelector" for destination selection then each of the 
+sink tasks will receive a single data array. The assigment of data arrays will depend on how the "LoadBalanceSelector"
+distributes the data. And example assigment might look as follows.
+
+`{0,1,2}` -> `4`  
+`{1,2,3}` -> `5`  
+`{2,3,4}` -> `6`  
+`{3,4,5}` -> `7`  
+
+### Broadcast
+
+The broadcast operation sends out messages from a single task to 1 or more tasks. Messages are send directly to each
+receiving task. 
 
 ## TaskPlan
 

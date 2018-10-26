@@ -80,6 +80,11 @@ public class KMeansJobParameters {
    */
   private String fileName;
 
+  /**
+   * Task parallelism value
+   */
+  private int parallelismValue;
+
   private String dataType;
 
   public KMeansJobParameters(int iterations, int workers) {
@@ -104,10 +109,12 @@ public class KMeansJobParameters {
     int points = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_NUMBER_OF_POINTS));
 
     int numberOfClusters = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_CLUSTERS));
-    int pointsVal = Integer.parseInt(cfg.getStringValue(
-        KMeansConstants.ARGS_POINTS_SEED_VALUE));
-    int centroidsVal = Integer.parseInt(cfg.getStringValue(
-        KMeansConstants.ARGS_CENTERS_SEED_VALUE));
+    int pointsVal =
+            Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_POINTS_SEED_VALUE));
+    int centroidsVal =
+            Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_CENTERS_SEED_VALUE));
+    int parallelismVal =
+            Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_PARALLELISM_VALUE));
 
     KMeansJobParameters jobParameters = new KMeansJobParameters(iterations, workers);
 
@@ -125,8 +132,13 @@ public class KMeansJobParameters {
     jobParameters.clusters = numberOfClusters;
     jobParameters.pointsSeedValue = pointsVal;
     jobParameters.centroidsSeedValue = centroidsVal;
+    jobParameters.parallelismValue = parallelismVal;
 
     return jobParameters;
+  }
+
+  public int getParallelismValue() {
+    return parallelismValue;
   }
 
   public int getIterations() {
@@ -184,15 +196,16 @@ public class KMeansJobParameters {
   @Override
   public String toString() {
 
-    LOG.fine("workers:" + workers + "\titeration:" + iterations + "\tdimension:" + dimension
-        + "\tnumber of clusters:" + clusters + "\tfilename:" + fileName
-        + "\tdatapoints file:" + pointsFile + "\tcenters file:" + centersFile
-        + "\tfilesys:" + fileSystem);
+    LOG.fine("workers:" + workers + "\titeration:" + iterations
+            + "\tdimension:" + dimension + "\tnumber of clusters:" + clusters
+            + "\tfilename:" + fileName + "\tdatapoints file:" + pointsFile
+            + "\tcenters file:" + centersFile
+            + "\tfilesys:" + fileSystem + "\tparallelism:" + parallelismValue);
 
     return "JobParameters{"
-        + ", iterations=" + iterations
-        + ", workers=" + workers
-        + '}';
+            + ", iterations=" + iterations
+            + ", workers=" + workers
+            + '}';
   }
 }
 

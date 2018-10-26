@@ -76,6 +76,10 @@ public abstract class HarpWorker implements IWorker {
                       IVolatileVolume volatileVolume) {
     List<WorkerNetworkInfo> workersList = workerController.waitForAllWorkersToJoin(50000);
 
+    LOG.info(String.format("Worker %s starting with %d workers, "
+            + "after waiting for all to start. \n %s",
+        workerID, workersList.size(), workersList.toString()));
+
     WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
 
     //Building Harp Specific parameters
@@ -111,18 +115,17 @@ public abstract class HarpWorker implements IWorker {
     }
 
     SyncClient syncClient = new SyncClient(workers);
+    LOG.info("Starting Harp Sync client");
+    syncClient.start();
+
     LOG.info(String.format("Starting harp server on port : %d", harpPort));
     server.start();
-
     LOG.info(String.format("Harp server started. %s:%d "
             + "on twister worker %s:%d",
         workerNetworkInfo.getWorkerIP().getHostAddress(),
         harpPort,
         workerNetworkInfo.getWorkerIP().getHostAddress(),
         workerNetworkInfo.getWorkerPort()));
-
-    LOG.info("Starting Harp Sync client");
-    syncClient.start();
 
     try {
       LOG.info("Trying master barrier");
@@ -144,7 +147,7 @@ public abstract class HarpWorker implements IWorker {
     syncClient.stop();
     LOG.info("Harp Sync Client stopped.");
     LOG.info("Shutting harp server down....");
-    server.stop();
+    server.stop(true);
     LOG.info("Harp server stopped.");
   }
 

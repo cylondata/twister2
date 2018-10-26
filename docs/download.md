@@ -10,13 +10,13 @@ You can download the source from the [GitHub](https://github.com/DSC-SPIDAL/twis
 
 Download the latest binaries from here.
 
-Twister2 is released as source code tarballs with corresponding binary tarballs for convenience. The downloads are distributed via Github.
+Twister2 is released as source code tarballs. The downloads are distributed via Github.
 
 ## Download
 
 | Version | Release Date | Binary Download | Source Release | Release Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| 0.1.0 | 2018 Sept 26 | Download | Download | Link to release note |
+| 0.1.0 | 2018 Oct 05 | N/A | [Download](https://github.com/DSC-SPIDAL/twister2/releases) | [Release note](release/twister2_release_0_1_0.md) |
 
 ### License {#license}
 
