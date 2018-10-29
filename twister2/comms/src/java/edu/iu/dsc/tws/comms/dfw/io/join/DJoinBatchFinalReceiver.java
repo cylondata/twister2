@@ -9,10 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.join;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -34,12 +46,30 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
+import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
+import edu.iu.dsc.tws.comms.shuffle.Shuffle;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
-public class JoinBatchFinalReceiver implements MessageReceiver {
+public class DJoinBatchFinalReceiver implements MessageReceiver {
 
-  private static final Logger LOG = Logger.getLogger(JoinBatchFinalReceiver.class.getName());
+  private static final Logger LOG = Logger.getLogger(DJoinBatchFinalReceiver.class.getName());
+
+  /**
+   * Sort mergers for each target
+   */
+  private Map<Integer, Shuffle> sortedMergers = new HashMap<>();
+
+  /**
+   * Comparator for sorting records
+   */
+  private Comparator<Object> comparator;
+
+  private KryoSerializer kryoSerializer;
 
   /**
    * The receiver to be used to deliver the message
@@ -89,14 +119,31 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
 
   private Map<Integer, Boolean> targetDone = new HashMap<>();
 
-  public JoinBatchFinalReceiver(BulkReceiver bulkReceiver) {
+  /**
+   * The directory in which we will be saving the shuffle objects
+   */
+  private String shuffleDirectory;
+
+  /**
+   * Weather everyone finished
+   */
+  private Set<Integer> targets = new HashSet<>();
+
+  public DJoinBatchFinalReceiver(BulkReceiver bulkReceiver,
+                                 String shuffleDir, Comparator<Object> com) {
     this.receiver = bulkReceiver;
+    this.kryoSerializer = new KryoSerializer();
+    this.comparator = com;
+    this.shuffleDirectory = shuffleDir;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     // The init method is called twice TODO: would be better to do a complete new data flow
     // operation
+
+    int maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
+    int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
     if (operationLeft != null) {
       this.operationRight = op;
     } else {
@@ -104,9 +151,15 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
       thisWorker = op.getTaskPlan().getThisExecutor();
       this.operationLeft = op;
       this.sources = ((DataFlowPartition) op).getSources();
+      this.targets = new HashSet<>(expectedIds.keySet());
 
       // lists to keep track of messages for destinations
       for (int target : expectedIds.keySet()) {
+        Shuffle sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory,
+            shuffleDirectory, DFWIOUtils.getOperationName(target, operationLeft),
+            operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target);
+
+        sortedMergers.put(target, sortedMerger);
         targetDone.put(target, false);
         targetMessagesLeft.put(target, new ArrayList<>());
         targetMessagesRight.put(target, new ArrayList<>());
@@ -135,13 +188,13 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
    * @return true if message was successfully processed.
    */
   @Override
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public boolean onMessage(int source, int path, int target, int flags, int tag, Object object) {
-
-    if (tag != 0 && tag != 1) {
-      throw new RuntimeException("Tag value must be either 0(left) or 1(right) for join operation");
+    Shuffle sortedMerger = sortedMergers.get(target);
+    if (sortedMerger == null) {
+      throw new RuntimeException("Un-expected target id: " + target);
     }
 
-    lock.lock();
     Map<Integer, List<Object>> targetMessages;
     Map<Integer, Set<Integer>> onFinishedSources;
 
@@ -153,29 +206,24 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
       onFinishedSources = onFinishedSourcesRight;
     }
 
-    try {
-      Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(target);
-      if ((flags & MessageFlags.END) == MessageFlags.END) {
-        if (onFinishedSrcsTarget.contains(source)) {
-          LOG.log(Level.WARNING,
-              String.format("%d Duplicate finish from source id %d", this.thisWorker, source));
-        } else {
-          onFinishedSrcsTarget.add(source);
-        }
-        return true;
-      }
-
-      List<Object> targetMsgList = targetMessages.get(target);
-      if (targetMsgList == null) {
-        throw new RuntimeException(String.format("%d target not exisits %d", executor, target));
-      }
-      if (object instanceof List) {
-        targetMsgList.addAll((Collection<?>) object);
+    Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(target);
+    if ((flags & MessageFlags.END) == MessageFlags.END) {
+      if (onFinishedSrcsTarget.contains(source)) {
+        LOG.log(Level.WARNING,
+            String.format("%d Duplicate finish from source id %d", this.thisWorker, source));
       } else {
-        targetMsgList.add(object);
+        onFinishedSrcsTarget.add(source);
       }
-    } finally {
-      lock.unlock();
+      return true;
+    }
+
+    // add the object to the map
+    List<KeyedContent> keyedContents = (List<KeyedContent>) object;
+    for (KeyedContent kc : keyedContents) {
+      Object data = kc.getValue();
+      byte[] d = DataSerializer.serialize(data, kryoSerializer);
+
+      sortedMerger.add(kc.getKey(), d, d.length);
     }
     return true;
   }
@@ -184,6 +232,10 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
   @SuppressWarnings({"unchecked", "rawtypes"})
   public boolean progress() {
     boolean needsFurtherProgress = false;
+    for (Shuffle sorts : sortedMergers.values()) {
+      sorts.run();
+    }
+
     for (int target : targetDone.keySet()) {
       if (targetDone.get(target)) {
         continue;
@@ -191,9 +243,10 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
       lock.lock();
       try {
         if (checkIfFinished(target)) {
-          Map<Object, List<Object>> results = innerJoin(targetMessagesLeft.get(target),
-              targetMessagesRight.get(target));
-          receiver.receive(target, new JoinIterator(results));
+          Shuffle sortedMerger = sortedMergers.get(target);
+          sortedMerger.switchToReading();
+          Iterator<Object> itr = sortedMerger.readIterator();
+          receiver.receive(target, itr);
           targetDone.put(target, true);
         } else {
           needsFurtherProgress = true;
@@ -205,38 +258,6 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
     }
 
     return needsFurtherProgress;
-  }
-
-  /**
-   * Performs an inner join on the two data lists that have been provided.
-   * The join is performed using the key value.
-   *
-   * @param left left partition of the join
-   * @param right right partition of the join
-   * @return the joined list of values
-   */
-  private Map<Object, List<Object>> innerJoin(List<Object> left, List<Object> right) {
-    Map<Object, List<Object>> joined = new HashMap<>();
-    for (Object entry : left) {
-      Object key = ((KeyedContent) entry).getKey();
-      if (joined.containsKey(key)) {
-        joined.get(key).add(((KeyedContent) entry).getValue());
-      } else {
-        joined.put(key, new ArrayList<Object>());
-        joined.get(key).add(((KeyedContent) entry).getValue());
-      }
-    }
-
-    for (Object entry : right) {
-      Object key = ((KeyedContent) entry).getKey();
-      if (joined.containsKey(key)) {
-        joined.get(key).add(((KeyedContent) entry).getValue());
-      } else {
-        joined.put(key, new ArrayList<Object>());
-        joined.get(key).add(((KeyedContent) entry).getValue());
-      }
-    }
-    return joined;
   }
 
   /**

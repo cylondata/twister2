@@ -42,7 +42,7 @@ public class JoinBatchPartialReceiver implements MessageReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-
+    joiningReceiver.init(cfg, op, expectedIds);
   }
 
   @Override

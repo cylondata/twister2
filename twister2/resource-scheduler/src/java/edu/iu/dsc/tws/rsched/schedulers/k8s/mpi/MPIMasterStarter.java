@@ -18,7 +18,6 @@ import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -116,29 +115,39 @@ public final class MPIMasterStarter {
         + "numberOfPods: " + numberOfPods
     );
 
-    ArrayList<String> podNames = createPodNames(numberOfPods);
-
     long start = System.currentTimeMillis();
     int timeoutSeconds = 100;
-    HashMap<String, String> podNamesIPs =
-        PodWatchUtils.getRunningJobPodIPs(podNames, jobName, namespace, timeoutSeconds);
 
-    if (podNamesIPs == null) {
-      LOG.severe("Could not get all pods running. Aborting. "
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      jobMasterIP = PodWatchUtils.getJobMasterIpByWatchingPodToRunning(
+          namespace, jobName, timeoutSeconds);
+
+      if (jobMasterIP == null) {
+        LOG.severe("Could not get job master IP by wathing job master pod to running. Aborting. "
+            + "You need to terminate this job and resubmit it....");
+        return;
+      }
+    }
+    LOG.info("Job Master IP address: " + jobMasterIP);
+
+    ArrayList<String> podIPs = PodWatchUtils.getWorkerIPsByWatchingPodsToRunning(
+        namespace, jobName, numberOfWorkers, timeoutSeconds);
+
+    if (podIPs == null) {
+      LOG.severe("Could not get IPs of all pods running. Aborting. "
           + "You need to terminate this job and resubmit it....");
       return;
     }
 
-    if (!JobMasterContext.jobMasterRunsInClient(config)) {
-      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-      jobMasterIP = podNamesIPs.remove(jobMasterPodName);
+    boolean written = createHostFile(podIPs);
+    if (!written) {
+      LOG.severe("hostfile can not be generated. Aborting. "
+          + "You need to terminate this job and resubmit it....");
+      return;
     }
-    LOG.info("Job Master IP address: " + jobMasterIP);
 
     long duration = System.currentTimeMillis() - start;
     LOG.info("Getting all pods running took: " + duration + " ms.");
-
-    createHostFile(podIP, podNamesIPs);
 
     String classToRun = "edu.iu.dsc.tws.rsched.schedulers.k8s.mpi.MPIWorkerStarter";
     String[] mpirunCommand =
@@ -149,7 +158,9 @@ public final class MPIMasterStarter {
     // we check whether password free ssh is enabled from mpimaster pod to all other pods
 
     start = System.currentTimeMillis();
-    String[] scriptCommand = generateCheckSshCommand(podNamesIPs);
+    // remove the IP of this pod from the list
+    podIPs.remove(podIP);
+    String[] scriptCommand = generateCheckSshCommand(podIPs);
     boolean pwdFreeSshOk = runScript(scriptCommand);
     duration = System.currentTimeMillis() - start;
     LOG.info("Checking password free access took: " + duration + " ms");
@@ -159,7 +170,6 @@ public final class MPIMasterStarter {
     } else {
       LOG.severe("Password free ssh can not be setup among pods. Not running mpirun ...");
     }
-
   }
 
   /**
@@ -169,17 +179,14 @@ public final class MPIMasterStarter {
    * each line has one ip
    * @return
    */
-  public static boolean createHostFile(String podIP, HashMap<String, String> podNamesIPs) {
+  public static boolean createHostFile(ArrayList<String> ipList) {
 
     try {
       StringBuffer bufferToLog = new StringBuffer();
       BufferedWriter writer = new BufferedWriter(
           new OutputStreamWriter(new FileOutputStream(HOSTFILE_NAME)));
 
-      writer.write(podIP + System.lineSeparator());
-      bufferToLog.append(podIP + System.lineSeparator());
-
-      for (String ip: podNamesIPs.values()) {
+      for (String ip: ipList) {
         writer.write(ip + System.lineSeparator());
         bufferToLog.append(ip + System.lineSeparator());
       }
@@ -297,13 +304,13 @@ public final class MPIMasterStarter {
     return commandLineArgument.substring(commandLineArgument.indexOf('=') + 1);
   }
 
-  public static String[] generateCheckSshCommand(HashMap<String, String> podNamesIPs) {
+  public static String[] generateCheckSshCommand(ArrayList<String> podIPs) {
 
-    String[] command = new String[podNamesIPs.size() + 1];
+    String[] command = new String[podIPs.size() + 1];
     command[0] = "./check_pwd_free_ssh.sh";
 
     int index = 1;
-    for (String ip: podNamesIPs.values()) {
+    for (String ip: podIPs) {
       command[index] = ip;
       index++;
     }
