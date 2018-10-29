@@ -40,21 +40,29 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   }
 
   //Newly added for Hierarchical Task Graph
-  private String pOperation;
   private String taskGraphName;
   private DataFlowTaskGraph dataFlowTaskGraph;
-
   private Config config;
+
+  public void setTaskGraphName(String taskGraphName) {
+    this.taskGraphName = taskGraphName;
+  }
 
   public DataFlowTaskGraph(String name, DataFlowTaskGraph dataflowTaskGraph) {
     this.taskGraphName = name;
+    setTaskGraphName(this.taskGraphName);
     this.dataFlowTaskGraph = dataflowTaskGraph;
     config = Config.newBuilder().build();
   }
 
   public String getTaskGraphName() {
     return taskGraphName;
-  }//End
+  }
+
+  public void addConfiguration(String key, Object val) {
+    this.config = Config.newBuilder().put(key, val).putAll(config).build();
+  }
+  //End
 
   /**
    * This method is responsible for storing the directed edges between the source and target task
