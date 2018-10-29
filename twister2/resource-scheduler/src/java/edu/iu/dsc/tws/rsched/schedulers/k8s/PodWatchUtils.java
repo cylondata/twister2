@@ -271,26 +271,29 @@ public final class PodWatchUtils {
    * @param namespace
    * @return
    */
-  public static String getNodeIP(String namespace, String podName) {
+  public static String getNodeIP(String namespace, String jobName, String podIP) {
 
     if (apiClient == null || coreApi == null) {
       createApiInstances();
     }
 
-    String podNameLabel = "statefulset.kubernetes.io/pod-name=" + podName;
-//    String jobPodsLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
+    // this is better but it does not work with another installation
+//    String podNameLabel = "statefulset.kubernetes.io/pod-name=" + podName;
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
 
     V1PodList podList = null;
     try {
       podList = coreApi.listNamespacedPod(
-          namespace, null, null, null, null, podNameLabel, null, null, null, null);
+          namespace, null, null, null, null, workerRoleLabel, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting PodList.", e);
       throw new RuntimeException(e);
     }
 
     for (V1Pod pod : podList.getItems()) {
-      return pod.getStatus().getHostIP();
+      if (podIP.equals(pod.getStatus().getPodIP())) {
+        return pod.getStatus().getHostIP();
+      }
     }
 
     return null;
