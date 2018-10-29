@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.batch.BAllGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BAllReduceExample;
+import edu.iu.dsc.tws.examples.comms.batch.BDJoinExample;
 import edu.iu.dsc.tws.examples.comms.batch.BDKeyedGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BJoinExample;
@@ -169,6 +170,9 @@ public class ExampleMain {
           break;
         case "join":
           submitJob(config, workers, jobConfig, BJoinExample.class.getName());
+          break;
+        case "djoin":
+          submitJob(config, workers, jobConfig, BDJoinExample.class.getName());
           break;
       }
     } else {

@@ -16,10 +16,13 @@ twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.1.0.tar.gz"
 twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher"
 # the uplaoder class
 twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+
 # mpi run file, this assumes a mpirun that is shipped with the product
 # change this to just mpirun if you are using a system wide installation of OpenMPI
 # or complete path of OpenMPI in case you have something custom
-twister2.resource.scheduler.mpi.mpirun.file: "mpirun"
+twister2.resource.scheduler.mpi.mpirun.file: "twister2-core/ompi/bin/mpirun"
+# twister2.resource.scheduler.mpi.mpirun.file: "mpirun"
+
 # Indicates whether bootstrap process needs to be run and distribute job file and core
 # between MPI nodes. Twister2 assumes job file is accessible to all nodes if this property is set
 # to true, else it will run the bootstrap process
