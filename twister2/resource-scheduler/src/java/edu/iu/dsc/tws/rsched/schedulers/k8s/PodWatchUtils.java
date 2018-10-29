@@ -21,9 +21,6 @@ import java.util.logging.Logger;
 
 import com.google.gson.reflect.TypeToken;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Configuration;
@@ -57,59 +54,6 @@ public final class PodWatchUtils {
     Configuration.setDefaultApiClient(apiClient);
 
     coreApi = new CoreV1Api(apiClient);
-  }
-
-  /**
-   * watch pods until getting the Running event for Job Master pod
-   * return its IP address
-   */
-  public static String getJobMasterIP(Config cnfg, int timeout) {
-
-    String jobName = SchedulerContext.jobName(cnfg);
-    String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-    String namespace = KubernetesContext.namespace(cnfg);
-
-    ArrayList<String> jobMasterNameAsList = new ArrayList<>();
-    jobMasterNameAsList.add(jobMasterPodName);
-
-    String serviceLabel = KubernetesUtils.createJobMasterRoleLabelWithKey(jobName);
-//    String serviceLabel = KubernetesUtils.createJobMasterServiceLabelWithKey(jobName);
-
-    HashMap<String, String> nameAndIP =
-        discoverRunningPodIPs(jobMasterNameAsList, namespace, serviceLabel, timeout);
-
-    if (nameAndIP == null) {
-      return null;
-    }
-
-    return nameAndIP.get(jobMasterPodName);
-  }
-
-  /**
-   * watch pods until getting the Running event for all the pods in the given list
-   * return pod names and IP addresses as a HashMap
-   */
-  public static HashMap<String, String> getRunningWorkerPodIPs(ArrayList<String> podNames,
-                                                               String jobName,
-                                                               String namespace,
-                                                               int timeout) {
-
-    String serviceLabel = KubernetesUtils.createServiceLabelWithKey(jobName);
-    return discoverRunningPodIPs(podNames, namespace, serviceLabel, timeout);
-  }
-
-  /**
-   * this is used to get IP addresses of both worker and job master pods
-   * watch pods until getting the Running event for all the pods in the given list
-   * return pod names and IP addresses as a HashMap
-   */
-  public static HashMap<String, String> getRunningJobPodIPs(ArrayList<String> podNames,
-                                                            String jobName,
-                                                            String namespace,
-                                                            int timeout) {
-
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobName);
-    return discoverRunningPodIPs(podNames, namespace, jobPodsLabel, timeout);
   }
 
   /**
@@ -327,104 +271,29 @@ public final class PodWatchUtils {
    * @param namespace
    * @return
    */
-  public static String getNodeIP(String namespace, String jobName, String podIP) {
+  public static String getNodeIP(String namespace, String podName) {
 
     if (apiClient == null || coreApi == null) {
       createApiInstances();
     }
 
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobName);
+    String podNameLabel = "statefulset.kubernetes.io/pod-name=" + podName;
+//    String jobPodsLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
 
     V1PodList podList = null;
     try {
       podList = coreApi.listNamespacedPod(
-          namespace, null, null, null, null, jobPodsLabel, null, null, null, null);
+          namespace, null, null, null, null, podNameLabel, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting PodList.", e);
       throw new RuntimeException(e);
     }
 
     for (V1Pod pod : podList.getItems()) {
-      LOG.info("a podIP in the job: " + pod.getStatus().getPodIP());
-      if (podIP.equals(pod.getStatus().getPodIP())) {
-        return pod.getStatus().getHostIP();
-      }
+      return pod.getStatus().getHostIP();
     }
 
     return null;
-  }
-
-  /**
-   * get the IP of the job master pod by using list method
-   * @param namespace
-   * @return
-   */
-  public static String getJobMasterIP(String namespace, String jobName) {
-
-    if (apiClient == null || coreApi == null) {
-      createApiInstances();
-    }
-
-    String jobMasterPodLabel = KubernetesUtils.createJobMasterServiceLabelWithKey(jobName);
-    String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-
-    V1PodList podList = null;
-    try {
-      podList = coreApi.listNamespacedPod(
-          namespace, null, null, null, null, jobMasterPodLabel, null, null, null, null);
-    } catch (ApiException e) {
-      String logMessage = "Exception when getting the pod list: \n"
-          + "exCode: " + e.getCode() + "\n"
-          + "responseBody: " + e.getResponseBody();
-      LOG.log(Level.SEVERE, logMessage, e);
-      throw new RuntimeException(e);
-    }
-
-    for (V1Pod pod : podList.getItems()) {
-      if (jobMasterPodName.equals(pod.getMetadata().getName())) {
-        return pod.getStatus().getPodIP();
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * get the IP addresses of all pods in the job including the job master pod
-   * this does not work if a pod is not initialized yet
-   * in that case, only pod name is returned. pod ip is returned as null.
-   * use watch api, instead of this list method.
-   * @return
-   */
-  public static HashMap<String, String> getPodNamesAndIPsInJob(String namespace, String jobName) {
-
-    if (apiClient == null || coreApi == null) {
-      createApiInstances();
-    }
-
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobName);
-    HashMap<String, String> podNamesIPs = new HashMap<>();
-
-    V1PodList podList = null;
-    try {
-      podList = coreApi.listNamespacedPod(
-          namespace, null, null, null, null, jobPodsLabel, null, null, null, null);
-    } catch (ApiException e) {
-      String logMessage = "Exception when getting the pod list: \n"
-          + "exCode: " + e.getCode() + "\n"
-          + "responseBody: " + e.getResponseBody();
-      LOG.log(Level.SEVERE, logMessage, e);
-      throw new RuntimeException(e);
-    }
-
-    for (V1Pod pod : podList.getItems()) {
-      String podName = pod.getMetadata().getName();
-      String podIP = pod.getStatus().getPodIP();
-      podNamesIPs.put(podName, podIP);
-      LOG.info("Retrieved the pod address: " + podName + "[" + podIP + "]");
-    }
-
-    return podNamesIPs;
   }
 
   /**
@@ -575,6 +444,155 @@ public final class PodWatchUtils {
     }
 
     return podIP;
+  }
+
+  /**
+   * watch the job master pod until it is Running and get its IP
+   * we assume that the job master has the unique twister2-role label and value pair
+   */
+  public static String getJobMasterIpByWatchingPodToRunning(String namespace,
+                                                            String jobName,
+                                                            int timeout) {
+
+    if (apiClient == null || coreApi == null) {
+      createApiInstances();
+    }
+
+    String jobMasterRoleLabel = KubernetesUtils.createJobMasterRoleLabelWithKey(jobName);
+    String podPhase = "Running";
+
+    LOG.finest("Starting the watcher for the job master: " + namespace + ", " + jobName
+        + ", " + jobMasterRoleLabel);
+    Integer timeoutSeconds = timeout;
+    Watch<V1Pod> watch = null;
+
+    try {
+      watch = Watch.createWatch(
+          apiClient,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, jobMasterRoleLabel,
+              null, null, timeoutSeconds, Boolean.TRUE, null, null),
+          new TypeToken<Watch.Response<V1Pod>>() {
+          }.getType());
+
+    } catch (ApiException e) {
+      String logMessage = "Exception when watching the pods to get the IPs: \n"
+          + "exCode: " + e.getCode() + "\n"
+          + "responseBody: " + e.getResponseBody();
+      LOG.log(Level.SEVERE, logMessage, e);
+      throw new RuntimeException(e);
+    }
+
+    int eventCounter = 0;
+    LOG.finest("Getting watcher events.");
+    String podIP = null;
+
+    for (Watch.Response<V1Pod> item : watch) {
+      if (item.object != null) {
+        LOG.info(eventCounter++ + "-Received watch event: "
+            + item.object.getMetadata().getName() + ", "
+            + item.object.getStatus().getPodIP() + ", "
+            + item.object.getStatus().getPhase());
+        if (podPhase.equalsIgnoreCase(item.object.getStatus().getPhase())) {
+          podIP = item.object.getStatus().getPodIP();
+          break;
+        }
+
+      } else {
+        LOG.warning("Received an event with item.object null.");
+      }
+
+    }
+
+    try {
+      watch.close();
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception closing watcher.", e);
+    }
+
+    return podIP;
+  }
+
+  /**
+   * watch the worker pods until they are Running and get their IP addresses
+   * we assume that workers have the unique twister2-role label and value pair
+   * we get the ip addresses of all workers including the worker pod calling this method
+   *
+   * getting IP addresses by list method does not work,
+   * since uninitialized pod IPs are not returned by list method
+   *
+   * return null, if it can not get the full list
+   */
+  public static ArrayList<String> getWorkerIPsByWatchingPodsToRunning(String namespace,
+                                                            String jobName,
+                                                            int numberOfWorkers,
+                                                            int timeout) {
+
+    if (apiClient == null || coreApi == null) {
+      createApiInstances();
+    }
+
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
+    String podPhase = "Running";
+
+    LOG.finest("Starting the watcher for the worker pods: " + namespace + ", " + jobName
+        + ", " + workerRoleLabel);
+    Integer timeoutSeconds = timeout;
+    Watch<V1Pod> watch = null;
+
+    try {
+      watch = Watch.createWatch(
+          apiClient,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, workerRoleLabel,
+              null, null, timeoutSeconds, Boolean.TRUE, null, null),
+          new TypeToken<Watch.Response<V1Pod>>() {
+          }.getType());
+
+    } catch (ApiException e) {
+      String logMessage = "Exception when watching the pods to get the IPs: \n"
+          + "exCode: " + e.getCode() + "\n"
+          + "responseBody: " + e.getResponseBody();
+      LOG.log(Level.SEVERE, logMessage, e);
+      throw new RuntimeException(e);
+    }
+
+    int eventCounter = 0;
+    LOG.finest("Getting watcher events.");
+    ArrayList<String> ipList = new ArrayList<>();
+
+    for (Watch.Response<V1Pod> item : watch) {
+      if (item.object != null
+          && podPhase.equalsIgnoreCase(item.object.getStatus().getPhase())) {
+
+        LOG.info(eventCounter++ + "-Received pod Running event: "
+            + item.object.getMetadata().getName() + ", "
+            + item.object.getStatus().getPodIP() + ", "
+            + item.object.getStatus().getPhase());
+
+        ipList.add(item.object.getStatus().getPodIP());
+        if (ipList.size() == numberOfWorkers) {
+          break;
+        }
+      }
+    }
+
+    try {
+      watch.close();
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception closing watcher.", e);
+    }
+
+    if (ipList.size() == numberOfWorkers) {
+      return ipList;
+    } else {
+      StringBuffer ips = new StringBuffer();
+      for (String ip: ipList) {
+        ips.append(ip).append(", ");
+      }
+
+      LOG.severe("Could not get IPs of all worker pods. List of retrieved IPs: " + ips.toString());
+      return null;
+    }
+
   }
 
 }
