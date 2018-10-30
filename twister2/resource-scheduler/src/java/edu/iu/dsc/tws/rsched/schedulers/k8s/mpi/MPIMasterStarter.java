@@ -248,6 +248,7 @@ public final class MPIMasterStarter {
             "KUBERNETES_SERVICE_PORT=" + System.getenv("KUBERNETES_SERVICE_PORT"),
 //            "-output-filename",
 //            "/twister2-memory-dir/logfile",
+            "-tag-output",
             "java",
             className,
             jobMasterCLArgument,
