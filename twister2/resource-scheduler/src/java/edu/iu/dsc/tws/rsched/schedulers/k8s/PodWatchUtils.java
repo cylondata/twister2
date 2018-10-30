@@ -527,7 +527,7 @@ public final class PodWatchUtils {
    */
   public static ArrayList<String> getWorkerIPsByWatchingPodsToRunning(String namespace,
                                                             String jobName,
-                                                            int numberOfWorkers,
+                                                            int numberOfPods,
                                                             int timeout) {
 
     if (apiClient == null || coreApi == null) {
@@ -572,7 +572,7 @@ public final class PodWatchUtils {
             + item.object.getStatus().getPhase());
 
         ipList.add(item.object.getStatus().getPodIP());
-        if (ipList.size() == numberOfWorkers) {
+        if (ipList.size() == numberOfPods) {
           break;
         }
       }
@@ -584,7 +584,7 @@ public final class PodWatchUtils {
       LOG.log(Level.SEVERE, "Exception closing watcher.", e);
     }
 
-    if (ipList.size() == numberOfWorkers) {
+    if (ipList.size() == numberOfPods) {
       return ipList;
     } else {
       StringBuffer ips = new StringBuffer();
