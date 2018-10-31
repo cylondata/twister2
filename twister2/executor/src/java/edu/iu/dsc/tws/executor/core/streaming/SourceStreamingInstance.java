@@ -215,16 +215,17 @@ public class SourceStreamingInstance implements INodeInstance {
 
 
   public boolean storeSnapshot(int checkpointID) {
-//    try {
-//      LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-//      fsStateBackend.writeToStateBackend(config, streamingTaskId, workerId,
-//          (ICheckPointable) streamingTask, checkpointID);
-//      return true;
-//    } catch (Exception e) {
-//      LOG.log(Level.WARNING, "Could not store checkpoint", e);
-//      return false;
-//    }
-    return true;
+    try {
+      ((SourceCheckpointableTask) streamingTask).addCheckpointableStates();
+      LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+      fsStateBackend.writeToStateBackend(config, streamingTaskId, workerId,
+          (ICheckPointable) streamingTask, checkpointID);
+      return true;
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, "Could not store checkpoint", e);
+      return false;
+    }
+
   }
 
 
