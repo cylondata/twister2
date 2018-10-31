@@ -76,6 +76,11 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
     private int count;
 
     @Override
+    public void addCheckpointableStates() {
+
+    }
+
+    @Override
     public void prepare(Config cfg, TaskContext context) {
       connect(cfg, context);
       this.ctx = context;
@@ -100,6 +105,11 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
   private static class ReceivingTask extends SinkCheckpointableTask {
     private static final long serialVersionUID = -254264903510184798L;
     private int count = 0;
+
+    @Override
+    public void addCheckpointableStates() {
+
+    }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {

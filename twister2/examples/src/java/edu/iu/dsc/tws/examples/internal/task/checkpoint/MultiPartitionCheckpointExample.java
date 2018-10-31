@@ -69,6 +69,11 @@ public class MultiPartitionCheckpointExample extends TaskWorker {
     private int count = 0;
 
     @Override
+    public void addCheckpointableStates() {
+
+    }
+
+    @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
       connect(cfg, context);
@@ -91,6 +96,11 @@ public class MultiPartitionCheckpointExample extends TaskWorker {
   private static class SinkTask extends SinkCheckpointableTask {
     private static final long serialVersionUID = -254264903510224791L;
     private int count = 0;
+
+    @Override
+    public void addCheckpointableStates() {
+
+    }
 
     @Override
     public boolean execute(IMessage message) {
@@ -121,6 +131,7 @@ public class MultiPartitionCheckpointExample extends TaskWorker {
       }
       return true;
     }
+
   }
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {

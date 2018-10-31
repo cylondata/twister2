@@ -40,7 +40,13 @@ public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
   private KafkaPartitionFinder kafkaPartitionFinder;
   private KafkaTopicDescription topicDescription;
   private List<TopicPartition> topicPartitions;
-  private Properties  simpleKafkaConfig;
+  private Properties simpleKafkaConfig;
+
+  @Override
+  public void addCheckpointableStates() {
+
+  }
+
   @Override
   public boolean execute(IMessage message) {
     log.info("Recieved message {}", message.getContent());
@@ -85,6 +91,7 @@ public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
     this.producer = new KafkaProducer<String, String>(this.kafkaConfigs);
 
   }
+
   public TwsKafkaProducer(
       List<String> topics,
       List<String> servers
@@ -113,6 +120,7 @@ public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
     this.kafkaConfigs = KafkaProducerConfig.setProps(kafkaConfigs, newProps);
     return kafkaConfigs;
   }
+
   public Properties getKafkaConfigs() {
     return kafkaConfigs;
   }

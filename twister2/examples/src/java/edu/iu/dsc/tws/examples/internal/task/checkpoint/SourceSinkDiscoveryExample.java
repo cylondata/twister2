@@ -126,7 +126,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
     @Override
     public void execute() {
       if (count % 1000000 == 0) {
-        this.addState("count", count);
+//        this.addState("count", count);
       }
       if (count % 1000000 == 0) {
         ctx.write("partition-edge", "Hello");
@@ -147,6 +147,11 @@ public class SourceSinkDiscoveryExample implements IWorker {
       super.restoreSnapshot(snapshot);
       count = (Integer) this.getState("count");
     }
+
+    @Override
+    public void addCheckpointableStates() {
+      this.addState("count", count);
+    }
   }
 
   private static class ReceivingTask extends SinkCheckpointableTask {
@@ -162,7 +167,6 @@ public class SourceSinkDiscoveryExample implements IWorker {
       System.out.println(message.getContent() + " from Sink Task " + ctx.taskId());
       count++;
       LOG.log(Level.INFO, "count in sink is " + count);
-      this.addState("count", count);
       return true;
     }
 
@@ -176,6 +180,11 @@ public class SourceSinkDiscoveryExample implements IWorker {
     public void restoreSnapshot(Snapshot snapshot) {
       super.restoreSnapshot(snapshot);
       count = (Integer) this.getState("count");
+    }
+
+    @Override
+    public void addCheckpointableStates() {
+      this.addState("count", count);
     }
 
 
