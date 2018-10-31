@@ -119,7 +119,7 @@ public class ReduceBatchFinalReceiver extends ReduceBatchReceiver {
           }
 
         }
-        singularReceiver.receive(t, previous);
+        singularReceiver.receive(t, previous, 0);
       }
     }
     return needsFurtherProgress;

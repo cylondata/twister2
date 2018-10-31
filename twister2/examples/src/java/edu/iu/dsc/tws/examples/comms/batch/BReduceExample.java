@@ -101,7 +101,7 @@ public class BReduceExample extends BenchWorker {
     }
 
     @Override
-    public boolean receive(int target, Object object) {
+    public boolean receive(int target, Object object, int flags) {
       experimentData.setOutput(object);
       LOG.info("Reduced value : " + Arrays.toString((int[]) object));
       reduceDone = true;

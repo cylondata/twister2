@@ -142,7 +142,7 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("reduce-checkpointable-task");
     jobBuilder.setWorkerClass(ReduceStreamingCheckpointableTask.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(1, 256), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

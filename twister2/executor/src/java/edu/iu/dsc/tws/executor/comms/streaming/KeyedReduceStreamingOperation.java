@@ -96,7 +96,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public boolean receive(int target, Object object) {
+    public boolean receive(int target, Object object, int flags) {
       TaskMessage msg = new TaskMessage(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);

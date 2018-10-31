@@ -57,7 +57,7 @@ public class KReduceStreamingFinalReceiver extends KReduceStreamingReceiver {
       if (!targetSendQueue.isEmpty()) {
         Object current;
         while ((current = targetSendQueue.poll()) != null) {
-          singularReceiver.receive(target, current);
+          singularReceiver.receive(target, current, 0);
         }
       }
 

@@ -184,7 +184,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      return singularReceiver.receive(target, object);
+      return singularReceiver.receive(target, object, flags);
     }
 
     @Override

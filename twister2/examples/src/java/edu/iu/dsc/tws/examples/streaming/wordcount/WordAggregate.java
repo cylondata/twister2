@@ -36,7 +36,7 @@ public class WordAggregate implements SingularReceiver {
   }
 
   @Override
-  public boolean receive(int target, Object message) {
+  public boolean receive(int target, Object message, int flags) {
     if (message instanceof KeyedContent) {
       KeyedContent kc = (KeyedContent) message;
       LOG.log(Level.INFO, String.format("%d Word %s count %s",

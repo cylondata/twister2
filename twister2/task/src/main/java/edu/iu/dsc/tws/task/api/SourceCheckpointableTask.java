@@ -231,7 +231,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
         .setCurrentBarrierID(currentBarrierID)
         .setTaskID(ctx.taskId())
         .build();
-    LOG.info("sending barrier sync message");
+//    LOG.info("sending barrier sync message");
     taskClient.sendRequest(message);
     taskLooper.loop();
   }

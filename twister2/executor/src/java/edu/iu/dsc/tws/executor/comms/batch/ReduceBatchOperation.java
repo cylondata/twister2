@@ -92,7 +92,7 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
     }
 
     @Override
-    public boolean receive(int target, Object object) {
+    public boolean receive(int target, Object object, int flags) {
       TaskMessage msg = new TaskMessage(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);

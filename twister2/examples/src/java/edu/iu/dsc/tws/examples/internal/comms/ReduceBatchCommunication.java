@@ -171,7 +171,7 @@ public class ReduceBatchCommunication implements IWorker {
     }
 
     @Override
-    public boolean receive(int target, Object object) {
+    public boolean receive(int target, Object object, int flags) {
       count++;
       if (count % 1 == 0) {
         LOG.info(String.format("%d Received %d", target, count));

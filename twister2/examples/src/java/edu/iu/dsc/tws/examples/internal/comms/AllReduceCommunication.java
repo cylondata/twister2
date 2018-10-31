@@ -172,7 +172,7 @@ public class AllReduceCommunication implements IWorker {
     }
 
     @Override
-    public boolean receive(int target, Object object) {
+    public boolean receive(int target, Object object, int flags) {
       count++;
       if (count % 100 == 0) {
         LOG.info("Message received for last target: "
