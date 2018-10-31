@@ -35,9 +35,9 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
   private boolean restoreState = false;
   private volatile boolean consumerThreadStarted = false;
 
-  private  KafkaPartitionFinder partitionFinder;
-  private  KafkaTopicDescription topicDescription;
-  private  KafkaConsumerThread<T> kafkaConsumerThread;
+  private KafkaPartitionFinder partitionFinder;
+  private KafkaTopicDescription topicDescription;
+  private KafkaConsumerThread<T> kafkaConsumerThread;
 
   @Override
   public void execute() {
@@ -95,6 +95,7 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
     this.simpleKafkaConfig = createSimpleKafkaConfig(servers);
     this.edge = edge;
   }
+
   public Properties getKafkaConfigs() {
     return kafkaConfigs;
   }
@@ -114,8 +115,12 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
   public TwsKafkaConsumer() {
   }
 
-
   public void saveCheckpoint() {
+
+  }
+
+  @Override
+  public void addCheckpointableStates() {
 
   }
 }
