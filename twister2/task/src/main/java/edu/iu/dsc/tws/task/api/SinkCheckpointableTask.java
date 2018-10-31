@@ -190,4 +190,6 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink implements I
     this.snapshot = newsnapshot;
   }
 
+  public abstract void addCheckpointableStates();
+
 }
