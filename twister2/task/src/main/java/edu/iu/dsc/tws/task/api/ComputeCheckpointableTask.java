@@ -15,9 +15,33 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.streaming.BaseStreamCompute;
 
-public abstract class ComputeCheckpointableTask extends BaseStreamCompute {
+public abstract class ComputeCheckpointableTask extends BaseStreamCompute
+    implements ICheckPointable {
   private static final long serialVersionUID = -254264103890214728L;
 
   private static final Logger LOG = Logger.getLogger(BaseStreamCompute.class.getName());
+
+  public Snapshot snapshot;
+
+  public void addState(String key, Object value) {
+    if (snapshot == null) {
+      snapshot = new Snapshot();
+    }
+    snapshot.addState(key, value);
+  }
+
+  public Object getState(String key) {
+    return snapshot.getState(key);
+  }
+
+  @Override
+  public Snapshot getSnapshot() {
+    return snapshot;
+  }
+
+  @Override
+  public void restoreSnapshot(Snapshot newsnapshot) {
+    this.snapshot = newsnapshot;
+  }
 
 }
