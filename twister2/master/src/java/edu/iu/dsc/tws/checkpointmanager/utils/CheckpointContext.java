@@ -19,6 +19,7 @@ public class CheckpointContext extends Context {
   private static final String STATEBACKEND_DIRECTORY = "twister2.statebackend.directory";
   private static final String CHECKPOINT_RECOVERY = "twister2.statebackend.recovery";
   private static final String CHECKPOINT_ENABLE = "twister2.checkpoint.enable";
+  private static final String BARRIER_INTERVAL = "twister2.barrier.interval";
   private static final String STATEBACKEND_DIRECTORY_DEFAULT = System.getProperty("user.home")
       + "/statebackend/";
 
@@ -32,5 +33,9 @@ public class CheckpointContext extends Context {
 
   public static boolean enableCheckpoint(Config cfg) {
     return cfg.getBooleanValue(CHECKPOINT_ENABLE, false);
+  }
+
+  public static int getBarrierInterval(Config cfg){
+    return cfg.getIntegerValue(BARRIER_INTERVAL,10000);
   }
 }
