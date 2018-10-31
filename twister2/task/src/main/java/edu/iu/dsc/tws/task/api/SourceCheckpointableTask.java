@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 //import static java.lang.Math.max;
 
-public abstract class SourceCheckpointableTask extends BaseStreamSource {
+public abstract class SourceCheckpointableTask extends BaseStreamSource implements ICheckPointable {
   private static final long serialVersionUID = -254264903510214728L;
 
   private static final Logger LOG = Logger.getLogger(SourceCheckpointableTask.class.getName());
@@ -50,6 +50,8 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
    * to control the connection error when we repeatedly try connecting
    */
   private boolean connectionRefused = false;
+
+  public Snapshot snapshot;
 
   public void connect(Config cfg, TaskContext context) {
     this.ctx = context;
@@ -79,7 +81,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
     this.overallMessageCount += messageCount;
     if (intermediateMessageCount >= currentCheckpointInterval) {
       LOG.info(
-          "intermediateMessageCount: "  + intermediateMessageCount
+          "intermediateMessageCount: " + intermediateMessageCount
               +
               " overallMessageCount: " + overallMessageCount
               +
@@ -106,6 +108,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
   public void checkForBarrier() {
     setResponsePending();
     sendBarrierSyncMessage();
+    addCheckpointableStates();
   }
 
   private boolean tryUntilConnected(RRClient client, Progress looper, long timeLimit) {
@@ -250,4 +253,28 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
     this.globalCheckpointInterval = checkpointInterval;
     this.currentCheckpointInterval = globalCheckpointInterval;
   }
+
+  public void addState(String key, Object value) {
+    if (snapshot == null) {
+      snapshot = new Snapshot();
+    }
+    snapshot.addState(key, value);
+  }
+
+  public Object getState(String key) {
+    return snapshot.getState(key);
+  }
+
+  @Override
+  public Snapshot getSnapshot() {
+    return snapshot;
+  }
+
+  @Override
+  public void restoreSnapshot(Snapshot newsnapshot) {
+    this.snapshot = newsnapshot;
+  }
+
+  public abstract void addCheckpointableStates();
+
 }
