@@ -11,8 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.task.streaming.BaseStreamCompute;
 
 public abstract class ComputeCheckpointableTask extends BaseStreamCompute {
+  private static final long serialVersionUID = -254264103890214728L;
+
+  private static final Logger LOG = Logger.getLogger(BaseStreamCompute.class.getName());
 
 }
