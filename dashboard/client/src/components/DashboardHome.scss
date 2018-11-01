@@ -1,0 +1,22 @@
+.t2-quick-view-charts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+
+  .t2-quick-view-chart-wrapper {
+    position: relative;
+  }
+}
+
+.tw-dash-pinned-items-wrapper {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  @media (max-width: 1500px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 600px) {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  grid-column-gap: 5px;
+  grid-row-gap: 5px;
+}
