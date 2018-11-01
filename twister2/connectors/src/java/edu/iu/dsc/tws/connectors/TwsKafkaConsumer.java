@@ -18,6 +18,9 @@ import org.slf4j.LoggerFactory;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
 //import edu.iu.dsc.tws.task.api.Snapshot;
+import edu.iu.dsc.tws.connectors.config.KafkaTopicPartitionsWrapper;
+import edu.iu.dsc.tws.connectors.config.PartitionState;
+import edu.iu.dsc.tws.task.api.Snapshot;
 import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
@@ -32,7 +35,7 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
   private int worldSize;
   private TaskContext taskContext;
   private Map<TopicPartition, OffsetAndMetadata> offsetsToCommit;
-  private List<KafkaTopicPartitionState> topicPartitionStates;
+  private ArrayList<KafkaTopicPartitionState> topicPartitionStates;
   private String edge;
 
   private boolean restoreState = false;
@@ -124,16 +127,35 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
 
   @Override
   public void addCheckpointableStates() {
-    this.addState("trial", topicPartitionStates);
+    ArrayList<PartitionState> state = new ArrayList<>();
+    for (KafkaTopicPartitionState kafkaTopicPartitionState : topicPartitionStates) {
+      state.add(new PartitionState(
+          kafkaTopicPartitionState.getTopicPartition().topic(),
+          kafkaTopicPartitionState.getTopicPartition().partition(),
+          kafkaTopicPartitionState.getPositionOffset(),
+          kafkaTopicPartitionState.getCommitOffset()));
+    }
+    this.addState("kafkaConsumer", new KafkaTopicPartitionsWrapper(state));
   }
 
-//  @Override
-//  public void restoreSnapshot(Snapshot newsnapshot) {
-//    super.restoreSnapshot(newsnapshot);
-//    Object state = this.getState("trial");
-//    if (state instanceof ArrayList) {
-//      ArrayList<Object> states = (ArrayList) state;
-//    }
-//
-//  }
+  @Override
+  public void restoreSnapshot(Snapshot newsnapshot) {
+    super.restoreSnapshot(newsnapshot);
+    Object state = this.getState("kafkaConsumer");
+
+    if (state instanceof KafkaTopicPartitionsWrapper) {
+      ArrayList<KafkaTopicPartitionState> kafkaState = new ArrayList<>();
+      ArrayList<PartitionState> newStates = ((KafkaTopicPartitionsWrapper) state)
+          .getTopicPartitionStates();
+
+      for (PartitionState newState : newStates) {
+        TopicPartition partition = new TopicPartition(newState.getTopic(), newState.getPartition());
+        KafkaTopicPartitionState topicPartitionState = new KafkaTopicPartitionState(partition);
+        topicPartitionState.setCommitOffset(newState.getCommitOffset());
+        topicPartitionState.setPositionOffset(newState.getPositionOffset());
+        kafkaState.add(topicPartitionState);
+      }
+      this.topicPartitionStates = kafkaState;
+    }
+  }
 }
