@@ -43,8 +43,9 @@ public class CheckpointManager extends Thread {
 
   private Progress looper;
 
-  public CheckpointManager() {
+  public CheckpointManager(Config config) {
 
+    this.cfg = config;
     looper = new Progress();
     rrServer = new RRServer(cfg, "localhost", 6789, looper,
         -2, new ServerConnectHandler());

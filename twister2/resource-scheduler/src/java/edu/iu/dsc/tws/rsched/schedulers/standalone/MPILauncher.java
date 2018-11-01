@@ -49,7 +49,7 @@ public class MPILauncher implements ILauncher {
     // get the job working directory
     this.jobWorkingDirectory = MPIContext.workingDirectory(mConfig);
 
-    CheckpointManager cm = new CheckpointManager();
+    CheckpointManager cm = new CheckpointManager(config);
   }
 
   @Override
