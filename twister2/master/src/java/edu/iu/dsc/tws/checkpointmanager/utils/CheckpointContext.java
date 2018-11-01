@@ -35,7 +35,7 @@ public class CheckpointContext extends Context {
     return cfg.getBooleanValue(CHECKPOINT_ENABLE, false);
   }
 
-  public static int getBarrierInterval(Config cfg){
-    return cfg.getIntegerValue(BARRIER_INTERVAL,10000);
+  public static int getBarrierInterval(Config cfg) {
+    return cfg.getIntegerValue(BARRIER_INTERVAL, 10000);
   }
 }
