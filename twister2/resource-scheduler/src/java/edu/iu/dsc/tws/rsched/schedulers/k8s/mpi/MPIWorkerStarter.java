@@ -124,7 +124,7 @@ public final class MPIWorkerStarter {
 
       int workerPort = KubernetesContext.workerBasePort(config) + workerID;
 
-      String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), podName);
+      String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podIP);
       NodeInfo thisNodeInfo = null;
       if (nodeIP == null) {
         LOG.warning("Could not get nodeIP for this pod. Using podIP as nodeIP.");

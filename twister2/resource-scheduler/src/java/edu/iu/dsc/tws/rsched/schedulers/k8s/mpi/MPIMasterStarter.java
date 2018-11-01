@@ -131,7 +131,7 @@ public final class MPIMasterStarter {
     LOG.info("Job Master IP address: " + jobMasterIP);
 
     ArrayList<String> podIPs = PodWatchUtils.getWorkerIPsByWatchingPodsToRunning(
-        namespace, jobName, numberOfWorkers, timeoutSeconds);
+        namespace, jobName, numberOfPods, timeoutSeconds);
 
     if (podIPs == null) {
       LOG.severe("Could not get IPs of all pods running. Aborting. "
@@ -246,6 +246,9 @@ public final class MPIMasterStarter {
             "KUBERNETES_SERVICE_HOST=" + System.getenv("KUBERNETES_SERVICE_HOST"),
             "-x",
             "KUBERNETES_SERVICE_PORT=" + System.getenv("KUBERNETES_SERVICE_PORT"),
+//            "-output-filename",
+//            "/twister2-memory-dir/logfile",
+            "-tag-output",
             "java",
             className,
             jobMasterCLArgument,
