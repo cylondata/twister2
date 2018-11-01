@@ -11,14 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task.checkpoint;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.checkpointmanager.state_backend.FsCheckpointStorage;
+import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
@@ -26,8 +30,11 @@ import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.executor.core.Runtime;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IFunction;
@@ -50,6 +57,23 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
+
+    Path path = new Path(new File(CheckpointContext
+        .getStatebackendDirectoryDefault(config)).toURI());
+
+    Runtime runtime = new Runtime();
+    runtime.setParentpath(path);
+
+    LocalFileSystem localFileSystem = new LocalFileSystem();
+    runtime.setFileSystem(localFileSystem);
+    Config newconfig = runtime.updateConfig(config);
+
+    if (workerID == 1) {
+      LOG.log(Level.INFO, "Statebackend directory is created for job: " + runtime.getJobName());
+      FsCheckpointStorage createStorage = new FsCheckpointStorage(localFileSystem, path,
+          runtime.getJobName(), 0);
+    }
+
     GeneratorTask g = new GeneratorTask();
     ReceivingTask r = new ReceivingTask();
 
@@ -68,7 +92,7 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
     builder.operationMode(OperationMode.STREAMING);
     DataFlowTaskGraph graph = builder.build();
 
-    TaskUtils.execute(config, resources, graph, workerController);
+    TaskUtils.execute(newconfig, resources, graph, workerController);
   }
 
   private static class GeneratorTask extends SourceCheckpointableTask {
@@ -77,7 +101,7 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
 
     @Override
     public void addCheckpointableStates() {
-
+      this.addState("trial", 1);
     }
 
     @Override
@@ -108,7 +132,7 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
 
     @Override
     public void addCheckpointableStates() {
-
+      this.addState("trial", 1);
     }
 
     @Override
