@@ -99,7 +99,6 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource implemen
 //        currentCheckpointInterval = (long) (currentCheckpointInterval * 1.25);
 //        return;
 //      }
-      LOG.info("checking for barrier: interval: " + interval);
       checkForBarrier();
       currentCheckpointInterval += globalCheckpointInterval;
     }
