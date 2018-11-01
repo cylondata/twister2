@@ -131,6 +131,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
           Pair<Object, Integer> currentPair;
           int flags;
           for (Map.Entry<Integer, Queue<Pair<Object, Integer>>>  e : messagePerTarget.entrySet()) {
+
             if (!barrierMap.containsKey(e.getKey())) {
               if (previous == null) {
                 currentPair = e.getValue().poll();
@@ -139,6 +140,8 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
                   previous = currentPair.getLeft();
                 } else {
                   barrierMap.putIfAbsent(e.getKey(), currentPair.getLeft());
+                  LOG.info("executor : "
+                      +  executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
                   continue;
                 }
               } else {
@@ -148,7 +151,10 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
                   Object current = currentPair.getLeft();
                   previous = reduceFunction.reduce(previous, current);
                 } else {
+
                   barrierMap.putIfAbsent(e.getKey(), currentPair.getLeft());
+                  LOG.info("executor : "
+                      +  executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
                 }
               }
             }

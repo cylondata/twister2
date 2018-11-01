@@ -2,7 +2,9 @@
 package edu.iu.dsc.tws.connectors;
 
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+//import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -15,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
+//import edu.iu.dsc.tws.task.api.Snapshot;
 import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
@@ -50,8 +53,8 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
-    connect(cfg, context);
-    setCheckpointInterval(4);
+//    connect(cfg, context);
+//    setCheckpointInterval(4);
     this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
     this.worldSize = context.getParallelism();
     log.info("myID : {} , worldSize : {} ", myIndex, worldSize);
@@ -59,11 +62,11 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
         simpleKafkaConfig, worldSize, myIndex, topicDescription);
     this.topicPartitions = partitionFinder.getRelevantPartitions();
 
-    this.topicPartitionStates = new LinkedList<>();
+    this.topicPartitionStates = new ArrayList<>();
     for (TopicPartition tp : topicPartitions) {
       topicPartitionStates.add(new KafkaTopicPartitionState(tp));
     }
-
+    this.offsetsToCommit = new HashMap<>();
     this.kafkaConsumerThread = new KafkaConsumerThread<T>(
         kafkaConfigs, offsetsToCommit, topicPartitions, topicPartitionStates, context, edge);
     kafkaConsumerThread.assignPartitions();
@@ -121,6 +124,16 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
 
   @Override
   public void addCheckpointableStates() {
-
+    this.addState("trial", topicPartitionStates);
   }
+
+//  @Override
+//  public void restoreSnapshot(Snapshot newsnapshot) {
+//    super.restoreSnapshot(newsnapshot);
+//    Object state = this.getState("trial");
+//    if (state instanceof ArrayList) {
+//      ArrayList<Object> states = (ArrayList) state;
+//    }
+//
+//  }
 }
