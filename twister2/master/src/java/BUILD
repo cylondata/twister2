@@ -11,5 +11,6 @@ java_library(
         "//twister2/proto:proto_jobmaster_java",
         "//twister2/task/src/main/java:task-java",
         "@com_google_protobuf_protobuf_java//jar",
+        "//twister2/comms/src/java:comms-java",
     ],
 )
