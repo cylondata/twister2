@@ -24,8 +24,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.exceptions.LauncherException;
@@ -281,8 +279,7 @@ public class ResourceAllocator {
     // make it more formal as such
     launcher.initialize(updatedConfig);
 
-    RequestedResources requestedResources = buildRequestedResources(updatedJob);
-    launcher.launch(requestedResources, updatedJob);
+    launcher.launch(updatedJob);
   }
 
   /**
@@ -315,12 +312,4 @@ public class ResourceAllocator {
     }
   }
 
-  private RequestedResources buildRequestedResources(JobAPI.Job job) {
-    JobAPI.JobResources jobResources = job.getJobResources();
-    JobAPI.ComputeResource resource = jobResources.getResource(0).getComputeResource();
-    WorkerComputeResource computeResource =
-        new WorkerComputeResource(resource.getCpu(), resource.getRam(), resource.getDisk());
-
-    return new RequestedResources(job.getNumberOfWorkers(), computeResource);
-  }
 }

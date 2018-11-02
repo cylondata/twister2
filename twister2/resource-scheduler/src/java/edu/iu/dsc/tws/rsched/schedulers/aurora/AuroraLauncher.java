@@ -18,8 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -42,11 +41,10 @@ public class AuroraLauncher implements ILauncher {
   /**
    * Launch the processes according to the resource plan.
    *
-   * @param resourceRequest requested resources
    * @return true if the request is granted
    */
   @Override
-  public boolean launch(RequestedResources resourceRequest, JobAPI.Job job) {
+  public boolean launch(JobAPI.Job job) {
 
     String jobName = job.getJobName();
 
@@ -71,13 +69,16 @@ public class AuroraLauncher implements ILauncher {
     Map<AuroraField, String> bindings = constructEnvVariables(config);
 
     // convert RequestedResources to environment variables, override previous values from config
-    WorkerComputeResource computeResource = resourceRequest.getWorkerComputeResource();
+    JobAPI.ComputeResource computeResource =
+        job.getJobResources().getResource(0).getComputeResource();
     bindings.put(AuroraField.JOB_NAME, jobName);
     bindings.put(AuroraField.AURORA_WORKER_CLASS, AuroraContext.auroraWorkerClass(config));
-    bindings.put(AuroraField.CPUS_PER_WORKER, computeResource.getNoOfCpus() + "");
-    bindings.put(AuroraField.RAM_PER_WORKER, computeResource.getMemoryInBytes() + "");
-    bindings.put(AuroraField.DISK_PER_WORKER, computeResource.getDiskInBytes() + "");
-    bindings.put(AuroraField.NUMBER_OF_WORKERS, resourceRequest.getNumberOfWorkers() + "");
+    bindings.put(AuroraField.CPUS_PER_WORKER, computeResource.getCpu() + "");
+    bindings.put(AuroraField.RAM_PER_WORKER,
+        ComputeResourceUtils.getRamInBytes(computeResource) + "");
+    bindings.put(AuroraField.DISK_PER_WORKER,
+        ComputeResourceUtils.getDiskInBytes(computeResource) + "");
+    bindings.put(AuroraField.NUMBER_OF_WORKERS, job.getNumberOfWorkers() + "");
 
     logEnvVariables(bindings);
 
