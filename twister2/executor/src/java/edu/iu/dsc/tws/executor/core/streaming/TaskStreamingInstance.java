@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.task.api.ComputeCheckpointableTask;
 import edu.iu.dsc.tws.task.api.ICheckPointable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -199,7 +200,7 @@ public class TaskStreamingInstance implements INodeInstance {
             message.setFlag(MessageFlags.BARRIER);
             flags = MessageFlags.BARRIER;
 
-            for (String e :outEdges) {
+            for (String e : outEdges) {
               op = outParOps.get(e);
               op.send(taskId, message, flags);
             }
@@ -209,7 +210,7 @@ public class TaskStreamingInstance implements INodeInstance {
         } else {
           if (op.send(taskId, message, flags)) {
             outQueue.poll();
-          } else  {
+          } else {
             break;
           }
         }
@@ -242,6 +243,7 @@ public class TaskStreamingInstance implements INodeInstance {
 
   public boolean storeSnapshot(int currentBarrierID) {
     try {
+      ((ComputeCheckpointableTask) task).addCheckpointableStates();
       LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
       fsStateBackend.writeToStateBackend(config, taskId, workerId,
           (ICheckPointable) task, currentBarrierID);
