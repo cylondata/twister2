@@ -44,4 +44,16 @@ public abstract class ComputeCheckpointableTask extends BaseStreamCompute
     this.snapshot = newsnapshot;
   }
 
+  public abstract void addCheckpointableStates();
+
+  /**
+   * This will have the method to emit barrier in to the outgoing channel of the source task
+   */
+  public void emitBarrier(TaskContext ctx, int currentBarrierID) {
+    LOG.info("Sending barrier from source task ID : " + ctx.taskId());
+
+    ctx.writeBarrier("keyed-edge", currentBarrierID);
+
+  }
+
 }

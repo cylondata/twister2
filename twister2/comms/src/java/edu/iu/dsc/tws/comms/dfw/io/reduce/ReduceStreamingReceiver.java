@@ -36,7 +36,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
 
   protected Map<Integer, Map<Integer, Queue<Pair<Object, Integer>>>> messages = new HashMap<>();
   protected Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
-  protected Map<Integer, Object> barrierMap = new HashMap<>();
+  protected Map<Integer, Map<Integer, Object>> barrierMap = new HashMap<>();
   protected int executor;
   protected int count = 0;
   protected DataFlowOperation operation;
@@ -64,6 +64,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
       Map<Integer, Queue<Pair<Object, Integer>>> messagesPerTask = new HashMap<>();
       Map<Integer, Integer> countsPerTask = new HashMap<>();
       Map<Integer, Integer> totalCountsPerTask = new HashMap<>();
+      Map<Integer, Object> barrierMessage = new HashMap<>();
 
       for (int i : e.getValue()) {
         messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax));
@@ -74,6 +75,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
       LOG.fine(String.format("%d Final Task %d receives from %s",
           executor, e.getKey(), e.getValue().toString()));
 
+      barrierMap.put(e.getKey(), barrierMessage);
       reducedValuesMap.put(e.getKey(), new ArrayBlockingQueue<>(sendPendingMax));
       messages.put(e.getKey(), messagesPerTask);
       counts.put(e.getKey(), countsPerTask);
@@ -131,14 +133,17 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
           Pair<Object, Integer> currentPair;
           int flags;
           for (Map.Entry<Integer, Queue<Pair<Object, Integer>>>  e : messagePerTarget.entrySet()) {
-            if (!barrierMap.containsKey(e.getKey())) {
+
+            if (!barrierMap.get(t).containsKey(e.getKey())) {
               if (previous == null) {
                 currentPair = e.getValue().poll();
                 flags = currentPair.getRight();
                 if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
                   previous = currentPair.getLeft();
                 } else {
-                  barrierMap.putIfAbsent(e.getKey(), currentPair.getLeft());
+                  barrierMap.get(t).putIfAbsent(e.getKey(), currentPair.getLeft());
+                  LOG.info("executor : "
+                      +  executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
                   continue;
                 }
               } else {
@@ -148,11 +153,14 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
                   Object current = currentPair.getLeft();
                   previous = reduceFunction.reduce(previous, current);
                 } else {
-                  barrierMap.putIfAbsent(e.getKey(), currentPair.getLeft());
+
+                  barrierMap.get(t).putIfAbsent(e.getKey(), currentPair.getLeft());
+                  LOG.info("executor : "
+                      +  executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
                 }
               }
             }
-            if (messagePerTarget.keySet().size() == barrierMap.keySet().size()) {
+            if (messagePerTarget.keySet().size() == barrierMap.get(t).keySet().size()) {
               handleMessage(t, new Object(), MessageFlags.BARRIER, destination);
               barrierMap.clear();
             }

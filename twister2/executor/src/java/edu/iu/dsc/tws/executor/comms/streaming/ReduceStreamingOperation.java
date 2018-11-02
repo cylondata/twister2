@@ -97,8 +97,10 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Object object, int flags) {
+
+
       TaskMessage msg = new TaskMessage(object,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+          edgeGenerator.getStringMapping(communicationEdge), target, flags);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         if (messages.offer(msg)) {

@@ -12,12 +12,12 @@
 
 package edu.iu.dsc.tws.executor.core.streaming;
 
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.state_backend.FsCheckpointStreamFactory;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.local.LocalDataInputStream;
@@ -30,11 +30,13 @@ public class LocalStreamingStateBackend {
   private static final Logger LOG = Logger.getLogger(LocalStreamingStateBackend.class.getName());
 
   public Object readFromStateBackend(Config config, int streamingTaskId,
-                                     int workerId) throws IOException {
+                                     int workerId) throws Exception {
 
     Runtime runtime = (Runtime) config.get(Runtime.RUNTIME);
     Path path1 = new Path(runtime.getParentpath(), runtime.getJobName());
-    Path path2 = new Path(path1, String.valueOf(2));
+    int currentBarrierID = readCheckpointID(config);
+
+    Path path2 = new Path(path1, String.valueOf(currentBarrierID));
     LocalFileSystem localFileSystem = (LocalFileSystem) runtime.getFileSystem();
     FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
         0, localFileSystem);
@@ -72,6 +74,46 @@ public class LocalStreamingStateBackend {
       stream.write(checkpoint);
       stream.closeWriting();
     }
+  }
+
+  private void writeCheckpointID(int checkpointBarrierID, Config config) throws Exception {
+    synchronized (this) {
+      Runtime runtime = (Runtime) config.get(Runtime.RUNTIME);
+      Path path = new Path(runtime.getParentpath(), config.getStringValue(Context.JOB_NAME));
+      LocalFileSystem localFileSystem = (LocalFileSystem) runtime.getFileSystem();
+      FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path, path,
+          0, localFileSystem);
+      KryoSerializer kryoSerializer = new KryoSerializer();
+      byte[] checkpoint = kryoSerializer.serialize(checkpointBarrierID);
+      FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
+          fs.createCheckpointStateOutputStream();
+      stream.initialize("Acknowledged", "BarrierIDs");
+      stream.write(checkpoint);
+//      stream.write(checkpointBarrierID);
+      stream.closeWriting();
+
+    }
+  }
+
+  private int readCheckpointID(Config config) throws Exception {
+    Runtime runtime = (Runtime) config.get(Runtime.RUNTIME);
+    Path path = new Path(runtime.getParentpath(), runtime.getJobName());
+
+    LocalFileSystem localFileSystem = (LocalFileSystem) runtime.getFileSystem();
+    FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path, path,
+        0, localFileSystem);
+    FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
+        fs.createCheckpointStateOutputStream();
+
+    LocalDataInputStream localDataReadStream = (LocalDataInputStream)
+        stream.openStateHandle("Acknowledged",
+            "BarrierIDs").openInputStream();
+    byte[] checkpoint;
+    synchronized (this) {
+      checkpoint = stream.readCheckpoint(localDataReadStream);
+    }
+    KryoSerializer kryoSerializer = new KryoSerializer();
+    return (int) kryoSerializer.deserialize(checkpoint);
   }
 
 }
