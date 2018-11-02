@@ -64,7 +64,6 @@ def twister2_client_lib_resource_scheduler_files():
         "//twister2/proto:proto_job_java",
         "//third_party:ompi_javabinding_java",
         "@com_google_guava_guava//jar",
-        "@com_google_protobuf_protobuf_java//jar",
         "//twister2/proto:proto_job_state_java",
         "@commons_io_commons_io//jar",
         "@org_apache_commons_commons_compress//jar",
@@ -167,7 +166,6 @@ def twister2_client_lib_communication_files():
 
 def twister2_client_lib_common_files():
     return [
-        "//twister2/common/src/java:config-java",
         "//twister2/common/src/java:common-java",
     ]
 
@@ -178,7 +176,6 @@ def twister2_client_example_files():
 
 def twister2_client_lib_third_party_files():
     return [
-        "@com_google_protobuf_protobuf_java//jar",
         "@org_slf4j_slf4j_api//jar",
         "@org_slf4j_slf4j_jdk14//jar",
     ]

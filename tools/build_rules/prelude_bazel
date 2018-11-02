@@ -15,13 +15,27 @@
 #  specific language governing permissions and limitations
 #  under the License.
 
-def java_tests(test_classes, runtime_deps=[], resources=[], data=[], size="medium"):
-    for test_class in test_classes:
-        native.java_test(
-            name = test_class.split(".")[-1],
-            runtime_deps = runtime_deps,
-            size = size,
-            test_class = test_class,
-            resources = resources,
-            data = data,
-        )
+load(
+    "@//tools/rules:genproto.bzl",
+    "proto_library",
+)
+
+load(
+    "@//tools/rules/pex:pex_rules.bzl",
+    "pex_binary",
+    "pex_library",
+    "pex_test",
+    "pex_pytest",
+)
+
+load(
+    "@//tools/rules:jarjar_rules.bzl",
+    "jarjar_binary",
+)
+
+load(
+    "@//tools/rules:java_tests.bzl",
+    "java_tests",
+)
+
+
