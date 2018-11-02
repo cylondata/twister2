@@ -158,11 +158,6 @@ maven_jar(
 )
 
 maven_jar(
-    name = "com_google_protobuf_protobuf_java",
-    artifact = "com.google.protobuf:protobuf-java:3.4.0",
-)
-
-maven_jar(
     name = "org_yaml_snakeyaml",
     artifact = "org.yaml:snakeyaml:1.15",
 )
@@ -301,12 +296,6 @@ maven_jar(
     name = "com_github_jnr_jffi",
     artifact = "com.github.jnr:jffi:1.2.16",
 )
-
-#http_archive(
-#    name = "com_google_protobuf",
-#    strip_prefix = "protobuf-3.4.1",
-#    urls = ["https://github.com/google/protobuf/archive/v3.4.1.tar.gz"],
-#)
 
 PEX_SRC = "https://pypi.python.org/packages/3a/1d/cd41cd3765b78a4353bbf27d18b099f7afbcd13e7f2dc9520f304ec8981c/pex-1.2.15.tar.gz"
 
