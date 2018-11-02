@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -115,6 +116,8 @@ public class TaskStreamingInstance implements INodeInstance {
    */
   private int highWaterMark;
 
+  private Set<String> outEdges;
+
   public TaskStreamingInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                                BlockingQueue<IMessage> outQueue, Config config, String tName,
                                int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
@@ -131,6 +134,7 @@ public class TaskStreamingInstance implements INodeInstance {
     this.workerId = wId;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
+    this.outEdges = outEdges;
     if (CheckpointContext.getCheckpointRecovery(config)) {
       try {
         LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
@@ -168,9 +172,7 @@ public class TaskStreamingInstance implements INodeInstance {
         if ((message.getFlag() & MessageFlags.SYNC) != MessageFlags.SYNC) {
           task.execute(message);
         } else {
-          if (storeSnapshot()) {
-            outQueue.add(message);
-          }
+          outQueue.add(message);
         }
       }
     }
@@ -184,15 +186,32 @@ public class TaskStreamingInstance implements INodeInstance {
         // invoke the communication operation
         IParallelOperation op = outParOps.get(edge);
         int flags = 0;
+
         if ((message.getFlag() & MessageFlags.SYNC) == MessageFlags.SYNC) {
-          message.setFlag(MessageFlags.BARRIER);
-          flags = MessageFlags.BARRIER;
-        }
-        // if we successfully send remove
-        if (op.send(taskId, message, flags)) {
-          outQueue.poll();
+          @SuppressWarnings("unchecked")
+          ArrayList<Integer> messageArray = (ArrayList<Integer>) message.getContent();
+
+          int currentBarrierID = messageArray.get(0);
+
+          if (storeSnapshot(currentBarrierID)) {
+
+            message.setContent(currentBarrierID);
+            message.setFlag(MessageFlags.BARRIER);
+            flags = MessageFlags.BARRIER;
+
+            for (String e :outEdges) {
+              op = outParOps.get(e);
+              op.send(taskId, message, flags);
+            }
+            outQueue.poll();
+          }
+
         } else {
-          break;
+          if (op.send(taskId, message, flags)) {
+            outQueue.poll();
+          } else  {
+            break;
+          }
         }
       }
     }
@@ -221,10 +240,11 @@ public class TaskStreamingInstance implements INodeInstance {
     return outQueue;
   }
 
-  public boolean storeSnapshot() {
+  public boolean storeSnapshot(int currentBarrierID) {
     try {
       LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-      fsStateBackend.writeToStateBackend(config, taskId, workerId, (ICheckPointable) task, 1);
+      fsStateBackend.writeToStateBackend(config, taskId, workerId,
+          (ICheckPointable) task, currentBarrierID);
       return true;
     } catch (Exception e) {
       LOG.log(Level.WARNING, " Could not store checkpoint", e);

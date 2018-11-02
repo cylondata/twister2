@@ -36,4 +36,6 @@ public interface IMessage {
   int sourceTask();
 
   void setFlag(int barrier);
+
+  void setContent(Object message);
 }
