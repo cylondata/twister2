@@ -29,12 +29,10 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   private OperationMode operationMode = OperationMode.STREAMING;
 
   public DataFlowTaskGraph() {
-    //super(new VertexComparator(), new EdgeComparator());
     super(Comparator.comparing(Vertex::getName), Comparator.comparing(Edge::getName));
   }
 
   public DataFlowTaskGraph(OperationMode mode) {
-    //super(new VertexComparator(), new EdgeComparator());
     super(Comparator.comparing(Vertex::getName), Comparator.comparing(Edge::getName));
     this.operationMode = mode;
   }
