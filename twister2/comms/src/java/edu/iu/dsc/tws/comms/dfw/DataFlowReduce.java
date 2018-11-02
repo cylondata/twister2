@@ -118,7 +118,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   }
 
   /**
-   * We can receive messages from internal tasks or an external task, we allways receive messages
+   * We can receive messages from internal tasks or an external task, we always receive messages
    * to the main task of the executor and we go from there
    */
   public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
