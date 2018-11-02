@@ -27,8 +27,8 @@ public final class MesosWorkerUtils {
   public static AllocatedResources createAllocatedResources(String cluster,
                                                             int workerID,
                                                             JobAPI.Job job) {
-    JobAPI.WorkerComputeResource computeResource =
-        job.getJobResources().getResources(0).getWorkerComputeResource();
+    JobAPI.ComputeResource computeResource =
+        job.getJobResources().getResource(0).getComputeResource();
 
     AllocatedResources allocatedResources = new AllocatedResources(cluster, workerID);
     LOG.info("job get number of workers....:" + job.getNumberOfWorkers());

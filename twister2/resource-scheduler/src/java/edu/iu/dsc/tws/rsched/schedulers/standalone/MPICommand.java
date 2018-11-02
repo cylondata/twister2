@@ -87,9 +87,9 @@ public abstract class MPICommand {
 
   int getMemory(JobAPI.Job job) {
     int memory = 256;
-    List<JobAPI.JobResources.ResourceType> resources = job.getJobResources().getResourcesList();
+    List<JobAPI.JobResources.ResourceSet> resources = job.getJobResources().getResourceList();
     if (resources != null && resources.size() >= 1) {
-      int mem = resources.get(0).getWorkerComputeResource().getRam();
+      int mem = resources.get(0).getComputeResource().getRam();
       if (mem > 0) {
         memory = mem;
       }

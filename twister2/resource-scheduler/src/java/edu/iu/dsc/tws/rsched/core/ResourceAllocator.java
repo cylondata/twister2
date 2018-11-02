@@ -317,8 +317,7 @@ public class ResourceAllocator {
 
   private RequestedResources buildRequestedResources(JobAPI.Job job) {
     JobAPI.JobResources jobResources = job.getJobResources();
-    JobAPI.WorkerComputeResource resource =
-        jobResources.getResourcesList().get(0).getWorkerComputeResource();
+    JobAPI.ComputeResource resource = jobResources.getResource(0).getComputeResource();
     WorkerComputeResource computeResource =
         new WorkerComputeResource(resource.getCpu(), resource.getRam(), resource.getDisk());
 
