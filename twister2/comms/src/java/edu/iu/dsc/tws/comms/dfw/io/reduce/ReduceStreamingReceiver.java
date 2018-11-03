@@ -134,43 +134,35 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
           Pair<Object, Integer> currentPair;
           int flags;
           for (Map.Entry<Integer, Queue<Pair<Object, Integer>>> e : messagePerTarget.entrySet()) {
-            try {
-              if (!barrierMap.get(t).containsKey(e.getKey())) {
-                if (previous == null) {
-                  currentPair = e.getValue().poll();
-                  flags = currentPair.getRight();
-                  if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
-                    previous = currentPair.getLeft();
-                  } else {
-                    barrierMap.get(t).putIfAbsent(e.getKey(), currentPair.getLeft());
-                    LOG.info("executor : "
-                        + executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
-                    LOG.info("target : " + messagePerTarget);
-                    continue;
-                  }
+            if (!barrierMap.get(t).containsKey(e.getKey())) {
+              if (previous == null) {
+                currentPair = e.getValue().poll();
+                flags = currentPair.getRight();
+                if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
+                  previous = currentPair.getLeft();
                 } else {
-                  currentPair = e.getValue().poll();
-                  flags = currentPair.getRight();
-                  if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
-                    Object current = currentPair.getLeft();
-                    previous = reduceFunction.reduce(previous, current);
-                  } else {
+                  barrierMap.get(t).putIfAbsent(e.getKey(), currentPair.getLeft());
+                  LOG.info("executor : "
+                      + executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
+                  continue;
+                }
+              } else {
+                currentPair = e.getValue().poll();
+                flags = currentPair.getRight();
+                if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
+                  Object current = currentPair.getLeft();
+                  previous = reduceFunction.reduce(previous, current);
+                } else {
 
-                    barrierMap.get(t).putIfAbsent(e.getKey(), currentPair.getLeft());
-                    LOG.info("executor : "
-                        + executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
-                    LOG.info("target : " + messagePerTarget);
-                  }
+                  barrierMap.get(t).putIfAbsent(e.getKey(), currentPair.getLeft());
+                  LOG.info("executor : "
+                      + executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
                 }
               }
-              if (messagePerTarget.keySet().size() == barrierMap.get(t).keySet().size()) {
-                handleMessage(t, new Object(), MessageFlags.SYNC, destination);
-                barrierMap.get(t).clear();
-              }
-            } catch (NullPointerException error) {
-              LOG.info("barrier map : " + barrierMap);
-              LOG.info("messages map : " + messages);
-              LOG.info("target value : " + t);
+            }
+            if (messagePerTarget.keySet().size() == barrierMap.get(t).keySet().size()) {
+              handleMessage(t, new Object(), MessageFlags.SYNC, destination);
+              barrierMap.get(t).clear();
             }
           }
           if (previous != null) {
