@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.connectors;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -27,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class KafkaConsumerThread<T>  {
+public class KafkaConsumerThread<T> {
   private static final Logger LOG = LoggerFactory.getLogger(KafkaConsumerThread.class);
   private Consumer<String, String> consumer;
   private Properties kafkaConsumerConfig;
@@ -60,7 +61,7 @@ public class KafkaConsumerThread<T>  {
     if (!fetchLoopStarted) {
       LOG.info("starting");
       initiateConnection();
-      commitOffsets();
+//      commitOffsets();
       if (!active) {
         return 0;
       }
@@ -131,12 +132,25 @@ public class KafkaConsumerThread<T>  {
   public void setSeek() {
     initiateConnection();
     for (TopicPartition topicPartition : offsetsToSubscribe.keySet()) {
+      LOG.info("setting specific offset: partition : " + topicPartition.partition()
+          + "offset : " + (offsetsToSubscribe.get(topicPartition)).offset());
       consumer.seek(topicPartition, (offsetsToSubscribe.get(topicPartition)).offset());
     }
   }
 
   public void setOffsetsToSubscribe(Map<TopicPartition, OffsetAndMetadata> committedOffset) {
     this.offsetsToSubscribe = committedOffset;
+  }
+
+  public void setSeekToRestore() {
+    Map<TopicPartition, OffsetAndMetadata> newOffsets = new HashMap<>();
+    for (KafkaTopicPartitionState partitionState : topicPartitionStates) {
+      newOffsets.put(
+          partitionState.getTopicPartition(),
+          new OffsetAndMetadata(partitionState.getPositionOffset() + 1));
+    }
+    this.offsetsToSubscribe = newOffsets;
+    setSeek();
   }
 
   public void setSeekToBeginning() {
