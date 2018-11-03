@@ -71,7 +71,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("roundrobin-batchexample");
     jobBuilder.setWorkerClass(RoundRobinBatchTaskExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 2);
+    jobBuilder.addComputeResource(1, 512, 2);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

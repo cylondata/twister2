@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -286,7 +285,7 @@ public class AllGatherCommunication implements IWorker {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("basic-all-gather")
         .setWorkerClass(AllGatherCommunication.class.getName())
-        .setRequestResource(new WorkerComputeResource(2, 512), 4)
+        .addComputeResource(2, 512, 4)
         .setConfig(jobConfig)
         .build();
 

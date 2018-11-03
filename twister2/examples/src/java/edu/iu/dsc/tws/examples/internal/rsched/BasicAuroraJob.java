@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -44,8 +43,6 @@ public final class BasicAuroraJob {
     double diskGigaBytes = Context.workerVolatileDisk(config);
 
     String jobName = SchedulerContext.jobName(config);
-    WorkerComputeResource workerComputeResource =
-        new WorkerComputeResource(cpus, ramMegaBytes, diskGigaBytes);
 
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
@@ -60,7 +57,7 @@ public final class BasicAuroraJob {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName(jobName)
         .setWorkerClass(workerClass)
-        .setRequestResource(workerComputeResource, workers)
+        .addComputeResource(cpus, ramMegaBytes, diskGigaBytes, workers)
         .setConfig(jobConfig)
         .build();
 

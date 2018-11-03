@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -79,7 +78,7 @@ public class HelloWorld implements IWorker {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("hello-world-job")
         .setWorkerClass(HelloWorld.class)
-        .setRequestResource(new WorkerComputeResource(1, 512), numberOfWorkers)
+        .addComputeResource(2, 1024, numberOfWorkers)
         .setConfig(jobConfig)
         .build();
     // now submit the job

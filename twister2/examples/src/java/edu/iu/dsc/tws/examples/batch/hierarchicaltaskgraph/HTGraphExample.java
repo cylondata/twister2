@@ -31,7 +31,6 @@ import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
@@ -186,7 +185,7 @@ public class HTGraphExample extends TaskWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("HTGraph");
     jobBuilder.setWorkerClass(HTGraphExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 512), workers);
+    jobBuilder.addComputeResource(2, 512, workers);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
