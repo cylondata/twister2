@@ -36,7 +36,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
 
   protected Map<Integer, Map<Integer, Queue<Pair<Object, Integer>>>> messages = new HashMap<>();
   protected Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
-  protected Map<Integer, Map<Integer, Object>> barrierMap = new HashMap<>();
+  protected Map<Integer, Map<Integer, Boolean>> barrierMap = new HashMap<>();
   protected int executor;
   protected int count = 0;
   protected DataFlowOperation operation;
@@ -64,7 +64,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
       Map<Integer, Queue<Pair<Object, Integer>>> messagesPerTask = new HashMap<>();
       Map<Integer, Integer> countsPerTask = new HashMap<>();
       Map<Integer, Integer> totalCountsPerTask = new HashMap<>();
-      Map<Integer, Object> barrierMessage = new HashMap<>();
+      Map<Integer, Boolean> barrierMessage = new HashMap<>();
 
       for (int i : e.getValue()) {
         messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax));
@@ -145,7 +145,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
                   if (t == e.getKey()) {
                     reducedValues.add(currentPair);
                   } else {
-                    barrierMap.get(t).putIfAbsent(e.getKey(), currentPair.getLeft());
+                    barrierMap.get(t).putIfAbsent(e.getKey(), true);
                     barrierMessage = currentPair.getLeft();
                     LOG.info("executor : "
                         + executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
@@ -162,7 +162,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
                   if (t == e.getKey()) {
                     reducedValues.add(currentPair);
                   } else {
-                    barrierMap.get(t).putIfAbsent(e.getKey(), currentPair.getLeft());
+                    barrierMap.get(t).putIfAbsent(e.getKey(), true);
                     barrierMessage = currentPair.getLeft();
                     LOG.info("executor : "
                         + executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
