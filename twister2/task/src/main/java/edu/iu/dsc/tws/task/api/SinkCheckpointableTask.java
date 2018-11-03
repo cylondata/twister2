@@ -167,21 +167,19 @@ public abstract class SinkCheckpointableTask extends BaseStreamSink implements I
       taskClient.sendRequest(checkpointCompleteMessage);
       taskLooper.loop();
     } else if (messageContent instanceof Integer) {
-      if (messageContent instanceof ArrayList) {
 
-        @SuppressWarnings("unchecked")
-        Integer barrierID = (Integer) messageContent;
-        LOG.info("barrierID");
-        Checkpoint.CheckpointComplete checkpointCompleteMessage
-            = Checkpoint.CheckpointComplete.newBuilder()
-            .setCheckpointComplete(true)
-            .setCurrentBarrierID(barrierID)
-            .setSinkID(ctx.taskId())
-            .build();
+      @SuppressWarnings("unchecked")
+      Integer barrierID = (Integer) messageContent;
+      LOG.info("barrierID");
+      Checkpoint.CheckpointComplete checkpointCompleteMessage
+          = Checkpoint.CheckpointComplete.newBuilder()
+          .setCheckpointComplete(true)
+          .setCurrentBarrierID(barrierID)
+          .setSinkID(ctx.taskId())
+          .build();
 
-        taskClient.sendRequest(checkpointCompleteMessage);
-        taskLooper.loop();
-      }
+      taskClient.sendRequest(checkpointCompleteMessage);
+      taskLooper.loop();
     }
   }
 
