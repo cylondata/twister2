@@ -8,12 +8,14 @@ build:centos --linkopt -lm
 build:centos --linkopt -lpthread
 build:centos --linkopt -lrt
 build:centos --experimental_action_listener=tools/java:compile_java
+build:centos --strict_java_deps=off
 
 # For Mac
 # To use it: bazel build --config=darwin
 build:darwin --python2_path /usr/bin/python2.7
 build:darwin --java_toolchain=//tools/java:twister2_java_toolchain
 build:darwin --experimental_action_listener=tools/java:compile_java
+build:darwin --strict_java_deps=off
 
 # For Ubuntu
 # To use it: bazel build --config=ubuntu
@@ -25,4 +27,4 @@ build:ubuntu --linkopt -lm
 build:ubuntu --linkopt -lpthread
 build:ubuntu --linkopt -lrt
 build:ubuntu --strict_java_deps=off
-# build:ubuntu --experimental_action_listener=tools/java:compile_java
+build:ubuntu --experimental_action_listener=tools/java:compile_java
