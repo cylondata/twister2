@@ -65,8 +65,8 @@ public final class Twister2Job {
     resourceTypeBuilder.setComputeResource(
         JobAPI.ComputeResource.newBuilder()
             .setCpu(requestedResource.getNoOfCpus())
-            .setRam(requestedResource.getMemoryMegaBytes())
-            .setDisk(requestedResource.getDiskGigaBytes())
+            .setRamMegaBytes(requestedResource.getMemoryMegaBytes())
+            .setDiskGigaBytes(requestedResource.getDiskGigaBytes())
             .build()
     );
     jobResourceBuilder.addResource(resourceTypeBuilder.build());

@@ -33,8 +33,8 @@ message Config {
 // Disk as giga bytes. Dist is volatile disk.
 message ComputeResource {
     double cpu = 1;
-    int32 ram = 2;
-    double disk = 3;
+    int32 ram_mega_bytes = 2;
+    double disk_giga_bytes = 3;
 }
 
 // a job can have many types of ComputeResources

@@ -174,13 +174,13 @@ public final class JobUtils {
     }
 
     int ramPerWorker =
-        job.getJobResources().getResource(0).getComputeResource().getRam();
+        job.getJobResources().getResource(0).getComputeResource().getRamMegaBytes();
     if (ramPerWorker > 0) {
       builder.put(Context.TWISTER2_WORKER_RAM, ramPerWorker);
     }
 
     double diskPerWorker =
-        job.getJobResources().getResource(0).getComputeResource().getDisk();
+        job.getJobResources().getResource(0).getComputeResource().getDiskGigaBytes();
     if (diskPerWorker > 0) {
       builder.put(Context.WORKER_VOLATILE_DISK, diskPerWorker);
     }

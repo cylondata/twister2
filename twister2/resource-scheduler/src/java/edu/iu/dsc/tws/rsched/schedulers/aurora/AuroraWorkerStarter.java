@@ -226,9 +226,9 @@ public final class AuroraWorkerStarter {
     sb.append("\nCPUs: "
         + job.getJobResources().getResource(0).getComputeResource().getCpu());
     sb.append("\nRAM: "
-        + job.getJobResources().getResource(0).getComputeResource().getRam());
+        + job.getJobResources().getResource(0).getComputeResource().getRamMegaBytes());
     sb.append("\nDisk: "
-        + job.getJobResources().getResource(0).getComputeResource().getDisk());
+        + job.getJobResources().getResource(0).getComputeResource().getDiskGigaBytes());
 
     JobAPI.Config conf = job.getConfig();
     sb.append("\nnumber of key-values in job conf: " + conf.getKvsCount());

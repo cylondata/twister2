@@ -34,7 +34,8 @@ public final class MesosWorkerUtils {
     LOG.info("job get number of workers....:" + job.getNumberOfWorkers());
     for (int i = 0; i < job.getNumberOfWorkers(); i++) {
       allocatedResources.addWorkerComputeResource(new WorkerComputeResource(
-          i, computeResource.getCpu(), computeResource.getRam(), computeResource.getDisk()));
+          i, computeResource.getCpu(), computeResource.getRamMegaBytes(),
+          computeResource.getDiskGigaBytes()));
     }
     return allocatedResources;
   }

@@ -18,11 +18,11 @@ public final class ComputeResourceUtils {
   private ComputeResourceUtils() { }
 
   public static long getRamInBytes(JobAPI.ComputeResource computeResource) {
-    return computeResource.getRam() * 1024L * 1024;
+    return computeResource.getRamMegaBytes() * 1024L * 1024;
   }
 
   public static long getDiskInBytes(JobAPI.ComputeResource computeResource) {
-    return (long) (computeResource.getDisk() * 1024 * 1024 * 1024);
+    return (long) (computeResource.getDiskGigaBytes() * 1024 * 1024 * 1024);
   }
 
 }

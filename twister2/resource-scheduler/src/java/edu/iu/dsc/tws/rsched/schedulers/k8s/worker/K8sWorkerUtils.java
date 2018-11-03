@@ -185,7 +185,8 @@ public final class K8sWorkerUtils {
 
     for (int i = 0; i < job.getNumberOfWorkers(); i++) {
       allocatedResources.addWorkerComputeResource(new WorkerComputeResource(
-          i, computeResource.getCpu(), computeResource.getRam(), computeResource.getDisk()));
+          i, computeResource.getCpu(), computeResource.getRamMegaBytes(),
+          computeResource.getDiskGigaBytes()));
     }
 
     return allocatedResources;
