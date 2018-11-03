@@ -42,7 +42,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
   protected DataFlowOperation operation;
   protected int sendPendingMax = 128;
   protected int destination;
-  private Map<Integer, Queue<Object>> reducedValuesMap = new HashMap<>();
+  private Map<Integer, Queue<Pair<Object, Integer>>> reducedValuesMap = new HashMap<>();
   private Map<Integer, Map<Integer, Integer>> totalCounts = new HashMap<>();
 
   public ReduceStreamingReceiver(ReduceFunction function) {
@@ -111,7 +111,8 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
       // now check weather we have the messages for this source
       Map<Integer, Queue<Pair<Object, Integer>>> messagePerTarget = messages.get(t);
       Map<Integer, Integer> countsPerTarget = counts.get(t);
-      Queue<Object> reducedValues = this.reducedValuesMap.get(t);
+      Queue<Pair<Object, Integer>> reducedValues = this.reducedValuesMap.get(t);
+      Object barrierMessage = new Object();
 
       while (canProgress) {
         boolean found = true;
@@ -141,9 +142,14 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
                 if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
                   previous = currentPair.getLeft();
                 } else {
-                  barrierMap.get(t).putIfAbsent(e.getKey(), currentPair.getLeft());
-                  LOG.info("executor : "
-                      + executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
+                  if (t == e.getKey()) {
+                    reducedValues.add(currentPair);
+                  } else {
+                    barrierMap.get(t).putIfAbsent(e.getKey(), currentPair.getLeft());
+                    barrierMessage = currentPair.getLeft();
+                    LOG.info("executor : "
+                        + executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
+                  }
                   continue;
                 }
               } else {
@@ -153,26 +159,31 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
                   Object current = currentPair.getLeft();
                   previous = reduceFunction.reduce(previous, current);
                 } else {
-
-                  barrierMap.get(t).putIfAbsent(e.getKey(), currentPair.getLeft());
-                  LOG.info("executor : "
-                      + executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
+                  if (t == e.getKey()) {
+                    reducedValues.add(currentPair);
+                  } else {
+                    barrierMap.get(t).putIfAbsent(e.getKey(), currentPair.getLeft());
+                    barrierMessage = currentPair.getLeft();
+                    LOG.info("executor : "
+                        + executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
+                  }
                 }
               }
             }
             if (messagePerTarget.keySet().size() == barrierMap.get(t).keySet().size()) {
-              handleMessage(t, new Object(), MessageFlags.SYNC, destination);
+              handleMessage(t, barrierMessage, MessageFlags.SYNC, destination);
               barrierMap.get(t).clear();
             }
           }
           if (previous != null) {
-            reducedValues.offer(previous);
+            reducedValues.offer(Pair.of(previous, 0));
           }
         }
 
         if (reducedValues.size() > 0) {
           Object previous = reducedValues.peek();
-          boolean handle = handleMessage(t, previous, 0, destination);
+          boolean handle = handleMessage(t, ((Pair) previous).getLeft(),
+              (Integer) ((Pair) previous).getRight(), destination);
           if (handle) {
             reducedValues.poll();
             for (Map.Entry<Integer, Integer> e : countsPerTarget.entrySet()) {
@@ -184,6 +195,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
             needsFurtherProgress = true;
           }
         }
+//        LOG.info("reduced map" + reducedValuesMap);
       }
     }
     return needsFurtherProgress;
