@@ -9,33 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api;
+package edu.iu.dsc.tws.connectors.config;
 
-/**
- * Wrapper interface for all the messages types.
- */
-public interface IMessage {
-  /**
-   * Returns the content of the message
-   * @return content of the message
-   */
-  Object getContent();
+import java.util.ArrayList;
 
-  /**
-   * The edge this message is traveling
-   * @return the edge identifier
-   */
-  String edge();
+public class KafkaTopicPartitionsWrapper {
+  private ArrayList<PartitionState> topicPartitionStates;
 
-  /**
-   * Returns the flag of the message
-   * @return flag of the message
-   */
-  int getFlag();
+  public ArrayList<PartitionState> getTopicPartitionStates() {
+    return topicPartitionStates;
+  }
 
-  int sourceTask();
+  public KafkaTopicPartitionsWrapper() {
+  }
 
-  void setFlag(int barrier);
+  public KafkaTopicPartitionsWrapper(ArrayList<PartitionState> topicPartitionStates) {
+    this.topicPartitionStates = topicPartitionStates;
+  }
 
-  void setContent(Object message);
 }

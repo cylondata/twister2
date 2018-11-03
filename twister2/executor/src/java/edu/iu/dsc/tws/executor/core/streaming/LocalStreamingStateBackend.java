@@ -36,7 +36,6 @@ public class LocalStreamingStateBackend {
     Path path1 = new Path(runtime.getParentpath(), runtime.getJobName());
     int currentBarrierID = readCheckpointID(config);
 
-    LOG.log(Level.INFO, "current Barrier ID is :::::::" + currentBarrierID);
     Path path2 = new Path(path1, String.valueOf(currentBarrierID));
     LocalFileSystem localFileSystem = (LocalFileSystem) runtime.getFileSystem();
     FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
@@ -77,7 +76,7 @@ public class LocalStreamingStateBackend {
     }
   }
 
-  public void writeCheckpointID(int checkpointBarrierID, Config config) throws Exception {
+  private void writeCheckpointID(int checkpointBarrierID, Config config) throws Exception {
     synchronized (this) {
       Runtime runtime = (Runtime) config.get(Runtime.RUNTIME);
       Path path = new Path(runtime.getParentpath(), config.getStringValue(Context.JOB_NAME));
