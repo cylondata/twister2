@@ -37,6 +37,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
   protected Map<Integer, Map<Integer, Queue<Pair<Object, Integer>>>> messages = new HashMap<>();
   protected Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
   protected Map<Integer, Map<Integer, Boolean>> barrierMap = new HashMap<>();
+  protected Object barrierMessageContent = new Object();
   protected int executor;
   protected int count = 0;
   protected DataFlowOperation operation;
@@ -112,7 +113,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
       Map<Integer, Queue<Pair<Object, Integer>>> messagePerTarget = messages.get(t);
       Map<Integer, Integer> countsPerTarget = counts.get(t);
       Queue<Pair<Object, Integer>> reducedValues = this.reducedValuesMap.get(t);
-      Object barrierMessage = new Object();
+
 
       while (canProgress) {
         boolean found = true;
@@ -146,7 +147,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
                     reducedValues.add(currentPair);
                   } else {
                     barrierMap.get(t).putIfAbsent(e.getKey(), true);
-                    barrierMessage = currentPair.getLeft();
+                    barrierMessageContent = currentPair.getLeft();
                     LOG.info("executor : "
                         + executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
                   }
@@ -163,7 +164,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
                     reducedValues.add(currentPair);
                   } else {
                     barrierMap.get(t).putIfAbsent(e.getKey(), true);
-                    barrierMessage = currentPair.getLeft();
+                    barrierMessageContent = currentPair.getLeft();
                     LOG.info("executor : "
                         + executor + " " + barrierMap + " " + messagePerTarget.keySet().size());
                   }
@@ -171,7 +172,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
               }
             }
             if (messagePerTarget.keySet().size() == barrierMap.get(t).keySet().size()) {
-              handleMessage(t, barrierMessage, MessageFlags.SYNC, destination);
+              handleMessage(t, barrierMessageContent, MessageFlags.SYNC, destination);
               barrierMap.get(t).clear();
             }
           }

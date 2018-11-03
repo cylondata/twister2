@@ -135,12 +135,19 @@ public class SinkStreamingInstance implements INodeInstance {
               + " from source " + message.sourceTask());
 
           Object messageContent = message.getContent();
-
+          LOG.info("message content : " + (messageContent instanceof Integer));
           if (messageContent instanceof ArrayList) {
             @SuppressWarnings("unchecked")
             ArrayList<Integer> messageArray = (ArrayList<Integer>) messageContent;
 
             if (storeSnapshot(messageArray.get(0))) {
+              ((SinkCheckpointableTask) streamingTask).receivedValidBarrier(message);
+            }
+          } else if (messageContent instanceof Integer) {
+            @SuppressWarnings("unchecked")
+            Integer barrierID = (Integer) messageContent;
+
+            if (storeSnapshot(barrierID)) {
               ((SinkCheckpointableTask) streamingTask).receivedValidBarrier(message);
             }
           }
