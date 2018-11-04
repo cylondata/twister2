@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.connectors;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -44,7 +45,7 @@ public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
 
   @Override
   public void addCheckpointableStates() {
-
+    this.addState("trial", 2);
   }
 
   @Override
@@ -67,12 +68,26 @@ public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
       log.info("No partition found for given topic(s)");
     } else {
       for (TopicPartition topicPartition : topicPartitions) {
-        log.info("Producing to kafka, Message : {} , Topic : {}, Partition : {}",
-            message.getContent(), topicPartition.topic(), topicPartition.partition());
-        producer.send(new ProducerRecord<String, String>(topicPartition.topic(),
-            topicPartition.partition(),
-            message.getContent().toString(),
-            message.getContent().toString()));
+        @SuppressWarnings("unchecked")
+        String data = ((Iterator<String>) message.getContent()).next();
+        String[] tokens = data.split(":");
+        if (tokens[0].equals("log")) {
+          if (tokens[1].equals("Login")) {
+//            log.info("Producing to kafka, Message : {} , Topic : {}, Partition : {}",
+//                data, data, topicPartition.partition());
+            producer.send(new ProducerRecord<String, String>(topicPartition.topic(),
+                topicPartition.partition(),
+                data,
+                data));
+          }
+        } else {
+          log.info("Producing to kafka, Message : {} , Topic : {}, Partition : {}",
+              message.getContent(), topicPartition.topic(), topicPartition.partition());
+          producer.send(new ProducerRecord<String, String>(topicPartition.topic(),
+              topicPartition.partition(),
+              message.getContent().toString(),
+              message.getContent().toString()));
+        }
       }
     }
     return true;
@@ -80,7 +95,9 @@ public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
-    connect(cfg, context);
+//    connect(cfg, context);
+    this.context = context;
+    this.config = cfg;
     this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
     this.worldSize = context.getParallelism();
     log.info("myID : {} , worldSize : {} ", myIndex, worldSize);

@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
+import edu.iu.dsc.tws.connectors.TwsKafkaProducer;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
@@ -76,7 +77,10 @@ public class StreamingTaskExampleKafka implements IWorker {
         servers,
         "test",
         "partition-edge");
-    RecevingTask r = new RecevingTask();
+    TwsKafkaProducer<String> r = new TwsKafkaProducer<String>(
+        "outTopic",
+        servers
+    );
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);

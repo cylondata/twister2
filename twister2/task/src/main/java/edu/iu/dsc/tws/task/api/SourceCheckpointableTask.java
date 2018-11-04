@@ -243,7 +243,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource implemen
    */
   private void emitBarrier() {
     LOG.info("Sending barrier from source task ID : " + ctx.taskId());
-
+    barrierEmitted();
     ctx.writeBarrier("keyed-edge", currentBarrierID);
 
   }
@@ -275,5 +275,9 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource implemen
   }
 
   public abstract void addCheckpointableStates();
+
+  public void barrierEmitted() {
+    return;
+  }
 
 }
