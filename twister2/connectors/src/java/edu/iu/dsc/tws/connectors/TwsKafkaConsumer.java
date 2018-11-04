@@ -62,6 +62,7 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
   public void prepare(Config cfg, TaskContext context) {
 //    connect(cfg, context);
 //    setCheckpointInterval(4);
+
     if (!restoreState) {
       this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
       this.worldSize = context.getParallelism();

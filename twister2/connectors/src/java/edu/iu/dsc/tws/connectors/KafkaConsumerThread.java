@@ -73,7 +73,7 @@ public class KafkaConsumerThread<T> {
     }
     ConsumerRecords<String, String> records;
     int messageCount = 0;
-    records = consumer.poll(100);
+    records = consumer.poll(25);
     if (records != null) {
 
       for (ConsumerRecord<String, String> record : records) {
@@ -177,7 +177,7 @@ public class KafkaConsumerThread<T> {
   }
 
   public void emitRecord(String value, KafkaTopicPartitionState tps, Long offset) {
-    LOG.info("emitting record {} from the partition {}", value, offset);
+//    LOG.info("emitting record {} from the partition {}", value, offset);
     tps.setPositionOffset(offset);
     offsetsToCommit.put(tps.getTopicPartition(), new OffsetAndMetadata(offset));
     taskContext.write(this.edge, value);
