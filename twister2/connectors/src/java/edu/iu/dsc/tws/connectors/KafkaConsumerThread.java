@@ -153,6 +153,11 @@ public class KafkaConsumerThread<T> {
     setSeek();
   }
 
+  public void setSeekToEnd() {
+    initiateConnection();
+    consumer.seekToEnd(topicPartitions);
+  }
+
   public void setSeekToBeginning() {
     initiateConnection();
     consumer.seekToBeginning(topicPartitions);

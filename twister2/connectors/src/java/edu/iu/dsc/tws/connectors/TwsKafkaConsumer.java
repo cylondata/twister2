@@ -79,7 +79,7 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
           kafkaConfigs, offsetsToCommit, topicPartitions, topicPartitionStates, context, edge);
       kafkaConsumerThread.assignPartitions();
       log.info("{} partitions are assigned", this.topicPartitions.size());
-      kafkaConsumerThread.setSeekToBeginning();
+      kafkaConsumerThread.setSeekToEnd();
     } else {
 
       this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
