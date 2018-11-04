@@ -18,6 +18,12 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
@@ -35,6 +41,7 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
+import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.Runtime;
@@ -89,7 +96,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", 4);
+    builder.setParallelism("source", Integer.parseInt(config.get("twister2.workers").toString()));
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "partition-edge",
@@ -204,9 +211,27 @@ public class SourceSinkDiscoveryExample implements IWorker {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
+    Options options = new Options();
+    options.addOption(Constants.ARGS_WORKERS, true, "Workers");
+
+    CommandLineParser commandLineParser = new DefaultParser();
+
+    CommandLine cmd;
+
+    try {
+      cmd = commandLineParser.parse(options, args);
+
+    } catch (ParseException e) {
+      throw new RuntimeException("No valid arguments found");
+
+    }
+
+    int workers = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_WORKERS));
+
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+    configurations.put("twister2.workers", workers);
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
@@ -214,7 +239,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("source-sink-discovery-example");
     jobBuilder.setWorkerClass(SourceSinkDiscoveryExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
+    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), workers);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
