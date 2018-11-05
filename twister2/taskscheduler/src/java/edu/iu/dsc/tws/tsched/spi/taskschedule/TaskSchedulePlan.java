@@ -163,7 +163,7 @@ public class TaskSchedulePlan {
 
       return getTaskName().equals(that.getTaskName())
           && getTaskId() == that.getTaskId()
-          && getTaskId() == that.getTaskIndex()
+          && getTaskIndex() == that.getTaskIndex()
           && getResource().equals(that.getResource());
     }
 

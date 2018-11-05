@@ -1,19 +1,28 @@
 load("//tools:rules/java_tests.bzl", "java_tests")
 
-comms_deps_files = [
-    "//twister2/common/src/java:common-java",
-    "//twister2/comms/src/java:comms-java",
-    "@org_yaml_snakeyaml//jar",
-    "@com_google_protobuf_protobuf_java//jar",
-    "//third_party/java:mockito",
-    "//third_party/java:junit4",
-    "//third_party/java:powermock",
-]
-
 java_library(
     name = "comms-tests",
     srcs = glob(["**/*.java"]),
-    deps = comms_deps_files,
+    deps = [
+           "@org_yaml_snakeyaml//jar",
+           "@com_esotericsoftware_kryo//jar",
+           "@com_google_guava_guava//jar",
+           "@commons_lang_commons_lang//jar",
+           "@org_objenesis_objenesis//jar",
+           "@com_esotericsoftware_minlog//jar",
+           "@com_esotericsoftware_reflectasm//jar",
+           "@org_ow2_asm_asm//jar",
+           "//third_party:ompi_javabinding_java",
+           "//twister2/common/src/java:common-java",
+           "//twister2/data/src/main/java:data-java",
+           "@net_openhft_chronicle_queue//jar",
+           "@commons_io//jar",
+           "@com_google_protobuf//:protobuf_java",
+           "//third_party/java:mockito",
+           "//third_party/java:junit4",
+           "//third_party/java:powermock",
+           "//twister2/comms/src/java:comms-java",
+           ],
 )
 
 java_tests(

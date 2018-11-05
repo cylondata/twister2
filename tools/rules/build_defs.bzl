@@ -15,13 +15,8 @@
 #  specific language governing permissions and limitations
 #  under the License.
 
-def java_tests(test_classes, runtime_deps=[], resources=[], data=[], size="medium"):
-    for test_class in test_classes:
-        native.java_test(
-            name = test_class.split(".")[-1],
-            runtime_deps = runtime_deps,
-            size = size,
-            test_class = test_class,
-            resources = resources,
-            data = data,
-        )
+"""This file defines constants for the javadoc build"""
+
+DOCLINT_HTML_AND_SYNTAX = ["-Xdoclint:none"]
+
+DOCLINT_REFERENCES = ["-Xdoclint:none"]

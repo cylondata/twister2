@@ -15,7 +15,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 
-load("//tools/rules/pex:pex_rules.bzl", "pex_library")
+load("pex_rules", "pex_library")
 
 def proto_package_impl(ctx):
   return struct(proto_src = ctx.file.src)
@@ -48,7 +48,7 @@ def genproto_java_impl(ctx):
       "set -e",
       "rm -rf " + java_srcs,
       "mkdir " + java_srcs,
-      protoc.path + " -I " + src.dirname + " --java_out=" + java_srcs + " " + src.path,
+      protoc.path + " -I heron/proto --java_out=" + java_srcs + " " + src.path,
       "jar cMf " + srcjar.path + " -C " + java_srcs + " .",
       "rm -rf " + java_srcs,
   ])
@@ -59,13 +59,13 @@ def genproto_java_impl(ctx):
       command = java_cmd,
       use_default_shell_env = True)
 
-  return struct(files = depset([srcjar]))
+  return struct(files = set([srcjar]))
 
 genproto_java = rule(
     genproto_java_impl,
     attrs = genproto_base_attrs + {
         "_protoc": attr.label(
-            default = Label("@com_google_protobuf//:protoc"),
+            default = Label("//third_party/protobuf:protoc"),
             allow_files = True,
             single_file = True,
         ),
@@ -97,7 +97,6 @@ def proto_library(name, src=None, includes=[], deps=[], visibility=None,
         srcs = [name+"_java_src"],
         deps = java_deps,
         visibility = visibility,
-        javacopts = [ "-Xlint:-cast", "-Xlint:-static", "-Xlint:-deprecation"],
     )
 
   if not includes:
@@ -114,13 +113,13 @@ def proto_library(name, src=None, includes=[], deps=[], visibility=None,
     proto_src = src[:-6] + ".pb.cc"
     proto_srcgen_rule = name + "_cc_src"
     proto_lib = name + "_cc"
-    protoc = "@com_google_protobuf//:protoc"
+    protoc = "//third_party/protobuf:protoc"
     if not includes:
       proto_cmd = "$(location %s) --cpp_out=$(@D) %s" % (protoc, proto_path)
     else:
       proto_cmd = "$(location %s) %s --cpp_out=$(@D) %s" % (protoc, proto_include_paths, proto_path)
 
-    cc_deps = ["@com_google_protobuf//:protobuf"]
+    cc_deps = ["//third_party/protobuf:protobuf-cxx"]
     proto_deps = [src, protoc]
     for dep in deps:
       cc_deps += [dep + "_cc"]
@@ -150,7 +149,7 @@ def proto_library(name, src=None, includes=[], deps=[], visibility=None,
     proto_src = src[:-6] + "_pb2.py"
     proto_srcgen_rule = name + "_py_src"
     proto_lib = name + "_py"
-    protoc = "@com_google_protobuf//:protoc"
+    protoc = "//third_party/protobuf:protoc"
     if not includes:
       proto_cmd = "$(location %s) --python_out=$(@D) %s" % (protoc, proto_path)
     else:
