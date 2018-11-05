@@ -38,7 +38,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
 
   private TWSChannel channel;
   private DataFlowOperation direct;
-  private boolean progres = false;
+  private boolean progress = false;
   private static final Logger LOG = Logger.getLogger(TaskExecutorFixedThread.
       class.getName());
 
@@ -176,8 +176,8 @@ public class TaskExecutorFixedThread implements TaskExecutor {
     LOG.info("------------------------------------------");
     LOG.info("Register Task");
     LOG.info("Task : " + 0);
-    LOG.info("InputQueue : " + inputQueues.size());
-    LOG.info("OutputQueue : " + outputQueues.size());
+    LOG.info("InputQueue : " + (inputQueues != null ? inputQueues.size() : "null"));
+    LOG.info("OutputQueue : " + (outputQueues != null ? outputQueues.size() : "null"));
     LOG.info("------------------------------------------");
     //Register task queues
     //TODO: What happens in the queue already has data when task is registered
@@ -315,11 +315,11 @@ public class TaskExecutorFixedThread implements TaskExecutor {
   public void initCommunication(TWSChannel twscom, DataFlowOperation dfo) {
     this.channel = twscom;
     this.direct = dfo;
-    this.progres = true;
+    this.progress = true;
   }
 
   public void progres() {
-    while (progres) { //This can be done in a separate thread if that is more suitable
+    while (progress) { //This can be done in a separate thread if that is more suitable
       channel.progress();
       direct.progress();
       Thread.yield();
@@ -327,7 +327,7 @@ public class TaskExecutorFixedThread implements TaskExecutor {
   }
 
   public void setProgress(boolean value) {
-    this.progres = value;
+    this.progress = value;
   }
 
   public int getTaskMessageProcessLimit() {

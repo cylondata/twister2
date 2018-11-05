@@ -19,7 +19,6 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import org.apache.commons.cli.CommandLine;
@@ -110,7 +109,7 @@ public class KMeansJobMain {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("KMeans-job");
     jobBuilder.setWorkerClass(KMeansJob.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(2, 512), workers);
+    jobBuilder.addComputeResource(2, 512, workers);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

@@ -131,6 +131,9 @@ public final class RequestObjectBuilder {
     String jobPodsLabel = KubernetesUtils.createJobPodsLabel(Context.jobName(config));
     labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
 
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabel(Context.jobName(config));
+    labels.put(KubernetesConstants.TWISTER2_PODS_ROLE_KEY, workerRoleLabel);
+
     templateMetaData.setLabels(labels);
     template.setMetadata(templateMetaData);
 
@@ -502,14 +505,6 @@ public final class RequestObjectBuilder {
 
     String serviceName = KubernetesUtils.createServiceName(jobName);
     String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
-
-    return createHeadlessServiceObject(serviceName, serviceLabel);
-  }
-
-  public static V1Service createJobMasterServiceObject(String jobName) {
-
-    String serviceName = KubernetesUtils.createJobMasterServiceName(jobName);
-    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobName);
 
     return createHeadlessServiceObject(serviceName, serviceLabel);
   }

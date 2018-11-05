@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.task.batch.BTAllGatherExample;
@@ -209,7 +208,7 @@ public class ExampleTaskMain {
     twister2Job = Twister2Job.newBuilder()
         .setName(clazz)
         .setWorkerClass(clazz)
-        .setRequestResource(new WorkerComputeResource(1, 512), containers)
+        .addComputeResource(1, 512, containers)
         .setConfig(jobConfig)
         .build();
     // now submit the job

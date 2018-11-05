@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.task;
 
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.HierarchicalTaskGraph;
 
 public class SourceConnection {
   private String nodeName;
@@ -21,5 +22,8 @@ public class SourceConnection {
   }
 
   void build(DataFlowTaskGraph graph) {
+  }
+
+  void build(HierarchicalTaskGraph graph) {
   }
 }

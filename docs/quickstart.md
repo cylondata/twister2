@@ -4,7 +4,9 @@ Lets look at how to setup Twister2 and run few examples. Twister2 is designed as
 
 ## Building Twister2
 
-First we need to build Twister2. [Compiling Twister2](deployment/compiling.md) explains how to build it.
+First we need to build Twister2. [Compiling Twister2](deployment/compiling.md) explains how to build it. After building the code and
+following the instructions in [Twister2 Distribution](https://twister2.gitbook.io/twister2/deployment/compiling#twister2-distribution) you
+should have a extracted folder named `twister2-0.1.0`, this would be your twister2 home folder.
 
 ## Starting parallel workers
 
@@ -80,7 +82,7 @@ public class HelloWorld implements IWorker {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName("hello-world-job")
         .setWorkerClass(HelloWorld.class.getName())
-        .setRequestResource(new WorkerComputeResource(2, 1024), numberOfWorkers)
+        .addComputeResource(2, 1024, numberOfWorkers)
         .setConfig(jobConfig)
         .build();
     // now submit the job
@@ -89,7 +91,8 @@ public class HelloWorld implements IWorker {
 }
 ```
 
-Now lets run this class. Lets go inside the twister2 distibution and execute the following command from twister2 root directory.
+Now lets run this class. Lets go inside the twister2 distribution and execute the following command from twister2 root directory. The Twister2 root directory would be the `twister2-0.1.0` folder that we got during the building of the source code. Go into the
+`twister2-0.1.0` directory before executing the commands below.
 
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8

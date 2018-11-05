@@ -49,17 +49,6 @@ public class WorkerComputeResource {
     this.id = id;
   }
 
-  public WorkerComputeResource(double noOfCpus, int memoryMegaBytes) {
-    this.noOfCpus = noOfCpus;
-    this.memoryMegaBytes = memoryMegaBytes;
-  }
-
-  public WorkerComputeResource(double noOfCpus, int memoryMegaBytes, double diskGigaBytes) {
-    this.noOfCpus = noOfCpus;
-    this.memoryMegaBytes = memoryMegaBytes;
-    this.diskGigaBytes = diskGigaBytes;
-  }
-
   public WorkerComputeResource(int id, double noOfCpus, int memoryMegaBytes, double diskGigaBytes) {
     this.id = id;
     this.noOfCpus = noOfCpus;

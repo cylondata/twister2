@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -90,7 +89,7 @@ public final class Twister2Submitter {
     if (twister2Job.getName() != null
         && twister2Job.getWorkerClass() != null
         && twister2Job.getNumberOfWorkers() != 0
-        && twister2Job.getRequestedResource() != null) {
+        && twister2Job.getComputeResourceMap().size() != 0) {
       return twister2Job;
     }
 
@@ -126,20 +125,21 @@ public final class Twister2Submitter {
       }
     }
 
-    WorkerComputeResource computeResource = twister2Job.getRequestedResource();
-    if (computeResource == null) {
-      double cpuPerWorker = Context.workerCPU(config);
-      int ramPerWorker = Context.workerRAM(config);
-      double diskPerWorker = Context.workerVolatileDisk(config);
-      if (cpuPerWorker == 0) {
-        throw new RuntimeException("CPU per worker is not set.");
-      } else if (ramPerWorker == 0) {
-        throw new RuntimeException("RAM per worker is not set.");
-      } else {
-        computeResource = new WorkerComputeResource(cpuPerWorker, ramPerWorker, diskPerWorker);
-      }
-    }
-    builder.setRequestResource(computeResource, workerInstances);
+    //TODO update with new resource description
+//    WorkerComputeResource computeResource = twister2Job.getRequestedResource();
+//    if (computeResource == null) {
+//      double cpuPerWorker = Context.workerCPU(config);
+//      int ramPerWorker = Context.workerRAM(config);
+//      double diskPerWorker = Context.workerVolatileDisk(config);
+//      if (cpuPerWorker == 0) {
+//        throw new RuntimeException("CPU per worker is not set.");
+//      } else if (ramPerWorker == 0) {
+//        throw new RuntimeException("RAM per worker is not set.");
+//      } else {
+//        computeResource = new WorkerComputeResource(cpuPerWorker, ramPerWorker, diskPerWorker);
+//      }
+//    }
+//    builder.setRequestResource(computeResource, workerInstances);
 
     builder.setConfig(twister2Job.getConfig());
 
@@ -164,15 +164,11 @@ public final class Twister2Submitter {
         + "\nOnly lower case alphanumeric characters, dash(-), and dot(.) are allowed");
 
     jobName = KubernetesUtils.convertJobNameToK8sFormat(jobName);
+    twister2Job.setName(jobName);
 
     LOG.info("********* JobName modified to: " + jobName + " This name will be used *********");
 
-    return Twister2Job.newBuilder()
-        .setName(jobName)
-        .setWorkerClass(twister2Job.getWorkerClass())
-        .setRequestResource(twister2Job.getRequestedResource(), twister2Job.getNumberOfWorkers())
-        .setConfig(twister2Job.getConfig())
-        .build();
+    return twister2Job;
   }
 
 }

@@ -3,6 +3,7 @@ package(default_visibility = ["//visibility:public"])
 common_deps_files = [
     "@org_yaml_snakeyaml//jar",
     "@com_google_protobuf_protobuf_java//jar",
+    "//twister2/proto:proto_job_java",
 ]
 
 java_library(
@@ -18,4 +19,13 @@ java_library(
         "@com_google_protobuf_protobuf_java//jar",
         "@org_yaml_snakeyaml//jar",
     ],
+)
+
+load("//tools:maven.bzl", "POM_VERSION", "pom_file")
+
+pom_file(
+    name = "pom",
+    artifact_id = "common",
+    artifact_name = "common",
+    targets = [":common-java"],
 )

@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -169,7 +168,7 @@ public class SortJob implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("sort-job");
     jobBuilder.setWorkerClass(SortJob.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), NO_OF_TASKS);
+    jobBuilder.addComputeResource(1, 512, NO_OF_TASKS);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

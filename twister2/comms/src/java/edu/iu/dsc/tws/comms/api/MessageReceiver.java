@@ -23,7 +23,7 @@ public interface MessageReceiver {
   /**
    * Initialize the message receiver with tasks from which messages are expected
    * For each sub edge in graph, for each path, gives the expected task ids
-   *
+   * <p>
    * target -> source tasks
    *
    * @param expectedIds expected task ids
@@ -33,15 +33,29 @@ public interface MessageReceiver {
   /**
    * The actual message callback
    *
-   * @param source  the source task
+   * @param source the source task
    * @param path the path that is taken by the message, that is intermediate targets
    * @param target the target of this receiver
    * @param flags the communication flags
    * @param object the actual message
-   *
    * @return true if the message is accepted
    */
   boolean onMessage(int source, int path, int target, int flags, Object object);
+
+  /**
+   * The actual message callback
+   *
+   * @param source the source task
+   * @param path the path that is taken by the message, that is intermediate targets
+   * @param target the target of this receiver
+   * @param flags the communication flags
+   * @param tag tag value to identify this operation
+   * @param object the actual message
+   * @return true if the message is accepted
+   */
+  default boolean onMessage(int source, int path, int target, int flags, int tag, Object object) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Called when the end of the operation is reached

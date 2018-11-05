@@ -226,9 +226,13 @@ public class KubernetesController {
    */
   public boolean deleteService(String namespace, String serviceName) {
 
+    V1DeleteOptions deleteOptions = new V1DeleteOptions();
+    deleteOptions.setGracePeriodSeconds(0L);
+    deleteOptions.setPropagationPolicy(KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY);
+
     try {
       Response response = coreApi.deleteNamespacedServiceCall(
-          serviceName, namespace, null, null, null).execute();
+          serviceName, namespace, deleteOptions, null, null, null, null, null, null).execute();
 
       if (response.isSuccessful()) {
         LOG.info("Service [" + serviceName + "] is deleted.");

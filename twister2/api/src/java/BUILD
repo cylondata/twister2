@@ -1,5 +1,15 @@
 package(default_visibility = ["//visibility:public"])
 
+
+load("//tools:maven.bzl", "POM_VERSION", "pom_file")
+
+pom_file(
+    name = "pom",
+    artifact_id = "api",
+    artifact_name = "API",
+    targets = [":api-java"],
+)
+
 java_library(
     name = "api-java",
     srcs = glob(["**/*.java"]),
@@ -16,7 +26,6 @@ java_library(
         "//twister2/task/src/main/java:task-java",
         "//twister2/taskscheduler/src/java:taskscheduler-java",
         "@com_google_guava_guava//jar",
-        "@com_google_protobuf_protobuf_java//jar",
         "@commons_cli_commons_cli//jar",
         "@fast_utils//jar",
     ],

@@ -10,6 +10,6 @@ java_library(
         "//twister2/proto:proto_job_state_java",
         "//twister2/proto:proto_jobmaster_java",
         "//twister2/task/src/main/java:task-java",
-        "@com_google_protobuf_protobuf_java//jar",
+        "@com_google_protobuf//:protobuf_java",
     ],
 )

@@ -18,7 +18,7 @@ java_library(
         "@com_google_code_findbugs_jsr305//jar",
         "@com_google_code_gson_gson//jar",
         "@com_google_guava_guava//jar",
-        "@com_google_protobuf_protobuf_java//jar",
+        "@com_google_protobuf//:protobuf_java",
         "@com_hashicorp_nomad//jar",
         "@com_squareup_okhttp_logging_interceptor//jar",
         "@com_squareup_okhttp_okhttp//jar",

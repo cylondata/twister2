@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -58,11 +57,10 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   /**
    * Launch the processes according to the resource plan.
    *
-   * @param resourceRequest requested resources
    * @return true if the request is granted
    */
   @Override
-  public boolean launch(RequestedResources resourceRequest, JobAPI.Job job) {
+  public boolean launch(JobAPI.Job job) {
 
     if (!configParametersOK()) {
       return false;
@@ -110,7 +108,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       long start = System.currentTimeMillis();
 
       int containersPerPod = KubernetesContext.workersPerPod(config);
-      int numberOfPods = resourceRequest.getNumberOfWorkers() / containersPerPod;
+      int numberOfPods = job.getNumberOfWorkers() / containersPerPod;
 
       boolean transferred =
           controller.transferJobPackageInParallel(namespace, jobName, numberOfPods, jobPackageFile);
@@ -188,7 +186,8 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     // if Job Master runs as a separate pod, initialize a service for that
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
 
-      V1Service serviceForJobMaster = RequestObjectBuilder.createJobMasterServiceObject(jobName);
+      V1Service serviceForJobMaster =
+          JobMasterRequestObject.createJobMasterServiceObject(config, jobName);
       serviceCreated = controller.createService(namespace, serviceForJobMaster);
       if (serviceCreated) {
         jobSubmissionStatus.setServiceForJobMasterCreated(true);
