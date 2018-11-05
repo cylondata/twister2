@@ -11,7 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.mesos;
 
+import java.util.List;
+import java.util.Map;
+
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 
@@ -58,6 +62,12 @@ public final class MesosContext extends SchedulerContext {
   public static final String DOCKER_IMAGE_NAME = "twister2.docker.image.name";
   public static final String MESOS_WORKER_CLASS = "twister2.class.mesos.worker";
   public static final String MESOS_CONTAINER_CLASS = "twister2.job.worker.class";
+  public static final String MESOS_RACKS_LIST = "mesos.racks.list";
+  public static final String MESOS_DATACENTERS_LIST = "mesos.datacenters.list";
+  public static final String MESOS_RACK_LABEL_KEY = "mesos.rack.labey.key";
+  public static final String MESOS_DATACENTER_LABEL_KEY = "mesos.datacenter.labey.key";
+
+
 
   public static final int DEFAULT_RAM_SIZE = 128; // 1GB
   public static final int DEFAULT_DISK_SIZE = 128; // 1GB
@@ -71,6 +81,13 @@ public final class MesosContext extends SchedulerContext {
   private MesosContext() {
   }
 
+  public static String rackLabelKeyForMesos(Config cfg) {
+    return cfg.getStringValue(MESOS_RACK_LABEL_KEY);
+  }
+
+  public static String datacenterLabelKeyForMesos(Config cfg) {
+    return cfg.getStringValue(MESOS_DATACENTER_LABEL_KEY);
+  }
 
   public static String mesosClusterName(Config cfg) {
     return cfg.getStringValue(MESOS_CLUSTER_NAME);
@@ -148,6 +165,49 @@ public final class MesosContext extends SchedulerContext {
   public static String getMesosMasterHost(Config config) {
     return config.getStringValue(MESOS_MASTER_HOST);
   }
+
+  public static NodeInfo getNodeInfo(Config cfg, String nodeIP) {
+
+    List<Map<String, List<String>>> rackList =
+        cfg.getListOfMapsWithListValues(MESOS_RACKS_LIST);
+
+    String rack = findValue(rackList, nodeIP);
+    if (rack == null) {
+      return new NodeInfo(nodeIP, null, null);
+    }
+
+    List<Map<String, List<String>>> dcList =
+        cfg.getListOfMapsWithListValues(MESOS_DATACENTERS_LIST);
+
+    String datacenter = findValue(dcList, rack);
+    return new NodeInfo(nodeIP, rack, datacenter);
+  }
+
+  /**
+   * find the given String value in the inner List
+   * return the key for that Map
+   * @return
+   */
+  private static String findValue(List<Map<String, List<String>>> outerList, String value) {
+    if (outerList == null) {
+      return null;
+    }
+    for (Map<String, List<String>> map: outerList) {
+      for (String mapKey: map.keySet()) {
+        List<String> innerList = map.get(mapKey);
+        for (String listItem: innerList) {
+          if (listItem.equals(value)) {
+            return mapKey;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+
+
   /*
   public static String getSchedulerWorkingDirectory(Config config) {
     return config.getStringValue(SCHEDULER_WORKING_DIRECTORY);
