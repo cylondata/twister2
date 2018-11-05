@@ -3,8 +3,22 @@
 ################################################################################
 
 # twister2 job name
-# twister2.job.name: "reduce-stream-bench"
 twister2.job.name: "t2-job"
+
+worker.compute.resources:
+- compute.resource:
+    cpu: 1.0  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+    ram: 1024 # ram for each worker as mega bytes
+    disk: 1.0 # volatile disk for each worker as giga bytes
+    instances: 6 # number of worker instances with this specification
+    workersPerPod: 2 # number of workers on each pod in Kubernetes
+
+- compute.resource:
+    cpu: 0.5  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+    ram: 1024 # ram for each worker as mega bytes
+    disk: 1.0 # volatile disk for each worker as giga bytes
+    instances: 3 # number of worker instances with this specification
+    workersPerPod: 1 # number of workers on each pod in Kubernetes
 
 # number of cores for each worker
 # it is a floating point number

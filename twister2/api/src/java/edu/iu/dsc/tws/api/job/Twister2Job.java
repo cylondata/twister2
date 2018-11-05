@@ -11,8 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.job;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import com.google.protobuf.ByteString;
@@ -33,7 +32,7 @@ public final class Twister2Job {
 
   private String name;
   private String workerClass;
-  private HashMap<JobAPI.ComputeResource, Integer> resources = new HashMap<>();
+  private ArrayList<JobAPI.ComputeResource> resources = new ArrayList<>();
   private JobConfig config;
 
   private Twister2Job() {
@@ -57,25 +56,9 @@ public final class Twister2Job {
     jobBuilder.setJobName(name);
     jobBuilder.setNumberOfWorkers(countNumberOfWorkers());
 
-    JobAPI.JobResources.Builder jobResourcesBuilder = JobAPI.JobResources.newBuilder();
-
-    for (Map.Entry<JobAPI.ComputeResource, Integer> entry: resources.entrySet()) {
-
-      JobAPI.JobResources.ResourceSet.Builder resourceSetBuilder =
-          JobAPI.JobResources.ResourceSet.newBuilder();
-      resourceSetBuilder.setNumberOfWorkers(entry.getValue());
-      resourceSetBuilder.setComputeResource(
-          JobAPI.ComputeResource.newBuilder()
-              .setCpu(entry.getKey().getCpu())
-              .setRamMegaBytes(entry.getKey().getRamMegaBytes())
-              .setDiskGigaBytes(entry.getKey().getDiskGigaBytes())
-              .build()
-      );
-      jobResourcesBuilder.addResource(resourceSetBuilder.build());
+    for (JobAPI.ComputeResource computeResource: resources) {
+      jobBuilder.addComputeResource(computeResource);
     }
-
-    // set the job resources
-    jobBuilder.setJobResources(jobResourcesBuilder.build());
 
     return jobBuilder.build();
   }
@@ -96,7 +79,7 @@ public final class Twister2Job {
     return workerClass;
   }
 
-  public HashMap<JobAPI.ComputeResource, Integer> getComputeResourceMap() {
+  public ArrayList<JobAPI.ComputeResource> getComputeResourceMap() {
     return resources;
   }
 
@@ -110,8 +93,8 @@ public final class Twister2Job {
 
   private int countNumberOfWorkers() {
     int totalWorkers = 0;
-    for (Integer workersPerSet: resources.values()) {
-      totalWorkers += workersPerSet;
+    for (JobAPI.ComputeResource computeResource: resources) {
+      totalWorkers += computeResource.getNumberOfWorkers();
     }
     return totalWorkers;
   }
@@ -142,26 +125,40 @@ public final class Twister2Job {
       return this;
     }
 
-    public BasicJobBuilder addComputeResource(double cpu, int ramMegaBytes, int numberOfWorkers) {
-      addComputeResource(cpu, ramMegaBytes, 0, numberOfWorkers);
+    public BasicJobBuilder addComputeResource(double cpu,
+                                              int ramMegaBytes,
+                                              int numberOfWorkers) {
+      addComputeResource(cpu, ramMegaBytes, 0, numberOfWorkers, 1);
+      return this;
+    }
+
+    public BasicJobBuilder addComputeResource(double cpu,
+                                              int ramMegaBytes,
+                                              double diskGigABytes,
+                                              int numberOfWorkers) {
+      addComputeResource(cpu, ramMegaBytes, diskGigABytes, numberOfWorkers, 1);
       return this;
     }
 
 
-    public BasicJobBuilder addComputeResource(double cpu, int ramMegaBytes, double diskGigABytes,
-                                              int numberOfWorkers) {
+    public BasicJobBuilder addComputeResource(double cpu,
+                                              int ramMegaBytes,
+                                              double diskGigABytes,
+                                              int numberOfWorkers,
+                                              int workersPerPod) {
       JobAPI.ComputeResource computeResource = JobAPI.ComputeResource.newBuilder()
           .setCpu(cpu)
           .setRamMegaBytes(ramMegaBytes)
           .setDiskGigaBytes(diskGigABytes)
+          .setNumberOfWorkers(numberOfWorkers)
+          .setWorkersPerPod(workersPerPod)
           .build();
-      addComputeResource(computeResource, numberOfWorkers);
+      addComputeResource(computeResource);
       return this;
     }
 
-    public BasicJobBuilder addComputeResource(JobAPI.ComputeResource computeResource,
-                                          int numberOfWorkers) {
-      twister2Job.resources.put(computeResource, numberOfWorkers);
+    public BasicJobBuilder addComputeResource(JobAPI.ComputeResource computeResource) {
+      twister2Job.resources.add(computeResource);
       return this;
     }
 

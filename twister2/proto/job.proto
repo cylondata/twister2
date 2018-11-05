@@ -30,23 +30,25 @@ message Config {
 // compute resource for a worker
 // cpu as a double, can be fractional
 // RAM as mega bytes
-// Disk as giga bytes. Dist is volatile disk.
+// Disk as giga bytes. Disk is volatile disk.
 message ComputeResource {
     double cpu = 1;
     int32 ram_mega_bytes = 2;
     double disk_giga_bytes = 3;
+    int32 number_of_workers = 4;
+    int32 workers_per_pod = 5;
 }
 
 // a job can have many types of ComputeResources
 // for each resource, we specify the number of workers
 // number_of_workers in JobResources is the total of all workers in the job
-message JobResources {
-    message ResourceSet {
-        int32 number_of_workers = 1;
-        ComputeResource compute_resource = 2;
-    }
-    repeated ResourceSet resource = 1;
-}
+//message JobResources {
+//    message ResourceSet {
+//        int32 number_of_workers = 1;
+//        ComputeResource compute_resource = 2;
+//    }
+//    repeated ResourceSet resource = 1;
+//}
 
 // this is a Twister job.
 message Job {
@@ -55,7 +57,8 @@ message Job {
     string worker_class_name = 2;
     int32 number_of_workers = 3;
     // the requested resources
-    JobResources job_resources = 4;
+    repeated ComputeResource compute_resource = 4;
+//    JobResources job_resources = 4;
     // the configurations specified
     Config config = 5;
     // how the job is layed out

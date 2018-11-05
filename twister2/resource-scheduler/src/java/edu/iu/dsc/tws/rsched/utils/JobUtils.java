@@ -168,19 +168,19 @@ public final class JobUtils {
     }
 
     double cpuPerWorker =
-        job.getJobResources().getResource(0).getComputeResource().getCpu();
+        job.getComputeResource(0).getCpu();
     if (cpuPerWorker > 0) {
       builder.put(Context.TWISTER2_WORKER_CPU, cpuPerWorker);
     }
 
     int ramPerWorker =
-        job.getJobResources().getResource(0).getComputeResource().getRamMegaBytes();
+        job.getComputeResource(0).getRamMegaBytes();
     if (ramPerWorker > 0) {
       builder.put(Context.TWISTER2_WORKER_RAM, ramPerWorker);
     }
 
     double diskPerWorker =
-        job.getJobResources().getResource(0).getComputeResource().getDiskGigaBytes();
+        job.getComputeResource(0).getDiskGigaBytes();
     if (diskPerWorker > 0) {
       builder.put(Context.WORKER_VOLATILE_DISK, diskPerWorker);
     }

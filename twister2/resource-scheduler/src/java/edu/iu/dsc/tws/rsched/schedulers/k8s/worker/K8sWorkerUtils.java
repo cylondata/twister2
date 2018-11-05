@@ -178,8 +178,7 @@ public final class K8sWorkerUtils {
                                                             int workerID,
                                                             JobAPI.Job job) {
 
-    JobAPI.ComputeResource computeResource =
-        job.getJobResources().getResource(0).getComputeResource();
+    JobAPI.ComputeResource computeResource = job.getComputeResource(0);
 
     AllocatedResources allocatedResources = new AllocatedResources(cluster, workerID);
 

@@ -69,8 +69,7 @@ public class AuroraLauncher implements ILauncher {
     Map<AuroraField, String> bindings = constructEnvVariables(config);
 
     // convert RequestedResources to environment variables, override previous values from config
-    JobAPI.ComputeResource computeResource =
-        job.getJobResources().getResource(0).getComputeResource();
+    JobAPI.ComputeResource computeResource = job.getComputeResource(0);
     bindings.put(AuroraField.JOB_NAME, jobName);
     bindings.put(AuroraField.AURORA_WORKER_CLASS, AuroraContext.auroraWorkerClass(config));
     bindings.put(AuroraField.CPUS_PER_WORKER, computeResource.getCpu() + "");
