@@ -40,5 +40,9 @@ deploy_library \
   twister2/common/src/java/libcommon-java.jar \
   twister2/common/src/java/pom.xml
 
+deploy_library \
+  twister2/resource-scheduler/src/java/libresource-scheduler-java.jar \
+  twister2/resource-scheduler/src/java/pom.xml
+
 
 

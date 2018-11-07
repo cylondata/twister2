@@ -1,5 +1,14 @@
 package(default_visibility = ["//visibility:public"])
 
+load("//tools:maven.bzl", "POM_VERSION", "pom_file")
+
+pom_file(
+    name = "pom",
+    artifact_id = "resource-scheduler",
+    artifact_name = "Resource Scheduler",
+    targets = [":resource-scheduler-java"],
+)
+
 java_library(
     name = "resource-scheduler-java",
     srcs = glob(["**/*.java"]),
