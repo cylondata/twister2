@@ -13,16 +13,52 @@ package edu.iu.dsc.tws.comms.api;
 
 //Note: is a new type is added make sure to update the MessageTypeUtils and
 // to update edu.iu.dsc.tws.data.memory.utils.DataMessageType
+// todo above comment might be invalid
 public enum MessageType {
-  INTEGER,
-  CHAR,
+
+  INTEGER(true),
+  CHAR(true),
   BYTE,
-  MULTI_FIXED_BYTE,
+  MULTI_FIXED_BYTE(false, true),
   STRING,
-  LONG,
-  DOUBLE,
+  LONG(true),
+  DOUBLE(true),
   OBJECT,
   BUFFER,
   EMPTY,
-  SHORT;
+  SHORT(true);
+
+  private boolean isMultiMessageType;
+  private boolean isPrimitive;
+
+  MessageType() {
+    this(false, false);
+  }
+
+  MessageType(boolean isPrimitive) {
+    this(isPrimitive, false);
+  }
+
+
+  MessageType(boolean isPrimitive, boolean isMultiMessageType) {
+    this.isPrimitive = isPrimitive;
+    this.isMultiMessageType = isMultiMessageType;
+  }
+
+  /**
+   * Checks if the given message type is of a primitive type
+   * if the type is primitive then we do not need to add data length to the data buffers
+   */
+  public boolean isPrimitive() {
+    return isPrimitive;
+  }
+
+  /**
+   * checks if the type is a multi message, not to be confused with the aggregated multi-messages
+   * that are passed through the network when optimized communications such as reduce are performed
+   * this refers to the original type of the message
+   */
+  public boolean isMultiMessageType() {
+    return this.isMultiMessageType;
+  }
 }

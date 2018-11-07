@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
-import edu.iu.dsc.tws.comms.utils.MessageTypeUtils;
 
 public class MultiMessageDeserializer implements MessageDeSerializer {
   private static final Logger LOG = Logger.getLogger(MultiMessageDeserializer.class.getName());
@@ -85,10 +84,10 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
 
       Object object = buildMessage(currentMessage, messageBuffers, length);
       readLength += length + Integer.BYTES;
-      if (keyed && !MessageTypeUtils.isPrimitiveType(currentMessage.getKeyType())) {
+      if (keyed && !currentMessage.getKeyType().isPrimitive()) {
         //adding 4 to the length since the key length is also kept
         readLength += Integer.BYTES;
-        if (MessageTypeUtils.isMultiMessageType(currentMessage.getKeyType())) {
+        if (currentMessage.getKeyType().isMultiMessageType()) {
           readLength += Integer.BYTES;
         }
       }
@@ -133,7 +132,7 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
 
       Object object = getSingleDataBuffers(currentMessage, messageBuffers, length);
       readLength += length + Integer.BYTES;
-      if (keyed && !MessageTypeUtils.isPrimitiveType(currentMessage.getKeyType())) {
+      if (keyed && !currentMessage.getKeyType().isPrimitive()) {
         //adding 4 to the length since the key length is also kept
         readLength += Integer.BYTES;
       }
@@ -199,7 +198,7 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
       Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(channelMessage.getKeyType(),
           message, serializer);
       Object data;
-      if (MessageTypeUtils.isMultiMessageType(channelMessage.getKeyType())) {
+      if (channelMessage.getKeyType().isMultiMessageType()) {
         //TODO :need to check correctness for multi-message
         data = DataDeserializer.deserializeData(message,
             length - keyPair.getKey(), serializer, type,
