@@ -14,7 +14,7 @@ def twister2_client_conf_files():
         "//twister2/config/src/yaml:conf-standalone-yaml",
         "//twister2/config/src/yaml:conf-aurora-yaml",
         "//twister2/config/src/yaml:conf-kubernetes-yaml",
-	      "//twister2/config/src/yaml:conf-mesos-yaml",
+        "//twister2/config/src/yaml:conf-mesos-yaml",
     ]
 
 def twister2_client_local_files():
@@ -92,6 +92,7 @@ def twister2_client_lib_resource_scheduler_files():
         "@org_apache_httpcomponents_http_core//jar",
         "@org_bouncycastle_bcpkix_jdk15on//jar",
         "@org_bouncycastle_bcprov_jdk15on//jar",
+        "@com_google_protobuf//:protobuf_java",
     ]
 
 def twister2_client_lib_api_files():
@@ -123,6 +124,7 @@ def twister2_client_lib_data_files():
         "@org_apache_htrace//jar",
         "@org_apache_hadoop//jar",
     ]
+
 def twister2_client_lib_connector_files():
     return [
         "//twister2/connectors/src/java:connector-java",
@@ -182,7 +184,7 @@ def twister2_client_lib_third_party_files():
 
 def twister2_client_lib_master_files():
     return [
-        "//twister2/connectors/src/java:master-java"
+        "//twister2/connectors/src/java:master-java",
     ]
 
 #def twister2_client_lib_connector_files():

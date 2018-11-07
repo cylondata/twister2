@@ -28,5 +28,6 @@ java_library(
         "@com_google_guava_guava//jar",
         "@commons_cli_commons_cli//jar",
         "@fast_utils//jar",
+        "@com_google_protobuf//:protobuf_java"
     ],
 )
