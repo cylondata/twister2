@@ -1,5 +1,16 @@
 import React from "react";
-import {Navbar, Alignment, Button, Position, Menu, Popover, MenuItem, Divider, Tree, Classes} from "@blueprintjs/core";
+import {
+    Navbar,
+    Alignment,
+    Button,
+    Position,
+    Menu,
+    Popover,
+    MenuItem,
+    Divider,
+    Tree,
+    Classes
+} from "@blueprintjs/core";
 import LOGO from "./half.svg";
 import "./Dashboard.css";
 import {Route, Switch} from "react-router-dom";
@@ -8,6 +19,8 @@ import ClustersComponents from "./grid/clusters/ClustersComponents";
 import JobsComponents from "./workloads/jobs/JobsComponents";
 import DashboardHome from "./DashboardHome";
 import NewJobCreateComponent from "./workloads/jobs/NewJobCreateComponent";
+import WorkerComponents from "./grid/workers/WorkerComponents";
+import WorkerInfoComponent from "./grid/workers/WorkerInfoComponent";
 
 const MENU_NODES = 1;
 const MENU_CLUSTERS = 2;
@@ -32,6 +45,8 @@ export default class Dashboard extends React.Component {
             case MENU_JOBS:
                 this.props.history.push("/jobs");
                 break;
+            case MENU_WORKERS:
+                this.props.history.push("/workers");
             default:
                 break;
         }
@@ -61,10 +76,12 @@ export default class Dashboard extends React.Component {
                             </div>
                         </Navbar.Heading>
                         <Navbar.Divider/>
-                        <Button className="bp3-minimal" icon="home" text="Home" onClick={this.onHomeClicked}/>
+                        <Button className="bp3-minimal" icon="home" text="Home"
+                                onClick={this.onHomeClicked}/>
                     </Navbar.Group>
                     <Navbar.Group align={Alignment.RIGHT}>
-                        <Button className="bp3-minimal" icon="plus" text="Submit" onClick={this.onCreateNewJobClicked}/>
+                        <Button className="bp3-minimal" icon="plus" text="Submit"
+                                onClick={this.onCreateNewJobClicked}/>
                         <Popover content={
                             <Menu>
                                 <Menu.Item icon="log-out" text="Logout"/>
@@ -148,6 +165,10 @@ export default class Dashboard extends React.Component {
                             <Route exact path='/clusters' component={ClustersComponents}/>
                             <Route exact path='/jobs' component={JobsComponents}/>
                             <Route exact path='/newjob' component={NewJobCreateComponent}/>
+
+
+                            <Route exact path='/workers' component={WorkerComponents}/>
+                            <Route exact path='/workers/:workerId' component={WorkerInfoComponent}/>
                         </Switch>
                     </div>
                 </div>

@@ -5,6 +5,7 @@
   "dependencies": {
     "@blueprintjs/core": "^3.7.0",
     "chart.js": "^2.7.3",
+    "file-saver": "^2.0.0-rc.4",
     "react": "^16.6.0",
     "react-chartjs-2": "^2.7.4",
     "react-dom": "^16.6.0",
