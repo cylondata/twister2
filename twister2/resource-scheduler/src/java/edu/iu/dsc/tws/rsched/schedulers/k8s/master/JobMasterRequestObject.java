@@ -27,12 +27,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
-
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
@@ -59,15 +59,28 @@ import io.kubernetes.client.models.V1beta2StatefulSet;
 import io.kubernetes.client.models.V1beta2StatefulSetSpec;
 
 public final class JobMasterRequestObject {
+  private static final Logger LOG = Logger.getLogger(JobMasterRequestObject.class.getName());
+
+  private static Config config;
+  private static String jobName;
 
   private JobMasterRequestObject() { }
 
+  public static void init(Config cnfg) {
+    config = cnfg;
+    jobName = Context.jobName(config);
+  }
+
   /**
    * create StatefulSet object for a job
-   * @param jobName
    * @return
    */
-  public static V1beta2StatefulSet createStatefulSetObject(String jobName, Config config) {
+  public static V1beta2StatefulSet createStatefulSetObject() {
+
+    if (config == null) {
+      LOG.severe("JobMasterRequestObject.init method has not been called.");
+      return null;
+    }
 
     V1beta2StatefulSet statefulSet = new V1beta2StatefulSet();
     statefulSet.setApiVersion("apps/v1beta2");
@@ -90,7 +103,7 @@ public final class JobMasterRequestObject {
     setSpec.setSelector(selector);
 
     // construct the pod template
-    V1PodTemplateSpec template = constructPodTemplate(jobName, config);
+    V1PodTemplateSpec template = constructPodTemplate();
     setSpec.setTemplate(template);
 
     statefulSet.setSpec(setSpec);
@@ -100,11 +113,9 @@ public final class JobMasterRequestObject {
 
   /**
    * construct pod template
-   * @param jobName
-   * @param config
    * @return
    */
-  public static V1PodTemplateSpec constructPodTemplate(String jobName, Config config) {
+  public static V1PodTemplateSpec constructPodTemplate() {
 
     V1PodTemplateSpec template = new V1PodTemplateSpec();
     V1ObjectMeta templateMetaData = new V1ObjectMeta();
@@ -130,20 +141,20 @@ public final class JobMasterRequestObject {
     // create it if the requested disk space is positive
     if (JobMasterContext.volatileVolumeRequested(config)) {
       double vSize = JobMasterContext.volatileVolumeSize(config);
-      V1Volume volatileVolume = RequestObjectBuilder.createVolatileVolumeObject(vSize);
+      V1Volume volatileVolume = RequestObjectBuilder.createVolatileVolume(vSize);
       volumes.add(volatileVolume);
     }
 
     if (JobMasterContext.persistentVolumeRequested(config)) {
       String claimName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
-      V1Volume persistentVolume = RequestObjectBuilder.createPersistentVolumeObject(claimName);
+      V1Volume persistentVolume = RequestObjectBuilder.createPersistentVolume(claimName);
       volumes.add(persistentVolume);
     }
 
     podSpec.setVolumes(volumes);
 
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
-    containers.add(constructContainer(config));
+    containers.add(constructContainer());
     podSpec.setContainers(containers);
 
     template.setSpec(podSpec);
@@ -152,10 +163,9 @@ public final class JobMasterRequestObject {
 
   /**
    * construct a container
-   * @param config
    * @return
    */
-  public static V1Container constructContainer(Config config) {
+  public static V1Container constructContainer() {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
     container.setName("twister2-job-master");
@@ -204,16 +214,15 @@ public final class JobMasterRequestObject {
     port.setProtocol("TCP");
     container.setPorts(Arrays.asList(port));
 
-    container.setEnv(constructEnvironmentVariables(config));
+    container.setEnv(constructEnvironmentVariables());
 
     return container;
   }
 
   /**
    * set environment variables for containers
-   * @param config
    */
-  public static List<V1EnvVar> constructEnvironmentVariables(Config config) {
+  public static List<V1EnvVar> constructEnvironmentVariables() {
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
     // POD_IP with downward API
@@ -277,7 +286,7 @@ public final class JobMasterRequestObject {
     return envVars;
   }
 
-  public static V1Service createJobMasterServiceObject(Config config, String jobName) {
+  public static V1Service createJobMasterServiceObject() {
 
     String serviceName = KubernetesUtils.createJobMasterServiceName(jobName);
     String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobName);

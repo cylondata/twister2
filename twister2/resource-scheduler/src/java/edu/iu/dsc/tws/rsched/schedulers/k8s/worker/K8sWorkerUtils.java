@@ -135,17 +135,37 @@ public final class K8sWorkerUtils {
   /**
    * calculate the workerID from the given parameters
    */
-  public static int calculateWorkerID(String podName, String containerName, int workersPerPod) {
-    int podIndex = KubernetesUtils.idFromName(podName);
-    int containerIndex = KubernetesUtils.idFromName(containerName);
+  public static int calculateWorkerID(JobAPI.Job job, String podName, String containerName) {
 
-    return calculateWorkerID(podIndex, containerIndex, workersPerPod);
+    String ssName = KubernetesUtils.removeIndexFromName(podName);
+    int currentStatefulSetIndex = KubernetesUtils.indexFromName(ssName);
+    int workersUpToSS = countWorkersUpToSS(job, currentStatefulSetIndex);
+
+    int podIndex = KubernetesUtils.indexFromName(podName);
+    int containerIndex = KubernetesUtils.indexFromName(containerName);
+    int workersPerPod = job.getComputeResource(currentStatefulSetIndex).getWorkersPerPod();
+
+    int workerID = workersUpToSS + calculateWorkerIDInSS(podIndex, containerIndex, workersPerPod);
+    return workerID;
   }
 
   /**
-   * calculate the workerID from the given parameters
+   * calculate the number of workers in the earlier statefulsets
    */
-  public static int calculateWorkerID(int podIndex, int containerIndex, int workersPerPod) {
+  public static int countWorkersUpToSS(JobAPI.Job job, int currentStatefulSetIndex) {
+
+    int workerCount = 0;
+    for (int i = 0; i < currentStatefulSetIndex; i++) {
+      workerCount += job.getComputeResource(i).getNumberOfWorkers();
+    }
+
+    return workerCount;
+  }
+
+  /**
+   * calculate the workerID in the given StatefulSet
+   */
+  public static int calculateWorkerIDInSS(int podIndex, int containerIndex, int workersPerPod) {
     return podIndex * workersPerPod + containerIndex;
   }
 
@@ -178,14 +198,19 @@ public final class K8sWorkerUtils {
                                                             int workerID,
                                                             JobAPI.Job job) {
 
-    JobAPI.ComputeResource computeResource = job.getComputeResource(0);
-
     AllocatedResources allocatedResources = new AllocatedResources(cluster, workerID);
+    int workerIndex = 0;
 
-    for (int i = 0; i < job.getNumberOfWorkers(); i++) {
-      allocatedResources.addWorkerComputeResource(new WorkerComputeResource(
-          i, computeResource.getCpu(), computeResource.getRamMegaBytes(),
-          computeResource.getDiskGigaBytes()));
+    for (int i = 0; i < job.getComputeResourceList().size(); i++) {
+      JobAPI.ComputeResource computeResource = job.getComputeResource(i);
+
+      for (int j = 0; j < computeResource.getNumberOfWorkers(); j++) {
+        WorkerComputeResource wcr =
+            new WorkerComputeResource(workerIndex++, computeResource.getCpu(),
+                computeResource.getRamMegaBytes(), computeResource.getDiskGigaBytes());
+
+        allocatedResources.addWorkerComputeResource(wcr);
+      }
     }
 
     return allocatedResources;

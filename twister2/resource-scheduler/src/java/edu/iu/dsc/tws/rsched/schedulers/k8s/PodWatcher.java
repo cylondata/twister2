@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
@@ -28,15 +29,14 @@ public class PodWatcher extends Thread {
   private String namespace;
   private String jobName;
 
-  public PodWatcher(String namespace, String jobName, int numberOfPods) {
+  public PodWatcher(String namespace, String jobName, ArrayList<String> podNames) {
 
     this.namespace = namespace;
     this.jobName = jobName;
 
     pods = new HashMap<String, Boolean>();
-    for (int i = 0; i < numberOfPods; i++) {
-      String podName = KubernetesUtils.podNameFromJobName(jobName, i);
-      pods.put(podName, false);
+    for (int i = 0; i < podNames.size(); i++) {
+      pods.put(podNames.get(i), false);
     }
   }
 
@@ -60,7 +60,7 @@ public class PodWatcher extends Thread {
    */
   public void run() {
 
-    PodWatchUtils.watchPodsToStarting(namespace, pods, 50);
+    PodWatchUtils.watchPodsToStarting(namespace, jobName, pods, 50);
 //    PodWatchUtils.watchPodsToRunning(namespace, jobName, pods, 50);
 
   }

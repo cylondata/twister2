@@ -73,14 +73,21 @@ public final class K8sWorkerStarter {
         + KUBERNETES_CLUSTER_TYPE;
 
     config = K8sWorkerUtils.loadConfig(configDir);
+    jobMasterIP = updateJobMasterIp(jobMasterIP);
 
-    // test methods for debugging
-//    PodWatchUtils.testGetPodList(KubernetesContext.namespace(config));
-//    PodWatchUtils.testWatchPods(KubernetesContext.namespace(config), jobName, 100);
+    // read job description file
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
+    jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
+    job = JobUtils.readJobFile(null, jobDescFileName);
+    LOG.info("Job description file is loaded: " + jobDescFileName);
 
-    addJobMasterIpToConfig(jobMasterIP);
+    // add any configuration from job file to the config object
+    // if there are the same config parameters in both,
+    // job file configurations will override
+    config = JobUtils.overrideConfigs(job, config);
+    config = JobUtils.updateConfigs(job, config);
 
-    // get podName and podIP from localhost
+    // get podIP from localhost
     InetAddress localHost = null;
     try {
       localHost = InetAddress.getLocalHost();
@@ -96,8 +103,7 @@ public final class K8sWorkerStarter {
     LOG.info("NodeInfo for this worker: " + thisNodeInfo);
 
     // set workerID
-    int containersPerPod = KubernetesContext.workersPerPod(config);
-    workerID = K8sWorkerUtils.calculateWorkerID(podName, containerName, containersPerPod);
+    workerID = K8sWorkerUtils.calculateWorkerID(job, podName, containerName);
 
     // set workerNetworkInfo
     workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID, thisNodeInfo);
@@ -113,18 +119,6 @@ public final class K8sWorkerStarter {
     // initialize persistent logging
     K8sWorkerUtils.initWorkerLogger(workerID, pv, config);
 
-    // read job description file
-    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
-    jobDescFileName = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/" + jobDescFileName;
-    job = JobUtils.readJobFile(null, jobDescFileName);
-    LOG.info("Job description file is loaded: " + jobDescFileName);
-
-    // add any configuration from job file to the config object
-    // if there are the same config parameters in both,
-    // job file configurations will override
-    config = JobUtils.overrideConfigs(job, config);
-    config = JobUtils.updateConfigs(job, config);
-
     LOG.info("Worker information summary: \n"
         + "workerID: " + workerID + "\n"
         + "POD_IP: " + podIP + "\n"
@@ -135,7 +129,9 @@ public final class K8sWorkerStarter {
     );
 
     // start JobMasterClient
-    jobMasterClient = new JobMasterClient(config, workerNetworkInfo);
+    jobMasterClient = new JobMasterClient(config, workerNetworkInfo, jobMasterIP,
+        JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
+
     Thread clientThread = jobMasterClient.startThreaded();
     if (clientThread == null) {
       throw new RuntimeException("Can not start JobMasterClient thread.");
@@ -155,15 +151,15 @@ public final class K8sWorkerStarter {
   }
 
   /**
-   * update jobMasterIP in config
+   * update jobMasterIP if necessary
    * if job master runs in client, jobMasterIP has to be provided as an environment variable
    * that variable must be provided as a parameter to this method
    * if job master runs as a separate pod,
-   * we get the job master service IP address from its service name
+   * we get the job master IP address from its pod
    * @param jobMasterIP
    */
   @SuppressWarnings("ParameterAssignment")
-  public static void addJobMasterIpToConfig(String jobMasterIP) {
+  public static String updateJobMasterIp(String jobMasterIP) {
 
     // if job master runs in client, jobMasterIP has to be provided as an environment variable
     if (JobMasterContext.jobMasterRunsInClient(config)) {
@@ -189,6 +185,8 @@ public final class K8sWorkerStarter {
         .putAll(config)
         .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
         .build();
+
+    return jobMasterIP;
   }
 
   /**
@@ -208,14 +206,13 @@ public final class K8sWorkerStarter {
       throw new RuntimeException(e);
     }
 
-    K8sVolatileVolume volatileVolume = null;
-    if (SchedulerContext.volatileDiskRequested(config)) {
-      volatileVolume =
-          new K8sVolatileVolume(SchedulerContext.jobName(config), workerID);
-    }
-
     AllocatedResources allocatedResources = K8sWorkerUtils.createAllocatedResources(
         KubernetesContext.clusterType(config), workerID, job);
+
+    K8sVolatileVolume volatileVolume = null;
+    if (allocatedResources.getWorkerComputeResources(workerID).getDiskGigaBytes() > 0) {
+      volatileVolume = new K8sVolatileVolume(jobName, workerID);
+    }
 
     worker.execute(config, workerID, allocatedResources, workerController, pv, volatileVolume);
   }

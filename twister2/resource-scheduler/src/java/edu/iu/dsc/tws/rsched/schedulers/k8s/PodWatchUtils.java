@@ -211,6 +211,7 @@ public final class PodWatchUtils {
    * flag the pods with a true value in the given HashMap
    */
   public static boolean watchPodsToStarting(String namespace,
+                                            String jobName,
                                             HashMap<String, Boolean> pods,
                                             int timeout) {
 
@@ -221,6 +222,7 @@ public final class PodWatchUtils {
       createApiInstances();
     }
 
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
     String reason = "Started";
     Integer timeoutSeconds = timeout;
     Watch<V1Event> watch = null;

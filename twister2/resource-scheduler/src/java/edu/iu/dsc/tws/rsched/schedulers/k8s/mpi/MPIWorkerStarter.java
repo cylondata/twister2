@@ -150,13 +150,10 @@ public final class MPIWorkerStarter {
       LOG.log(Level.SEVERE, "Cannot get localHost.", e);
     }
 
-    config = Config.newBuilder()
-        .putAll(config)
-        .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
-        .build();
-
     // start JobMasterClient
-    jobMasterClient = new JobMasterClient(config, workerNetworkInfo);
+    jobMasterClient = new JobMasterClient(config, workerNetworkInfo, jobMasterIP,
+        JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
+
     Thread clientThread = jobMasterClient.startThreaded();
     if (clientThread == null) {
       throw new RuntimeException("Can not start JobMasterClient thread.");
@@ -196,14 +193,14 @@ public final class MPIWorkerStarter {
       throw new RuntimeException(e);
     }
 
-    K8sVolatileVolume volatileVolume = null;
-    if (SchedulerContext.volatileDiskRequested(config)) {
-      volatileVolume =
-          new K8sVolatileVolume(SchedulerContext.jobName(config), workerID);
-    }
 
     AllocatedResources allocatedResources = K8sWorkerUtils.createAllocatedResources(
         KubernetesContext.clusterType(config), workerID, job);
+
+    K8sVolatileVolume volatileVolume = null;
+    if (allocatedResources.getWorkerComputeResources(workerID).getDiskGigaBytes() > 0) {
+      volatileVolume = new K8sVolatileVolume(jobName, workerID);
+    }
 
     worker.execute(config, workerID, allocatedResources, workerController, pv, volatileVolume);
   }

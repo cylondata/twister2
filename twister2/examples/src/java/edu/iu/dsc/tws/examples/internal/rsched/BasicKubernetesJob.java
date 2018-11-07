@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 
 public final class BasicKubernetesJob {
   private static final Logger LOG = Logger.getLogger(BasicKubernetesJob.class.getName());
@@ -67,6 +68,7 @@ public final class BasicKubernetesJob {
     int ramMegaBytes = SchedulerContext.workerRAM(config);
     int workers = SchedulerContext.workerInstances(config);
     double diskGigaBytes = Context.workerVolatileDisk(config);
+    int workersPerPod = KubernetesContext.workersPerPod(config);
     String jobName = SchedulerContext.jobName(config);
 
     // build JobConfig
@@ -82,7 +84,8 @@ public final class BasicKubernetesJob {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName(jobName)
         .setWorkerClass(workerClass)
-        .addComputeResource(cpus, ramMegaBytes, diskGigaBytes, workers)
+        .addComputeResource(cpus, ramMegaBytes, diskGigaBytes, workers, workersPerPod)
+//        .addComputeResource(1.0, 1024, 1.0, 4, 2)
         .setConfig(jobConfig)
         .build();
 

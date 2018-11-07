@@ -22,7 +22,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -89,10 +88,9 @@ public final class MPIMasterStarter {
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
 
-    int numberOfWorkers = Context.workerInstances(config);
-    int workersPerPod = KubernetesContext.workersPerPod(config);
     String namespace = KubernetesContext.namespace(config);
-    int numberOfPods = numberOfWorkers / workersPerPod;
+    int workersPerPod = job.getComputeResource(0).getWorkersPerPod();
+    int numberOfPods = KubernetesUtils.numberOfWorkerPods(job);
 
     InetAddress localHost = null;
     try {
@@ -110,8 +108,7 @@ public final class MPIMasterStarter {
         + "podIP: " + podIP + "\n"
         + "jobName: " + jobName + "\n"
         + "namespace: " + namespace + "\n"
-        + "numberOfWorkers: " + numberOfWorkers + "\n"
-        + "workersPerPod: " + workersPerPod + "\n"
+        + "numberOfWorkers: " + job.getNumberOfWorkers() + "\n"
         + "numberOfPods: " + numberOfPods
     );
 
@@ -205,27 +202,6 @@ public final class MPIMasterStarter {
       return false;
     }
 
-  }
-
-  /**
-   * create all pod names in this job, except the first worker pod (this pod)
-   * @param numberOfPods
-   * @return
-   */
-  public static ArrayList<String> createPodNames(int numberOfPods) {
-
-    ArrayList<String> podNames = new ArrayList<>();
-    for (int i = 1; i < numberOfPods; i++) {
-      String podName = KubernetesUtils.podNameFromJobName(jobName, i);
-      podNames.add(podName);
-    }
-
-    if (!JobMasterContext.jobMasterRunsInClient(config)) {
-      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-      podNames.add(jobMasterPodName);
-    }
-
-    return podNames;
   }
 
   public static String[] generateMPIrunCommand(String className,
