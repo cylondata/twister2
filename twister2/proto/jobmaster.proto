@@ -21,9 +21,9 @@ option java_outer_classname = "JobMasterAPI";
 message Ping {
     oneof required {
         int32 workerID = 1;
+        MessageType messageType = 3;
     }
     string pingMessage = 2;
-    MessageType messageType = 3;
 
     enum MessageType {
         WORKER_TO_MASTER = 0;
@@ -61,7 +61,9 @@ message WorkerNetworkInfo {
 // for other states, just the workerID and newState is enough
 message WorkerStateChange {
     WorkerNetworkInfo workerNetworkInfo = 1;
-    WorkerState newState = 2;
+    oneof required {
+        WorkerState newState = 2;
+    }
 }
 
 // sent by the master to the worker
@@ -69,8 +71,8 @@ message WorkerStateChange {
 message WorkerStateChangeResponse {
     oneof required {
         int32 workerID = 1;
+        WorkerState sentState = 2;
     }
-    WorkerState sentState = 2;
 }
 
 // Get the list of wokers in a job from the job master
@@ -82,8 +84,8 @@ message ListWorkersRequest {
 
     oneof required {
         int32 workerID = 1;
+        RequestType requestType = 2;
     }
-    RequestType requestType = 2;
 }
 
 // Job master returns the list of workers in a job to a worker
