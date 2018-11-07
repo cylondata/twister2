@@ -11,9 +11,9 @@ addons:
 before_install:
   - echo "s:======================================"
   - echo "Downloading bazel"
-  - wget https://github.com/bazelbuild/bazel/releases/download/0.8.1/bazel_0.8.1-linux-x86_64.deb
-  - sha256sum -c tools/bazel_0.8.1-linux-x86_64.deb.sha256
-  - sudo dpkg -i bazel_0.8.1-linux-x86_64.deb
+  - wget https://github.com/bazelbuild/bazel/releases/download/0.18.1/bazel_0.18.1-linux-x86_64.deb
+  - sha256sum -c tools/bazel_0.18.1-linux-x86_64.deb.sha256
+  - sudo dpkg -i bazel_0.18.1-linux-x86_64.deb
   - echo "Installing C++ and Python"
   - sudo apt-get install g++
   - sudo apt-get install  python-dev python-pip

@@ -24,7 +24,6 @@
 package edu.iu.dsc.tws.rsched.interfaces;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
@@ -37,7 +36,7 @@ public interface IController {
    */
   void initialize(Config config);
 
-  boolean start(RequestedResources requestedResources, JobAPI.Job job);
+  boolean start(JobAPI.Job job);
 
   void close();
 

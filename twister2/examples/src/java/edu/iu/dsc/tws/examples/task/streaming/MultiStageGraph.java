@@ -140,7 +140,7 @@ public class MultiStageGraph extends TaskWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName(MultiStageGraph.class.getName());
     jobBuilder.setWorkerClass(MultiStageGraph.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

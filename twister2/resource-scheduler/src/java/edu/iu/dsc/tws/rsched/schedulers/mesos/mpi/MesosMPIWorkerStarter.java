@@ -105,6 +105,11 @@ public final class MesosMPIWorkerStarter {
 
     startWorker(workerController, null);
     try {
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      LOG.info("sleep exception" + e.getMessage());
+    }
+    try {
       MPI.Finalize();
     } catch (MPIException ignore) {
       LOG.info("MPI Finalize Exception" + ignore.getMessage());

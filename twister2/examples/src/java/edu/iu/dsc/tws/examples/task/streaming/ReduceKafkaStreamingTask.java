@@ -141,7 +141,7 @@ public class ReduceKafkaStreamingTask implements IWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("reduce-task");
     jobBuilder.setWorkerClass(ReduceKafkaStreamingTask.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

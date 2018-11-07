@@ -19,7 +19,6 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
 
@@ -62,7 +61,7 @@ public class MesosLauncher implements ILauncher {
   }
 
   @Override
-  public boolean launch(RequestedResources resourceRequest, JobAPI.Job job) {
+  public boolean launch(JobAPI.Job job) {
 
     runFramework(MesosContext.getMesosMasterUri(config), job.getJobName());
 

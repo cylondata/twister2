@@ -83,7 +83,7 @@ kubernetes.racks.list:
 # default value is 0.0Gi
 # set this value to zero, if you have not persistent disk support
 # when this value is zero, twister2 will not try to set up persistent storage for this job
-persistent.volume.per.worker: 1.0
+persistent.volume.per.worker: 0.0
 
 # the admin should provide a PersistentVolume object with the following storage class.
 # Default storage class name is "twister2".

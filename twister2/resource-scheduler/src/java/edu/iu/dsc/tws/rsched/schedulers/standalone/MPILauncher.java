@@ -24,7 +24,6 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.IController;
@@ -153,7 +152,7 @@ public class MPILauncher implements ILauncher {
   }
 
   @Override
-  public boolean launch(RequestedResources resourcePlan, JobAPI.Job job) {
+  public boolean launch(JobAPI.Job job) {
     LOG.log(Level.INFO, "Launching job for cluster {0}",
         MPIContext.clusterType(config));
 
@@ -181,7 +180,7 @@ public class MPILauncher implements ILauncher {
     // slurm and start the job
     IController controller = new MPIController(true);
     controller.initialize(newConfig);
-    return controller.start(resourcePlan, job);
+    return controller.start(job);
   }
 
   /**

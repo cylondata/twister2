@@ -3,6 +3,7 @@ package(default_visibility = ["//visibility:public"])
 common_deps_files = [
     "@org_yaml_snakeyaml//jar",
     "@com_google_protobuf_protobuf_java//jar",
+    "//twister2/proto:proto_job_java",
 ]
 
 java_library(

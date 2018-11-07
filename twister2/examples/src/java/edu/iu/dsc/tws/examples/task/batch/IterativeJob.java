@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
@@ -142,7 +141,7 @@ public class IterativeJob extends TaskWorker {
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("iterative-job");
     jobBuilder.setWorkerClass(IterativeJob.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(4, 1024), 4);
+    jobBuilder.addComputeResource(4, 1024, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

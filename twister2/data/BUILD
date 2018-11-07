@@ -2,7 +2,6 @@ package(default_visibility = ["//visibility:public"])
 
 common_deps_files = [
     "@org_yaml_snakeyaml//jar",
-    "//twister2/common/src/java:config-java",
     "//twister2/common/src/java:common-java",
     "@com_esotericsoftware_kryo//jar",
     "//third_party:com_github_jnr_jffi_native",

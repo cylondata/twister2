@@ -24,7 +24,7 @@ twister2.ram_per_container: "1024"
 twister2.disk_per_container: "1024"
 
 # number of instances for the task
-twister2.number_of_containers: "6"
+twister2.number_of_containers: "5"
 
 # container per mesos executor
 twister2.container_per_worker: "1"
@@ -43,3 +43,30 @@ twister2.worker_port: "31000"
 twister2.desired_nodes: "all"
 
 twister2.use_docker_container: "true"
+
+# rack label key for Mesos nodes in a cluster
+# each rack should have a unique label
+# all nodes in a rack should share this label
+# Twister2 workers can be scheduled by using these label values
+# Better data locality can be achieved
+# Example: rack=rack1, rack=rack2, rack=rack3, etc
+# no default value is specified
+mesos.rack.labey.key: rack
+
+# data center label key
+# each data center should have a unique label
+# all nodes in a data center should share this label
+# Twister2 workers can be scheduled by using these label values
+# Better data locality can be achieved
+# Example: datacenter=dc1, datacenter=dc1, datacenter=dc1, etc
+# no default value is specified
+mesos.datacenter.labey.key: datacenter
+
+# Data center list with rack names
+mesos.datacenters.list:
+- echo: ['blue-rack', 'green-rack']
+
+# Rack list with node IPs in them
+mesos.racks.list:
+- blue-rack: ['10.0.0.40', '10.0.0.41', '10.0.0.42', '10.0.0.43', '10.0.0.44', ]
+- green-rack: ['node11.ip', 'node12.ip', 'node13.ip']
