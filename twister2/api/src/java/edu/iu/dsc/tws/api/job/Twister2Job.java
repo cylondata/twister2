@@ -46,6 +46,9 @@ public final class Twister2Job {
    * Serializing the JobAPI
    **/
   public JobAPI.Job serialize() {
+
+    checkJobParameters();
+
     JobAPI.Job.Builder jobBuilder = JobAPI.Job.newBuilder();
 
     JobAPI.Config.Builder configBuilder = JobAPI.Config.newBuilder();
@@ -67,6 +70,24 @@ public final class Twister2Job {
     return jobBuilder.build();
   }
 
+  private void checkJobParameters() {
+    if (name == null) {
+      throw new RuntimeException("Job name is null. You have to provide a unique jobName");
+    }
+
+    if (workerClass == null) {
+      throw new RuntimeException("workerClass is null. A worker class has to be provided.");
+    }
+
+    if (resources.size() == 0) {
+      throw new RuntimeException("No ComputeResource is provided.");
+    }
+
+    if (countNumberOfWorkers() == 0) {
+      throw new RuntimeException("0 worker instances requested.");
+    }
+  }
+
   /**
    * we only allow job name to be updated through this interface
    * @param jobName
@@ -83,7 +104,7 @@ public final class Twister2Job {
     return workerClass;
   }
 
-  public ArrayList<JobAPI.ComputeResource> getComputeResourceMap() {
+  public ArrayList<JobAPI.ComputeResource> getComputeResources() {
     return resources;
   }
 
