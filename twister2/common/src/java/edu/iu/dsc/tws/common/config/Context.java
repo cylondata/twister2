@@ -79,17 +79,6 @@ public class Context {
   // job files will also be unpacked to this directory
   public static final String JOB_ARCHIVE_DIRECTORY = "twister2-job";
 
-  public static final double TWISTER2_WORKER_CPU_DEFAULT = 1.0;
-  public static final String TWISTER2_WORKER_CPU = "twister2.worker.cpu";
-
-  // RAM in mega bytes
-  public static final int TWISTER2_WORKER_RAM_DEFAULT = 200;
-  public static final String TWISTER2_WORKER_RAM = "twister2.worker.ram";
-
-  // volatile disk size per worker in GB
-  public static final double WORKER_VOLATILE_DISK_DEFAULT = 0.0;
-  public static final String WORKER_VOLATILE_DISK = "twister2.worker.volatile.disk";
-
   public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
   public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
 
