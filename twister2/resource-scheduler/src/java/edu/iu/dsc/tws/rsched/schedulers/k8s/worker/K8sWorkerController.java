@@ -51,10 +51,10 @@ public class K8sWorkerController implements IWorkerController {
   private WorkerNetworkInfo thisWorker;
 
   public K8sWorkerController(Config config, String podName, String podIpStr, String containerName,
-                             String jobName) {
+                             String jobName, int workersPerPod) {
     this.config = config;
     numberOfWorkers = SchedulerContext.workerInstances(config);
-    workersPerPod = KubernetesContext.workersPerPod(config);
+    this.workersPerPod = workersPerPod;
     numberOfPods = numberOfWorkers / workersPerPod;
     workerList = new ArrayList<WorkerNetworkInfo>();
     this.jobName = jobName;
