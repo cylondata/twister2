@@ -193,14 +193,14 @@ public final class MPIWorkerStarter {
       throw new RuntimeException(e);
     }
 
-
-    AllocatedResources allocatedResources = K8sWorkerUtils.createAllocatedResources(
-        KubernetesContext.clusterType(config), workerID, job);
+    AllocatedResources allocatedResources = null;
+//    AllocatedResources allocatedResources = K8sWorkerUtils.createAllocatedResources(
+//        KubernetesContext.clusterType(config), workerID, job);
 
     K8sVolatileVolume volatileVolume = null;
-    if (allocatedResources.getWorkerComputeResources(workerID).getDiskGigaBytes() > 0) {
-      volatileVolume = new K8sVolatileVolume(jobName, workerID);
-    }
+//    if (allocatedResources.getWorkerComputeResources(workerID).getDiskGigaBytes() > 0) {
+//      volatileVolume = new K8sVolatileVolume(jobName, workerID);
+//    }
 
     worker.execute(config, workerID, allocatedResources, workerController, pv, volatileVolume);
   }
