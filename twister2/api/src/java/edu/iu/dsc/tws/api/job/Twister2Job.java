@@ -105,6 +105,7 @@ public final class Twister2Job {
 
   public static final class BasicJobBuilder {
     private Twister2Job twister2Job;
+    private int computeResourceIndex = 0;
 
     private BasicJobBuilder() {
       this.twister2Job = new Twister2Job();
@@ -152,6 +153,7 @@ public final class Twister2Job {
           .setDiskGigaBytes(diskGigABytes)
           .setNumberOfWorkers(numberOfWorkers)
           .setWorkersPerPod(workersPerPod)
+          .setIndex(computeResourceIndex++)
           .build();
       addComputeResource(computeResource);
       return this;

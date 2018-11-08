@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.models.V1Service;
@@ -99,8 +100,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     }
 
     // initialize StatefulSets for this job
-    boolean statefulSetInitialized =
-        initStatefulSets(jobName, jobFileSize, job.getComputeResourceList());
+    boolean statefulSetInitialized = initStatefulSets(jobName, jobFileSize, job);
     if (!statefulSetInitialized) {
       clearupWhenSubmissionFails(jobName);
       return false;
@@ -235,13 +235,13 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
   private boolean initStatefulSets(String jobName,
                                    long jobFileSize,
-                                   List<JobAPI.ComputeResource> computeResources) {
+                                   JobAPI.Job job) {
 
     // first check whether there is a StatefulSet with the same name,
     // if so, do not submit new job. Give a message and terminate
     // user needs to explicitly terminate that job
     ArrayList<String> statefulSetNames = new ArrayList<>();
-    for (int i = 0; i < computeResources.size(); i++) {
+    for (int i = 0; i < job.getComputeResourceList().size(); i++) {
       statefulSetNames.add(KubernetesUtils.createWorkersStatefulSetName(jobName, i));
     }
 
@@ -292,11 +292,18 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     }
 
     // create StatefulSets for workers
-    for (int i = 0; i < computeResources.size(); i++) {
+    for (int i = 0; i < job.getComputeResourceList().size(); i++) {
+
+      JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, i);
+      if (computeResource == null) {
+        LOG.severe("Something wrong with the job object. Can not get ComputeResource from job"
+            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
+        return false;
+      }
 
       // create the StatefulSet object for this job
       V1beta2StatefulSet statefulSet = RequestObjectBuilder.createStatefulSetForWorkers(
-          computeResources.get(i), i, jobFileSize, encodedNodeInfoList);
+          computeResource, i, jobFileSize, encodedNodeInfoList);
 
       if (statefulSet == null) {
         return false;

@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 
 public final class K8sWorkerUtils {
@@ -143,7 +144,8 @@ public final class K8sWorkerUtils {
 
     int podIndex = KubernetesUtils.indexFromName(podName);
     int containerIndex = KubernetesUtils.indexFromName(containerName);
-    int workersPerPod = job.getComputeResource(currentStatefulSetIndex).getWorkersPerPod();
+    int workersPerPod =
+        JobUtils.getComputeResource(job, currentStatefulSetIndex).getWorkersPerPod();
 
     int workerID = workersUpToSS + calculateWorkerIDInSS(podIndex, containerIndex, workersPerPod);
     return workerID;
@@ -156,7 +158,7 @@ public final class K8sWorkerUtils {
 
     int workerCount = 0;
     for (int i = 0; i < currentStatefulSetIndex; i++) {
-      workerCount += job.getComputeResource(i).getNumberOfWorkers();
+      workerCount += JobUtils.getComputeResource(job, i).getNumberOfWorkers();
     }
 
     return workerCount;
@@ -191,7 +193,8 @@ public final class K8sWorkerUtils {
   }
 
   /**
-   * we assume all resources are uniform
+   * this is for non-mpi jobs
+   * workerIDs are ordered with respect to their statefulset, pod and container indexes
    * @return
    */
   public static AllocatedResources createAllocatedResources(String cluster,
@@ -202,7 +205,7 @@ public final class K8sWorkerUtils {
     int workerIndex = 0;
 
     for (int i = 0; i < job.getComputeResourceList().size(); i++) {
-      JobAPI.ComputeResource computeResource = job.getComputeResource(i);
+      JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, i);
 
       for (int j = 0; j < computeResource.getNumberOfWorkers(); j++) {
         WorkerComputeResource wcr =

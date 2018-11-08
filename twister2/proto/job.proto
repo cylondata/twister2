@@ -31,12 +31,16 @@ message Config {
 // cpu as a double, can be fractional
 // RAM as mega bytes
 // Disk as giga bytes. Disk is volatile disk.
+// number_of_workers to have this compute resource
+// workers_per_pod: in kubernetes, number of workes in each pod for this resource
+// index: a unique index is assigned to each resource starting from 0
 message ComputeResource {
     double cpu = 1;
     int32 ram_mega_bytes = 2;
     double disk_giga_bytes = 3;
     int32 number_of_workers = 4;
     int32 workers_per_pod = 5;
+    int32 index = 6;
 }
 
 // a job can have many types of ComputeResources

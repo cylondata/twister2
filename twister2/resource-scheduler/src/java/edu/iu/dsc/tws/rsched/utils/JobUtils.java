@@ -188,4 +188,21 @@ public final class JobUtils {
     return builder.build();
   }
 
+  /**
+   * return the ComputeResource with the given index
+   * if not found, return null
+   * @param job
+   * @param index
+   * @return
+   */
+  public static JobAPI.ComputeResource getComputeResource(JobAPI.Job job, int index) {
+    for (JobAPI.ComputeResource computeResource: job.getComputeResourceList()) {
+      if (computeResource.getIndex() == index) {
+        return computeResource;
+      }
+    }
+
+    return null;
+  }
+
 }
