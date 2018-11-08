@@ -12,14 +12,18 @@
 package edu.iu.dsc.tws.api.job;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 /**
  * This is a basic job with only communication available
@@ -161,6 +165,28 @@ public final class Twister2Job {
 
     public BasicJobBuilder addComputeResource(JobAPI.ComputeResource computeResource) {
       twister2Job.resources.add(computeResource);
+      return this;
+    }
+
+    public BasicJobBuilder loadComputeResources(Config config) {
+      List<Map<String, Number>> list =
+          (List) (config.get(SchedulerContext.WORKER_COMPUTE_RESOURCES));
+
+      for (Map<String, Number> computeResource: list) {
+        double cpu = (Double) computeResource.get("cpu");
+        int ram = (Integer) computeResource.get("ram");
+        double disk = (Double) computeResource.get("disk");
+        int instances = (Integer) computeResource.get("instances");
+        int workersPerPod = 1;
+        if (computeResource.get("workersPerPod") != null) {
+          workersPerPod = (Integer) computeResource.get("workersPerPod");
+        }
+        LOG.info(String.format("ComputeResource: cpu: %.1f, ram: %d MB, disk: %.1f GB, "
+            + "instances: %d, workersPerPod: %d.", cpu, ram, disk, instances, workersPerPod));
+
+        addComputeResource(cpu, ram, disk, instances, workersPerPod);
+      }
+
       return this;
     }
 

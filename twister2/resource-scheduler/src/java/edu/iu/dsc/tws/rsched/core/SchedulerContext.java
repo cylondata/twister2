@@ -31,6 +31,7 @@ public class SchedulerContext extends Context {
   // Temp directory where the files are placed before packing them for upload
   public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
 
+  public static final String WORKER_COMPUTE_RESOURCES = "worker.compute.resources";
   /**
    * These are specified as system properties when deploying a job
    */

@@ -1,43 +1,35 @@
 ################################################################################
-# Client configuration parameters for submission of twister2 jobs
+# Job configuration parameters for submission of twister2 jobs
 ################################################################################
 
 # twister2 job name
 twister2.job.name: "t2-job"
 
+# A Twister2 job can have multiple sets of compute resources
+# Four fields are mandatory: cpu, ram, disk and instances
+# workersPerPod shows the number of workers on each pod in Kubernetes. May be omitted in other clusters.
+# instances must be divisible by workersPerPod, when workersPerPod is given
 worker.compute.resources:
-- compute.resource:
-    cpu: 1.0  # number of cores for each worker, may be fractional such as 0.5 or 2.4
-    ram: 1024 # ram for each worker as mega bytes
-    disk: 1.0 # volatile disk for each worker as giga bytes
-    instances: 6 # number of worker instances with this specification
-    workersPerPod: 2 # number of workers on each pod in Kubernetes
+- cpu: 1.0  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+  ram: 1024 # ram for each worker as Mega bytes
+  disk: 1.0 # volatile disk for each worker as Giga bytes
+  instances: 6 # number of worker instances with this specification
+  workersPerPod: 2 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
 
-- compute.resource:
-    cpu: 0.5  # number of cores for each worker, may be fractional such as 0.5 or 2.4
-    ram: 1024 # ram for each worker as mega bytes
-    disk: 1.0 # volatile disk for each worker as giga bytes
-    instances: 3 # number of worker instances with this specification
-    workersPerPod: 1 # number of workers on each pod in Kubernetes
+- cpu: 0.5  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+  ram: 1024 # ram for each worker as mega bytes
+  disk: 1.0 # volatile disk for each worker as giga bytes. May be zero.
+  instances: 3 # number of worker instances with this specification
+#  workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
 
-# number of cores for each worker
-# it is a floating point number
-# each worker can have fractional cores such as 0.5 cores or multiple cores as 2
-# default value is 1.0 core
-twister2.worker.cpu: 0.5
-
-# amount of memory for each worker in the job in mega bytes as integer
-# default value is 200 MB
-twister2.worker.ram: 1024
-
-# amount of volatile hard disk space on each worker in giga bytes as a double
-# set this value to zero if you will not use volatile hard disk space
-# when its value is zero, no volatile disk will be setup of this worker
-# default value is 0 GB. 
-twister2.worker.volatile.disk: 1.0
-
-# number of worker instances in this job
-twister2.worker.instances: 6
+# worker class to run
+twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BroadcastCommunication"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.batch.sort.SortJob"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.comms.batch.BReduceExample"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.batch.comms.batch.BReduceExample"
 
 ########################################################################
 # Kubernetes related settings
@@ -45,11 +37,6 @@ twister2.worker.instances: 6
 # namespace to use in kubernetes
 # default value is "default"
 # kubernetes.namespace: "default"
-
-# number of workers (containers) per pod
-# default is 1
-# twister2.worker.instances must be divisible by kubernetes.workers.per.pod
-kubernetes.workers.per.pod: 1
 
 ########################################################################
 # Node locations related settings
