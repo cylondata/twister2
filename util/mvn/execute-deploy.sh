@@ -41,8 +41,40 @@ deploy_library \
   twister2/common/src/java/pom.xml
 
 deploy_library \
+  twister2/comms/src/java/libcomms-java.jar \
+  twister2/comms/src/java/pom.xml
+
+deploy_library \
+  twister2/connectors/src/java/libconnector-java.jar \
+  twister2/connectors/src/java/pom.xml
+
+deploy_library \
+  twister2/data/src/main/java/libdata-java.jar \
+  twister2/data/src/main/java/pom.xml
+
+deploy_library \
+  twister2/examples/src/java/libexamples-java.jar \
+  twister2/examples/src/java/pom.xml
+
+deploy_library \
+  twister2/executor/src/java/libexecutor-java.jar \
+  twister2/executor/src/java/pom.xml
+
+deploy_library \
+  twister2/master/src/java/libmaster-java.jar \
+  twister2/master/src/java/pom.xml
+
+deploy_library \
   twister2/resource-scheduler/src/java/libresource-scheduler-java.jar \
   twister2/resource-scheduler/src/java/pom.xml
+
+deploy_library \
+  twister2/task/src/main/java/libtask-java.jar \
+  twister2/task/src/main/java/pom.xml
+
+deploy_library \
+  twister2/taskscheduler/src/java/libtaskscheduler-java.jar \
+  twister2/taskscheduler/src/java/pom.xml
 
 
 

@@ -1,8 +1,11 @@
 package(default_visibility = ["//visibility:public"])
 
-java_library(
+load("//tools:maven.bzl", "t2_java_lib")
+
+t2_java_lib(
     name = "master-java",
     srcs = glob(["**/*.java"]),
+    artifact_name = "Twister2 Master",
     deps = [
         "//twister2/common/src/java:common-java",
         "//twister2/data/src/main/java:data-java",

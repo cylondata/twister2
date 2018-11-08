@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
+load("//tools:maven.bzl", "t2_java_lib")
+
 common_deps_files = [
     "@org_yaml_snakeyaml//jar",
     "//twister2/common/src/java:common-java",
@@ -30,9 +32,10 @@ common_deps_files = [
     "@org_apache_hadoop//jar",
 ]
 
-java_library(
+t2_java_lib(
     name = "data-java",
     srcs = glob(["**/*.java"]),
+    artifact_name = "Twister2 Data",
     deps = common_deps_files,
 )
 
