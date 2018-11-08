@@ -18,10 +18,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
 
 public final class BasicMesosJob {
   private static final Logger LOG = Logger.getLogger(BasicMesosJob.class.getName());
@@ -32,11 +30,6 @@ public final class BasicMesosJob {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     System.out.println("read config values: " + config.size());
     System.out.println(config);
-
-    int cpus = MesosContext.cpusPerContainer(config);
-    int ramMegaBytes = MesosContext.ramPerContainer(config);
-    double diskGigaBytes = Context.workerVolatileDisk(config);
-    int containers = MesosContext.numberOfContainers(config);
 
     String jobName = SchedulerContext.jobName(config);
     jobName += "-" + System.currentTimeMillis();
@@ -55,7 +48,7 @@ public final class BasicMesosJob {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName(jobName)
         .setWorkerClass(workerClass)
-        .addComputeResource(cpus, ramMegaBytes, diskGigaBytes, containers)
+        .loadComputeResources(config)
         .setConfig(jobConfig)
         .build();
 

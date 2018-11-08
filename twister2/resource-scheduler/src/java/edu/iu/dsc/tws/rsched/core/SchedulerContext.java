@@ -126,13 +126,6 @@ public class SchedulerContext extends Context {
     return persistentVolumePerWorker(cfg) > 0;
   }
 
-  /**
-   * if workerVolatileDisk is more than zero, return true, otherwise false
-   */
-  public static boolean volatileDiskRequested(Config cfg) {
-    return workerVolatileDisk(cfg) > 0;
-  }
-
   public static String createJobDescriptionFileName(String jobName) {
     return jobName + ".job";
   }

@@ -15,15 +15,11 @@ import java.util.HashMap;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
-
 import edu.iu.dsc.tws.api.job.Twister2Job;
-
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class BasicAuroraJob {
@@ -36,11 +32,6 @@ public final class BasicAuroraJob {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     System.out.println("read config values: " + config.size());
     System.out.println(config);
-
-    double cpus = SchedulerContext.workerCPU(config);
-    int ramMegaBytes = SchedulerContext.workerRAM(config);
-    int workers = SchedulerContext.workerInstances(config);
-    double diskGigaBytes = Context.workerVolatileDisk(config);
 
     String jobName = SchedulerContext.jobName(config);
 
@@ -57,7 +48,7 @@ public final class BasicAuroraJob {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setName(jobName)
         .setWorkerClass(workerClass)
-        .addComputeResource(cpus, ramMegaBytes, diskGigaBytes, workers)
+        .loadComputeResources(config)
         .setConfig(jobConfig)
         .build();
 

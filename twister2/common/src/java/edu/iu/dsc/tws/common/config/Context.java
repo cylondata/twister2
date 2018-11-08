@@ -191,29 +191,6 @@ public class Context {
     return cfg.getStringValue(TWISTER2_HOME);
   }
 
-  /**
-   * CPU as double.
-   * Can be any value more than 0.0
-   * Examples: 0.2, 2.5, etc
-   */
-  public static double workerCPU(Config cfg) {
-    return cfg.getDoubleValue(TWISTER2_WORKER_CPU, TWISTER2_WORKER_CPU_DEFAULT);
-  }
-
-  /**
-   * RAM in Mega Bytes
-   */
-  public static int workerRAM(Config cfg) {
-    return cfg.getIntegerValue(TWISTER2_WORKER_RAM, TWISTER2_WORKER_RAM_DEFAULT);
-  }
-
-  /**
-   * Disk in Giga Bytes
-   */
-  public static double workerVolatileDisk(Config cfg) {
-    return cfg.getDoubleValue(WORKER_VOLATILE_DISK, WORKER_VOLATILE_DISK_DEFAULT);
-  }
-
   public static int workerInstances(Config cfg) {
     return cfg.getIntegerValue(TWISTER2_WORKER_INSTANCES, TWISTER2_WORKER_INSTANCES_DEFAULT);
   }

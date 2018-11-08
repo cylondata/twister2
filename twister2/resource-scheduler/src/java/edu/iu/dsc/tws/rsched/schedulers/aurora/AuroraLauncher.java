@@ -66,7 +66,7 @@ public class AuroraLauncher implements ILauncher {
     String auroraFilename = AuroraContext.auroraScript(config);
 
     // get environment variables from config
-    Map<AuroraField, String> bindings = constructEnvVariables(config);
+    Map<AuroraField, String> bindings = constructEnvVariables(config, job);
 
     // convert RequestedResources to environment variables, override previous values from config
     JobAPI.ComputeResource computeResource = job.getComputeResource(0);
@@ -123,10 +123,11 @@ public class AuroraLauncher implements ILauncher {
    * @param config
    * @return
    */
-  public static Map<AuroraField, String> constructEnvVariables(Config config) {
+  public static Map<AuroraField, String> constructEnvVariables(Config config, JobAPI.Job job) {
 
     String jobName = SchedulerContext.jobName(config);
     String jobDescriptionFile = SchedulerContext.createJobDescriptionFileName(jobName);
+    JobAPI.ComputeResource computeResource = job.getComputeResource(0);
 
     HashMap<AuroraField, String> envs = new HashMap<AuroraField, String>();
     envs.put(AuroraField.CORE_PACKAGE_FILENAME, SchedulerContext.corePackageFileName(config));
@@ -135,10 +136,9 @@ public class AuroraLauncher implements ILauncher {
     envs.put(AuroraField.ENVIRONMENT, AuroraContext.environment(config));
     envs.put(AuroraField.ROLE, AuroraContext.role(config));
     envs.put(AuroraField.JOB_NAME, jobName);
-    envs.put(AuroraField.CPUS_PER_WORKER, SchedulerContext.workerCPU(config) + "");
-    envs.put(AuroraField.RAM_PER_WORKER, SchedulerContext.workerRAM(config) * 1048576 + "");
-    envs.put(AuroraField.DISK_PER_WORKER,
-        AuroraContext.workerVolatileDisk(config) * 1073741824 + "");
+    envs.put(AuroraField.CPUS_PER_WORKER, computeResource.getCpu() + "");
+    envs.put(AuroraField.RAM_PER_WORKER, computeResource.getRamMegaBytes() * 1048576 + "");
+    envs.put(AuroraField.DISK_PER_WORKER, computeResource.getDiskGigaBytes() * 1073741824 + "");
     envs.put(AuroraField.NUMBER_OF_WORKERS, SchedulerContext.workerInstances(config) + "");
     envs.put(AuroraField.TWISTER2_PACKAGES_PATH, SchedulerContext.packagesPath(config));
     envs.put(AuroraField.JOB_DESCRIPTION_FILE, jobDescriptionFile);
