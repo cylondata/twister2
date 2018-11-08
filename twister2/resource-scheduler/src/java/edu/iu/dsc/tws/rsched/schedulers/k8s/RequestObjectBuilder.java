@@ -71,9 +71,9 @@ public final class RequestObjectBuilder {
 
   private RequestObjectBuilder() { }
 
-  public static void init(Config cnfg) {
+  public static void init(Config cnfg, String jName) {
     config = cnfg;
-    jobName = KubernetesContext.jobName(config);
+    jobName = jName;
   }
 
   /**

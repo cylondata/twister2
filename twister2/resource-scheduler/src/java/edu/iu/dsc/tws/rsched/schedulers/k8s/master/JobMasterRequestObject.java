@@ -66,9 +66,9 @@ public final class JobMasterRequestObject {
 
   private JobMasterRequestObject() { }
 
-  public static void init(Config cnfg) {
+  public static void init(Config cnfg, String jName) {
     config = cnfg;
-    jobName = Context.jobName(config);
+    jobName = jName;
   }
 
   /**
@@ -123,7 +123,7 @@ public final class JobMasterRequestObject {
     labels.put(KubernetesConstants.SERVICE_LABEL_KEY,
         KubernetesUtils.createJobMasterServiceLabel(jobName));
 
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(Context.jobName(config));
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(jobName);
     labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
 
     String jobMasterRoleLabel = KubernetesUtils.createJobMasterRoleLabel(jobName);
@@ -241,7 +241,7 @@ public final class JobMasterRequestObject {
 
     envVars.add(new V1EnvVar()
         .name(Context.JOB_NAME)
-        .value(Context.jobName(config)));
+        .value(jobName));
 
     envVars.add(new V1EnvVar()
         .name(KubernetesContext.KUBERNETES_NAMESPACE)

@@ -53,8 +53,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     this.config = conf;
     namespace = KubernetesContext.namespace(config);
     controller.init();
-    RequestObjectBuilder.init(conf);
-    JobMasterRequestObject.init(conf);
   }
 
   /**
@@ -68,6 +66,9 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     if (!configParametersOK(job)) {
       return false;
     }
+
+    RequestObjectBuilder.init(config, job.getJobName());
+    JobMasterRequestObject.init(config, job.getJobName());
 
     String jobName = job.getJobName();
 
