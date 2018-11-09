@@ -1,17 +1,11 @@
 package(default_visibility = ["//visibility:public"])
 
-load("//tools:maven.bzl", "POM_VERSION", "pom_file")
+load("//tools:maven.bzl", "t2_java_lib")
 
-pom_file(
-    name = "pom",
-    artifact_id = "resource-scheduler",
-    artifact_name = "Resource Scheduler",
-    targets = [":resource-scheduler-java"],
-)
-
-java_library(
+t2_java_lib(
     name = "resource-scheduler-java",
     srcs = glob(["**/*.java"]),
+    artifact_name = "Twister2 Resource Scheduler",
     deps = [
         "//third_party:ompi_javabinding_java",
         "//twister2/common/src/java:common-java",

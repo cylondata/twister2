@@ -15,6 +15,7 @@
 """
 
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
+load("//:t2_meta.bzl", "T2_VERSION")
 
 MavenInfo = provider(
     fields = {
@@ -166,7 +167,7 @@ def _pom_file(ctx):
     substitutions.update(ctx.attr.substitutions)
     substitutions.update({
         "{generated_bzl_deps}": "\n".join(formatted_deps),
-        "{pom_version}": ctx.var.get("pom_version", "LOCAL-SNAPSHOT"),
+        "{pom_version}": T2_VERSION,  #ctx.var.get("pom_version", T2_VERSION),
     })
 
     ctx.actions.expand_template(
