@@ -326,7 +326,7 @@ public final class MPIWorker {
     if (persistentJobDir == null) {
       return;
     }
-    String logDir = persistentJobDir + "/logs";
+    String logDir = persistentJobDir + "/logs/worker-" + workerID;
     File directory = new File(logDir);
     if (!directory.exists()) {
       if (!directory.mkdirs()) {
