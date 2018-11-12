@@ -319,5 +319,32 @@ public final class JobMasterRequestObject {
     return service;
   }
 
+  public static V1Service createJobMasterHeadlessServiceObject() {
+
+    String serviceName = KubernetesUtils.createJobMasterServiceName(jobName);
+    String serviceLabel = KubernetesUtils.createJobMasterServiceLabel(jobName);
+
+    V1Service service = new V1Service();
+    service.setKind("Service");
+    service.setApiVersion("v1");
+
+    // construct and set metadata
+    V1ObjectMeta meta = new V1ObjectMeta();
+    meta.setName(serviceName);
+    service.setMetadata(meta);
+
+    // construct and set service spec
+    V1ServiceSpec serviceSpec = new V1ServiceSpec();
+    serviceSpec.setClusterIP("None");
+
+    // set selector
+    HashMap<String, String> selectors = new HashMap<String, String>();
+    selectors.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
+    serviceSpec.setSelector(selectors);
+
+    service.setSpec(serviceSpec);
+
+    return service;
+  }
 
 }

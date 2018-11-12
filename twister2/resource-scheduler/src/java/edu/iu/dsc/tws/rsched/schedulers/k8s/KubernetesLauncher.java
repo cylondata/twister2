@@ -190,7 +190,8 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     // if Job Master runs as a separate pod, initialize a service for that
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
 
-      V1Service serviceForJobMaster = JobMasterRequestObject.createJobMasterServiceObject();
+      V1Service serviceForJobMaster = JobMasterRequestObject.createJobMasterHeadlessServiceObject();
+//      V1Service serviceForJobMaster = JobMasterRequestObject.createJobMasterServiceObject();
       serviceCreated = controller.createService(namespace, serviceForJobMaster);
       if (serviceCreated) {
         jobSubmissionStatus.setServiceForJobMasterCreated(true);
