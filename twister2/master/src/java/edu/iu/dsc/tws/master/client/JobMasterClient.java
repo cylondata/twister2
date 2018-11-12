@@ -154,9 +154,7 @@ public class JobMasterClient {
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
 
-    if (rrClient.isConnected()) {
-      LOG.info("JobMasterClient connected to JobMaster.");
-    } else {
+    if (!rrClient.isConnected()) {
       LOG.severe("JobMasterClient can not connect to Job Master. Exiting .....");
       return false;
     }
@@ -408,6 +406,10 @@ public class JobMasterClient {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
+      if (status == StatusCode.SUCCESS) {
+        LOG.info(thisWorker.getWorkerID() + " JobMasterClient connected to JobMaster: " + channel);
+      }
+
       if (status == StatusCode.CONNECTION_REFUSED) {
         connectionRefused = true;
       }
