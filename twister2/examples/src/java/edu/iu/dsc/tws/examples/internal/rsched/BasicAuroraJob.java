@@ -33,8 +33,6 @@ public final class BasicAuroraJob {
     System.out.println("read config values: " + config.size());
     System.out.println(config);
 
-    String jobName = SchedulerContext.jobName(config);
-
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
@@ -42,15 +40,8 @@ public final class BasicAuroraJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    String workerClass = SchedulerContext.workerClass(config);
-
     // build the job
-    Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName(jobName)
-        .setWorkerClass(workerClass)
-        .loadComputeResources(config)
-        .setConfig(jobConfig)
-        .build();
+    Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, jobConfig);
 
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);

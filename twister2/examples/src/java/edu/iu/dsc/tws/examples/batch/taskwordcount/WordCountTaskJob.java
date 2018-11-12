@@ -134,8 +134,8 @@ public class WordCountTaskJob extends TaskWorker {
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("wordcount-batch-task");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("wordcount-batch-task");
     jobBuilder.setWorkerClass(WordCountTaskJob.class);
     jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);

@@ -20,6 +20,7 @@ import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -34,9 +35,9 @@ public final class Twister2Job {
 
   private static final KryoSerializer KRYO_SERIALIZER = new KryoSerializer();
 
-  private String name;
+  private String jobName;
   private String workerClass;
-  private ArrayList<JobAPI.ComputeResource> resources = new ArrayList<>();
+  private ArrayList<JobAPI.ComputeResource> computeResources = new ArrayList<>();
   private JobConfig config;
 
   private Twister2Job() {
@@ -60,10 +61,10 @@ public final class Twister2Job {
 
     jobBuilder.setConfig(configBuilder);
     jobBuilder.setWorkerClassName(workerClass);
-    jobBuilder.setJobName(name);
+    jobBuilder.setJobName(jobName);
     jobBuilder.setNumberOfWorkers(countNumberOfWorkers());
 
-    for (JobAPI.ComputeResource computeResource: resources) {
+    for (JobAPI.ComputeResource computeResource: computeResources) {
       jobBuilder.addComputeResource(computeResource);
     }
 
@@ -71,15 +72,15 @@ public final class Twister2Job {
   }
 
   private void checkJobParameters() {
-    if (name == null) {
-      throw new RuntimeException("Job name is null. You have to provide a unique jobName");
+    if (jobName == null) {
+      throw new RuntimeException("Job jobName is null. You have to provide a unique jobName");
     }
 
     if (workerClass == null) {
       throw new RuntimeException("workerClass is null. A worker class has to be provided.");
     }
 
-    if (resources.size() == 0) {
+    if (computeResources.size() == 0) {
       throw new RuntimeException("No ComputeResource is provided.");
     }
 
@@ -89,15 +90,15 @@ public final class Twister2Job {
   }
 
   /**
-   * we only allow job name to be updated through this interface
+   * we only allow job jobName to be updated through this interface
    * @param jobName
    */
-  public void setName(String jobName) {
-    name = jobName;
+  public void setJobName(String jobName) {
+    this.jobName = jobName;
   }
 
-  public String getName() {
-    return name;
+  public String getJobName() {
+    return jobName;
   }
 
   public String getWorkerClass() {
@@ -105,7 +106,7 @@ public final class Twister2Job {
   }
 
   public ArrayList<JobAPI.ComputeResource> getComputeResources() {
-    return resources;
+    return computeResources;
   }
 
   public int getNumberOfWorkers() {
@@ -118,78 +119,98 @@ public final class Twister2Job {
 
   private int countNumberOfWorkers() {
     int totalWorkers = 0;
-    for (JobAPI.ComputeResource computeResource: resources) {
+    for (JobAPI.ComputeResource computeResource: computeResources) {
       totalWorkers += computeResource.getNumberOfWorkers();
     }
     return totalWorkers;
   }
 
-  public static BasicJobBuilder newBuilder() {
-    return new BasicJobBuilder();
+  public static Twister2Job loadTwister2Job(Config config, JobConfig jobConfig) {
+    // build and return the job
+    return Twister2Job.newBuilder()
+        .setJobName(Context.jobName(config))
+        .setWorkerClass(SchedulerContext.workerClass(config))
+        .loadComputeResources(config)
+        .setConfig(jobConfig)
+        .build();
+
   }
 
-  public static final class BasicJobBuilder {
+  @Override
+  public String toString() {
+    String jobStr = "[jobName=" + jobName + "], [workerClass=" + workerClass + "]";
+    for (int i = 0; i < computeResources.size(); i++) {
+      JobAPI.ComputeResource cr = computeResources.get(i);
+      jobStr += String.format("\nComputeResource[%d]: cpu: %.1f, ram: %d MB, disk: %.1f GB, "
+          + "instances: %d, workersPerPod: %d", i, cr.getCpu(), cr.getRamMegaBytes(),
+          cr.getDiskGigaBytes(), cr.getNumberOfWorkers(), cr.getWorkersPerPod());
+    }
+
+    return jobStr;
+  }
+
+  public static Twister2JobBuilder newBuilder() {
+    return new Twister2JobBuilder();
+  }
+
+  public static final class Twister2JobBuilder {
     private Twister2Job twister2Job;
     private int computeResourceIndex = 0;
 
-    private BasicJobBuilder() {
+    private Twister2JobBuilder() {
       this.twister2Job = new Twister2Job();
     }
 
-    public BasicJobBuilder setName(String name) {
-      twister2Job.name = name;
+    public Twister2JobBuilder setJobName(String name) {
+      twister2Job.jobName = name;
       return this;
     }
 
-    public BasicJobBuilder setWorkerClass(String workerClass) {
+    public Twister2JobBuilder setWorkerClass(String workerClass) {
       twister2Job.workerClass = workerClass;
       return this;
     }
 
-    public BasicJobBuilder setWorkerClass(Class<? extends IWorker> workerClass) {
+    public Twister2JobBuilder setWorkerClass(Class<? extends IWorker> workerClass) {
       twister2Job.workerClass = workerClass.getName();
       return this;
     }
 
-    public BasicJobBuilder addComputeResource(double cpu,
-                                              int ramMegaBytes,
-                                              int numberOfWorkers) {
+    public Twister2JobBuilder addComputeResource(double cpu,
+                                                 int ramMegaBytes,
+                                                 int numberOfWorkers) {
       addComputeResource(cpu, ramMegaBytes, 0, numberOfWorkers, 1);
       return this;
     }
 
-    public BasicJobBuilder addComputeResource(double cpu,
-                                              int ramMegaBytes,
-                                              double diskGigABytes,
-                                              int numberOfWorkers) {
-      addComputeResource(cpu, ramMegaBytes, diskGigABytes, numberOfWorkers, 1);
+    public Twister2JobBuilder addComputeResource(double cpu,
+                                                 int ramMegaBytes,
+                                                 double diskGigaBytes,
+                                                 int numberOfWorkers) {
+      addComputeResource(cpu, ramMegaBytes, diskGigaBytes, numberOfWorkers, 1);
       return this;
     }
 
 
-    public BasicJobBuilder addComputeResource(double cpu,
-                                              int ramMegaBytes,
-                                              double diskGigABytes,
-                                              int numberOfWorkers,
-                                              int workersPerPod) {
+    public Twister2JobBuilder addComputeResource(double cpu,
+                                                 int ramMegaBytes,
+                                                 double diskGigaBytes,
+                                                 int numberOfWorkers,
+                                                 int workersPerPod) {
       JobAPI.ComputeResource computeResource = JobAPI.ComputeResource.newBuilder()
           .setCpu(cpu)
           .setRamMegaBytes(ramMegaBytes)
-          .setDiskGigaBytes(diskGigABytes)
+          .setDiskGigaBytes(diskGigaBytes)
           .setNumberOfWorkers(numberOfWorkers)
           .setWorkersPerPod(workersPerPod)
           .setIndex(computeResourceIndex++)
           .build();
-      addComputeResource(computeResource);
+
+      twister2Job.computeResources.add(computeResource);
       return this;
     }
 
-    public BasicJobBuilder addComputeResource(JobAPI.ComputeResource computeResource) {
-      twister2Job.resources.add(computeResource);
-      return this;
-    }
-
-    public BasicJobBuilder loadComputeResources(Config config) {
+    private Twister2JobBuilder loadComputeResources(Config config) {
       List<Map<String, Number>> list =
           (List) (config.get(SchedulerContext.WORKER_COMPUTE_RESOURCES));
 
@@ -202,8 +223,6 @@ public final class Twister2Job {
         if (computeResource.get("workersPerPod") != null) {
           workersPerPod = (Integer) computeResource.get("workersPerPod");
         }
-        LOG.info(String.format("ComputeResource: cpu: %.1f, ram: %d MB, disk: %.1f GB, "
-            + "instances: %d, workersPerPod: %d.", cpu, ram, disk, instances, workersPerPod));
 
         addComputeResource(cpu, ram, disk, instances, workersPerPod);
       }
@@ -211,7 +230,7 @@ public final class Twister2Job {
       return this;
     }
 
-    public BasicJobBuilder setConfig(JobConfig config) {
+    public Twister2JobBuilder setConfig(JobConfig config) {
       twister2Job.config = config;
       return this;
     }

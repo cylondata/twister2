@@ -83,7 +83,7 @@ public final class Twister2Submitter {
    */
   public static void processJobNameForK8s(Twister2Job twister2Job) {
 
-    String jobName = twister2Job.getName();
+    String jobName = twister2Job.getJobName();
 
     // if it is a proper job name, return
     if (KubernetesUtils.jobNameConformsToK8sNamingRules(jobName)) {
@@ -94,7 +94,7 @@ public final class Twister2Submitter {
         + "\nOnly lower case alphanumeric characters, dash(-), and dot(.) are allowed");
 
     jobName = KubernetesUtils.convertJobNameToK8sFormat(jobName);
-    twister2Job.setName(jobName);
+    twister2Job.setJobName(jobName);
 
     LOG.info("********* JobName modified to: " + jobName + " This name will be used *********");
   }

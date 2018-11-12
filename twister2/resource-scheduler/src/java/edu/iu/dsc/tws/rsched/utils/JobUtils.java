@@ -144,7 +144,6 @@ public final class JobUtils {
 
   /**
    * write the values from Job object to config object
-   * only write the values that are initialized
    * @param job
    * @param config
    * @return
@@ -152,20 +151,9 @@ public final class JobUtils {
   public static Config updateConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
 
-    String jobName = job.getJobName();
-    if (jobName != null) {
-      builder.put(Context.JOB_NAME, jobName);
-    }
-
-    String workerClass = job.getWorkerClassName();
-    if (workerClass != null) {
-      builder.put(SchedulerContext.WORKER_CLASS, workerClass);
-    }
-
-    int workerInstances = job.getNumberOfWorkers();
-    if (workerInstances > 0) {
-      builder.put(Context.TWISTER2_WORKER_INSTANCES, workerInstances);
-    }
+    builder.put(Context.JOB_NAME, job.getJobName());
+    builder.put(SchedulerContext.WORKER_CLASS, job.getWorkerClassName());
+    builder.put(Context.TWISTER2_WORKER_INSTANCES, job.getNumberOfWorkers());
 
     return builder.build();
   }

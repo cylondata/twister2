@@ -62,8 +62,6 @@ public final class BasicKubernetesJob {
    */
   public static void submitJob(Config config) {
 
-    String jobName = SchedulerContext.jobName(config);
-
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
@@ -71,15 +69,10 @@ public final class BasicKubernetesJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    String workerClass = SchedulerContext.workerClass(config);
-
-    // build the job
-    Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName(jobName)
-        .setWorkerClass(workerClass)
-        .loadComputeResources(config)
-        .setConfig(jobConfig)
-        .build();
+    // load the job parameters from client.yaml file
+    // It gets: job-name, worker-class and ComputeResource list from that file
+    Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, jobConfig);
+    LOG.info("The job to be submitted: \n" + twister2Job);
 
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);

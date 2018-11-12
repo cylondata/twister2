@@ -241,7 +241,7 @@ public class PartitionBarrierCommunication implements IWorker {
 
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("basic-partition")
+        .setJobName("basic-partition")
         .setWorkerClass(PartitionBarrierCommunication.class.getName())
         .addComputeResource(1, 512, 4)
         .setConfig(jobConfig)

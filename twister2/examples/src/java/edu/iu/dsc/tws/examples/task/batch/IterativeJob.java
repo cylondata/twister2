@@ -138,8 +138,8 @@ public class IterativeJob extends TaskWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("iterative-job");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("iterative-job");
     jobBuilder.setWorkerClass(IterativeJob.class.getName());
     jobBuilder.addComputeResource(4, 1024, 4);
     jobBuilder.setConfig(jobConfig);

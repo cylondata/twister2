@@ -212,7 +212,7 @@ public class BroadcastCommunication implements IWorker {
 
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("basic-broadcast")
+        .setJobName("basic-broadcast")
         .setWorkerClass(BroadcastCommunication.class.getName())
         .addComputeResource(2, 512, 4)
         .setConfig(jobConfig)

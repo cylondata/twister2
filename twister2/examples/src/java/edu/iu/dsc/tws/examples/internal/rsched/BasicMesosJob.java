@@ -41,22 +41,15 @@ public final class BasicMesosJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    String workerClass = SchedulerContext.workerClass(config);
-    System.out.println("Worker class: " + workerClass);
-
     // build the job
-    Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName(jobName)
-        .setWorkerClass(workerClass)
-        .loadComputeResources(config)
-        .setConfig(jobConfig)
-        .build();
+    Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, jobConfig);
+    twister2Job.setJobName(jobName);
 
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
 
     System.out.println("now terminating...");
-    Twister2Submitter.terminateJob(twister2Job.getName(), config);
+    Twister2Submitter.terminateJob(twister2Job.getJobName(), config);
   }
 
 }

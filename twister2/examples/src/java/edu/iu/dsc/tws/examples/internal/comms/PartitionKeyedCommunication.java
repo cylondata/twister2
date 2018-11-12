@@ -275,7 +275,7 @@ public class PartitionKeyedCommunication implements IWorker {
 
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("basic-partition-keyed")
+        .setJobName("basic-partition-keyed")
         .setWorkerClass(PartitionKeyedCommunication.class.getName())
         .addComputeResource(1, 512, 4)
         .setConfig(jobConfig)

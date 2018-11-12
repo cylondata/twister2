@@ -10,7 +10,7 @@ twister2.job.name: "t2-job"
 # workersPerPod shows the number of workers on each pod in Kubernetes. May be omitted in other clusters.
 # instances must be divisible by workersPerPod, when workersPerPod is given
 worker.compute.resources:
-- cpu: 1.0  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+- cpu: 0.4  # number of cores for each worker, may be fractional such as 0.5 or 2.4
   ram: 1024 # ram for each worker as Mega bytes
   disk: 1.0 # volatile disk for each worker as Giga bytes
   instances: 6 # number of worker instances with this specification
@@ -19,8 +19,8 @@ worker.compute.resources:
 - cpu: 0.5  # number of cores for each worker, may be fractional such as 0.5 or 2.4
   ram: 1024 # ram for each worker as mega bytes
   disk: 1.0 # volatile disk for each worker as giga bytes. May be zero.
-  instances: 3 # number of worker instances with this specification
-#  workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
+  instances: 4 # number of worker instances with this specification
+  workersPerPod: 2 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
 
 # worker class to run
 twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"

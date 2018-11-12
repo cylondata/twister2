@@ -28,8 +28,8 @@ public final class WordCountJob {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("streaming-wordcount");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("streaming-wordcount");
     jobBuilder.setWorkerClass(WordCountWorker.class.getName());
     jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
