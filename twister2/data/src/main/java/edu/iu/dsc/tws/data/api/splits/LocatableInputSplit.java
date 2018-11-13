@@ -9,18 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-package edu.iu.dsc.tws.data.fs.io;
+package edu.iu.dsc.tws.data.api.splits;
 
 import java.util.Arrays;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.data.fs.io.InputSplit;
 
 /**
  * A locatable input split is an input split referring to input data which
  * is located on one or more hosts.
  */
-public class LocatableInputSplit implements InputSplit, java.io.Serializable {
+public abstract class LocatableInputSplit<T> implements InputSplit<T>, java.io.Serializable {
 
   private static final Logger LOG = Logger.getLogger(LocatableInputSplit.class.getName());
 

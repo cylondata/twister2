@@ -50,8 +50,8 @@ public class TestBinaryFileFormatter {
       ByteBuffer byteBuffer = ByteBuffer.allocate(4000);
       byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
       while ((currentSplit = inputSplitAssigner.getNextInputSplit(null, 0)) != null) {
-        binaryInputFormatter.open(currentSplit);
-        while (binaryInputFormatter.nextRecord(line) != null) {
+        currentSplit.open();
+        while (currentSplit.nextRecord(line) != null) {
           byteBuffer.clear();
           byteBuffer.put(line);
           byteBuffer.flip();

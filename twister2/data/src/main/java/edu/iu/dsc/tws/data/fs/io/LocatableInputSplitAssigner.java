@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.data.api.splits.LocatableInputSplit;
 import edu.iu.dsc.tws.data.utils.NetUtils;
 
 /**

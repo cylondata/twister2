@@ -39,14 +39,12 @@ public class TestLocalFileSystem {
       InputSplit[] inputSplits = txtInput.createInputSplits(minSplits);
       InputSplitAssigner inputSplitAssigner = txtInput.getInputSplitAssigner(inputSplits);
       InputSplit cur = inputSplitAssigner.getNextInputSplit(null, 0);
-      txtInput.open(cur);
+      cur.open();
       String line = "";
-      line = (String) txtInput.nextRecord(line);
+      line = (String) cur.nextRecord(line);
       System.out.println(line);
     } catch (Exception e) {
       e.printStackTrace();
     }
-
   }
-
 }

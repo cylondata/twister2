@@ -9,25 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data.api.formatters;
+package edu.iu.dsc.tws.data.api.splits;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.fs.FileInputSplit;
+import edu.iu.dsc.tws.data.api.formatters.FileInputFormat;
 import edu.iu.dsc.tws.data.fs.Path;
 
-/**
- * Base class for inputs that are delimited
- */
-public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
-
-  private static final long serialVersionUID = 1L;
-
-  private static final Logger LOG = Logger.getLogger(DelimitedInputFormat.class.getName());
+public abstract class DelimitedSplit<OT> extends FileInputSplit<OT> {
 
   // The charset used to convert strings to bytes
   private String charsetName = "UTF-8";
@@ -81,17 +73,17 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
 
   private long offset = -1;
 
-
-  public DelimitedInputFormat() {
-    this(null, null);
-  }
-
-  protected DelimitedInputFormat(Path filePath, Config configuration) {
-    super(filePath);
-    if (configuration == null) {
-      //TODO L2: Need to create global config
-      //configuration = GlobalConfiguration.loadConfiguration();
-    }
+  /**
+   * Constructs a split with host information.
+   *
+   * @param num the number of this input split
+   * @param file the file name
+   * @param start the position of the first byte in the file to process
+   * @param length the number of bytes in the file to process (-1 is flag for "read whole file")
+   * @param hosts the list of hosts containing the block, possibly <code>null</code>
+   */
+  public DelimitedSplit(int num, Path file, long start, long length, String[] hosts) {
+    super(num, file, start, length, hosts);
   }
 
   public byte[] getDelimiter() {
@@ -157,29 +149,6 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
     return this.charset;
   }
 
-  /**
-   * This function parses the given byte array which represents a serialized record.
-   * The function returns a valid record or throws an IOException.
-   *
-   * @param reuse An optionally reusable object.
-   * @param bytes Binary data of serialized records.
-   * @param readOffset The offset where to start to read the record data.
-   * @param numBytes The number of bytes that can be read starting at the offset position.
-   * @return Returns the read record if it was successfully deserialized.
-   * @throws IOException if the record could not be read.
-   */
-  public abstract OT readRecord(OT reuse, byte[] bytes, int readOffset, int numBytes)
-      throws IOException;
-
-  @Override
-  public OT nextRecord(OT record) throws IOException {
-    if (readLine()) {
-      return readRecord(record, this.currBuffer, this.currOffset, this.currLen);
-    } else {
-      this.end = true;
-      return null;
-    }
-  }
 
   // --------------------------------------------------------------------------------------------
   //  Pre-flight: Configuration, Splits, Sampling
@@ -213,11 +182,9 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
    * allocates read buffers
    * and positions the stream at the correct position, making sure that any partial
    * record at the beginning is skipped.
-   *
-   * @param split The input split to open.
    */
-  public void open(FileInputSplit split) throws IOException {
-    super.open(split);
+  public void open() throws IOException {
+    super.open();
     initBuffers();
 
     this.offset = splitStart;
@@ -231,6 +198,30 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
       }
     } else {
       fillBuffer(0);
+    }
+  }
+
+  /**
+   * This function parses the given byte array which represents a serialized record.
+   * The function returns a valid record or throws an IOException.
+   *
+   * @param reuse An optionally reusable object.
+   * @param bytes Binary data of serialized records.
+   * @param readOffset The offset where to start to read the record data.
+   * @param numBytes The number of bytes that can be read starting at the offset position.
+   * @return Returns the read record if it was successfully deserialized.
+   * @throws IOException if the record could not be read.
+   */
+  public abstract OT readRecord(OT reuse, byte[] bytes, int readOffset, int numBytes)
+      throws IOException;
+
+  @Override
+  public OT nextRecord(OT record) throws IOException {
+    if (readLine()) {
+      return readRecord(record, this.currBuffer, this.currOffset, this.currLen);
+    } else {
+      this.end = true;
+      return null;
     }
   }
 

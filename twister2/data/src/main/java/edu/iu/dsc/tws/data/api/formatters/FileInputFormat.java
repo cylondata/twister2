@@ -20,9 +20,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.InputFormat;
+import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.BlockLocation;
 import edu.iu.dsc.tws.data.fs.FSDataInputStream;
-import edu.iu.dsc.tws.data.fs.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
@@ -30,7 +30,6 @@ import edu.iu.dsc.tws.data.fs.io.LocatableInputSplitAssigner;
 
 /**
  * Base class for File input formats for specific file types the methods
- * {@link #nextRecord(Object)} and {@link #reachedEnd()} methods need to be implemented.
  */
 public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSplit> {
   private static final Logger LOG = Logger.getLogger(FileInputFormat.class.getName());
@@ -45,13 +44,13 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
   /**
    * The splitLength is set to -1L for reading the whole split.
    */
-  protected static final long READ_WHOLE_SPLIT_FLAG = -1L;
+  public static final long READ_WHOLE_SPLIT_FLAG = -1L;
 
   /**
    * The flag to specify whether recursive traversal of the input directory
    * structure is enabled.
    */
-  protected boolean enumerateNestedFiles = false;
+  private boolean enumerateNestedFiles = false;
 
   /**
    * The path to the file that contains the input.
@@ -61,88 +60,24 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
   /**
    * The fraction that the last split may be larger than the others.
    */
-  protected static final float MAX_SPLIT_SIZE_DISCREPANCY = 1.1f;
+  private static final float MAX_SPLIT_SIZE_DISCREPANCY = 1.1f;
 
   /**
    * The minimal split size, set by the configure() method.
    */
-  protected long minSplitSize = 0;
-
-  /**
-   * Current split that is used
-   */
-  protected FileInputSplit currentSplit;
-
-  /**
-   * Start point of the current split
-   */
-  protected long splitStart;
-
-  /**
-   * Length of the current split
-   */
-  protected long splitLength;
+  private long minSplitSize = 0;
 
   /**
    * The input data stream
    */
   protected FSDataInputStream stream;
 
-  /**
-   * Time to wait when opening a file.
-   */
-  protected long openTimeout;
 
-  public FileInputFormat() {
-  }
-
-  protected FileInputFormat(Path filePath) {
-    this.filePath = filePath;
-  }
-
-  public boolean isEnumerateNestedFiles() {
-    return enumerateNestedFiles;
-  }
-
-  public void setEnumerateNestedFiles(boolean enumerateNestedFiles) {
-    this.enumerateNestedFiles = enumerateNestedFiles;
-  }
-
-  public long getMinSplitSize() {
-    return minSplitSize;
-  }
-
-  public void setMinSplitSize(long minSplitSize) {
-    if (minSplitSize < 0) {
-      throw new IllegalArgumentException("The minimum split size cannot be negative.");
-    }
-
-    this.minSplitSize = minSplitSize;
-  }
-
-  public int getNumSplits() {
-    return numSplits;
-  }
-
-  public void setNumSplits(int numSplits) {
-    if (numSplits < -1 || numSplits == 0) {
-      throw new IllegalArgumentException("The desired number of splits must "
-          + "be positive or -1 (= don't care).");
-    }
-
-    this.numSplits = numSplits;
-  }
-
-  public Path getFilePath() {
-    return filePath;
-  }
-
-  public void setFilePath(Path filePath) {
+  public FileInputFormat(Path filePath) {
     this.filePath = filePath;
   }
 
   @Override
-
   public void configure(Config parameters) {
 
   }
@@ -223,7 +158,7 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
           // get the block containing the majority of the data
           blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
           // create a new split
-          FileInputSplit fis = new FileInputSplit(splitNum++, file.getPath(), position, splitSize,
+          FileInputSplit fis = createSplit(splitNum++, file.getPath(), position, splitSize,
               blocks[blockIndex].getHosts());
           inputSplits.add(fis);
 
@@ -234,7 +169,7 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
 
         if (bytesUnassigned > 0) {
           blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
-          final FileInputSplit fis = new FileInputSplit(splitNum++, file.getPath(), position,
+          final FileInputSplit fis = createSplit(splitNum++, file.getPath(), position,
               bytesUnassigned, blocks[blockIndex].getHosts());
           inputSplits.add(fis);
         }
@@ -248,12 +183,15 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
         } else {
           hosts = new String[0];
         }
-        final FileInputSplit fis = new FileInputSplit(splitNum++, file.getPath(), 0, 0, hosts);
+        final FileInputSplit fis = createSplit(splitNum++, file.getPath(), 0, 0, hosts);
         inputSplits.add(fis);
       }
     }
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
+
+  protected abstract FileInputSplit createSplit(int num, Path file, long start,
+                                                long length, String[] hosts);
 
 
   @Override
@@ -261,66 +199,13 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
     return new LocatableInputSplitAssigner(inputSplits);
   }
 
-  /**
-   * Opens an input stream to the file defined in the input format.
-   * The stream is positioned at the beginning of the given split.
-   * <p>
-   * The stream is actually opened in an asynchronous thread to make sure any
-   * interruptions to the thread
-   * working on the input format do not reach the file system.
-   */
-  @Override
-  public void open(FileInputSplit fileSplit) throws IOException {
-
-    this.currentSplit = fileSplit;
-    this.splitStart = fileSplit.getStart();
-    this.splitLength = fileSplit.getLength();
-
-    LOG.log(Level.INFO, "Opening input split " + fileSplit.getPath() + " ["
-        + this.splitStart + "," + this.splitLength + "]");
-
-    // open the split in an asynchronous thread
-    final InputSplitOpenThread isot = new InputSplitOpenThread(fileSplit, this.openTimeout);
-    isot.start();
-
-    try {
-      this.stream = isot.waitForCompletion();
-      //TODO L3: Check the need to input stream wrapper ( ex for decoding ).
-      // This is not an initial requirement
-      //this.stream = decorateInputStream(this.stream, fileSplit);
-    } catch (Throwable t) {
-      throw new IOException("Error opening the Input Split " + fileSplit.getPath()
-          + " [" + splitStart + "," + splitLength + "]: " + t.getMessage(), t);
-    }
-
-    // get FSDataInputStream
-    if (this.splitStart != 0) {
-      this.stream.seek(this.splitStart);
-    }
-  }
-
-
-  @Override
-  public boolean reachedEnd() throws IOException {
-    return false;
-  }
-
-  @Override
-  public OT nextRecord(OT reuse) throws IOException {
-    return null;
-  }
-
-  @Override
-  public void close() throws IOException {
-
-  }
 
   /**
    * Enumerate all files in the directory and recursive if enumerateNestedFiles is true.
    *
    * @return the total length of accepted files.
    */
-  protected long sumFilesInDir(Path path, List<FileStatus> files, boolean logExcludedFiles)
+  long sumFilesInDir(Path path, List<FileStatus> files, boolean logExcludedFiles)
       throws IOException {
     final FileSystem fs = path.getFileSystem();
 
@@ -361,7 +246,7 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
    * @param fileStatus The file status to check.
    * @return true, if the given file or directory is accepted
    */
-  public boolean acceptFile(FileStatus fileStatus) {
+  private boolean acceptFile(FileStatus fileStatus) {
     final String name = fileStatus.getPath().getName();
     return !name.startsWith("_")
         && !name.startsWith(".");
@@ -380,8 +265,8 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
    * @return The index of the block containing the given position (gives the block that contains
    * most of the split)
    */
-  protected int getBlockIndexForPosition(BlockLocation[] blocks, long offset,
-                                         long halfSplitSize, int startIndex) {
+  int getBlockIndexForPosition(BlockLocation[] blocks, long offset,
+                               long halfSplitSize, int startIndex) {
     // go over all indexes after the startIndex
     for (int i = startIndex; i < blocks.length; i++) {
       long blockStart = blocks[i].getOffset();
@@ -398,103 +283,5 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
       }
     }
     throw new IllegalArgumentException("The given offset is not contained in the any block.");
-  }
-
-  /**
-   * Obtains a DataInputStream in an thread that is not interrupted.
-   * This is a necessary hack around the problem that the HDFS client is very
-   * sensitive to InterruptedExceptions.
-   */
-  public static class InputSplitOpenThread extends Thread {
-
-    private final FileInputSplit split;
-
-    private final long timeout;
-
-    private volatile FSDataInputStream fdis;
-
-    private volatile Throwable error;
-
-    private volatile boolean aborted;
-
-    public InputSplitOpenThread(FileInputSplit split, long timeout) {
-      super("Transient InputSplit Opener");
-      setDaemon(true);
-
-      this.split = split;
-      this.timeout = timeout;
-    }
-
-    @Override
-    public void run() {
-      try {
-        final FileSystem fs = FileSystem.get(this.split.getPath().toUri());
-        this.fdis = fs.open(this.split.getPath());
-
-        // check for canceling and close the stream in that case, because no one will obtain it
-        if (this.aborted) {
-          final FSDataInputStream f = this.fdis;
-          this.fdis = null;
-          f.close();
-        }
-      } catch (Throwable t) {
-        this.error = t;
-      }
-    }
-
-    public FSDataInputStream waitForCompletion() throws Throwable {
-      final long start = System.currentTimeMillis();
-      long remaining = this.timeout;
-
-      do {
-        try {
-          // wait for the task completion
-          this.join(remaining);
-        } catch (InterruptedException iex) {
-          // we were canceled, so abort the procedure
-          abortWait();
-          throw iex;
-        }
-      }
-      while (this.error == null && this.fdis == null
-          && (remaining = this.timeout + start - System.currentTimeMillis()) > 0);
-
-      if (this.error != null) {
-        throw this.error;
-      }
-      if (this.fdis != null) {
-        return this.fdis;
-      } else {
-        // double-check that the stream has not been set by now. we don't know here whether
-        // a) the opener thread recognized the canceling and closed the stream
-        // b) the flag was set such that the stream did not see it and we have a valid stream
-        // In any case, close the stream and throw an exception.
-        abortWait();
-
-        final boolean stillAlive = this.isAlive();
-        final StringBuilder bld = new StringBuilder(256);
-        for (StackTraceElement e : this.getStackTrace()) {
-          bld.append("\tat ").append(e.toString()).append('\n');
-        }
-        throw new IOException("Input opening request timed out. Opener was "
-            + (stillAlive ? "" : "NOT ")
-            + " alive. Stack of split open thread:\n" + bld.toString());
-      }
-    }
-
-    /**
-     * Double checked procedure setting the abort flag and closing the stream.
-     */
-    private void abortWait() {
-      this.aborted = true;
-      final FSDataInputStream inStream = this.fdis;
-      this.fdis = null;
-      if (inStream != null) {
-        try {
-          inStream.close();
-        } catch (Throwable t) {
-        }
-      }
-    }
   }
 }
