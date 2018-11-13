@@ -42,53 +42,29 @@ public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
   private KafkaTopicDescription topicDescription;
   private List<TopicPartition> topicPartitions;
   private Properties simpleKafkaConfig;
+  private int currentIndex = 0;
 
   @Override
   public void addCheckpointableStates() {
-    this.addState("trial", 2);
+    this.addState("kafka-producer", currentIndex);
   }
 
   @Override
   public boolean execute(IMessage message) {
-    log.info("Recieved message {}", message.getContent());
-//    if (this.singleTopic == null) {
-//      for (String topic : this.listOfTopics) {
-//        log.info("Producing to kafka message : {} , Topic : {}", message.getContent(), topic);
-//        producer.send(new ProducerRecord<String, String>(topic,
-//            message.getContent().toString(),
-//            message.getContent().toString()));
-//      }
-//    } else {
-//      log.info("Producing to kafka message : {} , Topic : {}", message.getContent(), singleTopic);
-//      producer.send(new ProducerRecord<String, String>(singleTopic,
-//          message.getContent().toString(),
-//          message.getContent().toString()));
-//    }
     if (topicPartitions.isEmpty()) {
       log.info("No partition found for given topic(s)");
     } else {
-      for (TopicPartition topicPartition : topicPartitions) {
-        @SuppressWarnings("unchecked")
-        String data = ((Iterator<String>) message.getContent()).next();
-        String[] tokens = data.split(":");
-        if (tokens[0].equals("log")) {
-          if (tokens[1].equals("Login")) {
-//            log.info("Producing to kafka, Message : {} , Topic : {}, Partition : {}",
-//                data, data, topicPartition.partition());
-            producer.send(new ProducerRecord<String, String>(topicPartition.topic(),
-                topicPartition.partition(),
-                data,
-                data));
-          }
-        } else {
-          log.info("Producing to kafka, Message : {} , Topic : {}, Partition : {}",
-              message.getContent(), topicPartition.topic(), topicPartition.partition());
-          producer.send(new ProducerRecord<String, String>(topicPartition.topic(),
-              topicPartition.partition(),
-              message.getContent().toString(),
-              message.getContent().toString()));
-        }
-      }
+      TopicPartition topicPartition = topicPartitions.get(currentIndex);
+      @SuppressWarnings("unchecked")
+      String data = ((Iterator<String>) message.getContent()).next();
+      log.info("Producing to kafka, Message : {} , Topic : {}, Partition : {}",
+          data, data, topicPartition.partition());
+      producer.send(new ProducerRecord<String, String>(topicPartition.topic(),
+          topicPartition.partition(),
+          data,
+          data));
+      currentIndex = (currentIndex + 1) % topicPartitions.size();
+
     }
     return true;
   }

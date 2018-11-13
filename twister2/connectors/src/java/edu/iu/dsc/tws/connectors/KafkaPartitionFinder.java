@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.connectors;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -57,7 +57,7 @@ public class KafkaPartitionFinder {
       return getAllPartitionsForTopics(topics.getFixedTopics());
     } else {
       List<String> allTopics = allTopics();
-      List<String> relevantTopics = new LinkedList<>();
+      List<String> relevantTopics = new ArrayList<>();
       Pattern pattern = topics.getTopicPattern();
       for (String topic : allTopics) {
         Matcher matcher = pattern.matcher(topic);
@@ -71,7 +71,7 @@ public class KafkaPartitionFinder {
   }
 
   public List<TopicPartition> getRelevantPartitions() {
-    List<TopicPartition> relevantPartitions = new LinkedList<>();
+    List<TopicPartition> relevantPartitions = new ArrayList<>();
     List<TopicPartition> allPartitions = getAllPartitions();
     for (TopicPartition partition : allPartitions) {
       if (assignPartition(partition)) {
@@ -89,7 +89,7 @@ public class KafkaPartitionFinder {
 
   private List<String> allTopics() throws WakeupException {
     try {
-      return new LinkedList<>(consumer.listTopics().keySet());
+      return new ArrayList<>(consumer.listTopics().keySet());
     } catch (WakeupException e) {
       throw new WakeupException();
     }
@@ -97,7 +97,7 @@ public class KafkaPartitionFinder {
 
   private List<TopicPartition> getAllPartitionsForTopics(List<String> topics2)
       throws WakeupException {
-    List<TopicPartition> partitions = new LinkedList<>();
+    List<TopicPartition> partitions = new ArrayList<>();
 
     try {
       for (String topic : topics2) {
