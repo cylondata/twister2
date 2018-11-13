@@ -133,6 +133,14 @@ public final class K8sWorkerUtils {
     }
   }
 
+  public static JobAPI.ComputeResource getComputeResource(JobAPI.Job job, String podName) {
+
+    String ssName = KubernetesUtils.removeIndexFromName(podName);
+    int currentStatefulSetIndex = KubernetesUtils.indexFromName(ssName);
+    return JobUtils.getComputeResource(job, currentStatefulSetIndex);
+  }
+
+
   /**
    * calculate the workerID from the given parameters
    */

@@ -117,10 +117,11 @@ public final class MPIWorkerStarter {
     config = JobUtils.updateConfigs(job, config);
 
     InetAddress localHost = null;
+    String podName = null;
     try {
       localHost = InetAddress.getLocalHost();
       String podIP = localHost.getHostAddress();
-      String podName = localHost.getHostName();
+      podName = localHost.getHostName();
 
       int workerPort = KubernetesContext.workerBasePort(config) + workerID;
 
@@ -166,7 +167,7 @@ public final class MPIWorkerStarter {
     jobMasterClient.sendWorkerRunningMessage();
 
     // start the worker
-    startWorker(jobMasterClient.getJMWorkerController(), pv);
+    startWorker(jobMasterClient.getJMWorkerController(), pv, podName);
 
     // finalize MPI
     try {
@@ -181,7 +182,7 @@ public final class MPIWorkerStarter {
    * start the Worker class specified in conf files
    */
   public static void startWorker(IWorkerController workerController,
-                                 IPersistentVolume pv) {
+                                 IPersistentVolume pv, String podName) {
     String workerClass = SchedulerContext.workerClass(config);
     IWorker worker;
     try {
@@ -197,10 +198,11 @@ public final class MPIWorkerStarter {
 //    AllocatedResources allocatedResources = K8sWorkerUtils.createAllocatedResources(
 //        KubernetesContext.clusterType(config), workerID, job);
 
+    JobAPI.ComputeResource computeResource = K8sWorkerUtils.getComputeResource(job, podName);
     K8sVolatileVolume volatileVolume = null;
-//    if (allocatedResources.getWorkerComputeResources(workerID).getDiskGigaBytes() > 0) {
-//      volatileVolume = new K8sVolatileVolume(jobName, workerID);
-//    }
+    if (computeResource.getDiskGigaBytes() > 0) {
+      volatileVolume = new K8sVolatileVolume(jobName, workerID);
+    }
 
     worker.execute(config, workerID, allocatedResources, workerController, pv, volatileVolume);
   }
