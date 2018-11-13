@@ -71,7 +71,7 @@ public class BTGatherExample extends BenchTaskWorker {
         }
 
         /*if (count % jobParameters.getPrintInterval() == 0) {
-          LOG.info("Gathered : " + message.getContent().getClass().getName()
+          LOG.info("Gathered : " + message.getContent().getClass().getJobName()
               + " numberOfElements: " + numberOfElements
               + " total: " + totalValues);
         }*/

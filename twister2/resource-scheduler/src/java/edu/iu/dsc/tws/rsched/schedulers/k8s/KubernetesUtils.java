@@ -13,10 +13,13 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 public final class KubernetesUtils {
@@ -29,13 +32,23 @@ public final class KubernetesUtils {
   }
 
   /**
-   * when the given name is in the form of "name-id"
-   * it returns the id as int
+   * when the given name is in the form of "name-index"
+   * it returns the index as int
    * @param name
    * @return
    */
-  public static int idFromName(String name) {
+  public static int indexFromName(String name) {
     return Integer.parseInt(name.substring(name.lastIndexOf("-") + 1));
+  }
+
+  /**
+   * when the given name is in the form of "name-index"
+   * it returns the name by removing the dash and the index
+   * @param name
+   * @return
+   */
+  public static String removeIndexFromName(String name) {
+    return name.substring(0, name.lastIndexOf("-"));
   }
 
   /**
@@ -49,12 +62,11 @@ public final class KubernetesUtils {
   }
 
   /**
-   * create podName from jobName with pod index
-   * @param jobName
+   * create podName from StatefulSet name with pod index
    * @return
    */
-  public static String podNameFromJobName(String jobName, int podIndex) {
-    return jobName + "-" + podIndex;
+  public static String podNameFromStatefulSetName(String ssName, int podIndex) {
+    return ssName + "-" + podIndex;
   }
 
   /**
@@ -166,6 +178,15 @@ public final class KubernetesUtils {
   }
 
   /**
+   * create StatefulSet name for workers
+   * add the given index a suffix to the job name
+   * @return
+   */
+  public static String createWorkersStatefulSetName(String jobName, int index) {
+    return jobName + "-" + index;
+  }
+
+  /**
    * create StatefulSet name for the given job name
    * add a suffix to job name
    * @return
@@ -256,5 +277,48 @@ public final class KubernetesUtils {
 
     return modifiedJobName;
   }
+
+  /**
+   * calculate the number of pods in a job
+   * @param job
+   * @return
+   */
+  public static int numberOfWorkerPods(JobAPI.Job job) {
+
+    int podsCount = 0;
+
+    for (JobAPI.ComputeResource computeResource: job.getComputeResourceList()) {
+      podsCount += computeResource.getNumberOfWorkers() / computeResource.getWorkersPerPod();
+    }
+
+    return podsCount;
+  }
+
+  /**
+   * generate all pod names in a job
+   * @param job
+   * @return
+   */
+  public static ArrayList<String> generatePodNames(JobAPI.Job job) {
+
+    ArrayList<String> podNames = new ArrayList<>();
+    List<JobAPI.ComputeResource> resourceList = job.getComputeResourceList();
+
+    for (int i = 0; i < resourceList.size(); i++) {
+
+      int podsCount =
+          resourceList.get(i).getNumberOfWorkers() / resourceList.get(i).getWorkersPerPod();
+
+      for (int j = 0; j < podsCount; j++) {
+        String ssName = KubernetesUtils.createWorkersStatefulSetName(job.getJobName(), i);
+        String podName = KubernetesUtils.podNameFromStatefulSetName(ssName, j);
+        podNames.add(podName);
+      }
+    }
+
+    return podNames;
+  }
+
+
 
 }

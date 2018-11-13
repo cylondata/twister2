@@ -33,7 +33,6 @@ import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -73,10 +72,9 @@ public class BasicK8sWorker implements IWorker {
 
     LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
 
-    Map<String, List<WorkerComputeResource>> workersPerNode =
-        WorkerResourceUtils.getWorkersPerNode(allocatedResources, workerList);
-
-    printWorkersPerNode(workersPerNode);
+//    Map<String, List<WorkerComputeResource>> workersPerNode =
+//        WorkerResourceUtils.getWorkersPerNode(allocatedResources, workerList);
+//    printWorkersPerNode(workersPerNode);
 
 //    listHdfsDir();
 //    sleepSomeTime(50);
@@ -96,7 +94,7 @@ public class BasicK8sWorker implements IWorker {
       LOG.log(Level.SEVERE, "Could not start ServerSocket.", e);
     }
 
-    LOG.info("Echo Started server on port " + workerNetworkInfo.getWorkerPort());
+    LOG.info("Echo Server started on port " + workerNetworkInfo.getWorkerPort());
 
     // repeatedly wait for connections, and process
     while (true) {

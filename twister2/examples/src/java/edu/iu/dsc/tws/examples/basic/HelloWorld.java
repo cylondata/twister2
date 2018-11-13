@@ -76,7 +76,7 @@ public class HelloWorld implements IWorker {
     jobConfig.put("hello-key", "Twister2-Hello");
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("hello-world-job")
+        .setJobName("hello-world-job")
         .setWorkerClass(HelloWorld.class)
         .addComputeResource(2, 1024, numberOfWorkers)
         .setConfig(jobConfig)

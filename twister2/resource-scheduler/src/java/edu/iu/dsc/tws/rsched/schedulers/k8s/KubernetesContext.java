@@ -22,9 +22,6 @@ public class KubernetesContext extends SchedulerContext {
 
   public static final String TWISTER2_DOCKER_IMAGE_FOR_K8S = "twister2.docker.image.for.kubernetes";
 
-  public static final int WORKERS_PER_POD_DEFAULT = 1;
-  public static final String WORKERS_PER_POD = "kubernetes.workers.per.pod";
-
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
 
@@ -80,10 +77,6 @@ public class KubernetesContext extends SchedulerContext {
 
   public static String twister2DockerImageForK8s(Config cfg) {
     return cfg.getStringValue(TWISTER2_DOCKER_IMAGE_FOR_K8S);
-  }
-
-  public static int workersPerPod(Config cfg) {
-    return cfg.getIntegerValue(WORKERS_PER_POD, WORKERS_PER_POD_DEFAULT);
   }
 
   public static String namespace(Config cfg) {

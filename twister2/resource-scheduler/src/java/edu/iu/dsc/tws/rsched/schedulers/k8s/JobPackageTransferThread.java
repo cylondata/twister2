@@ -36,11 +36,11 @@ public class JobPackageTransferThread extends Thread {
   private boolean transferred = false;
   private boolean stopExecution = false;
 
-  public JobPackageTransferThread(String namespace, String jobName, int podIndex,
+  public JobPackageTransferThread(String namespace, String podName,
                                    String jobPackageFile, PodWatcher podWatcher) {
 
     this.jobPackageFile = jobPackageFile;
-    podName = KubernetesUtils.podNameFromJobName(jobName, podIndex);
+    this.podName = podName;
     copyCommand = KubernetesUtils.createCopyCommand(jobPackageFile, namespace, podName);
     pods = podWatcher.getPods();
   }

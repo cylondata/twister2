@@ -24,3 +24,7 @@ bazel-twister2
 
 #sphinx created files
 docs/_build
+
+# ignore the tmp dir
+tmp/
+

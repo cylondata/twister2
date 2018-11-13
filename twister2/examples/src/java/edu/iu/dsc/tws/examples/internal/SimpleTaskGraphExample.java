@@ -61,7 +61,7 @@ public class SimpleTaskGraphExample implements IWorker {
 
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
-            .setName("basic-taskgraphJob")
+            .setJobName("basic-taskgraphJob")
             .setWorkerClass(SimpleTaskGraphExample.class.getName())
             .addComputeResource(2, 1024, 1.0, 2)
             .setConfig(jobConfig)
