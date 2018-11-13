@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.data.fs.io.LocatableInputSplitAssigner;
 /**
  * Base class for File input formats for specific file types the methods
  */
-public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSplit> {
+public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSplit<OT>> {
   private static final Logger LOG = Logger.getLogger(FileInputFormat.class.getName());
 
   private static final long serialVersionUID = 1L;
@@ -91,7 +91,7 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
    * @return The computed file splits.
    */
   @Override
-  public FileInputSplit[] createInputSplits(int minNumSplits) throws Exception {
+  public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws Exception {
     if (minNumSplits < 1) {
       throw new IllegalArgumentException("Number of input splits has to be at least 1.");
     }

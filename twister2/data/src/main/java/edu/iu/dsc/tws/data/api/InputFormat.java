@@ -55,7 +55,7 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitter;
  * @see InputSplit
  * //@see BaseStatistics
  */
-public interface InputFormat<OT, T extends InputSplit> extends InputSplitter<T>, Serializable {
+public interface InputFormat<OT, T extends InputSplit<OT>> extends InputSplitter<T>, Serializable {
 
   /**
    * Configures this input format. Since input formats are instantiated generically
