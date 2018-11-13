@@ -236,7 +236,7 @@ public final class RequestObjectBuilder {
     V1Volume volatileVolume = new V1Volume();
     volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
     V1EmptyDirVolumeSource volumeSource2 = new V1EmptyDirVolumeSource();
-    volumeSource2.setSizeLimit(volumeSize + "Gi");
+    volumeSource2.setSizeLimit(String.format("%.2fGi", volumeSize));
     volatileVolume.setEmptyDir(volumeSource2);
     return volatileVolume;
   }
@@ -303,10 +303,10 @@ public final class RequestObjectBuilder {
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {
-      resReq.putLimitsItem("cpu", new Quantity(cpuPerContainer + ""));
+      resReq.putLimitsItem("cpu", new Quantity(String.format("%.2f", cpuPerContainer)));
       resReq.putLimitsItem("memory", new Quantity(ramPerContainer + "Mi"));
     } else {
-      resReq.putRequestsItem("cpu", new Quantity(cpuPerContainer + ""));
+      resReq.putRequestsItem("cpu", new Quantity(String.format("%.2f", cpuPerContainer)));
       resReq.putRequestsItem("memory", new Quantity(ramPerContainer + "Mi"));
     }
     container.setResources(resReq);
