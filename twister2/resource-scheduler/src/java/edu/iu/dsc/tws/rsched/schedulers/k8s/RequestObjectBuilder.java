@@ -81,7 +81,6 @@ public final class RequestObjectBuilder {
    * @return
    */
   public static V1beta2StatefulSet createStatefulSetForWorkers(ComputeResource computeResource,
-                                                               int statefulSetIndex,
                                                                long jobFileSize,
                                                                String encodedNodeInfoList) {
 
@@ -91,7 +90,7 @@ public final class RequestObjectBuilder {
     }
 
     String statefulSetName =
-        KubernetesUtils.createWorkersStatefulSetName(jobName, statefulSetIndex);
+        KubernetesUtils.createWorkersStatefulSetName(jobName, computeResource.getIndex());
 
     V1beta2StatefulSet statefulSet = new V1beta2StatefulSet();
     statefulSet.setApiVersion("apps/v1beta2");
@@ -120,7 +119,7 @@ public final class RequestObjectBuilder {
 
     // construct the pod template
     V1PodTemplateSpec template = constructPodTemplate(
-        computeResource, statefulSetIndex, serviceLabel, jobFileSize, encodedNodeInfoList);
+        computeResource, serviceLabel, jobFileSize, encodedNodeInfoList);
 
     setSpec.setTemplate(template);
 
@@ -136,7 +135,6 @@ public final class RequestObjectBuilder {
    * @return
    */
   public static V1PodTemplateSpec constructPodTemplate(ComputeResource computeResource,
-                                                       int statefulSetIndex,
                                                        String serviceLabel,
                                                        long jobFileSize,
                                                        String encodedNodeInfoList) {
@@ -202,7 +200,7 @@ public final class RequestObjectBuilder {
     }
     podSpec.setContainers(containers);
 
-    if (statefulSetIndex == 0) {
+    if (computeResource.getIndex() == 0) {
       constructAffinity(podSpec);
     }
 

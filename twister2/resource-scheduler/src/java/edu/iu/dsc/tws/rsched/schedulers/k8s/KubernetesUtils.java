@@ -306,11 +306,12 @@ public final class KubernetesUtils {
 
     for (int i = 0; i < resourceList.size(); i++) {
 
-      int podsCount =
-          resourceList.get(i).getNumberOfWorkers() / resourceList.get(i).getWorkersPerPod();
+      JobAPI.ComputeResource computeResource = resourceList.get(i);
+      int podsCount = computeResource.getNumberOfWorkers() / computeResource.getWorkersPerPod();
+      int index = computeResource.getIndex();
 
       for (int j = 0; j < podsCount; j++) {
-        String ssName = KubernetesUtils.createWorkersStatefulSetName(job.getJobName(), i);
+        String ssName = KubernetesUtils.createWorkersStatefulSetName(job.getJobName(), index);
         String podName = KubernetesUtils.podNameFromStatefulSetName(ssName, j);
         podNames.add(podName);
       }

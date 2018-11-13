@@ -305,7 +305,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
       // create the StatefulSet object for this job
       V1beta2StatefulSet statefulSet = RequestObjectBuilder.createStatefulSetForWorkers(
-          computeResource, i, jobFileSize, encodedNodeInfoList);
+          computeResource, jobFileSize, encodedNodeInfoList);
 
       if (statefulSet == null) {
         return false;
