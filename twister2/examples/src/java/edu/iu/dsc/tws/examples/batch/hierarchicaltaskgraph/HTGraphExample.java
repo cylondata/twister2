@@ -182,8 +182,8 @@ public class HTGraphExample extends TaskWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("HTGraph");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("HTGraph");
     jobBuilder.setWorkerClass(HTGraphExample.class.getName());
     jobBuilder.addComputeResource(2, 512, workers);
     jobBuilder.setConfig(jobConfig);

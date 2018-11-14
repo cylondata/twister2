@@ -106,8 +106,8 @@ public class KMeansJobMain {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("KMeans-job");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("KMeans-job");
     jobBuilder.setWorkerClass(KMeansJob.class.getName());
     jobBuilder.addComputeResource(2, 512, workers);
     jobBuilder.setConfig(jobConfig);

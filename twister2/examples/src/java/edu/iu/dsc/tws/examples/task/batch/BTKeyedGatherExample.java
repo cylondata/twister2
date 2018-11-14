@@ -63,7 +63,7 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
             ImmutablePair<?, ?> l = (ImmutablePair<?, ?>) value;
             Object key = l.getKey();
             Object val = l.getValue();
-            //LOG.info("Value : " + val.getClass().getName());
+            //LOG.info("Value : " + val.getClass().getJobName());
             if (count % jobParameters.getPrintInterval() == 0) {
               if (val instanceof Object[]) {
                 Object[] objects = (Object[]) val;

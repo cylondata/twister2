@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
@@ -28,7 +27,6 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
@@ -147,10 +145,13 @@ public final class MesosMPIWorkerStarter {
     }
 
     MesosVolatileVolume volatileVolume = null;
-    if (SchedulerContext.volatileDiskRequested(config)) {
-      volatileVolume =
-          new MesosVolatileVolume(SchedulerContext.jobName(config), workerID);
-    }
+    //TODO method SchedulerContext.volatileDiskRequested deleted
+    //volatileVolume needs to be checked from job object
+//    if (SchedulerContext.volatileDiskRequested(config)) {
+//      volatileVolume =
+//          new MesosVolatileVolume(SchedulerContext.jobName(config), workerID);
+//    }
+
     // lets create the resource plan
     Map<Integer, String> processNames = MPIWorker.createResourcePlan(config);
     // now create the resource plan

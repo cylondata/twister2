@@ -19,7 +19,13 @@ twister2.uploader.ssh.command.options: ""
 # The ssh connection string sets the remote user name and host used by the uploader.
 twister2.uploader.ssh.command.connection: "research@149.165.150.81"
 
-# this is to choose the uploading method in Kubernetes
-# uploading method can be either: "webserver" or "client-to-pods"
-# by default it is "client-to-pods"
-# twister2.kubernetes.uploading.method: webserver
+# this is to upload the job package from submitting client to pods directly in Kubernetes
+# if this is false, job package will be transferred to pods through the upload web server
+# default value is true
+twister2.kubernetes.client.to.pods.uploading: true
+
+# When the uploading method is "client-to-pods",
+# upload attempts can either start after watching pods or immediately when StatefulSets are created
+# watching pods before starting file upload attempts is more accurate
+# it may be slightly slower to transfer the job package by watching pods though
+twister2.kubernetes.uploader.watch.pods.starting: true
