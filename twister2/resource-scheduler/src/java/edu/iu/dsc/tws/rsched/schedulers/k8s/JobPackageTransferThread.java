@@ -56,7 +56,7 @@ import io.kubernetes.client.util.Watch;
  *
  */
 public class JobPackageTransferThread extends Thread {
-  private static final Logger LOG = Logger.getLogger(PodWatcher.class.getName());
+  private static final Logger LOG = Logger.getLogger(JobPackageTransferThread.class.getName());
 
   public static boolean watchBeforeUploading;
 
