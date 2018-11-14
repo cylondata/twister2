@@ -26,7 +26,7 @@ public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
 
   // max length for the user provided Twister2 job name
-  private static final int MAX_JOB_NAME_LENGTH = 200;
+  private static final int MAX_JOB_NAME_LENGTH = 50;
 
   private KubernetesUtils() {
   }
@@ -84,7 +84,7 @@ public final class KubernetesUtils {
    * @return
    */
   public static String createJobMasterServiceName(String jobName) {
-    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobName + "-job-master";
+    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobName + "-jm";
   }
 
   /**
@@ -122,11 +122,11 @@ public final class KubernetesUtils {
    * @return
    */
   public static String createJobMasterServiceLabel(String jobName) {
-    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobName + "-job-master";
+    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobName + "-jm";
   }
 
   public static String createJobMasterRoleLabel(String jobName) {
-    return jobName + "-job-master";
+    return jobName + "-jm";
   }
 
   public static String createWorkerRoleLabel(String jobName) {
@@ -192,7 +192,7 @@ public final class KubernetesUtils {
    * @return
    */
   public static String createJobMasterStatefulSetName(String jobName) {
-    return jobName + "-job-master";
+    return jobName + "-jm";
   }
 
   /**
@@ -228,7 +228,7 @@ public final class KubernetesUtils {
    *   consist of lower case alphanumeric characters, dash(-), and dot(.).
    *   at most 253 characters in length
    * since we also add some prefixes or suffixes to job names such as:
-   *   "twister2-service-label-", "-job-master"
+   *   "t2-srv-lbl-", "-jm"
    * we require that job names be at most 200 chars in length
    * @param jobName
    * @return
@@ -243,7 +243,8 @@ public final class KubernetesUtils {
 
     // make sure it only has:
     // lowercase chars, digits, dots and dashes
-    if (jobName.matches("[a-z0-9\\.\\-]+")) {
+//    if (jobName.matches("[a-z0-9\\.\\-]+")) {
+    if (jobName.matches("[a-z0-9\\-]+")) {
       return true;
     }
 
@@ -263,6 +264,8 @@ public final class KubernetesUtils {
 
     // replace underscores with dashes if any
     String modifiedJobName = jobName.replace("_", "-");
+    // replace dots with dashes if any
+    modifiedJobName = modifiedJobName.replace(".", "-");
 
     // convert to lower case
     modifiedJobName = modifiedJobName.toLowerCase(Locale.ENGLISH);
