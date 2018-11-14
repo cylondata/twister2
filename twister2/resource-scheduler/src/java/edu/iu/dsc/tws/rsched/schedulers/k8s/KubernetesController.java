@@ -286,54 +286,6 @@ public class KubernetesController {
   }
 
   /**
-   * transfer the job package to pods in parallel by many threads
-   * @param namespace
-   * @param jobName
-   * @param jobPackageFile
-   * @return
-   */
-  public boolean transferJobPackageInParallel(String namespace, String jobName,
-                                              ArrayList<String> podNames,
-                                              String jobPackageFile) {
-
-    PodWatcher podWatcher = new PodWatcher(namespace, jobName, podNames);
-    podWatcher.start();
-
-    JobPackageTransferThread[] transferThreads = new JobPackageTransferThread[podNames.size()];
-    for (int i = 0; i < podNames.size(); i++) {
-      transferThreads[i] =
-          new JobPackageTransferThread(namespace, podNames.get(i), jobPackageFile, podWatcher);
-
-      transferThreads[i].start();
-    }
-
-    // wait all transfer threads to finish up
-    boolean allTransferred = true;
-    for (int i = 0; i < transferThreads.length; i++) {
-      try {
-        transferThreads[i].join();
-        if (!transferThreads[i].packageTransferred()) {
-          LOG.log(Level.SEVERE, "Job Package is not transferred to the pod: "
-              + transferThreads[i].getPodName());
-          allTransferred = false;
-          break;
-        }
-      } catch (InterruptedException e) {
-        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
-      }
-    }
-
-    // if one transfer fails, stop all transfer threads and return false
-    if (!allTransferred) {
-      for (int i = 0; i < transferThreads.length; i++) {
-        transferThreads[i].setStopExecution();
-      }
-    }
-
-    return allTransferred;
-  }
-
-  /**
    * sending a command to shell
    */
   public static boolean runProcess(String[] command) {

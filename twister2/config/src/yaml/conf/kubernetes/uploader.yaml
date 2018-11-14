@@ -23,3 +23,9 @@ twister2.uploader.ssh.command.connection: "research@149.165.150.81"
 # uploading method can be either: "webserver" or "client-to-pods"
 # by default it is "client-to-pods"
 # twister2.kubernetes.uploading.method: webserver
+
+# When the uploading method is "client-to-pods",
+# upload attempts can either start after watching pods or immediately when StatefulSets are created
+# watching pods before starting file upload attempts is more accurate
+# it may be slightly slower to transfer the job package by watching pods though
+twister2.kubernetes.uploader.watch.pods.starting: true

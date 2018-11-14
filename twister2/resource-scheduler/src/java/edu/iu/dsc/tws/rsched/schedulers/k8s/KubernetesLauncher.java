@@ -84,6 +84,12 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     long jobFileSize = jobFile.length();
 
+    // start job package transfer threads to watch pods to start
+    if (KubernetesContext.uploadMethod(config).equalsIgnoreCase("client-to-pods")) {
+      JobPackageTransferThread.startTransferThreads(
+          namespace, job, jobPackageFile, KubernetesContext.watchBeforeUploadAttempts(config));
+    }
+
     // initialize the service in Kubernetes master
     boolean servicesCreated = initServices(jobName);
     if (!servicesCreated) {
@@ -110,12 +116,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     if (KubernetesContext.uploadMethod(config).equalsIgnoreCase("client-to-pods")) {
       // transfer the job package to pods, measure the transfer time
       long start = System.currentTimeMillis();
-
-      int numberOfPods = KubernetesUtils.numberOfWorkerPods(job);
-      ArrayList<String> podNames = KubernetesUtils.generatePodNames(job);
-
-      boolean transferred =
-          controller.transferJobPackageInParallel(namespace, jobName, podNames, jobPackageFile);
+      boolean transferred = JobPackageTransferThread.completeFileTransfers();
 
       if (transferred) {
         long duration = System.currentTimeMillis() - start;
@@ -293,6 +294,9 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
           + "\n" + NodeInfo.listToString(nodeInfoList));
     }
 
+    // let the transfer threads know that we are about to submit the StatefulSets
+    JobPackageTransferThread.setSubmittingStatefulSets();
+
     // create StatefulSets for workers
     for (int i = 0; i < job.getComputeResourceList().size(); i++) {
 
@@ -432,6 +436,8 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   private void clearupWhenSubmissionFails(String jobName) {
 
     LOG.info("Will clear up any resources created during the job submission process.");
+
+    JobPackageTransferThread.cancelTransfers();
 
     // first delete the service objects
     // delete the job service
