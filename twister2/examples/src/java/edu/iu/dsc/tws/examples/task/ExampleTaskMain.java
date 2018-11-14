@@ -136,7 +136,6 @@ public class ExampleTaskMain {
     jobConfig.put(Constants.ARGS_STREAM, stream);
 
     // build the job
-    Twister2Job twister2Job;
     if (!stream) {
       switch (operation) {
         case "reduce":
