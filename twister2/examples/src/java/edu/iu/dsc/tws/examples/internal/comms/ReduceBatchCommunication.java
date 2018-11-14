@@ -230,7 +230,7 @@ public class ReduceBatchCommunication implements IWorker {
 
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("basic-batch-reduce")
+        .setJobName("basic-batch-reduce")
         .setWorkerClass(ReduceBatchCommunication.class.getName())
         .addComputeResource(1, 512, 4)
         .setConfig(jobConfig)

@@ -15,10 +15,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.system.job.JobAPI.ComputeResource;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 
@@ -62,18 +64,33 @@ import io.kubernetes.client.models.V1beta2StatefulSetSpec;
  * build objects to submit to Kubernetes master
  */
 public final class RequestObjectBuilder {
+  private static final Logger LOG = Logger.getLogger(RequestObjectBuilder.class.getName());
+
+  private static Config config;
+  private static String jobName;
 
   private RequestObjectBuilder() { }
 
+  public static void init(Config cnfg, String jName) {
+    config = cnfg;
+    jobName = jName;
+  }
+
   /**
    * create StatefulSet object for a job
-   * @param jobName
    * @return
    */
-  public static V1beta2StatefulSet createStatefulSetObjectForJob(Config config,
-                                                                 String jobName,
-                                                                 long jobFileSize,
-                                                                 String encodedNodeInfoList) {
+  public static V1beta2StatefulSet createStatefulSetForWorkers(ComputeResource computeResource,
+                                                               long jobFileSize,
+                                                               String encodedNodeInfoList) {
+
+    if (config == null) {
+      LOG.severe("RequestObjectBuilder.init method has not been called.");
+      return null;
+    }
+
+    String statefulSetName =
+        KubernetesUtils.createWorkersStatefulSetName(jobName, computeResource.getIndex());
 
     V1beta2StatefulSet statefulSet = new V1beta2StatefulSet();
     statefulSet.setApiVersion("apps/v1beta2");
@@ -81,7 +98,7 @@ public final class RequestObjectBuilder {
 
     // construct metadata and set for jobName setting
     V1ObjectMeta meta = new V1ObjectMeta();
-    meta.setName(jobName);
+    meta.setName(statefulSetName);
     statefulSet.setMetadata(meta);
 
     // construct JobSpec and set
@@ -91,8 +108,7 @@ public final class RequestObjectBuilder {
     // by default they are started sequentially
     setSpec.setPodManagementPolicy("Parallel");
 
-    int containersPerPod = KubernetesContext.workersPerPod(config);
-    int numberOfPods = Context.workerInstances(config) / containersPerPod;
+    int numberOfPods = computeResource.getNumberOfWorkers() / computeResource.getWorkersPerPod();
     setSpec.setReplicas(numberOfPods);
 
     // add selector for the job
@@ -102,8 +118,9 @@ public final class RequestObjectBuilder {
     setSpec.setSelector(selector);
 
     // construct the pod template
-    V1PodTemplateSpec template =
-        constructPodTemplate(config, serviceLabel, jobFileSize, encodedNodeInfoList);
+    V1PodTemplateSpec template = constructPodTemplate(
+        computeResource, serviceLabel, jobFileSize, encodedNodeInfoList);
+
     setSpec.setTemplate(template);
 
     statefulSet.setSpec(setSpec);
@@ -115,10 +132,9 @@ public final class RequestObjectBuilder {
    * construct pod template
    * @param serviceLabel
    * @param jobFileSize
-   * @param config
    * @return
    */
-  public static V1PodTemplateSpec constructPodTemplate(Config config,
+  public static V1PodTemplateSpec constructPodTemplate(ComputeResource computeResource,
                                                        String serviceLabel,
                                                        long jobFileSize,
                                                        String encodedNodeInfoList) {
@@ -128,10 +144,10 @@ public final class RequestObjectBuilder {
     HashMap<String, String> labels = new HashMap<String, String>();
     labels.put(KubernetesConstants.SERVICE_LABEL_KEY, serviceLabel);
 
-    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(Context.jobName(config));
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabel(jobName);
     labels.put(KubernetesConstants.TWISTER2_JOB_PODS_KEY, jobPodsLabel);
 
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabel(Context.jobName(config));
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabel(jobName);
     labels.put(KubernetesConstants.TWISTER2_PODS_ROLE_KEY, workerRoleLabel);
 
     templateMetaData.setLabels(labels);
@@ -150,30 +166,28 @@ public final class RequestObjectBuilder {
 
     // a volatile disk based volume
     // create it if the requested disk space is positive
-    if (SchedulerContext.volatileDiskRequested(config)) {
-      double volumeSize =
-          SchedulerContext.workerVolatileDisk(config) * SchedulerContext.workerInstances(config);
-      V1Volume volatileVolume = createVolatileVolumeObject(volumeSize);
+    if (computeResource.getDiskGigaBytes() > 0) {
+      double volumeSize = computeResource.getDiskGigaBytes() * computeResource.getWorkersPerPod();
+      V1Volume volatileVolume = createVolatileVolume(volumeSize);
       volumes.add(volatileVolume);
     }
 
     if (SchedulerContext.persistentVolumeRequested(config)) {
-      String claimName =
-          KubernetesUtils.createPersistentVolumeClaimName(SchedulerContext.jobName(config));
-      V1Volume persistentVolume = createPersistentVolumeObject(claimName);
+      String claimName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
+      V1Volume persistentVolume = createPersistentVolume(claimName);
       volumes.add(persistentVolume);
     }
 
     // if openmpi is used, we initialize a Secret volume on each pod
     if (SchedulerContext.useOpenMPI(config)) {
       String secretName = KubernetesContext.secretName(config);
-      V1Volume secretVolume = createSecretVolumeObject(secretName);
+      V1Volume secretVolume = createSecretVolume(secretName);
       volumes.add(secretVolume);
     }
 
     podSpec.setVolumes(volumes);
 
-    int containersPerPod = KubernetesContext.workersPerPod(config);
+    int containersPerPod = computeResource.getWorkersPerPod();
 
     // if openmpi is used, we initialize only one container for each pod
     if (SchedulerContext.useOpenMPI(config)) {
@@ -182,21 +196,31 @@ public final class RequestObjectBuilder {
 
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
-      containers.add(constructContainer(config, i, jobFileSize, encodedNodeInfoList));
+      containers.add(constructContainer(computeResource, i, jobFileSize, encodedNodeInfoList));
     }
     podSpec.setContainers(containers);
 
+    if (computeResource.getIndex() == 0) {
+      constructAffinity(podSpec);
+    }
+
+    template.setSpec(podSpec);
+
+    return template;
+  }
+
+  public static void constructAffinity(V1PodSpec podSpec) {
     V1Affinity affinity = new V1Affinity();
     boolean affinitySet = false;
     if (KubernetesContext.workerToNodeMapping(config)) {
-      setNodeAffinity(config, affinity);
+      setNodeAffinity(affinity);
       affinitySet = true;
     }
 
     String uniformMappingType = KubernetesContext.workerMappingUniform(config);
     if ("all-same-node".equalsIgnoreCase(uniformMappingType)
         || "all-separate-nodes".equalsIgnoreCase(uniformMappingType)) {
-      setUniformMappingAffinity(config, affinity);
+      setUniformMappingAffinity(affinity);
       affinitySet = true;
     }
 
@@ -204,21 +228,18 @@ public final class RequestObjectBuilder {
     if (affinitySet) {
       podSpec.setAffinity(affinity);
     }
-
-    template.setSpec(podSpec);
-    return template;
   }
 
-  public static V1Volume createVolatileVolumeObject(double volumeSize) {
+  public static V1Volume createVolatileVolume(double volumeSize) {
     V1Volume volatileVolume = new V1Volume();
     volatileVolume.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
     V1EmptyDirVolumeSource volumeSource2 = new V1EmptyDirVolumeSource();
-    volumeSource2.setSizeLimit(volumeSize + "Gi");
+    volumeSource2.setSizeLimit(String.format("%.2fGi", volumeSize));
     volatileVolume.setEmptyDir(volumeSource2);
     return volatileVolume;
   }
 
-  public static V1Volume createPersistentVolumeObject(String claimName) {
+  public static V1Volume createPersistentVolume(String claimName) {
     V1Volume persistentVolume = new V1Volume();
     persistentVolume.setName(KubernetesConstants.PERSISTENT_VOLUME_NAME);
     V1PersistentVolumeClaimVolumeSource perVolSource = new V1PersistentVolumeClaimVolumeSource();
@@ -227,7 +248,7 @@ public final class RequestObjectBuilder {
     return persistentVolume;
   }
 
-  public static V1Volume createSecretVolumeObject(String secretName) {
+  public static V1Volume createSecretVolume(String secretName) {
     V1Volume secretVolume = new V1Volume();
     secretVolume.setName(KubernetesConstants.SECRET_VOLUME_NAME);
     V1SecretVolumeSource secretVolumeSource = new V1SecretVolumeSource();
@@ -241,10 +262,9 @@ public final class RequestObjectBuilder {
    * construct a container
    * @param containerIndex
    * @param jobFileSize
-   * @param config
    * @return
    */
-  public static V1Container constructContainer(Config config,
+  public static V1Container constructContainer(ComputeResource computeResource,
                                                int containerIndex,
                                                long jobFileSize,
                                                String encodedNodeInfoList) {
@@ -267,13 +287,13 @@ public final class RequestObjectBuilder {
 //        container.setArgs(Arrays.asList("1000000")); parameter to the main method
 
     String startScript = null;
-    double cpuPerContainer = Context.workerCPU(config);
-    int ramPerContainer = Context.workerRAM(config);
+    double cpuPerContainer = computeResource.getCpu();
+    int ramPerContainer = computeResource.getRamMegaBytes();
 
     if (SchedulerContext.useOpenMPI(config)) {
       startScript = "./init_openmpi.sh";
-      cpuPerContainer = cpuPerContainer * KubernetesContext.workersPerPod(config);
-      ramPerContainer = ramPerContainer * KubernetesContext.workersPerPod(config);
+      cpuPerContainer = cpuPerContainer * computeResource.getWorkersPerPod();
+      ramPerContainer = ramPerContainer * computeResource.getWorkersPerPod();
     } else {
       startScript = "./init_nonmpi.sh";
     }
@@ -281,10 +301,10 @@ public final class RequestObjectBuilder {
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     if (KubernetesContext.bindWorkerToCPU(config)) {
-      resReq.putLimitsItem("cpu", new Quantity(cpuPerContainer + ""));
+      resReq.putLimitsItem("cpu", new Quantity(String.format("%.2f", cpuPerContainer)));
       resReq.putLimitsItem("memory", new Quantity(ramPerContainer + "Mi"));
     } else {
-      resReq.putRequestsItem("cpu", new Quantity(cpuPerContainer + ""));
+      resReq.putRequestsItem("cpu", new Quantity(String.format("%.2f", cpuPerContainer)));
       resReq.putRequestsItem("memory", new Quantity(ramPerContainer + "Mi"));
     }
     container.setResources(resReq);
@@ -295,7 +315,7 @@ public final class RequestObjectBuilder {
     memoryVolumeMount.setMountPath(KubernetesConstants.POD_MEMORY_VOLUME);
     volumeMounts.add(memoryVolumeMount);
 
-    if (SchedulerContext.volatileDiskRequested(config)) {
+    if (computeResource.getDiskGigaBytes() > 0) {
       V1VolumeMount volatileVolumeMount = new V1VolumeMount();
       volatileVolumeMount.setName(KubernetesConstants.POD_VOLATILE_VOLUME_NAME);
       volatileVolumeMount.setMountPath(KubernetesConstants.POD_VOLATILE_VOLUME);
@@ -329,19 +349,17 @@ public final class RequestObjectBuilder {
 
     container.setEnv(
         constructEnvironmentVariables(
-            config, containerName, jobFileSize, containerPort, encodedNodeInfoList));
+            containerName, jobFileSize, containerPort, encodedNodeInfoList));
 
     return container;
   }
 
   /**
    * set environment variables for containers
-   * @param config
    * @param containerName
    * @param jobFileSize
    */
-  public static List<V1EnvVar> constructEnvironmentVariables(Config config,
-                                                             String containerName,
+  public static List<V1EnvVar> constructEnvironmentVariables(String containerName,
                                                              long jobFileSize,
                                                              int workerPort,
                                                              String encodedNodeInfoList) {
@@ -350,7 +368,7 @@ public final class RequestObjectBuilder {
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.JOB_NAME + "")
-        .value(Context.jobName(config)));
+        .value(jobName));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.JOB_PACKAGE_FILE_SIZE + "")
@@ -446,7 +464,7 @@ public final class RequestObjectBuilder {
     return envVars;
   }
 
-  public static void setNodeAffinity(Config config, V1Affinity affinity) {
+  public static void setNodeAffinity(V1Affinity affinity) {
 
     String key = KubernetesContext.workerMappingKey(config);
     String operator = KubernetesContext.workerMappingOperator(config);
@@ -469,12 +487,12 @@ public final class RequestObjectBuilder {
     affinity.setNodeAffinity(nodeAffinity);
   }
 
-  public static void setUniformMappingAffinity(Config config, V1Affinity affinity) {
+  public static void setUniformMappingAffinity(V1Affinity affinity) {
 
     String mappingType = KubernetesContext.workerMappingUniform(config);
     String key = KubernetesConstants.SERVICE_LABEL_KEY;
     String operator = "In";
-    String serviceLabel = KubernetesUtils.createServiceLabel(SchedulerContext.jobName(config));
+    String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
     List<String> values = Arrays.asList(serviceLabel);
 
     V1LabelSelectorRequirement labelRequirement = new V1LabelSelectorRequirement();
@@ -501,7 +519,7 @@ public final class RequestObjectBuilder {
 
   }
 
-  public static V1Service createJobServiceObject(String jobName) {
+  public static V1Service createJobServiceObject() {
 
     String serviceName = KubernetesUtils.createServiceName(jobName);
     String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
@@ -534,7 +552,7 @@ public final class RequestObjectBuilder {
     return service;
   }
 
-  public static V1Service createNodePortServiceObject(Config config, String jobName) {
+  public static V1Service createNodePortServiceObject() {
 
     String serviceName = KubernetesUtils.createServiceName(jobName);
     String serviceLabel = KubernetesUtils.createServiceLabel(jobName);
@@ -580,11 +598,10 @@ public final class RequestObjectBuilder {
    * we initially used this method to create PersistentVolumes
    * we no longer use this method
    * it is just here in case we may need it for some reason at one point
-   * @param config
    * @param pvName
    * @return
    */
-  public static V1PersistentVolume createPersistentVolumeObject(Config config, String pvName) {
+  public static V1PersistentVolume createPersistentVolumeObject(String pvName) {
     V1PersistentVolume pv = new V1PersistentVolume();
     pv.setApiVersion("v1");
 
@@ -617,8 +634,8 @@ public final class RequestObjectBuilder {
     return pv;
   }
 
-  public static V1PersistentVolumeClaim createPersistentVolumeClaimObject(
-      Config config, String pvcName) {
+  public static V1PersistentVolumeClaim createPersistentVolumeClaimObject(String pvcName,
+                                                                          int numberOfWorkers) {
 
     V1PersistentVolumeClaim pvc = new V1PersistentVolumeClaim();
     pvc.setApiVersion("v1");
@@ -641,8 +658,7 @@ public final class RequestObjectBuilder {
     pvcSpec.setAccessModes(Arrays.asList(accessMode));
 
     V1ResourceRequirements resources = new V1ResourceRequirements();
-    double storageSize =
-        SchedulerContext.persistentVolumePerWorker(config) * Context.workerInstances(config);
+    double storageSize = SchedulerContext.persistentVolumePerWorker(config) * numberOfWorkers;
 
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
       storageSize += JobMasterContext.persistentVolumeSize(config);

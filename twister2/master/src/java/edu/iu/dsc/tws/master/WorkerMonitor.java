@@ -62,12 +62,11 @@ public class WorkerMonitor implements MessageHandler {
       pingMessageReceived(id, ping);
 
     } else if (message instanceof JobMasterAPI.WorkerStateChange) {
-      LOG.log(Level.INFO, "Worker change request received: " + message.toString());
       JobMasterAPI.WorkerStateChange wscMessage = (JobMasterAPI.WorkerStateChange) message;
       stateChangeMessageReceived(id, wscMessage);
 
     } else if (message instanceof JobMasterAPI.ListWorkersRequest) {
-      LOG.log(Level.INFO, "List worker request received: " + message.toString());
+      LOG.log(Level.INFO, "ListWorkersRequest received: " + message.toString());
       JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
 
@@ -98,7 +97,7 @@ public class WorkerMonitor implements MessageHandler {
   private void stateChangeMessageReceived(RequestID id, JobMasterAPI.WorkerStateChange message) {
 
     if (message.getNewState() == JobMasterAPI.WorkerState.STARTING) {
-      LOG.info("WorkerStateChange message received: \n" + message);
+      LOG.info("WorkerStateChange STARTING message received: \n" + message);
       InetAddress ip = WorkerInfo.covertToIPAddress(message.getWorkerNetworkInfo().getWorkerIP());
       int port = message.getWorkerNetworkInfo().getPort();
       int workerID = message.getWorkerNetworkInfo().getWorkerID();
@@ -112,8 +111,14 @@ public class WorkerMonitor implements MessageHandler {
 
       WorkerInfo worker = new WorkerInfo(workerID, ip, port, nodeIP, rackName, dcName);
       worker.setWorkerState(JobMasterAPI.WorkerState.STARTING);
-      workers.put(workerID, worker);
-
+      if (workers.containsKey(worker.getWorkerID())) {
+        LOG.severe("Second worker STARTING message received for workerID: " + workerID
+            + "\nIgnoring this worker STARTING message. "
+            + "\nReceived Message: " + message
+            + "\nPrevious WorkerInfo with that workerID: " + workers.get(workerID));
+      } else {
+        workers.put(workerID, worker);
+      }
       sendWorkerStateChangeResponse(id, workerID, message.getNewState());
 
       if (workers.size() == numberOfWorkers) {
@@ -137,7 +142,7 @@ public class WorkerMonitor implements MessageHandler {
 
       workers.get(message.getWorkerNetworkInfo().getWorkerID())
           .setWorkerState(message.getNewState());
-      LOG.info("WorkerStateChange message received: \n" + message);
+      LOG.info("WorkerStateChange COMPLETED message received: \n" + message);
 
       // send the response message
       sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
@@ -152,11 +157,18 @@ public class WorkerMonitor implements MessageHandler {
 
       return;
 
-    } else {
+    } else if (message.getNewState() == JobMasterAPI.WorkerState.RUNNING) {
       workers.get(message.getWorkerNetworkInfo().getWorkerID())
           .setWorkerState(message.getNewState());
-      LOG.info("WorkerStateChange message received: \n" + message);
+      LOG.info("WorkerStateChange RUNNING message received: \n" + message);
 
+      // send the response message
+      sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
+          message.getNewState());
+
+    } else {
+      LOG.warning("Unrecognized WorkerStateChange message received. Ignoring and sending reply: \n"
+          + message);
       // send the response message
       sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
           message.getNewState());

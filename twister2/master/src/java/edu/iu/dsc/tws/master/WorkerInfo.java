@@ -121,4 +121,9 @@ public class WorkerInfo {
   public int hashCode() {
     return Objects.hash(networkInfo.getWorkerID());
   }
+
+  @Override
+  public String toString() {
+    return networkInfo.toString();
+  }
 }

@@ -185,8 +185,8 @@ public class TaskCheckpointExample implements IWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("task-checkpoint-example");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("task-checkpoint-example");
     jobBuilder.setWorkerClass(TaskCheckpointExample.class.getName());
     jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);

@@ -98,6 +98,33 @@ public class KubernetesController {
   }
 
   /**
+   * return the list of StatefulSet names that matches this jobs StatefulSet names for workers
+   * they must be in the form of "jobName-index"
+   * otherwise return an empty ArrayList
+   */
+  public ArrayList<String> getStatefulSetsForJobWorkers(String namespace, String jobName) {
+    V1beta2StatefulSetList setList = null;
+    try {
+      setList = beta2Api.listNamespacedStatefulSet(
+          namespace, null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
+      throw new RuntimeException(e);
+    }
+
+    ArrayList<String> ssNameList = new ArrayList<>();
+
+    for (V1beta2StatefulSet statefulSet : setList.getItems()) {
+      String ssName = statefulSet.getMetadata().getName();
+      if (ssName.matches(jobName + "-" + "[0-9]+")) {
+        ssNameList.add(ssName);
+      }
+    }
+
+    return ssNameList;
+  }
+
+  /**
    * create the given service on Kubernetes master
    */
   public boolean createStatefulSetJob(String namespace, V1beta2StatefulSet statefulSet) {
@@ -256,87 +283,6 @@ public class KubernetesController {
       LOG.log(Level.SEVERE, "Exception when deleting the the service: " + serviceName, e);
       return false;
     }
-  }
-
-  /**
-   * transfer the job package to the first pod
-   * this is used when persistent storage is used
-   * @param namespace
-   * @param jobName
-   * @param jobPackageFile
-   * @return
-   */
-  public boolean transferJobPackage(String namespace, String jobName, String jobPackageFile) {
-
-    PodWatcher podWatcher = new PodWatcher(namespace, jobName, 1);
-    podWatcher.start();
-
-    JobPackageTransferThread transferThread =
-        new JobPackageTransferThread(namespace, jobName, 0, jobPackageFile, podWatcher);
-    transferThread.start();
-
-    // wait all transfer threads to finish up
-    try {
-      transferThread.join();
-      if (!transferThread.packageTransferred()) {
-        LOG.log(Level.SEVERE, "Job Package is not transferred to the pod: "
-            + transferThread.getPodName());
-        return false;
-      }
-    } catch (InterruptedException e) {
-      LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * transfer the job package to pods in parallel by many threads
-   * @param namespace
-   * @param jobName
-   * @param numberOfPods
-   * @param jobPackageFile
-   * @return
-   */
-  public boolean transferJobPackageInParallel(String namespace, String jobName, int numberOfPods,
-                                              String jobPackageFile) {
-
-    PodWatcher podWatcher = new PodWatcher(namespace, jobName, numberOfPods);
-    podWatcher.start();
-
-    JobPackageTransferThread[] transferThreads = new JobPackageTransferThread[numberOfPods];
-    for (int i = 0; i < numberOfPods; i++) {
-      transferThreads[i] =
-          new JobPackageTransferThread(namespace, jobName, i, jobPackageFile, podWatcher);
-
-      transferThreads[i].start();
-    }
-
-    // wait all transfer threads to finish up
-    boolean allTransferred = true;
-    for (int i = 0; i < transferThreads.length; i++) {
-      try {
-        transferThreads[i].join();
-        if (!transferThreads[i].packageTransferred()) {
-          LOG.log(Level.SEVERE, "Job Package is not transferred to the pod: "
-              + transferThreads[i].getPodName());
-          allTransferred = false;
-          break;
-        }
-      } catch (InterruptedException e) {
-        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
-      }
-    }
-
-    // if one transfer fails, stop all transfer threads and return false
-    if (!allTransferred) {
-      for (int i = 0; i < transferThreads.length; i++) {
-        transferThreads[i].setStopExecution();
-      }
-    }
-
-    return allTransferred;
   }
 
   /**

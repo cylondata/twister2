@@ -13,29 +13,42 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
 
   // max length for the user provided Twister2 job name
-  private static final int MAX_JOB_NAME_LENGTH = 200;
+  private static final int MAX_JOB_NAME_LENGTH = 50;
 
   private KubernetesUtils() {
   }
 
   /**
-   * when the given name is in the form of "name-id"
-   * it returns the id as int
+   * when the given name is in the form of "name-index"
+   * it returns the index as int
    * @param name
    * @return
    */
-  public static int idFromName(String name) {
+  public static int indexFromName(String name) {
     return Integer.parseInt(name.substring(name.lastIndexOf("-") + 1));
+  }
+
+  /**
+   * when the given name is in the form of "name-index"
+   * it returns the name by removing the dash and the index
+   * @param name
+   * @return
+   */
+  public static String removeIndexFromName(String name) {
+    return name.substring(0, name.lastIndexOf("-"));
   }
 
   /**
@@ -49,12 +62,11 @@ public final class KubernetesUtils {
   }
 
   /**
-   * create podName from jobName with pod index
-   * @param jobName
+   * create podName from StatefulSet name with pod index
    * @return
    */
-  public static String podNameFromJobName(String jobName, int podIndex) {
-    return jobName + "-" + podIndex;
+  public static String podNameFromStatefulSetName(String ssName, int podIndex) {
+    return ssName + "-" + podIndex;
   }
 
   /**
@@ -72,7 +84,7 @@ public final class KubernetesUtils {
    * @return
    */
   public static String createJobMasterServiceName(String jobName) {
-    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobName + "-job-master";
+    return KubernetesConstants.TWISTER2_SERVICE_PREFIX + jobName + "-jm";
   }
 
   /**
@@ -110,11 +122,11 @@ public final class KubernetesUtils {
    * @return
    */
   public static String createJobMasterServiceLabel(String jobName) {
-    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobName + "-job-master";
+    return KubernetesConstants.SERVICE_LABEL_PREFIX + jobName + "-jm";
   }
 
   public static String createJobMasterRoleLabel(String jobName) {
-    return jobName + "-job-master";
+    return jobName + "-jm";
   }
 
   public static String createWorkerRoleLabel(String jobName) {
@@ -166,12 +178,21 @@ public final class KubernetesUtils {
   }
 
   /**
+   * create StatefulSet name for workers
+   * add the given index a suffix to the job name
+   * @return
+   */
+  public static String createWorkersStatefulSetName(String jobName, int index) {
+    return jobName + "-" + index;
+  }
+
+  /**
    * create StatefulSet name for the given job name
    * add a suffix to job name
    * @return
    */
   public static String createJobMasterStatefulSetName(String jobName) {
-    return jobName + "-job-master";
+    return jobName + "-jm";
   }
 
   /**
@@ -207,7 +228,7 @@ public final class KubernetesUtils {
    *   consist of lower case alphanumeric characters, dash(-), and dot(.).
    *   at most 253 characters in length
    * since we also add some prefixes or suffixes to job names such as:
-   *   "twister2-service-label-", "-job-master"
+   *   "t2-srv-lbl-", "-jm"
    * we require that job names be at most 200 chars in length
    * @param jobName
    * @return
@@ -222,7 +243,8 @@ public final class KubernetesUtils {
 
     // make sure it only has:
     // lowercase chars, digits, dots and dashes
-    if (jobName.matches("[a-z0-9\\.\\-]+")) {
+//    if (jobName.matches("[a-z0-9\\.\\-]+")) {
+    if (jobName.matches("[a-z0-9\\-]+")) {
       return true;
     }
 
@@ -242,6 +264,8 @@ public final class KubernetesUtils {
 
     // replace underscores with dashes if any
     String modifiedJobName = jobName.replace("_", "-");
+    // replace dots with dashes if any
+    modifiedJobName = modifiedJobName.replace(".", "-");
 
     // convert to lower case
     modifiedJobName = modifiedJobName.toLowerCase(Locale.ENGLISH);
@@ -256,5 +280,49 @@ public final class KubernetesUtils {
 
     return modifiedJobName;
   }
+
+  /**
+   * calculate the number of pods in a job
+   * @param job
+   * @return
+   */
+  public static int numberOfWorkerPods(JobAPI.Job job) {
+
+    int podsCount = 0;
+
+    for (JobAPI.ComputeResource computeResource: job.getComputeResourceList()) {
+      podsCount += computeResource.getNumberOfWorkers() / computeResource.getWorkersPerPod();
+    }
+
+    return podsCount;
+  }
+
+  /**
+   * generate all pod names in a job
+   * @param job
+   * @return
+   */
+  public static ArrayList<String> generatePodNames(JobAPI.Job job) {
+
+    ArrayList<String> podNames = new ArrayList<>();
+    List<JobAPI.ComputeResource> resourceList = job.getComputeResourceList();
+
+    for (int i = 0; i < resourceList.size(); i++) {
+
+      JobAPI.ComputeResource computeResource = resourceList.get(i);
+      int podsCount = computeResource.getNumberOfWorkers() / computeResource.getWorkersPerPod();
+      int index = computeResource.getIndex();
+
+      for (int j = 0; j < podsCount; j++) {
+        String ssName = KubernetesUtils.createWorkersStatefulSetName(job.getJobName(), index);
+        String podName = KubernetesUtils.podNameFromStatefulSetName(ssName, j);
+        podNames.add(podName);
+      }
+    }
+
+    return podNames;
+  }
+
+
 
 }

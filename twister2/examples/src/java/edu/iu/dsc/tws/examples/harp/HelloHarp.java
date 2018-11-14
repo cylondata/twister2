@@ -84,7 +84,7 @@ public class HelloHarp extends HarpWorker {
     jobConfig.put("hello-harp-key", "Twister2-Hello-Harp");
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("hello-harp-job")
+        .setJobName("hello-harp-job")
         .setWorkerClass(HelloHarp.class)
         .addComputeResource(1, 512, numberOfWorkers)
         .setConfig(jobConfig)

@@ -36,8 +36,8 @@ import io.kubernetes.client.util.Watch;
 public final class PodWatchUtils {
   private static final Logger LOG = Logger.getLogger(PodWatchUtils.class.getName());
 
-  private static CoreV1Api coreApi;
-  private static ApiClient apiClient;
+  public static CoreV1Api coreApi;
+  public static ApiClient apiClient;
 
   private PodWatchUtils() {
   }
@@ -211,6 +211,7 @@ public final class PodWatchUtils {
    * flag the pods with a true value in the given HashMap
    */
   public static boolean watchPodsToStarting(String namespace,
+                                            String jobName,
                                             HashMap<String, Boolean> pods,
                                             int timeout) {
 
@@ -221,6 +222,7 @@ public final class PodWatchUtils {
       createApiInstances();
     }
 
+    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
     String reason = "Started";
     Integer timeoutSeconds = timeout;
     Watch<V1Event> watch = null;

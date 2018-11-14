@@ -22,9 +22,6 @@ public class KubernetesContext extends SchedulerContext {
 
   public static final String TWISTER2_DOCKER_IMAGE_FOR_K8S = "twister2.docker.image.for.kubernetes";
 
-  public static final int WORKERS_PER_POD_DEFAULT = 1;
-  public static final String WORKERS_PER_POD = "kubernetes.workers.per.pod";
-
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
 
@@ -72,18 +69,18 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_WORKER_MAPPING_UNIFORM_DEFAULT = "none";
   public static final String K8S_WORKER_MAPPING_UNIFORM = "kubernetes.worker.mapping.uniform";
 
-  // it can be either "webserver" or "client-to-pods"
-  public static final String K8S_UPLOADING_METHOD_DEFAULT = "client-to-pods";
-  public static final String K8S_UPLOADING_METHOD = "twister2.kubernetes.uploading.method";
+  public static final boolean CLIENT_TO_PODS_UPLOADING_DEFAULT = true;
+  public static final String CLIENT_TO_PODS_UPLOADING =
+      "twister2.kubernetes.client.to.pods.uploading";
 
   public static final String SECRET_NAME = "kubernetes.secret.name";
 
+  public static final boolean WATCH_BEFORE_UPLOAD_ATTEMPTS_DEFAULT = true;
+  public static final String WATCH_BEFORE_UPLOAD_ATTEMPTS =
+      "twister2.kubernetes.uploader.watch.pods.starting";
+
   public static String twister2DockerImageForK8s(Config cfg) {
     return cfg.getStringValue(TWISTER2_DOCKER_IMAGE_FOR_K8S);
-  }
-
-  public static int workersPerPod(Config cfg) {
-    return cfg.getIntegerValue(WORKERS_PER_POD, WORKERS_PER_POD_DEFAULT);
   }
 
   public static String namespace(Config cfg) {
@@ -155,12 +152,26 @@ public class KubernetesContext extends SchedulerContext {
   }
 
   public static String uploadMethod(Config cfg) {
-    return cfg.getStringValue(K8S_UPLOADING_METHOD, K8S_UPLOADING_METHOD_DEFAULT);
+    if (clientToPodsUploading(cfg)) {
+      return "client-to-pods";
+    } else {
+      return "webserver";
+    }
+  }
+
+  public static boolean clientToPodsUploading(Config cfg) {
+    return cfg.getBooleanValue(CLIENT_TO_PODS_UPLOADING, CLIENT_TO_PODS_UPLOADING_DEFAULT);
   }
 
   public static String secretName(Config cfg) {
     return cfg.getStringValue(SECRET_NAME);
   }
+
+  public static boolean watchBeforeUploadAttempts(Config cfg) {
+    return cfg.getBooleanValue(WATCH_BEFORE_UPLOAD_ATTEMPTS, WATCH_BEFORE_UPLOAD_ATTEMPTS_DEFAULT);
+  }
+
+
 
   public static NodeInfo getNodeInfo(Config cfg, String nodeIP) {
 

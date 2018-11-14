@@ -90,8 +90,11 @@ public class JobMasterClient {
         JobMasterContext.jobMasterPort(config), JobMasterContext.workerInstances(config));
   }
 
-  public JobMasterClient(Config config, WorkerNetworkInfo thisWorker,
-                         String masterHost, int masterPort, int numberOfWorkers) {
+  public JobMasterClient(Config config,
+                         WorkerNetworkInfo thisWorker,
+                         String masterHost,
+                         int masterPort,
+                         int numberOfWorkers) {
     this.config = config;
     this.thisWorker = thisWorker;
     this.masterAddress = masterHost;
@@ -151,9 +154,7 @@ public class JobMasterClient {
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
 
-    if (rrClient.isConnected()) {
-      LOG.info("JobMasterClient connected to JobMaster.");
-    } else {
+    if (!rrClient.isConnected()) {
       LOG.severe("JobMasterClient can not connect to Job Master. Exiting .....");
       return false;
     }
@@ -303,9 +304,9 @@ public class JobMasterClient {
         .setNewState(JobMasterAPI.WorkerState.STARTING)
         .build();
 
+    LOG.info("Sending Worker STARTING message: \n" + workerStateChange);
     // if JobMaster assigns ID, wait for the response
     if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
-      LOG.info("Sending the Worker Starting message: \n" + workerStateChange);
       try {
         rrClient.sendRequestWaitResponse(workerStateChange,
             JobMasterContext.responseWaitDuration(config));
@@ -318,7 +319,7 @@ public class JobMasterClient {
     } else {
       RequestID requestID = rrClient.sendRequest(workerStateChange);
       if (requestID == null) {
-        LOG.severe("Couldn't send Worker Starting message: " + workerStateChange);
+        LOG.severe("Couldn't send Worker STARTING message: " + workerStateChange);
         return null;
       }
     }
@@ -342,11 +343,11 @@ public class JobMasterClient {
 
     RequestID requestID = rrClient.sendRequest(workerStateChange);
     if (requestID == null) {
-      LOG.severe("Could not send Worker Running message.");
+      LOG.severe("Could not send Worker RUNNING message.");
       return false;
     }
 
-    LOG.info("Sent the Worker Running message: \n" + workerStateChange);
+    LOG.info("Sent Worker RUNNING message: \n" + workerStateChange);
     return true;
   }
 
@@ -362,7 +363,7 @@ public class JobMasterClient {
         .setNewState(JobMasterAPI.WorkerState.COMPLETED)
         .build();
 
-    LOG.info("Sending the Worker Completed message: \n" + workerStateChange);
+    LOG.info("Sending Worker COMPLETED message: \n" + workerStateChange);
     try {
       rrClient.sendRequestWaitResponse(workerStateChange,
           JobMasterContext.responseWaitDuration(config));
@@ -405,6 +406,10 @@ public class JobMasterClient {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
+      if (status == StatusCode.SUCCESS) {
+        LOG.info(thisWorker.getWorkerID() + " JobMasterClient connected to JobMaster: " + channel);
+      }
+
       if (status == StatusCode.CONNECTION_REFUSED) {
         connectionRefused = true;
       }
