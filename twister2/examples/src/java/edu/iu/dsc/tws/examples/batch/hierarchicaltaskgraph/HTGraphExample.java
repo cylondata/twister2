@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.batch.hierarchicaltaskgraph;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,6 +44,7 @@ import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.HierarchicalTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.tsched.utils.HierarchicalTaskGraphParser;
 
 public class HTGraphExample extends TaskWorker {
 
@@ -65,7 +67,7 @@ public class HTGraphExample extends TaskWorker {
         parallelismValue);
     computeConnection1.allreduce("source1", "all-reduce", new Aggregator(),
         DataType.OBJECT);
-    graphBuilderX.setMode(OperationMode.BATCH);
+    graphBuilderX.setMode(OperationMode.STREAMING);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
     TaskGraphBuilder graphBuilderY = TaskGraphBuilder.newBuilder(config);
@@ -74,7 +76,7 @@ public class HTGraphExample extends TaskWorker {
         parallelismValue);
     computeConnection2.allreduce("source2", "all-reduce", new Aggregator(),
         DataType.OBJECT);
-    graphBuilderY.setMode(OperationMode.STREAMING);
+    graphBuilderY.setMode(OperationMode.BATCH);
     DataFlowTaskGraph streamingGraph = graphBuilderY.build();
 
     LOG.fine("Batch Graph:" + batchGraph.getTaskVertexSet() + "\t"
@@ -88,7 +90,7 @@ public class HTGraphExample extends TaskWorker {
     ComputeConnection computeConnection = hierarchicalTaskGraphBuilder.addSinkTaskGraph(
         "sinktaskgraph", streamingGraph);
     computeConnection.broadcast("sourcetaskgraph");
-    hierarchicalTaskGraphBuilder.setMode(OperationMode.STREAMING);
+    hierarchicalTaskGraphBuilder.setMode(OperationMode.BATCH);
 
     HierarchicalTaskGraph hierarchicalTaskGraph =
         hierarchicalTaskGraphBuilder.buildHierarchicalTaskGraph();
@@ -98,10 +100,15 @@ public class HTGraphExample extends TaskWorker {
         + "\t" + hierarchicalTaskGraph.parentsOfTaskGraph(
         streamingGraph).iterator().next().getTaskGraphName());
 
-    //Invoke HTG Task Scheduler
+    //Invoke HTG Parser
+    HierarchicalTaskGraphParser hierarchicalTaskGraphParser =
+        new HierarchicalTaskGraphParser(hierarchicalTaskGraph);
+    List<DataFlowTaskGraph> dataFlowTaskGraphList =
+        hierarchicalTaskGraphParser.hierarchicalTaskGraphParse();
 
-    //Invoke Executor
+    //TODO:Invoke HTG Scheduler and send the list
 
+    //TODO:Invoke Executor
   }//End of execute method
 
   private class HTGSourceTask extends BaseBatchSource implements Receptor {
