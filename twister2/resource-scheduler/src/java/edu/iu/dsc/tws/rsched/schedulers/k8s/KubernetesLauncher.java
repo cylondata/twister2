@@ -85,7 +85,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     long jobFileSize = jobFile.length();
 
     // start job package transfer threads to watch pods to start
-    if (KubernetesContext.uploadMethod(config).equalsIgnoreCase("client-to-pods")) {
+    if (KubernetesContext.clientToPodsUploading(config)) {
       JobPackageTransferThread.startTransferThreads(
           namespace, job, jobPackageFile, KubernetesContext.watchBeforeUploadAttempts(config));
     }
@@ -113,7 +113,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       return false;
     }
 
-    if (KubernetesContext.uploadMethod(config).equalsIgnoreCase("client-to-pods")) {
+    if (KubernetesContext.clientToPodsUploading(config)) {
       // transfer the job package to pods, measure the transfer time
       long start = System.currentTimeMillis();
       boolean transferred = JobPackageTransferThread.completeFileTransfers();

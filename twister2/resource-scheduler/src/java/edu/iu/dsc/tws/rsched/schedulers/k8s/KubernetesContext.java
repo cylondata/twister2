@@ -69,9 +69,9 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_WORKER_MAPPING_UNIFORM_DEFAULT = "none";
   public static final String K8S_WORKER_MAPPING_UNIFORM = "kubernetes.worker.mapping.uniform";
 
-  // it can be either "webserver" or "client-to-pods"
-  public static final String K8S_UPLOADING_METHOD_DEFAULT = "client-to-pods";
-  public static final String K8S_UPLOADING_METHOD = "twister2.kubernetes.uploading.method";
+  public static final boolean CLIENT_TO_PODS_UPLOADING_DEFAULT = true;
+  public static final String CLIENT_TO_PODS_UPLOADING =
+      "twister2.kubernetes.client.to.pods.uploading";
 
   public static final String SECRET_NAME = "kubernetes.secret.name";
 
@@ -152,7 +152,15 @@ public class KubernetesContext extends SchedulerContext {
   }
 
   public static String uploadMethod(Config cfg) {
-    return cfg.getStringValue(K8S_UPLOADING_METHOD, K8S_UPLOADING_METHOD_DEFAULT);
+    if (clientToPodsUploading(cfg)) {
+      return "client-to-pods";
+    } else {
+      return "webserver";
+    }
+  }
+
+  public static boolean clientToPodsUploading(Config cfg) {
+    return cfg.getBooleanValue(CLIENT_TO_PODS_UPLOADING, CLIENT_TO_PODS_UPLOADING_DEFAULT);
   }
 
   public static String secretName(Config cfg) {

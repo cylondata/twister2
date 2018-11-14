@@ -103,7 +103,7 @@ public class ResourceAllocator {
     String uploaderClass = SchedulerContext.uploaderClass(config);
     String nullUploader = "edu.iu.dsc.tws.rsched.uploaders.NullUploader";
     if (clusterType.equalsIgnoreCase(KubernetesConstants.KUBERNETES_CLUSTER_TYPE)
-        && KubernetesContext.uploadMethod(config).equalsIgnoreCase("client-to-pods")
+        && KubernetesContext.clientToPodsUploading(config)
         && !uploaderClass.equalsIgnoreCase(nullUploader)) {
 
       uploaderClass = nullUploader;
