@@ -302,7 +302,7 @@ public class KubernetesController {
     JobPackageTransferThread[] transferThreads = new JobPackageTransferThread[podNames.size()];
     for (int i = 0; i < podNames.size(); i++) {
       transferThreads[i] =
-          new JobPackageTransferThread(namespace, podNames.get(i), jobPackageFile, podWatcher);
+          new JobPackageTransferThread(namespace, podNames.get(i), jobPackageFile);
 
       transferThreads[i].start();
     }
@@ -325,9 +325,7 @@ public class KubernetesController {
 
     // if one transfer fails, stop all transfer threads and return false
     if (!allTransferred) {
-      for (int i = 0; i < transferThreads.length; i++) {
-        transferThreads[i].setStopExecution();
-      }
+      JobPackageTransferThread.setStopExecution();
     }
 
     return allTransferred;

@@ -36,8 +36,8 @@ import io.kubernetes.client.util.Watch;
 public final class PodWatchUtils {
   private static final Logger LOG = Logger.getLogger(PodWatchUtils.class.getName());
 
-  private static CoreV1Api coreApi;
-  private static ApiClient apiClient;
+  public static CoreV1Api coreApi;
+  public static ApiClient apiClient;
 
   private PodWatchUtils() {
   }
