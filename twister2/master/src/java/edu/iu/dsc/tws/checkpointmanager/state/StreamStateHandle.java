@@ -14,9 +14,10 @@ package edu.iu.dsc.tws.checkpointmanager.state;
 import java.io.IOException;
 
 import edu.iu.dsc.tws.data.fs.FSDataInputStream;
+import edu.iu.dsc.tws.data.fs.FileSystem;
 
 public interface StreamStateHandle extends StateObject {
 
-  FSDataInputStream openInputStream() throws IOException;
+  FSDataInputStream openInputStream(FileSystem fileSystem) throws IOException;
 }
 
