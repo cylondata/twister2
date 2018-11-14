@@ -75,6 +75,10 @@ public class KubernetesContext extends SchedulerContext {
 
   public static final String SECRET_NAME = "kubernetes.secret.name";
 
+  public static final boolean WATCH_BEFORE_UPLOAD_ATTEMPTS_DEFAULT = true;
+  public static final String WATCH_BEFORE_UPLOAD_ATTEMPTS =
+      "twister2.kubernetes.uploader.watch.pods.starting";
+
   public static String twister2DockerImageForK8s(Config cfg) {
     return cfg.getStringValue(TWISTER2_DOCKER_IMAGE_FOR_K8S);
   }
@@ -154,6 +158,12 @@ public class KubernetesContext extends SchedulerContext {
   public static String secretName(Config cfg) {
     return cfg.getStringValue(SECRET_NAME);
   }
+
+  public static boolean watchBeforeUploadAttempts(Config cfg) {
+    return cfg.getBooleanValue(WATCH_BEFORE_UPLOAD_ATTEMPTS, WATCH_BEFORE_UPLOAD_ATTEMPTS_DEFAULT);
+  }
+
+
 
   public static NodeInfo getNodeInfo(Config cfg, String nodeIP) {
 
