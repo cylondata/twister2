@@ -13,7 +13,7 @@ t2_java_lib(
         "//twister2/data/src/main/java:data-java",
         "@com_esotericsoftware_kryo//jar",
         "@com_google_guava_guava//jar",
-        "@commons_lang_commons_lang//jar",
+        "@org_apache_commons_commons_lang3//jar",
         "@org_yaml_snakeyaml//jar",
     ],
 )
