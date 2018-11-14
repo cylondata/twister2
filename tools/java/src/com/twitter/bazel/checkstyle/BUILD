@@ -3,7 +3,7 @@ package(default_visibility = ["//visibility:public"])
 common_deps = [
     ":util",
     "@commons_cli_commons_cli//jar",
-    "@commons_lang_commons_lang//jar",
+    "@org_apache_commons_commons_lang3//jar",
     "@com_google_guava_guava//jar",
     "//third_party/java/bazel:extra_actions_proto_java",
     "//third_party/java/bazel:proto_java",
