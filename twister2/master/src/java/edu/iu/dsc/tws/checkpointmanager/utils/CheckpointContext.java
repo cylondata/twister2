@@ -20,6 +20,8 @@ public class CheckpointContext extends Context {
   private static final String CHECKPOINT_RECOVERY = "twister2.statebackend.recovery";
   private static final String CHECKPOINT_ENABLE = "twister2.checkpoint.enable";
   private static final String BARRIER_INTERVAL = "twister2.barrier.interval";
+  private static final String HDFS_ENABLE = "twister2.statebackend.hadoopfilesystem";
+  private static final String HDFS_FILENAME = "twister2.statebackend.HDFS.filename";
   private static final String STATEBACKEND_DIRECTORY_DEFAULT = System.getProperty("user.home")
       + "/statebackend/";
 
@@ -29,6 +31,14 @@ public class CheckpointContext extends Context {
 
   public static boolean getCheckpointRecovery(Config cfg) {
     return cfg.getBooleanValue(CHECKPOINT_RECOVERY, false);
+  }
+
+  public static boolean enableHDFS(Config cfg) {
+    return cfg.getBooleanValue(HDFS_ENABLE, false);
+  }
+
+  public static String getHDFSFilename(Config cfg) {
+    return cfg.getStringValue(HDFS_FILENAME, "checkpointing");
   }
 
   public static boolean enableCheckpoint(Config cfg) {
