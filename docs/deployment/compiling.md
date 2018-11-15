@@ -165,5 +165,5 @@ to
 './configure --prefix=$$INSTALL_DIR --enable-mpi-java --with-jdk-bindir=<path-to-jdk>/bin --with-jdk-headers=<path-to-jdk>/include',
 ```
 
-Please replace <path-to-jdk> with your jdk location.
+Please replace '<path-to-jdk>' with your jdk location.
 
