@@ -29,10 +29,33 @@ public class Job {
     private String description;
 
     @Column
-    private Date heartbeatTime;
+    private Date heartbeatTime;//job master heartbeat
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "job", orphanRemoval = true)
     private Set<Worker> workers = new HashSet<>();
+
+    @ManyToOne
+    private Cluster cluster;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private EntityState state;
+
+    public EntityState getState() {
+        return state;
+    }
+
+    public void setState(EntityState state) {
+        this.state = state;
+    }
+
+    public Cluster getCluster() {
+        return cluster;
+    }
+
+    public void setCluster(Cluster cluster) {
+        this.cluster = cluster;
+    }
 
     public String getId() {
         return id;

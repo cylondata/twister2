@@ -2,6 +2,9 @@
   "id": "uuid-random-thing",
   "name": "Sample Job",
   "description": "Sample description",
+  "cluster": {
+    "id": 11
+  },
   "workers": [
     {
       "name": "worker1",

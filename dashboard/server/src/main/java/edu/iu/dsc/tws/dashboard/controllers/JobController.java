@@ -2,15 +2,21 @@ package edu.iu.dsc.tws.dashboard.controllers;
 
 import edu.iu.dsc.tws.dashboard.data_models.Job;
 import edu.iu.dsc.tws.dashboard.data_models.Worker;
+import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import edu.iu.dsc.tws.dashboard.services.JobService;
 import edu.iu.dsc.tws.dashboard.services.WorkerService;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("jobs")
 public class JobController {
+
+    private final static Logger LOG = LogManager.getLogger(JobController.class);
 
     @Autowired
     private JobService jobService;
@@ -20,23 +26,39 @@ public class JobController {
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public Iterable<Job> all() {
+        LOG.debug("Request received to list all jobs");
         return this.jobService.getAllJobs();
     }
 
     @RequestMapping(value = "/", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public Job createJob(@RequestBody Job jobCreateRequest) {
-        System.out.println("Received persistent request");
-        System.out.println(jobCreateRequest);
+        LOG.debug("Job persistent request received. {}", jobCreateRequest);
         return this.jobService.createJob(jobCreateRequest);
     }
 
     @RequestMapping(value = "/{jobId}/", method = RequestMethod.GET)
-    public Job getJon(@PathVariable("jobId") String jobId) {
+    public Job getJob(@PathVariable("jobId") String jobId) {
+        LOG.debug("Querying single job {}", jobId);
         return this.jobService.getJobById(jobId);
     }
 
     @RequestMapping(value = "/{jobId}/workers/", method = RequestMethod.GET)
     public Iterable<Worker> getWorkers(@PathVariable("jobId") String jobId) {
+        LOG.debug("Querying workers of job {}", jobId);
         return workerService.getAllForJob(jobId);
     }
+
+    @RequestMapping(value = "/{jobId}/state/", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public void changeState(@PathVariable String jobId, @RequestBody StateChangeRequest stateChangeRequest) {
+        LOG.debug("Changing state of the job {} to {}", jobId, stateChangeRequest.getEntityState());
+        this.jobService.changeState(jobId, stateChangeRequest);
+    }
+
+
+    @RequestMapping(value = "/{jobId}/beat/", method = RequestMethod.POST)
+    public void heartbeat(@PathVariable String jobId) {
+        LOG.debug("heartbeat signal received for job {}", jobId);
+        this.jobService.heartbeat(jobId);
+    }
+
 }

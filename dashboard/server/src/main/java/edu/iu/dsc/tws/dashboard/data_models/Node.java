@@ -14,25 +14,23 @@ package edu.iu.dsc.tws.dashboard.data_models;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
-public class Worker {
+public class Node {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column
+    @Column(nullable = false)
     private String host;
 
     @Column
-    private Integer port;
+    private String os;
 
     @Column
-    private Double cpuAllocation;
-
-    @Column
-    private Double memoryAllocation;
+    private Date heartbeatTime;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -48,15 +46,15 @@ public class Worker {
 
     @ManyToOne(optional = false)
     @JoinColumn
-    @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state"})
-    private Job job;
+    @JsonIgnoreProperties({"nodes", "description"})
+    private Cluster cluster;
 
-    public Job getJob() {
-        return job;
+    public Cluster getCluster() {
+        return cluster;
     }
 
-    public void setJob(Job job) {
-        this.job = job;
+    public void setCluster(Cluster cluster) {
+        this.cluster = cluster;
     }
 
     public Long getId() {
@@ -75,39 +73,19 @@ public class Worker {
         this.host = host;
     }
 
-    public Integer getPort() {
-        return port;
+    public String getOs() {
+        return os;
     }
 
-    public void setPort(Integer port) {
-        this.port = port;
+    public void setOs(String os) {
+        this.os = os;
     }
 
-    public Double getCpuAllocation() {
-        return cpuAllocation;
+    public Date getHeartbeatTime() {
+        return heartbeatTime;
     }
 
-    public void setCpuAllocation(Double cpuAllocation) {
-        this.cpuAllocation = cpuAllocation;
-    }
-
-    public Double getMemoryAllocation() {
-        return memoryAllocation;
-    }
-
-    public void setMemoryAllocation(Double memoryAllocation) {
-        this.memoryAllocation = memoryAllocation;
-    }
-
-    @Override
-    public String toString() {
-        return "Worker{" +
-                "id=" + id +
-                ", host='" + host + '\'' +
-                ", port=" + port +
-                ", cpuAllocation=" + cpuAllocation +
-                ", memoryAllocation=" + memoryAllocation +
-                ", job=" + job +
-                '}';
+    public void setHeartbeatTime(Date heartbeatTime) {
+        this.heartbeatTime = heartbeatTime;
     }
 }

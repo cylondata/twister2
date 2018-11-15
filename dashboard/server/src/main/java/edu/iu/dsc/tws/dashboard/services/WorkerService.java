@@ -19,4 +19,7 @@ public class WorkerService {
         return workerRepository.findAll();
     }
 
+    public Worker createWorker(Worker worker) {
+        return this.workerRepository.save(worker);
+    }
 }

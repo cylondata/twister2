@@ -13,10 +13,13 @@ package edu.iu.dsc.tws.dashboard.services;
 
 import edu.iu.dsc.tws.dashboard.data_models.Job;
 import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
+import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.Date;
 import java.util.Optional;
 
 @Service
@@ -42,4 +45,13 @@ public class JobService {
         return this.jobRepository.findAll();
     }
 
+    @Transactional
+    public void changeState(String jobId, StateChangeRequest stateChangeRequest) {
+        this.jobRepository.changeJobState(jobId, stateChangeRequest.getEntityState());
+    }
+
+    @Transactional
+    public void heartbeat(String jobId) {
+        this.jobRepository.heartbeat(jobId, new Date());
+    }
 }
