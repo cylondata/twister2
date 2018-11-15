@@ -32,7 +32,7 @@ public class HierarchicalTaskGraphParser {
     this.hierarchicalTaskGraph = graph;
   }
 
-  public List<DataFlowTaskGraph> globalTaskSchedule() {
+  public List<DataFlowTaskGraph> hierarchicalTaskGraphParse() {
 
     Set<DataFlowTaskGraph> taskGraphSet = hierarchicalTaskGraph.getTaskGraphSet();
 
@@ -61,7 +61,7 @@ public class HierarchicalTaskGraphParser {
 
     for (int i = 0; i < taskgraphList.size(); i++) {
       DataFlowTaskGraph dataFlowTaskGraph = taskgraphList.get(i);
-      LOG.fine("Dataflow Task Graph and Type:" + dataFlowTaskGraph + "\t"
+      LOG.info("Dataflow Task Graph and Type:" + dataFlowTaskGraph + "\t"
           + dataFlowTaskGraph.getOperationMode());
     }
 

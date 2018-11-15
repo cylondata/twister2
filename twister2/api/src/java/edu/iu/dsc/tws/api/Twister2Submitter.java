@@ -63,11 +63,11 @@ public final class Twister2Submitter {
       if (!KubernetesUtils.jobNameConformsToK8sNamingRules(jobName)) {
 
         LOG.info("JobName does not conform to Kubernetes naming rules: " + jobName
-            + "\nOnly lower case alphanumeric characters, dash(-), and dot(.) are allowed");
+            + " Only lower case alphanumeric characters and dashes(-) are allowed");
 
         jobName = KubernetesUtils.convertJobNameToK8sFormat(jobName);
 
-        LOG.info("********* JobName modified to: " + jobName + " This name will be used *********");
+        LOG.info("****************** JobName modified. Following jobname will be used: " + jobName);
       }
     }
 
@@ -91,12 +91,12 @@ public final class Twister2Submitter {
     }
 
     LOG.info("JobName does not conform to Kubernetes naming rules: " + jobName
-        + "\nOnly lower case alphanumeric characters, dash(-), and dot(.) are allowed");
+        + " Only lower case alphanumeric characters and dashes(-) are allowed");
 
     jobName = KubernetesUtils.convertJobNameToK8sFormat(jobName);
     twister2Job.setJobName(jobName);
 
-    LOG.info("********* JobName modified to: " + jobName + " This name will be used *********");
+    LOG.info("******************* JobName modified. Following jobname will be used: " + jobName);
   }
 
 }
