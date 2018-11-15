@@ -210,7 +210,10 @@ public final class Twister2Job {
       return this;
     }
 
+    @SuppressWarnings({"LineLength", "unchecked"})
     private Twister2JobBuilder loadComputeResources(Config config) {
+      // to remove unchecked cast warnings:
+      // https://stackoverflow.com/questions/19163453/how-to-check-types-of-key-and-value-if-object-instanceof-hashmap
       List<Map<String, Number>> list =
           (List) (config.get(SchedulerContext.WORKER_COMPUTE_RESOURCES));
 
