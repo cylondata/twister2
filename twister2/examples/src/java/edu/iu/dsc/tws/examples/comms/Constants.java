@@ -24,6 +24,7 @@ public final class Constants {
   public static final String ARGS_TASK_STAGES = "stages";
   public static final String ARGS_GAP = "gap";
   public static final String ARGS_FNAME = "fname";
+  public static final String ARGS_INPUT_DIRECTORY = "input";
   public static final String ARGS_OUTSTANDING = "outstanding";
   public static final String ARGS_STREAM = "stream";
   public static final String ARGS_THREADS = "threads";

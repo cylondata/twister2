@@ -41,7 +41,7 @@ public final class DataParallelJob {
     Options options = new Options();
     options.addOption(Constants.ARGS_WORKERS, true, "Workers");
     options.addOption(Constants.ARGS_SIZE, true, "Size");
-    options.addOption(Utils.createOption(Constants.ARGS_FNAME, true, "File name", false));
+    options.addOption(Utils.createOption(Constants.ARGS_INPUT_DIRECTORY, true, "File name", false));
     options.addOption(Utils.createOption(Constants.ARGS_PRINT_INTERVAL, true, "Threads", false));
 
     CommandLineParser commandLineParser = new DefaultParser();
@@ -63,7 +63,7 @@ public final class DataParallelJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.put(Constants.ARGS_SIZE, Integer.toString(size));
     jobConfig.put(Constants.ARGS_WORKERS, Integer.toString(workers));
-    jobConfig.put(Constants.ARGS_FNAME, fName);
+    jobConfig.put(Constants.ARGS_INPUT_DIRECTORY, fName);
     jobConfig.put(Constants.ARGS_PRINT_INTERVAL, printInt);
 
     // build the job

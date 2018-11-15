@@ -11,28 +11,27 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.dataparallel;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 /**
  * This example demonstrates the use of a data parallel job. Here we will generate set of random
  * data using the data api and process it in parallel by loading the saved data using the data
  * API
  */
-public class DataParallelWorker implements IWorker {
+public class DataParallelWorker extends TaskWorker {
 
   @Override
-  public void execute(Config config, int workerID, AllocatedResources allocatedResources,
-                      IWorkerController workerController, IPersistentVolume persistentVolume,
-                      IVolatileVolume volatileVolume) {
+  public void execute() {
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
-  }
+    DataParallelTask task = new DataParallelTask();
+    taskGraphBuilder.addSource("map", task, 4);
 
-  public static void main(String[] args) {
-
+    DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();
+    ExecutionPlan plan = taskExecutor.plan(dataFlowTaskGraph);
+    taskExecutor.execute(dataFlowTaskGraph, plan);
   }
 }

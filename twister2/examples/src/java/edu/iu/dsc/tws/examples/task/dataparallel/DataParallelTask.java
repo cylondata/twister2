@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.data.api.formatters.TextInputFormatter;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
+import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.executor.core.Runtime;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -36,7 +37,7 @@ public class DataParallelTask extends BaseBatchSource {
     try {
       while (!inputSplit.reachedEnd()) {
         String value = inputSplit.nextRecord(null);
-        LOG.info("We read values");
+        LOG.info("We read value: " + value);
       }
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to read the input", e);
@@ -47,8 +48,9 @@ public class DataParallelTask extends BaseBatchSource {
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
 
+    String directory = cfg.getStringValue(Constants.ARGS_INPUT_DIRECTORY);
     Runtime runtime = (Runtime) context.getConfig(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(context,
-        new TextInputFormatter(new Path("")));
+        new TextInputFormatter(new Path(directory)));
   }
 }

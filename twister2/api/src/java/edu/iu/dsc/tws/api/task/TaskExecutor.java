@@ -96,6 +96,23 @@ public class TaskExecutor {
    * streaming, this call doesn't return while for batch computations it returns after
    * the execution is done.
    *
+   * @param taskConfig the user configuration to be passed to the task instances
+   * @param graph the dataflow graph
+   * @param plan the execution plan
+   */
+  public void execute(Config taskConfig, DataFlowTaskGraph graph, ExecutionPlan plan) {
+    Config newCfg = Config.newBuilder().putAll(config).putAll(taskConfig).build();
+
+    Executor executor = new Executor(newCfg, workerID, plan, communicator.getChannel(),
+        graph.getOperationMode());
+    executor.execute();
+  }
+
+  /**
+   * Execute a plan and a graph. This call blocks until the execution finishes. In case of
+   * streaming, this call doesn't return while for batch computations it returns after
+   * the execution is done.
+   *
    * @param graph the dataflow graph
    * @param plan the execution plan
    */

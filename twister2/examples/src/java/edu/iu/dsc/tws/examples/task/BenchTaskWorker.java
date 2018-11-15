@@ -73,8 +73,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
     dataFlowTaskGraph = taskGraphBuilder.build();
     executionPlan = taskExecutor.plan(dataFlowTaskGraph);
     taskExecutor.execute(dataFlowTaskGraph, executionPlan);
-
-
   }
 
   public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
