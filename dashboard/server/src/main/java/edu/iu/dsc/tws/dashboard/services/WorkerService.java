@@ -2,6 +2,7 @@ package edu.iu.dsc.tws.dashboard.services;
 
 import edu.iu.dsc.tws.dashboard.data_models.Worker;
 import edu.iu.dsc.tws.dashboard.repositories.WorkerRepository;
+import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,5 +22,9 @@ public class WorkerService {
 
     public Worker createWorker(Worker worker) {
         return this.workerRepository.save(worker);
+    }
+
+    public void changeState(String workerId, StateChangeRequest stateChangeRequest) {
+        this.workerRepository.changeWorkerState(workerId, stateChangeRequest.getEntityState());
     }
 }
