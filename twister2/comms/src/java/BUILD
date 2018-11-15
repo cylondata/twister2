@@ -12,8 +12,8 @@ t2_java_lib(
         "//twister2/data/src/main/java:data-java",
         "@com_esotericsoftware_kryo//jar",
         "@com_google_guava_guava//jar",
-        "@commons_io//jar",
-        "@commons_lang_commons_lang//jar",
+        "@commons_io_commons_io//jar",
+        "@org_apache_commons_commons_lang3//jar",
     ],
 )
 
@@ -28,8 +28,8 @@ java_binary(
         "//twister2/data/src/main/java:data-java",
         "@com_esotericsoftware_kryo//jar",
         "@com_google_guava_guava//jar",
-        "@commons_io//jar",
-        "@commons_lang_commons_lang//jar",
+        "@commons_io_commons_io//jar",
+        "@org_apache_commons_commons_lang3//jar",
     ],
 )
 
@@ -42,8 +42,8 @@ java_binary(
         "//twister2/data/src/main/java:data-java",
         "@com_esotericsoftware_kryo//jar",
         "@com_google_guava_guava//jar",
-        "@commons_io//jar",
-        "@commons_lang_commons_lang//jar",
+        "@commons_io_commons_io//jar",
+        "@org_apache_commons_commons_lang3//jar",
     ],
 )
 
@@ -60,8 +60,8 @@ java_binary(
         "@com_esotericsoftware_minlog//jar",
         "@com_esotericsoftware_reflectasm//jar",
         "@com_google_guava_guava//jar",
-        "@commons_io//jar",
-        "@commons_lang_commons_lang//jar",
+        "@commons_io_commons_io//jar",
+        "@org_apache_commons_commons_lang3//jar",
         "@net_openhft_chronicle_queue//jar",
         "@org_objenesis_objenesis//jar",
         "@org_ow2_asm_asm//jar",
@@ -82,8 +82,8 @@ java_binary(
         "@com_esotericsoftware_minlog//jar",
         "@com_esotericsoftware_reflectasm//jar",
         "@com_google_guava_guava//jar",
-        "@commons_io//jar",
-        "@commons_lang_commons_lang//jar",
+        "@commons_io_commons_io//jar",
+        "@org_apache_commons_commons_lang3//jar",
         "@net_openhft_chronicle_queue//jar",
         "@org_objenesis_objenesis//jar",
         "@org_ow2_asm_asm//jar",

@@ -21,6 +21,6 @@ t2_java_lib(
         "@com_google_guava_guava//jar",
         "@com_google_protobuf_protobuf_java//jar",
         "@commons_cli_commons_cli//jar",
-        "@fast_utils//jar",
+        "@it_unimi_dsi_fastutil//jar",
     ],
 )
