@@ -241,10 +241,11 @@ public final class KubernetesUtils {
       return false;
     }
 
-    // make sure it only has:
-    // lowercase chars, digits, dots and dashes
-//    if (jobName.matches("[a-z0-9\\.\\-]+")) {
-    if (jobName.matches("[a-z0-9\\-]+")) {
+    // first character is a lowercase letter from a to z
+    // last character is an alphanumeric character: [a-z0-9]
+    // in between alphanumeric characters and dashes
+    // first character is mandatory. It has to be at least 1 char in length
+    if (jobName.matches("[a-z]([-a-z0-9]*[a-z0-9])?")) {
       return true;
     }
 
@@ -254,9 +255,11 @@ public final class KubernetesUtils {
   /**
    * we perform the following actions:
    *   shorten the length of the job name if needed
-   *   replace underscore characters with dashes
+   *   replace underscore and dot characters with dashes
    *   convert to lower case characters
    *   delete non-alphanumeric characters excluding dots and dashes
+   *   replace the first char with "a", if it is not a letter in between a-z
+   *   replace the last char with "z", if it is dash
    * @param jobName
    * @return
    */
@@ -270,8 +273,20 @@ public final class KubernetesUtils {
     // convert to lower case
     modifiedJobName = modifiedJobName.toLowerCase(Locale.ENGLISH);
 
-    // delete all non-alphanumeric characters excluding dots and dashes
-    modifiedJobName = modifiedJobName.replaceAll("[^a-z0-9\\.\\-]", "");
+    // delete all non-alphanumeric characters excluding dashes
+    modifiedJobName = modifiedJobName.replaceAll("[^a-z0-9\\-]", "");
+
+    // make sure the first char is a letter
+    // if not, replace it  with "a"
+    if (modifiedJobName.matches("[^a-z][-a-z0-9]*")) {
+      modifiedJobName = "a" + modifiedJobName.substring(1);
+    }
+
+    // make sure the last char is not dash
+    // if it is, replace it  with "z"
+    if (modifiedJobName.matches("[-a-z0-9]*[-]")) {
+      modifiedJobName = modifiedJobName.substring(0, modifiedJobName.length() - 1) + "z";
+    }
 
     // shorten the job name if needed
     if (modifiedJobName.length() > MAX_JOB_NAME_LENGTH) {
@@ -322,7 +337,4 @@ public final class KubernetesUtils {
 
     return podNames;
   }
-
-
-
 }
