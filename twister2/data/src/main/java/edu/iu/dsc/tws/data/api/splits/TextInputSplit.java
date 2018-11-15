@@ -17,7 +17,7 @@ import java.nio.charset.Charset;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.Path;
 
-public class TextInputSplit extends DelimitedSplit<String> {
+public class TextInputSplit extends DelimitedInputSplit<String> {
   /**
    * Code of \r, used to remove \r from a line when the line ends with \r\n.
    */
@@ -80,6 +80,6 @@ public class TextInputSplit extends DelimitedSplit<String> {
       curNumBytes -= 1;
     }
 
-    return new String(bytes, readOffset, numBytes, this.charsetName);
+    return new String(bytes, readOffset, curNumBytes, this.charsetName);
   }
 }

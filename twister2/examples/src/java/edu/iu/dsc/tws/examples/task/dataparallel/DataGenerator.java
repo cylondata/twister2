@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.task.dataparallel;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Random;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -43,8 +44,27 @@ public final class DataGenerator {
                                   int sizeMargin) throws IOException {
     if ("csv".equals(type)) {
       generateCSV(directory, numOfFiles, sizeOfFile, sizeMargin);
+    } else if ("txt".equals(type)) {
+      generateText(directory, numOfFiles, sizeOfFile, sizeMargin);
     } else {
       throw new RuntimeException("Unsupported data gen type: " + type);
+    }
+  }
+
+  private static void generateText(Path directory, int numOfFiles,
+                                   int sizeOfFile, int sizeMargin) throws IOException {
+    FileSystem fs = FileSystem.get(directory.toUri());
+    Random random = new Random(System.currentTimeMillis());
+
+    for (int i = 0; i < numOfFiles; i++) {
+      FSDataOutputStream outputStream = fs.create(new Path(directory,
+          generateRandom(10) + ".txt"));
+      PrintWriter pw = new PrintWriter(outputStream);
+      for (int j = 0; j < sizeOfFile + random.nextInt(sizeMargin); j++) {
+        String row = generateRandom(20 + random.nextInt(10));
+        pw.println(row);
+      }
+      pw.close();
     }
   }
 
@@ -56,12 +76,13 @@ public final class DataGenerator {
   private static void generateCSV(Path directory, int numOfFiles, int sizeOfFile,
                                   int sizeMargin) throws IOException {
     FileSystem fs = FileSystem.get(directory.toUri());
+    Random random = new Random(System.currentTimeMillis());
 
     for (int i = 0; i < numOfFiles; i++) {
       FSDataOutputStream outputStream = fs.create(new Path(directory,
           generateRandom(10) + ".csv"));
       PrintWriter pw = new PrintWriter(outputStream);
-      for (int j = 0; j < sizeOfFile; j++) {
+      for (int j = 0; j < sizeOfFile + random.nextInt(sizeMargin); j++) {
         String row = generateCSVLine(10);
         pw.println(row);
       }

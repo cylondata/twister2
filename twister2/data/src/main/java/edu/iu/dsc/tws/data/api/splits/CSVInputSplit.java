@@ -15,7 +15,7 @@ import java.io.IOException;
 
 import edu.iu.dsc.tws.data.fs.Path;
 
-public class CSVInputSplit extends DelimitedSplit<String> {
+public class CSVInputSplit extends DelimitedInputSplit<String> {
   /**
    * Constructs a split with host information.
    *
@@ -32,6 +32,7 @@ public class CSVInputSplit extends DelimitedSplit<String> {
   @Override
   public String readRecord(String reuse, byte[] bytes,
                            int readOffset, int numBytes) throws IOException {
+
     return null;
   }
 }

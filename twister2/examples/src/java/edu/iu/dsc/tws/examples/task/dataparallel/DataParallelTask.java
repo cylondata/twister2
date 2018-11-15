@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.formatters.BinaryInputFormatter;
+import edu.iu.dsc.tws.data.api.formatters.TextInputFormatter;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
@@ -28,14 +28,14 @@ import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 public class DataParallelTask extends BaseBatchSource {
   private static final Logger LOG = Logger.getLogger(DataParallelTask.class.getName());
 
-  private DataSource<byte[]> source;
+  private DataSource<String> source;
 
   @Override
   public void execute() {
-    InputSplit<byte[]> inputSplit = source.getSplit(context.taskIndex());
+    InputSplit<String> inputSplit = source.getSplit(context.taskIndex());
     try {
       while (!inputSplit.reachedEnd()) {
-        byte[] values = inputSplit.nextRecord(null);
+        String value = inputSplit.nextRecord(null);
         LOG.info("We read values");
       }
     } catch (IOException e) {
@@ -49,6 +49,6 @@ public class DataParallelTask extends BaseBatchSource {
 
     Runtime runtime = (Runtime) context.getConfig(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(context,
-        new BinaryInputFormatter(new Path(""), 10));
+        new TextInputFormatter(new Path("")));
   }
 }

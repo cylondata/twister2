@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.FileInputFormat;
 import edu.iu.dsc.tws.data.fs.Path;
 
-public abstract class DelimitedSplit<OT> extends FileInputSplit<OT> {
+public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
 
   // The charset used to convert strings to bytes
   private String charsetName = "UTF-8";
@@ -33,11 +33,6 @@ public abstract class DelimitedSplit<OT> extends FileInputSplit<OT> {
   private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
 
   /**
-   * The maximum size of a sample record before sampling is aborted. To catch
-   * cases where a wrong delimiter is given.
-   */
-
-  /**
    * The configuration key to set the record delimiter.
    */
   protected static final String RECORD_DELIMITER = "delimited-format.delimiter";
@@ -49,11 +44,6 @@ public abstract class DelimitedSplit<OT> extends FileInputSplit<OT> {
   private int lineLengthLimit = Integer.MAX_VALUE;
 
   private int bufferSize = -1;
-
-  // --------------------------------------------------------------------------------------------
-  //  Variables for internal parsing.
-  //  They are all transient, because we do not want them so be serialized
-  // --------------------------------------------------------------------------------------------
 
   private transient byte[] readBuffer;
 
@@ -82,7 +72,7 @@ public abstract class DelimitedSplit<OT> extends FileInputSplit<OT> {
    * @param length the number of bytes in the file to process (-1 is flag for "read whole file")
    * @param hosts the list of hosts containing the block, possibly <code>null</code>
    */
-  public DelimitedSplit(int num, Path file, long start, long length, String[] hosts) {
+  public DelimitedInputSplit(int num, Path file, long start, long length, String[] hosts) {
     super(num, file, start, length, hosts);
   }
 
@@ -149,11 +139,6 @@ public abstract class DelimitedSplit<OT> extends FileInputSplit<OT> {
     return this.charset;
   }
 
-
-  // --------------------------------------------------------------------------------------------
-  //  Pre-flight: Configuration, Splits, Sampling
-  // --------------------------------------------------------------------------------------------
-
   /**
    * Configures this input format by reading the path to the file from the
    * configuration and the string that
@@ -167,14 +152,12 @@ public abstract class DelimitedSplit<OT> extends FileInputSplit<OT> {
 
     // the if() clauses are to prevent the configure() method from
     // overwriting the values set by the setters
-
     if (Arrays.equals(delimiter, new byte[]{'\n'})) {
       String delimString = parameters.getStringValue(RECORD_DELIMITER, null);
       if (delimString != null) {
         setDelimiterString(delimString);
       }
     }
-
   }
 
   /**
