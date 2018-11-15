@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.dataparallel;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
@@ -24,6 +25,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -34,29 +36,29 @@ public final class DataParallelJob {
   private DataParallelJob() {
   }
 
-  public static void main(String[] args) throws ParseException {
+  public static void main(String[] args) throws ParseException, IOException {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     Options options = new Options();
     options.addOption(Constants.ARGS_WORKERS, true, "Workers");
-    options.addOption(Constants.ARGS_SIZE, true, "Size");
-    options.addOption(Utils.createOption(Constants.ARGS_INPUT_DIRECTORY, true, "File name", false));
-    options.addOption(Utils.createOption(Constants.ARGS_PRINT_INTERVAL, true, "Threads", false));
+    options.addOption(Constants.ARGS_SIZE, true, "Size of the file");
+    options.addOption(Constants.ARGS_NUMBER_OF_FILES, true, "Number of files");
+    options.addOption(Constants.ARGS_SHARED_FILE_SYSTEM, false, "Shared file system");
+    options.addOption(Utils.createOption(Constants.ARGS_INPUT_DIRECTORY,
+        true, "Input directory", true));
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
     int workers = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_WORKERS));
     int size = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_SIZE));
+    String fName = cmd.getOptionValue(Constants.ARGS_INPUT_DIRECTORY);
+    int numFiles = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_NUMBER_OF_FILES));
+    boolean shared = cmd.hasOption(Constants.ARGS_SHARED_FILE_SYSTEM);
 
-    String fName = "";
-    if (cmd.hasOption(Constants.ARGS_FNAME)) {
-      fName = cmd.getOptionValue(Constants.ARGS_FNAME);
-    }
-
-    String printInt = "1";
-    if (cmd.hasOption(Constants.ARGS_PRINT_INTERVAL)) {
-      printInt = cmd.getOptionValue(Constants.ARGS_PRINT_INTERVAL);
+    // we we are a shared file system, lets generate data at the client
+    if (shared) {
+      DataGenerator.generateData("txt", new Path(fName), numFiles, size, 100);
     }
 
     // build JobConfig
@@ -64,7 +66,7 @@ public final class DataParallelJob {
     jobConfig.put(Constants.ARGS_SIZE, Integer.toString(size));
     jobConfig.put(Constants.ARGS_WORKERS, Integer.toString(workers));
     jobConfig.put(Constants.ARGS_INPUT_DIRECTORY, fName);
-    jobConfig.put(Constants.ARGS_PRINT_INTERVAL, printInt);
+    jobConfig.put(Constants.ARGS_NUMBER_OF_FILES, numFiles);
 
     // build the job
     submitJob(config, workers, jobConfig, DataParallelWorker.class.getName());
