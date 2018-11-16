@@ -28,8 +28,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
@@ -118,18 +119,18 @@ public final class ZKWorkerControllerExample {
     int port = 1000 + (int) (Math.random() * 1000);
     String workerAddress = "localhost:" + port;
 
-    NodeInfo nodeInfo = new NodeInfo("node1.on.hostx", "rack1", "dc01");
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtil.createNodeInfo("node1.on.hostx", "rack1", "dc01");
     ZKWorkerController zkWorkerController =
         new ZKWorkerController(cnfg, jobName, workerAddress, numberOfWorkers, nodeInfo);
     zkWorkerController.initialize();
 
-    List<WorkerNetworkInfo> workerList = zkWorkerController.getWorkerList();
-    LOG.info("Initial worker list: \n" + WorkerNetworkInfo.workerListAsString(workerList));
+    List<JobMasterAPI.WorkerInfo> workerList = zkWorkerController.getWorkerList();
+    LOG.info("Initial worker list: \n" + WorkerInfoUtil.workerListAsString(workerList));
 
     LOG.info("Waiting for all workers to join: ");
     // wait until 100sec
     workerList = zkWorkerController.waitForAllWorkersToJoin(100000);
-    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
+    LOG.info(WorkerInfoUtil.workerListAsString(workerList));
 
     sleeeep((long) (Math.random() * 10000));
 
@@ -146,7 +147,7 @@ public final class ZKWorkerControllerExample {
     }
 
     workerList = zkWorkerController.getCurrentWorkers();
-    LOG.info("Current worker list: \n" + WorkerNetworkInfo.workerListAsString(workerList));
+    LOG.info("Current worker list: \n" + WorkerInfoUtil.workerListAsString(workerList));
 
     sleeeep((long) (Math.random() * 10000));
 

@@ -12,10 +12,8 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 import java.util.List;
-import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class KubernetesContext extends SchedulerContext {
@@ -30,12 +28,6 @@ public class KubernetesContext extends SchedulerContext {
 
   public static final boolean NODE_LOCATIONS_FROM_CONFIG_DEFAULT = true;
   public static final String NODE_LOCATIONS_FROM_CONFIG = "kubernetes.node.locations.from.config";
-
-  public static final String KUBERNETES_RACK_LABEL_KEY = "kubernetes.rack.labey.key";
-  public static final String KUBERNETES_DATACENTER_LABEL_KEY = "kubernetes.datacenter.labey.key";
-
-  public static final String KUBERNETES_RACKS_LIST = "kubernetes.racks.list";
-  public static final String KUBERNETES_DATACENTERS_LIST = "kubernetes.datacenters.list";
 
   public static final boolean NODE_PORT_SERVICE_REQUESTED_DEFAULT = false;
   public static final String NODE_PORT_SERVICE_REQUESTED = "kubernetes.node.port.service.requested";
@@ -92,11 +84,11 @@ public class KubernetesContext extends SchedulerContext {
   }
 
   public static String rackLabelKeyForK8s(Config cfg) {
-    return cfg.getStringValue(KUBERNETES_RACK_LABEL_KEY);
+    return cfg.getStringValue(RACK_LABEL_KEY);
   }
 
   public static String datacenterLabelKeyForK8s(Config cfg) {
-    return cfg.getStringValue(KUBERNETES_DATACENTER_LABEL_KEY);
+    return cfg.getStringValue(DATACENTER_LABEL_KEY);
   }
 
   public static boolean nodePortServiceRequested(Config cfg) {
@@ -171,44 +163,5 @@ public class KubernetesContext extends SchedulerContext {
     return cfg.getBooleanValue(WATCH_BEFORE_UPLOAD_ATTEMPTS, WATCH_BEFORE_UPLOAD_ATTEMPTS_DEFAULT);
   }
 
-
-
-  public static NodeInfo getNodeInfo(Config cfg, String nodeIP) {
-
-    List<Map<String, List<String>>> rackList =
-        cfg.getListOfMapsWithListValues(KUBERNETES_RACKS_LIST);
-
-    String rack = findValue(rackList, nodeIP);
-    if (rack == null) {
-      return new NodeInfo(nodeIP, null, null);
-    }
-
-    List<Map<String, List<String>>> dcList =
-        cfg.getListOfMapsWithListValues(KUBERNETES_DATACENTERS_LIST);
-
-    String datacenter = findValue(dcList, rack);
-    return new NodeInfo(nodeIP, rack, datacenter);
-  }
-
-  /**
-   * find the given String value in the inner List
-   * return the key for that Map
-   * @return
-   */
-  private static String findValue(List<Map<String, List<String>>> outerList, String value) {
-
-    for (Map<String, List<String>> map: outerList) {
-      for (String mapKey: map.keySet()) {
-        List<String> innerList = map.get(mapKey);
-        for (String listItem: innerList) {
-          if (listItem.equals(value)) {
-            return mapKey;
-          }
-        }
-      }
-    }
-
-    return null;
-  }
 
 }

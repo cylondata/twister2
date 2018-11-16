@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
 import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 import mpi.MPI;
 
@@ -54,9 +55,9 @@ public final class Network {
                                                  IWorkerController wController,
                                                  AllocatedResources resourcePlan) {
     TCPChannel channel;
-    int index = wController.getWorkerNetworkInfo().getWorkerID();
-    Integer workerPort = wController.getWorkerNetworkInfo().getWorkerPort();
-    String localIp = wController.getWorkerNetworkInfo().getWorkerIP().getHostAddress();
+    int index = wController.getWorkerInfo().getWorkerID();
+    Integer workerPort = wController.getWorkerInfo().getPort();
+    String localIp = wController.getWorkerInfo().getWorkerIP();
     try {
       channel = createChannel(config,
           new WorkerNetworkInfo(InetAddress.getByName(localIp), workerPort, index), index);
@@ -70,14 +71,14 @@ public final class Network {
 
     // now talk to a central server and get the information about the worker
     // this is a synchronization step
-    List<WorkerNetworkInfo> wInfo = wController.getWorkerList();
+    List<JobMasterAPI.WorkerInfo> wInfo = wController.getWorkerList();
 
     // lets start the client connections now
     List<NetworkInfo> nInfos = new ArrayList<>();
-    for (WorkerNetworkInfo w : wInfo) {
+    for (JobMasterAPI.WorkerInfo w : wInfo) {
       NetworkInfo networkInfo = new NetworkInfo(w.getWorkerID());
-      networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getWorkerPort());
-      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP().getHostAddress());
+      networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getPort());
+      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP());
       nInfos.add(networkInfo);
     }
 

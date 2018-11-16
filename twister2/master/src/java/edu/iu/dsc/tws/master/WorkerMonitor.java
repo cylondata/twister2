@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master;
 
-import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -20,6 +19,7 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
@@ -36,7 +36,7 @@ public class WorkerMonitor implements MessageHandler {
 
   private int numberOfWorkers;
 
-  private HashMap<Integer, WorkerInfo> workers;
+  private HashMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
 
   public WorkerMonitor(Config config, JobMaster jobMaster, RRServer rrServer) {
@@ -98,28 +98,24 @@ public class WorkerMonitor implements MessageHandler {
 
     if (message.getNewState() == JobMasterAPI.WorkerState.STARTING) {
       LOG.info("WorkerStateChange STARTING message received: \n" + message);
-      InetAddress ip = WorkerInfo.covertToIPAddress(message.getWorkerNetworkInfo().getWorkerIP());
-      int port = message.getWorkerNetworkInfo().getPort();
-      int workerID = message.getWorkerNetworkInfo().getWorkerID();
-      String nodeIP = message.getWorkerNetworkInfo().getNodeIP();
-      String rackName = message.getWorkerNetworkInfo().getRackName();
-      String dcName = message.getWorkerNetworkInfo().getDataCenterName();
+      JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
 
       if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
-        workerID = workers.size();
+        int workerID = workers.size();
+        workerInfo = WorkerInfoUtil.updateWorkerID(workerInfo, workerID);
       }
 
-      WorkerInfo worker = new WorkerInfo(workerID, ip, port, nodeIP, rackName, dcName);
+      WorkerWithState worker = new WorkerWithState(workerInfo);
       worker.setWorkerState(JobMasterAPI.WorkerState.STARTING);
       if (workers.containsKey(worker.getWorkerID())) {
-        LOG.severe("Second worker STARTING message received for workerID: " + workerID
+        LOG.severe("Second worker STARTING message received for workerID: " + worker.getWorkerID()
             + "\nIgnoring this worker STARTING message. "
             + "\nReceived Message: " + message
-            + "\nPrevious WorkerInfo with that workerID: " + workers.get(workerID));
+            + "\nPrevious Worker with that workerID: " + workers.get(worker.getWorkerID()));
       } else {
-        workers.put(workerID, worker);
+        workers.put(worker.getWorkerID(), worker);
       }
-      sendWorkerStateChangeResponse(id, workerID, message.getNewState());
+      sendWorkerStateChangeResponse(id, worker.getWorkerID(), message.getNewState());
 
       if (workers.size() == numberOfWorkers) {
         sendListWorkersResponseToWaitList();
@@ -127,26 +123,24 @@ public class WorkerMonitor implements MessageHandler {
 
       return;
 
-    } else if (!workers.containsKey(message.getWorkerNetworkInfo().getWorkerID())) {
+    } else if (!workers.containsKey(message.getWorkerInfo().getWorkerID())) {
 
       LOG.warning("WorkerStateChange message received from a worker "
           + "that has not joined the job yet.\n"
           + "Not processing the message, just sending a response"
           + message);
 
-      sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
+      sendWorkerStateChangeResponse(id, message.getWorkerInfo().getWorkerID(),
           message.getNewState());
       return;
 
     } else if (message.getNewState() == JobMasterAPI.WorkerState.COMPLETED) {
 
-      workers.get(message.getWorkerNetworkInfo().getWorkerID())
-          .setWorkerState(message.getNewState());
+      workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
       LOG.info("WorkerStateChange COMPLETED message received: \n" + message);
 
       // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
-          message.getNewState());
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
 
       // check whether all workers completed
       // if so, stop the job master
@@ -158,20 +152,17 @@ public class WorkerMonitor implements MessageHandler {
       return;
 
     } else if (message.getNewState() == JobMasterAPI.WorkerState.RUNNING) {
-      workers.get(message.getWorkerNetworkInfo().getWorkerID())
-          .setWorkerState(message.getNewState());
+      workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
       LOG.info("WorkerStateChange RUNNING message received: \n" + message);
 
       // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
-          message.getNewState());
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
 
     } else {
       LOG.warning("Unrecognized WorkerStateChange message received. Ignoring and sending reply: \n"
           + message);
       // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerNetworkInfo().getWorkerID(),
-          message.getNewState());
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
     }
   }
 
@@ -180,7 +171,7 @@ public class WorkerMonitor implements MessageHandler {
       return false;
     }
 
-    for (WorkerInfo worker: workers.values()) {
+    for (WorkerWithState worker: workers.values()) {
       if (worker.getWorkerState() != JobMasterAPI.WorkerState.COMPLETED) {
         return false;
       }
@@ -232,26 +223,8 @@ public class WorkerMonitor implements MessageHandler {
     JobMasterAPI.ListWorkersResponse.Builder responseBuilder = ListWorkersResponse.newBuilder()
         .setWorkerID(workerID);
 
-    for (WorkerInfo worker: workers.values()) {
-      JobMasterAPI.WorkerNetworkInfo.Builder workerInfoBuilder =
-          JobMasterAPI.WorkerNetworkInfo.newBuilder()
-              .setWorkerID(worker.getWorkerID())
-              .setWorkerIP(worker.getIp().getHostAddress())
-              .setPort(worker.getPort());
-
-      if (worker.hasNodeIP()) {
-        workerInfoBuilder.setNodeIP(worker.getNodeIP());
-      }
-
-      if (worker.hasRackName()) {
-        workerInfoBuilder.setRackName(worker.getRackName());
-      }
-
-      if (worker.hasDataCenterName()) {
-        workerInfoBuilder.setDataCenterName(worker.getDataCenterName());
-      }
-
-      responseBuilder.addWorkers(workerInfoBuilder.build());
+    for (WorkerWithState worker: workers.values()) {
+      responseBuilder.addWorker(worker.getWorkerInfo());
     }
 
     JobMasterAPI.ListWorkersResponse response = responseBuilder.build();

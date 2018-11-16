@@ -20,12 +20,12 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
@@ -95,11 +95,11 @@ public final class MesosMPIWorkerStarter {
     String jobMasterIP = args[1];
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("Worker ID..: " + workerID);
-    startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
+    startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP);
 
     LOG.info("\nWorker Controller\nWorker ID..: "
-        + workerController.getWorkerNetworkInfo().getWorkerID()
-        + "\nIP address..: " + workerController.getWorkerNetworkInfo().getWorkerIP().toString());
+        + workerController.getWorkerInfo().getWorkerID()
+        + "\nIP address..: " + workerController.getWorkerInfo().getWorkerIP());
 
     startWorker(workerController, null);
     try {
@@ -117,11 +117,11 @@ public final class MesosMPIWorkerStarter {
     //workerController.close();
   }
 
-  public static void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
+  public static void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP) {
 
     LOG.info("JobMaster IP..: " + jobMasterIP);
-    LOG.info("NETWORK INFO..: " + networkInfo.getWorkerIP().toString());
-    jobMasterClient = new JobMasterClient(config, networkInfo, jobMasterIP);
+    LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP().toString());
+    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP);
     jobMasterClient.startThreaded();
     // we need to make sure that the worker starting message went through
     jobMasterClient.sendWorkerStartingMessage();

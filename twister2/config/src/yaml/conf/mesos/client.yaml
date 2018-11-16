@@ -53,7 +53,7 @@ twister2.use_docker_container: "true"
 # Better data locality can be achieved
 # Example: rack=rack1, rack=rack2, rack=rack3, etc
 # no default value is specified
-mesos.rack.labey.key: rack
+rack.labey.key: rack
 
 # data center label key
 # each data center should have a unique label
@@ -62,13 +62,13 @@ mesos.rack.labey.key: rack
 # Better data locality can be achieved
 # Example: datacenter=dc1, datacenter=dc1, datacenter=dc1, etc
 # no default value is specified
-mesos.datacenter.labey.key: datacenter
+datacenter.labey.key: datacenter
 
 # Data center list with rack names
-mesos.datacenters.list:
+datacenters.list:
 - echo: ['blue-rack', 'green-rack']
 
 # Rack list with node IPs in them
-mesos.racks.list:
+racks.list:
 - blue-rack: ['10.0.0.40', '10.0.0.41', '10.0.0.42', '10.0.0.43', '10.0.0.44', ]
 - green-rack: ['node11.ip', 'node12.ip', 'node13.ip']

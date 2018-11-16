@@ -17,29 +17,34 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class MPIWorkerController implements IWorkerController {
   private int thisWorkerID;
 
-  private Map<Integer, WorkerNetworkInfo> networkInfoMap = new HashMap<>();
+  private Map<Integer, JobMasterAPI.WorkerInfo> networkInfoMap = new HashMap<>();
 
   public MPIWorkerController(int thisWorkerID, Map<Integer, String> processNames) {
     this.thisWorkerID = thisWorkerID;
     for (Map.Entry<Integer, String> e : processNames.entrySet()) {
-      networkInfoMap.put(e.getKey(), new WorkerNetworkInfo(e.getValue(), 0, e.getKey(),
-          new NodeInfo(e.getValue(), null, null)));
+      JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtil.createNodeInfo(e.getValue(), null, null);
+      JobMasterAPI.WorkerInfo workerInfo =
+          WorkerInfoUtil.createWorkerInfo(e.getKey(), e.getValue(), 0, nodeInfo);
+      networkInfoMap.put(e.getKey(), workerInfo);
+//      networkInfoMap.put(e.getKey(), new WorkerNetworkInfo(e.getValue(), 0, e.getKey(),
+//          new NodeInfoUtil(e.getValue(), null, null)));
     }
   }
 
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfo() {
+  public JobMasterAPI.WorkerInfo getWorkerInfo() {
     return networkInfoMap.get(thisWorkerID);
   }
 
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfoForID(int id) {
+  public JobMasterAPI.WorkerInfo getWorkerInfoForID(int id) {
     return networkInfoMap.get(id);
   }
 
@@ -49,12 +54,12 @@ public class MPIWorkerController implements IWorkerController {
   }
 
   @Override
-  public List<WorkerNetworkInfo> getWorkerList() {
+  public List<JobMasterAPI.WorkerInfo> getWorkerList() {
     return new ArrayList<>(networkInfoMap.values());
   }
 
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
+  public List<JobMasterAPI.WorkerInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
     return new ArrayList<>(networkInfoMap.values());
   }
 

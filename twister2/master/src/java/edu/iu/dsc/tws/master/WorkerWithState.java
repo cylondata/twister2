@@ -17,25 +17,17 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-public class WorkerInfo {
-  private static final Logger LOG = Logger.getLogger(WorkerInfo.class.getName());
+public class WorkerWithState {
+  private static final Logger LOG = Logger.getLogger(WorkerWithState.class.getName());
 
   private JobMasterAPI.WorkerState workerState;
-  private WorkerNetworkInfo networkInfo;
+  private JobMasterAPI.WorkerInfo workerInfo;
   private long pingTimestamp;
 
-  public WorkerInfo(int workerID, InetAddress ip, int port) {
-    this(workerID, ip, port, null, null, null);
-  }
-
-  public WorkerInfo(int workerID, InetAddress ip, int port,
-                    String nodeIP, String rackName, String dcname) {
-
-    networkInfo = new WorkerNetworkInfo(ip, port, workerID, new NodeInfo(nodeIP, rackName, dcname));
+  public WorkerWithState(JobMasterAPI.WorkerInfo workerInfo) {
+    this.workerInfo = workerInfo;
     workerState = JobMasterAPI.WorkerState.UNASSIGNED;
     pingTimestamp = -1;
   }
@@ -55,44 +47,48 @@ public class WorkerInfo {
     this.workerState = workerState;
   }
 
+  public JobMasterAPI.WorkerInfo getWorkerInfo() {
+    return workerInfo;
+  }
+
   public JobMasterAPI.WorkerState getWorkerState() {
     return workerState;
   }
 
-  public InetAddress getIp() {
-    return networkInfo.getWorkerIP();
+  public String getIp() {
+    return workerInfo.getWorkerIP();
   }
 
   public int getPort() {
-    return networkInfo.getWorkerPort();
+    return workerInfo.getPort();
   }
 
   public int getWorkerID() {
-    return networkInfo.getWorkerID();
+    return workerInfo.getWorkerID();
   }
 
   public String getNodeIP() {
-    return networkInfo.getNodeInfo().getNodeIP();
+    return workerInfo.getNodeInfo().getNodeIP();
   }
 
   public String getRackName() {
-    return networkInfo.getNodeInfo().getRackName();
+    return workerInfo.getNodeInfo().getRackName();
   }
 
   public String getDataCenterName() {
-    return networkInfo.getNodeInfo().getDataCenterName();
+    return workerInfo.getNodeInfo().getDataCenterName();
   }
 
   public boolean hasNodeIP() {
-    return networkInfo.getNodeInfo().hasNodeIP();
+    return workerInfo.getNodeInfo().getNodeIP() == null ? false : true;
   }
 
   public boolean hasRackName() {
-    return networkInfo.getNodeInfo().hasRackName();
+    return workerInfo.getNodeInfo().getRackName() == null ? false : true;
   }
 
   public boolean hasDataCenterName() {
-    return networkInfo.getNodeInfo().hasDataCenterName();
+    return workerInfo.getNodeInfo().getDataCenterName() == null ? false : true;
   }
 
   public void setPingTimestamp(long pingTimestamp) {
@@ -113,17 +109,17 @@ public class WorkerInfo {
       return false;
     }
 
-    WorkerInfo that = (WorkerInfo) o;
-    return networkInfo.getWorkerID() == that.networkInfo.getWorkerID();
+    WorkerWithState that = (WorkerWithState) o;
+    return workerInfo.getWorkerID() == that.workerInfo.getWorkerID();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(networkInfo.getWorkerID());
+    return Objects.hash(workerInfo.getWorkerID());
   }
 
   @Override
   public String toString() {
-    return networkInfo.toString();
+    return workerInfo.toString();
   }
 }

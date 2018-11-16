@@ -6,6 +6,7 @@ common_deps_files = [
     "@org_yaml_snakeyaml//jar",
     "@com_google_protobuf_protobuf_java//jar",
     "//twister2/proto:proto_job_java",
+    "//twister2/proto:proto_jobmaster_java",
 ]
 
 t2_java_lib(

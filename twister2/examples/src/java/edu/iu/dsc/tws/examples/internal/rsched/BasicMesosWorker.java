@@ -40,7 +40,7 @@ public class BasicMesosWorker implements IWorker {
 
     // wait some random amount of time before finishing
     long duration = (long) (Math.random() * 1000);
-    int port = workerController.getWorkerNetworkInfo().getWorkerPort();
+    int port = workerController.getWorkerInfo().getPort();
     try {
       System.out.println("I am the worker: " + workerID);
       System.out.println("I am sleeping " + duration + "ms. Then will close.");

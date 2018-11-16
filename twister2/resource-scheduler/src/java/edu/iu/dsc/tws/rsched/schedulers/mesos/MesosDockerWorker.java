@@ -36,8 +36,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -71,7 +71,7 @@ public class MesosDockerWorker {
     logger.initLogging();
 
     MesosWorkerController workerController = null;
-    List<WorkerNetworkInfo> workerNetworkInfoList = new ArrayList<>();
+    List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<>();
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
@@ -80,7 +80,7 @@ public class MesosDockerWorker {
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
-      workerNetworkInfoList = workerController.waitForAllWorkersToJoin(
+      workerInfoList = workerController.waitForAllWorkersToJoin(
           ZKContext.maxWaitTimeForAllWorkersToJoin(worker.config));
       LOG.info("Everyone has joined");
       //container.execute(worker.config, id, null, workerController, null);
@@ -90,7 +90,7 @@ public class MesosDockerWorker {
     }
 
     //job master is the one with the id==0
-    String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
+    String jobMasterIP = workerInfoList.get(0).getWorkerIP();
     LOG.info("JobMasterIP..: " + jobMasterIP);
     LOG.info("Worker ID..: " + workerId);
     StringBuilder outputBuilder = new StringBuilder();
@@ -98,7 +98,7 @@ public class MesosDockerWorker {
     LOG.info("Worker count..: " + workerCount);
 
     //start job master client
-    worker.startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
+    worker.startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP);
 
     //mpi master has the id equals to 1
     //id==0 is job master
@@ -107,9 +107,9 @@ public class MesosDockerWorker {
       Writer writer = new BufferedWriter(new OutputStreamWriter(
           new FileOutputStream("/twister2/hostFile", true)));
       for (int i = 1; i < workerCount; i++) {
-        writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
+        writer.write(workerInfoList.get(i).getWorkerIP()
             + "\n");
-        LOG.info("Host IP..: " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress());
+        LOG.info("Host IP..: " + workerInfoList.get(i).getWorkerIP());
       }
       writer.close();
       LOG.info("Before mpirun");
@@ -132,11 +132,11 @@ public class MesosDockerWorker {
   }
 
 
-  public void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
+  public void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP) {
 
     LOG.info("JobMasterIP..: " + jobMasterIP);
 
-    jobMasterClient = new JobMasterClient(config, networkInfo, jobMasterIP);
+    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP);
     jobMasterClient.startThreaded();
     // we need to make sure that the worker starting message went through
     jobMasterClient.sendWorkerStartingMessage();

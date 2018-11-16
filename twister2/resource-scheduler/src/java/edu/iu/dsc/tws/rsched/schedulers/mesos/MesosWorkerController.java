@@ -20,10 +20,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 
 public class MesosWorkerController implements IWorkerController {
@@ -36,8 +37,8 @@ public class MesosWorkerController implements IWorkerController {
   private int workerPort;
   private int numberOfWorkers;
   private int containerPerWorker;
-  private List<WorkerNetworkInfo> workerList;
-  private WorkerNetworkInfo thisWorker;
+  private List<JobMasterAPI.WorkerInfo> workerList;
+  private JobMasterAPI.WorkerInfo thisWorker;
   private ZKWorkerController zkWorkerController;
 
   public MesosWorkerController(Config cfg, JobAPI.Job job, String ip, int port, int workerID) {
@@ -50,9 +51,11 @@ public class MesosWorkerController implements IWorkerController {
     containerPerWorker = MesosContext.containerPerWorker(config);
     workerList = new ArrayList<>();
 //    thisWorker = new WorkerNetworkInfo(convertStringToIP(ip), port, workerID,
-//        new NodeInfo(ip, "rack1", "dc1"));
-    thisWorker = new WorkerNetworkInfo(convertStringToIP(ip), port, workerID,
-        MesosContext.getNodeInfo(config, ip));
+//        new NodeInfoUtil(ip, "rack1", "dc1"));
+    thisWorker = WorkerInfoUtil.createWorkerInfo(workerID, ip, port,
+        SchedulerContext.getNodeInfo(config, ip));
+//    thisWorker = new WorkerNetworkInfo(convertStringToIP(ip), port, workerID,
+//        MesosContext.getNodeInfo(config, ip));
   }
 
   /**
@@ -68,12 +71,12 @@ public class MesosWorkerController implements IWorkerController {
   }
 
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfo() {
+  public JobMasterAPI.WorkerInfo getWorkerInfo() {
     return thisWorker;
   }
 
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfoForID(int id) {
+  public JobMasterAPI.WorkerInfo getWorkerInfoForID(int id) {
     return null;
   }
 
@@ -83,7 +86,7 @@ public class MesosWorkerController implements IWorkerController {
   }
 
   @Override
-  public List<WorkerNetworkInfo> getWorkerList() {
+  public List<JobMasterAPI.WorkerInfo> getWorkerList() {
     return zkWorkerController.getWorkerList();
   }
 
@@ -94,18 +97,18 @@ public class MesosWorkerController implements IWorkerController {
     String workerHostPort = workerIp + ":" + workerPort;
 
     // temporary value
-//    NodeInfo nodeInfo = new NodeInfo(workerIp, null, null);
-    NodeInfo nodeInfo = MesosContext.getNodeInfo(config, workerIp);
+//    NodeInfoUtil nodeInfo = new NodeInfoUtil(workerIp, null, null);
+    JobMasterAPI.NodeInfo nodeInfo = MesosContext.getNodeInfo(config, workerIp);
     zkWorkerController =
         new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
     zkWorkerController.initialize();
     long duration = System.currentTimeMillis() - startTime;
-    LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerNetworkInfo()
+    LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerInfo()
         + " took: " + duration + "ms");
   }
 
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
+  public List<JobMasterAPI.WorkerInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
 
     LOG.info("Waiting for " + numberOfWorkers + " workers to join .........");
 

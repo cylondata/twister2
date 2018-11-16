@@ -23,11 +23,11 @@ import java.util.logging.Logger;
 import org.apache.commons.cli.Option;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public final class Utils {
   private static final Logger LOG = Logger.getLogger(Utils.class.getName());
@@ -182,7 +182,7 @@ public final class Utils {
    */
   public static TaskPlan createStageTaskPlan(Config cfg, AllocatedResources allocatedResources,
                                              List<Integer> noOfTaskEachStage,
-                                             List<WorkerNetworkInfo> workerList) {
+                                             List<JobMasterAPI.WorkerInfo> workerList) {
     int noOfContainers = allocatedResources.getNumberOfWorkers();
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();

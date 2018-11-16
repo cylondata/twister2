@@ -21,11 +21,12 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 /**
@@ -47,8 +48,8 @@ public class HelloWorld implements IWorker {
             + "and I got a message: %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
 
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
-    String workersStr = WorkerNetworkInfo.workerListAsString(workerList);
+    List<JobMasterAPI.WorkerInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    String workersStr = WorkerInfoUtil.workerListAsString(workerList);
     LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
 
     try {

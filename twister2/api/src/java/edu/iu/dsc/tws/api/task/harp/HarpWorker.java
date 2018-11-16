@@ -48,12 +48,11 @@ import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.harp.client.SyncClient;
 import edu.iu.harp.collective.Communication;
 import edu.iu.harp.io.Constant;
@@ -74,13 +73,13 @@ public abstract class HarpWorker implements IWorker {
   public void execute(Config config, int workerID, AllocatedResources allocatedResources,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
-    List<WorkerNetworkInfo> workersList = workerController.waitForAllWorkersToJoin(50000);
+    List<JobMasterAPI.WorkerInfo> workersList = workerController.waitForAllWorkersToJoin(50000);
 
     LOG.info(String.format("Worker %s starting with %d workers, "
             + "after waiting for all to start. \n %s",
         workerID, workersList.size(), workersList.toString()));
 
-    WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
+    JobMasterAPI.WorkerInfo workerInfo = workerController.getWorkerInfo();
 
     //Building Harp Specific parameters
     Map<String, Integer> rackToIntegerMap = this.getRackToIntegerMap(workersList);
@@ -97,7 +96,7 @@ public abstract class HarpWorker implements IWorker {
     Server server;
     try {
       server = new Server(
-          workerNetworkInfo.getWorkerIP().getHostAddress(),
+          workerInfo.getWorkerIP(),
           harpPort,
           new EventQueue(),
           dataMap,
@@ -106,10 +105,10 @@ public abstract class HarpWorker implements IWorker {
     } catch (Exception e) {
       LOG.log(Level.SEVERE, String.format("Failed to start harp server %s:%d "
               + "on twister worker %s:%d",
-          workerNetworkInfo.getWorkerIP().getHostAddress(),
+          workerInfo.getWorkerIP(),
           harpPort,
-          workerNetworkInfo.getWorkerIP().getHostAddress(),
-          workerNetworkInfo.getWorkerPort()),
+          workerInfo.getWorkerIP(),
+          workerInfo.getPort()),
           e);
       throw new RuntimeException("Failed to start Harp Server");
     }
@@ -122,10 +121,10 @@ public abstract class HarpWorker implements IWorker {
     server.start();
     LOG.info(String.format("Harp server started. %s:%d "
             + "on twister worker %s:%d",
-        workerNetworkInfo.getWorkerIP().getHostAddress(),
+        workerInfo.getWorkerIP(),
         harpPort,
-        workerNetworkInfo.getWorkerIP().getHostAddress(),
-        workerNetworkInfo.getWorkerPort()));
+        workerInfo.getWorkerIP(),
+        workerInfo.getPort()));
 
     try {
       LOG.info("Trying master barrier");
@@ -160,14 +159,14 @@ public abstract class HarpWorker implements IWorker {
     }
   }
 
-  private Map<Integer, List<String>> getNodesOfRackMap(List<WorkerNetworkInfo> workerList,
+  private Map<Integer, List<String>> getNodesOfRackMap(List<JobMasterAPI.WorkerInfo> workerList,
                                                        Map<String, Integer> racks) {
     Map<Integer, List<String>> nodesOfRack = new HashMap<>();
 
     workerList.forEach(worker -> {
       Integer rackKey = racks.get(getRackKey(worker.getNodeInfo()));
       nodesOfRack.computeIfAbsent(rackKey, integer -> new ArrayList<>());
-      nodesOfRack.get(rackKey).add(worker.getWorkerIP().getHostAddress());
+      nodesOfRack.get(rackKey).add(worker.getWorkerIP());
     });
 
     return nodesOfRack;
@@ -180,10 +179,10 @@ public abstract class HarpWorker implements IWorker {
    *
    * @return Alphanumeric to numeric mapping of rack IDs
    */
-  private Map<String, Integer> getRackToIntegerMap(List<WorkerNetworkInfo> workerList) {
+  private Map<String, Integer> getRackToIntegerMap(List<JobMasterAPI.WorkerInfo> workerList) {
     AtomicInteger counter = new AtomicInteger();
     return workerList.stream()
-        .map(WorkerNetworkInfo::getNodeInfo)
+        .map(JobMasterAPI.WorkerInfo::getNodeInfo)
         .map(this::getRackKey)
         .distinct()
         .sorted()
@@ -195,8 +194,8 @@ public abstract class HarpWorker implements IWorker {
    *
    * @return unique id for the rack
    */
-  private String getRackKey(NodeInfo nodeInfo) {
-    return nodeInfo.hasDataCenterName() ? //multiple data centers can have same rack name
+  private String getRackKey(JobMasterAPI.NodeInfo nodeInfo) {
+    return nodeInfo.getDataCenterName() != null ? //multiple data centers can have same rack name
         nodeInfo.getDataCenterName().concat(nodeInfo.getRackName()) : nodeInfo.getRackName();
   }
 

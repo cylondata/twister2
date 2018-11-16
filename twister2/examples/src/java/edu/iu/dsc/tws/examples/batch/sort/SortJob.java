@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
@@ -37,6 +36,7 @@ import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -69,7 +69,7 @@ public class SortJob implements IWorker {
 
     taskStages.add(NO_OF_TASKS);
     taskStages.add(NO_OF_TASKS);
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    List<JobMasterAPI.WorkerInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(cfg, allocatedResources, taskStages, workerList);
 

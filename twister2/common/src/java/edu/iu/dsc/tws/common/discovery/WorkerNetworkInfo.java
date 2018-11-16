@@ -41,21 +41,21 @@ public class WorkerNetworkInfo {
   private int workerID;
   private InetAddress ip;
   private int port;
-  private NodeInfo nodeInfo;
+  private NodeInfoUtil nodeInfo;
 
   public WorkerNetworkInfo(String ipStr, int port, int workerID) {
-    this(convertStringToIP(ipStr), port, workerID, new NodeInfo(ipStr, null, null));
+    this(convertStringToIP(ipStr), port, workerID, null);
   }
 
   public WorkerNetworkInfo(InetAddress ip, int port, int workerID) {
-    this(ip, port, workerID, new NodeInfo(ip.getHostAddress(), null, null));
+    this(ip, port, workerID, null);
   }
 
-  public WorkerNetworkInfo(String ipStr, int port, int workerID, NodeInfo nodeInfo) {
+  public WorkerNetworkInfo(String ipStr, int port, int workerID, NodeInfoUtil nodeInfo) {
     this(convertStringToIP(ipStr), port, workerID, nodeInfo);
   }
 
-  public WorkerNetworkInfo(InetAddress ip, int port, int workerID, NodeInfo nodeInfo) {
+  public WorkerNetworkInfo(InetAddress ip, int port, int workerID, NodeInfoUtil nodeInfo) {
     this.ip = ip;
     this.port = port;
     this.workerID = workerID;
@@ -74,7 +74,7 @@ public class WorkerNetworkInfo {
     return port;
   }
 
-  public NodeInfo getNodeInfo() {
+  public NodeInfoUtil getNodeInfo() {
     return nodeInfo;
   }
 
@@ -121,14 +121,14 @@ public class WorkerNetworkInfo {
    * encode the given WorkerNetworkInfo object fields as a single line of a String
    * encoding has two parts:
    *   first part consists of ip, port and workerID separated by comma
-   *   second part consists of NodeInfo object
+   *   second part consists of NodeInfoUtil object
    * two parts are separated by a semicolon
    * @return
    */
-  public static String encodeWorkerNetworkInfo(WorkerNetworkInfo networkInfo) {
-    return networkInfo.ip.getHostAddress() + "," + networkInfo.port + "," + networkInfo.workerID
-        + ";" + NodeInfo.encodeNodeInfo(networkInfo.nodeInfo);
-  }
+//  public static String encodeWorkerNetworkInfo(WorkerNetworkInfo networkInfo) {
+//    return networkInfo.ip.getHostAddress() + "," + networkInfo.port + "," + networkInfo.workerID
+//        + ";" + NodeInfoUtil.encodeNodeInfo(networkInfo.nodeInfo);
+//  }
 
   /**
    * decode the given String that is encoded with the method encodeWorkerNetworkInfo
@@ -140,20 +140,21 @@ public class WorkerNetworkInfo {
       return null;
     }
 
-    String[] twoParts = networkInfoStr.split(";");
-    NodeInfo nodeInfo = NodeInfo.decodeNodeInfo(twoParts[1]);
-
-    String[] fields = twoParts[0].split(",");
-    if (fields.length != 3) {
-      return null;
-    }
-
-    WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(fields[0],
-        Integer.parseInt(fields[1]),
-        Integer.parseInt(fields[2]),
-        nodeInfo);
-
-    return workerNetworkInfo;
+//    String[] twoParts = networkInfoStr.split(";");
+//    NodeInfoUtil nodeInfo = NodeInfoUtil.decodeNodeInfo(twoParts[1]);
+//
+//    String[] fields = twoParts[0].split(",");
+//    if (fields.length != 3) {
+//      return null;
+//    }
+//
+//    WorkerNetworkInfo workerNetworkInfo = new WorkerNetworkInfo(fields[0],
+//        Integer.parseInt(fields[1]),
+//        Integer.parseInt(fields[2]),
+//        nodeInfo);
+//
+//    return workerNetworkInfo;
+    return null;
   }
 
   /**

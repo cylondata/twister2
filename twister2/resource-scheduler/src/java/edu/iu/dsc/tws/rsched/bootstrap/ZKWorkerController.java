@@ -34,8 +34,9 @@ import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 
 /**
  * gets unique workerID's for each client by using DistributedAtomicInteger
@@ -60,7 +61,7 @@ public class ZKWorkerController implements IWorkerController {
   private int workerPort;
 
   // WorkerNetworkInfo object for this worker
-  private WorkerNetworkInfo workerNetworkInfo;
+  private WorkerInfo workerInfo;
 
   // number of workers in this job
   private int numberOfWorkers;
@@ -68,7 +69,7 @@ public class ZKWorkerController implements IWorkerController {
   // name of this job
   private String jobName;
 
-  // NodeInfo object for this worker
+  // NodeInfoUtil object for this worker
   private NodeInfo nodeInfo;
 
   // the client to connect to ZK server
@@ -142,7 +143,8 @@ public class ZKWorkerController implements IWorkerController {
       // get a workerID, create the jobZnode, append worker info
       if (client.checkExists().forPath(jobPath) == null) {
         int workerID = createWorkerID();
-        workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerID, nodeInfo);
+        workerInfo = WorkerInfoUtil.createWorkerInfo(
+            workerID, workerIP.getHostAddress(), workerPort, nodeInfo);
         createWorkerZnode();
         appendWorkerInfo();
 
@@ -150,21 +152,22 @@ public class ZKWorkerController implements IWorkerController {
         // check whether this worker joined the job before
         // whether it is coming from a failure
       } else {
-        List<WorkerNetworkInfo> workers = parseJobZNode();
-        workerNetworkInfo = getIfExists(workers);
+        List<WorkerInfo> workers = parseJobZNode();
+        workerInfo = getIfExists(workers);
 
         // this worker is coming from a failure,
-        // use the workerNetworkInfo from job znode, construct worker znode only
-        if (workerNetworkInfo != null) {
+        // use the workerInfo from job znode, construct worker znode only
+        if (workerInfo != null) {
           createWorkerZnode();
           LOG.warning("Worker is coming from a failure. It is using the previous job znode data: "
-              + workerNetworkInfo);
+              + workerInfo);
 
         // it has not joined before,
         // create workerID, append its info to the jobZnode
         } else {
           int workerID = createWorkerID();
-          workerNetworkInfo = new WorkerNetworkInfo(workerIP, workerPort, workerID, nodeInfo);
+          workerInfo = WorkerInfoUtil.createWorkerInfo(
+              workerID, workerIP.getHostAddress(), workerPort, nodeInfo);
           createWorkerZnode();
           appendWorkerInfo();
         }
@@ -175,7 +178,7 @@ public class ZKWorkerController implements IWorkerController {
       childrenCache = new PathChildrenCache(client, jobPath, true);
       childrenCache.start();
 
-      LOG.info("This worker: " + workerNetworkInfo + " initialized successfully.");
+      LOG.info("This worker: " + workerInfo + " initialized successfully.");
 
       return true;
     } catch (Exception e) {
@@ -185,14 +188,14 @@ public class ZKWorkerController implements IWorkerController {
   }
 
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfo() {
-    return workerNetworkInfo;
+  public WorkerInfo getWorkerInfo() {
+    return workerInfo;
   }
 
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfoForID(int id) {
-    List<WorkerNetworkInfo> workerList = getWorkerList();
-    for (WorkerNetworkInfo info: workerList) {
+  public WorkerInfo getWorkerInfoForID(int id) {
+    List<WorkerInfo> workerList = getWorkerList();
+    for (WorkerInfo info: workerList) {
       if (info.getWorkerID() == id) {
         return info;
       }
@@ -234,9 +237,8 @@ public class ZKWorkerController implements IWorkerController {
   private void createWorkerZnode() {
     try {
       String thisNodePath =
-          ZKUtil.constructWorkerPath(jobPath, workerNetworkInfo.getWorkerIpAndPort());
-      String encodedWorkerNetworkInfo =
-          WorkerNetworkInfo.encodeWorkerNetworkInfo(workerNetworkInfo);
+          ZKUtil.constructWorkerPath(jobPath, getWorkerIpAndPort(workerInfo));
+      String encodedWorkerNetworkInfo = WorkerInfoUtil.encodeWorkerInfo(workerInfo);
 
       jobZNode = ZKUtil.createPersistentEphemeralZnode(
           client, thisNodePath, encodedWorkerNetworkInfo.getBytes());
@@ -246,7 +248,7 @@ public class ZKWorkerController implements IWorkerController {
       String fullZnodePath = jobZNode.getActualPath();
       LOG.fine("An ephemeral znode is created for this worker: " + fullZnodePath);
     } catch (Exception e) {
-      throw new RuntimeException("Could not create znode for the worker: " + workerNetworkInfo, e);
+      throw new RuntimeException("Could not create znode for the worker: " + workerInfo, e);
     }
   }
 
@@ -263,26 +265,25 @@ public class ZKWorkerController implements IWorkerController {
       lock.acquire();
       byte[] parentData = client.getData().forPath(jobPath);
       String parentStr = new String(parentData);
-      String updatedParentStr = parentStr
-          + "\n" + WorkerNetworkInfo.encodeWorkerNetworkInfo(workerNetworkInfo);
+      String updatedParentStr = parentStr + "\n" + WorkerInfoUtil.encodeWorkerInfo(workerInfo);
       client.setData().forPath(jobPath, updatedParentStr.getBytes());
       lock.release();
       LOG.info("Updated job znode content: " + updatedParentStr);
     } catch (Exception e) {
       throw new RuntimeException("Could not update the job znode content for the worker: "
-          + workerNetworkInfo, e);
+          + workerInfo, e);
     }
   }
 
   /**
    * Print all given workers
    */
-  public void printWorkers(List<WorkerNetworkInfo> workers) {
+  public void printWorkers(List<WorkerInfo> workers) {
 
     StringBuffer logBuffer = new StringBuffer();
     logBuffer.append("Number of workers in the job: " + workers.size() + "\n");
 
-    for (WorkerNetworkInfo worker: workers) {
+    for (WorkerInfo worker: workers) {
       logBuffer.append(worker.toString() + "\n");
     }
 
@@ -293,12 +294,12 @@ public class ZKWorkerController implements IWorkerController {
    * Get current list of workers from local children cache
    * This list does not have the workers that have already left
    */
-  public List<WorkerNetworkInfo> getCurrentWorkers() {
+  public List<WorkerInfo> getCurrentWorkers() {
 
-    List<WorkerNetworkInfo> workers = new ArrayList<WorkerNetworkInfo>();
+    List<WorkerInfo> workers = new ArrayList<>();
     for (ChildData child: childrenCache.getCurrentData()) {
       String childContent = new String(child.getData());
-      WorkerNetworkInfo wnInfo = WorkerNetworkInfo.decodeWorkerNetworkInfo(childContent);
+      WorkerInfo wnInfo = WorkerInfoUtil.decodeWorkerInfo(childContent);
       workers.add(wnInfo);
     }
     return workers;
@@ -315,7 +316,7 @@ public class ZKWorkerController implements IWorkerController {
    * Get all joined workers including the ones that have already completed and left
    */
   @Override
-  public List<WorkerNetworkInfo> getWorkerList() {
+  public List<WorkerInfo> getWorkerList() {
 
     return parseJobZNode();
   }
@@ -326,7 +327,7 @@ public class ZKWorkerController implements IWorkerController {
    * return them as a List
    * @return
    */
-  private List<WorkerNetworkInfo> parseJobZNode() {
+  private List<WorkerInfo> parseJobZNode() {
     byte[] jobZnodeData = null;
     try {
       jobZnodeData = client.getData().forPath(jobPath);
@@ -335,12 +336,12 @@ public class ZKWorkerController implements IWorkerController {
       return null;
     }
 
-    List<WorkerNetworkInfo> workers = new ArrayList<WorkerNetworkInfo>();
+    List<WorkerInfo> workers = new ArrayList<>();
     String jobZnodeStr = new String(jobZnodeData);
     StringTokenizer st = new StringTokenizer(jobZnodeStr, "\n");
     while (st.hasMoreTokens()) {
       String token = st.nextToken();
-      WorkerNetworkInfo worker = WorkerNetworkInfo.decodeWorkerNetworkInfo(token);
+      WorkerInfo worker = WorkerInfoUtil.decodeWorkerInfo(token);
       if (worker != null) {
         workers.add(worker);
       }
@@ -354,15 +355,19 @@ public class ZKWorkerController implements IWorkerController {
    * @param workers
    * @return
    */
-  private WorkerNetworkInfo getIfExists(List<WorkerNetworkInfo> workers) {
+  private WorkerInfo getIfExists(List<WorkerInfo> workers) {
     String workerIpAndPort = workerIP.getHostAddress() + ":" + workerPort;
-    for (WorkerNetworkInfo worker: workers) {
-      if (workerIpAndPort.equalsIgnoreCase(worker.getWorkerIpAndPort())) {
+    for (WorkerInfo worker: workers) {
+      if (workerIpAndPort.equalsIgnoreCase(getWorkerIpAndPort(worker))) {
         return worker;
       }
     }
 
     return null;
+  }
+
+  private String getWorkerIpAndPort(WorkerInfo wInfo) {
+    return wInfo.getWorkerIP() + ":" + wInfo.getPort();
   }
 
   /**
@@ -390,7 +395,7 @@ public class ZKWorkerController implements IWorkerController {
    * return null if timeLimit is reached or en exception is thrown while waiting
    */
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
+  public List<WorkerInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
 
     long duration = 0;
     while (duration < timeLimitMilliSec) {

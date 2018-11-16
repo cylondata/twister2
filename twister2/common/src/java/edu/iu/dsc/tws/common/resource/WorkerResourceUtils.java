@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public final class WorkerResourceUtils {
   public static final Logger LOG = Logger.getLogger(WorkerResourceUtils.class.getName());
@@ -26,7 +26,7 @@ public final class WorkerResourceUtils {
 
   public static Map<String, List<WorkerComputeResource>> getWorkersPerNode(
       AllocatedResources allocatedResources,
-      List<WorkerNetworkInfo> workerList) {
+      List<JobMasterAPI.WorkerInfo> workerList) {
 
     List<WorkerComputeResource> computeResources = allocatedResources.getWorkerComputeResources();
 
@@ -53,12 +53,12 @@ public final class WorkerResourceUtils {
     return workersPerNode;
   }
 
-  public static List<String> getDistinctNodeIPs(List<WorkerNetworkInfo> workerList) {
+  public static List<String> getDistinctNodeIPs(List<JobMasterAPI.WorkerInfo> workerList) {
 
     ArrayList<String> distinctNodes = new ArrayList<>();
 
-    for (WorkerNetworkInfo workerNetworkInfo: workerList) {
-      String nodeIP = workerNetworkInfo.getNodeInfo().getNodeIP();
+    for (JobMasterAPI.WorkerInfo workerInfo: workerList) {
+      String nodeIP = workerInfo.getNodeInfo().getNodeIP();
       if (nodeIP == null) {
         LOG.severe("NodeIP is null");
         return null;
@@ -71,13 +71,13 @@ public final class WorkerResourceUtils {
   }
 
   public static List<Integer> getWorkerIDsForANode(String nodeIP,
-                                                   List<WorkerNetworkInfo> workerList) {
+                                                   List<JobMasterAPI.WorkerInfo> workerList) {
 
     ArrayList<Integer> workerIDs = new ArrayList<>();
 
-    for (WorkerNetworkInfo workerNetworkInfo: workerList) {
-      if (nodeIP.equals(workerNetworkInfo.getNodeInfo().getNodeIP())) {
-        workerIDs.add(workerNetworkInfo.getWorkerID());
+    for (JobMasterAPI.WorkerInfo workerInfo: workerList) {
+      if (nodeIP.equals(workerInfo.getNodeInfo().getNodeIP())) {
+        workerIDs.add(workerInfo.getWorkerID());
       }
     }
 

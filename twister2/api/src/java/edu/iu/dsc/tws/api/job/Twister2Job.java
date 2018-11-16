@@ -210,6 +210,7 @@ public final class Twister2Job {
       return this;
     }
 
+    @SuppressWarnings("unchecked")
     private Twister2JobBuilder loadComputeResources(Config config) {
       List<Map<String, Number>> list =
           (List) (config.get(SchedulerContext.WORKER_COMPUTE_RESOURCES));

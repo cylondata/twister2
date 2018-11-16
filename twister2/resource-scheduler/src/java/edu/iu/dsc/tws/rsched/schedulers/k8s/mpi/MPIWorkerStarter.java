@@ -18,8 +18,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
@@ -50,10 +51,11 @@ public final class MPIWorkerStarter {
   private static Config config = null;
   private static int workerID = -1; // -1 means, not initialized
   private static int numberOfWorkers = -1; // -1 means, not initialized
-  private static WorkerNetworkInfo workerNetworkInfo;
+  private static JobMasterAPI.WorkerInfo workerInfo;
   private static JobMasterClient jobMasterClient;
   private static String jobName = null;
   private static JobAPI.Job job = null;
+  private static JobAPI.ComputeResource computeResource = null;
 
   private MPIWorkerStarter() { }
 
@@ -126,20 +128,23 @@ public final class MPIWorkerStarter {
       int workerPort = KubernetesContext.workerBasePort(config) + workerID;
 
       String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podIP);
-      NodeInfo thisNodeInfo = null;
+      JobMasterAPI.NodeInfo nodeInfo = null;
       if (nodeIP == null) {
         LOG.warning("Could not get nodeIP for this pod. Using podIP as nodeIP.");
-        thisNodeInfo = new NodeInfo(podIP, null, null);
+        nodeInfo = NodeInfoUtil.createNodeInfo(podIP, null, null);
       } else {
 
-        thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
+        nodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
             ? KubernetesContext.getNodeInfo(config, nodeIP)
             : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
       }
 
-      LOG.info("NodeInfo for this worker: " + thisNodeInfo);
+      LOG.info("NodeInfoUtil for this worker: " + nodeInfo);
 
-      workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID, thisNodeInfo);
+      computeResource = K8sWorkerUtils.getComputeResource(job, podName);
+
+      workerInfo = WorkerInfoUtil.createWorkerInfo(
+          workerID, localHost.getHostAddress(), workerPort, nodeInfo, computeResource);
 
       LOG.info("Worker information summary: \n"
           + "MPI Rank(workerID): " + workerID + "\n"
@@ -152,7 +157,7 @@ public final class MPIWorkerStarter {
     }
 
     // start JobMasterClient
-    jobMasterClient = new JobMasterClient(config, workerNetworkInfo, jobMasterIP,
+    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP,
         JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
 
     Thread clientThread = jobMasterClient.startThreaded();
@@ -198,7 +203,6 @@ public final class MPIWorkerStarter {
 //    AllocatedResources allocatedResources = K8sWorkerUtils.createAllocatedResources(
 //        KubernetesContext.clusterType(config), workerID, job);
 
-    JobAPI.ComputeResource computeResource = K8sWorkerUtils.getComputeResource(job, podName);
     K8sVolatileVolume volatileVolume = null;
     if (computeResource.getDiskGigaBytes() > 0) {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);

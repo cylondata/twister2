@@ -21,7 +21,8 @@ import java.util.logging.Logger;
 
 import com.squareup.okhttp.Response;
 
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 import io.kubernetes.client.ApiClient;
@@ -486,10 +487,11 @@ public class KubernetesController {
   }
 
   /**
-   * get NodeInfo objects for the nodes on this cluster
-   * @return the NodeInfo object list. If it can not get the list from K8s master, return null.
+   * get NodeInfoUtil objects for the nodes on this cluster
+   * @return the NodeInfoUtil object list. If it can not get the list from K8s master, return null.
    */
-  public ArrayList<NodeInfo> getNodeInfo(String rackLabelKey, String datacenterLabelKey) {
+  public ArrayList<JobMasterAPI.NodeInfo> getNodeInfo(String rackLabelKey,
+                                                      String datacenterLabelKey) {
 
     V1NodeList nodeList = null;
     try {
@@ -499,7 +501,7 @@ public class KubernetesController {
       return null;
     }
 
-    ArrayList<NodeInfo> nodeInfoList = new ArrayList<>();
+    ArrayList<JobMasterAPI.NodeInfo> nodeInfoList = new ArrayList<>();
     for (V1Node node : nodeList.getItems()) {
       List<V1NodeAddress> addressList = node.getStatus().getAddresses();
       for (V1NodeAddress nodeAddress: addressList) {
@@ -519,7 +521,8 @@ public class KubernetesController {
             }
           }
 
-          NodeInfo nodeInfo = new NodeInfo(nodeIP, rackName, datacenterName);
+          JobMasterAPI.NodeInfo nodeInfo =
+              NodeInfoUtil.createNodeInfo(nodeIP, rackName, datacenterName);
           nodeInfoList.add(nodeInfo);
           break;
         }

@@ -36,8 +36,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
@@ -77,7 +77,7 @@ public final class MesosMPIMasterStarter {
     logger.initLogging();
 
     MesosWorkerController workerController = null;
-    List<WorkerNetworkInfo> workerNetworkInfoList = new ArrayList<>();
+    List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<>();
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + mpiMaster.jobName + ".job");
@@ -86,7 +86,7 @@ public final class MesosMPIMasterStarter {
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
-      workerNetworkInfoList = workerController.waitForAllWorkersToJoin(
+      workerInfoList = workerController.waitForAllWorkersToJoin(
           ZKContext.maxWaitTimeForAllWorkersToJoin(mpiMaster.config));
       LOG.info("Everyone has joined");
       //container.execute(worker.config, id, null, workerController, null);
@@ -124,16 +124,16 @@ public final class MesosMPIMasterStarter {
     int workerCount = workerController.getNumberOfWorkers();
     LOG.info("Worker Count..: " + workerCount);
 
-    mpiMaster.startJobMasterClient(workerController.getWorkerNetworkInfo(), jobMasterIP);
+    mpiMaster.startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP);
 
     Writer writer = new BufferedWriter(new OutputStreamWriter(
         new FileOutputStream("/twister2/hostFile", true)));
 
     for (int i = 0; i < workerCount; i++) {
 
-      writer.write(workerNetworkInfoList.get(i).getWorkerIP().getHostAddress()
+      writer.write(workerInfoList.get(i).getWorkerIP()
           + "\n");
-      LOG.info("Host IP..: " + workerNetworkInfoList.get(i).getWorkerIP().getHostAddress());
+      LOG.info("Host IP..: " + workerInfoList.get(i).getWorkerIP());
     }
 
     writer.close();
@@ -162,11 +162,11 @@ public final class MesosMPIMasterStarter {
 
   }
 
-  public void startJobMasterClient(WorkerNetworkInfo networkInfo, String jobMasterIP) {
+  public void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP) {
 
     LOG.info("JobMaster IP..: " + jobMasterIP);
-    LOG.info("NETWORK INFO..: " + networkInfo.getWorkerIP().toString());
-    jobMasterClient = new JobMasterClient(config, networkInfo, jobMasterIP);
+    LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP());
+    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP);
     jobMasterClient.startThreaded();
     // we need to make sure that the worker starting message went through
     jobMasterClient.sendWorkerStartingMessage();

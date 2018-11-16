@@ -25,6 +25,8 @@ package edu.iu.dsc.tws.common.discovery;
 
 import java.util.List;
 
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+
 /**
  * an interface to get the list of workers in a job and their addresses
  */
@@ -34,12 +36,12 @@ public interface IWorkerController {
    * return the WorkerNetworkInfo object for this worker
    * @return
    */
-  WorkerNetworkInfo getWorkerNetworkInfo();
+  JobMasterAPI.WorkerInfo getWorkerInfo();
 
   /**
    * return the WorkerNetworkInfo object for the given ID
    */
-  WorkerNetworkInfo getWorkerNetworkInfoForID(int id);
+  JobMasterAPI.WorkerInfo getWorkerInfoForID(int id);
 
   /**
    * return the number of all workers in this job,
@@ -55,7 +57,7 @@ public interface IWorkerController {
    * understand whether there are non-joined workers
    * @return
    */
-  List<WorkerNetworkInfo> getWorkerList();
+  List<JobMasterAPI.WorkerInfo> getWorkerList();
 
   /**
    * wait for all workers to join the job
@@ -63,7 +65,7 @@ public interface IWorkerController {
    * @param timeLimitMilliSec
    * @return
    */
-  List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec);
+  List<JobMasterAPI.WorkerInfo> waitForAllWorkersToJoin(long timeLimitMilliSec);
 
   /**
    * wait for all workers in the job to arrive at this barrier

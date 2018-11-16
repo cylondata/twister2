@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
@@ -34,6 +33,7 @@ import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
 import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class WordCountWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
@@ -67,7 +67,7 @@ public class WordCountWorker implements IWorker {
     taskStages.add(NO_OF_TASKS);
     taskStages.add(NO_OF_TASKS);
 
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    List<JobMasterAPI.WorkerInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(
         cfg, resources, taskStages, workerList);

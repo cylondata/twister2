@@ -12,91 +12,42 @@
 package edu.iu.dsc.tws.common.discovery;
 
 import java.util.ArrayList;
-import java.util.Objects;
+
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 
 /**
- * this class represents the physical machine properties a worker runs on
+ * Utility methods for NodeInfo objects
  */
 
-public class NodeInfo {
-  private String nodeIP;
-  private String rackName;
-  private String dataCenterName;
+public final class NodeInfoUtil {
 
-  public NodeInfo(String nodeIP, String rackName, String dataCenterName) {
-    this.nodeIP = nodeIP;
-    this.rackName = rackName;
-    this.dataCenterName = dataCenterName;
+  private NodeInfoUtil() { }
 
-    // make empty strings null, since protobuff returns empty string for non-set fields
-    if ("".equals(nodeIP)) {
-      this.nodeIP = null;
-    }
-
-    if ("".equals(rackName)) {
-      this.rackName = null;
-    }
-
-    if ("".equals(dataCenterName)) {
-      this.dataCenterName = null;
-    }
-  }
-
-  public String getNodeIP() {
-    return nodeIP;
-  }
-
-  public String getRackName() {
-    return rackName;
-  }
-
-  public String getDataCenterName() {
-    return dataCenterName;
-  }
-
-  public boolean hasNodeIP() {
-    return nodeIP != null;
-  }
-
-  public boolean hasRackName() {
-    return rackName != null;
-  }
-
-  public boolean hasDataCenterName() {
-    return dataCenterName != null;
-  }
-
-  @Override
-  public String toString() {
-    return "NodeInfo{"
-        + "nodeIP='" + nodeIP + '\''
-        + ", rackName='" + rackName + '\''
-        + ", dataCenterName='" + dataCenterName + '\''
+  public static String toString(NodeInfo nodeInfo) {
+    return "NodeInfoUtil{"
+        + "nodeIP='" + nodeInfo.getNodeIP() + '\''
+        + ", rackName='" + nodeInfo.getRackName() + '\''
+        + ", dataCenterName='" + nodeInfo.getDataCenterName() + '\''
         + '}';
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+  public static NodeInfo createNodeInfo(String nodeIP, String rackName, String dataCenterName) {
+
+    NodeInfo.Builder builder = NodeInfo.newBuilder();
+
+    if (nodeIP != null) {
+      builder.setNodeIP(nodeIP);
     }
 
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+    if (rackName != null) {
+      builder.setRackName(rackName);
     }
 
-    if (nodeIP == null) {
-      return false;
+    if (dataCenterName != null) {
+      builder.setDataCenterName(dataCenterName);
     }
 
-    NodeInfo nodeInfo = (NodeInfo) o;
-    return nodeIP.equals(nodeInfo.nodeIP);
-  }
-
-  @Override
-  public int hashCode() {
-
-    return Objects.hash(nodeIP);
+    return builder.build();
   }
 
   /**
@@ -109,7 +60,7 @@ public class NodeInfo {
     if (nodeInfo == null) {
       return "null,null,null";
     }
-    return nodeInfo.nodeIP + "," + nodeInfo.rackName + "," + nodeInfo.dataCenterName;
+    return nodeInfo.getNodeIP() + "," + nodeInfo.getRackName() + "," + nodeInfo.getDataCenterName();
   }
 
   /**
@@ -143,7 +94,7 @@ public class NodeInfo {
       dcName = null;
     }
 
-    return new NodeInfo(nodeIP, rackName, dcName);
+    return createNodeInfo(nodeIP, rackName, dcName);
   }
 
   /**
@@ -161,7 +112,7 @@ public class NodeInfo {
 
   /**
    * decode the given String that is encoded with the method encodeNodeInfoList
-   * each NodeInfo object is separated by others with a semi colon
+   * each NodeInfoUtil object is separated by others with a semi colon
    * @return
    */
   public static ArrayList<NodeInfo> decodeNodeInfoList(String nodeInfoListStr) {
@@ -182,8 +133,8 @@ public class NodeInfo {
   }
 
   /**
-   * convert the given list of NodeInfo objects to a multi-line string for printing
-   * each NodeInfo object in a separate line
+   * convert the given list of NodeInfoUtil objects to a multi-line string for printing
+   * each NodeInfoUtil object in a separate line
    * @return
    */
   public static String listToString(ArrayList<NodeInfo> nodeInfoList) {
@@ -197,6 +148,23 @@ public class NodeInfo {
       allNodesInfos += nodeInfo.toString() + "\n";
     }
     return allNodesInfos;
+  }
+
+  /**
+   * find the NodeInfo object with the given nodeIP and return it
+   * @return
+   */
+  public static NodeInfo getNodeInfo(ArrayList<NodeInfo> nodeInfoList, String nodeIP) {
+    if (nodeInfoList == null || nodeIP == null) {
+      return null;
+    }
+
+    for (NodeInfo nodeInfo: nodeInfoList) {
+      if (nodeIP.equals(nodeInfo.getNodeIP())) {
+        return nodeInfo;
+      }
+    }
+    return null;
   }
 
 }

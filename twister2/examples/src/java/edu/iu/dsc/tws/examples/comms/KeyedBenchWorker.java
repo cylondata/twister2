@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * BenchWorker class that works with keyed operations
@@ -61,7 +62,7 @@ public abstract class KeyedBenchWorker implements IWorker {
 
   protected boolean sourcesDone = false;
 
-  protected List<WorkerNetworkInfo> workerList = null;
+  protected List<JobMasterAPI.WorkerInfo> workerList = null;
 
   protected ExperimentData experimentData;
 
@@ -78,7 +79,7 @@ public abstract class KeyedBenchWorker implements IWorker {
     // wait for all workers in this job to join
     workerList = workerController.waitForAllWorkersToJoin(50000);
     if (workerList != null) {
-      LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
+      LOG.info("All workers joined. " + WorkerInfoUtil.workerListAsString(workerList));
     } else {
       LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
       return;

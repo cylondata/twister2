@@ -40,7 +40,10 @@ message ComputeResource {
     double disk_giga_bytes = 3;
     int32 number_of_workers = 4;
     int32 workers_per_pod = 5;
-    int32 index = 6;
+
+    oneof indexRequired {
+        int32 index = 6;
+    }
 }
 
 // a job can have many types of ComputeResources

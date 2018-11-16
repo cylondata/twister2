@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
@@ -33,6 +32,7 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -59,7 +59,7 @@ public abstract class BenchWorker implements IWorker {
 
   protected boolean sourcesDone = false;
 
-  protected List<WorkerNetworkInfo> workerList = null;
+  protected List<JobMasterAPI.WorkerInfo> workerList = null;
 
   protected ExperimentData experimentData;
 
