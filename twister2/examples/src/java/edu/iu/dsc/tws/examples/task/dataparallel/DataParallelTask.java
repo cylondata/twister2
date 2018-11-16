@@ -50,7 +50,7 @@ public class DataParallelTask extends BaseBatchSource {
 
     String directory = cfg.getStringValue(Constants.ARGS_INPUT_DIRECTORY);
     Runtime runtime = (Runtime) context.getConfig(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    this.source = runtime.createInput(context,
+    this.source = runtime.createInput(cfg, context,
         new TextInputFormatter(new Path(directory)));
   }
 }

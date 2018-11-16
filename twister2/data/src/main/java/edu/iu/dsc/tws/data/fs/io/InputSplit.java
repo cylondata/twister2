@@ -27,6 +27,10 @@ import edu.iu.dsc.tws.common.config.Config;
  */
 public interface InputSplit<OT> extends Serializable {
 
+  /**
+   * Configure the split with parameters
+   * @param parameters the parameters
+   */
   void configure(Config parameters);
 
   /**

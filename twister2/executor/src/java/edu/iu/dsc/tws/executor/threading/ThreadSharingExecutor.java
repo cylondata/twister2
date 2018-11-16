@@ -19,10 +19,11 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.IExecutor;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 
-public abstract class ThreadSharingExecutor extends AbstractExecutor {
+public abstract class ThreadSharingExecutor implements  IExecutor {
   private static final Logger LOG = Logger.getLogger(ThreadSharingExecutor.class.getName());
 
   protected int numThreads;
@@ -42,6 +43,10 @@ public abstract class ThreadSharingExecutor extends AbstractExecutor {
     this.channel = ch;
     this.executionPlan = plan;
     this.config = cfg;
+
+    // lets create the runtime object
+
+
     // go through the instances
     return runExecution();
   }
