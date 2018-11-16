@@ -177,7 +177,8 @@ public final class AuroraWorkerStarter {
     // TODO: need to put at least nodeIP to this NodeInfoUtil object
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtil.createNodeInfo(null, null, null);
     zkWorkerController =
-        new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
+        new ZKWorkerController(config, job.getJobName(), workerHostPort,
+            numberOfWorkers, nodeInfo, null);
     zkWorkerController.initialize();
     long duration = System.currentTimeMillis() - startTime;
     LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerInfo()

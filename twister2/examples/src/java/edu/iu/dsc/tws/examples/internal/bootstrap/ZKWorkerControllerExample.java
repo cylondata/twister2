@@ -30,7 +30,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
 import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
@@ -120,8 +122,12 @@ public final class ZKWorkerControllerExample {
     String workerAddress = "localhost:" + port;
 
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtil.createNodeInfo("node1.on.hostx", "rack1", "dc01");
-    ZKWorkerController zkWorkerController =
-        new ZKWorkerController(cnfg, jobName, workerAddress, numberOfWorkers, nodeInfo);
+    JobAPI.ComputeResource computeResource =
+        ComputeResourceUtils.createComputeResource(0, 1, 1024, 2);
+
+    ZKWorkerController zkWorkerController = new ZKWorkerController(
+        cnfg, jobName, workerAddress, numberOfWorkers, nodeInfo, computeResource);
+
     zkWorkerController.initialize();
 
     List<JobMasterAPI.WorkerInfo> workerList = zkWorkerController.getWorkerList();

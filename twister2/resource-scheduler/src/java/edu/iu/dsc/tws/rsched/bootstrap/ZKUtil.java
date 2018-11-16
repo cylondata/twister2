@@ -258,9 +258,9 @@ public final class ZKUtil {
   }
 
   /**
-   * encode the given WorkerInfo object as a byte array.
-   * First put the length of the byte array as a 4 byte array to the beginning
-   * resulting byte array has the length and workerInfo object after that
+   * decode the given binary encoded WorkerInfo object list
+   * encoding assumed to be dones by encodeWorkerInfo method
+   * length of each WorkerInfo object is encoded before the WorkerInfo object bytes
    * @return
    */
   public static List<JobMasterAPI.WorkerInfo> decodeWorkerInfos(byte[] encodedBytes) {
@@ -307,6 +307,13 @@ public final class ZKUtil {
   }
 
 
+  /**
+   * add two byte arrays
+   * like appending the second one to first one, but in a new array
+   * @param byteArray1
+   * @param byteArray2
+   * @return
+   */
   public static byte[] addTwoByteArrays(byte[] byteArray1, byte[] byteArray2) {
     byte[] allBytes = new byte[byteArray1.length + byteArray2.length];
     System.arraycopy(byteArray1, 0, allBytes, 0, byteArray1.length);
@@ -314,6 +321,12 @@ public final class ZKUtil {
     return allBytes;
   }
 
+  /**
+   * construct an int from four bytes starting at the given index
+   * @param byteArray
+   * @param startIndex
+   * @return
+   */
   public static int intFromBytes(byte[] byteArray, int startIndex) {
     // provide 4 bytes of length int
     return Ints.fromBytes(

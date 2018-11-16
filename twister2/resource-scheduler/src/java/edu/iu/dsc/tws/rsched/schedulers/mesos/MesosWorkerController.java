@@ -99,8 +99,13 @@ public class MesosWorkerController implements IWorkerController {
     // temporary value
 //    NodeInfoUtil nodeInfo = new NodeInfoUtil(workerIp, null, null);
     JobMasterAPI.NodeInfo nodeInfo = MesosContext.getNodeInfo(config, workerIp);
+
+    //TODO: need to provide real ComputeResource object
+    JobAPI.ComputeResource computeResource = null;
     zkWorkerController =
-        new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
+        new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers,
+            nodeInfo, computeResource);
+
     zkWorkerController.initialize();
     long duration = System.currentTimeMillis() - startTime;
     LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerInfo()

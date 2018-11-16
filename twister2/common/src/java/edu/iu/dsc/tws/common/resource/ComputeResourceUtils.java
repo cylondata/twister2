@@ -17,6 +17,18 @@ public final class ComputeResourceUtils {
 
   private ComputeResourceUtils() { }
 
+  public static JobAPI.ComputeResource createComputeResource(int index,
+                                                             double cpu,
+                                                             int ramMegaBytes,
+                                                             double diskGigaBytes) {
+    return JobAPI.ComputeResource.newBuilder()
+        .setIndex(index)
+        .setCpu(cpu)
+        .setRamMegaBytes(ramMegaBytes)
+        .setDiskGigaBytes(diskGigaBytes)
+        .build();
+  }
+
   public static long getRamInBytes(JobAPI.ComputeResource computeResource) {
     return computeResource.getRamMegaBytes() * 1024L * 1024;
   }

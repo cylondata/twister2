@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.bootstrap;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +36,7 @@ import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * gets unique workerID's for each client by using DistributedAtomicInteger
@@ -45,8 +44,11 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
  * it does not keep the list of worker nodes, it is already kept in PathChildrenCache
  * If a worker joins after failure, it gets its previous ID
  * There is no gap in id sequence.
- * All worker names and IDs are kept in the job node as data
- * Each worker appends its worker name-ID pair to this list when they join
+ * All worker names and IDs are kept in the job node as binary encoded WorkerInfo
+ * Each worker appends its WorkerInfo
+ * Before each WorkerInfo byte array, we put the length of the byte array as 4 bytes
+ * So WorkerInfo objects are decoded by using their lengths
+ *
  * They append to this list in synchronized fashion by acquiring a distributed lock:
  *   InterProcessMutex
  *
@@ -58,10 +60,10 @@ public class ZKWorkerController implements IWorkerController {
   public static final Logger LOG = Logger.getLogger(ZKWorkerController.class.getName());
 
   // hostname and port number of this worker
-  private InetAddress workerIP;
+  private String workerIP;
   private int workerPort;
 
-  // WorkerNetworkInfo object for this worker
+  // WorkerInfo object for this worker
   private WorkerInfo workerInfo;
 
   // number of workers in this job
@@ -70,8 +72,11 @@ public class ZKWorkerController implements IWorkerController {
   // name of this job
   private String jobName;
 
-  // NodeInfoUtil object for this worker
+  // NodeInfo object for this worker
   private NodeInfo nodeInfo;
+
+  // ComputeResource object for this worker
+  private JobAPI.ComputeResource computeResource;
 
   // the client to connect to ZK server
   private CuratorFramework client;
@@ -95,22 +100,18 @@ public class ZKWorkerController implements IWorkerController {
                             String jobName,
                             String workerIpAndPort,
                             int numberOfWorkers,
-                            NodeInfo nodeInfo) {
+                            NodeInfo nodeInfo,
+                            JobAPI.ComputeResource computeResource) {
     this.config = config;
     this.jobName = jobName;
     this.numberOfWorkers = numberOfWorkers;
     this.nodeInfo = nodeInfo;
     this.jobPath = ZKUtil.constructJobPath(config, jobName);
+    this.computeResource = computeResource;
 
-    try {
-      // convert hostname to IP before assigning
-      String[] fields = workerIpAndPort.split(":");
-      this.workerIP = InetAddress.getByName(fields[0]);
-      this.workerPort = Integer.parseInt(fields[1]);
-    } catch (UnknownHostException e) {
-      LOG.log(Level.SEVERE, "Can not convert the given string to IP: " + workerIpAndPort, e);
-      throw new RuntimeException(e);
-    }
+    String[] fields = workerIpAndPort.split(":");
+    this.workerIP = fields[0];
+    this.workerPort = Integer.parseInt(fields[1]);
   }
 
   /**
@@ -145,7 +146,8 @@ public class ZKWorkerController implements IWorkerController {
       if (client.checkExists().forPath(jobPath) == null) {
         int workerID = createWorkerID();
         workerInfo = WorkerInfoUtil.createWorkerInfo(
-            workerID, workerIP.getHostAddress(), workerPort, nodeInfo);
+            workerID, workerIP, workerPort, nodeInfo, computeResource);
+
         createWorkerZnode();
         appendWorkerInfo();
 
@@ -168,7 +170,8 @@ public class ZKWorkerController implements IWorkerController {
         } else {
           int workerID = createWorkerID();
           workerInfo = WorkerInfoUtil.createWorkerInfo(
-              workerID, workerIP.getHostAddress(), workerPort, nodeInfo);
+              workerID, workerIP, workerPort, nodeInfo, computeResource);
+
           createWorkerZnode();
           appendWorkerInfo();
         }
@@ -350,7 +353,7 @@ public class ZKWorkerController implements IWorkerController {
    * @return
    */
   private WorkerInfo getIfExists(List<WorkerInfo> workers) {
-    String workerIpAndPort = workerIP.getHostAddress() + ":" + workerPort;
+    String workerIpAndPort = workerIP + ":" + workerPort;
     for (WorkerInfo worker: workers) {
       if (workerIpAndPort.equalsIgnoreCase(getWorkerIpAndPort(worker))) {
         return worker;
@@ -371,7 +374,8 @@ public class ZKWorkerController implements IWorkerController {
    * this count also includes the workers that have already completed
    */
   private int countNumberOfJoinedWorkers() {
-    byte[] parentData = null;
+
+    byte[] parentData;
     try {
       parentData = client.getData().forPath(jobPath);
     } catch (Exception e) {
@@ -392,8 +396,8 @@ public class ZKWorkerController implements IWorkerController {
 
   /**
    * wait to make sure that the number of workers reached the total number of workers in the job
-   * return the all joined workers in the job including the ones that have already left
-   * return null if timeLimit is reached or en exception is thrown while waiting
+   * return all joined workers in the job including the ones that have already left
+   * return null if the timeLimit is reached or en exception is thrown while waiting
    */
   @Override
   public List<WorkerInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {

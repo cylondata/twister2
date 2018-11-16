@@ -23,14 +23,13 @@ public final class NodeInfoUtil {
 
   private NodeInfoUtil() { }
 
-  public static String toString(NodeInfo nodeInfo) {
-    return "NodeInfoUtil{"
-        + "nodeIP='" + nodeInfo.getNodeIP() + '\''
-        + ", rackName='" + nodeInfo.getRackName() + '\''
-        + ", dataCenterName='" + nodeInfo.getDataCenterName() + '\''
-        + '}';
-  }
-
+  /**
+   * do not set if any one of the parameters are null
+   * @param nodeIP
+   * @param rackName
+   * @param dataCenterName
+   * @return
+   */
   public static NodeInfo createNodeInfo(String nodeIP, String rackName, String dataCenterName) {
 
     NodeInfo.Builder builder = NodeInfo.newBuilder();
@@ -53,6 +52,7 @@ public final class NodeInfoUtil {
   /**
    * encode the given NodeInfo object fields as a single line String
    * each field is separated by a comma
+   * if the given NodeInfo is null, then return "null,null,null"
    * @param nodeInfo
    * @return
    */
@@ -133,8 +133,8 @@ public final class NodeInfoUtil {
   }
 
   /**
-   * convert the given list of NodeInfoUtil objects to a multi-line string for printing
-   * each NodeInfoUtil object in a separate line
+   * convert the given list of NodeInfo objects to a multi-line string for printing
+   * each NodeInfo object in a separate line
    * @return
    */
   public static String listToString(ArrayList<NodeInfo> nodeInfoList) {
