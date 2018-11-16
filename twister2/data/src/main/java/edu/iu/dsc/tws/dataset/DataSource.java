@@ -16,17 +16,17 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.InputFormat;
+import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 
 public class DataSource<T> extends DataSet<T> {
   private static final Logger LOG = Logger.getLogger(DataSource.class.getName());
 
-  private InputFormat<T, ?> input;
+  private InputPartitioner<T, ?> input;
 
   private Map<Integer, InputSplit<T>> splits = new HashMap<>();
 
-  public DataSource(Config config, InputFormat<T, ?> input, int numSplits) {
+  public DataSource(Config config, InputPartitioner<T, ?> input, int numSplits) {
     super(0);
 
     this.input = input;

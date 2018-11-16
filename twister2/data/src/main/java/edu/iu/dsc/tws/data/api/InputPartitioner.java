@@ -55,7 +55,8 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitter;
  * @see InputSplit
  * //@see BaseStatistics
  */
-public interface InputFormat<OT, T extends InputSplit<OT>> extends InputSplitter<T>, Serializable {
+public interface InputPartitioner<OT, T extends InputSplit<OT>>
+    extends InputSplitter<T>, Serializable {
 
   /**
    * Configures this input format. Since input formats are instantiated generically
@@ -69,9 +70,20 @@ public interface InputFormat<OT, T extends InputSplit<OT>> extends InputSplitter
    */
   void configure(Config parameters);
 
+  /**
+   * Create the input splits
+   * @param minNumSplits Number of minimal input splits, as a hint.
+   * @return set of input splits
+   * @throws Exception if an error occurred
+   */
   @Override
   T[] createInputSplits(int minNumSplits) throws Exception;
 
+  /**
+   * Return the input split asigner
+   * @param inputSplits the input splits to be assigned
+   * @return assigner
+   */
   @Override
   InputSplitAssigner getInputSplitAssigner(T[] inputSplits);
 }

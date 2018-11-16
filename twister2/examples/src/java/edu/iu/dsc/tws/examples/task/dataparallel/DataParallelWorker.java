@@ -11,8 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.dataparallel;
 
+import java.io.IOException;
+
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
@@ -26,6 +30,19 @@ public class DataParallelWorker extends TaskWorker {
   @Override
   public void execute() {
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+
+    String inputDirectory = config.getStringValue(Constants.ARGS_INPUT_DIRECTORY);
+    boolean shared = config.getBooleanValue(Constants.ARGS_SHARED_FILE_SYSTEM);
+    int numFiles = config.getIntegerValue(Constants.ARGS_NUMBER_OF_FILES, 4);
+    int size = config.getIntegerValue(Constants.ARGS_SIZE, 1000);
+
+    if (shared) {
+      try {
+        DataGenerator.generateData("txt", new Path(inputDirectory), numFiles, size, 100);
+      } catch (IOException e) {
+        throw new RuntimeException("Failed to create data: " + inputDirectory);
+      }
+    }
 
     DataParallelTask task = new DataParallelTask();
     taskGraphBuilder.addSource("map", task, 4);

@@ -23,21 +23,22 @@ import edu.iu.dsc.tws.data.fs.BlockLocation;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
 /**
  * Input formatter class that reads binary files
  */
-public class BinaryInputFormatter extends FileInputFormat<byte[]> {
+public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
   private static final long serialVersionUID = 1L;
 
-  private static final Logger LOG = Logger.getLogger(BinaryInputFormatter.class.getName());
+  private static final Logger LOG = Logger.getLogger(BinaryInputPartitioner.class.getName());
 
   /**
    * The length of a single record in the given binary file.
    */
   protected transient int recordLength;
 
-  public BinaryInputFormatter(Path filePath, int recordLen) {
+  public BinaryInputPartitioner(Path filePath, int recordLen) {
     super(filePath);
     this.recordLength = recordLen;
   }
@@ -130,6 +131,11 @@ public class BinaryInputFormatter extends FileInputFormat<byte[]> {
 
     }
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
+  }
+
+  @Override
+  public InputSplitAssigner getInputSplitAssigner(FileInputSplit<byte[]>[] inputSplits) {
+    return null;
   }
 
   @Override

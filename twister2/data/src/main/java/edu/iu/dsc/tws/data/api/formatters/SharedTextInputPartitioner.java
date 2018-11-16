@@ -11,14 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.formatters;
 
+import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.api.splits.TextInputSplit;
 import edu.iu.dsc.tws.data.fs.Path;
 
-public class TextInputFormatter extends FileInputFormat<String> {
+public class SharedTextInputPartitioner extends FileInputPartitioner<String> {
   private static final long serialVersionUID = 1L;
 
-  public TextInputFormatter(Path filePath) {
+  public SharedTextInputPartitioner(Path filePath) {
     super(filePath);
   }
 
@@ -26,5 +27,10 @@ public class TextInputFormatter extends FileInputFormat<String> {
   protected FileInputSplit createSplit(int num, Path file, long start,
                                        long length, String[] hosts) {
     return new TextInputSplit(num, file, start, length, hosts);
+  }
+
+  @Override
+  public LocatableInputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
+    return new LocatableInputSplitAssigner(inputSplits);
   }
 }

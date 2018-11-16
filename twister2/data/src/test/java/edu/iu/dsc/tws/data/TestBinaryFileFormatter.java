@@ -17,8 +17,8 @@ import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.InputFormat;
-import edu.iu.dsc.tws.data.api.formatters.BinaryInputFormatter;
+import edu.iu.dsc.tws.data.api.InputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
@@ -33,7 +33,7 @@ public class TestBinaryFileFormatter {
         + "data/src/test/resources/2000.bin");
     Config txtFileConf = builder.build();
     Path path = new Path("/home/pulasthi/git/twister2/twister2/data/src/test/resources/2000.bin");
-    InputFormat binaryInputFormatter = new BinaryInputFormatter(path, 2000 * Short.BYTES);
+    InputPartitioner binaryInputFormatter = new BinaryInputPartitioner(path, 2000 * Short.BYTES);
     binaryInputFormatter.configure(txtFileConf);
     int minSplits = 8;
     double expectedSum = 1.97973979E8;

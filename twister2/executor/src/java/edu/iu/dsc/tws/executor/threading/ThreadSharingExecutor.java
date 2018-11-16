@@ -21,8 +21,12 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.IExecutor;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
+import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 
+/**
+ * Abstract class for thread sharing executors
+ */
 public abstract class ThreadSharingExecutor implements  IExecutor {
   private static final Logger LOG = Logger.getLogger(ThreadSharingExecutor.class.getName());
 
@@ -42,23 +46,36 @@ public abstract class ThreadSharingExecutor implements  IExecutor {
     this.numThreads = ExecutorContext.threadsPerContainer(cfg);
     this.channel = ch;
     this.executionPlan = plan;
-    this.config = cfg;
 
     // lets create the runtime object
-
+    ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(cfg), plan, ch);
+    // updated config
+    this.config = Config.newBuilder().putAll(cfg).
+        put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
 
     // go through the instances
     return runExecution();
   }
 
+  /**
+   * Specific implementation needs to implement this method
+   * @return weather we executed successfully
+   */
   public abstract boolean runExecution();
 
-  public void progressStreamComm() {
+  /**
+   * Progress the communications
+   */
+  protected void progressStreamComm() {
     while (true) {
       this.channel.progress();
     }
   }
 
+  /**
+   * We are done executing
+   * @return weather we are done
+   */
   public boolean isDone() {
     return false;
   }

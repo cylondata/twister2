@@ -16,13 +16,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.formatters.TextInputFormatter;
+import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.examples.comms.Constants;
+import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
-import edu.iu.dsc.tws.executor.core.Runtime;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
@@ -49,8 +49,10 @@ public class DataParallelTask extends BaseBatchSource {
     super.prepare(cfg, context);
 
     String directory = cfg.getStringValue(Constants.ARGS_INPUT_DIRECTORY);
-    Runtime runtime = (Runtime) context.getConfig(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+    ExecutionRuntime runtime = (ExecutionRuntime) context.getConfig(
+        ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+
     this.source = runtime.createInput(cfg, context,
-        new TextInputFormatter(new Path(directory)));
+        new LocalTextInputPartitioner(new Path(directory)));
   }
 }

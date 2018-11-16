@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.nio.ByteOrder;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.formatters.FileInputFormat;
+import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 
 public class BinaryInputSplit extends FileInputSplit<byte[]> {
@@ -258,7 +258,7 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
   private boolean fillBuffer(int fillOffset) throws IOException {
     int maxReadLength = this.readBuffer.length - fillOffset;
     // special case for reading the whole split.
-    if (this.splitLength == FileInputFormat.READ_WHOLE_SPLIT_FLAG) {
+    if (this.splitLength == FileInputPartitioner.READ_WHOLE_SPLIT_FLAG) {
       int read = this.stream.read(this.readBuffer, fillOffset, maxReadLength);
       if (read == -1) {
         this.stream.close();

@@ -14,10 +14,12 @@ package edu.iu.dsc.tws.data.fs.io;
 
 import java.io.Serializable;
 
+import edu.iu.dsc.tws.data.api.InputPartitioner;
+
 
 /**
  * InputSplitter create {@link InputSplit}s that define portions of data to be produced
- * by {@link edu.iu.dsc.tws.data.api.InputFormat}s.
+ * by {@link InputPartitioner}s.
  *
  * @param <T> The type of the input splits created by the source.
  */

@@ -67,6 +67,7 @@ public final class DataParallelJob {
     jobConfig.put(Constants.ARGS_WORKERS, Integer.toString(workers));
     jobConfig.put(Constants.ARGS_INPUT_DIRECTORY, fName);
     jobConfig.put(Constants.ARGS_NUMBER_OF_FILES, numFiles);
+    jobConfig.put(Constants.ARGS_SHARED_FILE_SYSTEM, shared);
 
     // build the job
     submitJob(config, workers, jobConfig, DataParallelWorker.class.getName());

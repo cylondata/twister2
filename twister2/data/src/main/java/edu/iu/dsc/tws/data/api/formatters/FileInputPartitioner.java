@@ -19,20 +19,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.InputFormat;
+import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.BlockLocation;
 import edu.iu.dsc.tws.data.fs.FSDataInputStream;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.fs.io.LocatableInputSplitAssigner;
 
 /**
  * Base class for File input formats for specific file types the methods
  */
-public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSplit<OT>> {
-  private static final Logger LOG = Logger.getLogger(FileInputFormat.class.getName());
+public abstract class FileInputPartitioner<OT> implements InputPartitioner<OT, FileInputSplit<OT>> {
+  private static final Logger LOG = Logger.getLogger(FileInputPartitioner.class.getName());
 
   private static final long serialVersionUID = 1L;
 
@@ -73,7 +72,7 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
   protected FSDataInputStream stream;
 
 
-  public FileInputFormat(Path filePath) {
+  public FileInputPartitioner(Path filePath) {
     this.filePath = filePath;
   }
 
@@ -194,12 +193,6 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
                                                 long length, String[] hosts);
 
 
-  @Override
-  public LocatableInputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
-    return new LocatableInputSplitAssigner(inputSplits);
-  }
-
-
   /**
    * Enumerate all files in the directory and recursive if enumerateNestedFiles is true.
    *
@@ -240,7 +233,7 @@ public abstract class FileInputFormat<OT> implements InputFormat<OT, FileInputSp
 
   /**
    * A simple hook to filter files and directories from the input.
-   * The method may be overridden. Hadoop's FileInputFormat has a similar mechanism and applies the
+   * The method may be overridden. Hadoop's FileInputPartitioner has a similar mechanism and applies the
    * same filters by default.
    *
    * @param fileStatus The file status to check.

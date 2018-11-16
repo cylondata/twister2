@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.executor.core;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.data.api.InputFormat;
+import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 /**
  * Captures the runtime information about the system.
  */
-public class Runtime {
+public class ExecutionRuntime {
   /**
    * Name of the job
    */
@@ -44,7 +44,7 @@ public class Runtime {
    */
   private TWSChannel channel;
 
-  public Runtime(String jName, ExecutionPlan execPlan, TWSChannel ch) {
+  public ExecutionRuntime(String jName, ExecutionPlan execPlan, TWSChannel ch) {
     this.jobName = jName;
     this.plan = execPlan;
     this.channel = ch;
@@ -62,6 +62,14 @@ public class Runtime {
     this.setJobName(config.getStringValue(Context.JOB_NAME));
   }
 
+  public TWSChannel getChannel() {
+    return channel;
+  }
+
+  public ExecutionPlan getPlan() {
+    return plan;
+  }
+
   public Path getParentpath() {
     return parentpath;
   }
@@ -70,7 +78,9 @@ public class Runtime {
     this.parentpath = parentpath;
   }
 
-  public <T> DataSource<T> createInput(Config cfg, TaskContext context, InputFormat<T, ?> input) {
+  public <T> DataSource<T> createInput(Config cfg, TaskContext context,
+                                       InputPartitioner<T, ?> input) {
+
     return new DataSource<>(cfg, input, context.getParallelism());
   }
 }
