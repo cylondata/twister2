@@ -90,8 +90,8 @@ public class SinkStreamingInstance  implements INodeInstance {
     this.taskName = tName;
   }
 
-  public void prepare() {
-    streamingTask.prepare(config, new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
+  public void prepare(Config cfg) {
+    streamingTask.prepare(cfg, new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
         parallelism, workerId, nodeConfigs));
   }
 

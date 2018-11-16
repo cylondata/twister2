@@ -109,10 +109,10 @@ public class SourceStreamingInstance implements INodeInstance {
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
   }
 
-  public void prepare() {
+  public void prepare(Config cfg) {
     outputStreamingCollection = new DefaultOutputCollection(outStreamingQueue);
 
-    streamingTask.prepare(config, new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
+    streamingTask.prepare(cfg, new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
         parallelism, workerId, outputStreamingCollection, nodeConfigs));
   }
 

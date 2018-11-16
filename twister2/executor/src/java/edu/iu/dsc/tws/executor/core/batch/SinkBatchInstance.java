@@ -105,8 +105,8 @@ public class SinkBatchInstance implements INodeInstance {
     state = new InstanceState(InstanceState.INIT);
   }
 
-  public void prepare() {
-    batchTask.prepare(config, new TaskContext(batchTaskIndex, batchTaskId, taskName,
+  public void prepare(Config cfg) {
+    batchTask.prepare(cfg, new TaskContext(batchTaskIndex, batchTaskId, taskName,
         parallelism, workerId, nodeConfigs));
   }
 
