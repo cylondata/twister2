@@ -12,12 +12,14 @@
 package edu.iu.dsc.tws.common.discovery;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public final class WorkerInfoUtil {
+  public static final Logger LOG = Logger.getLogger(WorkerInfoUtil.class.getName());
 
   private WorkerInfoUtil() { }
 
@@ -63,45 +65,6 @@ public final class WorkerInfoUtil {
         workerInfo.getPort(),
         workerInfo.getNodeInfo(),
         workerInfo.getComputeResource());
-  }
-
-  /**
-   * encode the given WorkerNetworkInfo object fields as a single line of a String
-   * encoding has two parts:
-   *   first part consists of ip, port and workerID separated by comma
-   *   second part consists of NodeInfoUtil object
-   * two parts are separated by a semicolon
-   * @return
-   */
-  public static String encodeWorkerInfo(WorkerInfo workerInfo) {
-    return workerInfo.getWorkerID() + "," + workerInfo.getWorkerIP() + "," + workerInfo.getPort()
-        + ";" + NodeInfoUtil.encodeNodeInfo(workerInfo.getNodeInfo());
-  }
-
-
-  /**
-   * decode the given String that is encoded with the method encodeWorkerNetworkInfo
-   * each field is separated by a comma
-   * @return
-   */
-  public static WorkerInfo decodeWorkerInfo(String networkInfoStr) {
-    if (networkInfoStr == null) {
-      return null;
-    }
-
-    String[] twoParts = networkInfoStr.split(";");
-    NodeInfo nodeInfo = NodeInfoUtil.decodeNodeInfo(twoParts[1]);
-
-    String[] fields = twoParts[0].split(",");
-    if (fields.length != 3) {
-      return null;
-    }
-
-    int workerID = Integer.parseInt(fields[0]);
-    String workerIP = fields[1];
-    int workerPort = Integer.parseInt(fields[2]);
-
-    return createWorkerInfo(workerID, workerIP, workerPort, nodeInfo);
   }
 
   /**

@@ -11,8 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.bootstrap;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.common.primitives.Ints;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -22,6 +27,7 @@ import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * this class provides methods to construct znode path names for jobs and workers
@@ -251,5 +257,70 @@ public final class ZKUtil {
     return new PersistentNode(client, CreateMode.EPHEMERAL, false, path, payload);
   }
 
+  /**
+   * encode the given WorkerInfo object as a byte array.
+   * First put the length of the byte array as a 4 byte array to the beginning
+   * resulting byte array has the length and workerInfo object after that
+   * @return
+   */
+  public static List<JobMasterAPI.WorkerInfo> decodeWorkerInfos(byte[] encodedBytes) {
+
+    if (encodedBytes == null) {
+      return null;
+    }
+
+    List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<>();
+
+    int nextWorkerInfoIndex = 0;
+    while (nextWorkerInfoIndex < encodedBytes.length) {
+
+      // provide 4 bytes of length int
+      int length = intFromBytes(encodedBytes, nextWorkerInfoIndex);
+
+      try {
+        JobMasterAPI.WorkerInfo workerInfo = JobMasterAPI.WorkerInfo.newBuilder()
+            .mergeFrom(encodedBytes, nextWorkerInfoIndex + 4, length)
+            .build();
+        workerInfoList.add(workerInfo);
+      } catch (InvalidProtocolBufferException e) {
+        LOG.log(Level.SEVERE, "Could not decode received byte array as a WorkerInfo object", e);
+        return null;
+      }
+
+      nextWorkerInfoIndex += 4 + length;
+    }
+
+    return workerInfoList;
+  }
+
+  /**
+   * encode the given WorkerInfo object as a byte array.
+   * First put the length of the byte array as a 4 byte array to the beginning
+   * resulting byte array has the length and workerInfo object after that
+   * @return
+   */
+  public static byte[] encodeWorkerInfo(JobMasterAPI.WorkerInfo workerInfo) {
+    byte[] workerInfoBytes = workerInfo.toByteArray();
+    byte[] lengthBytes = Ints.toByteArray(workerInfoBytes.length);
+
+    return addTwoByteArrays(lengthBytes, workerInfoBytes);
+  }
+
+
+  public static byte[] addTwoByteArrays(byte[] byteArray1, byte[] byteArray2) {
+    byte[] allBytes = new byte[byteArray1.length + byteArray2.length];
+    System.arraycopy(byteArray1, 0, allBytes, 0, byteArray1.length);
+    System.arraycopy(byteArray2, 0, allBytes, byteArray1.length, byteArray2.length);
+    return allBytes;
+  }
+
+  public static int intFromBytes(byte[] byteArray, int startIndex) {
+    // provide 4 bytes of length int
+    return Ints.fromBytes(
+        byteArray[startIndex],
+        byteArray[startIndex + 1],
+        byteArray[startIndex + 2],
+        byteArray[startIndex + 3]);
+  }
 
 }

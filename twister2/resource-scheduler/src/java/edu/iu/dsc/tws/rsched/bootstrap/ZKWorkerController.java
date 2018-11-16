@@ -15,10 +15,11 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -238,10 +239,9 @@ public class ZKWorkerController implements IWorkerController {
     try {
       String thisNodePath =
           ZKUtil.constructWorkerPath(jobPath, getWorkerIpAndPort(workerInfo));
-      String encodedWorkerNetworkInfo = WorkerInfoUtil.encodeWorkerInfo(workerInfo);
 
       jobZNode = ZKUtil.createPersistentEphemeralZnode(
-          client, thisNodePath, encodedWorkerNetworkInfo.getBytes());
+          client, thisNodePath, workerInfo.toByteArray());
 
       jobZNode.start();
       jobZNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
@@ -264,11 +264,12 @@ public class ZKWorkerController implements IWorkerController {
     try {
       lock.acquire();
       byte[] parentData = client.getData().forPath(jobPath);
-      String parentStr = new String(parentData);
-      String updatedParentStr = parentStr + "\n" + WorkerInfoUtil.encodeWorkerInfo(workerInfo);
-      client.setData().forPath(jobPath, updatedParentStr.getBytes());
+      byte[] encodedWorkerInfoBytes = ZKUtil.encodeWorkerInfo(workerInfo);
+      byte[] allBytes = ZKUtil.addTwoByteArrays(parentData, encodedWorkerInfoBytes);
+
+      client.setData().forPath(jobPath, allBytes);
       lock.release();
-      LOG.info("Updated job znode content: " + updatedParentStr);
+      LOG.info("Added own WorkerInfo and updated job znode content.");
     } catch (Exception e) {
       throw new RuntimeException("Could not update the job znode content for the worker: "
           + workerInfo, e);
@@ -298,8 +299,14 @@ public class ZKWorkerController implements IWorkerController {
 
     List<WorkerInfo> workers = new ArrayList<>();
     for (ChildData child: childrenCache.getCurrentData()) {
-      String childContent = new String(child.getData());
-      WorkerInfo wnInfo = WorkerInfoUtil.decodeWorkerInfo(childContent);
+      WorkerInfo wnInfo = null;
+      try {
+        wnInfo = WorkerInfo.newBuilder()
+            .mergeFrom(child.getData())
+            .build();
+      } catch (InvalidProtocolBufferException e) {
+        LOG.log(Level.SEVERE, "Could not decode child znode content as a WorkerInfo object", e);
+      }
       workers.add(wnInfo);
     }
     return workers;
@@ -323,35 +330,22 @@ public class ZKWorkerController implements IWorkerController {
 
   /**
    * parse the job znode content
-   * construct WorkerNetworkInfo objects
+   * construct WorkerInfo objects
    * return them as a List
    * @return
    */
   private List<WorkerInfo> parseJobZNode() {
-    byte[] jobZnodeData = null;
     try {
-      jobZnodeData = client.getData().forPath(jobPath);
+      byte[] jobZnodeData = client.getData().forPath(jobPath);
+      return ZKUtil.decodeWorkerInfos(jobZnodeData);
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Could not get the job node data", e);
       return null;
     }
-
-    List<WorkerInfo> workers = new ArrayList<>();
-    String jobZnodeStr = new String(jobZnodeData);
-    StringTokenizer st = new StringTokenizer(jobZnodeStr, "\n");
-    while (st.hasMoreTokens()) {
-      String token = st.nextToken();
-      WorkerInfo worker = WorkerInfoUtil.decodeWorkerInfo(token);
-      if (worker != null) {
-        workers.add(worker);
-      }
-    }
-
-    return workers;
   }
 
   /**
-   * get the WorkerNetworkInfo object for this worker if it exists in the given list
+   * get the WorkerInfo object for this worker if it exists in the given list
    * @param workers
    * @return
    */
@@ -371,7 +365,8 @@ public class ZKWorkerController implements IWorkerController {
   }
 
   /**
-   * count the number of all joined workers
+   * count the number of WorkerInfo objects encoded in the job znode
+   *
    * count the workers based on their data availability on this worker
    * this count also includes the workers that have already completed
    */
@@ -384,9 +379,15 @@ public class ZKWorkerController implements IWorkerController {
       return -1;
     }
 
-    String parentStr = new String(parentData);
-    StringTokenizer st = new StringTokenizer(parentStr, "\n");
-    return st.countTokens();
+    int lengthIndex = 0;
+    int counter = 0;
+    while (lengthIndex < parentData.length) {
+      int length = ZKUtil.intFromBytes(parentData, lengthIndex);
+      lengthIndex += 4 + length;
+      counter++;
+    }
+
+    return counter;
   }
 
   /**
