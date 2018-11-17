@@ -40,8 +40,6 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
 
   private Map<Integer, Map<Integer, BlockingQueue<MessageObject>>> barrierMap;
 
-//  private Map<InBlockingQueue<MessageObject> bufferMessage = new ArrayBlockingQueue<>(2000);
-
 
   public PartitionStreamingFinalReceiver(BulkReceiver receiver) {
     this.receiver = receiver;
