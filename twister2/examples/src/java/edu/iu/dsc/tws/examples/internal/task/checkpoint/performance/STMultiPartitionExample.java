@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.internal.task.checkpoint;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.examples.internal.task.checkpoint.performance;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -17,12 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -41,13 +47,13 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
-import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.Runtime;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.ComputeCheckpointableTask;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
@@ -63,9 +69,10 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
-public class SourceSinkDiscoveryExample implements IWorker {
+public class STMultiPartitionExample implements IWorker {
 
-  private static final Logger LOG = Logger.getLogger(SourceSinkDiscoveryExample.class.getName());
+  private static final Logger LOG =
+      Logger.getLogger(STMultiPartitionExample.class.getName());
 
   @Override
   public void execute(Config config, int workerID, AllocatedResources resources,
@@ -75,7 +82,6 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     Path path = new Path(new File(CheckpointContext
         .getStatebackendDirectoryDefault(config)).toURI());
-    path.getParent();
 
     Runtime runtime = new Runtime();
     runtime.setParentpath(path);
@@ -92,15 +98,24 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     GeneratorTask g = new GeneratorTask();
 
+    MiddleTask m = new MiddleTask();
+
     ReceivingTask r = new ReceivingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
+
     builder.addSource("source", g);
-    builder.setParallelism("source", Integer.parseInt(config.get("twister2.workers").toString()));
+    builder.setParallelism("source", 4);
+
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
-    builder.connect("source", "sink", "partition-edge",
+
+    builder.addTask("middle", m);
+    builder.setParallelism("middle", 4);
+
+    builder.connect("source", "middle", "partition-edge-1",
         Operations.PARTITION);
+    builder.connect("middle", "sink", "partition-edge-2", Operations.PARTITION);
     builder.operationMode(OperationMode.STREAMING);
 
     builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(newconfig));
@@ -128,30 +143,71 @@ public class SourceSinkDiscoveryExample implements IWorker {
     private TaskContext ctx;
     private Config config;
 
-    private int count = 0;
+    private int value = 0;
+    private int myIndex;
+    private int worldSize;
+    private int limit = 1000000;
 
     @Override
     public void execute() {
-      if (count % 1000000 == 0) {
-//        this.addState("count", count);
+      if (value == limit) {
+        context.write("partition-edge-1", "end");
+      } else if (value < limit) {
+        context.write("partition-edge-1", value + myIndex*limit);
+//      LOG.log(Level.INFO, "count for source " + this.context.taskId() + " is " + value);
+        value++;
       }
-      if (count % 1000000 == 0) {
-        ctx.write("partition-edge", "Hello");
-        LOG.log(Level.INFO, "count for source is " + count);
-      }
-
-      count++;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-//      connect(cfg, context);
-      this.ctx = context;
+      this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
+      this.worldSize = context.getParallelism();
+      super.prepare(cfg, context);
     }
 
     @Override
     public void restoreSnapshot(Snapshot snapshot) {
       super.restoreSnapshot(snapshot);
+      value = (Integer) this.getState("value");
+    }
+
+    @Override
+    public void addCheckpointableStates() {
+      this.addState("value", value);
+    }
+  }
+
+
+  public static class MiddleTask extends ComputeCheckpointableTask {
+
+    private static final long serialVersionUID = -254264903231284798L;
+
+    private int count = 0;
+
+    @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+    }
+
+    @Override
+    public boolean execute(IMessage content) {
+      count++;
+      if(count == 10000) {
+        LOG.info("Count in middle task " + context.taskId()
+            + " is " + count
+            + " value is" + content
+        );
+      }
+      context.write("partition-edge-2", content.toString());
+
+
+      return true;
+    }
+
+    @Override
+    public void restoreSnapshot(Snapshot newsnapshot) {
+      super.restoreSnapshot(newsnapshot);
       count = (Integer) this.getState("count");
     }
 
@@ -171,16 +227,15 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      System.out.println(message.getContent() + " from Sink Task " + ctx.taskId());
+//      System.out.println(message.getContent() + " from Sink Task " + ctx.taskId());
       count++;
-      LOG.log(Level.INFO, "count in sink is " + count);
+      LOG.log(Level.INFO, "count in sink " + ctx.taskId() + " is " + count);
       return true;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
       this.ctx = context;
-//      connect(cfg, context);
     }
 
     @Override
@@ -211,35 +266,17 @@ public class SourceSinkDiscoveryExample implements IWorker {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
-    Options options = new Options();
-    options.addOption(Constants.ARGS_WORKERS, true, "Workers");
-
-    CommandLineParser commandLineParser = new DefaultParser();
-
-    CommandLine cmd;
-
-    try {
-      cmd = commandLineParser.parse(options, args);
-
-    } catch (ParseException e) {
-      throw new RuntimeException("No valid arguments found");
-
-    }
-
-    int workers = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_WORKERS));
-
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
-    configurations.put("twister2.workers", workers);
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("source-sink-discovery-example");
-    jobBuilder.setWorkerClass(SourceSinkDiscoveryExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), workers);
+    jobBuilder.setName("st-multi-partition-checkpoint");
+    jobBuilder.setWorkerClass(STMultiPartitionExample.class.getName());
+    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

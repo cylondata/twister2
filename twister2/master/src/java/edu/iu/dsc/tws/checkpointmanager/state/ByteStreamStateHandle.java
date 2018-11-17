@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.checkpointmanager.state;
 import java.io.IOException;
 
 import edu.iu.dsc.tws.data.fs.FSDataInputStream;
+import edu.iu.dsc.tws.data.fs.FileSystem;
 
 public class ByteStreamStateHandle implements StreamStateHandle {
 
@@ -29,13 +30,12 @@ public class ByteStreamStateHandle implements StreamStateHandle {
   }
 
   @Override
-  public FSDataInputStream openInputStream() throws IOException {
+  public FSDataInputStream openInputStream(FileSystem fs) throws IOException {
     return new ByteStateHandleInputStream(data);
   }
 
   @Override
   public void discardState() throws Exception {
-
   }
 
   @Override

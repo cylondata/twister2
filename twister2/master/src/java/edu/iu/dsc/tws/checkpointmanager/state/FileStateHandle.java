@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.checkpointmanager.state;
 import java.io.IOException;
 
 import edu.iu.dsc.tws.data.fs.FSDataInputStream;
+import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 
 public class FileStateHandle implements StreamStateHandle {
 
@@ -25,6 +25,11 @@ public class FileStateHandle implements StreamStateHandle {
 
   private final long stateSize;
 
+  @Override
+  public void discardState() throws Exception {
+
+  }
+
   public FileStateHandle(Path filePath, long stateSize) {
     this.filePath = filePath;
     this.stateSize = stateSize;
@@ -32,28 +37,26 @@ public class FileStateHandle implements StreamStateHandle {
 
 
   @Override
-  public FSDataInputStream openInputStream() throws IOException {
-    return getFileSystem().open(filePath);
+  public FSDataInputStream openInputStream(FileSystem fs) throws IOException {
+    return getFileSystem(fs).open(filePath);
   }
 
   public Path getFilePath() {
     return filePath;
   }
 
-  public void discardState() throws Exception {
-    LocalFileSystem fs = getFileSystem();
-    fs.delete(filePath, false);
-  }
+//  public void discardState() throws Exception {
+//    LocalFileSystem fs = getFileSystem();
+//    fs.delete(filePath, false);
+//  }
 
 
   public long getStateSize() {
     return stateSize;
   }
 
-
-  //todo change this ASAP
-  private LocalFileSystem getFileSystem() throws IOException {
-    return new LocalFileSystem();
+  private FileSystem getFileSystem(FileSystem fs) throws IOException {
+    return fs;
   }
 
 

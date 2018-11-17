@@ -44,6 +44,9 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.local.LocalDataInputStream;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
+import edu.iu.dsc.tws.data.hdfs.HadoopDataInputStream;
+import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
+import edu.iu.dsc.tws.data.utils.HdfsUtils;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 
 public class TaskBarrierMonitor implements MessageHandler {
@@ -236,42 +239,78 @@ public class TaskBarrierMonitor implements MessageHandler {
 
   private void writeBarrierID(int barrierID) throws Exception {
     synchronized (this) {
-      Path path = new Path(new File(CheckpointContext
-          .getStatebackendDirectoryDefault(config)).toURI());
-//      Path path = new Path("/home/kumar/statebackend/");
-      Path path2 = new Path(path, config.getStringValue(Context.JOB_NAME));
-      LocalFileSystem localFileSystem = new LocalFileSystem();
-      FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
-          0, localFileSystem);
-      KryoSerializer kryoSerializer = new KryoSerializer();
-      byte[] checkpoint = kryoSerializer.serialize(barrierID);
-      FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
-          fs.createCheckpointStateOutputStream();
-      stream.initialize("Acknowledged", "BarrierIDs");
-      stream.write(checkpoint);
-      stream.closeWriting();
+      if (CheckpointContext.enableHDFS(config)) {
+        HdfsUtils hdfsUtils = new HdfsUtils(config, CheckpointContext.getHDFSFilename(config));
+        HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+        Path path = hdfsUtils.getPath();
+        Path path2 = new Path(path, config.getStringValue(Context.JOB_NAME));
+        FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
+            0, hadoopFileSystem);
+        KryoSerializer kryoSerializer = new KryoSerializer();
+        byte[] checkpoint = kryoSerializer.serialize(barrierID);
+        FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
+            fs.createCheckpointStateOutputStream();
+        stream.initialize("Acknowledged", "BarrierIDs");
+        stream.write(checkpoint);
+        stream.closeWriting();
+      } else {
+        Path path = new Path(new File(CheckpointContext
+            .getStatebackendDirectoryDefault(config)).toURI());
+        Path path2 = new Path(path, config.getStringValue(Context.JOB_NAME));
+        LocalFileSystem localFileSystem = new LocalFileSystem();
+        FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
+            0, localFileSystem);
+        KryoSerializer kryoSerializer = new KryoSerializer();
+        byte[] checkpoint = kryoSerializer.serialize(barrierID);
+        FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
+            fs.createCheckpointStateOutputStream();
+        stream.initialize("Acknowledged", "BarrierIDs");
+        stream.write(checkpoint);
+        stream.closeWriting();
+      }
+
     }
   }
 
   private int readBarrierID() throws Exception {
-    Path path = new Path(new File(CheckpointContext
-        .getStatebackendDirectoryDefault(config)).toURI());
-    Path path2 = new Path(path, config.getStringValue(Context.JOB_NAME));
-    LocalFileSystem localFileSystem = new LocalFileSystem();
-    FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
-        0, localFileSystem);
-    FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
-        fs.createCheckpointStateOutputStream();
-    LocalDataInputStream localDataReadStream = (LocalDataInputStream)
-        stream.openStateHandle("Acknowledged",
-            "BarrierIDs").openInputStream();
-    byte[] checkpoint;
-    synchronized (this) {
-      checkpoint = stream.readCheckpoint(localDataReadStream);
-    }
-    KryoSerializer kryoSerializer = new KryoSerializer();
-    return (int) kryoSerializer.deserialize(checkpoint);
 
+    if (CheckpointContext.enableHDFS(config)) {
+      HdfsUtils hdfsUtils = new HdfsUtils(config, CheckpointContext.getHDFSFilename(config));
+      HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+      Path path = hdfsUtils.getPath();
+      Path path2 = new Path(path, config.getStringValue(Context.JOB_NAME));
+      FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
+          0, hadoopFileSystem);
+      FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
+          fs.createCheckpointStateOutputStream();
+      HadoopDataInputStream hadoopDataReadStream = (HadoopDataInputStream)
+          stream.openStateHandle("Acknowledged",
+              "BarrierIDs").openInputStream(hadoopFileSystem);
+      byte[] checkpoint;
+      synchronized (this) {
+        checkpoint = stream.readCheckpoint(hadoopDataReadStream);
+      }
+      KryoSerializer kryoSerializer = new KryoSerializer();
+      return (int) kryoSerializer.deserialize(checkpoint);
+    } else {
+      Path path = new Path(new File(CheckpointContext
+          .getStatebackendDirectoryDefault(config)).toURI());
+      Path path2 = new Path(path, config.getStringValue(Context.JOB_NAME));
+      LocalFileSystem localFileSystem = new LocalFileSystem();
+      FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
+          0, localFileSystem);
+      FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
+          fs.createCheckpointStateOutputStream();
+      LocalDataInputStream localDataReadStream = (LocalDataInputStream)
+          stream.openStateHandle("Acknowledged",
+              "BarrierIDs").openInputStream(localFileSystem);
+      byte[] checkpoint;
+      synchronized (this) {
+        checkpoint = stream.readCheckpoint(localDataReadStream);
+      }
+      KryoSerializer kryoSerializer = new KryoSerializer();
+      return (int) kryoSerializer.deserialize(checkpoint);
+    }
   }
 
 

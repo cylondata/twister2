@@ -11,18 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task.checkpoint;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -40,8 +33,8 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
-import edu.iu.dsc.tws.examples.comms.Constants;
+import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
+import edu.iu.dsc.tws.data.utils.HdfsUtils;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.Runtime;
@@ -63,9 +56,10 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
-public class SourceSinkDiscoveryExample implements IWorker {
+public class HDFSSourceSinkDiscoveryExample implements IWorker {
 
-  private static final Logger LOG = Logger.getLogger(SourceSinkDiscoveryExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(
+      HDFSSourceSinkDiscoveryExample.class.getName());
 
   @Override
   public void execute(Config config, int workerID, AllocatedResources resources,
@@ -73,20 +67,21 @@ public class SourceSinkDiscoveryExample implements IWorker {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    Path path = new Path(new File(CheckpointContext
-        .getStatebackendDirectoryDefault(config)).toURI());
-    path.getParent();
+    HdfsUtils hdfsUtils = new HdfsUtils(config, CheckpointContext.getHDFSFilename(config));
+    HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+    Path path = hdfsUtils.getPath();
 
     Runtime runtime = new Runtime();
     runtime.setParentpath(path);
 
-    LocalFileSystem localFileSystem = new LocalFileSystem();
-    runtime.setFileSystem(localFileSystem);
+//    LocalFileSystem localFileSystem = new LocalFileSystem();
+    runtime.setFileSystem(hadoopFileSystem);
     Config newconfig = runtime.updateConfig(config);
 
     if (workerID == 1) {
-      LOG.log(Level.INFO, "Statebackend directory is created for job: " + runtime.getJobName());
-      FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path,
+      LOG.log(Level.INFO, "Statebackend directory is created for job: "
+          + runtime.getJobName());
+      FsCheckpointStorage newStateBackend = new FsCheckpointStorage(hadoopFileSystem, path,
           runtime.getJobName(), 0);
     }
 
@@ -96,7 +91,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", Integer.parseInt(config.get("twister2.workers").toString()));
+    builder.setParallelism("source", 4);
     builder.addSink("sink", r);
     builder.setParallelism("sink", 4);
     builder.connect("source", "sink", "partition-edge",
@@ -211,35 +206,17 @@ public class SourceSinkDiscoveryExample implements IWorker {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
-    Options options = new Options();
-    options.addOption(Constants.ARGS_WORKERS, true, "Workers");
-
-    CommandLineParser commandLineParser = new DefaultParser();
-
-    CommandLine cmd;
-
-    try {
-      cmd = commandLineParser.parse(options, args);
-
-    } catch (ParseException e) {
-      throw new RuntimeException("No valid arguments found");
-
-    }
-
-    int workers = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_WORKERS));
-
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
-    configurations.put("twister2.workers", workers);
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
     Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setName("source-sink-discovery-example");
-    jobBuilder.setWorkerClass(SourceSinkDiscoveryExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), workers);
+    jobBuilder.setWorkerClass(HDFSSourceSinkDiscoveryExample.class.getName());
+    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
