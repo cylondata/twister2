@@ -38,9 +38,9 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
 
   private Map<Integer, List<Integer>> expIds;
 
-  private Map<Integer, Map<Integer, Boolean>> barrierMap;
+  private Map<Integer, Map<Integer, BlockingQueue<MessageObject>>> barrierMap;
 
-  private BlockingQueue<MessageObject> bufferMessage = new ArrayBlockingQueue<>(2000);
+//  private Map<InBlockingQueue<MessageObject> bufferMessage = new ArrayBlockingQueue<>(2000);
 
 
   public PartitionStreamingFinalReceiver(BulkReceiver receiver) {
@@ -63,25 +63,26 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
       if (barrierMap.containsKey(target)) {
-        barrierMap.get(target).putIfAbsent(source, true);
+        barrierMap.get(target).putIfAbsent(source, new ArrayBlockingQueue<>(2000));
       } else {
-        barrierMap.put(target, new HashMap<Integer, Boolean>());
-        barrierMap.get(target).put(source, true);
+        barrierMap.put(target, new HashMap<>());
+        barrierMap.get(target).put(source, new ArrayBlockingQueue<>(2000));
       }
       if (barrierMap.get(target).keySet().size() == expIds.get(target).size()) {
         if (receiver.sync(target, MessageFlags.BARRIER, object)) {
-          for (MessageObject messageObject : bufferMessage) {
-            messages.get(messageObject.getTarget()).offer(messageObject.getMessage());
+          for (Integer barrierSource : barrierMap.get(target).keySet()) {
+            for (MessageObject messageObject : barrierMap.get(target).get(barrierSource)) {
+              messages.get(messageObject.getTarget()).offer(messageObject.getMessage());
+            }
+            barrierMap.get(target).clear();
           }
-          barrierMap.clear();
-          bufferMessage = new ArrayBlockingQueue<>(2000);
         }
       }
       return true;
     } else {
       if (barrierMap.containsKey(target)) {
         if (barrierMap.get(target).containsKey(source)) {
-          bufferMessage.add(new MessageObject(target, object));
+          barrierMap.get(target).get(source).add(new MessageObject(target, object));
           return true;
         } else {
           return messages.get(target).offer(object);
