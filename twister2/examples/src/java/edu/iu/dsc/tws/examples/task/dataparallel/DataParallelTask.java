@@ -35,10 +35,13 @@ public class DataParallelTask extends BaseBatchSource {
   public void execute() {
     InputSplit<String> inputSplit = source.getSplit(context.taskIndex());
     try {
+      int count = 0;
       while (!inputSplit.reachedEnd()) {
         String value = inputSplit.nextRecord(null);
         LOG.info("We read value: " + value);
+        count += 1;
       }
+      LOG.info("Finished: " + context.taskIndex() + " count: " + count);
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to read the input", e);
     }

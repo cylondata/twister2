@@ -169,13 +169,32 @@ public class LocalFileSystem extends FileSystem {
   }
 
   @Override
-  public FSDataOutputStream create(Path f) throws IOException {
-    return null;
+  public FSDataOutputStream create(Path filePath) throws IOException {
+    final Path parent = filePath.getParent();
+    if (parent != null && !mkdirs(parent)) {
+      throw new IOException("Mkdirs failed to create " + parent);
+    }
+
+    final File file = pathToFile(filePath);
+    return new LocalDataOutputStream(file);
   }
 
   @Override
   public boolean delete(Path f, boolean recursive) throws IOException {
-    return false;
+    final File file = pathToFile(f);
+    if (file.isFile()) {
+      return file.delete();
+    } else if ((!recursive) && file.isDirectory()) {
+      File[] containedFiles = file.listFiles();
+      if (containedFiles == null) {
+        throw new IOException("Directory " + file.toString()
+            + " does not exist or an I/O error occurred");
+      } else if (containedFiles.length != 0) {
+        throw new IOException("Directory " + file.toString() + " is not empty");
+      }
+    }
+
+    return delete(file);
   }
 
   @Override
@@ -212,5 +231,34 @@ public class LocalFileSystem extends FileSystem {
   @Override
   public boolean isDistributedFS() {
     return false;
+  }
+
+  /**
+   * Deletes the given file or directory.
+   *
+   * @param f
+   *        the file to be deleted
+   * @return <code>true</code> if all files were deleted successfully, <code>false</code> otherwise
+   * @throws IOException
+   *         thrown if an error occurred while deleting the files/directories
+   */
+  private boolean delete(final File f) throws IOException {
+
+    if (f.isDirectory()) {
+      final File[] files = f.listFiles();
+      if (files != null) {
+        for (File file : files) {
+          final boolean del = delete(file);
+          if (!del) {
+            return false;
+          }
+        }
+      }
+    } else {
+      return f.delete();
+    }
+
+    // Now directory is empty
+    return f.delete();
   }
 }

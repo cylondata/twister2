@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 /**
  * This example demonstrates the use of a data parallel job. Here we will generate set of random
@@ -36,9 +37,9 @@ public class DataParallelWorker extends TaskWorker {
     int numFiles = config.getIntegerValue(Constants.ARGS_NUMBER_OF_FILES, 4);
     int size = config.getIntegerValue(Constants.ARGS_SIZE, 1000);
 
-    if (shared) {
+    if (!shared) {
       try {
-        DataGenerator.generateData("txt", new Path(inputDirectory), numFiles, size, 100);
+        DataGenerator.generateData("txt", new Path(inputDirectory), numFiles, size, 10);
       } catch (IOException e) {
         throw new RuntimeException("Failed to create data: " + inputDirectory);
       }
@@ -46,6 +47,7 @@ public class DataParallelWorker extends TaskWorker {
 
     DataParallelTask task = new DataParallelTask();
     taskGraphBuilder.addSource("map", task, 4);
+    taskGraphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(dataFlowTaskGraph);
