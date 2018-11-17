@@ -143,33 +143,38 @@ public class STMultiPartitionExample implements IWorker {
     private TaskContext ctx;
     private Config config;
 
-    private int count = 0;
+    private int value = 0;
+    private int myIndex;
+    private int worldSize;
+    private int limit = 1000000;
 
     @Override
     public void execute() {
-
-      if (count % 1000000 == 0) {
-        context.write("partition-edge-1", "Hello");
-        LOG.log(Level.INFO, "count for source " + this.context.taskId() + " is " + count);
+      if (value == limit) {
+        context.write("partition-edge-1", "end");
+      } else if (value < limit) {
+        context.write("partition-edge-1", value + myIndex*limit);
+//      LOG.log(Level.INFO, "count for source " + this.context.taskId() + " is " + value);
+        value++;
       }
-
-      count++;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
+      this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
+      this.worldSize = context.getParallelism();
       super.prepare(cfg, context);
     }
 
     @Override
     public void restoreSnapshot(Snapshot snapshot) {
       super.restoreSnapshot(snapshot);
-      count = (Integer) this.getState("count");
+      value = (Integer) this.getState("value");
     }
 
     @Override
     public void addCheckpointableStates() {
-      this.addState("count", count);
+      this.addState("value", value);
     }
   }
 
@@ -188,10 +193,13 @@ public class STMultiPartitionExample implements IWorker {
     @Override
     public boolean execute(IMessage content) {
       count++;
-
-      LOG.info("Count in middle task " + context.taskId() + " is " + count);
-
-      context.write("partition-edge-2", "Hello");
+      if(count == 10000) {
+        LOG.info("Count in middle task " + context.taskId()
+            + " is " + count
+            + " value is" + content
+        );
+      }
+      context.write("partition-edge-2", content.toString());
 
 
       return true;
@@ -219,7 +227,7 @@ public class STMultiPartitionExample implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      System.out.println(message.getContent() + " from Sink Task " + ctx.taskId());
+//      System.out.println(message.getContent() + " from Sink Task " + ctx.taskId());
       count++;
       LOG.log(Level.INFO, "count in sink " + ctx.taskId() + " is " + count);
       return true;
