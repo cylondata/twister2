@@ -19,18 +19,26 @@ import edu.iu.dsc.tws.data.fs.Path;
 public class LocalTextInputPartitioner extends FileInputPartitioner<String> {
   private static final long serialVersionUID = 1L;
 
-  public LocalTextInputPartitioner(Path filePath) {
+  private int nTasks;
+
+  private OrderedInputSplitAssigner assigner;
+
+  public LocalTextInputPartitioner(Path filePath, int numTasks) {
     super(filePath);
+    this.nTasks = numTasks;
   }
 
   @Override
-  protected FileInputSplit createSplit(int num, Path file, long start,
+  protected TextInputSplit createSplit(int num, Path file, long start,
                                        long length, String[] hosts) {
     return new TextInputSplit(num, file, start, length, hosts);
   }
 
   @Override
-  public OrderedInputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
-    return new OrderedInputSplitAssigner(inputSplits);
+  public OrderedInputSplitAssigner getInputSplitAssigner(FileInputSplit<String>[] inputSplits) {
+    if (assigner == null) {
+      assigner = new OrderedInputSplitAssigner(inputSplits, nTasks);
+    }
+    return assigner;
   }
 }

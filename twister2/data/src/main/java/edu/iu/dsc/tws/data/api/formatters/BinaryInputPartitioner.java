@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.BinaryInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.BlockLocation;
@@ -135,7 +136,7 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
 
   @Override
   public InputSplitAssigner getInputSplitAssigner(FileInputSplit<byte[]>[] inputSplits) {
-    return null;
+    return new LocatableInputSplitAssigner(inputSplits);
   }
 
   @Override

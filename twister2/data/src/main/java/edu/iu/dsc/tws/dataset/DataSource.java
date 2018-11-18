@@ -11,43 +11,45 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.InputPartitioner;
+import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
-public class DataSource<T> extends DataSet<T> {
+public class DataSource<T, O extends FileInputSplit<T>> extends DataSet<T> {
   private static final Logger LOG = Logger.getLogger(DataSource.class.getName());
 
-  private InputPartitioner<T, ?> input;
+  private InputPartitioner<T, O> input;
 
-  private Map<Integer, InputSplit<T>> splits = new HashMap<>();
+  private O[] splits;
 
-  public DataSource(Config config, InputPartitioner<T, ?> input, int numSplits) {
+  public DataSource(Config config, InputPartitioner<T, O> input, int numSplits) {
     super(0);
-
     this.input = input;
     this.input.configure(config);
     try {
-      InputSplit<T>[] sps = this.input.createInputSplits(numSplits);
-      for (InputSplit<T> split : sps) {
-        splits.put(split.getSplitNumber(), split);
-      }
-
-      for (InputSplit<T> split : sps) {
-        split.configure(config);
-        // open the split
-        split.open();
-      }
+      this.splits = this.input.createInputSplits(numSplits);
     } catch (Exception e) {
       throw new RuntimeException("Failed to create the input splits");
     }
   }
 
-  public InputSplit<T> getSplit(int id) {
-    return splits.get(id);
+  public InputSplit<T> getNextSplit(int id) {
+    InputSplitAssigner assigner = input.getInputSplitAssigner(splits);
+    InputSplit<T> split = assigner.getNextInputSplit("localhost", id);
+    if (split != null) {
+      try {
+        split.open();
+      } catch (IOException e) {
+        throw new RuntimeException("Failed to open split", e);
+      }
+      return split;
+    } else {
+      return null;
+    }
   }
 }

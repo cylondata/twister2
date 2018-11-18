@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.data.fs.io.InputSplit;
  * A locatable input split is an input split referring to input data which
  * is located on one or more hosts.
  */
-public abstract class LocatableInputSplit<T> implements InputSplit<T>, java.io.Serializable {
+public abstract class LocatableInputSplit<T> implements InputSplit<T> {
 
   private static final Logger LOG = Logger.getLogger(LocatableInputSplit.class.getName());
 

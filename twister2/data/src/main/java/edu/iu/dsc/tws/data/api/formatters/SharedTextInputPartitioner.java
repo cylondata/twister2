@@ -30,7 +30,7 @@ public class SharedTextInputPartitioner extends FileInputPartitioner<String> {
   }
 
   @Override
-  public LocatableInputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
+  public LocatableInputSplitAssigner getInputSplitAssigner(FileInputSplit<String>[] inputSplits) {
     return new LocatableInputSplitAssigner(inputSplits);
   }
 }

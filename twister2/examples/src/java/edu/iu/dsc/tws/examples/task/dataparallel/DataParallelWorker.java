@@ -37,7 +37,7 @@ public class DataParallelWorker extends TaskWorker {
     int numFiles = config.getIntegerValue(Constants.ARGS_NUMBER_OF_FILES, 4);
     int size = config.getIntegerValue(Constants.ARGS_SIZE, 1000);
 
-    if (!shared) {
+    if (!shared && workerId == 0) {
       try {
         DataGenerator.generateData("txt", new Path(inputDirectory), numFiles, size, 10);
       } catch (IOException e) {

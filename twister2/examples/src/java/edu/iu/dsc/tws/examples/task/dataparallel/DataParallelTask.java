@@ -29,21 +29,29 @@ import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 public class DataParallelTask extends BaseBatchSource {
   private static final Logger LOG = Logger.getLogger(DataParallelTask.class.getName());
 
-  private DataSource<String> source;
+  private static final long serialVersionUID = -1L;
+
+  private DataSource<String, ?> source;
 
   @Override
   public void execute() {
-    InputSplit<String> inputSplit = source.getSplit(context.taskIndex());
-    try {
-      int count = 0;
-      while (!inputSplit.reachedEnd()) {
-        String value = inputSplit.nextRecord(null);
-        LOG.info("We read value: " + value);
-        count += 1;
+    InputSplit<String> inputSplit = source.getNextSplit(context.taskIndex());
+    int splitCount = 0;
+    while (inputSplit != null) {
+      try {
+        int count = 0;
+        while (!inputSplit.reachedEnd()) {
+          String value = inputSplit.nextRecord(null);
+          LOG.info("We read value: " + value);
+          count += 1;
+        }
+        splitCount += 1;
+        inputSplit = source.getNextSplit(context.taskIndex());
+        LOG.info("Finished: " + context.taskIndex() + " count: " + count
+            + " split: " + splitCount);
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Failed to read the input", e);
       }
-      LOG.info("Finished: " + context.taskIndex() + " count: " + count);
-    } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Failed to read the input", e);
     }
   }
 
@@ -56,6 +64,6 @@ public class DataParallelTask extends BaseBatchSource {
         ExecutorContext.TWISTER2_RUNTIME_OBJECT);
 
     this.source = runtime.createInput(cfg, context,
-        new LocalTextInputPartitioner(new Path(directory)));
+        new LocalTextInputPartitioner(new Path(directory), context.getParallelism()));
   }
 }
