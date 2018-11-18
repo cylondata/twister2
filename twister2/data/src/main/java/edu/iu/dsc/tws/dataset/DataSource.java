@@ -16,11 +16,10 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.InputPartitioner;
-import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
-public class DataSource<T, O extends FileInputSplit<T>> extends DataSet<T> {
+public class DataSource<T, O extends InputSplit<T>> extends DataSet<T> {
   private static final Logger LOG = Logger.getLogger(DataSource.class.getName());
 
   private InputPartitioner<T, O> input;

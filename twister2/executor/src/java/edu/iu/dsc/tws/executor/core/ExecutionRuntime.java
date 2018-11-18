@@ -15,8 +15,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.data.api.InputPartitioner;
-import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -79,7 +79,7 @@ public class ExecutionRuntime {
     this.parentpath = parentpath;
   }
 
-  public <T, O extends FileInputSplit<T>> DataSource<T, O> createInput(
+  public <T, O extends InputSplit<T>> DataSource<T, O> createInput(
       Config cfg, TaskContext context, InputPartitioner<T, O> input) {
 
     return new DataSource<T, O>(cfg, input, context.getParallelism());
