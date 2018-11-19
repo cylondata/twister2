@@ -136,7 +136,7 @@ public final class ZKWorkerControllerExample {
 
     LOG.info("Waiting for all workers to join: ");
     // wait until 100sec
-    workerList = zkWorkerController.waitForAllWorkersToJoin(100000);
+    workerList = zkWorkerController.getAllWorkers();
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     sleeeep((long) (Math.random() * 10000));

@@ -75,7 +75,7 @@ public class WordCountWorker implements IWorker {
 
   private void setupTasks(IWorkerController workerController) {
     taskPlan = WordCountUtils.createWordCountPlan(config, id,
-        workerController.waitForAllWorkersToJoin(50000),
+        workerController.getAllWorkers(),
         NO_OF_TASKS);
 
     sources = new HashSet<>();

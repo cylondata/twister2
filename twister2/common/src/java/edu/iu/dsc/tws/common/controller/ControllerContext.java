@@ -18,19 +18,19 @@ public final class ControllerContext {
   private ControllerContext() { }
 
   // max wait time to get worker list from the server in milliseconds
-  public static final int MAX_WAIT_TIME_DEFAULT = 100000;
+  public static final long MAX_WAIT_TIME_DEFAULT = 100000;
   public static final String MAX_WAIT_TIME_FOR_ALL_TO_JOIN =
       "twister2.worker.controller.max.wait.time.for.all.workers.to.join";
 
   public static final String MAX_WAIT_TIME_ON_BARRIER =
       "twister2.worker.controller.max.wait.time.on.barrier";
 
-  public static int maxWaitTimeForAllToJoin(Config cfg) {
-    return cfg.getIntegerValue(MAX_WAIT_TIME_FOR_ALL_TO_JOIN, MAX_WAIT_TIME_DEFAULT);
+  public static long maxWaitTimeForAllToJoin(Config cfg) {
+    return cfg.getLongValue(MAX_WAIT_TIME_FOR_ALL_TO_JOIN, MAX_WAIT_TIME_DEFAULT);
   }
 
-  public static int maxWaitTimeOnBarrier(Config cfg) {
-    return cfg.getIntegerValue(MAX_WAIT_TIME_ON_BARRIER, MAX_WAIT_TIME_DEFAULT);
+  public static long maxWaitTimeOnBarrier(Config cfg) {
+    return cfg.getLongValue(MAX_WAIT_TIME_ON_BARRIER, MAX_WAIT_TIME_DEFAULT);
   }
 
 }

@@ -68,7 +68,7 @@ public abstract class BenchWorker implements IWorker {
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
     this.workerId = workerID;
-    this.workerList = workerController.waitForAllWorkersToJoin(50000);
+    this.workerList = workerController.getAllWorkers();
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(cfg, workerID,
         jobParameters.getTaskStages(), workerList);

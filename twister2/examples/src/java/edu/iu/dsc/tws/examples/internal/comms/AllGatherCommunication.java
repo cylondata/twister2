@@ -64,7 +64,7 @@ public class AllGatherCommunication implements IWorker {
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, workerID,
-        workerController.waitForAllWorkersToJoin(50000),
+        workerController.getAllWorkers(),
         NO_OF_TASKS);
 
     //first get the communication config file

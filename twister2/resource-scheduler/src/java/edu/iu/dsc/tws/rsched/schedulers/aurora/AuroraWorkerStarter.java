@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -192,16 +191,12 @@ public final class AuroraWorkerStarter {
     int numberOfWorkers = job.getNumberOfWorkers();
     LOG.info("Waiting for " + numberOfWorkers + " workers to join .........");
 
-    // the amount of time to wait for all workers to join a job
-    int timeLimit = ControllerContext.maxWaitTimeForAllToJoin(config);
     long startTime = System.currentTimeMillis();
-    List<JobMasterAPI.WorkerInfo> workerList =
-        zkWorkerController.waitForAllWorkersToJoin(timeLimit);
+    List<JobMasterAPI.WorkerInfo> workerList = zkWorkerController.getAllWorkers();
     long duration = System.currentTimeMillis() - startTime;
 
     if (workerList == null) {
-      LOG.log(Level.SEVERE, "Could not get full worker list. timeout limit has been reached !!!!"
-          + "Waited " + timeLimit + " ms.");
+      LOG.log(Level.SEVERE, "Could not get full worker list. timeout limit has been reached !!!!");
     } else {
       LOG.log(Level.INFO, "Waited " + duration + " ms for all workers to join.");
 

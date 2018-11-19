@@ -72,7 +72,7 @@ public abstract class HarpWorker implements IWorker {
   public void execute(Config config, int workerID,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
-    List<JobMasterAPI.WorkerInfo> workersList = workerController.waitForAllWorkersToJoin(50000);
+    List<JobMasterAPI.WorkerInfo> workersList = workerController.getAllWorkers();
 
     LOG.info(String.format("Worker %s starting with %d workers, "
             + "after waiting for all to start. \n %s",

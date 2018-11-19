@@ -81,7 +81,7 @@ public abstract class TaskWorker implements IWorker {
     this.persistentVolume = pVolume;
     this.volatileVolume = vVolume;
 
-    List<JobMasterAPI.WorkerInfo> workerInfoList = wController.waitForAllWorkersToJoin(50000);
+    List<JobMasterAPI.WorkerInfo> workerInfoList = wController.getAllWorkers();
 
     // create the channel
     channel = Network.initializeChannel(config, workerController);

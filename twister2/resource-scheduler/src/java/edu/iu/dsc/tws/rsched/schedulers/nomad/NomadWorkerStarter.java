@@ -192,7 +192,7 @@ public final class NomadWorkerStarter {
 
     String workerClass = SchedulerContext.workerClass(config);
 
-    List<JobMasterAPI.WorkerInfo> workerInfos = workerController.waitForAllWorkersToJoin(30000);
+    List<JobMasterAPI.WorkerInfo> workerInfos = workerController.getAllWorkers();
 
     try {
       Object object = ReflectionUtils.newInstance(workerClass);

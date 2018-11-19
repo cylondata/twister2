@@ -60,12 +60,15 @@ public interface IWorkerController {
   List<JobMasterAPI.WorkerInfo> getJoinedWorkers();
 
   /**
-   * wait for all workers to join the job
+   * get all workers in the job.
+   * If some workers has not joined the job yet, wait for them.
+   * After waiting for the timeout specified in ControllerContext.maxWaitTimeForAllToJoin
+   * if some workers still could not join, return null
+   *
    * return all workers in the job including the ones that have already left, if any
-   * @param timeLimitMilliSec
    * @return
    */
-  List<JobMasterAPI.WorkerInfo> waitForAllWorkersToJoin(long timeLimitMilliSec);
+  List<JobMasterAPI.WorkerInfo> getAllWorkers();
 
   /**
    * wait for all workers in the job to arrive at this barrier

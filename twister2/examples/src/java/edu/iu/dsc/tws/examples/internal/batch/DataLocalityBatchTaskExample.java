@@ -154,7 +154,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     builder.addConfiguration("sink2", "outputdataset2", sinkOutputDataset2);
 
     DataFlowTaskGraph graph = builder.build();
-    WorkerPlan workerPlan = createWorkerPlan(workerController.waitForAllWorkersToJoin(50000));
+    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
 
     //Assign the "datalocalityaware" or "roundrobin" scheduling mode in config file.
     TaskScheduler taskScheduler = new TaskScheduler();
@@ -183,7 +183,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
 
     TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-        workerController.waitForAllWorkersToJoin(50000), new Communicator(config, network));
+        workerController.getAllWorkers(), new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network, OperationMode.BATCH);
     executor.execute();

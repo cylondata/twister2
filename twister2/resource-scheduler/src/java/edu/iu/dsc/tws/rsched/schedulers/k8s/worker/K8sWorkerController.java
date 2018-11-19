@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -259,15 +260,15 @@ public class K8sWorkerController implements IWorkerController {
 
   /**
    * wait for all pods to run
-   * @param timeLimitMilliSec
    * @return
    */
   @Override
-  public List<JobMasterAPI.WorkerInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() {
     // first make sure all workers are in the list
     long startTime = System.currentTimeMillis();
     if (workerList.size() < numberOfWorkers) {
-      boolean listBuilt = buildWorkerListWaitForAll(timeLimitMilliSec);
+      boolean listBuilt = buildWorkerListWaitForAll(
+          ControllerContext.maxWaitTimeForAllToJoin(config));
       if (!listBuilt) {
         return null;
       }
@@ -275,6 +276,7 @@ public class K8sWorkerController implements IWorkerController {
 
     ArrayList<String> podNameList = constructPodNameList();
 
+    long timeLimitMilliSec = ControllerContext.maxWaitTimeForAllToJoin(config);
     long duration = System.currentTimeMillis() - startTime;
     long remainingTimeLimit = timeLimitMilliSec - duration;
 

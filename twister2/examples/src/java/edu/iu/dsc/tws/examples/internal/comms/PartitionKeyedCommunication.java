@@ -69,7 +69,7 @@ public class PartitionKeyedCommunication implements IWorker {
 
     // lets create the task plan
     TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, workerID,
-        workerController.waitForAllWorkersToJoin(50000), NO_OF_TASKS);
+        workerController.getAllWorkers(), NO_OF_TASKS);
     //first get the communication config file
     TWSChannel network = Network.initializeChannel(cfg, workerController);
 

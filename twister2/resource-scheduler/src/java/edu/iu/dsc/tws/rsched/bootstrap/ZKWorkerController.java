@@ -32,6 +32,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
@@ -400,10 +401,11 @@ public class ZKWorkerController implements IWorkerController {
    * return null if the timeLimit is reached or en exception is thrown while waiting
    */
   @Override
-  public List<WorkerInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
+  public List<WorkerInfo> getAllWorkers() {
 
+    long timeLimit = ControllerContext.maxWaitTimeForAllToJoin(config);
     long duration = 0;
-    while (duration < timeLimitMilliSec) {
+    while (duration < timeLimit) {
       if (countNumberOfJoinedWorkers() < numberOfWorkers) {
         try {
           Thread.sleep(50);

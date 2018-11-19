@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
@@ -91,14 +92,14 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   }
 
   @Override
-  public List<JobMasterAPI.WorkerInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() {
     if (workerList.size() == numberOfWorkers) {
       return workerList;
     }
 
     boolean sentAndReceived =
         sendWorkerListRequest(ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED,
-            timeLimitMilliSec);
+            ControllerContext.maxWaitTimeForAllToJoin(config));
 
     if (!sentAndReceived) {
       return null;

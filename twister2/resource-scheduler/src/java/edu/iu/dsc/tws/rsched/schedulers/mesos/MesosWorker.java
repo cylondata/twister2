@@ -24,7 +24,6 @@ import org.apache.mesos.Protos;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -101,7 +100,7 @@ public class MesosWorker implements Executor {
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
-      workerController.waitForAllWorkersToJoin(ControllerContext.maxWaitTimeForAllToJoin(config));
+      workerController.getAllWorkers();
       LOG.info("Everyone has joined");
       container.execute(config, id, workerController, null, null);
       workerController.close();

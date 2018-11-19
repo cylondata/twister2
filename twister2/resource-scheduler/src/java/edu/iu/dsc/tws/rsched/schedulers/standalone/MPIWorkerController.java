@@ -57,7 +57,7 @@ public class MPIWorkerController implements IWorkerController {
   }
 
   @Override
-  public List<JobMasterAPI.WorkerInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() {
     return new ArrayList<>(networkInfoMap.values());
   }
 

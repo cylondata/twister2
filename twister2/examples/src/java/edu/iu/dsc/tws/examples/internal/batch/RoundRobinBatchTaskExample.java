@@ -146,7 +146,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     builder.addConfiguration("final", "inputdataset", sourceInputDataset);
 
     DataFlowTaskGraph graph = builder.build();
-    WorkerPlan workerPlan = createWorkerPlan(workerController.waitForAllWorkersToJoin(50000));
+    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
 
     //Assign the "datalocalityaware" or "roundrobin" scheduling mode in config file.
     TaskScheduler taskScheduler = new TaskScheduler();
@@ -175,7 +175,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
 
     TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-        workerController.waitForAllWorkersToJoin(50000), new Communicator(config, network));
+        workerController.getAllWorkers(), new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network, OperationMode.BATCH);
     executor.execute();

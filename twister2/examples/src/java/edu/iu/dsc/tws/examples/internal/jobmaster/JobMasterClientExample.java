@@ -104,7 +104,7 @@ public final class JobMasterClientExample {
     List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
-    workerList = workerController.waitForAllWorkersToJoin(100000);
+    workerList = workerController.getAllWorkers();
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     // wait up to 10sec

@@ -66,7 +66,7 @@ public class WordCountWorker implements IWorker {
     taskStages.add(NO_OF_TASKS);
     taskStages.add(NO_OF_TASKS);
 
-    List<JobMasterAPI.WorkerInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    List<JobMasterAPI.WorkerInfo> workerList = workerController.getAllWorkers();
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(
         cfg, workerID, taskStages, workerList);
