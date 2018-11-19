@@ -29,13 +29,12 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class BasicK8sWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
@@ -43,7 +42,6 @@ public class BasicK8sWorker implements IWorker {
   @Override
   public void execute(Config config,
                       int workerID,
-                      AllocatedResources allocatedResources,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -62,39 +60,37 @@ public class BasicK8sWorker implements IWorker {
     }
 
     // wait for all workers in this job to join
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
-    if (workerList != null) {
-      LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
-    } else {
+    List<JobMasterAPI.WorkerInfo> workerList = workerController.getAllWorkers();
+    if (workerList == null) {
       LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
       return;
     }
 
     LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
 
-//    Map<String, List<WorkerComputeResource>> workersPerNode =
-//        WorkerResourceUtils.getWorkersPerNode(allocatedResources, workerList);
-//    printWorkersPerNode(workersPerNode);
+    Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode =
+        WorkerResourceUtils.getWorkersPerNode(workerList);
+    printWorkersPerNode(workersPerNode);
 
 //    listHdfsDir();
 //    sleepSomeTime(50);
-    echoServer(workerController.getWorkerNetworkInfo());
+    echoServer(workerController.getWorkerInfo());
   }
 
   /**
    * an echo server.
    */
-  public static void echoServer(WorkerNetworkInfo workerNetworkInfo) {
+  public static void echoServer(JobMasterAPI.WorkerInfo workerInfo) {
 
     // create socket
     ServerSocket serverSocket = null;
     try {
-      serverSocket = new ServerSocket(workerNetworkInfo.getWorkerPort());
+      serverSocket = new ServerSocket(workerInfo.getPort());
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Could not start ServerSocket.", e);
     }
 
-    LOG.info("Echo Server started on port " + workerNetworkInfo.getWorkerPort());
+    LOG.info("Echo Server started on port " + workerInfo.getPort());
 
     // repeatedly wait for connections, and process
     while (true) {
@@ -109,7 +105,7 @@ public class BasicK8sWorker implements IWorker {
 
         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 
-        out.println("hello from the server: " + workerNetworkInfo);
+        out.println("hello from the server: " + workerInfo);
         out.println("Will echo your messages:");
 
         String s;
@@ -142,13 +138,13 @@ public class BasicK8sWorker implements IWorker {
     }
   }
 
-  public void printWorkersPerNode(Map<String, List<WorkerComputeResource>> workersPerNode) {
+  public void printWorkersPerNode(Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode) {
 
     StringBuffer toPrint = new StringBuffer();
     for (String nodeIP: workersPerNode.keySet()) {
       toPrint.append("\n" + nodeIP + ": ");
-      for (WorkerComputeResource resource: workersPerNode.get(nodeIP)) {
-        toPrint.append(resource.getId() + ", ");
+      for (JobMasterAPI.WorkerInfo workerInfo: workersPerNode.get(nodeIP)) {
+        toPrint.append(workerInfo.getWorkerID() + ", ");
       }
     }
 

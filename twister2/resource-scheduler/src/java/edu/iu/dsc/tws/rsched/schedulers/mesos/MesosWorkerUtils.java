@@ -13,30 +13,10 @@ package edu.iu.dsc.tws.rsched.schedulers.mesos;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
-
 public final class MesosWorkerUtils {
   private static final Logger LOG = Logger.getLogger(MesosWorkerUtils.class.getName());
 
   private MesosWorkerUtils() {
 
-  }
-
-  public static AllocatedResources createAllocatedResources(String cluster,
-                                                            int workerID,
-                                                            JobAPI.Job job) {
-    JobAPI.ComputeResource computeResource =
-        job.getComputeResource(0);
-
-    AllocatedResources allocatedResources = new AllocatedResources(cluster, workerID);
-    LOG.info("job get number of workers....:" + job.getNumberOfWorkers());
-    for (int i = 0; i < job.getNumberOfWorkers(); i++) {
-      allocatedResources.addWorkerComputeResource(new WorkerComputeResource(
-          i, computeResource.getCpu(), computeResource.getRamMegaBytes(),
-          computeResource.getDiskGigaBytes()));
-    }
-    return allocatedResources;
   }
 }

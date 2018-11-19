@@ -29,12 +29,13 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JMWorkerController;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
@@ -80,11 +81,11 @@ public final class JobMasterClientExample {
     InetAddress workerIP = JMWorkerController.convertStringToIP("localhost");
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
-    NodeInfo nodeInfo = new NodeInfo("node.ip", "rack01", null);
-    WorkerNetworkInfo workerNetworkInfo =
-        new WorkerNetworkInfo(workerIP, workerPort, workerTempID, nodeInfo);
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo("node.ip", "rack01", null);
+    JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
+        workerTempID, workerIP.getHostAddress(), workerPort, nodeInfo);
 
-    JobMasterClient client = new JobMasterClient(config, workerNetworkInfo);
+    JobMasterClient client = new JobMasterClient(config, workerInfo);
     Thread clientThread = client.startThreaded();
     if (clientThread == null) {
       LOG.severe("JobMasterClient can not initialize. Exiting ...");
@@ -100,16 +101,16 @@ public final class JobMasterClientExample {
 
     client.sendWorkerRunningMessage();
 
-    List<WorkerNetworkInfo> workerList = workerController.getWorkerList();
-    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
+    List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
+    LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
-    workerList = workerController.waitForAllWorkersToJoin(100000);
-    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
+    workerList = workerController.getAllWorkers();
+    LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     // wait up to 10sec
     sleeeep((long) (Math.random() * 10000));
     long timeLimit = 20000;
-    boolean allWorkersReachedBarrier = client.getJMWorkerController().waitOnBarrier(timeLimit);
+    boolean allWorkersReachedBarrier = client.getJMWorkerController().waitOnBarrier();
     if (allWorkersReachedBarrier) {
       LOG.info("All workers reached the barrier. Proceeding.");
     } else {

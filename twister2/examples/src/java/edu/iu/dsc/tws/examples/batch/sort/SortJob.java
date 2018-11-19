@@ -24,9 +24,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -37,6 +35,7 @@ import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -60,7 +59,7 @@ public class SortJob implements IWorker {
   private Set<RecordSource> recordSources = new HashSet<>();
 
   @Override
-  public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
+  public void execute(Config cfg, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -69,12 +68,13 @@ public class SortJob implements IWorker {
 
     taskStages.add(NO_OF_TASKS);
     taskStages.add(NO_OF_TASKS);
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    List<JobMasterAPI.WorkerInfo> workerList = workerController.getAllWorkers();
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(cfg, allocatedResources, taskStages, workerList);
+    this.taskPlan = Utils.createStageTaskPlan(cfg, workerID,
+        taskStages, workerList);
 
     // setup the network
-    setupNetwork(workerController, allocatedResources);
+    setupNetwork(workerController);
     // set up the tasks
     setupTasks();
 
@@ -113,8 +113,8 @@ public class SortJob implements IWorker {
     }
   }
 
-  private void setupNetwork(IWorkerController controller, AllocatedResources resources) {
-    TWSChannel twsChannel = Network.initializeChannel(config, controller, resources);
+  private void setupNetwork(IWorkerController controller) {
+    TWSChannel twsChannel = Network.initializeChannel(config, controller);
     this.channel = new Communicator(config, twsChannel);
   }
 

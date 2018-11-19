@@ -57,7 +57,7 @@ kubernetes.node.locations.from.config: false
 # Better data locality can be achieved
 # Example: rack=rack1, rack=rack2, rack=rack3, etc
 # no default value is specified
-kubernetes.rack.labey.key: rack
+rack.labey.key: rack
 
 # data center label key
 # each data center should have a unique label
@@ -66,14 +66,14 @@ kubernetes.rack.labey.key: rack
 # Better data locality can be achieved
 # Example: datacenter=dc1, datacenter=dc1, datacenter=dc1, etc
 # no default value is specified
-kubernetes.datacenter.labey.key: datacenter
+datacenter.labey.key: datacenter
 
 # Data center list with rack names
-kubernetes.datacenters.list:
+datacenters.list:
 - echo: ['blue-rack', 'green-rack']
 
 # Rack list with node IPs in them
-kubernetes.racks.list:
+racks.list:
 - blue-rack: ['node01.ip', 'node02.ip', 'node03.ip']
 - green-rack: ['node11.ip', 'node12.ip', 'node13.ip']
 

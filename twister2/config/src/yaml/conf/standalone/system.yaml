@@ -40,3 +40,14 @@ twister2.job.master.runs.in.client: false
 # if true, job master assigns the worker IDs,
 # if false, workers have their IDs when regitering with the job master
 twister2.job.master.assigns.worker.ids: false
+
+###################################################################################
+# WorkerController related config parameters
+###################################################################################
+# amount of timeout for all workers to join the job
+# in milli seconds
+twister2.worker.controller.max.wait.time.for.all.workers.to.join: 100000
+
+# amount of timeout on barriers for all workers to arrive
+# in milli seconds
+twister2.worker.controller.max.wait.time.on.barrier: 100000

@@ -9,99 +9,64 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.discovery;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.common.resource;
 
 import java.util.ArrayList;
-import java.util.Objects;
+import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 
 /**
- * this class represents the physical machine properties a worker runs on
+ * Utility methods for NodeInfo objects
  */
 
-public class NodeInfo {
-  private String nodeIP;
-  private String rackName;
-  private String dataCenterName;
+public final class NodeInfoUtils {
+  private static final Logger LOG = Logger.getLogger(NodeInfoUtils.class.getName());
 
-  public NodeInfo(String nodeIP, String rackName, String dataCenterName) {
-    this.nodeIP = nodeIP;
-    this.rackName = rackName;
-    this.dataCenterName = dataCenterName;
+  private NodeInfoUtils() { }
 
-    // make empty strings null, since protobuff returns empty string for non-set fields
-    if ("".equals(nodeIP)) {
-      this.nodeIP = null;
+  /**
+   * do not set if any one of the parameters are null
+   * @param nodeIP
+   * @param rackName
+   * @param dataCenterName
+   * @return
+   */
+  public static NodeInfo createNodeInfo(String nodeIP, String rackName, String dataCenterName) {
+
+    NodeInfo.Builder builder = NodeInfo.newBuilder();
+
+    if (nodeIP != null) {
+      builder.setNodeIP(nodeIP);
     }
 
-    if ("".equals(rackName)) {
-      this.rackName = null;
+    if (rackName != null) {
+      builder.setRackName(rackName);
     }
 
-    if ("".equals(dataCenterName)) {
-      this.dataCenterName = null;
-    }
-  }
-
-  public String getNodeIP() {
-    return nodeIP;
-  }
-
-  public String getRackName() {
-    return rackName;
-  }
-
-  public String getDataCenterName() {
-    return dataCenterName;
-  }
-
-  public boolean hasNodeIP() {
-    return nodeIP != null;
-  }
-
-  public boolean hasRackName() {
-    return rackName != null;
-  }
-
-  public boolean hasDataCenterName() {
-    return dataCenterName != null;
-  }
-
-  @Override
-  public String toString() {
-    return "NodeInfo{"
-        + "nodeIP='" + nodeIP + '\''
-        + ", rackName='" + rackName + '\''
-        + ", dataCenterName='" + dataCenterName + '\''
-        + '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    if (dataCenterName != null) {
+      builder.setDataCenterName(dataCenterName);
     }
 
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    if (nodeIP == null) {
-      return false;
-    }
-
-    NodeInfo nodeInfo = (NodeInfo) o;
-    return nodeIP.equals(nodeInfo.nodeIP);
-  }
-
-  @Override
-  public int hashCode() {
-
-    return Objects.hash(nodeIP);
+    return builder.build();
   }
 
   /**
    * encode the given NodeInfo object fields as a single line String
    * each field is separated by a comma
+   * if the given NodeInfo is null, then return "null,null,null"
    * @param nodeInfo
    * @return
    */
@@ -109,7 +74,23 @@ public class NodeInfo {
     if (nodeInfo == null) {
       return "null,null,null";
     }
-    return nodeInfo.nodeIP + "," + nodeInfo.rackName + "," + nodeInfo.dataCenterName;
+
+    String nodeIP = nodeInfo.getNodeIP();
+    if (nodeInfo.getNodeIP().isEmpty()) {
+      nodeIP = "null";
+    }
+
+    String rackName = nodeInfo.getRackName();
+    if (nodeInfo.getRackName().isEmpty()) {
+      rackName = "null";
+    }
+
+    String dcName = nodeInfo.getDataCenterName();
+    if (nodeInfo.getDataCenterName().isEmpty()) {
+      dcName = "null";
+    }
+
+    return nodeIP + "," + rackName + "," + dcName;
   }
 
   /**
@@ -143,7 +124,7 @@ public class NodeInfo {
       dcName = null;
     }
 
-    return new NodeInfo(nodeIP, rackName, dcName);
+    return createNodeInfo(nodeIP, rackName, dcName);
   }
 
   /**
@@ -161,7 +142,7 @@ public class NodeInfo {
 
   /**
    * decode the given String that is encoded with the method encodeNodeInfoList
-   * each NodeInfo object is separated by others with a semi colon
+   * each NodeInfoUtils object is separated by others with a semi colon
    * @return
    */
   public static ArrayList<NodeInfo> decodeNodeInfoList(String nodeInfoListStr) {
@@ -197,6 +178,23 @@ public class NodeInfo {
       allNodesInfos += nodeInfo.toString() + "\n";
     }
     return allNodesInfos;
+  }
+
+  /**
+   * find the NodeInfo object with the given nodeIP and return it
+   * @return
+   */
+  public static NodeInfo getNodeInfo(ArrayList<NodeInfo> nodeInfoList, String nodeIP) {
+    if (nodeInfoList == null || nodeIP == null) {
+      return null;
+    }
+
+    for (NodeInfo nodeInfo: nodeInfoList) {
+      if (nodeIP.equals(nodeInfo.getNodeIP())) {
+        return nodeInfo;
+      }
+    }
+    return null;
   }
 
 }

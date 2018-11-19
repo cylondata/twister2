@@ -16,16 +16,15 @@ import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
@@ -42,10 +41,11 @@ public final class K8sWorkerStarter {
 
   private static Config config = null;
   private static int workerID = -1; // -1 means, not initialized
-  private static WorkerNetworkInfo workerNetworkInfo;
+  private static JobMasterAPI.WorkerInfo workerInfo;
   private static JobMasterClient jobMasterClient;
   private static String jobName = null;
   private static JobAPI.Job job = null;
+  private static JobAPI.ComputeResource computeResource = null;
 
   private K8sWorkerStarter() { }
 
@@ -96,17 +96,21 @@ public final class K8sWorkerStarter {
     }
 
     String podIP = localHost.getHostAddress();
-    NodeInfo thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
+    JobMasterAPI.NodeInfo nodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
         ? KubernetesContext.getNodeInfo(config, hostIP)
         : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, hostIP);
 
-    LOG.info("NodeInfo for this worker: " + thisNodeInfo);
+    LOG.info("NodeInfo for this worker: " + nodeInfo);
 
     // set workerID
     workerID = K8sWorkerUtils.calculateWorkerID(job, podName, containerName);
 
-    // set workerNetworkInfo
-    workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID, thisNodeInfo);
+    // get computeResource for this worker
+    computeResource = K8sWorkerUtils.getComputeResource(job, podName);
+
+    // set workerInfo
+    workerInfo = WorkerInfoUtils.createWorkerInfo(
+        workerID, localHost.getHostAddress(), workerPort, nodeInfo, computeResource);
 
     // initialize persistent volume
     K8sPersistentVolume pv = null;
@@ -129,7 +133,7 @@ public final class K8sWorkerStarter {
     );
 
     // start JobMasterClient
-    jobMasterClient = new JobMasterClient(config, workerNetworkInfo, jobMasterIP,
+    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP,
         JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
 
     Thread clientThread = jobMasterClient.startThreaded();
@@ -206,15 +210,12 @@ public final class K8sWorkerStarter {
       throw new RuntimeException(e);
     }
 
-    AllocatedResources allocatedResources = K8sWorkerUtils.createAllocatedResources(
-        KubernetesContext.clusterType(config), workerID, job);
-
     K8sVolatileVolume volatileVolume = null;
-    if (allocatedResources.getWorkerComputeResources(workerID).getDiskGigaBytes() > 0) {
+    if (computeResource.getDiskGigaBytes() > 0) {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
 
-    worker.execute(config, workerID, allocatedResources, workerController, pv, volatileVolume);
+    worker.execute(config, workerID, workerController, pv, volatileVolume);
   }
 
   /**

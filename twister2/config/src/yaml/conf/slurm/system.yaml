@@ -1,0 +1,10 @@
+###################################################################################
+# WorkerController related config parameters
+###################################################################################
+# amount of timeout for all workers to join the job
+# in milli seconds
+twister2.worker.controller.max.wait.time.for.all.workers.to.join: 100000
+
+# amount of timeout on barriers for all workers to arrive
+# in milli seconds
+twister2.worker.controller.max.wait.time.on.barrier: 100000

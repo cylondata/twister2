@@ -23,13 +23,12 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.ICompute;
@@ -75,17 +74,16 @@ public class SimpleTaskGraphExample implements IWorker {
    * This is the execute method for the task graph.
    * @param config
    * @param workerID
-   * @param resources
    * @param workerController
    * @param persistentVolume
    * @param volatileVolume
    */
-  public void execute(Config config, int workerID, AllocatedResources resources,
+  public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
+    LOG.log(Level.INFO, "Starting the example with container id: " + workerID);
     TaskMapper taskMapper = new TaskMapper("task1");
     TaskReducer taskReducer = new TaskReducer("task2");
     TaskShuffler taskShuffler = new TaskShuffler("task3");
@@ -139,7 +137,7 @@ public class SimpleTaskGraphExample implements IWorker {
     builder.addConfiguration("task4", "inputdataset", sourceInputDataset);
 
     DataFlowTaskGraph graph = builder.build();
-    WorkerPlan workerPlan = createWorkerPlan(resources);
+    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
 
     LOG.info("Generated Dataflow Task Graph Is:" + graph.getTaskVertexSet());
 
@@ -166,10 +164,10 @@ public class SimpleTaskGraphExample implements IWorker {
     }
   }
 
-  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
+  public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
+    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+      Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }
     return new WorkerPlan(workers);

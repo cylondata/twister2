@@ -37,42 +37,41 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 
 
 public class BasicNetworkTest implements IWorker, Runnable {
   private static final Logger LOG = Logger.getLogger(BasicNetworkTest.class.getName());
 
-  private WorkerNetworkInfo workerNetworkInfo;
+  private JobMasterAPI.WorkerInfo workerInfo;
   private IWorkerController workerController;
 
   @Override
   public void execute(Config config,
                       int workerID,
-                      AllocatedResources allocatedResources,
                       IWorkerController wController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
 
     this.workerController = wController;
-    workerNetworkInfo = wController.getWorkerNetworkInfo();
+    workerInfo = wController.getWorkerInfo();
 
-    LOG.info("Worker started: " + workerNetworkInfo);
+    LOG.info("Worker started: " + workerInfo);
 
     Thread echoServer = new Thread(this);
     echoServer.start();
 
     // wait for all workers in this job to join
-    List<WorkerNetworkInfo> workerList = wController.waitForAllWorkersToJoin(50000);
+    List<JobMasterAPI.WorkerInfo> workerList = wController.getAllWorkers();
     if (workerList != null) {
-      LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
+      LOG.info("All workers joined. " + WorkerInfoUtils.workerListAsString(workerList));
     } else {
       LOG.severe("Can not get all workers to join. Exiting ........................");
       return;
@@ -86,8 +85,8 @@ public class BasicNetworkTest implements IWorker, Runnable {
     }
 
 
-    for (WorkerNetworkInfo worker : workerList) {
-      if (worker.equals(workerNetworkInfo)) {
+    for (JobMasterAPI.WorkerInfo worker : workerList) {
+      if (worker.equals(workerInfo)) {
         continue;
       }
 
@@ -106,12 +105,12 @@ public class BasicNetworkTest implements IWorker, Runnable {
     // create socket
     ServerSocket serverSocket = null;
     try {
-      serverSocket = new ServerSocket(workerNetworkInfo.getWorkerPort());
+      serverSocket = new ServerSocket(workerInfo.getPort());
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Could not start ServerSocket.", e);
     }
 
-    LOG.info("Echo Started server on port " + workerNetworkInfo.getWorkerPort());
+    LOG.info("Echo Started server on port " + workerInfo.getPort());
 
     // repeatedly wait for connections, and process
     while (true) {
@@ -126,7 +125,7 @@ public class BasicNetworkTest implements IWorker, Runnable {
 
         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 
-        out.println("hello from the server: " + workerNetworkInfo);
+        out.println("hello from the server: " + workerInfo);
         out.println("Will echo your messages:");
 
         String receivedMessage = reader.readLine();
@@ -150,10 +149,10 @@ public class BasicNetworkTest implements IWorker, Runnable {
   /**
    * send a hello message and receive the response
    */
-  private void sendReceiveHello(WorkerNetworkInfo targetWorker) {
+  private void sendReceiveHello(JobMasterAPI.WorkerInfo targetWorker) {
 
     try {
-      Socket socketClient = new Socket(targetWorker.getWorkerIP(), targetWorker.getWorkerPort());
+      Socket socketClient = new Socket(targetWorker.getWorkerIP(), targetWorker.getPort());
       LOG.info("Connection Established to: " + targetWorker);
 
       BufferedReader reader =
@@ -161,7 +160,7 @@ public class BasicNetworkTest implements IWorker, Runnable {
 
       BufferedWriter writer =
           new BufferedWriter(new OutputStreamWriter(socketClient.getOutputStream()));
-      writer.write("hello from: " + workerNetworkInfo + "\n");
+      writer.write("hello from: " + workerInfo + "\n");
       writer.flush();
 
       String serverMessage = "";

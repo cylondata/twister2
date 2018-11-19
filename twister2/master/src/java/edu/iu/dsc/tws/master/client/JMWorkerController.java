@@ -21,9 +21,8 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.controller.ControllerContext;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
@@ -36,18 +35,18 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 public class JMWorkerController implements IWorkerController, MessageHandler {
   private static final Logger LOG = Logger.getLogger(JMWorkerController.class.getName());
 
-  private WorkerNetworkInfo thisWorker;
-  private ArrayList<WorkerNetworkInfo> workerList;
+  private JobMasterAPI.WorkerInfo thisWorker;
+  private ArrayList<JobMasterAPI.WorkerInfo> workerList;
   private int numberOfWorkers;
 
   private RRClient rrClient;
   private Config config;
 
-  public JMWorkerController(Config config, WorkerNetworkInfo thisWorker, RRClient rrClient) {
+  public JMWorkerController(Config config, JobMasterAPI.WorkerInfo thisWorker, RRClient rrClient) {
     this(config, thisWorker, rrClient, JobMasterContext.workerInstances(config));
   }
 
-  public JMWorkerController(Config config, WorkerNetworkInfo thisWorker,
+  public JMWorkerController(Config config, JobMasterAPI.WorkerInfo thisWorker,
                             RRClient rrClient, int numberOfWorkers) {
     this.config = config;
     this.numberOfWorkers = numberOfWorkers;
@@ -58,13 +57,13 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   }
 
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfo() {
+  public JobMasterAPI.WorkerInfo getWorkerInfo() {
     return thisWorker;
   }
 
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfoForID(int id) {
-    for (WorkerNetworkInfo info : workerList) {
+  public JobMasterAPI.WorkerInfo getWorkerInfoForID(int id) {
+    for (JobMasterAPI.WorkerInfo info : workerList) {
       if (info.getWorkerID() == id) {
         return info;
       }
@@ -79,7 +78,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   }
 
   @Override
-  public List<WorkerNetworkInfo> getWorkerList() {
+  public List<JobMasterAPI.WorkerInfo> getJoinedWorkers() {
 
     if (workerList.size() == numberOfWorkers) {
       return workerList;
@@ -93,14 +92,14 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   }
 
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() {
     if (workerList.size() == numberOfWorkers) {
       return workerList;
     }
 
     boolean sentAndReceived =
         sendWorkerListRequest(ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED,
-            timeLimitMilliSec);
+            ControllerContext.maxWaitTimeForAllToJoin(config));
 
     if (!sentAndReceived) {
       return null;
@@ -135,26 +134,17 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
       LOG.info("ListWorkersResponse message received from the master: \n" + message);
 
       ListWorkersResponse listResponse = (ListWorkersResponse) message;
-      List<JobMasterAPI.WorkerNetworkInfo> receivedWorkerInfos =
-          listResponse.getWorkersList();
+      List<JobMasterAPI.WorkerInfo> receivedWorkerInfos =
+          listResponse.getWorkerList();
 
       workerList.clear();
       workerList.add(thisWorker);
 
-      for (JobMasterAPI.WorkerNetworkInfo receivedWorkerInfo : receivedWorkerInfos) {
+      for (JobMasterAPI.WorkerInfo receivedWorkerInfo : receivedWorkerInfos) {
 
         // if received worker info belongs to this worker, do not add
         if (receivedWorkerInfo.getWorkerID() != thisWorker.getWorkerID()) {
-          NodeInfo nodeInfo = new NodeInfo(receivedWorkerInfo.getNodeIP(),
-              receivedWorkerInfo.getRackName(),
-              receivedWorkerInfo.getDataCenterName());
-
-          InetAddress ip = convertStringToIP(receivedWorkerInfo.getWorkerIP());
-
-          WorkerNetworkInfo workerInfo = new WorkerNetworkInfo(
-              ip, receivedWorkerInfo.getPort(), receivedWorkerInfo.getWorkerID(), nodeInfo);
-
-          workerList.add(workerInfo);
+          workerList.add(receivedWorkerInfo);
         }
       }
 
@@ -167,7 +157,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
   }
 
-  public boolean waitOnBarrier(long timeLimitMilliSec) {
+  public boolean waitOnBarrier() {
 
     JobMasterAPI.BarrierRequest barrierRequest = JobMasterAPI.BarrierRequest.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
@@ -175,7 +165,8 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
     LOG.info("Sending BarrierRequest message: \n" + barrierRequest.toString());
     try {
-      rrClient.sendRequestWaitResponse(barrierRequest, timeLimitMilliSec);
+      rrClient.sendRequestWaitResponse(barrierRequest,
+          ControllerContext.maxWaitTimeOnBarrier(config));
       return true;
     } catch (BlockingSendException e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);

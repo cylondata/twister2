@@ -39,7 +39,7 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
   @Override
   protected void execute() {
 
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
+    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
         jobParameters.getTaskStages(), workerList);
 
     Set<Integer> sources = new HashSet<>();

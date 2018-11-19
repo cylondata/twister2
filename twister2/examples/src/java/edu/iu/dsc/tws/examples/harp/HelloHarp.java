@@ -19,8 +19,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.harp.HarpWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -38,7 +37,7 @@ public class HelloHarp extends HarpWorker {
   private static final Logger LOG = Logger.getLogger(HelloHarp.class.getName());
 
   @Override
-  public void executeHarp(Config config, int workerID, AllocatedResources allocatedResources,
+  public void executeHarp(Config config, int workerID, int numberOfWorkers,
                           IWorkerController workerController, IPersistentVolume persistentVolume,
                           IVolatileVolume volatileVolume,
                           DataMap harpDataMap, Workers harpWorkers) {

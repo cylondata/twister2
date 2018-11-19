@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
@@ -27,10 +26,12 @@ import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 
 /**
  * JobMasterClient class
@@ -61,7 +62,7 @@ public class JobMasterClient {
   private boolean stopLooper = false;
 
   private Config config;
-  private WorkerNetworkInfo thisWorker;
+  private WorkerInfo thisWorker;
 
   private String masterAddress;
   private int masterPort;
@@ -85,13 +86,13 @@ public class JobMasterClient {
    */
   private boolean connectionRefused = false;
 
-  public JobMasterClient(Config config, WorkerNetworkInfo thisWorker) {
+  public JobMasterClient(Config config, WorkerInfo thisWorker) {
     this(config, thisWorker, JobMasterContext.jobMasterIP(config),
         JobMasterContext.jobMasterPort(config), JobMasterContext.workerInstances(config));
   }
 
   public JobMasterClient(Config config,
-                         WorkerNetworkInfo thisWorker,
+                         WorkerInfo thisWorker,
                          String masterHost,
                          int masterPort,
                          int numberOfWorkers) {
@@ -102,7 +103,7 @@ public class JobMasterClient {
     this.numberOfWorkers = numberOfWorkers;
   }
 
-  public JobMasterClient(Config config, WorkerNetworkInfo thisWorker, String jobMasterIP) {
+  public JobMasterClient(Config config, WorkerInfo thisWorker, String jobMasterIP) {
     this.config = config;
     this.thisWorker = thisWorker;
     this.masterAddress = jobMasterIP;
@@ -276,31 +277,14 @@ public class JobMasterClient {
 
   /**
    * send worker STARTING message
-   * put WorkerNetworkInfo in that message
+   * put WorkerInfo in that message
    * @return
    */
-  public WorkerNetworkInfo sendWorkerStartingMessage() {
-
-    JobMasterAPI.WorkerNetworkInfo.Builder workerInfoBuilder =
-        JobMasterAPI.WorkerNetworkInfo.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
-        .setWorkerIP(thisWorker.getWorkerIP().getHostAddress())
-        .setPort(thisWorker.getWorkerPort());
-
-    if (thisWorker.getNodeInfo().hasNodeIP()) {
-      workerInfoBuilder.setNodeIP(thisWorker.getNodeInfo().getNodeIP());
-    }
-
-    if (thisWorker.getNodeInfo().hasRackName()) {
-      workerInfoBuilder.setRackName(thisWorker.getNodeInfo().getRackName());
-    }
-
-    if (thisWorker.getNodeInfo().hasDataCenterName()) {
-      workerInfoBuilder.setDataCenterName(thisWorker.getNodeInfo().getDataCenterName());
-    }
+  public boolean sendWorkerStartingMessage() {
 
     JobMasterAPI.WorkerStateChange workerStateChange = JobMasterAPI.WorkerStateChange.newBuilder()
-        .setWorkerNetworkInfo(workerInfoBuilder.build())
+        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerInfo(thisWorker)
         .setNewState(JobMasterAPI.WorkerState.STARTING)
         .build();
 
@@ -313,31 +297,27 @@ public class JobMasterClient {
 
       } catch (BlockingSendException bse) {
         LOG.log(Level.SEVERE, bse.getMessage(), bse);
-        return null;
+        return false;
       }
 
     } else {
       RequestID requestID = rrClient.sendRequest(workerStateChange);
       if (requestID == null) {
         LOG.severe("Couldn't send Worker STARTING message: " + workerStateChange);
-        return null;
+        return false;
       }
     }
 
     startingMessageSent = true;
     pinger.sendPingMessage();
 
-    return thisWorker;
+    return true;
   }
 
   public boolean sendWorkerRunningMessage() {
-    JobMasterAPI.WorkerNetworkInfo workerInfo =
-        JobMasterAPI.WorkerNetworkInfo.newBuilder()
-            .setWorkerID(thisWorker.getWorkerID())
-            .build();
 
     JobMasterAPI.WorkerStateChange workerStateChange = JobMasterAPI.WorkerStateChange.newBuilder()
-        .setWorkerNetworkInfo(workerInfo)
+        .setWorkerID(thisWorker.getWorkerID())
         .setNewState(JobMasterAPI.WorkerState.RUNNING)
         .build();
 
@@ -353,13 +333,8 @@ public class JobMasterClient {
 
   public boolean sendWorkerCompletedMessage() {
 
-    JobMasterAPI.WorkerNetworkInfo workerInfo =
-        JobMasterAPI.WorkerNetworkInfo.newBuilder()
-            .setWorkerID(thisWorker.getWorkerID())
-            .build();
-
     JobMasterAPI.WorkerStateChange workerStateChange = JobMasterAPI.WorkerStateChange.newBuilder()
-        .setWorkerNetworkInfo(workerInfo)
+        .setWorkerID(thisWorker.getWorkerID())
         .setNewState(JobMasterAPI.WorkerState.COMPLETED)
         .build();
 
@@ -388,7 +363,7 @@ public class JobMasterClient {
 
         if (JobMasterContext.jobMasterAssignsWorkerIDs(config)
             && responseMessage.getSentState() == JobMasterAPI.WorkerState.STARTING) {
-          thisWorker.setWorkerID(responseMessage.getWorkerID());
+          thisWorker = WorkerInfoUtils.updateWorkerID(thisWorker, responseMessage.getWorkerID());
         }
 
       } else {

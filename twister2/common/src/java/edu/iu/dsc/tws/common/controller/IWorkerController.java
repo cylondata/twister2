@@ -21,9 +21,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.discovery;
+package edu.iu.dsc.tws.common.controller;
 
 import java.util.List;
+
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * an interface to get the list of workers in a job and their addresses
@@ -31,15 +33,15 @@ import java.util.List;
 public interface IWorkerController {
 
   /**
-   * return the WorkerNetworkInfo object for this worker
+   * return the WorkerInfo object for this worker
    * @return
    */
-  WorkerNetworkInfo getWorkerNetworkInfo();
+  JobMasterAPI.WorkerInfo getWorkerInfo();
 
   /**
-   * return the WorkerNetworkInfo object for the given ID
+   * return the WorkerInfo object for the given ID
    */
-  WorkerNetworkInfo getWorkerNetworkInfoForID(int id);
+  JobMasterAPI.WorkerInfo getWorkerInfoForID(int id);
 
   /**
    * return the number of all workers in this job,
@@ -49,28 +51,30 @@ public interface IWorkerController {
   int getNumberOfWorkers();
 
   /**
-   * return all known workers in a job, including the ones finished execution
+   * get all joined workers in this job, including the ones finished execution
    * some workers that has not joined yet, may not be included in this list.
    * users can compare the total number of workers to the size of this list and
    * understand whether there are non-joined workers
    * @return
    */
-  List<WorkerNetworkInfo> getWorkerList();
+  List<JobMasterAPI.WorkerInfo> getJoinedWorkers();
 
   /**
-   * wait for all workers to join the job
+   * get all workers in the job.
+   * If some workers has not joined the job yet, wait for them.
+   * After waiting for the timeout specified in ControllerContext.maxWaitTimeForAllToJoin
+   * if some workers still could not join, return null
+   *
    * return all workers in the job including the ones that have already left, if any
-   * @param timeLimitMilliSec
    * @return
    */
-  List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec);
+  List<JobMasterAPI.WorkerInfo> getAllWorkers();
 
   /**
    * wait for all workers in the job to arrive at this barrier
    * if the time limit has been reached before all workers arrived, return false
    * otherwise return true
-   * @param timeLimitMilliSec
    * @return
    */
-  boolean waitOnBarrier(long timeLimitMilliSec);
+  boolean waitOnBarrier();
 }

@@ -29,16 +29,15 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -189,25 +188,18 @@ public final class NomadWorkerStarter {
     LOG.log(Level.INFO, "A worker process is starting...");
     // lets create the resource plan
     this.workerController = createWorkerController();
-    WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
+    JobMasterAPI.WorkerInfo workerNetworkInfo = workerController.getWorkerInfo();
 
     String workerClass = SchedulerContext.workerClass(config);
 
-    AllocatedResources resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config),
-        workerNetworkInfo.getWorkerID());
-    List<WorkerNetworkInfo> networkInfos = workerController.waitForAllWorkersToJoin(30000);
-    for (WorkerNetworkInfo w : networkInfos) {
-      WorkerComputeResource workerComputeResource = new WorkerComputeResource(w.getWorkerID());
-      resourcePlan.addWorkerComputeResource(workerComputeResource);
-    }
+    List<JobMasterAPI.WorkerInfo> workerInfos = workerController.getAllWorkers();
 
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
       if (object instanceof IWorker) {
         IWorker container = (IWorker) object;
         // now initialize the container
-        container.execute(config, workerNetworkInfo.getWorkerID(), resourcePlan,
-            workerController, null, null);
+        container.execute(config, workerNetworkInfo.getWorkerID(), workerController, null, null);
       } else {
         throw new RuntimeException("Job is not of time IWorker: " + object.getClass().getName());
       }
@@ -246,10 +238,11 @@ public final class NomadWorkerStarter {
 
     int port = ports.get("worker");
     String host = localIps.get("worker");
-    WorkerNetworkInfo networkInfo = new WorkerNetworkInfo(host, port, workerID);
+    JobMasterAPI.WorkerInfo workerInfo =
+        WorkerInfoUtils.createWorkerInfo(workerID, host, port, null);
 
     this.masterClient = createMasterClient(config, jobMasterIP, jobMasterPort,
-        networkInfo, numberOfWorkers);
+        workerInfo, numberOfWorkers);
 
     return masterClient.getJMWorkerController();
   }
@@ -258,11 +251,11 @@ public final class NomadWorkerStarter {
    * Create the job master client to get information about the workers
    */
   private JobMasterClient createMasterClient(Config cfg, String masterHost, int masterPort,
-                                                    WorkerNetworkInfo networkInfo,
+                                                    JobMasterAPI.WorkerInfo workerInfo,
                                                     int numberContainers) {
     // we start the job master client
     JobMasterClient jobMasterClient = new JobMasterClient(cfg,
-        networkInfo, masterHost, masterPort, numberContainers);
+        workerInfo, masterHost, masterPort, numberContainers);
     LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
     jobMasterClient.startThreaded();
     // now lets send the starting message

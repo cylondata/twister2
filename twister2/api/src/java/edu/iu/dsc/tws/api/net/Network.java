@@ -11,21 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.net;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
 import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 import mpi.MPI;
 
@@ -33,51 +30,45 @@ public final class Network {
   private Network() {
   }
 
-  public static TWSChannel initializeChannel(Config config, IWorkerController wController,
-                                             AllocatedResources resourcePlan) {
+  public static TWSChannel initializeChannel(Config config, IWorkerController wController) {
     if (config.getStringValue("twister2.network.channel.class").equals(
         "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel")) {
-      return initializeTCPNetwork(config, wController, resourcePlan);
+      return initializeTCPNetwork(config, wController);
     } else {
-      return initializeMPIChannel(config, wController, resourcePlan);
+      return initializeMPIChannel(config, wController);
     }
   }
 
   private static TWSChannel initializeMPIChannel(Config config,
-                                                 IWorkerController wController,
-                                                 AllocatedResources plan) {
+                                                 IWorkerController wController) {
     //first get the communication config file
-    return new TWSMPIChannel(config, MPI.COMM_WORLD, plan.getWorkerId());
+    return new TWSMPIChannel(config, MPI.COMM_WORLD, wController.getWorkerInfo().getWorkerID());
   }
 
   private static TWSChannel initializeTCPNetwork(Config config,
-                                                 IWorkerController wController,
-                                                 AllocatedResources resourcePlan) {
+                                                 IWorkerController wController) {
     TCPChannel channel;
-    int index = wController.getWorkerNetworkInfo().getWorkerID();
-    Integer workerPort = wController.getWorkerNetworkInfo().getWorkerPort();
-    String localIp = wController.getWorkerNetworkInfo().getWorkerIP().getHostAddress();
-    try {
-      channel = createChannel(config,
-          new WorkerNetworkInfo(InetAddress.getByName(localIp), workerPort, index), index);
-      // now lets start listening before sending the ports to master,
-      channel.startListening();
-    } catch (UnknownHostException e) {
-      throw new RuntimeException("Failed to get network address: " + localIp, e);
-    }
+    int index = wController.getWorkerInfo().getWorkerID();
+    Integer workerPort = wController.getWorkerInfo().getPort();
+    String localIp = wController.getWorkerInfo().getWorkerIP();
+
+    channel = createChannel(config, localIp, workerPort, index);
+    // now lets start listening before sending the ports to master,
+    channel.startListening();
+
     // wait for everyone to start the job master
-    wController.waitOnBarrier(30000);
+    wController.waitOnBarrier();
 
     // now talk to a central server and get the information about the worker
     // this is a synchronization step
-    List<WorkerNetworkInfo> wInfo = wController.getWorkerList();
+    List<JobMasterAPI.WorkerInfo> wInfo = wController.getJoinedWorkers();
 
     // lets start the client connections now
     List<NetworkInfo> nInfos = new ArrayList<>();
-    for (WorkerNetworkInfo w : wInfo) {
+    for (JobMasterAPI.WorkerInfo w : wInfo) {
       NetworkInfo networkInfo = new NetworkInfo(w.getWorkerID());
-      networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getWorkerPort());
-      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP().getHostAddress());
+      networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getPort());
+      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP());
       nInfos.add(networkInfo);
     }
 
@@ -87,20 +78,19 @@ public final class Network {
     channel.waitForConnections();
 
     // now lets create a tcp channel
-    return new TWSTCPChannel(config, resourcePlan.getWorkerId(), channel);
+    return new TWSTCPChannel(config, wController.getWorkerInfo().getWorkerID(), channel);
   }
 
   /**
    * Start the TCP servers here
    * @param cfg the configuration
-   * @param networkInfo network info
    * @param workerId worker id
    */
-  private static TCPChannel createChannel(Config cfg, WorkerNetworkInfo networkInfo,
+  private static TCPChannel createChannel(Config cfg, String workerIP, int workerPort,
                                           int workerId) {
     NetworkInfo netInfo = new NetworkInfo(workerId);
-    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, networkInfo.getWorkerIP().getHostAddress());
-    netInfo.addProperty(TCPContext.NETWORK_PORT, networkInfo.getWorkerPort());
+    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, workerIP);
+    netInfo.addProperty(TCPContext.NETWORK_PORT, workerPort);
     return new TCPChannel(cfg, netInfo);
   }
 }

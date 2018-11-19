@@ -1,6 +1,8 @@
 syntax = "proto3";
 package tws.proto.jobmaster;
 
+import "job.proto";
+
 option java_package = "edu.iu.dsc.tws.proto.jobmaster";
 option java_outer_classname = "JobMasterAPI";
 
@@ -41,18 +43,24 @@ enum WorkerState {
     UNASSIGNED = 4;
 }
 
+message NodeInfo {
+    string nodeIP = 1;
+    string rackName = 2;
+    string dataCenterName = 3;
+}
+
 //
 // Networking Data about a Twister2 Worker
 //
-message WorkerNetworkInfo {
+message WorkerInfo {
     oneof required {
         int32 workerID = 1;
     }
     string workerIP = 2;
     int32 port = 3;
-    string nodeIP = 4;
-    string rackName = 5;
-    string dataCenterName = 6;
+
+    NodeInfo nodeInfo = 4;
+    tws.proto.job.ComputeResource computeResource = 5;
 }
 
 // a worker informs the master that its state has changed
@@ -61,10 +69,13 @@ message WorkerNetworkInfo {
 //   optionally its node info: nodeIP, rackName and dataCenterName
 // for other states, just the workerID and newState is enough
 message WorkerStateChange {
-    WorkerNetworkInfo workerNetworkInfo = 1;
-    oneof required {
+    oneof idRequired {
+        int32 workerID = 1;
+    }
+    oneof stateRequired {
         WorkerState newState = 2;
     }
+    WorkerInfo workerInfo = 3;
 }
 
 // sent by the master to the worker
@@ -99,7 +110,7 @@ message ListWorkersResponse {
     oneof required {
         int32 workerID = 1;
     }
-    repeated WorkerNetworkInfo workers = 2;
+    repeated WorkerInfo worker = 2;
 }
 
 // All workers in a job wants to wait in a Barrier point

@@ -20,12 +20,12 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 /**
@@ -37,7 +37,7 @@ public class HelloWorld implements IWorker {
 
   @Override
   public void execute(Config config, int workerID,
-                      AllocatedResources allocatedResources, IWorkerController workerController,
+                      IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
     // lets retrieve the configuration set in the job config
     String helloKeyValue = config.getStringValue("hello-key");
@@ -47,8 +47,8 @@ public class HelloWorld implements IWorker {
             + "and I got a message: %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
 
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
-    String workersStr = WorkerNetworkInfo.workerListAsString(workerList);
+    List<JobMasterAPI.WorkerInfo> workerList = workerController.getAllWorkers();
+    String workersStr = WorkerInfoUtils.workerListAsString(workerList);
     LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
 
     try {
