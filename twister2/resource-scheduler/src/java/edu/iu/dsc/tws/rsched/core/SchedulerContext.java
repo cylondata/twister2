@@ -18,7 +18,7 @@ import java.util.Map;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.TokenSub;
-import edu.iu.dsc.tws.common.controller.NodeInfoUtils;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class SchedulerContext extends Context {

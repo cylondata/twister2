@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 
 import com.squareup.okhttp.Response;
 
-import edu.iu.dsc.tws.common.controller.NodeInfoUtils;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 

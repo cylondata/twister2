@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.controller.NodeInfoUtils;
-import edu.iu.dsc.tws.common.controller.WorkerInfoUtils;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class MPIWorkerController implements IWorkerController {
