@@ -24,12 +24,12 @@ import org.apache.mesos.Protos;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static java.lang.Math.toIntExact;
@@ -101,7 +101,7 @@ public class MesosWorker implements Executor {
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
-      workerController.waitForAllWorkersToJoin(ZKContext.maxWaitTimeForAllWorkersToJoin(config));
+      workerController.waitForAllWorkersToJoin(ControllerContext.maxWaitTimeForAllToJoin(config));
       LOG.info("Everyone has joined");
       container.execute(config, id, workerController, null, null);
       workerController.close();

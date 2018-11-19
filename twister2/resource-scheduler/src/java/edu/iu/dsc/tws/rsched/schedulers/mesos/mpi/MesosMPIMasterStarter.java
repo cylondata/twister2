@@ -36,10 +36,10 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
@@ -87,7 +87,7 @@ public final class MesosMPIMasterStarter {
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
       workerInfoList = workerController.waitForAllWorkersToJoin(
-          ZKContext.maxWaitTimeForAllWorkersToJoin(mpiMaster.config));
+          ControllerContext.maxWaitTimeForAllToJoin(mpiMaster.config));
       LOG.info("Everyone has joined");
       //container.execute(worker.config, id, null, workerController, null);
 

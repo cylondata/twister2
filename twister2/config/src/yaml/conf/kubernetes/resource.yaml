@@ -58,5 +58,13 @@ twister2.zookeeper.server.addresses: "ip:port"
 # the default is "/twister2"
 #twister2.zookeeper.root.node.path: "/twister2"
 
-# if the workers want to wait for all others to join a job, max wait time in ms
-twister2.zookeeper.max.wait.time.for.all.workers.to.join: 100000
+###################################################################################
+# WorkerController related config parameters
+###################################################################################
+# amount of timeout for all workers to join the job
+# in milli seconds
+twister2.worker.controller.max.wait.time.for.all.workers.to.join: 100000
+
+# amount of timeout on barriers for all workers to arrive
+# in milli seconds
+twister2.worker.controller.max.wait.time.on.barrier: 100000

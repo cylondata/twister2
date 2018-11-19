@@ -48,9 +48,6 @@ twister2.worker.ping.interval: 10000
 # default value is 11111
 twister2.job.master.port: 11111
 
-## how much time we have to wait for at the end of the worker for everyone to sync
-twister2.worker.end.sync.wait.time.ms: 30000
-
 # worker to job master response wait time in milliseconds
 # this is for messages that wait for a response from the job master
 # default value is 10seconds = 10000

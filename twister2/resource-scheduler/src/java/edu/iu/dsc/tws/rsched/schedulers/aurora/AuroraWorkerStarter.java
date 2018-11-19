@@ -21,13 +21,13 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -193,7 +193,7 @@ public final class AuroraWorkerStarter {
     LOG.info("Waiting for " + numberOfWorkers + " workers to join .........");
 
     // the amount of time to wait for all workers to join a job
-    int timeLimit =  ZKContext.maxWaitTimeForAllWorkersToJoin(config);
+    int timeLimit = ControllerContext.maxWaitTimeForAllToJoin(config);
     long startTime = System.currentTimeMillis();
     List<JobMasterAPI.WorkerInfo> workerList =
         zkWorkerController.waitForAllWorkersToJoin(timeLimit);

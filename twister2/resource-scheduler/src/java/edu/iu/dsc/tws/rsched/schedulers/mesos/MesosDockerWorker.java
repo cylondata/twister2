@@ -36,10 +36,10 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
@@ -81,7 +81,7 @@ public class MesosDockerWorker {
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
       workerInfoList = workerController.waitForAllWorkersToJoin(
-          ZKContext.maxWaitTimeForAllWorkersToJoin(worker.config));
+          ControllerContext.maxWaitTimeForAllToJoin(worker.config));
       LOG.info("Everyone has joined");
       //container.execute(worker.config, id, null, workerController, null);
 
