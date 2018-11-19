@@ -33,7 +33,7 @@ import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -145,7 +145,7 @@ public class ZKWorkerController implements IWorkerController {
       // get a workerID, create the jobZnode, append worker info
       if (client.checkExists().forPath(jobPath) == null) {
         int workerID = createWorkerID();
-        workerInfo = WorkerInfoUtil.createWorkerInfo(
+        workerInfo = WorkerInfoUtils.createWorkerInfo(
             workerID, workerIP, workerPort, nodeInfo, computeResource);
 
         createWorkerZnode();
@@ -169,7 +169,7 @@ public class ZKWorkerController implements IWorkerController {
         // create workerID, append its info to the jobZnode
         } else {
           int workerID = createWorkerID();
-          workerInfo = WorkerInfoUtil.createWorkerInfo(
+          workerInfo = WorkerInfoUtils.createWorkerInfo(
               workerID, workerIP, workerPort, nodeInfo, computeResource);
 
           createWorkerZnode();

@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 
 import com.squareup.okhttp.Response;
 
-import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
@@ -487,8 +487,8 @@ public class KubernetesController {
   }
 
   /**
-   * get NodeInfoUtil objects for the nodes on this cluster
-   * @return the NodeInfoUtil object list. If it can not get the list from K8s master, return null.
+   * get NodeInfoUtils objects for the nodes on this cluster
+   * @return the NodeInfoUtils object list. If it can not get the list from K8s master, return null.
    */
   public ArrayList<JobMasterAPI.NodeInfo> getNodeInfo(String rackLabelKey,
                                                       String datacenterLabelKey) {
@@ -522,7 +522,7 @@ public class KubernetesController {
           }
 
           JobMasterAPI.NodeInfo nodeInfo =
-              NodeInfoUtil.createNodeInfo(nodeIP, rackName, datacenterName);
+              NodeInfoUtils.createNodeInfo(nodeIP, rackName, datacenterName);
           nodeInfoList.add(nodeInfo);
           break;
         }

@@ -24,7 +24,7 @@ import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
@@ -65,7 +65,7 @@ public class K8sWorkerController implements IWorkerController {
     int basePort = KubernetesContext.workerBasePort(config);
     InetAddress podIP = convertStringToIP(podIpStr);
     thisWorker =
-        WorkerInfoUtil.createWorkerInfo(workerID, podIpStr, basePort + containerIndex, null);
+        WorkerInfoUtils.createWorkerInfo(workerID, podIpStr, basePort + containerIndex, null);
 
     createApiInstances();
   }
@@ -224,7 +224,7 @@ public class K8sWorkerController implements IWorkerController {
         int containerIndex = i;
         int workerID = calculateWorkerID(podName, containerIndex);
         JobMasterAPI.WorkerInfo workerNetworkInfo =
-            WorkerInfoUtil.createWorkerInfo(workerID, pod.getStatus().getPodIP(),
+            WorkerInfoUtils.createWorkerInfo(workerID, pod.getStatus().getPodIP(),
                 basePort + containerIndex, null);
         workerList.add(workerNetworkInfo);
       }

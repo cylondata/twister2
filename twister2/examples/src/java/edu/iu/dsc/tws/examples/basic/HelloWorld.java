@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -48,7 +48,7 @@ public class HelloWorld implements IWorker {
         workerController.getNumberOfWorkers(), helloKeyValue));
 
     List<JobMasterAPI.WorkerInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
-    String workersStr = WorkerInfoUtil.workerListAsString(workerList);
+    String workersStr = WorkerInfoUtils.workerListAsString(workerList);
     LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
 
     try {

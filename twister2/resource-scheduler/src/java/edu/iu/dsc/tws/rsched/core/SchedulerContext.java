@@ -18,7 +18,7 @@ import java.util.Map;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.TokenSub;
-import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class SchedulerContext extends Context {
@@ -155,14 +155,14 @@ public class SchedulerContext extends Context {
 
     String rack = findValue(rackList, nodeIP);
     if (rack == null) {
-      return NodeInfoUtil.createNodeInfo(nodeIP, null, null);
+      return NodeInfoUtils.createNodeInfo(nodeIP, null, null);
     }
 
     List<Map<String, List<String>>> dcList =
         cfg.getListOfMapsWithListValues(DATACENTERS_LIST);
 
     String datacenter = findValue(dcList, rack);
-    return NodeInfoUtil.createNodeInfo(nodeIP, rack, datacenter);
+    return NodeInfoUtils.createNodeInfo(nodeIP, rack, datacenter);
   }
 
   /**

@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -75,7 +75,7 @@ public abstract class KeyedBenchWorker implements IWorker {
     // wait for all workers in this job to join
     workerList = workerController.waitForAllWorkersToJoin(50000);
     if (workerList != null) {
-      LOG.info("All workers joined. " + WorkerInfoUtil.workerListAsString(workerList));
+      LOG.info("All workers joined. " + WorkerInfoUtils.workerListAsString(workerList));
     } else {
       LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
       return;

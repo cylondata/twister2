@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
@@ -50,12 +50,8 @@ public class MesosWorkerController implements IWorkerController {
     numberOfWorkers = MesosContext.numberOfContainers(config) - 1;
     containerPerWorker = MesosContext.containerPerWorker(config);
     workerList = new ArrayList<>();
-//    thisWorker = new WorkerNetworkInfo(convertStringToIP(ip), port, workerID,
-//        new NodeInfoUtil(ip, "rack1", "dc1"));
-    thisWorker = WorkerInfoUtil.createWorkerInfo(workerID, ip, port,
+    thisWorker = WorkerInfoUtils.createWorkerInfo(workerID, ip, port,
         SchedulerContext.getNodeInfo(config, ip));
-//    thisWorker = new WorkerNetworkInfo(convertStringToIP(ip), port, workerID,
-//        MesosContext.getNodeInfo(config, ip));
   }
 
   /**
@@ -97,7 +93,7 @@ public class MesosWorkerController implements IWorkerController {
     String workerHostPort = workerIp + ":" + workerPort;
 
     // temporary value
-//    NodeInfoUtil nodeInfo = new NodeInfoUtil(workerIp, null, null);
+//    NodeInfoUtils nodeInfo = new NodeInfoUtils(workerIp, null, null);
     JobMasterAPI.NodeInfo nodeInfo = MesosContext.getNodeInfo(config, workerIp);
 
     //TODO: need to provide real ComputeResource object

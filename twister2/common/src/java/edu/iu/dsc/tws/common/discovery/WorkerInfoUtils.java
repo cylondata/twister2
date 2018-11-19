@@ -18,10 +18,10 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
-public final class WorkerInfoUtil {
-  public static final Logger LOG = Logger.getLogger(WorkerInfoUtil.class.getName());
+public final class WorkerInfoUtils {
+  public static final Logger LOG = Logger.getLogger(WorkerInfoUtils.class.getName());
 
-  private WorkerInfoUtil() { }
+  private WorkerInfoUtils() { }
 
   public static WorkerInfo createWorkerInfo(int workerID,
                                             String workerIP,
@@ -86,7 +86,4 @@ public final class WorkerInfoUtil {
 
     return buffer.toString();
   }
-
-
-
 }

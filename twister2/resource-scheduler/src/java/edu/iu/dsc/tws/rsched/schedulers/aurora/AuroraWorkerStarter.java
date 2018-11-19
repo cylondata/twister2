@@ -21,8 +21,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtils;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -174,8 +174,8 @@ public final class AuroraWorkerStarter {
     String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
     int numberOfWorkers = job.getNumberOfWorkers();
 
-    // TODO: need to put at least nodeIP to this NodeInfoUtil object
-    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtil.createNodeInfo(null, null, null);
+    // TODO: need to put at least nodeIP to this NodeInfoUtils object
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(null, null, null);
     zkWorkerController =
         new ZKWorkerController(config, job.getJobName(), workerHostPort,
             numberOfWorkers, nodeInfo, null);
@@ -206,7 +206,7 @@ public final class AuroraWorkerStarter {
       LOG.log(Level.INFO, "Waited " + duration + " ms for all workers to join.");
 
       LOG.info("list of all joined workers in the job: "
-          + WorkerInfoUtil.workerListAsString(workerList));
+          + WorkerInfoUtils.workerListAsString(workerList));
     }
   }
 

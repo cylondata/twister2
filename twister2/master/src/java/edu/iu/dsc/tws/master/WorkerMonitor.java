@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
@@ -102,7 +102,7 @@ public class WorkerMonitor implements MessageHandler {
 
       if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
         int workerID = workers.size();
-        workerInfo = WorkerInfoUtil.updateWorkerID(workerInfo, workerID);
+        workerInfo = WorkerInfoUtils.updateWorkerID(workerInfo, workerID);
       }
 
       WorkerWithState worker = new WorkerWithState(workerInfo);

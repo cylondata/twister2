@@ -30,7 +30,7 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -239,7 +239,7 @@ public final class NomadWorkerStarter {
     int port = ports.get("worker");
     String host = localIps.get("worker");
     JobMasterAPI.WorkerInfo workerInfo =
-        WorkerInfoUtil.createWorkerInfo(workerID, host, port, null);
+        WorkerInfoUtils.createWorkerInfo(workerID, host, port, null);
 
     this.masterClient = createMasterClient(config, jobMasterIP, jobMasterPort,
         workerInfo, numberOfWorkers);

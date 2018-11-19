@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtils;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -182,19 +182,19 @@ public final class K8sWorkerUtils {
                                                                 String nodeIP) {
 
     // we will return this, in case we do not find it in the given list
-    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtil.createNodeInfo(nodeIP, null, null);
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(nodeIP, null, null);
 
     ArrayList<JobMasterAPI.NodeInfo> nodeInfoList =
-        NodeInfoUtil.decodeNodeInfoList(encodedNodeInfoList);
+        NodeInfoUtils.decodeNodeInfoList(encodedNodeInfoList);
 
     if (nodeInfoList == null || nodeInfoList.size() == 0) {
       LOG.warning("NodeInfo list is not constructed from the string: " + encodedNodeInfoList);
       return nodeInfo;
     } else {
       LOG.fine("Decoded NodeInfo list, size: " + nodeInfoList.size()
-          + "\n" + NodeInfoUtil.listToString(nodeInfoList));
+          + "\n" + NodeInfoUtils.listToString(nodeInfoList));
 
-      JobMasterAPI.NodeInfo nodeInfo1 = NodeInfoUtil.getNodeInfo(nodeInfoList, nodeIP);
+      JobMasterAPI.NodeInfo nodeInfo1 = NodeInfoUtils.getNodeInfo(nodeInfoList, nodeIP);
       if (nodeInfo1 == null) {
         LOG.warning("nodeIP does not exist in received encodedNodeInfoList. Using local value.");
         return nodeInfo;

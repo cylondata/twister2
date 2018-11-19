@@ -11,14 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.net;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
@@ -54,14 +51,11 @@ public final class Network {
     int index = wController.getWorkerInfo().getWorkerID();
     Integer workerPort = wController.getWorkerInfo().getPort();
     String localIp = wController.getWorkerInfo().getWorkerIP();
-    try {
-      channel = createChannel(config,
-          new WorkerNetworkInfo(InetAddress.getByName(localIp), workerPort, index), index);
-      // now lets start listening before sending the ports to master,
-      channel.startListening();
-    } catch (UnknownHostException e) {
-      throw new RuntimeException("Failed to get network address: " + localIp, e);
-    }
+
+    channel = createChannel(config, localIp, workerPort, index);
+    // now lets start listening before sending the ports to master,
+    channel.startListening();
+
     // wait for everyone to start the job master
     wController.waitOnBarrier(30000);
 
@@ -90,14 +84,13 @@ public final class Network {
   /**
    * Start the TCP servers here
    * @param cfg the configuration
-   * @param networkInfo network info
    * @param workerId worker id
    */
-  private static TCPChannel createChannel(Config cfg, WorkerNetworkInfo networkInfo,
+  private static TCPChannel createChannel(Config cfg, String workerIP, int workerPort,
                                           int workerId) {
     NetworkInfo netInfo = new NetworkInfo(workerId);
-    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, networkInfo.getWorkerIP().getHostAddress());
-    netInfo.addProperty(TCPContext.NETWORK_PORT, networkInfo.getWorkerPort());
+    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, workerIP);
+    netInfo.addProperty(TCPContext.NETWORK_PORT, workerPort);
     return new TCPChannel(cfg, netInfo);
   }
 }

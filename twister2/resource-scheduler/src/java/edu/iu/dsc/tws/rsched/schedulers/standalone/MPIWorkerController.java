@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtils;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class MPIWorkerController implements IWorkerController {
@@ -29,12 +29,10 @@ public class MPIWorkerController implements IWorkerController {
   public MPIWorkerController(int thisWorkerID, Map<Integer, String> processNames) {
     this.thisWorkerID = thisWorkerID;
     for (Map.Entry<Integer, String> e : processNames.entrySet()) {
-      JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtil.createNodeInfo(e.getValue(), null, null);
+      JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(e.getValue(), null, null);
       JobMasterAPI.WorkerInfo workerInfo =
-          WorkerInfoUtil.createWorkerInfo(e.getKey(), e.getValue(), 0, nodeInfo);
+          WorkerInfoUtils.createWorkerInfo(e.getKey(), e.getValue(), 0, nodeInfo);
       networkInfoMap.put(e.getKey(), workerInfo);
-//      networkInfoMap.put(e.getKey(), new WorkerNetworkInfo(e.getValue(), 0, e.getKey(),
-//          new NodeInfoUtil(e.getValue(), null, null)));
     }
   }
 

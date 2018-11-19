@@ -18,8 +18,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtils;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
@@ -130,7 +130,7 @@ public final class MPIWorkerStarter {
       JobMasterAPI.NodeInfo nodeInfo = null;
       if (nodeIP == null) {
         LOG.warning("Could not get nodeIP for this pod. Using podIP as nodeIP.");
-        nodeInfo = NodeInfoUtil.createNodeInfo(podIP, null, null);
+        nodeInfo = NodeInfoUtils.createNodeInfo(podIP, null, null);
       } else {
 
         nodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
@@ -138,11 +138,11 @@ public final class MPIWorkerStarter {
             : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
       }
 
-      LOG.info("NodeInfoUtil for this worker: " + nodeInfo);
+      LOG.info("NodeInfoUtils for this worker: " + nodeInfo);
 
       computeResource = K8sWorkerUtils.getComputeResource(job, podName);
 
-      workerInfo = WorkerInfoUtil.createWorkerInfo(
+      workerInfo = WorkerInfoUtils.createWorkerInfo(
           workerID, localHost.getHostAddress(), workerPort, nodeInfo, computeResource);
 
       LOG.info("Worker information summary: \n"

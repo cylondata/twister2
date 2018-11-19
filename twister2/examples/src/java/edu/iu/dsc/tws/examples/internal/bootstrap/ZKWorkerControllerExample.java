@@ -28,8 +28,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtils;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -121,7 +121,8 @@ public final class ZKWorkerControllerExample {
     int port = 1000 + (int) (Math.random() * 1000);
     String workerAddress = "localhost:" + port;
 
-    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtil.createNodeInfo("node1.on.hostx", "rack1", "dc01");
+    JobMasterAPI.NodeInfo nodeInfo =
+        NodeInfoUtils.createNodeInfo("node1.on.hostx", "rack1", "dc01");
     JobAPI.ComputeResource computeResource =
         ComputeResourceUtils.createComputeResource(0, 1, 1024, 2);
 
@@ -131,12 +132,12 @@ public final class ZKWorkerControllerExample {
     zkWorkerController.initialize();
 
     List<JobMasterAPI.WorkerInfo> workerList = zkWorkerController.getWorkerList();
-    LOG.info("Initial worker list: \n" + WorkerInfoUtil.workerListAsString(workerList));
+    LOG.info("Initial worker list: \n" + WorkerInfoUtils.workerListAsString(workerList));
 
     LOG.info("Waiting for all workers to join: ");
     // wait until 100sec
     workerList = zkWorkerController.waitForAllWorkersToJoin(100000);
-    LOG.info(WorkerInfoUtil.workerListAsString(workerList));
+    LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     sleeeep((long) (Math.random() * 10000));
 
@@ -153,7 +154,7 @@ public final class ZKWorkerControllerExample {
     }
 
     workerList = zkWorkerController.getCurrentWorkers();
-    LOG.info("Current worker list: \n" + WorkerInfoUtil.workerListAsString(workerList));
+    LOG.info("Current worker list: \n" + WorkerInfoUtils.workerListAsString(workerList));
 
     sleeeep((long) (Math.random() * 10000));
 

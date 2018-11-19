@@ -20,10 +20,10 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
  * Utility methods for NodeInfo objects
  */
 
-public final class NodeInfoUtil {
-  private static final Logger LOG = Logger.getLogger(NodeInfoUtil.class.getName());
+public final class NodeInfoUtils {
+  private static final Logger LOG = Logger.getLogger(NodeInfoUtils.class.getName());
 
-  private NodeInfoUtil() { }
+  private NodeInfoUtils() { }
 
   /**
    * do not set if any one of the parameters are null
@@ -130,7 +130,7 @@ public final class NodeInfoUtil {
 
   /**
    * decode the given String that is encoded with the method encodeNodeInfoList
-   * each NodeInfoUtil object is separated by others with a semi colon
+   * each NodeInfoUtils object is separated by others with a semi colon
    * @return
    */
   public static ArrayList<NodeInfo> decodeNodeInfoList(String nodeInfoListStr) {

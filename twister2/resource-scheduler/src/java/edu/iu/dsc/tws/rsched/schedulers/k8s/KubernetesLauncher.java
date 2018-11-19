@@ -20,7 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -286,14 +286,14 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     String encodedNodeInfoList = null;
     // if node locations will be retrieved from Kubernetes master
     if (!KubernetesContext.nodeLocationsFromConfig(config)) {
-      // first get Node list and build encoded NodeInfoUtil Strings
+      // first get Node list and build encoded NodeInfoUtils Strings
       String rackLabelKey = KubernetesContext.rackLabelKeyForK8s(config);
       String dcLabelKey = KubernetesContext.datacenterLabelKeyForK8s(config);
       ArrayList<JobMasterAPI.NodeInfo> nodeInfoList =
           controller.getNodeInfo(rackLabelKey, dcLabelKey);
-      encodedNodeInfoList = NodeInfoUtil.encodeNodeInfoList(nodeInfoList);
+      encodedNodeInfoList = NodeInfoUtils.encodeNodeInfoList(nodeInfoList);
       LOG.fine("NodeInfo objects: size " + nodeInfoList.size()
-          + "\n" + NodeInfoUtil.listToString(nodeInfoList));
+          + "\n" + NodeInfoUtils.listToString(nodeInfoList));
     }
 
     // let the transfer threads know that we are about to submit the StatefulSets

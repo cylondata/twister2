@@ -30,8 +30,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.NodeInfoUtils;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JMWorkerController;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
@@ -81,8 +81,8 @@ public final class JobMasterClientExample {
     InetAddress workerIP = JMWorkerController.convertStringToIP("localhost");
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
-    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtil.createNodeInfo("node.ip", "rack01", null);
-    JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtil.createWorkerInfo(
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo("node.ip", "rack01", null);
+    JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
         workerTempID, workerIP.getHostAddress(), workerPort, nodeInfo);
 
     JobMasterClient client = new JobMasterClient(config, workerInfo);
@@ -102,10 +102,10 @@ public final class JobMasterClientExample {
     client.sendWorkerRunningMessage();
 
     List<JobMasterAPI.WorkerInfo> workerList = workerController.getWorkerList();
-    LOG.info(WorkerInfoUtil.workerListAsString(workerList));
+    LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     workerList = workerController.waitForAllWorkersToJoin(100000);
-    LOG.info(WorkerInfoUtil.workerListAsString(workerList));
+    LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     // wait up to 10sec
     sleeeep((long) (Math.random() * 10000));

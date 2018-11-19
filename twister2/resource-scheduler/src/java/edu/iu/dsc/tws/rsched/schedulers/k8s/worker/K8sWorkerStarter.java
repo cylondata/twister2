@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
+import edu.iu.dsc.tws.common.discovery.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
@@ -109,7 +109,7 @@ public final class K8sWorkerStarter {
     computeResource = K8sWorkerUtils.getComputeResource(job, podName);
 
     // set workerInfo
-    workerInfo = WorkerInfoUtil.createWorkerInfo(
+    workerInfo = WorkerInfoUtils.createWorkerInfo(
         workerID, localHost.getHostAddress(), workerPort, nodeInfo, computeResource);
 
     // initialize persistent volume
