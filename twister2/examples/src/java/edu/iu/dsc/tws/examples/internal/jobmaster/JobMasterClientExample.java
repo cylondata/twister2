@@ -101,7 +101,7 @@ public final class JobMasterClientExample {
 
     client.sendWorkerRunningMessage();
 
-    List<JobMasterAPI.WorkerInfo> workerList = workerController.getWorkerList();
+    List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     workerList = workerController.waitForAllWorkersToJoin(100000);

@@ -64,7 +64,6 @@ public class SchedulerContext extends Context {
   // persistent volume per worker in GB
   public static final double PERSISTENT_VOLUME_PER_WORKER_DEFAULT = 0.0;
   public static final String PERSISTENT_VOLUME_PER_WORKER = "persistent.volume.per.worker";
-  public static final String WORKER_END_SYNC_TIME = "twister2.worker.end.sync.wait.time.ms";
 
   public static final String RACK_LABEL_KEY = "rack.labey.key";
   public static final String DATACENTER_LABEL_KEY = "datacenter.labey.key";

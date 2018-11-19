@@ -51,13 +51,13 @@ public interface IWorkerController {
   int getNumberOfWorkers();
 
   /**
-   * return all known workers in a job, including the ones finished execution
+   * get all joined workers in this job, including the ones finished execution
    * some workers that has not joined yet, may not be included in this list.
    * users can compare the total number of workers to the size of this list and
    * understand whether there are non-joined workers
    * @return
    */
-  List<JobMasterAPI.WorkerInfo> getWorkerList();
+  List<JobMasterAPI.WorkerInfo> getJoinedWorkers();
 
   /**
    * wait for all workers to join the job

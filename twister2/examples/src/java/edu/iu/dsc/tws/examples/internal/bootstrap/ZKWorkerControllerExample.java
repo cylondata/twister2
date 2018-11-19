@@ -131,7 +131,7 @@ public final class ZKWorkerControllerExample {
 
     zkWorkerController.initialize();
 
-    List<JobMasterAPI.WorkerInfo> workerList = zkWorkerController.getWorkerList();
+    List<JobMasterAPI.WorkerInfo> workerList = zkWorkerController.getJoinedWorkers();
     LOG.info("Initial worker list: \n" + WorkerInfoUtils.workerListAsString(workerList));
 
     LOG.info("Waiting for all workers to join: ");

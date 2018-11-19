@@ -77,7 +77,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   }
 
   @Override
-  public List<JobMasterAPI.WorkerInfo> getWorkerList() {
+  public List<JobMasterAPI.WorkerInfo> getJoinedWorkers() {
 
     if (workerList.size() == numberOfWorkers) {
       return workerList;

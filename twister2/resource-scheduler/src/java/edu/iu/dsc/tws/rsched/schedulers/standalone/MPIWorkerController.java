@@ -52,7 +52,7 @@ public class MPIWorkerController implements IWorkerController {
   }
 
   @Override
-  public List<JobMasterAPI.WorkerInfo> getWorkerList() {
+  public List<JobMasterAPI.WorkerInfo> getJoinedWorkers() {
     return new ArrayList<>(networkInfoMap.values());
   }
 

@@ -129,7 +129,7 @@ public class K8sWorkerController implements IWorkerController {
    * @return
    */
   @Override
-  public ArrayList<JobMasterAPI.WorkerInfo> getWorkerList() {
+  public ArrayList<JobMasterAPI.WorkerInfo> getJoinedWorkers() {
     return workerList;
   }
 

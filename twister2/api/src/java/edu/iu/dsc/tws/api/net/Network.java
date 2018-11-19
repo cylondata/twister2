@@ -61,7 +61,7 @@ public final class Network {
 
     // now talk to a central server and get the information about the worker
     // this is a synchronization step
-    List<JobMasterAPI.WorkerInfo> wInfo = wController.getWorkerList();
+    List<JobMasterAPI.WorkerInfo> wInfo = wController.getJoinedWorkers();
 
     // lets start the client connections now
     List<NetworkInfo> nInfos = new ArrayList<>();

@@ -82,8 +82,8 @@ public class MesosWorkerController implements IWorkerController {
   }
 
   @Override
-  public List<JobMasterAPI.WorkerInfo> getWorkerList() {
-    return zkWorkerController.getWorkerList();
+  public List<JobMasterAPI.WorkerInfo> getJoinedWorkers() {
+    return zkWorkerController.getJoinedWorkers();
   }
 
 
@@ -125,12 +125,12 @@ public class MesosWorkerController implements IWorkerController {
     } else {
       LOG.log(Level.INFO, "Waited " + duration + " ms for all workers to join.");
 
-      workerList = zkWorkerController.getWorkerList();
+      workerList = zkWorkerController.getJoinedWorkers();
       LOG.info("list of current workers in the job: ");
       zkWorkerController.printWorkers(workerList);
 
       LOG.info("list of all joined workers to the job: ");
-      zkWorkerController.printWorkers(zkWorkerController.getWorkerList());
+      zkWorkerController.printWorkers(zkWorkerController.getJoinedWorkers());
 
     }
     return workerList;

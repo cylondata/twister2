@@ -198,7 +198,7 @@ public class ZKWorkerController implements IWorkerController {
 
   @Override
   public WorkerInfo getWorkerInfoForID(int id) {
-    List<WorkerInfo> workerList = getWorkerList();
+    List<WorkerInfo> workerList = getJoinedWorkers();
     for (WorkerInfo info: workerList) {
       if (info.getWorkerID() == id) {
         return info;
@@ -326,7 +326,7 @@ public class ZKWorkerController implements IWorkerController {
    * Get all joined workers including the ones that have already completed and left
    */
   @Override
-  public List<WorkerInfo> getWorkerList() {
+  public List<WorkerInfo> getJoinedWorkers() {
 
     return parseJobZNode();
   }
@@ -412,7 +412,7 @@ public class ZKWorkerController implements IWorkerController {
           LOG.fine("Thread sleep interrupted. Will try again ...");
         }
       } else {
-        return getWorkerList();
+        return getJoinedWorkers();
       }
     }
 
