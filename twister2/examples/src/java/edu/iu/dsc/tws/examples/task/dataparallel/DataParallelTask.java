@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
@@ -63,7 +64,13 @@ public class DataParallelTask extends BaseBatchSource {
     ExecutionRuntime runtime = (ExecutionRuntime) config.get(
         ExecutorContext.TWISTER2_RUNTIME_OBJECT);
 
-    this.source = runtime.createInput(cfg, context,
-        new LocalTextInputPartitioner(new Path(directory), context.getParallelism()));
+    boolean shared = cfg.getBooleanValue(Constants.ARGS_SHARED_FILE_SYSTEM);
+    if (!shared) {
+      this.source = runtime.createInput(cfg, context,
+          new LocalTextInputPartitioner(new Path(directory), context.getParallelism()));
+    } else {
+      this.source = runtime.createInput(cfg, context,
+          new SharedTextInputPartitioner(new Path(directory)));
+    }
   }
 }
