@@ -33,8 +33,6 @@ import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -194,13 +192,7 @@ public final class NomadWorkerStarter {
 
     String workerClass = SchedulerContext.workerClass(config);
 
-    AllocatedResources resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config),
-        workerNetworkInfo.getWorkerID());
     List<JobMasterAPI.WorkerInfo> workerInfos = workerController.waitForAllWorkersToJoin(30000);
-    for (JobMasterAPI.WorkerInfo w : workerInfos) {
-      WorkerComputeResource workerComputeResource = new WorkerComputeResource(w.getWorkerID());
-      resourcePlan.addWorkerComputeResource(workerComputeResource);
-    }
 
     try {
       Object object = ReflectionUtils.newInstance(workerClass);

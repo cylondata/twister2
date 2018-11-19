@@ -30,7 +30,7 @@ import org.apache.hadoop.fs.Path;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -68,9 +68,9 @@ public class BasicK8sWorker implements IWorker {
 
     LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
 
-//    Map<String, List<WorkerComputeResource>> workersPerNode =
-//        WorkerResourceUtils.getWorkersPerNode(numberOfWorkers, workerList);
-//    printWorkersPerNode(workersPerNode);
+    Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode =
+        WorkerResourceUtils.getWorkersPerNode(workerList);
+    printWorkersPerNode(workersPerNode);
 
 //    listHdfsDir();
 //    sleepSomeTime(50);
@@ -138,13 +138,13 @@ public class BasicK8sWorker implements IWorker {
     }
   }
 
-  public void printWorkersPerNode(Map<String, List<WorkerComputeResource>> workersPerNode) {
+  public void printWorkersPerNode(Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode) {
 
     StringBuffer toPrint = new StringBuffer();
     for (String nodeIP: workersPerNode.keySet()) {
       toPrint.append("\n" + nodeIP + ": ");
-      for (WorkerComputeResource resource: workersPerNode.get(nodeIP)) {
-        toPrint.append(resource.getId() + ", ");
+      for (JobMasterAPI.WorkerInfo workerInfo: workersPerNode.get(nodeIP)) {
+        toPrint.append(workerInfo.getWorkerID() + ", ");
       }
     }
 

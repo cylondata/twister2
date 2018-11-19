@@ -49,8 +49,8 @@ public final class WorkerResourceUtils {
 
     for (JobMasterAPI.WorkerInfo workerInfo: workerList) {
       String nodeIP = workerInfo.getNodeInfo().getNodeIP();
-      if (nodeIP == null) {
-        LOG.severe("NodeIP is null");
+      if (nodeIP.isEmpty()) {
+        LOG.severe("NodeIP is not set.");
         return null;
       } else if (!distinctNodes.contains(nodeIP)) {
         distinctNodes.add(nodeIP);

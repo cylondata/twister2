@@ -25,8 +25,6 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -204,33 +202,6 @@ public final class K8sWorkerUtils {
 
       return nodeInfo1;
     }
-  }
-
-  /**
-   * this is for non-mpi jobs
-   * workerIDs are ordered with respect to their statefulset, pod and container indexes
-   * @return
-   */
-  public static AllocatedResources createAllocatedResources(String cluster,
-                                                            int workerID,
-                                                            JobAPI.Job job) {
-
-    AllocatedResources allocatedResources = new AllocatedResources(cluster, workerID);
-    int workerIndex = 0;
-
-    for (int i = 0; i < job.getComputeResourceList().size(); i++) {
-      JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, i);
-
-      for (int j = 0; j < computeResource.getNumberOfWorkers(); j++) {
-        WorkerComputeResource wcr =
-            new WorkerComputeResource(workerIndex++, computeResource.getCpu(),
-                computeResource.getRamMegaBytes(), computeResource.getDiskGigaBytes());
-
-        allocatedResources.addWorkerComputeResource(wcr);
-      }
-    }
-
-    return allocatedResources;
   }
 
   /**

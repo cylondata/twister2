@@ -34,8 +34,6 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -195,8 +193,6 @@ public final class MPIWorker {
 
       // lets create the resource plan
       Map<Integer, String> processNames = createResourcePlan(config);
-      // now create the resource plan
-      AllocatedResources resourcePlan = addContainers(config, processNames);
       // now create the worker
       IWorkerController controller = new MPIWorkerController(MPI.COMM_WORLD.getRank(),
           processNames);
@@ -280,23 +276,6 @@ public final class MPIWorker {
       return processNames;
     } catch (MPIException e) {
       throw new RuntimeException("Failed to communicate", e);
-    }
-  }
-
-  public static AllocatedResources addContainers(Config cfg,
-                                    Map<Integer, String> processes) {
-    int size = 0;
-    try {
-      size = MPI.COMM_WORLD.getSize();
-      AllocatedResources resourcePlan = new AllocatedResources(
-          MPIContext.clusterType(cfg), MPI.COMM_WORLD.getRank());
-      for (int i = 0; i < size; i++) {
-        WorkerComputeResource workerComputeResource = new WorkerComputeResource(i);
-        resourcePlan.addWorkerComputeResource(workerComputeResource);
-      }
-      return resourcePlan;
-    } catch (MPIException e) {
-      throw new RuntimeException("MPI Failure", e);
     }
   }
 

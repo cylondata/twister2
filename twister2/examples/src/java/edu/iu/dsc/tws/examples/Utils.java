@@ -23,8 +23,6 @@ import java.util.logging.Logger;
 import org.apache.commons.cli.Option;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -33,58 +31,6 @@ public final class Utils {
   private static final Logger LOG = Logger.getLogger(Utils.class.getName());
 
   private Utils() {
-  }
-
-  /**
-   * Let assume we have 1 task per container
-   * @param plan the resource plan from scheduler
-   * @return task plan
-   */
-  public static TaskPlan createTaskPlan(Config cfg, AllocatedResources plan) {
-    int noOfProcs = plan.getNumberOfWorkers();
-    LOG.log(Level.INFO, "No of containers: " + noOfProcs);
-    Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
-    Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getWorkerId();
-
-    List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
-    Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
-//    for (WorkerComputeResource c : containers) {
-//      String name = (String) c.getProperty(SchedulerContext.WORKER_NAME);
-//      List<WorkerComputeResource> containerList;
-//      if (!containersPerNode.containsKey(name)) {
-//        containerList = new ArrayList<>();
-//        containersPerNode.put(name, containerList);
-//      } else {
-//        containerList = containersPerNode.get(name);
-//      }
-//      containerList.add(c);
-//    }
-
-    for (int i = 0; i < noOfProcs; i++) {
-      Set<Integer> nodesOfExecutor = new HashSet<>();
-      nodesOfExecutor.add(i);
-      executorToGraphNodes.put(i, nodesOfExecutor);
-    }
-
-    int i = 0;
-    // we take each container as an executor
-    for (Map.Entry<String, List<WorkerComputeResource>> e : containersPerNode.entrySet()) {
-      Set<Integer> executorsOfGroup = new HashSet<>();
-      for (WorkerComputeResource c : e.getValue()) {
-        executorsOfGroup.add(c.getId());
-      }
-      groupsToExeuctors.put(i, executorsOfGroup);
-      i++;
-    }
-
-    String print = printMap(executorToGraphNodes);
-    LOG.fine("Executor To Graph: " + print);
-    print = printMap(groupsToExeuctors);
-    LOG.fine("Groups to executors: " + print);
-    // now lets create the task plan of this, we assume we have map tasks in all the processes
-    // and reduce task in 0th process
-    return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
   }
 
   /**
