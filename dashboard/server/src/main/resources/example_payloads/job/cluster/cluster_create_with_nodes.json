@@ -1,0 +1,10 @@
+{
+  "name": "Cluster1",
+  "description": "My Cluster",
+  "nodes": [
+    {
+      "host": "1.0.0.1",
+      "os": "Ubuntu 18.04"
+    }
+  ]
+}
