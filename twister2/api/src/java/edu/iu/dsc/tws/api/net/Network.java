@@ -57,7 +57,7 @@ public final class Network {
     channel.startListening();
 
     // wait for everyone to start the job master
-    wController.waitOnBarrier(30000);
+    wController.waitOnBarrier();
 
     // now talk to a central server and get the information about the worker
     // this is a synchronization step

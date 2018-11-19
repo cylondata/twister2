@@ -110,7 +110,7 @@ public final class JobMasterClientExample {
     // wait up to 10sec
     sleeeep((long) (Math.random() * 10000));
     long timeLimit = 20000;
-    boolean allWorkersReachedBarrier = client.getJMWorkerController().waitOnBarrier(timeLimit);
+    boolean allWorkersReachedBarrier = client.getJMWorkerController().waitOnBarrier();
     if (allWorkersReachedBarrier) {
       LOG.info("All workers reached the barrier. Proceeding.");
     } else {

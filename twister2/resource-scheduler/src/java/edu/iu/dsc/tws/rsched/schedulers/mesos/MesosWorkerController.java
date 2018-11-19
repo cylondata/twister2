@@ -136,8 +136,8 @@ public class MesosWorkerController implements IWorkerController {
   }
 
   @Override
-  public boolean waitOnBarrier(long timeLimitMilliSec) {
-    return zkWorkerController.waitOnBarrier(timeLimitMilliSec);
+  public boolean waitOnBarrier() {
+    return zkWorkerController.waitOnBarrier();
   }
 
   /**

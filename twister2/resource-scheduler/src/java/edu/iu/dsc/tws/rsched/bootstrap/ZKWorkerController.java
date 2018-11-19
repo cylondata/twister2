@@ -501,13 +501,12 @@ public class ZKWorkerController implements IWorkerController {
    *
    * return true if all workers have reached the barrier and they are all released
    * if timeout is reached, return false
-   * @param timeLimitMilliSec
    * @return
    */
   @Override
-  public boolean waitOnBarrier(long timeLimitMilliSec) {
+  public boolean waitOnBarrier() {
 
-    return incrementBarrierDAI(0, timeLimitMilliSec);
+    return incrementBarrierDAI(0, ControllerContext.maxWaitTimeOnBarrier(config));
   }
 
 

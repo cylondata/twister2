@@ -364,11 +364,10 @@ public class K8sWorkerController implements IWorkerController {
 
   /**
    * not implemented
-   * @param timeLimitMilliSec
    * @return
    */
   @Override
-  public boolean waitOnBarrier(long timeLimitMilliSec) {
+  public boolean waitOnBarrier() {
     return false;
   }
 

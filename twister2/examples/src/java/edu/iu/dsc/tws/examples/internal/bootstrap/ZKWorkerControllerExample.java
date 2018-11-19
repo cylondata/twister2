@@ -143,7 +143,7 @@ public final class ZKWorkerControllerExample {
 
     LOG.info("Waiting on the first barrier -------------------------- ");
     long timeLimit = 200000;
-    boolean allWorkersReachedBarrier = zkWorkerController.waitOnBarrier(timeLimit);
+    boolean allWorkersReachedBarrier = zkWorkerController.waitOnBarrier();
     if (allWorkersReachedBarrier) {
       LOG.info("All workers reached the barrier. Proceeding.");
     } else {
@@ -159,7 +159,7 @@ public final class ZKWorkerControllerExample {
     sleeeep((long) (Math.random() * 10000));
 
     LOG.info("Waiting on the second barrier -------------------------- ");
-    allWorkersReachedBarrier = zkWorkerController.waitOnBarrier(timeLimit);
+    allWorkersReachedBarrier = zkWorkerController.waitOnBarrier();
     if (allWorkersReachedBarrier) {
       LOG.info("All workers reached the barrier. Proceeding.");
     } else {

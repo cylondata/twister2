@@ -32,7 +32,6 @@ import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public abstract class BenchWorker implements IWorker {
@@ -84,7 +83,7 @@ public abstract class BenchWorker implements IWorker {
     // now communicationProgress
     progress();
     // wait for the sync
-    workerController.waitOnBarrier(SchedulerContext.workerEndSyncWaitTime(config));
+    workerController.waitOnBarrier();
     // lets terminate the communicator
     communicator.close();
   }

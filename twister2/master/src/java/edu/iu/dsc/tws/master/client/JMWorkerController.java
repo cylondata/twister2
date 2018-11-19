@@ -157,7 +157,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
   }
 
-  public boolean waitOnBarrier(long timeLimitMilliSec) {
+  public boolean waitOnBarrier() {
 
     JobMasterAPI.BarrierRequest barrierRequest = JobMasterAPI.BarrierRequest.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
@@ -165,7 +165,8 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
     LOG.info("Sending BarrierRequest message: \n" + barrierRequest.toString());
     try {
-      rrClient.sendRequestWaitResponse(barrierRequest, timeLimitMilliSec);
+      rrClient.sendRequestWaitResponse(barrierRequest,
+          ControllerContext.maxWaitTimeOnBarrier(config));
       return true;
     } catch (BlockingSendException e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);

@@ -62,7 +62,7 @@ public class MPIWorkerController implements IWorkerController {
   }
 
   @Override
-  public boolean waitOnBarrier(long timeLimitMilliSec) {
+  public boolean waitOnBarrier() {
     return false;
   }
 }

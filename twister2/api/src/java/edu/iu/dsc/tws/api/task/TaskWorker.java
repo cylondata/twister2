@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 /**
  * This is an implementation of IWorker to support easy deployment of task graphs.
@@ -96,7 +95,7 @@ public abstract class TaskWorker implements IWorker {
     // call execute
     execute();
     // wait for the sync
-    workerController.waitOnBarrier(SchedulerContext.workerEndSyncWaitTime(config));
+    workerController.waitOnBarrier();
     // lets terminate the network
     communicator.close();
   }
