@@ -13,14 +13,32 @@ package edu.iu.dsc.tws.dataset;
 
 import java.util.logging.Logger;
 
-public class DataSink<T> extends DataSet<T> {
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.OutputWriter;
+
+/**
+ * A data sink
+ *
+ * @param <T>
+ */
+public class DataSink<T> {
   private static final Logger LOG = Logger.getLogger(DataSink.class.getName());
 
-  public DataSink(int dId) {
-    super(dId);
+  private OutputWriter<T> outputWriter;
+
+  public DataSink(Config config, DataSet<T> dataSet) {
   }
 
-  public void write() {
+  public DataSink(Config config, OutputWriter<T> output) {
+    this.outputWriter = output;
+    this.outputWriter.configure(config);
+  }
 
+  public void add(int partition, T value) {
+    outputWriter.write(partition, value);
+  }
+
+  public void persist() {
+    outputWriter.close();
   }
 }

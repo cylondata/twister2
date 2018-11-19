@@ -31,8 +31,18 @@ import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
  * that need to be supported by the concrete implementation
  */
 public abstract class FileSystem {
-
   private static final Logger LOG = Logger.getLogger(FileSystem.class.getName());
+
+  public enum WriteMode {
+    /** Creates the target file only if no file exists at that path already.
+     * Does not overwrite existing files and directories. */
+    NO_OVERWRITE,
+
+    /** Creates a new target file regardless of any existing files or directories.
+     * Existing files and directories will be deleted (recursively) automatically before
+     * creating the new file. */
+    OVERWRITE
+  }
 
   /**
    * Object used to protect calls to specific methods.

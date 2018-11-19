@@ -19,6 +19,12 @@ import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
+/**
+ * A distributed data source
+ *
+ * @param <T> type of the data
+ * @param <O> type of InputSplit used for splitting the data
+ */
 public class DataSource<T, O extends InputSplit<T>> extends DataSet<T> {
   private static final Logger LOG = Logger.getLogger(DataSource.class.getName());
 
