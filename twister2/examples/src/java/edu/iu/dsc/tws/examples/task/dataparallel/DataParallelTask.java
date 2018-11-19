@@ -43,6 +43,7 @@ public class DataParallelTask extends BaseBatchSource {
   public void execute() {
     InputSplit<String> inputSplit = source.getNextSplit(context.taskIndex());
     int splitCount = 0;
+    int totalCount = 0;
     while (inputSplit != null) {
       try {
         int count = 0;
@@ -52,11 +53,12 @@ public class DataParallelTask extends BaseBatchSource {
 
           sink.add(context.taskIndex(), value);
           count += 1;
+          totalCount += 1;
         }
         splitCount += 1;
         inputSplit = source.getNextSplit(context.taskIndex());
         LOG.info("Finished: " + context.taskIndex() + " count: " + count
-            + " split: " + splitCount);
+            + " split: " + splitCount + " total count: " + totalCount);
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
       }

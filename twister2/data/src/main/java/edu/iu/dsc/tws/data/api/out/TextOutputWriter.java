@@ -39,4 +39,13 @@ public class TextOutputWriter extends FileOutputWriter<String> {
       writerMap.get(partition).println(data);
     }
   }
+
+  @Override
+  public void close() {
+    for (PrintWriter pw : writerMap.values()) {
+      pw.close();
+    }
+
+    super.close();
+  }
 }
