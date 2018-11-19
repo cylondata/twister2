@@ -40,7 +40,7 @@ public class OrderedInputSplitAssigner implements InputSplitAssigner {
     if (next.containsKey(taskId)) {
       count = next.get(taskId);
     }
-    int index = count * splits.length + taskId;
+    int index = count * numTasks + taskId;
     // if we are over the length, return null
     if (index > splits.length - 1) {
       return null;
