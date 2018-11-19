@@ -23,11 +23,6 @@ public class DataSet<T> {
 
   private int id;
 
-  /**
-   * Weather we will send data to disk, if we don't have enough space
-   */
-  private boolean persistent;
-
   public DataSet(Config config) {
 
   }
