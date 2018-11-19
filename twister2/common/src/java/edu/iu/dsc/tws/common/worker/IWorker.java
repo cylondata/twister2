@@ -24,7 +24,7 @@
 package edu.iu.dsc.tws.common.worker;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 
 /**
  * This is the main point of entry for a Twister2 job. Every job should implement this interface.
