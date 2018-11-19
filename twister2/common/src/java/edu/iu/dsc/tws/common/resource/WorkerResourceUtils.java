@@ -24,11 +24,8 @@ public final class WorkerResourceUtils {
 
   private WorkerResourceUtils() { }
 
-  public static Map<String, List<WorkerComputeResource>> getWorkersPerNode(
-      AllocatedResources allocatedResources,
+  public static Map<String, List<JobMasterAPI.WorkerInfo>> getWorkersPerNode(
       List<JobMasterAPI.WorkerInfo> workerList) {
-
-    List<WorkerComputeResource> computeResources = allocatedResources.getWorkerComputeResources();
 
     // get distinct NodeIPs
     List<String> distinctNodes = getDistinctNodeIPs(workerList);
@@ -37,17 +34,10 @@ public final class WorkerResourceUtils {
     }
 
     // build the list for each nodeIP
-    Map<String, List<WorkerComputeResource>> workersPerNode = new HashMap<>();
+    Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode = new HashMap<>();
     for (String nodeIP: distinctNodes) {
-      List<Integer> workerIDList = getWorkerIDsForANode(nodeIP, workerList);
-      ArrayList<WorkerComputeResource> resourceList = new ArrayList<>();
-      for (Integer workerID: workerIDList) {
-        WorkerComputeResource resource = computeResources.get(
-            computeResources.indexOf(new WorkerComputeResource(workerID)));
-        resourceList.add(resource);
-      }
-
-      workersPerNode.put(nodeIP, resourceList);
+      List<JobMasterAPI.WorkerInfo> workersOnANode = getWorkersOnANode(nodeIP, workerList);
+      workersPerNode.put(nodeIP, workersOnANode);
     }
 
     return workersPerNode;
@@ -70,14 +60,20 @@ public final class WorkerResourceUtils {
     return distinctNodes;
   }
 
-  public static List<Integer> getWorkerIDsForANode(String nodeIP,
-                                                   List<JobMasterAPI.WorkerInfo> workerList) {
+  /**
+   * get the list of WorkerInfo objects on the given node
+   * @param nodeIP
+   * @param workerList
+   * @return
+   */
+  public static List<JobMasterAPI.WorkerInfo> getWorkersOnANode(String nodeIP,
+                                                         List<JobMasterAPI.WorkerInfo> workerList) {
 
-    ArrayList<Integer> workerIDs = new ArrayList<>();
+    ArrayList<JobMasterAPI.WorkerInfo> workerIDs = new ArrayList<>();
 
     for (JobMasterAPI.WorkerInfo workerInfo: workerList) {
       if (nodeIP.equals(workerInfo.getNodeInfo().getNodeIP())) {
-        workerIDs.add(workerInfo.getWorkerID());
+        workerIDs.add(workerInfo);
       }
     }
 

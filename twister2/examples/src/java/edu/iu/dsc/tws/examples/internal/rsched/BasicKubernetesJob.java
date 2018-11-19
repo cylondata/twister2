@@ -32,7 +32,7 @@ public final class BasicKubernetesJob {
   @SuppressWarnings("unchecked")
   public static void main(String[] args) {
 
-//    LoggingHelper.setupLogging(null, "logs", "client");
+    //    LoggingHelper.setupLogging(null, "logs", "client");
     LOG.info("Job submission time: " + System.currentTimeMillis());
 
     // first load the configurations from command line and config files

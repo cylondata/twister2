@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -41,8 +40,6 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
  */
 public abstract class KeyedBenchWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(KeyedBenchWorker.class.getName());
-
-  protected AllocatedResources resourcePlan;
 
   private Lock lock = new ReentrantLock();
 
@@ -67,13 +64,12 @@ public abstract class KeyedBenchWorker implements IWorker {
   protected ExperimentData experimentData;
 
   @Override
-  public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
+  public void execute(Config cfg, int workerID,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
-    this.resourcePlan = allocatedResources;
     this.workerId = workerID;
 
     // wait for all workers in this job to join
@@ -86,11 +82,11 @@ public abstract class KeyedBenchWorker implements IWorker {
     }
 
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(
-        cfg, allocatedResources, jobParameters.getTaskStages(), workerList);
+    this.taskPlan = Utils.createStageTaskPlan(cfg, workerID,
+        jobParameters.getTaskStages(), workerList);
 
     // create the channel
-    channel = Network.initializeChannel(config, workerController, resourcePlan);
+    channel = Network.initializeChannel(config, workerController);
     // create the communicator
     communicator = new Communicator(cfg, channel);
     //collect experiment data

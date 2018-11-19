@@ -190,10 +190,10 @@ public final class K8sWorkerUtils {
         NodeInfoUtil.decodeNodeInfoList(encodedNodeInfoList);
 
     if (nodeInfoList == null || nodeInfoList.size() == 0) {
-      LOG.warning("NodeInfoUtil list is not constructed from the string: " + encodedNodeInfoList);
+      LOG.warning("NodeInfo list is not constructed from the string: " + encodedNodeInfoList);
       return nodeInfo;
     } else {
-      LOG.fine("Decoded NodeInfoUtil list, size: " + nodeInfoList.size()
+      LOG.fine("Decoded NodeInfo list, size: " + nodeInfoList.size()
           + "\n" + NodeInfoUtil.listToString(nodeInfoList));
 
       JobMasterAPI.NodeInfo nodeInfo1 = NodeInfoUtil.getNodeInfo(nodeInfoList, nodeIP);

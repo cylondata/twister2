@@ -33,13 +33,13 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 public interface IWorkerController {
 
   /**
-   * return the WorkerNetworkInfo object for this worker
+   * return the WorkerInfo object for this worker
    * @return
    */
   JobMasterAPI.WorkerInfo getWorkerInfo();
 
   /**
-   * return the WorkerNetworkInfo object for the given ID
+   * return the WorkerInfo object for the given ID
    */
   JobMasterAPI.WorkerInfo getWorkerInfoForID(int id);
 

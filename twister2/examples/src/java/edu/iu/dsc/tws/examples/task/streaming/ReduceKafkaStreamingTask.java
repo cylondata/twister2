@@ -55,7 +55,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 public class ReduceKafkaStreamingTask implements IWorker {
   @Override
-  public void execute(Config config, int workerID, AllocatedResources resources,
+  public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -80,7 +80,7 @@ public class ReduceKafkaStreamingTask implements IWorker {
     builder.operationMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();
-    TaskUtils.execute(config, resources, graph, workerController);
+    TaskUtils.execute(config, workerID, graph, workerController);
   }
 
   private static class GeneratorTask extends BaseStreamSource {

@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
 import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
@@ -34,26 +33,23 @@ public final class Network {
   private Network() {
   }
 
-  public static TWSChannel initializeChannel(Config config, IWorkerController wController,
-                                             AllocatedResources resourcePlan) {
+  public static TWSChannel initializeChannel(Config config, IWorkerController wController) {
     if (config.getStringValue("twister2.network.channel.class").equals(
         "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel")) {
-      return initializeTCPNetwork(config, wController, resourcePlan);
+      return initializeTCPNetwork(config, wController);
     } else {
-      return initializeMPIChannel(config, wController, resourcePlan);
+      return initializeMPIChannel(config, wController);
     }
   }
 
   private static TWSChannel initializeMPIChannel(Config config,
-                                                 IWorkerController wController,
-                                                 AllocatedResources plan) {
+                                                 IWorkerController wController) {
     //first get the communication config file
-    return new TWSMPIChannel(config, MPI.COMM_WORLD, plan.getWorkerId());
+    return new TWSMPIChannel(config, MPI.COMM_WORLD, wController.getWorkerInfo().getWorkerID());
   }
 
   private static TWSChannel initializeTCPNetwork(Config config,
-                                                 IWorkerController wController,
-                                                 AllocatedResources resourcePlan) {
+                                                 IWorkerController wController) {
     TCPChannel channel;
     int index = wController.getWorkerInfo().getWorkerID();
     Integer workerPort = wController.getWorkerInfo().getPort();
@@ -88,7 +84,7 @@ public final class Network {
     channel.waitForConnections();
 
     // now lets create a tcp channel
-    return new TWSTCPChannel(config, resourcePlan.getWorkerId(), channel);
+    return new TWSTCPChannel(config, wController.getWorkerInfo().getWorkerID(), channel);
   }
 
   /**

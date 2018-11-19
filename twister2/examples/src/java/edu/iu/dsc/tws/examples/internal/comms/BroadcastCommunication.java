@@ -26,7 +26,6 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -45,8 +44,6 @@ public class BroadcastCommunication implements IWorker {
   private static final Logger LOG = Logger.getLogger(BroadcastCommunication.class.getName());
 
   private DataFlowBroadcast broadcast;
-
-  private AllocatedResources resourcePlan;
 
   private int id;
 
@@ -67,23 +64,22 @@ public class BroadcastCommunication implements IWorker {
   @Override
   public void execute(Config cfg,
                       int workerID,
-                      AllocatedResources resources,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
+    LOG.log(Level.INFO, "Starting the example with container id: " + workerID);
     this.config = cfg;
-    this.resourcePlan = resources;
     this.id = workerID;
     this.status = Status.INIT;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
+    this.noOfTasksPerExecutor = NO_OF_TASKS / workerController.getNumberOfWorkers();
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
+    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, workerID,
+        workerController.waitForAllWorkersToJoin(50000), NO_OF_TASKS);
     LOG.log(Level.INFO, "Task plan: " + taskPlan);
     //first get the communication config file
-    TWSChannel network = Network.initializeChannel(cfg, workerController, resources);
+    TWSChannel network = Network.initializeChannel(cfg, workerController);
 
     Set<Integer> sources = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS; i++) {

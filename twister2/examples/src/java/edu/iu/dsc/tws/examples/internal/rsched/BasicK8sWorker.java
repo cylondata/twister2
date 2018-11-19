@@ -30,7 +30,6 @@ import org.apache.hadoop.fs.Path;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
@@ -43,7 +42,6 @@ public class BasicK8sWorker implements IWorker {
   @Override
   public void execute(Config config,
                       int workerID,
-                      AllocatedResources allocatedResources,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -71,7 +69,7 @@ public class BasicK8sWorker implements IWorker {
     LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
 
 //    Map<String, List<WorkerComputeResource>> workersPerNode =
-//        WorkerResourceUtils.getWorkersPerNode(allocatedResources, workerList);
+//        WorkerResourceUtils.getWorkersPerNode(numberOfWorkers, workerList);
 //    printWorkersPerNode(workersPerNode);
 
 //    listHdfsDir();

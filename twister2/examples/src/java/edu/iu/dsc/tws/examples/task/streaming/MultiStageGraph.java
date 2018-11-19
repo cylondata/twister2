@@ -62,7 +62,7 @@ public class MultiStageGraph extends TaskWorker {
     builder.setMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();
-    TaskUtils.execute(config, allocatedResources, graph, workerController);
+    TaskUtils.execute(config, workerId, graph, workerController);
   }
 
   private static class GeneratorTask extends BaseStreamSource {

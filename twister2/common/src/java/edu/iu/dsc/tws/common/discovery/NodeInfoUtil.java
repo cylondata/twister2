@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.common.discovery;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 
@@ -20,6 +21,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
  */
 
 public final class NodeInfoUtil {
+  private static final Logger LOG = Logger.getLogger(NodeInfoUtil.class.getName());
 
   private NodeInfoUtil() { }
 
@@ -60,7 +62,23 @@ public final class NodeInfoUtil {
     if (nodeInfo == null) {
       return "null,null,null";
     }
-    return nodeInfo.getNodeIP() + "," + nodeInfo.getRackName() + "," + nodeInfo.getDataCenterName();
+
+    String nodeIP = nodeInfo.getNodeIP();
+    if (nodeInfo.getNodeIP().isEmpty()) {
+      nodeIP = "null";
+    }
+
+    String rackName = nodeInfo.getRackName();
+    if (nodeInfo.getRackName().isEmpty()) {
+      rackName = "null";
+    }
+
+    String dcName = nodeInfo.getDataCenterName();
+    if (nodeInfo.getDataCenterName().isEmpty()) {
+      dcName = "null";
+    }
+
+    return nodeIP + "," + rackName + "," + dcName;
   }
 
   /**

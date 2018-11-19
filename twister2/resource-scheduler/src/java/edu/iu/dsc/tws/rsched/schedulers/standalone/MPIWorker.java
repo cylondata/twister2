@@ -207,7 +207,7 @@ public final class MPIWorker {
         if (object instanceof IWorker) {
           IWorker container = (IWorker) object;
           // now initialize the container
-          container.execute(config, rank, resourcePlan, controller, null, null);
+          container.execute(config, rank, controller, null, null);
         } else {
           throw new RuntimeException("Cannot instantiate class: " + object.getClass());
         }

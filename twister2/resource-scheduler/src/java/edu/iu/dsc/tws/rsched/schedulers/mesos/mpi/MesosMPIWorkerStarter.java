@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -30,7 +29,6 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
-import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerUtils;
 import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -156,10 +154,11 @@ public final class MesosMPIWorkerStarter {
     Map<Integer, String> processNames = MPIWorker.createResourcePlan(config);
     // now create the resource plan
     //AllocatedResources resourcePlan = MPIWorker.addContainers(config, processNames);
-    AllocatedResources resourcePlan = MesosWorkerUtils.createAllocatedResources("mesos",
-        workerID, job);
+//    AllocatedResources resourcePlan = MesosWorkerUtils.createAllocatedResources("mesos",
+//        workerID, job);
     //resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config), workerID);
-    worker.execute(config, workerID, resourcePlan, workerController, pv, volatileVolume);
+    worker.execute(config, workerID, workerController,
+        pv, volatileVolume);
   }
 
   /**

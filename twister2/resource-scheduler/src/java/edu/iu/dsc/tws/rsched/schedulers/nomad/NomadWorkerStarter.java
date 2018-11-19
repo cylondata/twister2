@@ -207,8 +207,7 @@ public final class NomadWorkerStarter {
       if (object instanceof IWorker) {
         IWorker container = (IWorker) object;
         // now initialize the container
-        container.execute(config, workerNetworkInfo.getWorkerID(), resourcePlan,
-            workerController, null, null);
+        container.execute(config, workerNetworkInfo.getWorkerID(), workerController, null, null);
       } else {
         throw new RuntimeException("Job is not of time IWorker: " + object.getClass().getName());
       }

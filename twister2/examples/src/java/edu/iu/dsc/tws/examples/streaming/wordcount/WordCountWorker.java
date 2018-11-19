@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -44,8 +43,6 @@ public class WordCountWorker implements IWorker {
 
   private Config config;
 
-  private AllocatedResources resourcePlan;
-
   private int id;
 
   private int noOfTasksPerExecutor;
@@ -55,17 +52,16 @@ public class WordCountWorker implements IWorker {
   private TaskPlan taskPlan;
 
   @Override
-  public void execute(Config cfg, int workerID, AllocatedResources resources,
+  public void execute(Config cfg, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
     this.config = cfg;
-    this.resourcePlan = resources;
     this.id = workerID;
-    this.noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
+    this.noOfTasksPerExecutor = NO_OF_TASKS / workerController.getNumberOfWorkers();
 
-    setupTasks();
-    setupNetwork(workerController, resources);
+    setupTasks(workerController);
+    setupNetwork(workerController);
 
     // create the communication
     keyGather = new SKeyedReduce(channel, taskPlan, sources, destinations,
@@ -77,8 +73,11 @@ public class WordCountWorker implements IWorker {
     progress();
   }
 
-  private void setupTasks() {
-    taskPlan = WordCountUtils.createWordCountPlan(config, resourcePlan, NO_OF_TASKS);
+  private void setupTasks(IWorkerController workerController) {
+    taskPlan = WordCountUtils.createWordCountPlan(config, id,
+        workerController.waitForAllWorkersToJoin(50000),
+        NO_OF_TASKS);
+
     sources = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS / 2; i++) {
       sources.add(i);
@@ -91,8 +90,8 @@ public class WordCountWorker implements IWorker {
         taskPlan.getThisExecutor(), sources, destinations));
   }
 
-  private void setupNetwork(IWorkerController controller, AllocatedResources resources) {
-    TWSChannel twsChannel = Network.initializeChannel(config, controller, resources);
+  private void setupNetwork(IWorkerController controller) {
+    TWSChannel twsChannel = Network.initializeChannel(config, controller);
     this.channel = new Communicator(config, twsChannel);
   }
 

@@ -292,7 +292,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       ArrayList<JobMasterAPI.NodeInfo> nodeInfoList =
           controller.getNodeInfo(rackLabelKey, dcLabelKey);
       encodedNodeInfoList = NodeInfoUtil.encodeNodeInfoList(nodeInfoList);
-      LOG.fine("NodeInfoUtil objects: size " + nodeInfoList.size()
+      LOG.fine("NodeInfo objects: size " + nodeInfoList.size()
           + "\n" + NodeInfoUtil.listToString(nodeInfoList));
     }
 

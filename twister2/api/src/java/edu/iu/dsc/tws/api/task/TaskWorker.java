@@ -11,17 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 /**
@@ -44,11 +45,6 @@ public abstract class TaskWorker implements IWorker {
    * This id
    */
   protected int workerId;
-
-  /**
-   * Allocated resources
-   */
-  protected AllocatedResources allocatedResources;
 
   /**
    * Controller
@@ -76,18 +72,19 @@ public abstract class TaskWorker implements IWorker {
   protected TaskExecutor taskExecutor;
 
   @Override
-  public void execute(Config cfg, int workerID, AllocatedResources allocResources,
+  public void execute(Config cfg, int workerID,
                       IWorkerController wController, IPersistentVolume pVolume,
                       IVolatileVolume vVolume) {
     this.config = cfg;
     this.workerId = workerID;
-    this.allocatedResources = allocResources;
     this.workerController = wController;
     this.persistentVolume = pVolume;
     this.volatileVolume = vVolume;
 
+    List<JobMasterAPI.WorkerInfo> workerInfoList = wController.waitForAllWorkersToJoin(50000);
+
     // create the channel
-    channel = Network.initializeChannel(config, workerController, allocatedResources);
+    channel = Network.initializeChannel(config, workerController);
     String persistent = null;
     if (vVolume != null && vVolume.getWorkerDirPath() != null) {
       persistent = vVolume.getWorkerDirPath();
@@ -95,7 +92,7 @@ public abstract class TaskWorker implements IWorker {
     // create the communicator
     communicator = new Communicator(config, channel, persistent);
     // create the executor
-    taskExecutor = new TaskExecutor(config, workerId, allocatedResources, communicator);
+    taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator);
     // call execute
     execute();
     // wait for the sync

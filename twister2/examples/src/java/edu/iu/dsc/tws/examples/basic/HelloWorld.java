@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -38,7 +37,7 @@ public class HelloWorld implements IWorker {
 
   @Override
   public void execute(Config config, int workerID,
-                      AllocatedResources allocatedResources, IWorkerController workerController,
+                      IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
     // lets retrieve the configuration set in the job config
     String helloKeyValue = config.getStringValue("hello-key");

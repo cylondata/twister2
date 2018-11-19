@@ -62,8 +62,8 @@ public final class Twister2Submitter {
     if (Context.clusterType(config).equals(KubernetesConstants.KUBERNETES_CLUSTER_TYPE)) {
       if (!KubernetesUtils.jobNameConformsToK8sNamingRules(jobName)) {
 
-        LOG.info("JobName does not conform to Kubernetes naming rules: " + jobName
-            + " Only lower case alphanumeric characters and dashes(-) are allowed");
+        LOG.info("JobName does not conform to Kubernetes naming rules: [" + jobName
+            + "] Only lower case alphanumeric characters and dash(-) are allowed.");
 
         jobName = KubernetesUtils.convertJobNameToK8sFormat(jobName);
 

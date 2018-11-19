@@ -48,7 +48,6 @@ import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -70,7 +69,7 @@ public abstract class HarpWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(HarpWorker.class.getName());
 
   @Override
-  public void execute(Config config, int workerID, AllocatedResources allocatedResources,
+  public void execute(Config config, int workerID,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
     List<JobMasterAPI.WorkerInfo> workersList = workerController.waitForAllWorkersToJoin(50000);
@@ -138,8 +137,8 @@ public abstract class HarpWorker implements IWorker {
     }
 
     //call executeHarp that will be coded by user
-    this.executeHarp(config, workerID, allocatedResources, workerController, persistentVolume,
-        volatileVolume, dataMap, workers);
+    this.executeHarp(config, workerID, workerController.getNumberOfWorkers(), workerController,
+        persistentVolume, volatileVolume, dataMap, workers);
 
     //stopping servers, releasing resources
     LOG.info("Execution completed. Shutting harp Sync Client down....");
@@ -195,7 +194,7 @@ public abstract class HarpWorker implements IWorker {
    * @return unique id for the rack
    */
   private String getRackKey(JobMasterAPI.NodeInfo nodeInfo) {
-    return nodeInfo.getDataCenterName() != null ? //multiple data centers can have same rack name
+    return nodeInfo.getDataCenterName().isEmpty() ? //multiple data centers can have same rack name
         nodeInfo.getDataCenterName().concat(nodeInfo.getRackName()) : nodeInfo.getRackName();
   }
 
@@ -203,7 +202,7 @@ public abstract class HarpWorker implements IWorker {
    * This method will be called after setting up Harp environment
    */
   public abstract void executeHarp(Config config, int workerID,
-                                   AllocatedResources allocatedResources,
+                                   int numberOfWorkers,
                                    IWorkerController workerController,
                                    IPersistentVolume persistentVolume,
                                    IVolatileVolume volatileVolume,

@@ -68,10 +68,10 @@ public final class AuroraWorkerStarter {
       throw new RuntimeException(e);
     }
 
-    // TODO: need toprovide all parameters
+    // TODO: need to provide all parameters
     worker.execute(workerStarter.config,
         workerStarter.zkWorkerController.getWorkerInfo().getWorkerID(),
-        null, null, null, null);
+        null, null, null);
 
     // close the things, let others know that it is done
     workerStarter.close();

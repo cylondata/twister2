@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.common.discovery.IWorkerController;
 import edu.iu.dsc.tws.common.discovery.NodeInfoUtil;
 import edu.iu.dsc.tws.common.discovery.WorkerInfoUtil;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -199,16 +198,12 @@ public final class MPIWorkerStarter {
       throw new RuntimeException(e);
     }
 
-    AllocatedResources allocatedResources = null;
-//    AllocatedResources allocatedResources = K8sWorkerUtils.createAllocatedResources(
-//        KubernetesContext.clusterType(config), workerID, job);
-
     K8sVolatileVolume volatileVolume = null;
     if (computeResource.getDiskGigaBytes() > 0) {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
 
-    worker.execute(config, workerID, allocatedResources, workerController, pv, volatileVolume);
+    worker.execute(config, workerID, workerController, pv, volatileVolume);
   }
 
   /**

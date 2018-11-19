@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -38,7 +37,7 @@ import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 
 public class StreamingTaskExampleKafka implements IWorker {
   @Override
-  public void execute(Config config, int workerID, AllocatedResources resources,
+  public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -74,7 +73,7 @@ public class StreamingTaskExampleKafka implements IWorker {
 
     DataFlowTaskGraph graph = builder.build();
 
-    TaskUtils.execute(config, resources, graph, workerController);
+    TaskUtils.execute(config, workerID, graph, workerController);
   }
 
   private static class RecevingTask extends BaseStreamSink {
