@@ -21,6 +21,8 @@ public class CentralizedTaskScheduler {
     this.hierarchicalTaskGraph = hierarchicalTaskgraph;
   }
 
+  //Parse the hierarchial task graph
+
   //Register with the JobMaster
 
   //Connect the Taskgraph Monitor
