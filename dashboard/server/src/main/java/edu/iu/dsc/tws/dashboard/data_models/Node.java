@@ -11,81 +11,90 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.data_models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import javax.persistence.*;
 import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 public class Node {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.AUTO)
+  private Long id;
 
-    @Column(nullable = false)
-    private String host;
+  @Column(nullable = false)
+  private String host;
 
-    @Column
-    private String os;
+  @Column
+  private String os;
 
-    @Column
-    private Date heartbeatTime;
+  @Column
+  private Date heartbeatTime;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private EntityState state;
+  @Column
+  @Enumerated(EnumType.STRING)
+  private EntityState state;
 
-    public EntityState getState() {
-        return state;
-    }
+  public EntityState getState() {
+    return state;
+  }
 
-    public void setState(EntityState state) {
-        this.state = state;
-    }
+  public void setState(EntityState state) {
+    this.state = state;
+  }
 
-    @ManyToOne(optional = false)
-    @JoinColumn
-    @JsonIgnoreProperties({"nodes", "description"})
-    private Cluster cluster;
+  @ManyToOne(optional = false)
+  @JoinColumn
+  @JsonIgnoreProperties({"nodes", "description"})
+  private Cluster cluster;
 
-    public Cluster getCluster() {
-        return cluster;
-    }
+  public Cluster getCluster() {
+    return cluster;
+  }
 
-    public void setCluster(Cluster cluster) {
-        this.cluster = cluster;
-    }
+  public void setCluster(Cluster cluster) {
+    this.cluster = cluster;
+  }
 
-    public Long getId() {
-        return id;
-    }
+  public Long getId() {
+    return id;
+  }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-    public String getHost() {
-        return host;
-    }
+  public String getHost() {
+    return host;
+  }
 
-    public void setHost(String host) {
-        this.host = host;
-    }
+  public void setHost(String host) {
+    this.host = host;
+  }
 
-    public String getOs() {
-        return os;
-    }
+  public String getOs() {
+    return os;
+  }
 
-    public void setOs(String os) {
-        this.os = os;
-    }
+  public void setOs(String os) {
+    this.os = os;
+  }
 
-    public Date getHeartbeatTime() {
-        return heartbeatTime;
-    }
+  public Date getHeartbeatTime() {
+    return heartbeatTime;
+  }
 
-    public void setHeartbeatTime(Date heartbeatTime) {
-        this.heartbeatTime = heartbeatTime;
-    }
+  public void setHeartbeatTime(Date heartbeatTime) {
+    this.heartbeatTime = heartbeatTime;
+  }
 }

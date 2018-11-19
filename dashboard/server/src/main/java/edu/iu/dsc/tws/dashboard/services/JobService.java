@@ -11,47 +11,49 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.services;
 
-import edu.iu.dsc.tws.dashboard.data_models.Job;
-import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
-import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
+import java.util.Date;
+import java.util.Optional;
+
+import javax.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.Date;
-import java.util.Optional;
+import edu.iu.dsc.tws.dashboard.data_models.Job;
+import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
+import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 
 @Service
 public class JobService {
 
-    @Autowired
-    private JobRepository jobRepository;
+  @Autowired
+  private JobRepository jobRepository;
 
-    public Job createJob(Job job) {
-        job.getWorkers().forEach(worker -> worker.setJob(job));
-        return jobRepository.save(job);
-    }
+  public Job createJob(Job job) {
+    job.getWorkers().forEach(worker -> worker.setJob(job));
+    return jobRepository.save(job);
+  }
 
-    public Job getJobById(String jobId) {
-        Optional<Job> byId = jobRepository.findById(jobId);
-        if (byId.isPresent()) {
-            return byId.get();
-        }
-        throw new EntityNotFoundException("No Job found with ID " + jobId);
+  public Job getJobById(String jobId) {
+    Optional<Job> byId = jobRepository.findById(jobId);
+    if (byId.isPresent()) {
+      return byId.get();
     }
+    throw new EntityNotFoundException("No Job found with ID " + jobId);
+  }
 
-    public Iterable<Job> getAllJobs() {
-        return this.jobRepository.findAll();
-    }
+  public Iterable<Job> getAllJobs() {
+    return this.jobRepository.findAll();
+  }
 
-    @Transactional
-    public void changeState(String jobId, StateChangeRequest stateChangeRequest) {
-        this.jobRepository.changeJobState(jobId, stateChangeRequest.getEntityState());
-    }
+  @Transactional
+  public void changeState(String jobId, StateChangeRequest stateChangeRequest) {
+    this.jobRepository.changeJobState(jobId, stateChangeRequest.getEntityState());
+  }
 
-    @Transactional
-    public void heartbeat(String jobId) {
-        this.jobRepository.heartbeat(jobId, new Date());
-    }
+  @Transactional
+  public void heartbeat(String jobId) {
+    this.jobRepository.heartbeat(jobId, new Date());
+  }
 }

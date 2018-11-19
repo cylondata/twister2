@@ -4,13 +4,13 @@ import edu.iu.dsc.tws.dashboard.data_models.EntityState;
 
 public class StateChangeRequest {
 
-    private EntityState entityState;
+  private EntityState entityState;
 
-    public EntityState getEntityState() {
-        return entityState;
-    }
+  public EntityState getEntityState() {
+    return entityState;
+  }
 
-    public void setEntityState(EntityState entityState) {
-        this.entityState = entityState;
-    }
+  public void setEntityState(EntityState entityState) {
+    this.entityState = entityState;
+  }
 }

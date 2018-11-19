@@ -11,103 +11,111 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.data_models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
-import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 public class Worker {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.AUTO)
+  private Long id;
 
-    @Column
-    private String host;
+  @Column
+  private String host;
 
-    @Column
-    private Integer port;
+  @Column
+  private Integer port;
 
-    @Column
-    private Double cpuAllocation;
+  @Column
+  private Double cpuAllocation;
 
-    @Column
-    private Double memoryAllocation;
+  @Column
+  private Double memoryAllocation;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private EntityState state;
+  @Column
+  @Enumerated(EnumType.STRING)
+  private EntityState state;
 
-    public EntityState getState() {
-        return state;
-    }
+  public EntityState getState() {
+    return state;
+  }
 
-    public void setState(EntityState state) {
-        this.state = state;
-    }
+  public void setState(EntityState state) {
+    this.state = state;
+  }
 
-    @ManyToOne(optional = false)
-    @JoinColumn
-    @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state"})
-    private Job job;
+  @ManyToOne(optional = false)
+  @JoinColumn
+  @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state"})
+  private Job job;
 
-    public Job getJob() {
-        return job;
-    }
+  public Job getJob() {
+    return job;
+  }
 
-    public void setJob(Job job) {
-        this.job = job;
-    }
+  public void setJob(Job job) {
+    this.job = job;
+  }
 
-    public Long getId() {
-        return id;
-    }
+  public Long getId() {
+    return id;
+  }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-    public String getHost() {
-        return host;
-    }
+  public String getHost() {
+    return host;
+  }
 
-    public void setHost(String host) {
-        this.host = host;
-    }
+  public void setHost(String host) {
+    this.host = host;
+  }
 
-    public Integer getPort() {
-        return port;
-    }
+  public Integer getPort() {
+    return port;
+  }
 
-    public void setPort(Integer port) {
-        this.port = port;
-    }
+  public void setPort(Integer port) {
+    this.port = port;
+  }
 
-    public Double getCpuAllocation() {
-        return cpuAllocation;
-    }
+  public Double getCpuAllocation() {
+    return cpuAllocation;
+  }
 
-    public void setCpuAllocation(Double cpuAllocation) {
-        this.cpuAllocation = cpuAllocation;
-    }
+  public void setCpuAllocation(Double cpuAllocation) {
+    this.cpuAllocation = cpuAllocation;
+  }
 
-    public Double getMemoryAllocation() {
-        return memoryAllocation;
-    }
+  public Double getMemoryAllocation() {
+    return memoryAllocation;
+  }
 
-    public void setMemoryAllocation(Double memoryAllocation) {
-        this.memoryAllocation = memoryAllocation;
-    }
+  public void setMemoryAllocation(Double memoryAllocation) {
+    this.memoryAllocation = memoryAllocation;
+  }
 
-    @Override
-    public String toString() {
-        return "Worker{" +
-                "id=" + id +
-                ", host='" + host + '\'' +
-                ", port=" + port +
-                ", cpuAllocation=" + cpuAllocation +
-                ", memoryAllocation=" + memoryAllocation +
-                ", job=" + job +
-                '}';
-    }
+  @Override
+  public String toString() {
+    return "Worker{"
+        + "id=" + id
+        + ", host='" + host + '\''
+        + ", port=" + port
+        + ", cpuAllocation=" + cpuAllocation
+        + ", memoryAllocation=" + memoryAllocation
+        + ", job=" + job
+        + '}';
+  }
 }
