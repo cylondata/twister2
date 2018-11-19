@@ -32,12 +32,24 @@ import edu.iu.dsc.tws.data.fs.Path;
 public abstract class FileOutputWriter<T> implements OutputWriter<T> {
   private static final Logger LOG = Logger.getLogger(FileOutputStream.class.getName());
 
+  /**
+   * File system object
+   */
   protected FileSystem fs;
 
+  /**
+   * Opened streams
+   */
   protected Map<Integer, FSDataOutputStream> openStreams = new HashMap<>();
 
+  /**
+   * Write mode of the files
+   */
   protected FileSystem.WriteMode writeMode;
 
+  /**
+   * File output path
+   */
   protected Path outPath;
 
   public FileOutputWriter(FileSystem.WriteMode writeMode, Path outPath) {
@@ -97,5 +109,6 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
         LOG.log(Level.SEVERE, "Failed to close the output stream", e);
       }
     }
+    openStreams.clear();
   }
 }

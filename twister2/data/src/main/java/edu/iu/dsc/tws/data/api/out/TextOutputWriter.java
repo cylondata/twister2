@@ -19,6 +19,9 @@ import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 
+/**
+ * Write a text file, every record is written to a new line
+ */
 public class TextOutputWriter extends FileOutputWriter<String> {
   private Map<Integer, PrintWriter> writerMap = new HashMap<>();
 
@@ -45,7 +48,7 @@ public class TextOutputWriter extends FileOutputWriter<String> {
     for (PrintWriter pw : writerMap.values()) {
       pw.close();
     }
-
+    writerMap.clear();
     super.close();
   }
 }
