@@ -18,8 +18,11 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
+import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
+import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
@@ -34,6 +37,8 @@ public class DataParallelTask extends BaseBatchSource {
 
   private DataSource<String, ?> source;
 
+  private DataSink<String> sink;
+
   @Override
   public void execute() {
     InputSplit<String> inputSplit = source.getNextSplit(context.taskIndex());
@@ -44,6 +49,8 @@ public class DataParallelTask extends BaseBatchSource {
         while (!inputSplit.reachedEnd()) {
           String value = inputSplit.nextRecord(null);
           LOG.info("We read value: " + value);
+
+          sink.add(context.taskIndex(), value);
           count += 1;
         }
         splitCount += 1;
@@ -54,6 +61,7 @@ public class DataParallelTask extends BaseBatchSource {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
       }
     }
+    sink.persist();
   }
 
   @Override
@@ -63,6 +71,7 @@ public class DataParallelTask extends BaseBatchSource {
     String directory = cfg.getStringValue(Constants.ARGS_INPUT_DIRECTORY);
     ExecutionRuntime runtime = (ExecutionRuntime) config.get(
         ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+    String outDir = cfg.getStringValue(Constants.ARGS_OUTPUT_DIRECTORY);
 
     boolean shared = cfg.getBooleanValue(Constants.ARGS_SHARED_FILE_SYSTEM);
     if (!shared) {
@@ -72,5 +81,7 @@ public class DataParallelTask extends BaseBatchSource {
       this.source = runtime.createInput(cfg, context,
           new SharedTextInputPartitioner(new Path(directory)));
     }
+    this.sink = new DataSink<String>(cfg,
+        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
   }
 }

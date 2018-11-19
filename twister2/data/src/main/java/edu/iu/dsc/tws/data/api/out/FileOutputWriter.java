@@ -40,11 +40,15 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
 
   protected Path outPath;
 
-  public FileOutputWriter(FileSystem.WriteMode writeMode, Path outPath) throws IOException {
+  public FileOutputWriter(FileSystem.WriteMode writeMode, Path outPath) {
     this.writeMode = writeMode;
     this.outPath = outPath;
 
-    this.fs = FileSystem.get(outPath.toUri());
+    try {
+      this.fs = FileSystem.get(outPath.toUri());
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to create file system for : " + outPath.toUri());
+    }
   }
 
   public void write(int partition, T out) {
@@ -62,6 +66,7 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
         throw new RuntimeException("Failed to create output stream for file: " + path, e);
       }
     }
+    writeRecord(partition, out);
   }
 
   /**

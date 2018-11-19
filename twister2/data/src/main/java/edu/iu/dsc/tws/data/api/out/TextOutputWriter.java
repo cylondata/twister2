@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.out;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +22,7 @@ import edu.iu.dsc.tws.data.fs.Path;
 public class TextOutputWriter extends FileOutputWriter<String> {
   private Map<Integer, PrintWriter> writerMap = new HashMap<>();
 
-  public TextOutputWriter(FileSystem.WriteMode writeMode, Path outPath) throws IOException {
+  public TextOutputWriter(FileSystem.WriteMode writeMode, Path outPath) {
     super(writeMode, outPath);
   }
 
