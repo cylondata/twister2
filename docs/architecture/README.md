@@ -37,5 +37,5 @@ This will present the job related data to users through a web page. Users will b
 This section describes some of these components in detail.
 
 * [Common](common/logging.md)
-* [Discovery](discovery/worker-discovery.md)
+* [Discovery](controller/worker-controller.md)
 * [JobMaster](job-master/job-master.md)

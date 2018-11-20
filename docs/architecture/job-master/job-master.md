@@ -2,7 +2,12 @@
 
 The Job Master manages job related activities during job execution such as worker life cycle management, worker discovery, resource cleanup, dynamic resource allocation, fault tolerance, etc.
 
-Currently, we implemented the following services: 1. Ping Service 2. Worker life-cycle monitoring 3. Worker Discovery 4. Job Termination 5. Barrier Service
+Currently, we implemented the following services: 
+1. Ping Service 
+2. Worker life-cycle monitoring 
+3. Worker Discovery 
+4. Job Termination 
+5. Barrier Service
 
 ## Possibilities for Job Master Architecture
 
@@ -58,16 +63,17 @@ Ping Message Format is shown below. It has the workerID from the sender worker. 
 
 ```text
 message Ping {
-    oneof required {
-        int32 workerID = 1;
-    }
-    string pingMessage = 2;
-    MessageType messageType = 3;
-
     enum MessageType {
         WORKER_TO_MASTER = 0;
         MASTER_TO_WORKER = 1;
     }
+    oneof idRequired {
+        int32 workerID = 1;
+    }
+    oneof typeRequired {
+        MessageType messageType = 2;
+    }
+    string pingMessage = 3;
 }
 ```
 
@@ -77,7 +83,8 @@ Ping service is started automatically. Users do not need to start it.
 
 ## Worker Life Cycle Monitoring
 
-Each worker reports its state changes to the job master during the job execution. Currently we have the following states for workers:
+Each worker reports its state changes to the job master during the job execution. 
+Currently we have the following states for workers:
 
 ```text
 enum WorkerState {
@@ -89,54 +96,76 @@ enum WorkerState {
 }
 ```
 
-When a worker is in the initializing phase, it first sends a STARTING message. It sends its IP address and its port number in this message. STARTING message registers the worker with the Job Master. STARTING message is mandatory. It can not be omitted. After a request is received for the STARTING message, the worker can send other messages.
-
-After the worker completes initialization and ready to execute the user code, it sends RUNNING message. When it has completed the computation, it sends COMPLETED message.
-
-UNASSIGNED state is used in the program code to handle the initial state when no state information is present for a worker. UNASSIGNED message is not exchanged between the worker and the job master.
-
-ERROR message is not currently used. We plan to use it to report error cases in the future.
-
-Workers send WorkerStateChange message to the job master to inform it about its state change. The format of the message is as follows:
+When a worker is in the initializing phase, it first sends a STARTING message. 
+It sends its WorkerInfo message in this message. STARTING message registers the worker with the Job Master. 
+STARTING message is mandatory. It can not be omitted. After a request is received for the STARTING message, 
+the worker can send other messages. STARTING message is sent as a WorkerStateChange message. 
 
 ```text
-message WorkerStateChange {
-    WorkerNetworkInfo workerNetworkInfo = 1;
-    WorkerState newState = 2;
+message NodeInfo {
+    string nodeIP = 1;
+    string rackName = 2;
+    string dataCenterName = 3;
 }
-```
 
-WorkerNetworkInfo message defines the networking properties of a Twister2 worker:
-
-```text
-message WorkerNetworkInfo {
+message WorkerInfo {
     oneof required {
         int32 workerID = 1;
     }
     string workerIP = 2;
     int32 port = 3;
-    string nodeIP = 4;
-    string rackName = 5;
-    string dataCenterName = 6;
+
+    NodeInfo nodeInfo = 4;
+    tws.proto.job.ComputeResource computeResource = 5;
+}
+
+message WorkerStateChange {
+    oneof idRequired {
+        int32 workerID = 1;
+    }
+    oneof stateRequired {
+        WorkerState newState = 2;
+    }
+    WorkerInfo workerInfo = 3;
 }
 ```
+
+After the worker completes initialization and ready to execute the user code, it sends RUNNING message. 
+When it has completed the computation, it sends COMPLETED message.
+
+UNASSIGNED state is used in the program code to handle the initial state when no state information is present for a worker. UNASSIGNED message is not exchanged between the worker and the job master.
+
+ERROR message is not currently used. We plan to use it to report error cases in the future.
+
+Workers send WorkerStateChange message to the job master to inform it about its state change. 
+The format of the message is as follows:
+
+WorkerInfo message defines the features of twister2 workers.
 
 The job master in response sends the following message to the worker.
 
 ```text
 message WorkerStateChangeResponse {
-    oneof required {
+    oneof idRequired {
         int32 workerID = 1;
     }
-    WorkerState sentState = 2;
+    oneof stateRequired {
+        WorkerState sentState = 2;
+    }
 }
 ```
 
 ## Worker Discovery
 
-Job Master provides worker discovery service to workers in a job. When a worker starts initializing, it sends its IP address and the port number to the job master. Job master keeps the list of all workers in a job with their network address information.
+Job Master provides worker discovery service to workers in a job. When a worker starts initializing, 
+it sends its WorkerInfo message to the job master. Job master keeps the list of all WorkerInfo messages 
+in a job with their state information.
 
-Workers send ListWorkersRequest message to get the list of all workers in a job with the network information. The message proto is shown below. Workers can get either the current list joined workers from the job master, or they can request the full list. In that case, the full list will be sent when all workers joined the job. When they ask the current list, they get the list of joined workers immediately. In both cases, this list includes the workers that have already left if any.
+Workers send ListWorkersRequest message to get the list of all workers in a job with their WorkerInfo data. 
+The message proto is shown below. Workers can get either the current list of joined workers from the job master, 
+or they can request the full list. In that case, the full list will be sent when all workers joined the job. 
+When they ask the current list, they get the list of joined workers immediately. 
+In both cases, this list includes the workers that have already left if any.
 
 ```text
 message ListWorkersRequest {
@@ -145,14 +174,17 @@ message ListWorkersRequest {
         RESPONSE_AFTER_ALL_JOINED = 1;
     }
 
-    oneof required {
+    oneof idRequired {
         int32 workerID = 1;
     }
-    RequestType requestType = 2;
+    oneof typeRequired {
+        RequestType requestType = 2;
+    }
 }
 ```
 
-Job master sends the worker list in the following message format. It sends many worker information on the same message.
+Job master sends the worker list in the following message format. 
+It sends many worker information on the same message.
 
 ```text
 message ListWorkersResponse {
@@ -160,12 +192,13 @@ message ListWorkersResponse {
     oneof required {
         int32 workerID = 1;
     }
-    repeated WorkerNetworkInfo workers = 2;
+    repeated WorkerInfo worker = 2;
 }
 ```
 
 **IWorkerController Implementation**  
-We developed the WorkerController class that will be used by the workers to interact with the job master. The class name is:
+We developed the WorkerController class that will be used by the workers to interact with the job master. 
+The class name is:
 
 ```text
 edu.iu.dsc.tws.master.client.JMWorkerController
@@ -174,16 +207,21 @@ edu.iu.dsc.tws.master.client.JMWorkerController
 It implements the interface:
 
 ```text
-edu.iu.dsc.tws.common.discovery.IWorkerController
+edu.iu.dsc.tws.common.controller.IWorkerController
 ```
 
 All worker implementations can utilize this class for worker discovery.
 
 ### WorkerID Assignment
 
-Each worker in a job should have a unique ID. Worker IDs start from 0 and increase sequentially without any gaps in between. We support two types of workerID assignments. The first option is that the Job Master assigns worker IDs. It assigns workerIDs in the order of their registration with the Job Master with worker STARTING message. It assigns the id 0 to the first worker to be registered. It assigns the id 1 to the second worker to be registered, so on.
+Each worker in a job should have a unique ID. Worker IDs start from 0 and increase sequentially without any gaps in between. 
+We support two types of workerID assignments. The first option is that the Job Master assigns worker IDs. 
+It assigns workerIDs in the order of their registration with the Job Master with worker STARTING message. 
+It assigns the id 0 to the first worker to be registered. It assigns the id 1 to the second worker to be registered, so on.
 
-The second option for the worker ID assignment is that the underlying Twister2 implementation may assign unique IDs for the workers. In this case, when workers register with the Job Master, they already have a valid unique ID. So, the Job Master does not assign a new ID to them. It uses their IDs.
+The second option for the worker ID assignment is that the underlying Twister2 implementation may assign unique IDs for the workers. 
+In this case, when workers register with the Job Master, they already have a valid unique ID. 
+So, the Job Master does not assign a new ID to them. It uses their IDs.
 
 Worker ID assignment method is controlled by a configuration parameter. The configuration parameter name is:
 

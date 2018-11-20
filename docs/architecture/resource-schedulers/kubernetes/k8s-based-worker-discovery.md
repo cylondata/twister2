@@ -7,6 +7,7 @@ We developed a worker controller that watches the pods in Kubernetes clusters by
 * Getting the IP addresses after the worker pods started running
 
 This class does not implement the barriers for workers.
+This class does not support NodeInfo and ComputeResource discovery. 
 
 The worker discoverer class is:
 
@@ -14,7 +15,7 @@ The worker discoverer class is:
 
 It implements interface:
 
-* [edu.iu.dsc.tws.common.discovery.IWorkerController](https://github.com/DSC-SPIDAL/twister2/tree/d9edff9bac47239db44731064aa5e2ac98867d97/docs/documentation/twister2/common/src/java/edu/iu/dsc/tws/common/discovery/IWorkerController.java)
+* [edu.iu.dsc.tws.common.controller.IWorkerController](https://github.com/DSC-SPIDAL/twister2/tree/d9edff9bac47239db44731064aa5e2ac98867d97/docs/documentation/twister2/common/src/java/edu/iu/dsc/tws/common/discovery/IWorkerController.java)
 
 ## Unique ID Assignment to Workers
 

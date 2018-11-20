@@ -1,4 +1,4 @@
-# ZK Based Job Master Discovery
+# ZooKeeper Based Job Master Discovery
 
 When a Twister2 job is submitted, a Job Master is created in addition to workers. Workers need to know the Job Master IP address and the port number to be able to connect to it. Some resource schedulers such as Kubernetes provides some means for workers to discover the Job Master. However, there might be resource schedulers that do not provide such discovery mechanisms such as Nomad scheduler. In that case, ZooKeeper server can be used to discover the Job Master address.
 

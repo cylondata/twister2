@@ -4,33 +4,42 @@ First, you can install Kubernetes project to a machine on your cluster or your p
 
 To compile & install Twister2 on a machine, please follow the steps in [compiling document](../compiling.md). You may also check [developer document](../../developers/developer-environment.md) for setting up IDEs.
 
-Here are the things that you need to do to run Twister2 jobs on Kubernetes clusters.
+Here are the things that you need to do to run Twister2 jobs on Kubernetes clusters:
+* **Authorization of Pods**: This is a required step to run any Twister2 job on Kubernetes clusters. 
+* **Persistent Storage Settings**: This is optional. You can set up persistent storage only if you want to use. 
+* **Generating Secret Object for OpenMPI Jobs**: This is required if you are going to run OpenMPI jobs. 
+* **Providing Rack and Datacenter information**: This is required only if you want Twister2 to perform rack and data center aware scheduling. 
+* **Job Package Uploader Settings**: This is required only if you want to upload the job package through a web server. 
 
 ## Authorization of Pods
 
-Twister2 Worker pods need to get the IP address of the Job Master. In addition, Job Master needs to be able to delete used resources after the job has completed. Therefore, before submitting a job, a Role and a RoleBinding object need to be created. We prepared the following YAML file: twister2-auth.yaml.
+Twister2 Worker pods need to watch Job Master pod and get its IP address. In addition, Job Master needs to be able to delete used resources after the job has completed. Therefore, before submitting a job, a Role and a RoleBinding object need to be created. We prepared the following YAML file: twister2-auth.yaml.
 
-First modify the namespace field in the twister2-auth.yaml. Change the value of this field to a namespace value, that users will use to submit Twister2 jobs. Then execute the following command:
+If you are going to use the default namespace, then execute the following command: 
 
 ```bash
     $kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/docs/deployment/kubernetes/twister2-auth.yaml
 ```
 
+If you are not going to use the default namespace, download the above yaml file, change the namespace field value to a namespace value that your users will use to submit Twister2 jobs. Then, execute the following command:
+
+```bash
+    $kubectl create -f /path/to/file/twister2-auth.yaml
+```
+
 ## Persistent Storage Settings
 
-Twister2 expects that either a Persistent Storage Provisioner or statically configured PersistentVolume exists in the cluster. Persistent storage class needs to be specified in the client.yaml configuration file. Configuration parameter is:
+To enable persistent storage in Twister2, either a Persistent Storage Provisioner or statically configured PersistentVolume must exist in the cluster. Persistent storage class needs to be specified in the client.yaml configuration file. Configuration parameter is:
 
 ```bash
     kubernetes.persistent.storage.class
 ```
 
-We used the default storage value as "twister2-nfs-storage". Please set your persistent storage class name in your provisioner and in the client.yaml config file.
+We used the default storage class value as "twister2-nfs-storage". Please set your persistent storage class name in your provisioner and in the client.yaml config file.
 
 We tested with NFS-Client provisioner from: [https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client)
 
 NFS-Client provisioner is used if you already have an NFS server. Otherwise you may use the NFS provisioner that does not require to have an NFS server: [https://github.com/kubernetes-incubator/external-storage/tree/master/nfs](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs)
-
-Before proceeding with Twister2, make sure you either setup a static PersistentVolume or deployed a persistent storage provisioner.
 
 ## Generating Secret Object for OpenMPI Jobs
 
@@ -42,7 +51,7 @@ First, generate an SSH key pair by using:
     $ssh-keygen
 ```
 
-Second, create a Kubernetes Secret object for the namespace of Twister2 users:
+Second, create a Kubernetes Secret object for the namespace of Twister2 users with the already generated key pairs. Execute the following command by specifying generated key files. Last parameter is the namespace. If you are using a namespace other than default, please change that. 
 
 ```bash
     $kubectl create secret generic twister2-openmpi-ssh-key --from-file=id_rsa=/path/to/.ssh/id_rsa --from-file=id_rsa.pub=/path/to/.ssh/id_rsa.pub --from-file=authorized_keys=/path/to/.ssh/id_rsa.pub --namespace=default
@@ -60,7 +69,7 @@ You can retrieve the created Secret object in YAML form by executing the followi
     $kubectl get secret <secret-name> -o=yaml
 ```
 
-Another possibility for deploying the Secret object is to use the [YAML file template](https://github.com/DSC-SPIDAL/twister2/tree/88f9af0614b72b52c7544f9071b2b0e3e422b76d/docs/documentation/architecture/resource-schedulers/kubernetes/yaml-templates/secret.yaml). You can edit that secret.yaml file. You can put the public and private keys to the corresponding fields. You can set the name and the namespace values. Then, you can create the Secret object by using kubectl method as:
+Another possibility for deploying the Secret object is to use the [YAML file template](https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/docs/architecture/resource-schedulers/kubernetes/yaml-templates/secret.yaml). You can edit that secret.yaml file. You can put the public and private keys to the corresponding fields. You can set the name and the namespace values. Then, you can create the Secret object by using kubectl method as:
 
 ```bash
     $kubectl create secret -f /path/to/file/secret.yaml
@@ -68,7 +77,7 @@ Another possibility for deploying the Secret object is to use the [YAML file tem
 
 ## Providing Rack and Datacenter information to Twister2
 
-Twister2 can use rack names and data center names of the nodes when scheduling tasks. There are two ways administrators and user can provide this information.
+Twister2 can use rack names and data center names of the nodes when scheduling tasks. There are two ways administrators and users can provide this information.
 
 **Through Configuration Files**:  
 Users can provide the IP addresses of nodes in racks in their clusters. In addition, they can provide the list of data centers with rack data in them.
@@ -87,8 +96,14 @@ Here is an example configuration:
     - rack02: ['node61.ip', 'node62.ip', 'node63.ip']
 ```
 
+Put these lists to client.yaml file. Then, assign the following configuration parameter in client.yaml as true: 
+
+```bash
+    kubernetes.node.locations.from.config
+```
+
 **Labelling Nodes With Rack and Data Center Information**:  
-Administrators can label their nodes in the cluster for their rack and datacenter information. Each node in the cluster must be labelled once. When the user submits a Twister2 job, submitting client first queries Kubernetes master for the labels of nodes. It provides this list to all workers in the job.
+Administrators can label their nodes in the cluster for their rack and datacenter information. Each node in the cluster must be labelled once. When users submit a Twister2 job, submitting client first queries Kubernetes master for the labels of nodes. It provides this list to all workers in the job.
 
 **Note**: For this solution to work, job submitting users must have admin privileges.
 
@@ -101,42 +116,48 @@ Administrators can label their nodes in the cluster for their rack and datacente
 Then, used rack and data center labels must be provided in the configuration files. These configuration parameters are:
 
 ```bash
-    kubernetes.rack.labey.key
-    kubernetes.datacenter.labey.key
+    rack.labey.key
+    datacenter.labey.key
 ```
 
-**Access Method**: Users must specify which method they use to provide rack and datacenter data. They need to set the value of the configuration parameter:
+To get the rack and datacenter information from Kubernetes master using labels, the value of the following configuration parameter has to be specified as false in client.yaml file: 
 
 ```bash
     kubernetes.node.locations.from.config
 ```
 
-If the value of this parameter is true, Twister2 will try to get the rack and data center labels from the configuration files. Otherwise, it will try to get it from the Kubernetes master.
-
 ## Job Package Uploader Settings
 
-When users submit a job to Kubernetes master, they first need to transfer the job package to workers. Submitting client packs all job related files into a tar file. This archive files needs to be transferred to each worker that will be started.
+When users submit a Twister2 job in Kubernetes cluster, submitting client program need to transfer the job package to workers. Submitting client first packs all job related files into a tar file. This archive files needs to be transferred to each worker that will be started.
 
 We provide [two methods](../../architecture/resource-schedulers/kubernetes/twister2-on-kubernetes.md):
 
-* Job Package Transfer Through a Web Server
 * Job Package Transfer Using kubectl file copy
+* Job Package Transfer Through a Web Server
 
-First method transfers the job package to a web server running in the cluster. Workers download the job package from this web server. Second method transfers the job package from client to workers directly by using kubectl copy method.
-
-First, the uploder transfer type has to be selected by specifying the configuration parameter:
+By default, we use the first method to transfer the job package. This method does not require any installations. It transfers the job package from client to workers directly by using kubectl copy method.
+Just make sure that the value of following configuration parameter in uploader.yaml file is true: 
 
 ```bash
-   twister2.kubernetes.uploading.method
+   twister2.kubernetes.client.to.pods.uploading
 ```
 
-The value of this parameter has to be either: "webserver" or "client-to-pods" By default, it is "client-to-pods". If you use the default setting, it does not require any other settings.
+Second method transfers the job package once to a web server running in the cluster. Workers download the job package from this web server. 
+This method is more efficient since it transfers the job package only once from client machine to a web server. 
+If the submitting clients are running on the cluster machines, this may not be important. 
+However, if the submitting clients are running on machines outside the cluster with limited bandwidth, then this can be important.
 
-For the transfer through a web server to work, a web server must exist in the cluster and submitting client must have write permission to that directory. Then, you need to specify the web server directory and address information the [configuration file](https://github.com/DSC-SPIDAL/twister2/tree/88f9af0614b72b52c7544f9071b2b0e3e422b76d/twister2/config/src/yaml/conf/kubernetes/uploader.yaml):
+First, the client to pods uploading parameter has to be disabled by assigning false in uploader.yaml file:
+
+```bash
+   twister2.kubernetes.client.to.pods.uploading
+```
+
+For the transfer through a web server to work, a web server must exist in the cluster and submitting client must have write permission to that directory. 
+Then, you need to specify the web server directory and address information for the following configuration parameters in uploader.yaml file: 
 
 ```bash
    twister2.uploader.scp.command.connection: user@host
    twister2.uploader.directory: "/path/to/web-server/directory/"
    twister2.download.directory: "http://host:port/web-server-directory"
 ```
-
