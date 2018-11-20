@@ -13,8 +13,8 @@ package edu.iu.dsc.tws.data;
 
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.InputFormat;
-import edu.iu.dsc.tws.data.api.formatters.TextInputFormatter;
+import edu.iu.dsc.tws.data.api.InputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
@@ -31,7 +31,7 @@ public class TestLocalFileSystem {
     Config txtFileConf = builder.build();
     Path path = new Path("/home/pulasthi/git/twister2/twister2/data/src/test/resources"
         + "/TextInputFormatTestFile.text");
-    InputFormat txtInput = new TextInputFormatter(path);
+    InputPartitioner txtInput = new SharedTextInputPartitioner(path);
     txtInput.configure(txtFileConf);
     int minSplits = 8;
 
@@ -39,14 +39,12 @@ public class TestLocalFileSystem {
       InputSplit[] inputSplits = txtInput.createInputSplits(minSplits);
       InputSplitAssigner inputSplitAssigner = txtInput.getInputSplitAssigner(inputSplits);
       InputSplit cur = inputSplitAssigner.getNextInputSplit(null, 0);
-      txtInput.open(cur);
+      cur.open();
       String line = "";
-      line = (String) txtInput.nextRecord(line);
+      line = (String) cur.nextRecord(line);
       System.out.println(line);
     } catch (Exception e) {
       e.printStackTrace();
     }
-
   }
-
 }

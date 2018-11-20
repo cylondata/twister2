@@ -78,24 +78,12 @@ public class JobParameters {
     return taskStages;
   }
 
-  public int getGap() {
-    return gap;
-  }
-
   public void setFileName(String fileName) {
     this.fileName = fileName;
   }
 
   public String getFileName() {
     return fileName;
-  }
-
-  public int getOutstanding() {
-    return outstanding;
-  }
-
-  public void setOutstanding(int outstanding) {
-    this.outstanding = outstanding;
   }
 
   public void setThreads(boolean threads) {
@@ -112,10 +100,6 @@ public class JobParameters {
 
   public String getDataType() {
     return dataType;
-  }
-
-  public int getInitIterations() {
-    return initIterations;
   }
 
   public boolean isDoVerify() {

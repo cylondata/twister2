@@ -11,13 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api;
 
-import java.io.IOException;
-import java.io.Serializable;
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
-import edu.iu.dsc.tws.data.fs.io.InputSplitter;
 
 /**
  * The base interface for data sources that produces records.
@@ -56,7 +52,7 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitter;
  * @see InputSplit
  * //@see BaseStatistics
  */
-public interface InputFormat<OT, T extends InputSplit> extends InputSplitter<T>, Serializable {
+public interface InputPartitioner<OT, T extends InputSplit<OT>> {
 
   /**
    * Configures this input format. Since input formats are instantiated generically
@@ -70,51 +66,18 @@ public interface InputFormat<OT, T extends InputSplit> extends InputSplitter<T>,
    */
   void configure(Config parameters);
 
-  @Override
+  /**
+   * Create the input splits
+   * @param minNumSplits Number of minimal input splits, as a hint.
+   * @return set of input splits
+   * @throws Exception if an error occurred
+   */
   T[] createInputSplits(int minNumSplits) throws Exception;
 
-  @Override
+  /**
+   * Return the input split asigner
+   * @param inputSplits the input splits to be assigned
+   * @return assigner
+   */
   InputSplitAssigner getInputSplitAssigner(T[] inputSplits);
-
-  /**
-   * Opens a parallel instance of the input format to work on a split.
-   * <p>
-   * When this method is called, the input format it guaranteed to be configured.
-   *
-   * @param split The split to be opened.
-   * @throws IOException Thrown, if the spit could not be opened due to an I/O problem.
-   */
-  void open(T split) throws IOException;
-
-  /**
-   * Method used to check if the end of the input is reached.
-   * <p>
-   * When this method is called, the input format it guaranteed to be opened.
-   *
-   * @return True if the end is reached, otherwise false.
-   * @throws IOException Thrown, if an I/O error occurred.
-   */
-  boolean reachedEnd() throws IOException;
-
-  /**
-   * Reads the next record from the input.
-   * <p>
-   * When this method is called, the input format it guaranteed to be opened.
-   *
-   * @param reuse Object that may be reused.
-   * @return Read record.
-   * @throws IOException Thrown, if an I/O error occurred.
-   */
-  OT nextRecord(OT reuse) throws IOException;
-
-  /**
-   * Method that marks the end of the life-cycle of an input split. Should be used to
-   * close channels and streams and release resources. After this method returns without an error,
-   * the input is assumed to be correctly read.
-   * <p>
-   * When this method is called, the input format it guaranteed to be opened.
-   *
-   * @throws IOException Thrown, if the input could not be closed properly.
-   */
-  void close() throws IOException;
 }

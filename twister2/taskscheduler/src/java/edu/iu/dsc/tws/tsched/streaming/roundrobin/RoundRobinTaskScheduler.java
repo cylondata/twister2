@@ -183,7 +183,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
     try {
       Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
       int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
-      if (numberOfContainers < totalTaskInstances) {
+      if (numberOfContainers <= totalTaskInstances) {
         int globalTaskIndex = 0;
         for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
           String task = e.getKey();

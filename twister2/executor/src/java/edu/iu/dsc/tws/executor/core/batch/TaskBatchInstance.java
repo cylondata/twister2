@@ -150,11 +150,11 @@ public class TaskBatchInstance implements INodeInstance {
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
   }
 
-  public void prepare() {
+  public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
     taskContext = new TaskContext(taskIndex, taskId, taskName, parallelism, workerId,
         outputCollection, nodeConfigs);
-    task.prepare(config, taskContext);
+    task.prepare(cfg, taskContext);
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {

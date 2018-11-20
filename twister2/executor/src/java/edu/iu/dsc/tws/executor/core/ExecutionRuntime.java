@@ -13,15 +13,43 @@ package edu.iu.dsc.tws.executor.core;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
+import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.dataset.DataSource;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class Runtime {
-
-  public static final String RUNTIME = "twister2.runtime";
-
+/**
+ * Captures the runtime information about the system.
+ */
+public class ExecutionRuntime {
+  /**
+   * Name of the job
+   */
   private String jobName;
 
+  /**
+   * The job directory
+   */
   private Path parentpath;
+
+  /**
+   * Execution plan
+   */
+  private ExecutionPlan plan;
+
+  /**
+   * The communication channel
+   */
+  private TWSChannel channel;
+
+  public ExecutionRuntime(String jName, ExecutionPlan execPlan, TWSChannel ch) {
+    this.jobName = jName;
+    this.plan = execPlan;
+    this.channel = ch;
+  }
 
   public String getJobName() {
     return jobName;
@@ -33,7 +61,14 @@ public class Runtime {
 
   public void setJobName(Config config) {
     this.setJobName(config.getStringValue(Context.JOB_NAME));
+  }
 
+  public TWSChannel getChannel() {
+    return channel;
+  }
+
+  public ExecutionPlan getPlan() {
+    return plan;
   }
 
   public Path getParentpath() {
@@ -44,13 +79,9 @@ public class Runtime {
     this.parentpath = parentpath;
   }
 
-  //this method creates the new configuration with runtime object
-  public Config updateConfig(Config config) {
-    this.setJobName(config);
-    Config updatedConfig = Config.newBuilder()
-        .putAll(config)
-        .put(RUNTIME, this)
-        .build();
-    return updatedConfig;
+  public <T, O extends InputSplit<T>> DataSource<T, O> createInput(
+      Config cfg, TaskContext context, InputPartitioner<T, O> input) {
+
+    return new DataSource<T, O>(cfg, input, context.getParallelism());
   }
 }

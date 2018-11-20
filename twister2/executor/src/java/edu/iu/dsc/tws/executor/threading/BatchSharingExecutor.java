@@ -48,7 +48,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
     // prepare the tasks
     for (INodeInstance node : tasks) {
-      node.prepare();
+      node.prepare(config);
     }
 
     for (int i = 0; i < curTaskSize; i++) {

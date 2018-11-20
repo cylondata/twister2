@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data.fs.io;
+package edu.iu.dsc.tws.data.api.assigner;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -19,6 +19,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.data.api.splits.LocatableInputSplit;
+import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.data.utils.NetUtils;
 
 /**
@@ -43,8 +45,6 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
 
   private int remoteAssignments;    // lock protected by the unassigned set lock
 
-  // --------------------------------------------------------------------------------------------
-
   public LocatableInputSplitAssigner(Collection<LocatableInputSplit> splits) {
     for (LocatableInputSplit split : splits) {
       this.unassigned.add(new LocatableInputSplitWithCount(split));
@@ -59,11 +59,8 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
     this.remoteSplitChooser = new LocatableInputSplitChooser(unassigned);
   }
 
-  // --------------------------------------------------------------------------------------------
-
   @Override
   public LocatableInputSplit getNextInputSplit(String host, int taskId) {
-
     // for a null host, we return a remote split
     if (host == null) {
       synchronized (this.remoteSplitChooser) {

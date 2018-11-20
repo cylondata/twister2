@@ -9,21 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data.api.formatters;
+package edu.iu.dsc.tws.data.api.splits;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.Path;
 
-public class TextInputFormatter extends DelimitedInputFormat<String> {
-
-  private static final Logger LOG = Logger.getLogger(TextInputFormatter.class.getName());
-
-  private static final long serialVersionUID = 1L;
-
+public class TextInputSplit extends DelimitedInputSplit<String> {
   /**
    * Code of \r, used to remove \r from a line when the line ends with \r\n.
    */
@@ -34,8 +28,17 @@ public class TextInputFormatter extends DelimitedInputFormat<String> {
    */
   private static final byte NEW_LINE = (byte) '\n';
 
-  public TextInputFormatter(Path filePath) {
-    super(filePath, null);
+  /**
+   * Constructs a split with host information.
+   *
+   * @param num the number of this input split
+   * @param file the file name
+   * @param start the position of the first byte in the file to process
+   * @param length the number of bytes in the file to process (-1 is flag for "read whole file")
+   * @param hosts the list of hosts containing the block, possibly <code>null</code>
+   */
+  public TextInputSplit(int num, Path file, long start, long length, String[] hosts) {
+    super(num, file, start, length, hosts);
   }
 
   @Override
@@ -77,6 +80,6 @@ public class TextInputFormatter extends DelimitedInputFormat<String> {
       curNumBytes -= 1;
     }
 
-    return new String(bytes, readOffset, numBytes, this.charsetName);
+    return new String(bytes, readOffset, curNumBytes, this.charsetName);
   }
 }

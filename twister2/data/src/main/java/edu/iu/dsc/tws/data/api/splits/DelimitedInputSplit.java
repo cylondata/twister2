@@ -9,25 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data.api.formatters;
+package edu.iu.dsc.tws.data.api.splits;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.fs.FileInputSplit;
+import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 
-/**
- * Base class for inputs that are delimited
- */
-public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
-
-  private static final long serialVersionUID = 1L;
-
-  private static final Logger LOG = Logger.getLogger(DelimitedInputFormat.class.getName());
+public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
 
   // The charset used to convert strings to bytes
   private String charsetName = "UTF-8";
@@ -41,11 +33,6 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
   private static final int DEFAULT_READ_BUFFER_SIZE = 1024 * 1024;
 
   /**
-   * The maximum size of a sample record before sampling is aborted. To catch
-   * cases where a wrong delimiter is given.
-   */
-
-  /**
    * The configuration key to set the record delimiter.
    */
   protected static final String RECORD_DELIMITER = "delimited-format.delimiter";
@@ -57,11 +44,6 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
   private int lineLengthLimit = Integer.MAX_VALUE;
 
   private int bufferSize = -1;
-
-  // --------------------------------------------------------------------------------------------
-  //  Variables for internal parsing.
-  //  They are all transient, because we do not want them so be serialized
-  // --------------------------------------------------------------------------------------------
 
   private transient byte[] readBuffer;
 
@@ -81,17 +63,17 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
 
   private long offset = -1;
 
-
-  public DelimitedInputFormat() {
-    this(null, null);
-  }
-
-  protected DelimitedInputFormat(Path filePath, Config configuration) {
-    super(filePath);
-    if (configuration == null) {
-      //TODO L2: Need to create global config
-      //configuration = GlobalConfiguration.loadConfiguration();
-    }
+  /**
+   * Constructs a split with host information.
+   *
+   * @param num the number of this input split
+   * @param file the file name
+   * @param start the position of the first byte in the file to process
+   * @param length the number of bytes in the file to process (-1 is flag for "read whole file")
+   * @param hosts the list of hosts containing the block, possibly <code>null</code>
+   */
+  public DelimitedInputSplit(int num, Path file, long start, long length, String[] hosts) {
+    super(num, file, start, length, hosts);
   }
 
   public byte[] getDelimiter() {
@@ -158,6 +140,51 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
   }
 
   /**
+   * Configures this input format by reading the path to the file from the
+   * configuration and the string that
+   * defines the record delimiter.
+   *
+   * @param parameters The configuration object to read the parameters from.
+   */
+  @Override
+  public void configure(Config parameters) {
+    super.configure(parameters);
+
+    // the if() clauses are to prevent the configure() method from
+    // overwriting the values set by the setters
+    if (Arrays.equals(delimiter, new byte[]{'\n'})) {
+      String delimString = parameters.getStringValue(RECORD_DELIMITER, null);
+      if (delimString != null) {
+        setDelimiterString(delimString);
+      }
+    }
+  }
+
+  /**
+   * Opens the given input split. This method opens the input stream to the specified file,
+   * allocates read buffers
+   * and positions the stream at the correct position, making sure that any partial
+   * record at the beginning is skipped.
+   */
+  public void open() throws IOException {
+    super.open();
+    initBuffers();
+
+    this.offset = splitStart;
+    if (this.splitStart != 0) {
+      this.stream.seek(offset);
+      readLine();
+      // if the first partial record already pushes the stream over
+      // the limit of our split, then no record starts within this split
+      if (this.overLimit) {
+        this.end = true;
+      }
+    } else {
+      fillBuffer(0);
+    }
+  }
+
+  /**
    * This function parses the given byte array which represents a serialized record.
    * The function returns a valid record or throws an IOException.
    *
@@ -178,59 +205,6 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
     } else {
       this.end = true;
       return null;
-    }
-  }
-
-  // --------------------------------------------------------------------------------------------
-  //  Pre-flight: Configuration, Splits, Sampling
-  // --------------------------------------------------------------------------------------------
-
-  /**
-   * Configures this input format by reading the path to the file from the
-   * configuration and the string that
-   * defines the record delimiter.
-   *
-   * @param parameters The configuration object to read the parameters from.
-   */
-  @Override
-  public void configure(Config parameters) {
-    super.configure(parameters);
-
-    // the if() clauses are to prevent the configure() method from
-    // overwriting the values set by the setters
-
-    if (Arrays.equals(delimiter, new byte[]{'\n'})) {
-      String delimString = parameters.getStringValue(RECORD_DELIMITER, null);
-      if (delimString != null) {
-        setDelimiterString(delimString);
-      }
-    }
-
-  }
-
-  /**
-   * Opens the given input split. This method opens the input stream to the specified file,
-   * allocates read buffers
-   * and positions the stream at the correct position, making sure that any partial
-   * record at the beginning is skipped.
-   *
-   * @param split The input split to open.
-   */
-  public void open(FileInputSplit split) throws IOException {
-    super.open(split);
-    initBuffers();
-
-    this.offset = splitStart;
-    if (this.splitStart != 0) {
-      this.stream.seek(offset);
-      readLine();
-      // if the first partial record already pushes the stream over
-      // the limit of our split, then no record starts within this split
-      if (this.overLimit) {
-        this.end = true;
-      }
-    } else {
-      fillBuffer(0);
     }
   }
 
@@ -260,7 +234,7 @@ public abstract class DelimitedInputFormat<OT> extends FileInputFormat<OT> {
   private boolean fillBuffer(int fillOffset) throws IOException {
     int maxReadLength = this.readBuffer.length - fillOffset;
     // special case for reading the whole split.
-    if (this.splitLength == FileInputFormat.READ_WHOLE_SPLIT_FLAG) {
+    if (this.splitLength == FileInputPartitioner.READ_WHOLE_SPLIT_FLAG) {
       int read = this.stream.read(this.readBuffer, fillOffset, maxReadLength);
       if (read == -1) {
         this.stream.close();

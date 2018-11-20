@@ -9,29 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api;
+package edu.iu.dsc.tws.data.api;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public abstract class SourceTask implements ISource {
-  private static final long serialVersionUID = -254264120110286748L;
-  private TaskContext context;
-  private Config config;
+/**
+ * Output writer to write a output
+ */
+public interface OutputWriter<T> {
+  /**
+   * Configure the output writer
+   *
+   * @param config configuration
+   */
+  void configure(Config config);
 
+  /**
+   * Add value to output
+   */
+  void write(int partition, T out);
 
-  @Override
-  public void execute() {
-
-  }
-
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    this.config = cfg;
-    this.context = ctx;
-  }
-
-  public TaskContext getContext() {
-    return this.context;
-  }
-
+  /**
+   * Close the writer, flush everything
+   */
+  void close();
 }

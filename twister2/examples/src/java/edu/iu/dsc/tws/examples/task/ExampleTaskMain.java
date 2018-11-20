@@ -64,7 +64,8 @@ public class ExampleTaskMain {
     options.addOption(Constants.ARGS_ITR, true, "Iteration");
     options.addOption(Utils.createOption(Constants.ARGS_OPERATION, true, "Operation", true));
     options.addOption(Constants.ARGS_STREAM, false, "Stream");
-    options.addOption(Utils.createOption(Constants.ARGS_TASK_STAGES, true, "Throughput mode", true));
+    options.addOption(Utils.createOption(Constants.ARGS_TASK_STAGES, true,
+        "Number of parallel instances of tasks", true));
     options.addOption(Utils.createOption(Constants.ARGS_GAP, true, "Gap", false));
     options.addOption(Utils.createOption(Constants.ARGS_FNAME, true, "File name", false));
     options.addOption(Utils.createOption(Constants.ARGS_OUTSTANDING, true, "Throughput no of messages", false));
@@ -136,7 +137,6 @@ public class ExampleTaskMain {
     jobConfig.put(Constants.ARGS_STREAM, stream);
 
     // build the job
-    Twister2Job twister2Job;
     if (!stream) {
       switch (operation) {
         case "reduce":
