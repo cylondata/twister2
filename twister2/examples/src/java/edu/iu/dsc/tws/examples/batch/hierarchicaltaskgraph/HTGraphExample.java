@@ -27,10 +27,11 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.HierarchicalTaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.api.task.htg.HTGComputeConnection;
+import edu.iu.dsc.tws.api.task.htg.HierarchicalTaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
@@ -42,8 +43,8 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.HierarchicalTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.graph.htgraph.HierarchicalTaskGraph;
 import edu.iu.dsc.tws.tsched.utils.HierarchicalTaskGraphParser;
 
 public class HTGraphExample extends TaskWorker {
@@ -79,23 +80,28 @@ public class HTGraphExample extends TaskWorker {
     graphBuilderY.setMode(OperationMode.BATCH);
     DataFlowTaskGraph streamingGraph = graphBuilderY.build();
 
-    LOG.fine("Batch Graph:" + batchGraph.getTaskVertexSet() + "\t"
-        + batchGraph.getTaskVertexSet().size() + "\t"
-        + "Streaming Graph:" + streamingGraph.getTaskVertexSet() + "\t"
-        + streamingGraph.getTaskVertexSet().size());
-
     HierarchicalTaskGraphBuilder hierarchicalTaskGraphBuilder =
         HierarchicalTaskGraphBuilder.newBuilder(config);
     hierarchicalTaskGraphBuilder.addSourceTaskGraph("sourcetaskgraph", batchGraph);
-    ComputeConnection computeConnection = hierarchicalTaskGraphBuilder.addSinkTaskGraph(
-        "sinktaskgraph", streamingGraph);
-    computeConnection.broadcast("sourcetaskgraph");
+    HTGComputeConnection htgComputeConnection = hierarchicalTaskGraphBuilder.addSinkTaskGraph(
+        "sinktaskgraph", streamingGraph, "source2");
+    htgComputeConnection.partition("sourcetaskgraph", "sink1");
     hierarchicalTaskGraphBuilder.setMode(OperationMode.BATCH);
 
     HierarchicalTaskGraph hierarchicalTaskGraph =
         hierarchicalTaskGraphBuilder.buildHierarchicalTaskGraph();
 
-    //To Print the hierachical dataflow task graph and its vertex names.
+    LOG.fine("Batch Task Graph:" + batchGraph.getTaskVertexSet() + "\t"
+        + batchGraph.getTaskVertexSet().size() + "\t"
+        + "Streaming Task Graph:" + streamingGraph.getTaskVertexSet() + "\t"
+        + streamingGraph.getTaskVertexSet().size());
+
+    LOG.info("Edge:" + hierarchicalTaskGraph.getAllTaskGraphEdges(
+        batchGraph, streamingGraph).iterator().next().getOperation()
+        + "\t" + hierarchicalTaskGraph.getAllTaskGraphEdges(
+        batchGraph, streamingGraph).iterator().next().getName());
+
+    //To print the hierarchical dataflow task graph and its vertex names.
     LOG.info("Parent Task Graph:" + hierarchicalTaskGraph.parentsOfTaskGraph(streamingGraph)
         + "\t" + hierarchicalTaskGraph.parentsOfTaskGraph(
         streamingGraph).iterator().next().getTaskGraphName());
@@ -106,9 +112,8 @@ public class HTGraphExample extends TaskWorker {
     List<DataFlowTaskGraph> dataFlowTaskGraphList =
         hierarchicalTaskGraphParser.hierarchicalTaskGraphParse();
 
-    //TODO:Invoke HTG Scheduler and send the list
-
     //TODO:Invoke Executor
+
   }//End of execute method
 
   private class HTGSourceTask extends BaseBatchSource implements Receptor {
@@ -189,6 +194,11 @@ public class HTGraphExample extends TaskWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
+    //TODO:Design the meta graph
+
+    //TODO:Invoke HTG Scheduler and send the list
+
+    //TODO:The bottom lines of code should be replaced with HTG Job Builder
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("HTGraph");
     jobBuilder.setWorkerClass(HTGraphExample.class.getName());

@@ -18,8 +18,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.HierarchicalTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.task.graph.htgraph.HierarchicalTaskGraph;
 
 public class HierarchicalTaskGraphParser {
 
@@ -61,7 +61,7 @@ public class HierarchicalTaskGraphParser {
 
     for (int i = 0; i < taskgraphList.size(); i++) {
       DataFlowTaskGraph dataFlowTaskGraph = taskgraphList.get(i);
-      LOG.info("Dataflow Task Graph and Type:" + dataFlowTaskGraph + "\t"
+      LOG.fine("Dataflow Task Graph and Type:" + dataFlowTaskGraph + "\t"
           + dataFlowTaskGraph.getOperationMode());
     }
 
