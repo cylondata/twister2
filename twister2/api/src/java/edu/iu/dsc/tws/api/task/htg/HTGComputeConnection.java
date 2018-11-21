@@ -9,13 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
+package edu.iu.dsc.tws.api.task.htg;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.task.TaskConfigurations;
 import edu.iu.dsc.tws.api.task.function.ReduceFn;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -23,18 +24,18 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
-import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.task.graph.htgraph.HierarchicalTaskGraph;
 
-/**
- * Represents a compute connection.
- */
-public class ComputeConnection {
-  private static final Logger LOG = Logger.getLogger(ComputeConnection.class.getName());
+public class HTGComputeConnection {
+
+  private static final Logger LOG = Logger.getLogger(HTGComputeConnection.class.getName());
 
   /**
    * Name of the node, that is trying to connect to other nodes in the graph
    */
   private String nodeName;
+
+  private String taskName;
 
   /**
    * The inputs created through this connection
@@ -42,12 +43,17 @@ public class ComputeConnection {
   private Map<String, Edge> inputs = new HashMap<>();
 
   /**
-   * Create a compute connection
+   * Create a connection
    *
    * @param nodeName the name of the node
    */
-  ComputeConnection(String nodeName) {
+  HTGComputeConnection(String nodeName) {
     this.nodeName = nodeName;
+  }
+
+  HTGComputeConnection(String nodeName, String taskname) {
+    this.nodeName = nodeName;
+    this.taskName = taskname;
   }
 
   /**
@@ -56,7 +62,7 @@ public class ComputeConnection {
    * @param parent the parent to connection
    * @return the ComputeConnection
    */
-  public ComputeConnection broadcast(String parent) {
+  public HTGComputeConnection broadcast(String parent) {
     Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.BROADCAST);
     inputs.put(parent, edge);
 
@@ -70,7 +76,7 @@ public class ComputeConnection {
    * @param name name of the edge
    * @return the ComputeConnection
    */
-  public ComputeConnection broadcast(String parent, String name) {
+  public HTGComputeConnection broadcast(String parent, String name) {
     Edge edge = new Edge(name, OperationNames.BROADCAST);
     inputs.put(parent, edge);
 
@@ -84,7 +90,7 @@ public class ComputeConnection {
    * @param function the reduce function
    * @return the ComputeConnection
    */
-  public ComputeConnection reduce(String parent, IFunction function) {
+  public HTGComputeConnection reduce(String parent, IFunction function) {
     Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.REDUCE, function);
     inputs.put(parent, edge);
 
@@ -99,7 +105,7 @@ public class ComputeConnection {
    * @param dataType the data type
    * @return the ComputeConnection
    */
-  public ComputeConnection reduce(String parent, Op op, DataType dataType) {
+  public HTGComputeConnection reduce(String parent, Op op, DataType dataType) {
     if (!isPrimitiveType(dataType)) {
       LOG.log(Level.SEVERE, "Reduce operations are only applicable to primitive types");
     }
@@ -119,7 +125,7 @@ public class ComputeConnection {
    * @param dataType the data type
    * @return the ComputeConnection
    */
-  public ComputeConnection reduce(String parent, IFunction function, DataType dataType) {
+  public HTGComputeConnection reduce(String parent, IFunction function, DataType dataType) {
     Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE,
         OperationNames.REDUCE, dataType, function);
     inputs.put(parent, edge);
@@ -135,7 +141,7 @@ public class ComputeConnection {
    * @param function the reduce function
    * @return the ComputeConnection
    */
-  public ComputeConnection reduce(String parent, String name, IFunction function) {
+  public HTGComputeConnection reduce(String parent, String name, IFunction function) {
     Edge edge = new Edge(name, OperationNames.REDUCE, DataType.OBJECT, function);
     inputs.put(parent, edge);
 
@@ -151,7 +157,7 @@ public class ComputeConnection {
    * @param dataType the data type
    * @return the ComputeConnection
    */
-  public ComputeConnection reduce(String parent, String name, Op op, DataType dataType) {
+  public HTGComputeConnection reduce(String parent, String name, Op op, DataType dataType) {
     if (!isPrimitiveType(dataType)) {
       LOG.log(Level.SEVERE, "Reduce operations are only applicable to primitive types");
     }
@@ -172,8 +178,8 @@ public class ComputeConnection {
    * @param dataType the data type
    * @return the ComputeConnection
    */
-  public ComputeConnection reduce(String parent, String name,
-                                  IFunction function, DataType dataType) {
+  public HTGComputeConnection reduce(String parent, String name,
+                                     IFunction function, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.REDUCE, dataType, function);
     inputs.put(parent, edge);
 
@@ -190,16 +196,16 @@ public class ComputeConnection {
    * @param dataType the data type
    * @return the ComputeConnection
    */
-  public ComputeConnection keyedReduce(String parent, String name,
-                                       IFunction function, DataType keyTpe, DataType dataType) {
+  public HTGComputeConnection keyedReduce(String parent, String name,
+                                          IFunction function, DataType keyTpe, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe, function);
     inputs.put(parent, edge);
 
     return this;
   }
 
-  public ComputeConnection keyedReduce(String parent, String name,
-                                       Op op, DataType keyTpe, DataType dataType) {
+  public HTGComputeConnection keyedReduce(String parent, String name,
+                                          Op op, DataType keyTpe, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
         new ReduceFn(op, dataType));
     inputs.put(parent, edge);
@@ -213,7 +219,7 @@ public class ComputeConnection {
    * @param parent the parent to connection
    * @return the ComputeConnection
    */
-  public ComputeConnection gather(String parent) {
+  public HTGComputeConnection gather(String parent) {
     Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.GATHER,
         DataType.OBJECT, DataType.OBJECT);
     inputs.put(parent, edge);
@@ -228,7 +234,7 @@ public class ComputeConnection {
    * @param dataType the data type
    * @return the ComputeConnection
    */
-  public ComputeConnection gather(String parent, DataType dataType) {
+  public HTGComputeConnection gather(String parent, DataType dataType) {
     Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.GATHER, dataType);
     inputs.put(parent, edge);
 
@@ -242,7 +248,7 @@ public class ComputeConnection {
    * @param name name of the edge
    * @return the ComputeConnection
    */
-  public ComputeConnection gather(String parent, String name) {
+  public HTGComputeConnection gather(String parent, String name) {
     Edge edge = new Edge(name, OperationNames.GATHER, DataType.OBJECT);
     inputs.put(parent, edge);
 
@@ -258,8 +264,8 @@ public class ComputeConnection {
    * @param dataType the data type
    * @return the ComputeConnection
    */
-  public ComputeConnection keyedGather(String parent, String name,
-                                       DataType keyTpe, DataType dataType) {
+  public HTGComputeConnection keyedGather(String parent, String name,
+                                          DataType keyTpe, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.KEYED_GATHER, dataType, keyTpe);
     inputs.put(parent, edge);
 
@@ -274,7 +280,7 @@ public class ComputeConnection {
    * @param dataType data type
    * @return the ComputeConnection
    */
-  public ComputeConnection gather(String parent, String name, DataType dataType) {
+  public HTGComputeConnection gather(String parent, String name, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.GATHER, dataType);
     inputs.put(parent, edge);
 
@@ -291,8 +297,8 @@ public class ComputeConnection {
    * @param props map of properties
    * @return the ComputeConnection
    */
-  public ComputeConnection gather(String parent, String name, DataType dataType,
-                                  Map<String, Object> props) {
+  public HTGComputeConnection gather(String parent, String name, DataType dataType,
+                                     Map<String, Object> props) {
     Edge edge = new Edge(name, OperationNames.GATHER, dataType);
     edge.addProperties(props);
     inputs.put(parent, edge);
@@ -306,7 +312,7 @@ public class ComputeConnection {
    * @param parent the parent to connection
    * @return the ComputeConnection
    */
-  public ComputeConnection partition(String parent) {
+  public HTGComputeConnection partition(String parent) {
     Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.PARTITION);
     inputs.put(parent, edge);
 
@@ -320,7 +326,7 @@ public class ComputeConnection {
    * @param dataType data type
    * @return the ComputeConnection
    */
-  public ComputeConnection partition(String parent, DataType dataType) {
+  public HTGComputeConnection partition(String parent, DataType dataType) {
     Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.PARTITION, dataType);
     inputs.put(parent, edge);
 
@@ -334,7 +340,7 @@ public class ComputeConnection {
    * @param name name of the edge
    * @return the ComputeConnection
    */
-  public ComputeConnection partition(String parent, String name) {
+  public HTGComputeConnection partition(String parent, String name) {
     Edge edge = new Edge(name, OperationNames.PARTITION, DataType.OBJECT);
     inputs.put(parent, edge);
 
@@ -349,15 +355,16 @@ public class ComputeConnection {
    * @param dataType data type
    * @return the ComputeConnection
    */
-  public ComputeConnection partition(String parent, String name, DataType dataType) {
+  public HTGComputeConnection partition(String parent, String name, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.PARTITION, dataType);
     inputs.put(parent, edge);
 
     return this;
   }
 
-  public ComputeConnection keyedPartition(String parent, String name,
-                                          DataType keyTpe, DataType dataType) {
+
+  public HTGComputeConnection keyedPartition(String parent, String name,
+                                             DataType keyTpe, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.KEYED_PARTITION, dataType, keyTpe);
     inputs.put(parent, edge);
 
@@ -371,7 +378,7 @@ public class ComputeConnection {
    * @param function the reduce function
    * @return the ComputeConnection
    */
-  public ComputeConnection allreduce(String parent, IFunction function) {
+  public HTGComputeConnection allreduce(String parent, IFunction function) {
     Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLREDUCE, function);
     inputs.put(parent, edge);
 
@@ -386,7 +393,7 @@ public class ComputeConnection {
    * @param dataType the data type
    * @return the ComputeConnection
    */
-  public ComputeConnection allreduce(String parent, Op op, DataType dataType) {
+  public HTGComputeConnection allreduce(String parent, Op op, DataType dataType) {
     if (!isPrimitiveType(dataType)) {
       LOG.log(Level.SEVERE, "Reduce operations are only applicable to primitive types");
     }
@@ -406,7 +413,7 @@ public class ComputeConnection {
    * @param dataType the data type
    * @return the ComputeConnection
    */
-  public ComputeConnection allreduce(String parent, IFunction function, DataType dataType) {
+  public HTGComputeConnection allreduce(String parent, IFunction function, DataType dataType) {
     Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE,
         OperationNames.ALLREDUCE, dataType, function);
     inputs.put(parent, edge);
@@ -422,7 +429,7 @@ public class ComputeConnection {
    * @param function the reduce function
    * @return the ComputeConnection
    */
-  public ComputeConnection allreduce(String parent, String name, IFunction function) {
+  public HTGComputeConnection allreduce(String parent, String name, IFunction function) {
     Edge edge = new Edge(name, OperationNames.ALLREDUCE, DataType.OBJECT, function);
     inputs.put(parent, edge);
 
@@ -438,7 +445,7 @@ public class ComputeConnection {
    * @param dataType the data type
    * @return the ComputeConnection
    */
-  public ComputeConnection allreduce(String parent, String name, Op op, DataType dataType) {
+  public HTGComputeConnection allreduce(String parent, String name, Op op, DataType dataType) {
     if (!isPrimitiveType(dataType)) {
       LOG.log(Level.SEVERE, "Reduce operations are only applicable to primitive types");
     }
@@ -458,8 +465,8 @@ public class ComputeConnection {
    * @param dataType the data type
    * @return the ComputeConnection
    */
-  public ComputeConnection allreduce(String parent, String name,
-                                     IFunction function, DataType dataType) {
+  public HTGComputeConnection allreduce(String parent, String name,
+                                        IFunction function, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.ALLREDUCE, dataType, function);
     inputs.put(parent, edge);
 
@@ -472,7 +479,7 @@ public class ComputeConnection {
    * @param parent the parent to connection
    * @return the ComputeConnection
    */
-  public ComputeConnection allgather(String parent) {
+  public HTGComputeConnection allgather(String parent) {
     Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLGATHER);
     inputs.put(parent, edge);
 
@@ -486,7 +493,7 @@ public class ComputeConnection {
    * @param dataType data type
    * @return the ComputeConnection
    */
-  public ComputeConnection allgather(String parent, DataType dataType) {
+  public HTGComputeConnection allgather(String parent, DataType dataType) {
     Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLGATHER, dataType);
     inputs.put(parent, edge);
 
@@ -500,7 +507,7 @@ public class ComputeConnection {
    * @param name name of the edge
    * @return the ComputeConnection
    */
-  public ComputeConnection allgather(String parent, String name) {
+  public HTGComputeConnection allgather(String parent, String name) {
     Edge edge = new Edge(name, OperationNames.ALLGATHER, DataType.OBJECT);
     inputs.put(parent, edge);
 
@@ -515,25 +522,36 @@ public class ComputeConnection {
    * @param dataType data type
    * @return the ComputeConnection
    */
-  public ComputeConnection allgather(String parent, String name, DataType dataType) {
+  public HTGComputeConnection allgather(String parent, String name, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.ALLGATHER, dataType);
     inputs.put(parent, edge);
 
     return this;
   }
 
-  void build(DataFlowTaskGraph graph) {
+
+  void build(HierarchicalTaskGraph graph) {
+
     for (Map.Entry<String, Edge> e : inputs.entrySet()) {
-      Vertex v1 = graph.vertex(nodeName);
-      if (v1 == null) {
-        throw new RuntimeException("Failed to connect non-existing task: " + nodeName);
+      DataFlowTaskGraph graph1 = graph.dataFlowTaskGraph(nodeName);
+      if (graph1 == null) {
+        throw new RuntimeException("Failed to connect non-existing taskgraph: " + nodeName);
       }
 
-      Vertex v2 = graph.vertex(e.getKey());
-      if (v2 == null) {
-        throw new RuntimeException("Failed to connect non-existing task: " + e.getKey());
+      DataFlowTaskGraph graph2 = graph.dataFlowTaskGraph(e.getKey());
+      LOG.info(
+          "TaskDetails:" + taskName + "\t" + nodeName
+              + "\t" + graph2 + "\t" + e.getKey() + "\t" + e.getValue());
+
+      if (graph2 == null) {
+        throw new RuntimeException("Failed to connect non-existing task graph: " + e.getKey());
       }
-      graph.addTaskEdge(v2, v1, e.getValue());
+
+      try {
+        graph.addTaskGraphEdge(graph2, graph1, e.getValue());
+      } catch (IllegalArgumentException ee) {
+        ee.printStackTrace();
+      }
     }
   }
 

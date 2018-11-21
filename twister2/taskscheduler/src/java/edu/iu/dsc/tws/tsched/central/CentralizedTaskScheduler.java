@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.central;
 
-import edu.iu.dsc.tws.task.graph.HierarchicalTaskGraph;
+import edu.iu.dsc.tws.task.graph.htgraph.HierarchicalTaskGraph;
 
 public class CentralizedTaskScheduler {
 

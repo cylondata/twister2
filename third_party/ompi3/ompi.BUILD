@@ -382,7 +382,7 @@ genrule(
         'mkdir -p $$TMP_DIR',
         'cp -pLR $$(pwd)/external/ompi3/* $$TMP_DIR',
         'cd $$TMP_DIR',
-        './configure --prefix=$$INSTALL_DIR --enable-mpi-java',
+        './configure --prefix=$$INSTALL_DIR --enable-mpi-java --with-jdk-bindir=/home/kannan/jdk1.8.0_181/bin --with-jdk-headers=/home/kannan/jdk1.8.0_181/include',
         'make install',
         'rm -rf $$TMP_DIR',
     ]),

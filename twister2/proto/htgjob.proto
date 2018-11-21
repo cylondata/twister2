@@ -1,0 +1,17 @@
+//syntax = "proto3";
+//package tws.proto.htgjob;
+//
+//import "job.proto";
+//
+//option java_package = "edu.iu.dsc.tws.proto.system.htgjob";
+//option java_outer_classname = "HTGJobAPI";
+//
+//message HTGJob {
+//    job.Job job = 1;
+//    string job_name = 2;
+//    string worker_class_name = 3;
+//    //int32 number_of_workers = 4;
+//    //repeated ComputeResource compute_resource = 5;
+//    job.Config config = 4;
+//    job.JobFormat job_format = 5;
+//}

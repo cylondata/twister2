@@ -210,7 +210,7 @@ public final class Twister2Job {
       return this;
     }
 
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings("unchecked")
     private Twister2JobBuilder loadComputeResources(Config config) {
       // to remove unchecked cast warnings:
       // https://stackoverflow.com/questions/19163453/

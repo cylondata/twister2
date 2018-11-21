@@ -9,17 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
+package edu.iu.dsc.tws.api.task.htg;
 
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.htgraph.HierarchicalTaskGraph;
 
-public class SourceConnection {
+public class HTGSourceConnection {
+
   private String nodeName;
 
-  public SourceConnection(String name) {
+  public HTGSourceConnection(String name) {
     this.nodeName = name;
   }
 
   void build(DataFlowTaskGraph graph) {
+  }
+
+  void build(HierarchicalTaskGraph graph) {
   }
 }
