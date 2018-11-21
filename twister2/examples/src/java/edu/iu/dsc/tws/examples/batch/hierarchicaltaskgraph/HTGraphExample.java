@@ -63,6 +63,7 @@ public class HTGraphExample extends TaskWorker {
     int parallelismValue = jobParameters.getParallelismValue();
 
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
+
     graphBuilderX.addSource("source1", htgSourceTask, parallelismValue);
     ComputeConnection computeConnection1 = graphBuilderX.addSink("sink1", htgReduceTask,
         parallelismValue);
