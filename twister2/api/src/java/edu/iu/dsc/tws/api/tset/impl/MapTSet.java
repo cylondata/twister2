@@ -9,12 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.api.tset.impl;
 
-/**
- *
- * @param <T>
- */
-public interface ReduceFunction<T> {
-  T reduce(T t1, T t2);
+public class MapTSet<T> extends BaseTSet<T> {
+
 }

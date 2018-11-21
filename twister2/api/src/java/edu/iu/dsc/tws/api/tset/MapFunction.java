@@ -11,6 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+/**
+ *
+ * @param <T>
+ * @param <O>
+ */
 public interface MapFunction<T, O> {
   O map(T t);
 }
