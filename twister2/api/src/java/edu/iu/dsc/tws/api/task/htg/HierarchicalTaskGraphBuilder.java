@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
+package edu.iu.dsc.tws.api.task.htg;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,10 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.task.TaskConfigurations;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.HierarchicalTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.graph.htgraph.HierarchicalTaskGraph;
 
 /**
  * This is the entry point for creating a task graph by the user.
@@ -37,12 +38,12 @@ public final class HierarchicalTaskGraphBuilder {
   /**
    * The parent edges of a taskgraph
    */
-  private List<ComputeConnection> computeTaskGraphConnections = new ArrayList<>();
+  private List<HTGComputeConnection> computeTaskGraphConnections = new ArrayList<>();
 
   /**
    * Source task graph connections
    */
-  private List<SourceConnection> sourceTaskGraphConnections = new ArrayList<>();
+  private List<HTGSourceConnection> sourceTaskGraphConnections = new ArrayList<>();
 
   /**
    * Default parallelism read from a configuration parameter
@@ -72,28 +73,28 @@ public final class HierarchicalTaskGraphBuilder {
     this.operationMode = mode;
   }
 
-  public SourceConnection addSourceTaskGraph(String name,
-                                             DataFlowTaskGraph dataFlowTaskGraph) {
+  public HTGSourceConnection addSourceTaskGraph(String name,
+                                                DataFlowTaskGraph dataFlowTaskGraph) {
     dataFlowTaskGraph.setTaskGraphName(name);
     graphMap.put(name, dataFlowTaskGraph);
     return createSourceTaskGraphConnection(name);
   }
 
-  private SourceConnection createSourceTaskGraphConnection(String name) {
-    SourceConnection sc = new SourceConnection(name);
+  private HTGSourceConnection createSourceTaskGraphConnection(String name) {
+    HTGSourceConnection sc = new HTGSourceConnection(name);
     sourceTaskGraphConnections.add(sc);
     return sc;
   }
 
-  public ComputeConnection addSinkTaskGraph(String name,
-                                            DataFlowTaskGraph dataFlowTaskGraph) {
+  public HTGComputeConnection addSinkTaskGraph(String name,
+                                               DataFlowTaskGraph dataFlowTaskGraph, String task) {
     dataFlowTaskGraph.setTaskGraphName(name);
     graphMap.put(name, dataFlowTaskGraph);
-    return createComputeTaskGraphConnection(name);
+    return createComputeTaskGraphConnection(name, task);
   }
 
-  private ComputeConnection createComputeTaskGraphConnection(String name) {
-    ComputeConnection cc = new ComputeConnection(name);
+  private HTGComputeConnection createComputeTaskGraphConnection(String name, String task) {
+    HTGComputeConnection cc = new HTGComputeConnection(name, task);
     computeTaskGraphConnections.add(cc);
     return cc;
   }
@@ -105,17 +106,18 @@ public final class HierarchicalTaskGraphBuilder {
 
     for (Map.Entry<String, DataFlowTaskGraph> e : graphMap.entrySet()) {
       hierarchicalTaskGraph.addTaskGraph(e.getKey(), e.getValue());
+      LOG.info("key and value:" + e.getKey() + "\t" + e.getValue());
     }
 
-    for (ComputeConnection computeConnection : computeTaskGraphConnections) {
-      computeConnection.build(hierarchicalTaskGraph);
+    for (HTGComputeConnection htgComputeConnection : computeTaskGraphConnections) {
+      htgComputeConnection.build(hierarchicalTaskGraph);
     }
 
-    for (SourceConnection c : sourceTaskGraphConnections) {
+    for (HTGSourceConnection c : sourceTaskGraphConnections) {
       c.build(hierarchicalTaskGraph);
     }
 
-    LOG.fine("HTG Values:" + hierarchicalTaskGraph.getTaskGraphSet());
+    LOG.info("HTG Values:" + hierarchicalTaskGraph.getTaskGraphSet());
     return hierarchicalTaskGraph;
   }
 }
