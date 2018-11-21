@@ -539,10 +539,6 @@ public class HTGComputeConnection {
       }
 
       DataFlowTaskGraph graph2 = graph.dataFlowTaskGraph(e.getKey());
-      LOG.info(
-          "TaskDetails:" + taskName + "\t" + nodeName
-              + "\t" + graph2 + "\t" + e.getKey() + "\t" + e.getValue());
-
       if (graph2 == null) {
         throw new RuntimeException("Failed to connect non-existing task graph: " + e.getKey());
       }
