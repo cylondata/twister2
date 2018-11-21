@@ -91,15 +91,10 @@ public class HTGraphExample extends TaskWorker {
     HierarchicalTaskGraph hierarchicalTaskGraph =
         hierarchicalTaskGraphBuilder.buildHierarchicalTaskGraph();
 
-    LOG.fine("Batch Task Graph:" + batchGraph.getTaskVertexSet() + "\t"
+    LOG.info("Batch Task Graph:" + batchGraph.getTaskVertexSet() + "\t"
         + batchGraph.getTaskVertexSet().size() + "\t"
         + "Streaming Task Graph:" + streamingGraph.getTaskVertexSet() + "\t"
         + streamingGraph.getTaskVertexSet().size());
-
-    LOG.info("Edge:" + hierarchicalTaskGraph.getAllTaskGraphEdges(
-        batchGraph, streamingGraph).iterator().next().getOperation()
-        + "\t" + hierarchicalTaskGraph.getAllTaskGraphEdges(
-        batchGraph, streamingGraph).iterator().next().getName());
 
     //To print the hierarchical dataflow task graph and its vertex names.
     LOG.info("Parent Task Graph:" + hierarchicalTaskGraph.parentsOfTaskGraph(streamingGraph)
