@@ -9,12 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.impl;
+package edu.iu.dsc.tws.api.tset.source;
 
-public class MapTSet<T> extends BaseTSet<T> {
-  private BaseTSet<T> parent;
-
-  public MapTSet(BaseTSet<T> parent) {
-    this.parent = parent;
-  }
+public class SourceTSet {
 }

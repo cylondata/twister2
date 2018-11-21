@@ -14,16 +14,22 @@ package edu.iu.dsc.tws.api.tset.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.TSet;
 
 public abstract class BaseTSet<T> implements TSet<T> {
-  private List<BaseTSet<?>> dataSets;
+  private List<BaseTSet<?>> children;
+
+  /**
+   * The builder to use to building the task graph
+   */
+  private TaskGraphBuilder builder;
 
   public BaseTSet() {
-    this.dataSets = new ArrayList<>();
+    this.children = new ArrayList<>();
   }
 
   @Override

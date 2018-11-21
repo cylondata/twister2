@@ -11,5 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
-public class ReduceTSet {
+public class ReduceTSet<T> extends BaseTSet<T> {
+
+
+
+  public void build() {
+
+  }
 }
