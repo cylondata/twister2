@@ -153,7 +153,7 @@ public class STMultiPartitionExample implements IWorker {
       if (value == limit) {
         context.write("partition-edge-1", "end");
       } else if (value < limit) {
-        context.write("partition-edge-1", value + myIndex*limit);
+        context.write("partition-edge-1", value + myIndex * limit);
 //      LOG.log(Level.INFO, "count for source " + this.context.taskId() + " is " + value);
         value++;
       }
@@ -193,7 +193,7 @@ public class STMultiPartitionExample implements IWorker {
     @Override
     public boolean execute(IMessage content) {
       count++;
-      if(count == 10000) {
+      if (count == 10000) {
         LOG.info("Count in middle task " + context.taskId()
             + " is " + count
             + " value is" + content
