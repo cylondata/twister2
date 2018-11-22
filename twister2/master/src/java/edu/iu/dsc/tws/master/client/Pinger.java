@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
@@ -25,7 +24,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 public class Pinger implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(Pinger.class.getName());
 
-  private WorkerNetworkInfo thisWorker;
+  private JobMasterAPI.WorkerInfo thisWorker;
   private RRClient rrClient;
   private long interval;
 
@@ -34,7 +33,7 @@ public class Pinger implements MessageHandler {
 
   private RequestID requestID = null;
 
-  public Pinger(WorkerNetworkInfo thisWorker, RRClient rrClient, long interval) {
+  public Pinger(JobMasterAPI.WorkerInfo thisWorker, RRClient rrClient, long interval) {
     this.thisWorker = thisWorker;
     this.rrClient = rrClient;
     this.interval = interval;

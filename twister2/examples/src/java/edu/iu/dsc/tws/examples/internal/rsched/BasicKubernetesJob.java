@@ -20,8 +20,6 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -34,7 +32,7 @@ public final class BasicKubernetesJob {
   @SuppressWarnings("unchecked")
   public static void main(String[] args) {
 
-//    LoggingHelper.setupLogging(null, "logs", "client");
+    //    LoggingHelper.setupLogging(null, "logs", "client");
     LOG.info("Job submission time: " + System.currentTimeMillis());
 
     // first load the configurations from command line and config files
@@ -64,14 +62,6 @@ public final class BasicKubernetesJob {
    */
   public static void submitJob(Config config) {
 
-    double cpus = SchedulerContext.workerCPU(config);
-    int ramMegaBytes = SchedulerContext.workerRAM(config);
-    int workers = SchedulerContext.workerInstances(config);
-    double diskGigaBytes = Context.workerVolatileDisk(config);
-    String jobName = SchedulerContext.jobName(config);
-    WorkerComputeResource workerComputeResource =
-        new WorkerComputeResource(cpus, ramMegaBytes, diskGigaBytes);
-
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
@@ -79,15 +69,10 @@ public final class BasicKubernetesJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    String workerClass = SchedulerContext.workerClass(config);
-
-    // build the job
-    Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName(jobName)
-        .setWorkerClass(workerClass)
-        .setRequestResource(workerComputeResource, workers)
-        .setConfig(jobConfig)
-        .build();
+    // load the job parameters from client.yaml file
+    // It gets: job-name, worker-class and ComputeResource list from that file
+    Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, jobConfig);
+    LOG.info("The job to be submitted: \n" + twister2Job);
 
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);

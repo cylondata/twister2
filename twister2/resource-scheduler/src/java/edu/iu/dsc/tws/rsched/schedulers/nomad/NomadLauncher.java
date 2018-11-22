@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -66,7 +65,7 @@ public class NomadLauncher implements ILauncher {
   }
 
   @Override
-  public boolean launch(RequestedResources resourcePlan, JobAPI.Job job) {
+  public boolean launch(JobAPI.Job job) {
     LOG.log(Level.INFO, "Launching job for cluster {0}",
         NomadContext.clusterType(config));
 
@@ -109,7 +108,7 @@ public class NomadLauncher implements ILauncher {
       }
     }
 
-    boolean start = controller.start(resourcePlan, job);
+    boolean start = controller.start(job);
     // now lets wait on client
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       try {

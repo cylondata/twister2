@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
-import edu.iu.dsc.tws.comms.utils.MessageTypeUtils;
 
 /**
  * Deserialize a single message in a buffer
@@ -125,7 +124,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
       MessageType keyType = message.getKeyType();
       Object data;
 
-      if (MessageTypeUtils.isMultiMessageType(keyType)) {
+      if (keyType.isMultiMessageType()) {
         data = DataDeserializer.getAsByteArray(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey()
                 - MULTI_MESSAGE_KEY_LENGTH_FEILD_SIZE, type, ((List) keyPair.getValue()).size());
@@ -137,7 +136,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
               message.getKeyType(), type));
         }
         return results;
-      } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
+      } else if (!keyType.isPrimitive()) {
         data = DataDeserializer.getAsByteArray(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey() - KEY_LENGTH_FEILD_SIZE, type);
       } else {
@@ -169,7 +168,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
       Object data;
       List<KeyedContent> results;
 
-      if (MessageTypeUtils.isMultiMessageType(keyType)) {
+      if (keyType.isMultiMessageType()) {
         List<byte[]> keyList = (List<byte[]>) keyPair.getValue();
         data = DataDeserializer.deserializeData(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey()
@@ -182,7 +181,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
               message.getKeyType(), type));
         }
         return results;
-      } else if (!MessageTypeUtils.isPrimitiveType(keyType)) {
+      } else if (!keyType.isPrimitive()) {
         Object d = DataDeserializer.deserializeData(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey() - KEY_LENGTH_FEILD_SIZE,
             deserializer, type);

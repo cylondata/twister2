@@ -25,9 +25,7 @@ import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.checkpointmanager.state_backend.FsCheckpointStorage;
 import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -39,6 +37,7 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.Runtime;
 import edu.iu.dsc.tws.executor.threading.Executor;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.ComputeCheckpointableTask;
@@ -63,7 +62,7 @@ public class STMultiPartitionCheckpointExample implements IWorker {
       Logger.getLogger(STMultiPartitionCheckpointExample.class.getName());
 
   @Override
-  public void execute(Config config, int workerID, AllocatedResources resources,
+  public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -115,11 +114,12 @@ public class STMultiPartitionCheckpointExample implements IWorker {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(newconfig);
 
-    WorkerPlan workerPlan = createWorkerPlan(resources);
+    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSChannel network = Network.initializeChannel(newconfig, workerController, resources);
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
+    TWSChannel network = Network.initializeChannel(newconfig, workerController);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
+        workerController.getAllWorkers(),
         new Communicator(newconfig, network));
     ExecutionPlan plan = executionPlanBuilder.build(newconfig, graph, taskSchedulePlan);
     Executor executor = new Executor(newconfig, workerID, plan, network);
@@ -232,10 +232,10 @@ public class STMultiPartitionCheckpointExample implements IWorker {
 
   }
 
-  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
+  public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
+    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+      Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }
 
@@ -253,10 +253,10 @@ public class STMultiPartitionCheckpointExample implements IWorker {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("st-multi-partition-checkpoint");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("st-multi-partition-checkpoint");
     jobBuilder.setWorkerClass(STMultiPartitionCheckpointExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

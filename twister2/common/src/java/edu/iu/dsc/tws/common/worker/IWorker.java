@@ -24,8 +24,7 @@
 package edu.iu.dsc.tws.common.worker;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 
 /**
  * This is the main point of entry for a Twister2 job. Every job should implement this interface.
@@ -35,17 +34,14 @@ import edu.iu.dsc.tws.common.resource.AllocatedResources;
 public interface IWorker {
   /**
    * Execute with the resources configured
-   *
    * @param config configuration
    * @param workerID the worker id
-   * @param allocatedResources allocated resource details
    * @param workerController the worker controller
    * @param persistentVolume information about persistent file system
    * @param volatileVolume information about volatile file system
    */
   void execute(Config config,
                int workerID,
-               AllocatedResources allocatedResources,
                IWorkerController workerController,
                IPersistentVolume persistentVolume,
                IVolatileVolume volatileVolume);

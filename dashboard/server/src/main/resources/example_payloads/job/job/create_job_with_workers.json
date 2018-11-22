@@ -1,0 +1,24 @@
+{
+  "id": "uuid-random-thing",
+  "name": "Sample Job",
+  "description": "Sample description",
+  "cluster": {
+    "id": 11
+  },
+  "workers": [
+    {
+      "name": "worker1",
+      "host": "1.0.0.1",
+      "port": "8080",
+      "cpuAllocation": "1.5",
+      "memoryAllocation": "1024"
+    },
+    {
+      "name": "worker2",
+      "host": "1.0.0.2",
+      "port": "8080",
+      "cpuAllocation": "2",
+      "memoryAllocation": "2048"
+    }
+  ]
+}

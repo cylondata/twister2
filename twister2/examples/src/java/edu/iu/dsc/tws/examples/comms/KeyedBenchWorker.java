@@ -22,9 +22,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -34,14 +33,13 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * BenchWorker class that works with keyed operations
  */
 public abstract class KeyedBenchWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(KeyedBenchWorker.class.getName());
-
-  protected AllocatedResources resourcePlan;
 
   private Lock lock = new ReentrantLock();
 
@@ -61,35 +59,34 @@ public abstract class KeyedBenchWorker implements IWorker {
 
   protected boolean sourcesDone = false;
 
-  protected List<WorkerNetworkInfo> workerList = null;
+  protected List<JobMasterAPI.WorkerInfo> workerList = null;
 
   protected ExperimentData experimentData;
 
   @Override
-  public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
+  public void execute(Config cfg, int workerID,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
-    this.resourcePlan = allocatedResources;
     this.workerId = workerID;
 
     // wait for all workers in this job to join
-    workerList = workerController.waitForAllWorkersToJoin(50000);
+    workerList = workerController.getAllWorkers();
     if (workerList != null) {
-      LOG.info("All workers joined. " + WorkerNetworkInfo.workerListAsString(workerList));
+      LOG.info("All workers joined. " + WorkerInfoUtils.workerListAsString(workerList));
     } else {
       LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
       return;
     }
 
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(
-        cfg, allocatedResources, jobParameters.getTaskStages(), workerList);
+    this.taskPlan = Utils.createStageTaskPlan(cfg, workerID,
+        jobParameters.getTaskStages(), workerList);
 
     // create the channel
-    channel = Network.initializeChannel(config, workerController, resourcePlan);
+    channel = Network.initializeChannel(config, workerController);
     // create the communicator
     communicator = new Communicator(cfg, channel);
     //collect experiment data

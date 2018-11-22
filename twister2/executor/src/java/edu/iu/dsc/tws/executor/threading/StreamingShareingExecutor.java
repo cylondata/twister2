@@ -34,7 +34,7 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
     tasks.addAll(nodes.values());
 
     for (INodeInstance node : tasks) {
-      node.prepare();
+      node.prepare(config);
     }
 
     for (int i = 0; i < numThreads; i++) {

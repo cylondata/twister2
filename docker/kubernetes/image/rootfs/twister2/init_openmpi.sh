@@ -39,19 +39,19 @@ fi
 CLASSPATH=$POD_MEMORY_VOLUME/$JOB_ARCHIVE_DIRECTORY/$USER_JOB_JAR_FILE:$CLASSPATH
 
 ###################  check whether this is the first pod #############################
-# if this is the first pod, HOSTNAME ends with "-0"
-# in that case, it should run mpirun
-# otherwise, it should start sshd and sleep infinity
+# if this is the first pod in the first StatefulSet, HOSTNAME ends with "-0-0"
+# in that case, it should run mpimaster
+# otherwise, it should start sshd and sleep to infinity
 
 echo "My hostname: $HOSTNAME"
 length=${#HOSTNAME}
 # echo "length of $HOSTNAME: $length"
 
-lastTwoChars=$(echo $HOSTNAME| cut -c $(($length-1))-$length)
-# echo "last two chars: $lastTwoChars"
+lastFourChars=$(echo $HOSTNAME| cut -c $(($length-3))-$length)
+# echo "last two chars: $lastFourChars"
 
-if [ "$lastTwoChars" = "-0" ]; then
-  echo "This is the first pod in the job: $HOSTNAME"
+if [ "$lastFourChars" = "-0-0" ]; then
+  echo "This is the first pod in the first StatefulSet of the job: $HOSTNAME"
   echo "Starting $CLASS_TO_RUN .... "
   java $CLASS_TO_RUN
   echo "$CLASS_TO_RUN is done. Starting to sleep infinity ..."
@@ -61,3 +61,4 @@ else
   echo "Starting to sleep to infinity ..."
   sleep infinity
 fi
+

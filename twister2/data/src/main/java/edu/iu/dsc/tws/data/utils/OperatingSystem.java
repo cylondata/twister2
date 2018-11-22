@@ -100,7 +100,7 @@ public enum OperatingSystem {
   /**
    * The key to extract the operating system name from the system properties.
    */
-  private static final String OS_KEY = "OS.name";
+  private static final String OS_KEY = "os.name";
 
   /**
    * The expected prefix for Linux operating systems.

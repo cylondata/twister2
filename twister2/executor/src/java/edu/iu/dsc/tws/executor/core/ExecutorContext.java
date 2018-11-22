@@ -21,6 +21,8 @@ public class ExecutorContext extends Context {
   public static final String INSTANCE_QUEUE_HIGH_WATERMARK =
       "twister2.exector.instance.queue.high.watermark";
 
+  public static final String TWISTER2_RUNTIME_OBJECT = "_twister2.runtime_";
+
   public static int threadsPerContainer(Config cfg) {
     return cfg.getIntegerValue(THREADS_PER_WORKER, 1);
   }

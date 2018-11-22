@@ -158,7 +158,7 @@ public class TaskBarrierMonitor implements MessageHandler {
 
       if (checkpointCompleteMessage.getCheckpointComplete()
           && checkpointCompleteMessage.getCurrentBarrierID() == this.currentBarrierID) {
-        LOG.info("Checkpointing with Barrier ID " + currentBarrierID + " is completed");
+//        LOG.info("Checkpointing with Barrier ID " + currentBarrierID + " is completed");
 
         barrierCompleteReceivedSinkSet.add(checkpointCompleteMessage.getSinkID());
 

@@ -17,16 +17,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
@@ -50,10 +50,11 @@ public final class MPIWorkerStarter {
   private static Config config = null;
   private static int workerID = -1; // -1 means, not initialized
   private static int numberOfWorkers = -1; // -1 means, not initialized
-  private static WorkerNetworkInfo workerNetworkInfo;
+  private static JobMasterAPI.WorkerInfo workerInfo;
   private static JobMasterClient jobMasterClient;
   private static String jobName = null;
   private static JobAPI.Job job = null;
+  private static JobAPI.ComputeResource computeResource = null;
 
   private MPIWorkerStarter() { }
 
@@ -117,28 +118,32 @@ public final class MPIWorkerStarter {
     config = JobUtils.updateConfigs(job, config);
 
     InetAddress localHost = null;
+    String podName = null;
     try {
       localHost = InetAddress.getLocalHost();
       String podIP = localHost.getHostAddress();
-      String podName = localHost.getHostName();
+      podName = localHost.getHostName();
 
       int workerPort = KubernetesContext.workerBasePort(config) + workerID;
 
       String nodeIP = PodWatchUtils.getNodeIP(KubernetesContext.namespace(config), jobName, podIP);
-      NodeInfo thisNodeInfo = null;
+      JobMasterAPI.NodeInfo nodeInfo = null;
       if (nodeIP == null) {
         LOG.warning("Could not get nodeIP for this pod. Using podIP as nodeIP.");
-        thisNodeInfo = new NodeInfo(podIP, null, null);
+        nodeInfo = NodeInfoUtils.createNodeInfo(podIP, null, null);
       } else {
 
-        thisNodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
+        nodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
             ? KubernetesContext.getNodeInfo(config, nodeIP)
             : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
       }
 
-      LOG.info("NodeInfo for this worker: " + thisNodeInfo);
+      LOG.info("NodeInfoUtils for this worker: " + nodeInfo);
 
-      workerNetworkInfo = new WorkerNetworkInfo(localHost, workerPort, workerID, thisNodeInfo);
+      computeResource = K8sWorkerUtils.getComputeResource(job, podName);
+
+      workerInfo = WorkerInfoUtils.createWorkerInfo(
+          workerID, localHost.getHostAddress(), workerPort, nodeInfo, computeResource);
 
       LOG.info("Worker information summary: \n"
           + "MPI Rank(workerID): " + workerID + "\n"
@@ -150,13 +155,10 @@ public final class MPIWorkerStarter {
       LOG.log(Level.SEVERE, "Cannot get localHost.", e);
     }
 
-    config = Config.newBuilder()
-        .putAll(config)
-        .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
-        .build();
-
     // start JobMasterClient
-    jobMasterClient = new JobMasterClient(config, workerNetworkInfo);
+    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP,
+        JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
+
     Thread clientThread = jobMasterClient.startThreaded();
     if (clientThread == null) {
       throw new RuntimeException("Can not start JobMasterClient thread.");
@@ -169,7 +171,7 @@ public final class MPIWorkerStarter {
     jobMasterClient.sendWorkerRunningMessage();
 
     // start the worker
-    startWorker(jobMasterClient.getJMWorkerController(), pv);
+    startWorker(jobMasterClient.getJMWorkerController(), pv, podName);
 
     // finalize MPI
     try {
@@ -184,7 +186,7 @@ public final class MPIWorkerStarter {
    * start the Worker class specified in conf files
    */
   public static void startWorker(IWorkerController workerController,
-                                 IPersistentVolume pv) {
+                                 IPersistentVolume pv, String podName) {
     String workerClass = SchedulerContext.workerClass(config);
     IWorker worker;
     try {
@@ -197,15 +199,11 @@ public final class MPIWorkerStarter {
     }
 
     K8sVolatileVolume volatileVolume = null;
-    if (SchedulerContext.volatileDiskRequested(config)) {
-      volatileVolume =
-          new K8sVolatileVolume(SchedulerContext.jobName(config), workerID);
+    if (computeResource.getDiskGigaBytes() > 0) {
+      volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
 
-    AllocatedResources allocatedResources = K8sWorkerUtils.createAllocatedResources(
-        KubernetesContext.clusterType(config), workerID, job);
-
-    worker.execute(config, workerID, allocatedResources, workerController, pv, volatileVolume);
+    worker.execute(config, workerID, workerController, pv, volatileVolume);
   }
 
   /**

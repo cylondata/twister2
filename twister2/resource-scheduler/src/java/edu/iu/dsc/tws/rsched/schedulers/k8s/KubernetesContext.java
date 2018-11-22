@@ -12,18 +12,13 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
 import java.util.List;
-import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class KubernetesContext extends SchedulerContext {
 
   public static final String TWISTER2_DOCKER_IMAGE_FOR_K8S = "twister2.docker.image.for.kubernetes";
-
-  public static final int WORKERS_PER_POD_DEFAULT = 1;
-  public static final String WORKERS_PER_POD = "kubernetes.workers.per.pod";
 
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
@@ -33,12 +28,6 @@ public class KubernetesContext extends SchedulerContext {
 
   public static final boolean NODE_LOCATIONS_FROM_CONFIG_DEFAULT = true;
   public static final String NODE_LOCATIONS_FROM_CONFIG = "kubernetes.node.locations.from.config";
-
-  public static final String KUBERNETES_RACK_LABEL_KEY = "kubernetes.rack.labey.key";
-  public static final String KUBERNETES_DATACENTER_LABEL_KEY = "kubernetes.datacenter.labey.key";
-
-  public static final String KUBERNETES_RACKS_LIST = "kubernetes.racks.list";
-  public static final String KUBERNETES_DATACENTERS_LIST = "kubernetes.datacenters.list";
 
   public static final boolean NODE_PORT_SERVICE_REQUESTED_DEFAULT = false;
   public static final String NODE_PORT_SERVICE_REQUESTED = "kubernetes.node.port.service.requested";
@@ -72,18 +61,18 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_WORKER_MAPPING_UNIFORM_DEFAULT = "none";
   public static final String K8S_WORKER_MAPPING_UNIFORM = "kubernetes.worker.mapping.uniform";
 
-  // it can be either "webserver" or "client-to-pods"
-  public static final String K8S_UPLOADING_METHOD_DEFAULT = "client-to-pods";
-  public static final String K8S_UPLOADING_METHOD = "twister2.kubernetes.uploading.method";
+  public static final boolean CLIENT_TO_PODS_UPLOADING_DEFAULT = true;
+  public static final String CLIENT_TO_PODS_UPLOADING =
+      "twister2.kubernetes.client.to.pods.uploading";
 
   public static final String SECRET_NAME = "kubernetes.secret.name";
 
+  public static final boolean WATCH_BEFORE_UPLOAD_ATTEMPTS_DEFAULT = true;
+  public static final String WATCH_BEFORE_UPLOAD_ATTEMPTS =
+      "twister2.kubernetes.uploader.watch.pods.starting";
+
   public static String twister2DockerImageForK8s(Config cfg) {
     return cfg.getStringValue(TWISTER2_DOCKER_IMAGE_FOR_K8S);
-  }
-
-  public static int workersPerPod(Config cfg) {
-    return cfg.getIntegerValue(WORKERS_PER_POD, WORKERS_PER_POD_DEFAULT);
   }
 
   public static String namespace(Config cfg) {
@@ -95,11 +84,11 @@ public class KubernetesContext extends SchedulerContext {
   }
 
   public static String rackLabelKeyForK8s(Config cfg) {
-    return cfg.getStringValue(KUBERNETES_RACK_LABEL_KEY);
+    return cfg.getStringValue(RACK_LABEL_KEY);
   }
 
   public static String datacenterLabelKeyForK8s(Config cfg) {
-    return cfg.getStringValue(KUBERNETES_DATACENTER_LABEL_KEY);
+    return cfg.getStringValue(DATACENTER_LABEL_KEY);
   }
 
   public static boolean nodePortServiceRequested(Config cfg) {
@@ -155,49 +144,24 @@ public class KubernetesContext extends SchedulerContext {
   }
 
   public static String uploadMethod(Config cfg) {
-    return cfg.getStringValue(K8S_UPLOADING_METHOD, K8S_UPLOADING_METHOD_DEFAULT);
+    if (clientToPodsUploading(cfg)) {
+      return "client-to-pods";
+    } else {
+      return "webserver";
+    }
+  }
+
+  public static boolean clientToPodsUploading(Config cfg) {
+    return cfg.getBooleanValue(CLIENT_TO_PODS_UPLOADING, CLIENT_TO_PODS_UPLOADING_DEFAULT);
   }
 
   public static String secretName(Config cfg) {
     return cfg.getStringValue(SECRET_NAME);
   }
 
-  public static NodeInfo getNodeInfo(Config cfg, String nodeIP) {
-
-    List<Map<String, List<String>>> rackList =
-        cfg.getListOfMapsWithListValues(KUBERNETES_RACKS_LIST);
-
-    String rack = findValue(rackList, nodeIP);
-    if (rack == null) {
-      return new NodeInfo(nodeIP, null, null);
-    }
-
-    List<Map<String, List<String>>> dcList =
-        cfg.getListOfMapsWithListValues(KUBERNETES_DATACENTERS_LIST);
-
-    String datacenter = findValue(dcList, rack);
-    return new NodeInfo(nodeIP, rack, datacenter);
+  public static boolean watchBeforeUploadAttempts(Config cfg) {
+    return cfg.getBooleanValue(WATCH_BEFORE_UPLOAD_ATTEMPTS, WATCH_BEFORE_UPLOAD_ATTEMPTS_DEFAULT);
   }
 
-  /**
-   * find the given String value in the inner List
-   * return the key for that Map
-   * @return
-   */
-  private static String findValue(List<Map<String, List<String>>> outerList, String value) {
-
-    for (Map<String, List<String>> map: outerList) {
-      for (String mapKey: map.keySet()) {
-        List<String> innerList = map.get(mapKey);
-        for (String listItem: innerList) {
-          if (listItem.equals(value)) {
-            return mapKey;
-          }
-        }
-      }
-    }
-
-    return null;
-  }
 
 }

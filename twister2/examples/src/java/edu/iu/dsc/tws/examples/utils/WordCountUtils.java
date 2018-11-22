@@ -20,9 +20,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public final class WordCountUtils {
   private static final Logger LOG = Logger.getLogger(WordCountUtils.class.getName());
@@ -33,28 +32,29 @@ public final class WordCountUtils {
   /**
    * Let assume we have 2 tasks per container and one additional for first container,
    * which will be the destination
-   * @param plan the resource plan from scheduler
    * @return task plan
    */
-  public static TaskPlan createWordCountPlan(Config cfg, AllocatedResources plan, int noOfTasks) {
-    int noOfProcs = plan.getNumberOfWorkers();
+  public static TaskPlan createWordCountPlan(Config cfg,
+                                             int workerID,
+                                             List<JobMasterAPI.WorkerInfo> workerInfoList,
+                                             int noOfTasks) {
+    int noOfProcs = workerInfoList.size();
 //    LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = plan.getWorkerId();
+    int thisExecutor = workerID;
 
-    List<WorkerComputeResource> containers = plan.getWorkerComputeResources();
-    Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
-    for (WorkerComputeResource c : containers) {
-      String name = Integer.toString(c.getId());
-      List<WorkerComputeResource> containerList;
+    Map<String, List<JobMasterAPI.WorkerInfo>> containersPerNode = new HashMap<>();
+    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
+      String name = Integer.toString(workerInfo.getWorkerID());
+      List<JobMasterAPI.WorkerInfo> containerList;
       if (!containersPerNode.containsKey(name)) {
         containerList = new ArrayList<>();
         containersPerNode.put(name, containerList);
       } else {
         containerList = containersPerNode.get(name);
       }
-      containerList.add(c);
+      containerList.add(workerInfo);
     }
 
     int taskPerExecutor = noOfTasks / noOfProcs;
@@ -71,19 +71,19 @@ public final class WordCountUtils {
 
     int i = 0;
     // we take each container as an executor
-    for (Map.Entry<String, List<WorkerComputeResource>> e : containersPerNode.entrySet()) {
+    for (Map.Entry<String, List<JobMasterAPI.WorkerInfo>> e : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
-      for (WorkerComputeResource c : e.getValue()) {
-        executorsOfGroup.add(c.getId());
+      for (JobMasterAPI.WorkerInfo workerInfo : e.getValue()) {
+        executorsOfGroup.add(workerInfo.getWorkerID());
       }
       groupsToExeuctors.put(i, executorsOfGroup);
       i++;
     }
 
     LOG.fine(String.format("%d Executor To Graph: %s",
-        plan.getWorkerId(), executorToGraphNodes));
+        workerID, executorToGraphNodes));
     LOG.fine(String.format("%d Groups to executors: %s",
-        plan.getWorkerId(), groupsToExeuctors));
+        workerID, groupsToExeuctors));
     // now lets create the task plan of this, we assume we have map tasks in all the processes
     // and reduce task in 0th process
     return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);

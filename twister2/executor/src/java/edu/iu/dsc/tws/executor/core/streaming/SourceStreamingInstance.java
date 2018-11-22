@@ -134,12 +134,13 @@ public class SourceStreamingInstance implements INodeInstance {
     }
   }
 
-  public void prepare() {
+  public void prepare(Config cfg) {
     outputStreamingCollection = new DefaultOutputCollection(outStreamingQueue);
+
     TaskContext taskContext = new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
         parallelism, workerId, outputStreamingCollection, nodeConfigs);
 
-    streamingTask.prepare(config, taskContext);
+    streamingTask.prepare(cfg, taskContext);
 
     if (streamingTask instanceof SourceCheckpointableTask) {
       ((SourceCheckpointableTask) streamingTask).connect(config, taskContext);

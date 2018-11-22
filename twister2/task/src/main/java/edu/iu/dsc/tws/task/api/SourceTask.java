@@ -15,7 +15,7 @@ import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class SourceTask implements ISource {
   private static final long serialVersionUID = -254264120110286748L;
-  private TaskContext ctx;
+  private TaskContext context;
   private Config config;
 
 
@@ -25,13 +25,13 @@ public abstract class SourceTask implements ISource {
   }
 
   @Override
-  public void prepare(Config cfg, TaskContext context) {
+  public void prepare(Config cfg, TaskContext ctx) {
     this.config = cfg;
-    this.ctx = context;
+    this.context = ctx;
   }
 
   public TaskContext getContext() {
-    return this.ctx;
+    return this.context;
   }
 
 }

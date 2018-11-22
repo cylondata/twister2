@@ -30,9 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public final class TaskPlanBuilder {
@@ -41,12 +40,11 @@ public final class TaskPlanBuilder {
 
   /**
    * Create a task plan based on the resource plan from resources and scheduled plan
-   * @param resourcePlan resource plan
    * @param schedulePlan schedule plan
    * @param idGenerator global task id generator
    * @return the task plan
    */
-  public static TaskPlan build(AllocatedResources resourcePlan,
+  public static TaskPlan build(int workerID, List<JobMasterAPI.WorkerInfo> workerInfoList,
                                TaskSchedulePlan schedulePlan, TaskIdGenerator idGenerator) {
     Set<TaskSchedulePlan.ContainerPlan> cPlanList = schedulePlan.getContainers();
     Map<Integer, Set<Integer>> containersToTasks = new HashMap<>();
@@ -63,31 +61,30 @@ public final class TaskPlanBuilder {
       containersToTasks.put(c.getContainerId(), instances);
     }
 
-    List<WorkerComputeResource> containers = resourcePlan.getWorkerComputeResources();
-    Map<String, List<WorkerComputeResource>> containersPerNode = new HashMap<>();
-    for (WorkerComputeResource c : containers) {
-      String name = Integer.toString(c.getId());
-      List<WorkerComputeResource> containerList;
+    Map<String, List<JobMasterAPI.WorkerInfo>> containersPerNode = new HashMap<>();
+    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
+      String name = Integer.toString(workerInfo.getWorkerID());
+      List<JobMasterAPI.WorkerInfo> containerList;
       if (!containersPerNode.containsKey(name)) {
         containerList = new ArrayList<>();
         containersPerNode.put(name, containerList);
       } else {
         containerList = containersPerNode.get(name);
       }
-      containerList.add(c);
+      containerList.add(workerInfo);
     }
 
     int i = 0;
     // we take each container as an executor
-    for (Map.Entry<String, List<WorkerComputeResource>> e : containersPerNode.entrySet()) {
+    for (Map.Entry<String, List<JobMasterAPI.WorkerInfo>> entry : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
-      for (WorkerComputeResource c : e.getValue()) {
-        executorsOfGroup.add(c.getId());
+      for (JobMasterAPI.WorkerInfo workerInfo : entry.getValue()) {
+        executorsOfGroup.add(workerInfo.getWorkerID());
       }
       groupsToTasks.put(i, executorsOfGroup);
       i++;
     }
 
-    return new TaskPlan(containersToTasks, groupsToTasks, resourcePlan.getWorkerId());
+    return new TaskPlan(containersToTasks, groupsToTasks, workerID);
   }
 }

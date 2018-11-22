@@ -59,6 +59,7 @@ public final class MesosContext extends SchedulerContext {
   public static final String MESOS_WORKER_CLASS = "twister2.class.mesos.worker";
   public static final String MESOS_CONTAINER_CLASS = "twister2.job.worker.class";
 
+
   public static final int DEFAULT_RAM_SIZE = 128; // 1GB
   public static final int DEFAULT_DISK_SIZE = 128; // 1GB
   public static final int DEFAULT_CPU_AMOUNT = 1;
@@ -70,7 +71,6 @@ public final class MesosContext extends SchedulerContext {
 
   private MesosContext() {
   }
-
 
   public static String mesosClusterName(Config cfg) {
     return cfg.getStringValue(MESOS_CLUSTER_NAME);
@@ -148,6 +148,7 @@ public final class MesosContext extends SchedulerContext {
   public static String getMesosMasterHost(Config config) {
     return config.getStringValue(MESOS_MASTER_HOST);
   }
+
   /*
   public static String getSchedulerWorkingDirectory(Config config) {
     return config.getStringValue(SCHEDULER_WORKING_DIRECTORY);

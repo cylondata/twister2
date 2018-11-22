@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.comms.op.batch;
 
+import java.util.Comparator;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -21,9 +22,9 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchPartialReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
@@ -66,8 +67,8 @@ public class BJoin {
 
     MessageReceiver finalRcvr;
     if (shuffle) {
-      finalRcvr = new DPartitionBatchFinalReceiver(
-          rcvr, false, shuffleDir, null);
+      finalRcvr = new DJoinBatchFinalReceiver(
+          rcvr, shuffleDir, new IntegerComparator());
     } else {
       finalRcvr = new JoinBatchFinalReceiver(rcvr);
     }
@@ -152,5 +153,14 @@ public class BJoin {
   public void close() {
     partitionLeft.close();
     partitionRight.close();
+  }
+
+  private class IntegerComparator implements Comparator<Object> {
+    @Override
+    public int compare(Object o1, Object o2) {
+      int o11 = (int) o1;
+      int o21 = (int) o2;
+      return Integer.compare(o11, o21);
+    }
   }
 }

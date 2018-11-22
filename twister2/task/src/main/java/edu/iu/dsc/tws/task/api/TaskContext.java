@@ -145,6 +145,16 @@ public class TaskContext {
   }
 
   /**
+   * Get a configuration with a name
+   *
+   * @param name name of the config
+   * @return the config, if not found return null
+   */
+  public Object getConfig(String name) {
+    return configs.get(name);
+  }
+
+  /**
    * Write a message with a key
    *
    * @param edge the edge

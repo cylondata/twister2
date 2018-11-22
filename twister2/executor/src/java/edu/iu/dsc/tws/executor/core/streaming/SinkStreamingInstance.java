@@ -111,12 +111,12 @@ public class SinkStreamingInstance implements INodeInstance {
     }
   }
 
-  public void prepare() {
-
+  public void prepare(Config cfg) {
     TaskContext taskContext = new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
         parallelism, workerId, nodeConfigs);
 
-    streamingTask.prepare(config, taskContext);
+    streamingTask.prepare(cfg, taskContext);
+
 
     if (streamingTask instanceof SinkCheckpointableTask) {
       ((SinkCheckpointableTask) streamingTask).connect(config, taskContext);

@@ -148,9 +148,9 @@ public class TaskStreamingInstance implements INodeInstance {
     }
   }
 
-  public void prepare() {
+  public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
-    task.prepare(config, new TaskContext(taskIndex, taskId, taskName, parallelism, workerId,
+    task.prepare(cfg, new TaskContext(taskIndex, taskId, taskName, parallelism, workerId,
         outputCollection, nodeConfigs));
   }
 

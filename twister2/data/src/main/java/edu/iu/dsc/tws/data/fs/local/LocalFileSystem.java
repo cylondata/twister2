@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
 import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.utils.OperatingSystem;
 
 /**
  * Represents a local file system.
@@ -38,7 +39,8 @@ public class LocalFileSystem extends FileSystem {
   /**
    * The URI representing the local file system.
    */
-  private URI uri = URI.create("file:///");
+  private static URI uri = OperatingSystem.isWindows() ? URI.create("file:/")
+      : URI.create("file:///");
 
   /**
    * Path pointing to the current working directory.
@@ -167,12 +169,13 @@ public class LocalFileSystem extends FileSystem {
   }
 
   @Override
-  public FSDataOutputStream create(Path f) throws IOException {
-    final Path parent = f.getParent();
+  public FSDataOutputStream create(Path filePath) throws IOException {
+    final Path parent = filePath.getParent();
     if (parent != null && !mkdirs(parent)) {
       throw new IOException("Mkdirs failed to create " + parent);
     }
-    final File file = pathToFile(f);
+
+    final File file = pathToFile(filePath);
     return new LocalDataOutputStream(file);
   }
 
@@ -190,25 +193,8 @@ public class LocalFileSystem extends FileSystem {
         throw new IOException("Directory " + file.toString() + " is not empty");
       }
     }
-    return delete(file);
-  }
 
-  private boolean delete(final File f) {
-    if (f.isDirectory()) {
-      final File[] files = f.listFiles();
-      if (files != null) {
-        for (File file : files) {
-          final boolean del = delete(file);
-          if (!del) {
-            return false;
-          }
-        }
-      }
-    } else {
-      return f.delete();
-    }
-    // Now directory is empty
-    return f.delete();
+    return delete(file);
   }
 
   @Override
@@ -245,5 +231,34 @@ public class LocalFileSystem extends FileSystem {
   @Override
   public boolean isDistributedFS() {
     return false;
+  }
+
+  /**
+   * Deletes the given file or directory.
+   *
+   * @param f
+   *        the file to be deleted
+   * @return <code>true</code> if all files were deleted successfully, <code>false</code> otherwise
+   * @throws IOException
+   *         thrown if an error occurred while deleting the files/directories
+   */
+  private boolean delete(final File f) throws IOException {
+
+    if (f.isDirectory()) {
+      final File[] files = f.listFiles();
+      if (files != null) {
+        for (File file : files) {
+          final boolean del = delete(file);
+          if (!del) {
+            return false;
+          }
+        }
+      }
+    } else {
+      return f.delete();
+    }
+
+    // Now directory is empty
+    return f.delete();
   }
 }

@@ -1,8 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
+load("//tools:maven.bzl", "t2_java_lib")
+
 common_deps_files = [
     "@org_yaml_snakeyaml//jar",
-    "//twister2/common/src/java:config-java",
     "//twister2/common/src/java:common-java",
     "//twister2/comms/src/java:comms-java",
     "//twister2/taskscheduler/src/java:taskscheduler-java",
@@ -13,7 +14,7 @@ common_deps_files = [
     "@com_google_guava_guava//jar",
 ]
 
-java_library(
+t2_java_lib(
     name = "executor-java",
     srcs = glob(["**/*.java"]),
     deps = common_deps_files,

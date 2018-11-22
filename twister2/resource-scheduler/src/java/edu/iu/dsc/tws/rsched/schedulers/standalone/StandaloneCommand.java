@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -35,8 +34,7 @@ public class StandaloneCommand extends MPICommand {
   }
 
   @Override
-  protected List<String> mpiCommand(String workingDirectory,
-                                    RequestedResources resourcePlan, JobAPI.Job job) {
+  protected List<String> mpiCommand(String workingDirectory, JobAPI.Job job) {
     String twister2Home = Paths.get(workingDirectory, job.getJobName()).toString();
     String configDirectoryName = Paths.get(workingDirectory,
         job.getJobName(), SchedulerContext.clusterType(config)).toString();
@@ -44,7 +42,7 @@ public class StandaloneCommand extends MPICommand {
 
     // lets construct the mpi command to launch
     List<String> mpiCommand = mpiCommand(getScriptPath());
-    Map<String, Object> map = mpiCommandArguments(config, resourcePlan, job);
+    Map<String, Object> map = mpiCommandArguments(config, job);
 
     mpiCommand.add(map.get("procs").toString());
     mpiCommand.add(map.get("java_props").toString());

@@ -11,15 +11,6 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 
-# worker class to run
-twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BroadcastCommunication"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.batch.sort.SortJob"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.comms.batch.BReduceExample"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
-# twister2.job.worker.class: "edu.iu.dsc.tws.examples.batch.comms.batch.BReduceExample"
-
 # image pull policy, by default is IfNotPresent
 # it could also be Always
 # kubernetes.image.pull.policy: "Always"
@@ -66,6 +57,3 @@ twister2.zookeeper.server.addresses: "ip:port"
 # the root node path of this job on ZooKeeper
 # the default is "/twister2"
 #twister2.zookeeper.root.node.path: "/twister2"
-
-# if the workers want to wait for all others to join a job, max wait time in ms
-twister2.zookeeper.max.wait.time.for.all.workers.to.join: 100000

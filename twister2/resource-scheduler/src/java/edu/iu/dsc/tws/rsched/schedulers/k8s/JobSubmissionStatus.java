@@ -11,12 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s;
 
+import java.util.ArrayList;
+
 public class JobSubmissionStatus {
   private boolean serviceForWorkersCreated;
   private boolean serviceForJobMasterCreated;
-  private boolean statefulsetForWorkersCreated;
-  private boolean statefulsetForJobMasterCreated;
   private boolean pvcCreated;
+  private ArrayList<String> createdStatefulSetNames = new ArrayList<>();
 
   public JobSubmissionStatus() { }
 
@@ -28,12 +29,8 @@ public class JobSubmissionStatus {
     return serviceForJobMasterCreated;
   }
 
-  public boolean isStatefulsetForWorkersCreated() {
-    return statefulsetForWorkersCreated;
-  }
-
-  public boolean isStatefulsetForJobMasterCreated() {
-    return statefulsetForJobMasterCreated;
+  public ArrayList<String> getCreatedStatefulSetNames() {
+    return createdStatefulSetNames;
   }
 
   public boolean isPvcCreated() {
@@ -48,12 +45,8 @@ public class JobSubmissionStatus {
     this.serviceForJobMasterCreated = serviceForJobMasterCreated;
   }
 
-  public void setStatefulsetForWorkersCreated(boolean statefulsetForWorkersCreated) {
-    this.statefulsetForWorkersCreated = statefulsetForWorkersCreated;
-  }
-
-  public void setStatefulsetForJobMasterCreated(boolean statefulsetForJobMasterCreated) {
-    this.statefulsetForJobMasterCreated = statefulsetForJobMasterCreated;
+  public void addCreatedStatefulSetName(String statefulSetName) {
+    createdStatefulSetNames.add(statefulSetName);
   }
 
   public void setPvcCreated(boolean pvcCreated) {

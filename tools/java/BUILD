@@ -5,7 +5,6 @@ package(default_visibility = ["//visibility:public"])
 java_toolchain(
     name = "twister2_java_toolchain",
     bootclasspath = ["@bazel_tools//tools/jdk:bootclasspath"],
-    encoding = "UTF-8",
     extclasspath = ["@bazel_tools//tools/jdk:extdir"],
     forcibly_disable_header_compilation = 0,
     genclass = ["@bazel_tools//tools/jdk:genclass"],
@@ -13,12 +12,8 @@ java_toolchain(
     ijar = ["@bazel_tools//tools/jdk:ijar"],
     javabuilder = ["@bazel_tools//tools/jdk:javabuilder"],
     javac = ["@bazel_tools//third_party/java/jdk/langtools:javac_jar"],
-    jvm_opts = [
-        "-Xbootclasspath/p:$(location @bazel_tools//third_party/java/jdk/langtools:javac_jar)",
-    ],
     misc = [
         "-Xlint:all",
-        "-Werror",
     ],
     singlejar = ["@bazel_tools//tools/jdk:singlejar"],
     source_version = "8",
