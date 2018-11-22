@@ -72,8 +72,8 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
             for (MessageObject messageObject : barrierMap.get(target).get(barrierSource)) {
               messages.get(messageObject.getTarget()).offer(messageObject.getMessage());
             }
-            barrierMap.get(target).clear();
           }
+          barrierMap.get(target).clear();
         }
       }
       return true;
