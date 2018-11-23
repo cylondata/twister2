@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -67,8 +68,9 @@ public class ReduceCommunication implements IWorker {
     try {
       taskPlan = Utils.createReduceTaskPlan(cfg, workerID,
           workerController.getAllWorkers(), NO_OF_TASKS);
-    } catch (java.util.concurrent.TimeoutException e) {
-      e.printStackTrace();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
     }
     //first get the communication config file
     TWSChannel network = Network.initializeChannel(cfg, workerController);

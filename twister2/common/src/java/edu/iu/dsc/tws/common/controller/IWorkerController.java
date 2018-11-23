@@ -24,8 +24,8 @@
 package edu.iu.dsc.tws.common.controller;
 
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
@@ -73,9 +73,9 @@ public interface IWorkerController {
 
   /**
    * wait for all workers in the job to arrive at this barrier
-   * if the time limit has been reached before all workers arrived, return false
-   * otherwise return true
+   * After waiting for the timeout specified in ControllerContext.maxWaitTimeOnBarrier
+   * if some workers still could not arrive at the barrier, throw an exception
    * @return
    */
-  boolean waitOnBarrier();
+  void waitOnBarrier() throws TimeoutException;
 }

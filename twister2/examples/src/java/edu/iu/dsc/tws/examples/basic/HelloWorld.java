@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
@@ -50,8 +51,8 @@ public class HelloWorld implements IWorker {
     List<JobMasterAPI.WorkerInfo> workerList = null;
     try {
       workerList = workerController.getAllWorkers();
-    } catch (java.util.concurrent.TimeoutException e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
       return;
     }
     String workersStr = WorkerInfoUtils.workerListAsString(workerList);

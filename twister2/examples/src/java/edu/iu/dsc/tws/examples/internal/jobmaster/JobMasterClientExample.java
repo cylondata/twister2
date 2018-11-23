@@ -31,6 +31,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -107,23 +108,19 @@ public final class JobMasterClientExample {
 
     try {
       workerList = workerController.getAllWorkers();
-    } catch (java.util.concurrent.TimeoutException e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
       return;
     }
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     // wait up to 10sec
     sleeeep((long) (Math.random() * 10000));
-    long timeLimit = 20000;
-    boolean allWorkersReachedBarrier = client.getJMWorkerController().waitOnBarrier();
-    if (allWorkersReachedBarrier) {
+    try {
+      client.getJMWorkerController().waitOnBarrier();
       LOG.info("All workers reached the barrier. Proceeding.");
-    } else {
-      LOG.info("Not all workers reached the barrier on the given timelimit: " + timeLimit + "ms"
-          + " Exiting ....... ");
-      client.close();
-      return;
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
 
     // wait up to 3sec

@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
@@ -139,9 +140,8 @@ public final class ZKWorkerControllerExample {
     // wait until 100sec
     try {
       workerList = zkWorkerController.getAllWorkers();
-    } catch (java.util.concurrent.TimeoutException e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-      return;
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
@@ -149,14 +149,12 @@ public final class ZKWorkerControllerExample {
 
     LOG.info("Waiting on the first barrier -------------------------- ");
     long timeLimit = 200000;
-    boolean allWorkersReachedBarrier = zkWorkerController.waitOnBarrier();
-    if (allWorkersReachedBarrier) {
+
+    try {
+      zkWorkerController.waitOnBarrier();
       LOG.info("All workers reached the barrier. Proceeding.");
-    } else {
-      LOG.info("Not all workers reached the barrier on the given timelimit: " + timeLimit + "ms"
-          + " Exiting ....... ");
-      zkWorkerController.close();
-      return;
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
 
     workerList = zkWorkerController.getCurrentWorkers();
@@ -165,14 +163,11 @@ public final class ZKWorkerControllerExample {
     sleeeep((long) (Math.random() * 10000));
 
     LOG.info("Waiting on the second barrier -------------------------- ");
-    allWorkersReachedBarrier = zkWorkerController.waitOnBarrier();
-    if (allWorkersReachedBarrier) {
+    try {
+      zkWorkerController.waitOnBarrier();
       LOG.info("All workers reached the barrier. Proceeding.");
-    } else {
-      LOG.info("Not all workers reached the barrier on the given timelimit: " + timeLimit + "ms"
-          + " Exiting ....... ");
-      zkWorkerController.close();
-      return;
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
 
     // sleep some random amount of time before closing

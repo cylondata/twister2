@@ -15,7 +15,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +23,7 @@ import com.google.protobuf.Message;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
@@ -160,7 +160,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
   }
 
-  public boolean waitOnBarrier() {
+  public void waitOnBarrier() throws TimeoutException {
 
     JobMasterAPI.BarrierRequest barrierRequest = JobMasterAPI.BarrierRequest.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
@@ -170,10 +170,9 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
     try {
       rrClient.sendRequestWaitResponse(barrierRequest,
           ControllerContext.maxWaitTimeOnBarrier(config));
-      return true;
     } catch (BlockingSendException e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-      return false;
+      throw new TimeoutException("All workers have not arrived at the barrier on the time limit: "
+          + ControllerContext.maxWaitTimeOnBarrier(config) + "ms.", e);
     }
 
   }

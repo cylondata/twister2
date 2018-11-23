@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.rsched.bootstrap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,6 +34,7 @@ import org.apache.curator.utils.CloseableUtils;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
@@ -505,9 +505,13 @@ public class ZKWorkerController implements IWorkerController {
    * @return
    */
   @Override
-  public boolean waitOnBarrier() {
+  public void waitOnBarrier() throws TimeoutException {
 
-    return incrementBarrierDAI(0, ControllerContext.maxWaitTimeOnBarrier(config));
+    boolean allArrived = incrementBarrierDAI(0, ControllerContext.maxWaitTimeOnBarrier(config));
+    if (!allArrived) {
+      throw new TimeoutException("All workers have not arrived at the barrier on the time limit: "
+          + ControllerContext.maxWaitTimeOnBarrier(config) + "ms.");
+    }
   }
 
 

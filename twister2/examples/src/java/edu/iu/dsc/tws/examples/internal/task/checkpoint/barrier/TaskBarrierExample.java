@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.examples.internal.task.checkpoint.barrier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -22,6 +24,7 @@ import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -46,6 +49,8 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class TaskBarrierExample implements IWorker {
+  private static final Logger LOG = Logger.getLogger(TaskBarrierExample.class.getName());
+
   @Override
   public void execute(Config config, int workerID,
                       IWorkerController workerController,
@@ -66,23 +71,19 @@ public class TaskBarrierExample implements IWorker {
     RoundRobinTaskScheduler roundRobinTaskScheduling = new RoundRobinTaskScheduler();
     roundRobinTaskScheduling.initialize(config);
 
-    WorkerPlan workerPlan = null;
+    List<JobMasterAPI.WorkerInfo> workerList = null;
     try {
-      workerPlan = createWorkerPlan(workerController.getAllWorkers());
-    } catch (java.util.concurrent.TimeoutException e) {
-      e.printStackTrace();
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
     }
+    WorkerPlan workerPlan = createWorkerPlan(workerList);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
 
     TWSChannel network = Network.initializeChannel(config, workerController);
-    ExecutionPlanBuilder executionPlanBuilder = null;
-    try {
-      executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-          workerController.getAllWorkers(),
-          new Communicator(config, network));
-    } catch (java.util.concurrent.TimeoutException e) {
-      e.printStackTrace();
-    }
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
+          workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network,
         OperationMode.STREAMING);

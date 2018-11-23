@@ -15,12 +15,12 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -137,8 +137,8 @@ public class MesosWorkerController implements IWorkerController {
   }
 
   @Override
-  public boolean waitOnBarrier() {
-    return zkWorkerController.waitOnBarrier();
+  public void waitOnBarrier() throws TimeoutException {
+    zkWorkerController.waitOnBarrier();
   }
 
   /**

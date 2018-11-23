@@ -17,7 +17,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,6 +25,7 @@ import com.google.gson.reflect.TypeToken;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -272,7 +272,7 @@ public class K8sWorkerController implements IWorkerController {
       boolean listBuilt = buildWorkerListWaitForAll(timeLimitMilliSec);
       if (!listBuilt) {
         throw
-            new TimeoutException("All workers have not joined the job on the specified time limit: "
+            new TimeoutException("All workers have not joined the job on the time limit: "
             + timeLimitMilliSec + "ms.");
       }
     }
@@ -286,9 +286,6 @@ public class K8sWorkerController implements IWorkerController {
     if (allRunning) {
       return workerList;
     } else {
-      LOG.log(Level.SEVERE, "Can not get to all pods running state. Time limit may have been "
-          + "reached. Or there can be a problem for pods to start and running. Time limit value: "
-          + timeLimitMilliSec + "ms");
       throw
           new TimeoutException("All workers have not joined the job on the specified time limit: "
               + timeLimitMilliSec + "ms.");
@@ -371,8 +368,7 @@ public class K8sWorkerController implements IWorkerController {
    * @return
    */
   @Override
-  public boolean waitOnBarrier() {
-    return false;
+  public void waitOnBarrier() throws TimeoutException {
   }
 
 }
