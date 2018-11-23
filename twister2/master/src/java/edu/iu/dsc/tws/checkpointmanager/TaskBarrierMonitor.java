@@ -230,12 +230,14 @@ public class TaskBarrierMonitor implements MessageHandler {
         LOG.info("All sinks acknowledged checkpoint manager for barrier ID : " + currentBarrierID);
         //start the next checkpoint
         int checkpointLimit = CheckpointContext.getCheckpointLimit(config);
-        if (currentBarrierID % 5 == 0) {
-          try {
-            deleteUnwantedCheckpoints(currentBarrierID, checkpointLimit);
-            LOG.info("Unwanted checkpointIDs are deleted ");
-          } catch (IOException e) {
-            LOG.log(Level.WARNING, "could not delete unwanted ids", e);
+        if (!CheckpointContext.enableHDFS(config)) {
+          if (currentBarrierID % 5 == 0) {
+            try {
+              deleteUnwantedCheckpoints(currentBarrierID, checkpointLimit);
+              LOG.info("Unwanted checkpointIDs are deleted ");
+            } catch (IOException e) {
+              LOG.log(Level.WARNING, "could not delete unwanted ids", e);
+            }
           }
         }
         currentBarrierID++;
