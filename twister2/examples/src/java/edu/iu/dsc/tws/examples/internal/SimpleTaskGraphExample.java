@@ -137,7 +137,13 @@ public class SimpleTaskGraphExample implements IWorker {
     builder.addConfiguration("task4", "inputdataset", sourceInputDataset);
 
     DataFlowTaskGraph graph = builder.build();
-    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    WorkerPlan workerPlan = null;
+    try {
+      workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
 
     LOG.info("Generated Dataflow Task Graph Is:" + graph.getTaskVertexSet());
 

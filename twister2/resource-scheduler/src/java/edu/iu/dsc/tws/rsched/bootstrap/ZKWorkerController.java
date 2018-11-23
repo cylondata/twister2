@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.rsched.bootstrap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -401,7 +402,7 @@ public class ZKWorkerController implements IWorkerController {
    * return null if the timeLimit is reached or en exception is thrown while waiting
    */
   @Override
-  public List<WorkerInfo> getAllWorkers() {
+  public List<WorkerInfo> getAllWorkers() throws TimeoutException {
 
     long timeLimit = ControllerContext.maxWaitTimeForAllToJoin(config);
     long duration = 0;
@@ -418,8 +419,8 @@ public class ZKWorkerController implements IWorkerController {
       }
     }
 
-    LOG.warning("Waited for all workers to join, but timeLimit has been reached.");
-    return null;
+    throw new TimeoutException("All workers have not joined the job on the specified time limit: "
+        + timeLimit + "ms.");
   }
 
   /**

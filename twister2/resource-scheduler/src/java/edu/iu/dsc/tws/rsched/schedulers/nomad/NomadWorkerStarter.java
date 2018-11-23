@@ -192,7 +192,12 @@ public final class NomadWorkerStarter {
 
     String workerClass = SchedulerContext.workerClass(config);
 
-    List<JobMasterAPI.WorkerInfo> workerInfos = workerController.getAllWorkers();
+    try {
+      List<JobMasterAPI.WorkerInfo> workerInfos = workerController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
 
     try {
       Object object = ReflectionUtils.newInstance(workerClass);

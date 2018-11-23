@@ -192,7 +192,13 @@ public final class AuroraWorkerStarter {
     LOG.info("Waiting for " + numberOfWorkers + " workers to join .........");
 
     long startTime = System.currentTimeMillis();
-    List<JobMasterAPI.WorkerInfo> workerList = zkWorkerController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = zkWorkerController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
     long duration = System.currentTimeMillis() - startTime;
 
     if (workerList == null) {

@@ -106,6 +106,9 @@ public class MesosWorker implements Executor {
       workerController.close();
     } catch (UnknownHostException e) {
       LOG.severe("Host unkown " + e.getMessage());
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
     }
 
     //The below two lines can be used to send a message to the framework

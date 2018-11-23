@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
@@ -66,7 +67,13 @@ public class WordCountWorker implements IWorker {
     taskStages.add(NO_OF_TASKS);
     taskStages.add(NO_OF_TASKS);
 
-    List<JobMasterAPI.WorkerInfo> workerList = workerController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(
         cfg, workerID, taskStages, workerList);

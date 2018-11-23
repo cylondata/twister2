@@ -79,8 +79,7 @@ public class MesosDockerWorker {
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
-      workerInfoList = workerController.getAllWorkers(
-      );
+      workerInfoList = workerController.getAllWorkers();
       LOG.info("Everyone has joined");
       //container.execute(worker.config, id, null, workerController, null);
 

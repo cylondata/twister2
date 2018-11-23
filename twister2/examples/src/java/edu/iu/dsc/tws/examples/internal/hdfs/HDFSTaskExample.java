@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -109,7 +110,14 @@ public class HDFSTaskExample implements IWorker {
     builder.addConfiguration("source", "outputdataset", outputList);
     builder.addConfiguration("sink", "outputdataset", outputList);
 
-    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
+    WorkerPlan workerPlan = createWorkerPlan(workerList);
     DataFlowTaskGraph graph = builder.build();
 
     TaskSchedulePlan taskSchedulePlan;
@@ -140,7 +148,7 @@ public class HDFSTaskExample implements IWorker {
 
     TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-        workerController.getAllWorkers(), new Communicator(config, network));
+          workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network);
     executor.execute();

@@ -66,13 +66,23 @@ public class TaskBarrierExample implements IWorker {
     RoundRobinTaskScheduler roundRobinTaskScheduling = new RoundRobinTaskScheduler();
     roundRobinTaskScheduling.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    WorkerPlan workerPlan = null;
+    try {
+      workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    } catch (java.util.concurrent.TimeoutException e) {
+      e.printStackTrace();
+    }
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
 
     TWSChannel network = Network.initializeChannel(config, workerController);
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-        workerController.getAllWorkers(),
-        new Communicator(config, network));
+    ExecutionPlanBuilder executionPlanBuilder = null;
+    try {
+      executionPlanBuilder = new ExecutionPlanBuilder(workerID,
+          workerController.getAllWorkers(),
+          new Communicator(config, network));
+    } catch (java.util.concurrent.TimeoutException e) {
+      e.printStackTrace();
+    }
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network,
         OperationMode.STREAMING);

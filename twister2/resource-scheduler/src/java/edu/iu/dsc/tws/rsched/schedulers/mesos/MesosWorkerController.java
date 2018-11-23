@@ -15,6 +15,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -109,7 +110,7 @@ public class MesosWorkerController implements IWorkerController {
   }
 
   @Override
-  public List<JobMasterAPI.WorkerInfo> getAllWorkers() {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException {
 
     LOG.info("Waiting for " + numberOfWorkers + " workers to join .........");
 

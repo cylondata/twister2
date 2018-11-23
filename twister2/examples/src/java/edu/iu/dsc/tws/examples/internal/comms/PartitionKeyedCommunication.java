@@ -68,8 +68,14 @@ public class PartitionKeyedCommunication implements IWorker {
     int noOfTasksPerExecutor = NO_OF_TASKS / workerController.getNumberOfWorkers();
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, workerID,
-        workerController.getAllWorkers(), NO_OF_TASKS);
+    TaskPlan taskPlan = null;
+    try {
+      taskPlan = Utils.createReduceTaskPlan(cfg, workerID,
+          workerController.getAllWorkers(), NO_OF_TASKS);
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
     //first get the communication config file
     TWSChannel network = Network.initializeChannel(cfg, workerController);
 

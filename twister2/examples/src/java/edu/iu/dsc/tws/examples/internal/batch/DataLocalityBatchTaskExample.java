@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -154,7 +155,14 @@ public class DataLocalityBatchTaskExample implements IWorker {
     builder.addConfiguration("sink2", "outputdataset2", sinkOutputDataset2);
 
     DataFlowTaskGraph graph = builder.build();
-    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
+    WorkerPlan workerPlan = createWorkerPlan(workerList);
 
     //Assign the "datalocalityaware" or "roundrobin" scheduling mode in config file.
     TaskScheduler taskScheduler = new TaskScheduler();
@@ -183,7 +191,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
 
     TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-        workerController.getAllWorkers(), new Communicator(config, network));
+          workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network, OperationMode.BATCH);
     executor.execute();

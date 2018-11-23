@@ -15,6 +15,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -92,17 +93,19 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   }
 
   @Override
-  public List<JobMasterAPI.WorkerInfo> getAllWorkers() {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException {
     if (workerList.size() == numberOfWorkers) {
       return workerList;
     }
 
+    long timeLimit = ControllerContext.maxWaitTimeForAllToJoin(config);
     boolean sentAndReceived =
-        sendWorkerListRequest(ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED,
-            ControllerContext.maxWaitTimeForAllToJoin(config));
+        sendWorkerListRequest(ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED, timeLimit);
 
     if (!sentAndReceived) {
-      return null;
+      throw
+          new TimeoutException("All workers have not joined the job on the specified time limit: "
+          + timeLimit + "ms.");
     }
 
     return workerList;

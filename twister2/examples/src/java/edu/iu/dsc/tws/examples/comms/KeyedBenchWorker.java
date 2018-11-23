@@ -73,7 +73,12 @@ public abstract class KeyedBenchWorker implements IWorker {
     this.workerId = workerID;
 
     // wait for all workers in this job to join
-    workerList = workerController.getAllWorkers();
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
     if (workerList != null) {
       LOG.info("All workers joined. " + WorkerInfoUtils.workerListAsString(workerList));
     } else {

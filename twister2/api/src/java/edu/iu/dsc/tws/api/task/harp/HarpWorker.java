@@ -72,7 +72,13 @@ public abstract class HarpWorker implements IWorker {
   public void execute(Config config, int workerID,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
-    List<JobMasterAPI.WorkerInfo> workersList = workerController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workersList = null;
+    try {
+      workersList = workerController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
 
     LOG.info(String.format("Worker %s starting with %d workers, "
             + "after waiting for all to start. \n %s",

@@ -69,7 +69,13 @@ public class BasicNetworkTest implements IWorker, Runnable {
     echoServer.start();
 
     // wait for all workers in this job to join
-    List<JobMasterAPI.WorkerInfo> workerList = wController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = wController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
     if (workerList != null) {
       LOG.info("All workers joined. " + WorkerInfoUtils.workerListAsString(workerList));
     } else {

@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.examples.internal.jobmaster;
 
 import java.net.InetAddress;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -104,7 +105,12 @@ public final class JobMasterClientExample {
     List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
-    workerList = workerController.getAllWorkers();
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     // wait up to 10sec

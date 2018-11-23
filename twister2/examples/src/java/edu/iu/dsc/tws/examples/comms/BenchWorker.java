@@ -67,7 +67,12 @@ public abstract class BenchWorker implements IWorker {
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
     this.workerId = workerID;
-    this.workerList = workerController.getAllWorkers();
+    try {
+      this.workerList = workerController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(cfg, workerID,
         jobParameters.getTaskStages(), workerList);

@@ -60,7 +60,13 @@ public class BasicK8sWorker implements IWorker {
     }
 
     // wait for all workers in this job to join
-    List<JobMasterAPI.WorkerInfo> workerList = workerController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
     if (workerList == null) {
       LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
       return;

@@ -24,6 +24,7 @@
 package edu.iu.dsc.tws.examples.internal.bootstrap;
 
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -136,7 +137,12 @@ public final class ZKWorkerControllerExample {
 
     LOG.info("Waiting for all workers to join: ");
     // wait until 100sec
-    workerList = zkWorkerController.getAllWorkers();
+    try {
+      workerList = zkWorkerController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     sleeeep((long) (Math.random() * 10000));

@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.task;
 
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
@@ -80,7 +81,13 @@ public abstract class TaskWorker implements IWorker {
     this.persistentVolume = pVolume;
     this.volatileVolume = vVolume;
 
-    List<JobMasterAPI.WorkerInfo> workerInfoList = wController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workerInfoList = null;
+    try {
+      workerInfoList = wController.getAllWorkers();
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
 
     // create the channel
     channel = Network.initializeChannel(config, workerController);

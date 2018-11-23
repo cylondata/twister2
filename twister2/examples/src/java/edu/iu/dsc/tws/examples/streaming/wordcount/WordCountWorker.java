@@ -74,9 +74,14 @@ public class WordCountWorker implements IWorker {
   }
 
   private void setupTasks(IWorkerController workerController) {
-    taskPlan = WordCountUtils.createWordCountPlan(config, id,
-        workerController.getAllWorkers(),
-        NO_OF_TASKS);
+    try {
+      taskPlan = WordCountUtils.createWordCountPlan(config, id,
+          workerController.getAllWorkers(),
+          NO_OF_TASKS);
+    } catch (java.util.concurrent.TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
 
     sources = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS / 2; i++) {
