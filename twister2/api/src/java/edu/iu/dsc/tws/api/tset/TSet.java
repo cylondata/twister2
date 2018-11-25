@@ -19,23 +19,23 @@ package edu.iu.dsc.tws.api.tset;
 public interface TSet<T> {
 
   /**
-   *
+   * Map
    * @param mapFn
    * @param <P>
    * @return
    */
-  <P> TSet<P> map(MapFunction<T, ? extends P> mapFn);
+  <P> TSet<P> map(MapFunction<T, P> mapFn);
 
   /**
-   *
+   * Flatmap
    * @param mapFn
    * @param <P>
    * @return
    */
-  <P> TSet<P> flatMap(FlatMapFunction<T, ? extends P> mapFn);
+  <P> TSet<P> flatMap(FlatMapFunction<T, P> mapFn);
 
   /**
-   *
+   * Reduce
    * @param reduceFn
    * @return
    */

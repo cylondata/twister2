@@ -11,10 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
-public class MapTSet<T> extends BaseTSet<T> {
-  private BaseTSet<T> parent;
+import edu.iu.dsc.tws.api.tset.MapFunction;
+import edu.iu.dsc.tws.api.tset.ops.MapOp;
 
-  public MapTSet(BaseTSet<T> parent) {
+public class MapTSet<T, P> extends BaseTSet<T> {
+  private BaseTSet<P> parent;
+
+  private MapFunction<P, T> mapFn;
+
+  public MapTSet(BaseTSet<P> parent, MapFunction<P, T> mapFunc) {
     this.parent = parent;
+    this.mapFn = mapFunc;
+  }
+
+  protected void build() {
+    builder.addCompute(name, new MapOp<>(mapFn), parallel);
   }
 }

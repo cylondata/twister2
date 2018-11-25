@@ -9,13 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.api.tset.impl;
 
-/**
- * Map function
- * @param <T>
- * @param <O>
- */
-public interface MapFunction<T, O> {
-  O map(T t);
+import edu.iu.dsc.tws.api.tset.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
+
+public class FlatMapTSet<T, P> extends BaseTSet<T> {
+  private BaseTSet<P> parent;
+
+  private FlatMapFunction<P, T> mapFn;
+
+  public FlatMapTSet(BaseTSet<P> parent, FlatMapFunction<P, T> mapFunc) {
+    this.parent = parent;
+    this.mapFn = mapFunc;
+  }
+
+  protected void build() {
+    builder.addCompute(name, new FlatMapOp<>(mapFn), parallel);
+  }
 }

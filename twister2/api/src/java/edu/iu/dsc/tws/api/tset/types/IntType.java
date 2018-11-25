@@ -9,13 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.api.tset.types;
 
-/**
- * Map function
- * @param <T>
- * @param <O>
- */
-public interface MapFunction<T, O> {
-  O map(T t);
+import edu.iu.dsc.tws.api.tset.TType;
+import edu.iu.dsc.tws.data.api.DataType;
+
+public class IntType implements TType {
+  private int[] data;
+
+  private Object data() {
+    return data;
+  }
+
+  @Override
+  public DataType type() {
+    return DataType.INTEGER;
+  }
 }

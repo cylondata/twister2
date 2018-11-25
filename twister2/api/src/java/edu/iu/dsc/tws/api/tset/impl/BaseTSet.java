@@ -21,25 +21,43 @@ import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.TSet;
 
 public abstract class BaseTSet<T> implements TSet<T> {
-  private List<BaseTSet<?>> children;
+  protected List<BaseTSet<?>> children;
 
   /**
    * The builder to use to building the task graph
    */
-  private TaskGraphBuilder builder;
+  protected TaskGraphBuilder builder;
+
+  /**
+   * Name of the data set
+   */
+  protected String name;
+
+  /**
+   * The parallelism of the set
+   */
+  protected int parallel;
 
   public BaseTSet() {
     this.children = new ArrayList<>();
   }
 
-  @Override
-  public <P> TSet<P> map(MapFunction<T, ? extends P> mapFn) {
-    return null;
+  public String getName() {
+    return name;
+  }
+
+  public int getParallelism() {
+    return parallel;
   }
 
   @Override
-  public <P> TSet<P> flatMap(FlatMapFunction<T, ? extends P> mapFn) {
-    return null;
+  public <P> TSet<P> map(MapFunction<T, P> mapFn) {
+    return new MapTSet<P, T>(this, mapFn);
+  }
+
+  @Override
+  public <P> TSet<P> flatMap(FlatMapFunction<T, P> mapFn) {
+    return new FlatMapTSet<P, T>(this, mapFn);
   }
 
   @Override

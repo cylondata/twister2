@@ -11,11 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-/**
- * Map function
- * @param <T>
- * @param <O>
- */
-public interface MapFunction<T, O> {
-  O map(T t);
+import edu.iu.dsc.tws.data.api.DataType;
+
+public interface TType {
+  DataType type();
 }

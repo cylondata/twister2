@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.tset;
 
 /**
+ * Flat map function interface
  *
  * @param <T>
  * @param <O>
