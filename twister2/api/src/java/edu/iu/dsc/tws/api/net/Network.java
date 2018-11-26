@@ -13,9 +13,12 @@ package edu.iu.dsc.tws.api.net;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
@@ -27,6 +30,8 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import mpi.MPI;
 
 public final class Network {
+  public static final Logger LOG = Logger.getLogger(Network.class.getName());
+
   private Network() {
   }
 
@@ -57,7 +62,12 @@ public final class Network {
     channel.startListening();
 
     // wait for everyone to start the job master
-    wController.waitOnBarrier();
+    try {
+      wController.waitOnBarrier();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return null;
+    }
 
     // now talk to a central server and get the information about the worker
     // this is a synchronization step

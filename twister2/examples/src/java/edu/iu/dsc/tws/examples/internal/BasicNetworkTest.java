@@ -38,6 +38,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
@@ -69,7 +70,13 @@ public class BasicNetworkTest implements IWorker, Runnable {
     echoServer.start();
 
     // wait for all workers in this job to join
-    List<JobMasterAPI.WorkerInfo> workerList = wController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = wController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
     if (workerList != null) {
       LOG.info("All workers joined. " + WorkerInfoUtils.workerListAsString(workerList));
     } else {

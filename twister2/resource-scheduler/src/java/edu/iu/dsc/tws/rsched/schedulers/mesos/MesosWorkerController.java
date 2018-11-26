@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -109,7 +110,7 @@ public class MesosWorkerController implements IWorkerController {
   }
 
   @Override
-  public List<JobMasterAPI.WorkerInfo> getAllWorkers() {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException {
 
     LOG.info("Waiting for " + numberOfWorkers + " workers to join .........");
 
@@ -136,8 +137,8 @@ public class MesosWorkerController implements IWorkerController {
   }
 
   @Override
-  public boolean waitOnBarrier() {
-    return zkWorkerController.waitOnBarrier();
+  public void waitOnBarrier() throws TimeoutException {
+    zkWorkerController.waitOnBarrier();
   }
 
   /**

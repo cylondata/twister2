@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -72,7 +73,13 @@ public abstract class HarpWorker implements IWorker {
   public void execute(Config config, int workerID,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
-    List<JobMasterAPI.WorkerInfo> workersList = workerController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workersList = null;
+    try {
+      workersList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
 
     LOG.info(String.format("Worker %s starting with %d workers, "
             + "after waiting for all to start. \n %s",

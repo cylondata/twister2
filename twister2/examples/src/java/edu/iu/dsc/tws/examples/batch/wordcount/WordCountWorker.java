@@ -15,11 +15,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -66,10 +68,15 @@ public class WordCountWorker implements IWorker {
     taskStages.add(NO_OF_TASKS);
     taskStages.add(NO_OF_TASKS);
 
-    List<JobMasterAPI.WorkerInfo> workerList = workerController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(
-        cfg, workerID, taskStages, workerList);
+    this.taskPlan = Utils.createStageTaskPlan(cfg, workerID, taskStages, workerList);
 
     setupTasks();
     setupNetwork(workerController);
