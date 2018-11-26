@@ -30,6 +30,7 @@ import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Configuration;
 import io.kubernetes.client.apis.AppsV1beta2Api;
 import io.kubernetes.client.apis.CoreV1Api;
+import io.kubernetes.client.models.V1ConfigMap;
 import io.kubernetes.client.models.V1DeleteOptions;
 import io.kubernetes.client.models.V1Node;
 import io.kubernetes.client.models.V1NodeAddress;
@@ -136,8 +137,7 @@ public class KubernetesController {
           namespace, statefulSet, null, null, null).execute();
 
       if (response.isSuccessful()) {
-        LOG.log(Level.INFO, "StatefulSet [" + statefulSetName
-            + "] is created for the same named job.");
+        LOG.log(Level.INFO, "StatefulSet [" + statefulSetName + "] is created.");
         return true;
 
       } else {
@@ -151,6 +151,35 @@ public class KubernetesController {
       LOG.log(Level.SEVERE, "Exception when creating the StatefulSet: " + statefulSetName, e);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when creating the StatefulSet: " + statefulSetName, e);
+    }
+    return false;
+  }
+
+  /**
+   * create the given service on Kubernetes master
+   */
+  public boolean createConfigMap(String namespace, V1ConfigMap configMap) {
+
+    String configMapName = configMap.getMetadata().getName();
+    try {
+      Response response = coreApi.createNamespacedConfigMapCall(
+          namespace, configMap, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "ConfigMap [" + configMapName + "] is created.");
+        return true;
+
+      } else {
+        LOG.log(Level.SEVERE, "Error when creating the ConfigMap [" + configMapName + "]: "
+            + response);
+        LOG.log(Level.SEVERE, "Submitted ConfigMap Object: " + configMap);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the StatefulSet: " + configMapName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the StatefulSet: " + configMapName, e);
     }
     return false;
   }

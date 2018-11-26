@@ -55,7 +55,8 @@ public final class JobMasterStarter {
    */
   public static Config buildConfigFromEnvVariables() {
     return Config.newBuilder()
-        .put(JobMasterContext.JOB_MASTER_IP, System.getenv(JobMasterContext.JOB_MASTER_IP))
+        .put(JobMasterContext.JOB_MASTER_IP,
+            System.getenv(K8sJobMasterEnvVariables.JOB_MASTER_IP + ""))
         .put(JobMasterContext.JOB_MASTER_PORT, System.getenv(JobMasterContext.JOB_MASTER_PORT))
         .put(Context.JOB_NAME, System.getenv(Context.JOB_NAME))
         .put(KubernetesContext.KUBERNETES_NAMESPACE,

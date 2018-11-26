@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
+import io.kubernetes.client.models.V1ConfigMap;
 import io.kubernetes.client.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1beta2StatefulSet;
@@ -265,6 +266,10 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // create statefulset for the job master
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
+
+      // create ConfigMap
+      V1ConfigMap configMap = JobMasterRequestObject.createJobMasterConfigMap(job);
+      boolean configMapCreated = controller.createConfigMap(namespace, configMap);
 
       // create the StatefulSet object for this job
       V1beta2StatefulSet jobMasterStatefulSet = JobMasterRequestObject.createStatefulSetObject();

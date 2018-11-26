@@ -23,16 +23,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
@@ -40,6 +46,8 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
 
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
+import io.kubernetes.client.models.V1ConfigMap;
+import io.kubernetes.client.models.V1ConfigMapVolumeSource;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1ContainerPort;
 import io.kubernetes.client.models.V1EnvVar;
@@ -151,6 +159,9 @@ public final class JobMasterRequestObject {
       volumes.add(persistentVolume);
     }
 
+    V1Volume configMapVolume = createConfigMapVolume();
+    volumes.add(configMapVolume);
+
     podSpec.setVolumes(volumes);
 
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
@@ -160,6 +171,17 @@ public final class JobMasterRequestObject {
     template.setSpec(podSpec);
     return template;
   }
+
+  public static V1Volume createConfigMapVolume() {
+    V1Volume configMapVolume = new V1Volume();
+    configMapVolume.setName(KubernetesConstants.CONFIG_MAP_VOLUME_NAME);
+    V1ConfigMapVolumeSource volumeSource = new V1ConfigMapVolumeSource();
+    volumeSource.setName(KubernetesUtils.createJobMasterConfigMapName(jobName));
+    configMapVolume.setConfigMap(volumeSource);
+    return configMapVolume;
+  }
+
+
 
   /**
    * construct a container
@@ -206,6 +228,11 @@ public final class JobMasterRequestObject {
       volumeMounts.add(persVolumeMount);
     }
 
+    V1VolumeMount configMapVolumeMount = new V1VolumeMount();
+    configMapVolumeMount.setName(KubernetesConstants.CONFIG_MAP_VOLUME_NAME);
+    configMapVolumeMount.setMountPath(KubernetesConstants.CONFIG_MAP_VOLUME_MOUNT);
+    volumeMounts.add(configMapVolumeMount);
+
     container.setVolumeMounts(volumeMounts);
 
     V1ContainerPort port = new V1ContainerPort();
@@ -232,7 +259,7 @@ public final class JobMasterRequestObject {
     varSource.setFieldRef(fieldSelector);
 
     envVars.add(new V1EnvVar()
-        .name(JobMasterContext.JOB_MASTER_IP)
+        .name(K8sJobMasterEnvVariables.JOB_MASTER_IP + "")
         .valueFrom(varSource));
 
     envVars.add(new V1EnvVar()
@@ -345,6 +372,42 @@ public final class JobMasterRequestObject {
     service.setSpec(serviceSpec);
 
     return service;
+  }
+
+  public static V1ConfigMap createJobMasterConfigMap(JobAPI.Job job) {
+    String configMapName = KubernetesUtils.createJobMasterConfigMapName(jobName);
+
+    V1ConfigMap configMap = new V1ConfigMap();
+    configMap.apiVersion("v1");
+    configMap.setKind("ConfigMap");
+
+    // construct and set metadata
+    V1ObjectMeta meta = new V1ObjectMeta();
+    meta.setName(configMapName);
+    configMap.setMetadata(meta);
+
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(job.getJobName());
+    configMap.putBinaryDataItem(jobDescFileName, job.toByteArray());
+
+    String clientYaml = Context.clientConfigurationFile(config);
+    String fileContent = readYAMLFile(clientYaml);
+    configMap.putDataItem("client.yaml", fileContent);
+
+    return configMap;
+  }
+
+  /**
+   * read the given YAML file as a single String
+   * @param filename
+   * @return
+   */
+  private static String readYAMLFile(String filename) {
+    try {
+      return new String(Files.readAllBytes(Paths.get(filename)));
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return null;
+    }
   }
 
 }
