@@ -12,15 +12,23 @@
 package edu.iu.dsc.tws.api.tset.impl;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.task.function.ReduceFn;
+import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.ops.ReduceOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class ReduceTSet<T> extends BaseTSet<T> {
 
-  public ReduceTSet(Config cfg, TaskGraphBuilder bldr) {
+public class ReduceTSet<T> extends BaseTSet<T> {
+  private BaseTSet<T> parent;
+
+  public ReduceTSet(Config cfg, TaskGraphBuilder bldr,
+                    BaseTSet<T> prnt, ReduceFunction<T> reduceFn) {
     super(cfg, bldr);
+    this.parent = prnt;
   }
 
   public void build() {
-
+    builder.addCompute(getName(), new ReduceOp<T>(), 1).reduce(parent.getName(),
+        new ReduceFn(null, null));
   }
 }
