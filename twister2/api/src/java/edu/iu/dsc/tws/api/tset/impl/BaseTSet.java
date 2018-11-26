@@ -17,10 +17,15 @@ import java.util.List;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
+import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.TSet;
+import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class BaseTSet<T> implements TSet<T> {
+  /**
+   * The children of this set
+   */
   protected List<BaseTSet<?>> children;
 
   /**
@@ -38,8 +43,15 @@ public abstract class BaseTSet<T> implements TSet<T> {
    */
   protected int parallel;
 
-  public BaseTSet() {
+  /**
+   * The configuration
+   */
+  private Config config;
+
+  public BaseTSet(Config cfg, TaskGraphBuilder bldr) {
     this.children = new ArrayList<>();
+    this.builder = bldr;
+    this.config = cfg;
   }
 
   public String getName() {
@@ -52,16 +64,27 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public <P> TSet<P> map(MapFunction<T, P> mapFn) {
-    return new MapTSet<P, T>(this, mapFn);
+    return new MapTSet<P, T>(config, builder, this, mapFn);
   }
 
   @Override
   public <P> TSet<P> flatMap(FlatMapFunction<T, P> mapFn) {
-    return new FlatMapTSet<P, T>(this, mapFn);
+    return new FlatMapTSet<P, T>(config, builder, this, mapFn);
   }
 
   @Override
   public TSet<T> reduce(ReduceFunction<T> reduceFn) {
     return null;
+  }
+
+  public TSet<T> partition(PartitionFunction<T> partitionFn) {
+    return null;
+  }
+
+  @Override
+  public void build() {
+    for (BaseTSet<?> c : children) {
+      c.build();
+    }
   }
 }

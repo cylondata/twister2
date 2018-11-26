@@ -9,18 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.impl;
+package edu.iu.dsc.tws.api.tset;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-
-public class ReduceTSet<T> extends BaseTSet<T> {
-
-  public ReduceTSet(Config cfg, TaskGraphBuilder bldr) {
-    super(cfg, bldr);
-  }
-
-  public void build() {
-
-  }
+public interface Source<T> extends TFunction {
+  T next();
 }

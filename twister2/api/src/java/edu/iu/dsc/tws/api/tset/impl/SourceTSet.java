@@ -11,9 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.common.config.Config;
+
 public class SourceTSet<T> extends BaseTSet<T> {
-
-
+  public SourceTSet(Config cfg, TaskGraphBuilder bldr) {
+    super(cfg, bldr);
+  }
 
   @Override
   public void build() {

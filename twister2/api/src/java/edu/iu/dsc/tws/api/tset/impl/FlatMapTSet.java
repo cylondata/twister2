@@ -11,15 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
+import edu.iu.dsc.tws.common.config.Config;
 
 public class FlatMapTSet<T, P> extends BaseTSet<T> {
   private BaseTSet<P> parent;
 
   private FlatMapFunction<P, T> mapFn;
 
-  public FlatMapTSet(BaseTSet<P> parent, FlatMapFunction<P, T> mapFunc) {
+  public FlatMapTSet(Config cfg, TaskGraphBuilder bldr,
+                     BaseTSet<P> parent, FlatMapFunction<P, T> mapFunc) {
+    super(cfg, bldr);
     this.parent = parent;
     this.mapFn = mapFunc;
   }

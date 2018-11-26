@@ -11,15 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.ops.MapOp;
+import edu.iu.dsc.tws.common.config.Config;
 
 public class MapTSet<T, P> extends BaseTSet<T> {
   private BaseTSet<P> parent;
 
   private MapFunction<P, T> mapFn;
 
-  public MapTSet(BaseTSet<P> parent, MapFunction<P, T> mapFunc) {
+  public MapTSet(Config cfg, TaskGraphBuilder builder,
+                 BaseTSet<P> parent, MapFunction<P, T> mapFunc) {
+    super(cfg, builder);
     this.parent = parent;
     this.mapFn = mapFunc;
   }
