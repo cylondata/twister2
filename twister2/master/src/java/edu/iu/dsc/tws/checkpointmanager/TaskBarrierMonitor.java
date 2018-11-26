@@ -24,6 +24,7 @@
 package edu.iu.dsc.tws.checkpointmanager;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -196,6 +197,7 @@ public class TaskBarrierMonitor implements MessageHandler {
         }
 
       }
+
       currentBarrierReceivedSourceSet = new HashSet<Integer>();
 
       barrierCompleteReceivedSinkSet = new HashSet<Integer>();
@@ -225,9 +227,19 @@ public class TaskBarrierMonitor implements MessageHandler {
 
       try {
         writeBarrierID(currentBarrierID);
-
         LOG.info("All sinks acknowledged checkpoint manager for barrier ID : " + currentBarrierID);
         //start the next checkpoint
+        int checkpointLimit = CheckpointContext.getCheckpointLimit(config);
+        if (!CheckpointContext.enableHDFS(config)) {
+          if (currentBarrierID % 5 == 0) {
+            try {
+              deleteUnwantedCheckpoints(currentBarrierID, checkpointLimit);
+              LOG.info("Unwanted checkpointIDs are deleted ");
+            } catch (IOException e) {
+              LOG.log(Level.WARNING, "could not delete unwanted ids", e);
+            }
+          }
+        }
         currentBarrierID++;
         sendBarrierFlag = true;
       } catch (Exception e) {
@@ -239,35 +251,30 @@ public class TaskBarrierMonitor implements MessageHandler {
 
   private void writeBarrierID(int barrierID) throws Exception {
     synchronized (this) {
+      FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream;
+      FsCheckpointStreamFactory fs;
       if (CheckpointContext.enableHDFS(config)) {
         HdfsUtils hdfsUtils = new HdfsUtils(config, CheckpointContext.getHDFSFilename(config));
         HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
         Path path = hdfsUtils.getPath();
         Path path2 = new Path(path, config.getStringValue(Context.JOB_NAME));
-        FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
+        fs = new FsCheckpointStreamFactory(path2, path2,
             0, hadoopFileSystem);
-        KryoSerializer kryoSerializer = new KryoSerializer();
-        byte[] checkpoint = kryoSerializer.serialize(barrierID);
-        FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
-            fs.createCheckpointStateOutputStream();
-        stream.initialize("Acknowledged", "BarrierIDs");
-        stream.write(checkpoint);
-        stream.closeWriting();
       } else {
         Path path = new Path(new File(CheckpointContext
             .getStatebackendDirectoryDefault(config)).toURI());
         Path path2 = new Path(path, config.getStringValue(Context.JOB_NAME));
         LocalFileSystem localFileSystem = new LocalFileSystem();
-        FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
+        fs = new FsCheckpointStreamFactory(path2, path2,
             0, localFileSystem);
-        KryoSerializer kryoSerializer = new KryoSerializer();
-        byte[] checkpoint = kryoSerializer.serialize(barrierID);
-        FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
-            fs.createCheckpointStateOutputStream();
-        stream.initialize("Acknowledged", "BarrierIDs");
-        stream.write(checkpoint);
-        stream.closeWriting();
       }
+      KryoSerializer kryoSerializer = new KryoSerializer();
+      byte[] checkpoint = kryoSerializer.serialize(barrierID);
+      stream = fs.createCheckpointStateOutputStream();
+      stream.initialize("Acknowledged", "BarrierIDs");
+      stream.write(checkpoint);
+      stream.closeWriting();
+
 
     }
   }
@@ -313,5 +320,38 @@ public class TaskBarrierMonitor implements MessageHandler {
     }
   }
 
+  private boolean deleteUnwantedCheckpoints(int latestBarrierID, int limit) throws IOException {
+
+    File reader = new File(CheckpointContext
+        .getStatebackendDirectoryDefault(config), config.getStringValue(Context.JOB_NAME));
+    Path path = new Path(reader.toURI());
+    LocalFileSystem localFileSystem = new LocalFileSystem();
+    int count = 0;
+    List<Integer> availableCheckpointIDs = new ArrayList<>();
+    for (final File fileEntry : reader.listFiles()) {
+      count++;
+      System.out.println("FileEntry Directory " + fileEntry.getName());
+      if (isStringInt(fileEntry.getName())) {
+        availableCheckpointIDs.add(Integer.parseInt(fileEntry.getName()));
+      }
+    }
+    if (count - 1 > limit) {
+      for (Integer checkpointID : availableCheckpointIDs) {
+        if (checkpointID <= (latestBarrierID - limit)) {
+          localFileSystem.delete(new Path(path, Integer.toString(checkpointID)), true);
+        }
+      }
+    }
+    return true;
+  }
+
+  private boolean isStringInt(String s) {
+    try {
+      Integer.parseInt(s);
+      return true;
+    } catch (NumberFormatException ex) {
+      return false;
+    }
+  }
 
 }
