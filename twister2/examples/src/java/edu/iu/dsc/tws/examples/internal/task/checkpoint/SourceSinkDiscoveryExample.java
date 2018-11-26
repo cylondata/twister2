@@ -140,7 +140,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
 //        this.addState("count", count);
       }
       if (count % 1000000 == 0) {
-        ctx.write("partition-edge", "Hello");
+//        ctx.write("partition-edge", "Hello");
         LOG.log(Level.INFO, "count for source is " + count);
       }
 

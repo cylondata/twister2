@@ -85,7 +85,11 @@ public class SPartition {
       List<Integer> destinations = destinationSelector.getDestinations(src);
 
       for (int dest : destinations) {
-        partition.send(src, message, flags, dest);
+        boolean barrierSent = partition.send(src, message, flags, dest);
+
+        if (!barrierSent) {
+          return false;
+        }
       }
       return true;
     }
