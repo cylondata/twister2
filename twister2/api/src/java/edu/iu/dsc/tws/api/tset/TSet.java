@@ -40,4 +40,9 @@ public interface TSet<T> {
    * @return
    */
   TSet<T> reduce(ReduceFunction<T> reduceFn);
+
+  /**
+   * Build this tset
+   */
+  void build();
 }

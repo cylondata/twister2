@@ -11,20 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
-import edu.iu.dsc.tws.api.tset.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
+public class SourceTSet<T> extends BaseTSet<T> {
 
-public class FlatMapTSet<T, P> extends BaseTSet<T> {
-  private BaseTSet<P> parent;
 
-  private FlatMapFunction<P, T> mapFn;
 
-  public FlatMapTSet(BaseTSet<P> parent, FlatMapFunction<P, T> mapFunc) {
-    this.parent = parent;
-    this.mapFn = mapFunc;
-  }
-
+  @Override
   public void build() {
-    builder.addCompute(name, new FlatMapOp<>(mapFn), parallel);
+
   }
 }

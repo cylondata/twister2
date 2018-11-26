@@ -13,8 +13,6 @@ package edu.iu.dsc.tws.api.tset.impl;
 
 public class ReduceTSet<T> extends BaseTSet<T> {
 
-
-
   public void build() {
 
   }

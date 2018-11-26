@@ -16,6 +16,6 @@ package edu.iu.dsc.tws.api.tset;
  * @param <T>
  * @param <O>
  */
-public interface MapFunction<T, O> {
+public interface MapFunction<T, O> extends TFunction {
   O map(T t);
 }

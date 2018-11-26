@@ -24,7 +24,7 @@ public class MapTSet<T, P> extends BaseTSet<T> {
     this.mapFn = mapFunc;
   }
 
-  protected void build() {
+  public void build() {
     builder.addCompute(name, new MapOp<>(mapFn), parallel);
   }
 }
