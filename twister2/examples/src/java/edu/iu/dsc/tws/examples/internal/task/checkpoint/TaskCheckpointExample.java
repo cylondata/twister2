@@ -32,9 +32,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -43,6 +41,7 @@ import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -60,12 +59,12 @@ import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class TaskCheckpointExample implements IWorker {
   @Override
-  public void execute(Config config, int workerID, AllocatedResources resources,
+  public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    TWSChannel channel = Network.initializeChannel(config, workerController, resources);
+    TWSChannel channel = Network.initializeChannel(config, workerController);
 
     GeneratorTask g = new GeneratorTask();
     ReceivingTask r = new ReceivingTask();
@@ -92,11 +91,11 @@ public class TaskCheckpointExample implements IWorker {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan(resources);
+    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
+        workerController.getAllWorkers(),
         new Communicator(config, channel));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, channel);
@@ -140,10 +139,10 @@ public class TaskCheckpointExample implements IWorker {
     }
   }
 
-  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
+  public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
+    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+      Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }
 
@@ -161,10 +160,11 @@ public class TaskCheckpointExample implements IWorker {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("task-checkpoint-example");
+
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("task-checkpoint-example");
     jobBuilder.setWorkerClass(TaskCheckpointExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

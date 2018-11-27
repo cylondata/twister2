@@ -22,6 +22,7 @@ public class CheckpointContext extends Context {
   private static final String BARRIER_INTERVAL = "twister2.barrier.interval";
   private static final String HDFS_ENABLE = "twister2.statebackend.hadoopfilesystem";
   private static final String HDFS_FILENAME = "twister2.statebackend.HDFS.filename";
+  private static final String CHECKPOINT_LIMIT = "twister2.statebackend.limit";
   private static final String STATEBACKEND_DIRECTORY_DEFAULT = System.getProperty("user.home")
       + "/statebackend/";
 
@@ -47,5 +48,9 @@ public class CheckpointContext extends Context {
 
   public static int getBarrierInterval(Config cfg) {
     return cfg.getIntegerValue(BARRIER_INTERVAL, 10000);
+  }
+
+  public static int getCheckpointLimit(Config cfg) {
+    return cfg.getIntegerValue(CHECKPOINT_LIMIT, 5);
   }
 }

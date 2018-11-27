@@ -1,0 +1,37 @@
+.logo-container {
+  display: grid;
+  grid-template-columns: 30px auto;
+
+  img {
+    padding-top: 10px;
+    height: 40px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 50px;
+  }
+}
+
+.dash-container {
+  display: grid;
+  grid-template-columns: 300px auto;
+  min-height: calc(100vh - 50px);
+
+  .bp3-tree {
+    height: 100%;
+  }
+
+  .dash-container-content {
+    padding: 10px;
+  }
+}
+
+.t2-page-heading {
+  margin-top: 0;
+}
+
+.text-center {
+  text-align: center;
+}

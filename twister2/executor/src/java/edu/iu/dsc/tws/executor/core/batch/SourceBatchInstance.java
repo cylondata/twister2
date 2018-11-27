@@ -126,12 +126,12 @@ public class SourceBatchInstance implements INodeInstance {
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
   }
 
-  public void prepare() {
+  public void prepare(Config cfg) {
     outputBatchCollection = new DefaultOutputCollection(outBatchQueue);
 
     taskContext = new TaskContext(batchTaskIndex, batchTaskId, batchTaskName,
         parallelism, workerId, outputBatchCollection, nodeConfigs);
-    batchTask.prepare(config, taskContext);
+    batchTask.prepare(cfg, taskContext);
   }
 
   /**

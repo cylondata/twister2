@@ -23,6 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.api;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.INode;
 
 public interface INodeInstance {
@@ -42,8 +43,10 @@ public interface INodeInstance {
 
   /**
    * Prepare for an execution
+   *
+   * @param cfg configuration
    */
-  void prepare();
+  void prepare(Config cfg);
 
   /**
    * Lets reset the node instance for a new execution

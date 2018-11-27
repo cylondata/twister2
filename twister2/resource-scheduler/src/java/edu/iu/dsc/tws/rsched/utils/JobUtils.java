@@ -144,7 +144,6 @@ public final class JobUtils {
 
   /**
    * write the values from Job object to config object
-   * only write the values that are initialized
    * @param job
    * @param config
    * @return
@@ -152,40 +151,28 @@ public final class JobUtils {
   public static Config updateConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
 
-    String jobName = job.getJobName();
-    if (jobName != null) {
-      builder.put(Context.JOB_NAME, jobName);
-    }
-
-    String workerClass = job.getWorkerClassName();
-    if (workerClass != null) {
-      builder.put(SchedulerContext.WORKER_CLASS, workerClass);
-    }
-
-    int workerInstances = job.getNumberOfWorkers();
-    if (workerInstances > 0) {
-      builder.put(Context.TWISTER2_WORKER_INSTANCES, workerInstances);
-    }
-
-    double cpuPerWorker =
-        job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getCpu();
-    if (cpuPerWorker > 0) {
-      builder.put(Context.TWISTER2_WORKER_CPU, cpuPerWorker);
-    }
-
-    int ramPerWorker =
-        job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getRam();
-    if (ramPerWorker > 0) {
-      builder.put(Context.TWISTER2_WORKER_RAM, ramPerWorker);
-    }
-
-    double diskPerWorker =
-        job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getDisk();
-    if (diskPerWorker > 0) {
-      builder.put(Context.WORKER_VOLATILE_DISK, diskPerWorker);
-    }
+    builder.put(Context.JOB_NAME, job.getJobName());
+    builder.put(SchedulerContext.WORKER_CLASS, job.getWorkerClassName());
+    builder.put(Context.TWISTER2_WORKER_INSTANCES, job.getNumberOfWorkers());
 
     return builder.build();
+  }
+
+  /**
+   * return the ComputeResource with the given index
+   * if not found, return null
+   * @param job
+   * @param index
+   * @return
+   */
+  public static JobAPI.ComputeResource getComputeResource(JobAPI.Job job, int index) {
+    for (JobAPI.ComputeResource computeResource: job.getComputeResourceList()) {
+      if (computeResource.getIndex() == index) {
+        return computeResource;
+      }
+    }
+
+    return null;
   }
 
 }

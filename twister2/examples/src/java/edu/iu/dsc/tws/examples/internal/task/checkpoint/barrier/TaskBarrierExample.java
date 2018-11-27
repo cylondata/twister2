@@ -21,9 +21,7 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -32,6 +30,7 @@ import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -48,7 +47,7 @@ import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class TaskBarrierExample implements IWorker {
   @Override
-  public void execute(Config config, int workerID, AllocatedResources resources,
+  public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -67,11 +66,12 @@ public class TaskBarrierExample implements IWorker {
     RoundRobinTaskScheduler roundRobinTaskScheduling = new RoundRobinTaskScheduler();
     roundRobinTaskScheduling.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan(resources);
+    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
 
-    TWSChannel network = Network.initializeChannel(config, workerController, resources);
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
+    TWSChannel network = Network.initializeChannel(config, workerController);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
+        workerController.getAllWorkers(),
         new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network,
@@ -112,10 +112,10 @@ public class TaskBarrierExample implements IWorker {
     }
   }
 
-  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
+  public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
+    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+      Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }
 
@@ -134,10 +134,10 @@ public class TaskBarrierExample implements IWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("task-barrier-example");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("task-barrier-example");
     jobBuilder.setWorkerClass(TaskBarrierExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

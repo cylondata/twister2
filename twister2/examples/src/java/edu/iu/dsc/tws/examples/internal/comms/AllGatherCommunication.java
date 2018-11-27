@@ -26,9 +26,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -55,19 +53,22 @@ public class AllGatherCommunication implements IWorker {
   private long startTime = 0;
 
   @Override
-  public void execute(Config cfg, int workerID, AllocatedResources resources,
+  public void execute(Config cfg, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
-    LOG.log(Level.INFO, "Starting the example with container id: " + resources.getWorkerId());
+    LOG.log(Level.INFO, "Starting the example with container id: " + workerID);
 
     this.id = workerID;
-    int noOfTasksPerExecutor = NO_OF_TASKS / resources.getNumberOfWorkers();
+    int noOfTasksPerExecutor = NO_OF_TASKS / workerController.getNumberOfWorkers();
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, resources, NO_OF_TASKS);
+    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, workerID,
+        workerController.getAllWorkers(),
+        NO_OF_TASKS);
+
     //first get the communication config file
-    TWSChannel network = Network.initializeChannel(cfg, workerController, resources);
+    TWSChannel network = Network.initializeChannel(cfg, workerController);
 
     Set<Integer> sources = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS; i++) {
@@ -284,9 +285,9 @@ public class AllGatherCommunication implements IWorker {
 
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("basic-all-gather")
+        .setJobName("basic-all-gather")
         .setWorkerClass(AllGatherCommunication.class.getName())
-        .setRequestResource(new WorkerComputeResource(2, 512), 4)
+        .addComputeResource(2, 512, 4)
         .setConfig(jobConfig)
         .build();
 

@@ -17,7 +17,6 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public final class WordCountJob {
@@ -29,10 +28,10 @@ public final class WordCountJob {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("streaming-wordcount");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("streaming-wordcount");
     jobBuilder.setWorkerClass(WordCountWorker.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

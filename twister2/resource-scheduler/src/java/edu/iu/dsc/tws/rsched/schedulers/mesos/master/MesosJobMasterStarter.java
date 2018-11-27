@@ -77,7 +77,7 @@ public final class MesosJobMasterStarter {
 //      LOG.info("Initializing with zookeeper");
 //      workerController.initializeWithZooKeeper();
 //      LOG.info("Waiting for all workers to join");
-//      workerController.waitForAllWorkersToJoin(
+//      workerController.getAllWorkers(
 //          ZKContext.maxWaitTimeForAllWorkersToJoin(config));
 //      LOG.info("Everyone has joined");
 ////      //container.execute(worker.config, id, null, workerController, null);

@@ -1,3 +1,4 @@
+
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -31,9 +32,7 @@ import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.checkpointmanager.state_backend.FsCheckpointStorage;
 import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -46,6 +45,7 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.Runtime;
 import edu.iu.dsc.tws.executor.threading.Executor;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -56,7 +56,6 @@ import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -68,7 +67,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
   private static final Logger LOG = Logger.getLogger(SourceSinkDiscoveryExample.class.getName());
 
   @Override
-  public void execute(Config config, int workerID, AllocatedResources resources,
+  public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -96,27 +95,32 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source", Integer.parseInt(config.get("twister2.workers").toString()));
+    builder.setParallelism("source",
+        Integer.parseInt(newconfig.get("twister2.workers").toString()));
     builder.addSink("sink", r);
-    builder.setParallelism("sink", 4);
+    builder.setParallelism("sink",
+        Integer.parseInt(newconfig.get("twister2.workers").toString()));
     builder.connect("source", "sink", "partition-edge",
         Operations.PARTITION);
     builder.operationMode(OperationMode.STREAMING);
 
-    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(newconfig));
-    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(newconfig));
-    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(newconfig));
+    List<String> sourceInputDataset = new ArrayList<>();
+    sourceInputDataset.add("dataset1.txt");
+    sourceInputDataset.add("dataset2.txt");
+
+    builder.addConfiguration("source", "inputdataset", sourceInputDataset);
 
     DataFlowTaskGraph graph = builder.build();
 
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(newconfig);
 
-    WorkerPlan workerPlan = createWorkerPlan(resources);
+    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSChannel network = Network.initializeChannel(newconfig, workerController, resources);
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
+    TWSChannel network = Network.initializeChannel(newconfig, workerController);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
+        workerController.getAllWorkers(),
         new Communicator(newconfig, network));
     ExecutionPlan plan = executionPlanBuilder.build(newconfig, graph, taskSchedulePlan);
     Executor executor = new Executor(newconfig, workerID, plan, network);
@@ -136,7 +140,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
 //        this.addState("count", count);
       }
       if (count % 1000000 == 0) {
-        ctx.write("partition-edge", "Hello");
+//        ctx.write("partition-edge", "Hello");
         LOG.log(Level.INFO, "count for source is " + count);
       }
 
@@ -197,10 +201,10 @@ public class SourceSinkDiscoveryExample implements IWorker {
 
   }
 
-  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
+  public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
+    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+      Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }
 
@@ -236,17 +240,15 @@ public class SourceSinkDiscoveryExample implements IWorker {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("source-sink-discovery-example");
+
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("source-sink-discovery-example");
     jobBuilder.setWorkerClass(SourceSinkDiscoveryExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), workers);
+    jobBuilder.addComputeResource(1, 512, workers);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
     Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }
-
-
-
 

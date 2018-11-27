@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.executor.core;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -22,7 +23,6 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
@@ -36,6 +36,7 @@ import edu.iu.dsc.tws.executor.core.batch.TaskBatchInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SinkStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SourceStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.TaskStreamingInstance;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -79,19 +80,20 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
   private Communicator network;
 
-  private AllocatedResources resourcePlan;
-
   private TaskIdGenerator taskIdGenerator;
 
   private KryoMemorySerializer kryoMemorySerializer;
 
   private EdgeGenerator edgeGenerator;
 
-  public ExecutionPlanBuilder(AllocatedResources plan, Communicator net) {
-    this.workerId = plan.getWorkerId();
+  private List<JobMasterAPI.WorkerInfo> workerInfoList;
+
+  public ExecutionPlanBuilder(int workerID, List<JobMasterAPI.WorkerInfo> workerInfoList,
+                              Communicator net) {
+    this.workerId = workerID;
     this.taskIdGenerator = new TaskIdGenerator();
     this.kryoMemorySerializer = new KryoMemorySerializer();
-    this.resourcePlan = plan;
+    this.workerInfoList = workerInfoList;
     this.edgeGenerator = new EdgeGenerator();
     this.network = net;
   }
@@ -100,7 +102,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   public ExecutionPlan build(Config cfg, DataFlowTaskGraph taskGraph,
                              TaskSchedulePlan taskSchedule) {
     // we need to build the task plan
-    TaskPlan taskPlan = TaskPlanBuilder.build(resourcePlan, taskSchedule, taskIdGenerator);
+    TaskPlan taskPlan =
+        TaskPlanBuilder.build(workerId, workerInfoList, taskSchedule, taskIdGenerator);
     ParallelOperationFactory opFactory = new ParallelOperationFactory(
         cfg, network, taskPlan, edgeGenerator);
 

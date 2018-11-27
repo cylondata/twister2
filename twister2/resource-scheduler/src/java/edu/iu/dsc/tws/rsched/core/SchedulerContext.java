@@ -12,10 +12,14 @@
 package edu.iu.dsc.tws.rsched.core;
 
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.TokenSub;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class SchedulerContext extends Context {
   public static final String LAUNCHER_CLASS = "twister2.class.launcher";
@@ -31,6 +35,7 @@ public class SchedulerContext extends Context {
   // Temp directory where the files are placed before packing them for upload
   public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
 
+  public static final String WORKER_COMPUTE_RESOURCES = "worker.compute.resources";
   /**
    * These are specified as system properties when deploying a job
    */
@@ -59,7 +64,11 @@ public class SchedulerContext extends Context {
   // persistent volume per worker in GB
   public static final double PERSISTENT_VOLUME_PER_WORKER_DEFAULT = 0.0;
   public static final String PERSISTENT_VOLUME_PER_WORKER = "persistent.volume.per.worker";
-  public static final String WORKER_END_SYNC_TIME = "twister2.worker.end.sync.wait.time.ms";
+
+  public static final String RACK_LABEL_KEY = "rack.labey.key";
+  public static final String DATACENTER_LABEL_KEY = "datacenter.labey.key";
+  public static final String RACKS_LIST = "racks.list";
+  public static final String DATACENTERS_LIST = "datacenters.list";
 
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
@@ -125,13 +134,6 @@ public class SchedulerContext extends Context {
     return persistentVolumePerWorker(cfg) > 0;
   }
 
-  /**
-   * if workerVolatileDisk is more than zero, return true, otherwise false
-   */
-  public static boolean volatileDiskRequested(Config cfg) {
-    return workerVolatileDisk(cfg) > 0;
-  }
-
   public static String createJobDescriptionFileName(String jobName) {
     return jobName + ".job";
   }
@@ -145,5 +147,42 @@ public class SchedulerContext extends Context {
         .equals("edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel");
   }
 
+  public static JobMasterAPI.NodeInfo getNodeInfo(Config cfg, String nodeIP) {
+
+    List<Map<String, List<String>>> rackList =
+        cfg.getListOfMapsWithListValues(RACKS_LIST);
+
+    String rack = findValue(rackList, nodeIP);
+    if (rack == null) {
+      return NodeInfoUtils.createNodeInfo(nodeIP, null, null);
+    }
+
+    List<Map<String, List<String>>> dcList =
+        cfg.getListOfMapsWithListValues(DATACENTERS_LIST);
+
+    String datacenter = findValue(dcList, rack);
+    return NodeInfoUtils.createNodeInfo(nodeIP, rack, datacenter);
+  }
+
+  /**
+   * find the given String value in the inner List
+   * return the key for that Map
+   * @return
+   */
+  private static String findValue(List<Map<String, List<String>>> outerList, String value) {
+
+    for (Map<String, List<String>> map: outerList) {
+      for (String mapKey: map.keySet()) {
+        List<String> innerList = map.get(mapKey);
+        for (String listItem: innerList) {
+          if (listItem.equals(value)) {
+            return mapKey;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
 
 }

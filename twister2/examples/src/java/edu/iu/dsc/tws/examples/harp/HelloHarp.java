@@ -19,9 +19,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.harp.HarpWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -39,7 +37,7 @@ public class HelloHarp extends HarpWorker {
   private static final Logger LOG = Logger.getLogger(HelloHarp.class.getName());
 
   @Override
-  public void executeHarp(Config config, int workerID, AllocatedResources allocatedResources,
+  public void executeHarp(Config config, int workerID, int numberOfWorkers,
                           IWorkerController workerController, IPersistentVolume persistentVolume,
                           IVolatileVolume volatileVolume,
                           DataMap harpDataMap, Workers harpWorkers) {
@@ -85,12 +83,9 @@ public class HelloHarp extends HarpWorker {
     jobConfig.put("hello-harp-key", "Twister2-Hello-Harp");
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("hello-harp-job")
+        .setJobName("hello-harp-job")
         .setWorkerClass(HelloHarp.class)
-        .setRequestResource(
-            new WorkerComputeResource(1, 512),
-            numberOfWorkers
-        )
+        .addComputeResource(1, 512, numberOfWorkers)
         .setConfig(jobConfig)
         .build();
     // now submit the job

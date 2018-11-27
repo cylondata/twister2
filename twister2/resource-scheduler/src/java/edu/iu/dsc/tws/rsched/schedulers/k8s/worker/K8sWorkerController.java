@@ -23,8 +23,10 @@ import java.util.logging.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.controller.ControllerContext;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
@@ -47,23 +49,24 @@ public class K8sWorkerController implements IWorkerController {
   private int workersPerPod;
   private static CoreV1Api coreApi;
   private static ApiClient apiClient;
-  private ArrayList<WorkerNetworkInfo> workerList;
-  private WorkerNetworkInfo thisWorker;
+  private ArrayList<JobMasterAPI.WorkerInfo> workerList;
+  private JobMasterAPI.WorkerInfo thisWorker;
 
   public K8sWorkerController(Config config, String podName, String podIpStr, String containerName,
-                             String jobName) {
+                             String jobName, int workersPerPod) {
     this.config = config;
     numberOfWorkers = SchedulerContext.workerInstances(config);
-    workersPerPod = KubernetesContext.workersPerPod(config);
+    this.workersPerPod = workersPerPod;
     numberOfPods = numberOfWorkers / workersPerPod;
-    workerList = new ArrayList<WorkerNetworkInfo>();
+    workerList = new ArrayList<JobMasterAPI.WorkerInfo>();
     this.jobName = jobName;
 
-    int containerIndex = KubernetesUtils.idFromName(containerName);
+    int containerIndex = KubernetesUtils.indexFromName(containerName);
     int workerID = calculateWorkerID(podName, containerIndex);
     int basePort = KubernetesContext.workerBasePort(config);
     InetAddress podIP = convertStringToIP(podIpStr);
-    thisWorker = new WorkerNetworkInfo(podIP, basePort + containerIndex, workerID);
+    thisWorker =
+        WorkerInfoUtils.createWorkerInfo(workerID, podIpStr, basePort + containerIndex, null);
 
     createApiInstances();
   }
@@ -94,7 +97,7 @@ public class K8sWorkerController implements IWorkerController {
    * return WorkerNetworkInfo object for this worker
    */
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfo() {
+  public JobMasterAPI.WorkerInfo getWorkerInfo() {
     return thisWorker;
   }
 
@@ -102,8 +105,8 @@ public class K8sWorkerController implements IWorkerController {
    * return the WorkerNetworkInfo object for the given id
    * @return
    */
-  public WorkerNetworkInfo getWorkerNetworkInfoForID(int id) {
-    for (WorkerNetworkInfo info: workerList) {
+  public JobMasterAPI.WorkerInfo getWorkerInfoForID(int id) {
+    for (JobMasterAPI.WorkerInfo info: workerList) {
       if (info.getWorkerID() == id) {
         return info;
       }
@@ -127,7 +130,7 @@ public class K8sWorkerController implements IWorkerController {
    * @return
    */
   @Override
-  public ArrayList<WorkerNetworkInfo> getWorkerList() {
+  public ArrayList<JobMasterAPI.WorkerInfo> getJoinedWorkers() {
     return workerList;
   }
 
@@ -221,8 +224,9 @@ public class K8sWorkerController implements IWorkerController {
       for (int i = 0; i < workersPerPod; i++) {
         int containerIndex = i;
         int workerID = calculateWorkerID(podName, containerIndex);
-        WorkerNetworkInfo workerNetworkInfo =
-            new WorkerNetworkInfo(podIP, basePort + containerIndex, workerID);
+        JobMasterAPI.WorkerInfo workerNetworkInfo =
+            WorkerInfoUtils.createWorkerInfo(workerID, pod.getStatus().getPodIP(),
+                basePort + containerIndex, null);
         workerList.add(workerNetworkInfo);
       }
     }
@@ -236,19 +240,19 @@ public class K8sWorkerController implements IWorkerController {
    * @return
    */
   public int calculateWorkerID(String podName, int containerIndex) {
-    int podNo = KubernetesUtils.idFromName(podName);
+    int podNo = KubernetesUtils.indexFromName(podName);
 
     return podNo * workersPerPod + containerIndex;
   }
 
-  public static void printWorkers(ArrayList<WorkerNetworkInfo> workers) {
+  public static void printWorkers(ArrayList<JobMasterAPI.WorkerInfo> workers) {
 
     StringBuffer buffer = new StringBuffer();
     buffer.append("Number of workers: " + workers.size() + "\n");
     int i = 0;
-    for (WorkerNetworkInfo worker: workers) {
-      buffer.append(String.format("%d: workerID[%d] %s\n",
-          i++, worker.getWorkerID(), worker.getWorkerIpAndPort()));
+    for (JobMasterAPI.WorkerInfo worker: workers) {
+      buffer.append(String.format("%d: workerID[%d] %s:%d\n",
+          i++, worker.getWorkerID(), worker.getWorkerIP(), worker.getPort()));
     }
 
     LOG.info(buffer.toString());
@@ -256,15 +260,15 @@ public class K8sWorkerController implements IWorkerController {
 
   /**
    * wait for all pods to run
-   * @param timeLimitMilliSec
    * @return
    */
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() {
     // first make sure all workers are in the list
     long startTime = System.currentTimeMillis();
     if (workerList.size() < numberOfWorkers) {
-      boolean listBuilt = buildWorkerListWaitForAll(timeLimitMilliSec);
+      boolean listBuilt = buildWorkerListWaitForAll(
+          ControllerContext.maxWaitTimeForAllToJoin(config));
       if (!listBuilt) {
         return null;
       }
@@ -272,6 +276,7 @@ public class K8sWorkerController implements IWorkerController {
 
     ArrayList<String> podNameList = constructPodNameList();
 
+    long timeLimitMilliSec = ControllerContext.maxWaitTimeForAllToJoin(config);
     long duration = System.currentTimeMillis() - startTime;
     long remainingTimeLimit = timeLimitMilliSec - duration;
 
@@ -359,11 +364,10 @@ public class K8sWorkerController implements IWorkerController {
 
   /**
    * not implemented
-   * @param timeLimitMilliSec
    * @return
    */
   @Override
-  public boolean waitOnBarrier(long timeLimitMilliSec) {
+  public boolean waitOnBarrier() {
     return false;
   }
 

@@ -31,11 +31,9 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -156,7 +154,7 @@ public final class MPIWorker {
     String jobName = cmd.getOptionValue("job_name");
 
     LOG.log(Level.FINE, String.format("Initializing process with "
-            + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
+        + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
@@ -195,8 +193,6 @@ public final class MPIWorker {
 
       // lets create the resource plan
       Map<Integer, String> processNames = createResourcePlan(config);
-      // now create the resource plan
-      AllocatedResources resourcePlan = addContainers(config, processNames);
       // now create the worker
       IWorkerController controller = new MPIWorkerController(MPI.COMM_WORLD.getRank(),
           processNames);
@@ -207,7 +203,7 @@ public final class MPIWorker {
         if (object instanceof IWorker) {
           IWorker container = (IWorker) object;
           // now initialize the container
-          container.execute(config, rank, resourcePlan, controller, null, null);
+          container.execute(config, rank, controller, null, null);
         } else {
           throw new RuntimeException("Cannot instantiate class: " + object.getClass());
         }
@@ -283,23 +279,6 @@ public final class MPIWorker {
     }
   }
 
-  public static AllocatedResources addContainers(Config cfg,
-                                                 Map<Integer, String> processes) {
-    int size = 0;
-    try {
-      size = MPI.COMM_WORLD.getSize();
-      AllocatedResources resourcePlan = new AllocatedResources(
-          MPIContext.clusterType(cfg), MPI.COMM_WORLD.getRank());
-      for (int i = 0; i < size; i++) {
-        WorkerComputeResource workerComputeResource = new WorkerComputeResource(i);
-        resourcePlan.addWorkerComputeResource(workerComputeResource);
-      }
-      return resourcePlan;
-    } catch (MPIException e) {
-      throw new RuntimeException("MPI Failure", e);
-    }
-  }
-
   /**
    * Initialize the loggers to log into the task local directory
    * @param cfg the configuration
@@ -326,7 +305,7 @@ public final class MPIWorker {
     if (persistentJobDir == null) {
       return;
     }
-    String logDir = persistentJobDir + "/logs";
+    String logDir = persistentJobDir + "/logs/worker-" + workerID;
     File directory = new File(logDir);
     if (!directory.exists()) {
       if (!directory.mkdirs()) {

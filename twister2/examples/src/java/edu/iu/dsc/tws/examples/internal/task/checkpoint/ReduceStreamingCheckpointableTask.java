@@ -24,9 +24,7 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.checkpointmanager.state_backend.FsCheckpointStorage;
 import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -35,6 +33,7 @@ import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.executor.core.Runtime;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IFunction;
@@ -53,7 +52,7 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
       = Logger.getLogger(ReduceStreamingCheckpointableTask.class.getName());
 
   @Override
-  public void execute(Config config, int workerID, AllocatedResources resources,
+  public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -92,7 +91,7 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
     builder.operationMode(OperationMode.STREAMING);
     DataFlowTaskGraph graph = builder.build();
 
-    TaskUtils.execute(newconfig, resources, graph, workerController);
+    TaskUtils.execute(newconfig, workerID, graph, workerController);
   }
 
   private static class GeneratorTask extends SourceCheckpointableTask {
@@ -152,10 +151,10 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
     }
   }
 
-  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
+  public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
+    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+      Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }
 
@@ -173,10 +172,10 @@ public class ReduceStreamingCheckpointableTask implements IWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("reduce-checkpointable-task");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("reduce-checkpointable-task");
     jobBuilder.setWorkerClass(ReduceStreamingCheckpointableTask.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 256), 4);
+    jobBuilder.addComputeResource(1, 256, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

@@ -22,16 +22,16 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 
 public final class K8sWorkerUtils {
@@ -132,63 +132,76 @@ public final class K8sWorkerUtils {
     }
   }
 
+  public static JobAPI.ComputeResource getComputeResource(JobAPI.Job job, String podName) {
+
+    String ssName = KubernetesUtils.removeIndexFromName(podName);
+    int currentStatefulSetIndex = KubernetesUtils.indexFromName(ssName);
+    return JobUtils.getComputeResource(job, currentStatefulSetIndex);
+  }
+
+
   /**
    * calculate the workerID from the given parameters
    */
-  public static int calculateWorkerID(String podName, String containerName, int workersPerPod) {
-    int podIndex = KubernetesUtils.idFromName(podName);
-    int containerIndex = KubernetesUtils.idFromName(containerName);
+  public static int calculateWorkerID(JobAPI.Job job, String podName, String containerName) {
 
-    return calculateWorkerID(podIndex, containerIndex, workersPerPod);
+    String ssName = KubernetesUtils.removeIndexFromName(podName);
+    int currentStatefulSetIndex = KubernetesUtils.indexFromName(ssName);
+    int workersUpToSS = countWorkersUpToSS(job, currentStatefulSetIndex);
+
+    int podIndex = KubernetesUtils.indexFromName(podName);
+    int containerIndex = KubernetesUtils.indexFromName(containerName);
+    int workersPerPod =
+        JobUtils.getComputeResource(job, currentStatefulSetIndex).getWorkersPerPod();
+
+    int workerID = workersUpToSS + calculateWorkerIDInSS(podIndex, containerIndex, workersPerPod);
+    return workerID;
   }
 
   /**
-   * calculate the workerID from the given parameters
+   * calculate the number of workers in the earlier statefulsets
    */
-  public static int calculateWorkerID(int podIndex, int containerIndex, int workersPerPod) {
+  public static int countWorkersUpToSS(JobAPI.Job job, int currentStatefulSetIndex) {
+
+    int workerCount = 0;
+    for (int i = 0; i < currentStatefulSetIndex; i++) {
+      workerCount += JobUtils.getComputeResource(job, i).getNumberOfWorkers();
+    }
+
+    return workerCount;
+  }
+
+  /**
+   * calculate the workerID in the given StatefulSet
+   */
+  public static int calculateWorkerIDInSS(int podIndex, int containerIndex, int workersPerPod) {
     return podIndex * workersPerPod + containerIndex;
   }
 
-  public static NodeInfo getNodeInfoFromEncodedStr(String encodedNodeInfoList, String nodeIP) {
-    NodeInfo nodeInfo = new NodeInfo(nodeIP, null, null);
-    ArrayList<NodeInfo> nodeInfoList = NodeInfo.decodeNodeInfoList(encodedNodeInfoList);
+  public static JobMasterAPI.NodeInfo getNodeInfoFromEncodedStr(String encodedNodeInfoList,
+                                                                String nodeIP) {
+
+    // we will return this, in case we do not find it in the given list
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(nodeIP, null, null);
+
+    ArrayList<JobMasterAPI.NodeInfo> nodeInfoList =
+        NodeInfoUtils.decodeNodeInfoList(encodedNodeInfoList);
 
     if (nodeInfoList == null || nodeInfoList.size() == 0) {
       LOG.warning("NodeInfo list is not constructed from the string: " + encodedNodeInfoList);
+      return nodeInfo;
     } else {
       LOG.fine("Decoded NodeInfo list, size: " + nodeInfoList.size()
-          + "\n" + NodeInfo.listToString(nodeInfoList));
+          + "\n" + NodeInfoUtils.listToString(nodeInfoList));
 
-      int index = nodeInfoList.indexOf(nodeInfo);
-      if (index < 0) {
+      JobMasterAPI.NodeInfo nodeInfo1 = NodeInfoUtils.getNodeInfo(nodeInfoList, nodeIP);
+      if (nodeInfo1 == null) {
         LOG.warning("nodeIP does not exist in received encodedNodeInfoList. Using local value.");
         return nodeInfo;
       }
-      nodeInfo = nodeInfoList.get(index);
+
+      return nodeInfo1;
     }
-
-    return nodeInfo;
-  }
-
-  /**
-   * we assume all resources are uniform
-   * @return
-   */
-  public static AllocatedResources createAllocatedResources(String cluster,
-                                                            int workerID,
-                                                            JobAPI.Job job) {
-
-    JobAPI.WorkerComputeResource computeResource =
-        job.getJobResources().getResources(0).getWorkerComputeResource();
-
-    AllocatedResources allocatedResources = new AllocatedResources(cluster, workerID);
-
-    for (int i = 0; i < job.getNumberOfWorkers(); i++) {
-      allocatedResources.addWorkerComputeResource(new WorkerComputeResource(
-          i, computeResource.getCpu(), computeResource.getRam(), computeResource.getDisk()));
-    }
-
-    return allocatedResources;
   }
 
   /**

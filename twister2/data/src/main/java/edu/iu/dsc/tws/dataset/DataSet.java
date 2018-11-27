@@ -16,10 +16,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import edu.iu.dsc.tws.common.config.Config;
+
 public class DataSet<T> {
   private Map<Integer, Partition<T>> partitions = new HashMap<>();
 
   private int id;
+
+  public DataSet(Config config) {
+
+  }
 
   public DataSet(int dId) {
     this.id = dId;

@@ -21,12 +21,12 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -67,10 +67,10 @@ public final class AuroraWorkerStarter {
       throw new RuntimeException(e);
     }
 
-    // TODO: need toprovide all parameters
+    // TODO: need to provide all parameters
     worker.execute(workerStarter.config,
-        workerStarter.zkWorkerController.getWorkerNetworkInfo().getWorkerID(),
-        null, null, null, null);
+        workerStarter.zkWorkerController.getWorkerInfo().getWorkerID(),
+        null, null, null);
 
     // close the things, let others know that it is done
     workerStarter.close();
@@ -173,13 +173,14 @@ public final class AuroraWorkerStarter {
     String workerHostPort = workerAddress.getHostAddress() + ":" + workerPort;
     int numberOfWorkers = job.getNumberOfWorkers();
 
-    // TODO: need to put at least nodeIP to this NodeInfo object
-    NodeInfo nodeInfo = new NodeInfo(null, null, null);
+    // TODO: need to put at least nodeIP to this NodeInfoUtils object
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(null, null, null);
     zkWorkerController =
-        new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
+        new ZKWorkerController(config, job.getJobName(), workerHostPort,
+            numberOfWorkers, nodeInfo, null);
     zkWorkerController.initialize();
     long duration = System.currentTimeMillis() - startTime;
-    LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerNetworkInfo()
+    LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerInfo()
         + " took: " + duration + "ms");
   }
 
@@ -190,20 +191,17 @@ public final class AuroraWorkerStarter {
     int numberOfWorkers = job.getNumberOfWorkers();
     LOG.info("Waiting for " + numberOfWorkers + " workers to join .........");
 
-    // the amount of time to wait for all workers to join a job
-    int timeLimit =  ZKContext.maxWaitTimeForAllWorkersToJoin(config);
     long startTime = System.currentTimeMillis();
-    List<WorkerNetworkInfo> workerList = zkWorkerController.waitForAllWorkersToJoin(timeLimit);
+    List<JobMasterAPI.WorkerInfo> workerList = zkWorkerController.getAllWorkers();
     long duration = System.currentTimeMillis() - startTime;
 
     if (workerList == null) {
-      LOG.log(Level.SEVERE, "Could not get full worker list. timeout limit has been reached !!!!"
-          + "Waited " + timeLimit + " ms.");
+      LOG.log(Level.SEVERE, "Could not get full worker list. timeout limit has been reached !!!!");
     } else {
       LOG.log(Level.INFO, "Waited " + duration + " ms for all workers to join.");
 
       LOG.info("list of all joined workers in the job: "
-          + WorkerNetworkInfo.workerListAsString(workerList));
+          + WorkerInfoUtils.workerListAsString(workerList));
     }
   }
 
@@ -223,12 +221,9 @@ public final class AuroraWorkerStarter {
     sb.append("\nJob name: " + job.getJobName());
     sb.append("\nJob file: " + job.getJobFormat().getJobFile());
     sb.append("\nnumber of workers: " + job.getNumberOfWorkers());
-    sb.append("\nCPUs: "
-        + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getCpu());
-    sb.append("\nRAM: "
-        + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getRam());
-    sb.append("\nDisk: "
-        + job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getDisk());
+    sb.append("\nCPUs: " + job.getComputeResource(0).getCpu());
+    sb.append("\nRAM: "  + job.getComputeResource(0).getRamMegaBytes());
+    sb.append("\nDisk: " + job.getComputeResource(0).getDiskGigaBytes());
 
     JobAPI.Config conf = job.getConfig();
     sb.append("\nnumber of key-values in job conf: " + conf.getKvsCount());

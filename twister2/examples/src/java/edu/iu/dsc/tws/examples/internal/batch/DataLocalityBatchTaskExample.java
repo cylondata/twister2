@@ -23,9 +23,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -36,6 +34,7 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.executor.threading.Executor;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -68,10 +67,10 @@ public class DataLocalityBatchTaskExample implements IWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("datalocality-batchexample");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("datalocality-batchexample");
     jobBuilder.setWorkerClass(DataLocalityBatchTaskExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 2);
+    jobBuilder.addComputeResource(1, 512, 2);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
@@ -79,7 +78,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
   }
 
   @Override
-  public void execute(Config config, int workerID, AllocatedResources resources,
+  public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -155,7 +154,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     builder.addConfiguration("sink2", "outputdataset2", sinkOutputDataset2);
 
     DataFlowTaskGraph graph = builder.build();
-    WorkerPlan workerPlan = createWorkerPlan(resources);
+    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
 
     //Assign the "datalocalityaware" or "roundrobin" scheduling mode in config file.
     TaskScheduler taskScheduler = new TaskScheduler();
@@ -182,18 +181,18 @@ public class DataLocalityBatchTaskExample implements IWorker {
       }
     }
 
-    TWSChannel network = Network.initializeChannel(config, workerController, resources);
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
-            new Communicator(config, network));
+    TWSChannel network = Network.initializeChannel(config, workerController);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
+        workerController.getAllWorkers(), new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network, OperationMode.BATCH);
     executor.execute();
   }
 
-  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
+  public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
+    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+      Worker w = new Worker(workerInfo.getWorkerID());
       if (w.getId() == 0) {
         w.addProperty("bandwidth", 1000.0);
         w.addProperty("latency", 0.1);

@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
 /**
  * Convert between edu.iu.dsc.tws.comms.api.DataMessageType and
  * edu.iu.dsc.tws.data.memory.utils.DataMessageType
+ * //todo remove if not using anymore
  */
 public final class MessageTypeUtils {
 

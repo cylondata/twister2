@@ -17,8 +17,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
@@ -26,6 +24,7 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
@@ -52,7 +51,7 @@ public class TaskExecutor {
   /**
    * The allocated resources
    */
-  private AllocatedResources allocResources;
+  private List<JobMasterAPI.WorkerInfo> workerInfoList;
 
   /**
    * The network communicator
@@ -63,13 +62,13 @@ public class TaskExecutor {
    * Creates a task executor.
    * @param cfg the configuration
    * @param wId the worker id
-   * @param resources allocated resources
    * @param net communicator
    */
-  public TaskExecutor(Config cfg, int wId, AllocatedResources resources, Communicator net) {
+  public TaskExecutor(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
+                      Communicator net) {
     this.config = cfg;
     this.workerID = wId;
-    this.allocResources = resources;
+    this.workerInfoList = workerInfoList;
     this.communicator = net;
   }
 
@@ -83,12 +82,29 @@ public class TaskExecutor {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan(allocResources);
+    WorkerPlan workerPlan = createWorkerPlan();
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
-        allocResources, communicator);
+        workerID, workerInfoList, communicator);
     return executionPlanBuilder.build(config, graph, taskSchedulePlan);
+  }
+
+  /**
+   * Execute a plan and a graph. This call blocks until the execution finishes. In case of
+   * streaming, this call doesn't return while for batch computations it returns after
+   * the execution is done.
+   *
+   * @param taskConfig the user configuration to be passed to the task instances
+   * @param graph the dataflow graph
+   * @param plan the execution plan
+   */
+  public void execute(Config taskConfig, DataFlowTaskGraph graph, ExecutionPlan plan) {
+    Config newCfg = Config.newBuilder().putAll(config).putAll(taskConfig).build();
+
+    Executor executor = new Executor(newCfg, workerID, plan, communicator.getChannel(),
+        graph.getOperationMode());
+    executor.execute();
   }
 
   /**
@@ -199,10 +215,10 @@ public class TaskExecutor {
     return dataSet;
   }
 
-  private WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
+  private WorkerPlan createWorkerPlan() {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
+    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
+      Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }
 

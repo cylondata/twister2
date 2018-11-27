@@ -34,8 +34,8 @@ The processes that perform the computations in a job.
 
 This will present the job related data to users through a web page. Users will be able to monitor their jobs on that web page. Only one instance will run in the cluster and it will provide data for all jobs running in the cluster.
 
-This section describes some of these components in detail.
+Following sections describe some of these components in detail.
 
-* [Common](common/logging.md)
-* [Discovery](discovery/worker-discovery.md)
-* [JobMaster](job-master/job-master.md)
+* [Logging](common/logging.md)
+* [Worker Controller](controller/worker-controller.md)
+* [Job Master](job-master/job-master.md)

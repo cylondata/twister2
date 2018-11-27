@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
+import java.util.ArrayList;
+
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
@@ -28,8 +30,12 @@ public class JobTerminator implements IJobTerminator {
 
   @Override
   public boolean terminateJob(String jobName) {
-    // delete the StatefulSet for workers
-    boolean ssForWorkersDeleted = controller.deleteStatefulSetJob(namespace, jobName);
+    // delete the StatefulSets for workers
+    ArrayList<String> ssNameLists = controller.getStatefulSetsForJobWorkers(namespace, jobName);
+    boolean ssForWorkersDeleted = true;
+    for (String ssName: ssNameLists) {
+      ssForWorkersDeleted &= controller.deleteStatefulSetJob(namespace, ssName);
+    }
 
     // delete the job service
     String serviceName = KubernetesUtils.createServiceName(jobName);
@@ -43,11 +49,7 @@ public class JobTerminator implements IJobTerminator {
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
     boolean pvcDeleted = controller.deletePersistentVolumeClaim(namespace, pvcName);
 
-    // delete the persistent volume
-//    String pvName = KubernetesUtils.createPersistentVolumeName(jobName);
-//    boolean pvDeleted = controller.deletePersistentVolume(pvName);
-
-    // first delete the job master StatefulSet
+    // last delete the job master StatefulSet
     String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
     boolean ssForJobMasterDeleted =
         controller.deleteStatefulSetJob(namespace, jobMasterStatefulSetName);

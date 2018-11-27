@@ -1,6 +1,7 @@
 twister2.checkpoint.enable: true
-twister2.statebackend.directory: "/home/kumar/statebackend/"
+twister2.statebackend.directory: "~/statebackend/"
 twister2.statebackend.recovery: false
 twister2.barrier.interval: 100000
 twister2.statebackend.hadoopfilesystem: false
 twister2.statebackend.HDFS.filename: "checkpointing"
+twister2.statebackend.limit: 3

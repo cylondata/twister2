@@ -11,15 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
@@ -30,8 +26,6 @@ import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 public abstract class BenchTaskWorker extends TaskWorker {
   private static final Logger LOG = Logger.getLogger(BenchTaskWorker.class.getName());
@@ -73,18 +67,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
     dataFlowTaskGraph = taskGraphBuilder.build();
     executionPlan = taskExecutor.plan(dataFlowTaskGraph);
     taskExecutor.execute(dataFlowTaskGraph, executionPlan);
-
-
-  }
-
-  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
-    List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
-      workers.add(w);
-    }
-
-    return new WorkerPlan(workers);
   }
 
   public abstract TaskGraphBuilder buildTaskGraph();

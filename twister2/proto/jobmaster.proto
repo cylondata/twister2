@@ -1,6 +1,8 @@
 syntax = "proto3";
 package tws.proto.jobmaster;
 
+import "job.proto";
+
 option java_package = "edu.iu.dsc.tws.proto.jobmaster";
 option java_outer_classname = "JobMasterAPI";
 
@@ -19,16 +21,17 @@ option java_outer_classname = "JobMasterAPI";
 // Ping message is sent by workers to the job master periodically
 // it is to show that that the workers are running
 message Ping {
-    oneof required {
-        int32 workerID = 1;
-    }
-    string pingMessage = 2;
-    MessageType messageType = 3;
-
     enum MessageType {
         WORKER_TO_MASTER = 0;
         MASTER_TO_WORKER = 1;
     }
+    oneof idRequired {
+        int32 workerID = 1;
+    }
+    oneof typeRequired {
+        MessageType messageType = 2;
+    }
+    string pingMessage = 3;
 }
 
 // a worker can be any one of these states
@@ -40,18 +43,24 @@ enum WorkerState {
     UNASSIGNED = 4;
 }
 
+message NodeInfo {
+    string nodeIP = 1;
+    string rackName = 2;
+    string dataCenterName = 3;
+}
+
 //
 // Networking Data about a Twister2 Worker
 //
-message WorkerNetworkInfo {
+message WorkerInfo {
     oneof required {
         int32 workerID = 1;
     }
     string workerIP = 2;
     int32 port = 3;
-    string nodeIP = 4;
-    string rackName = 5;
-    string dataCenterName = 6;
+
+    NodeInfo nodeInfo = 4;
+    tws.proto.job.ComputeResource computeResource = 5;
 }
 
 // a worker informs the master that its state has changed
@@ -60,17 +69,24 @@ message WorkerNetworkInfo {
 //   optionally its node info: nodeIP, rackName and dataCenterName
 // for other states, just the workerID and newState is enough
 message WorkerStateChange {
-    WorkerNetworkInfo workerNetworkInfo = 1;
-    WorkerState newState = 2;
+    oneof idRequired {
+        int32 workerID = 1;
+    }
+    oneof stateRequired {
+        WorkerState newState = 2;
+    }
+    WorkerInfo workerInfo = 3;
 }
 
 // sent by the master to the worker
 // to inform that its state change message has been received
 message WorkerStateChangeResponse {
-    oneof required {
+    oneof idRequired {
         int32 workerID = 1;
     }
-    WorkerState sentState = 2;
+    oneof stateRequired {
+        WorkerState sentState = 2;
+    }
 }
 
 // Get the list of wokers in a job from the job master
@@ -80,10 +96,12 @@ message ListWorkersRequest {
         RESPONSE_AFTER_ALL_JOINED = 1;
     }
 
-    oneof required {
+    oneof idRequired {
         int32 workerID = 1;
     }
-    RequestType requestType = 2;
+    oneof typeRequired {
+        RequestType requestType = 2;
+    }
 }
 
 // Job master returns the list of workers in a job to a worker
@@ -92,7 +110,7 @@ message ListWorkersResponse {
     oneof required {
         int32 workerID = 1;
     }
-    repeated WorkerNetworkInfo workers = 2;
+    repeated WorkerInfo worker = 2;
 }
 
 // All workers in a job wants to wait in a Barrier point

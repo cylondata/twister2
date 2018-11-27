@@ -23,10 +23,9 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -60,7 +59,7 @@ public class MultiPartitionCheckpointExample extends TaskWorker {
     builder.setMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();
-    TaskUtils.execute(config, allocatedResources, graph, workerController);
+    TaskUtils.execute(config, workerId, graph, workerController);
   }
 
   private static class GeneratorTask extends SourceCheckpointableTask {
@@ -134,10 +133,10 @@ public class MultiPartitionCheckpointExample extends TaskWorker {
 
   }
 
-  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
+  public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
+    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+      Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }
 
@@ -156,10 +155,10 @@ public class MultiPartitionCheckpointExample extends TaskWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("multi-partition-checkpoint-example");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("multi-partition-checkpoint-example");
     jobBuilder.setWorkerClass(MultiPartitionCheckpointExample.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

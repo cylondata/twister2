@@ -25,11 +25,10 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.batch.BAllGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BAllReduceExample;
+import edu.iu.dsc.tws.examples.comms.batch.BDJoinExample;
 import edu.iu.dsc.tws.examples.comms.batch.BDKeyedGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BGatherExample;
 import edu.iu.dsc.tws.examples.comms.batch.BJoinExample;
@@ -170,6 +169,9 @@ public class ExampleMain {
         case "join":
           submitJob(config, workers, jobConfig, BJoinExample.class.getName());
           break;
+        case "djoin":
+          submitJob(config, workers, jobConfig, BDJoinExample.class.getName());
+          break;
       }
     } else {
       switch (operation) {
@@ -209,9 +211,9 @@ public class ExampleMain {
   private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setName(clazz)
+        .setJobName(clazz)
         .setWorkerClass(clazz)
-        .setRequestResource(new WorkerComputeResource(1, 512), containers)
+        .addComputeResource(1, 512, containers)
         .setConfig(jobConfig)
         .build();
     // now submit the job

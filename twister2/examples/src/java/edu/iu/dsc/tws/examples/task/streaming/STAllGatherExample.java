@@ -72,7 +72,7 @@ public class STAllGatherExample extends BenchTaskWorker {
           }
         }
         /*if (count % jobParameters.getPrintInterval() == 0) {
-          LOG.info("AllGathered : " + message.getContent().getClass().getName()
+          LOG.info("AllGathered : " + message.getContent().getClass().getJobName()
               + ", Count : " + count + " numberOfElements: " + numberOfElements
               + " total: " + totalValues);
         }*/

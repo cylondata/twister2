@@ -12,6 +12,7 @@ metadata:
   labels:
     app: twister2-service-label-<job-name>
     twister2-job-pods: twister2-<job-name>
+    twister2-role: <job-name>-worker
 spec:
   # replicas are calculated by dividing twister2.worker.instances/kubernetes.workers.per.pod
   replicas: <twister2.worker.instances>/<kubernetes.workers.per.pod>
@@ -66,7 +67,7 @@ spec:
         # container-index is added automatically inside the code
         # it starts from 0 and increases sequentially
         name: twister2-container-<container-index>
-        image: auyar/twister2:v0.01
+        image: twister2/twister2-k8s:0.1.0
         imagePullPolicy: <kubernetes.image.pull.policy>
         ports:
           name: port11

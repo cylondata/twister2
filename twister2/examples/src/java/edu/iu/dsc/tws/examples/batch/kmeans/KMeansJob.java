@@ -124,10 +124,8 @@ public class KMeansJob extends TaskWorker {
     private static final long serialVersionUID = -254264120110286748L;
 
     private DataSet<Object> input;
-
     private double[][] centroid = null;
     private double[][] datapoints = null;
-
     private KMeansCalculator kMeansCalculator = null;
 
     @Override
@@ -136,10 +134,12 @@ public class KMeansJob extends TaskWorker {
       int startIndex = context.taskIndex() * datapoints.length / context.getParallelism();
       int endIndex = startIndex + datapoints.length / context.getParallelism();
 
+      int dim = Integer.parseInt(config.getStringValue("dim"));
+
       LOG.fine("Original Centroid Value::::" + Arrays.deepToString(centroid));
 
       kMeansCalculator = new KMeansCalculator(datapoints, centroid,
-              context.taskIndex(), 2, startIndex, endIndex);
+          context.taskIndex(), dim, startIndex, endIndex);
       KMeansCenters kMeansCenters = kMeansCalculator.calculate();
 
       LOG.fine("Task Index:::" + context.taskIndex() + "\t"
