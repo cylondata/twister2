@@ -11,26 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.Source;
-import edu.iu.dsc.tws.api.tset.ops.SourceOp;
-import edu.iu.dsc.tws.common.config.Config;
-
-public class SourceTSet<T> extends BaseTSet<T> {
-  private Source<T> soruce;
-
-  public SourceTSet(Config cfg, TaskGraphBuilder bldr, Source<T> src) {
-    super(cfg, bldr);
-    this.soruce = src;
-  }
-
-  @Override
-  public void build() {
-    builder.addSource(getName(), new SourceOp<T>(soruce));
-  }
-
-  @Override
-  protected Op getOp() {
-    return null;
-  }
+public enum Op {
+  REDUCE,
+  GATHER,
+  ALL_GATHER,
+  ALL_REDUCE,
+  MAP,
+  PARTITION,
 }

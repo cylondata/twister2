@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
@@ -29,6 +30,12 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
   }
 
   public void build() {
-    builder.addCompute(name, new FlatMapOp<>(mapFn), parallel);
+    ComputeConnection connection = builder.addCompute(getName(), new FlatMapOp<>(mapFn));
+    buildConnection(connection, parent);
+  }
+
+  @Override
+  protected Op getOp() {
+    return null;
   }
 }

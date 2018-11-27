@@ -11,11 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.ops.MapOp;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
 
 public class MapTSet<T, P> extends BaseTSet<T> {
   private BaseTSet<P> parent;
@@ -30,7 +30,12 @@ public class MapTSet<T, P> extends BaseTSet<T> {
   }
 
   public void build() {
-    builder.addCompute(name, new MapOp<>(mapFn), parallel).partition(parent.getName(),
-        DataType.INTEGER);
+    ComputeConnection connection = builder.addCompute(getName(), new MapOp<P, T>(mapFn));
+    buildConnection(connection, parent);
+  }
+
+  @Override
+  protected Op getOp() {
+    return Op.MAP;
   }
 }

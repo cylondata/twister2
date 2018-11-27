@@ -11,6 +11,25 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-public class TSetBuilder {
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.impl.SourceTSet;
+import edu.iu.dsc.tws.common.config.Config;
 
+public final class TSetBuilder {
+  private TSetBuilder(Config cfg) {
+    this.config = cfg;
+    this.builder = TaskGraphBuilder.newBuilder(cfg);
+  }
+
+  private Config config;
+
+  private TaskGraphBuilder builder;
+
+  public static TSetBuilder newBuilder(Config cfg) {
+    return new TSetBuilder(cfg);
+  }
+
+  public <T> TSet<T> createSource(Source<T> source) {
+    return new SourceTSet<T>(config, builder, source);
+  }
 }

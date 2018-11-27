@@ -14,13 +14,16 @@ package edu.iu.dsc.tws.api.tset.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 
 public abstract class BaseTSet<T> implements TSet<T> {
   /**
@@ -74,7 +77,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public TSet<T> reduce(ReduceFunction<T> reduceFn) {
-    return null;
+    return new ReduceTSet<T>(config, builder, this, reduceFn);
   }
 
   public TSet<T> partition(PartitionFunction<T> partitionFn) {
@@ -85,6 +88,30 @@ public abstract class BaseTSet<T> implements TSet<T> {
   public void build() {
     for (BaseTSet<?> c : children) {
       c.build();
+    }
+  }
+
+  /**
+   * Get the specific operation name
+   * @return operation
+   */
+  abstract protected Op getOp();
+
+  static <P> void buildConnection(ComputeConnection connection, BaseTSet<P> parent) {
+    if (parent.getOp() == Op.REDUCE) {
+      connection.reduce(parent.getName(), Constants.DEFAULT_EDGE, new ReduceOpFunction(),
+          DataType.OBJECT);
+    } else if (parent.getOp() == Op.GATHER) {
+      connection.gather(parent.getName(), Constants.DEFAULT_EDGE, null);
+    } else if (parent.getOp() == Op.ALL_REDUCE) {
+      connection.allreduce(parent.getName(), Constants.DEFAULT_EDGE, new ReduceOpFunction(),
+          DataType.OBJECT);
+    } else if (parent.getOp() == Op.ALL_GATHER) {
+      connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, null);
+    } else if (parent.getOp() == Op.PARTITION) {
+      connection.partition(parent.getName(), Constants.DEFAULT_EDGE, null);
+    } else {
+      throw new RuntimeException("Failed to build un-supported operation: " + parent.getOp());
     }
   }
 }

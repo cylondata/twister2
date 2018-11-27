@@ -11,24 +11,27 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
+import edu.iu.dsc.tws.api.tset.Constants;
+import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.dataset.DataSet;
-import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceOp<T> implements ISource {
   private TaskContext context;
 
-  private DataSet<T> dataSet;
+  private Source<T> dataSet;
 
-  public SourceOp(DataSource<T, ?> dataSet) {
-    this.dataSet = dataSet;
+  public SourceOp(Source<T> src) {
+    this.dataSet = src;
   }
 
   @Override
   public void execute() {
-    context.write("", null);
+    T t = dataSet.next();
+    if (t != null) {
+      context.write(Constants.DEFAULT_EDGE, t);
+    }
   }
 
   @Override

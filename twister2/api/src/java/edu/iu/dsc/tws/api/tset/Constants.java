@@ -9,14 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.ops;
+package edu.iu.dsc.tws.api.tset;
 
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchCompute;
-
-public class ReduceOp<T> extends BaseBatchCompute {
-  @Override
-  public boolean execute(IMessage content) {
-    return false;
-  }
+public final class Constants {
+  public static final String DEFAULT_EDGE = "default";
 }
