@@ -163,10 +163,16 @@ public class PartitionPartialReceiver implements MessageReceiver {
         barrierMessage.add(object);
         if (readyToSend.isEmpty()) {
           if (!dests.isEmpty()) {
-            operation.sendPartial(representSource, new ArrayList<>(dests), 0, target);
+            while (!operation.sendPartial(representSource, new ArrayList<>(dests), 0,
+                target)) {
+              LOG.fine("attempting to resend BARRIER message");
+            }
           }
 
-          operation.sendPartial(representSource, barrierMessage, MessageFlags.BARRIER, target);
+          while (!operation.sendPartial(representSource, barrierMessage, MessageFlags.BARRIER,
+              target)) {
+            LOG.fine("attempting to resend BARRIER message");
+          }
         } else {
           Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
           while (it.hasNext()) {
@@ -181,9 +187,16 @@ public class PartitionPartialReceiver implements MessageReceiver {
             }
           }
           if (!dests.isEmpty()) {
-            operation.sendPartial(representSource, new ArrayList<>(dests), 0, target);
+            while (!operation.sendPartial(representSource, new ArrayList<>(dests), 0,
+                target)) {
+              LOG.fine("attempting to resend BARRIER message");
+            }
           }
-          operation.sendPartial(representSource, barrierMessage, MessageFlags.BARRIER, target);
+
+          while (!operation.sendPartial(representSource, barrierMessage, MessageFlags.BARRIER,
+              target)) {
+            LOG.fine("attempting to resend BARRIER message");
+          }
         }
       } else {
         dests.add(object);

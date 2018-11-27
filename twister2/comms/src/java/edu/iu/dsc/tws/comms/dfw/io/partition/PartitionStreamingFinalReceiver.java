@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -49,7 +50,7 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   public void init(Config cfg, DataFlowOperation operation,
                    Map<Integer, List<Integer>> expectedIds) {
     this.expIds = expectedIds;
-    this.barrierMap = new HashMap<>();
+    this.barrierMap = new ConcurrentHashMap<>();
     int sendPendingMax = DataFlowContext.sendPendingMax(cfg);
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       messages.put(e.getKey(), new ArrayBlockingQueue<>(sendPendingMax));
@@ -60,6 +61,7 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+      LOG.info(source + " ------- " + target);
       if (barrierMap.containsKey(target)) {
         barrierMap.get(target).putIfAbsent(source, new ArrayBlockingQueue<>(2000));
       } else {
@@ -72,8 +74,8 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
             for (MessageObject messageObject : barrierMap.get(target).get(barrierSource)) {
               messages.get(messageObject.getTarget()).offer(messageObject.getMessage());
             }
-            barrierMap.get(target).clear();
           }
+          barrierMap.get(target).clear();
         }
       }
       return true;

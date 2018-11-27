@@ -71,7 +71,7 @@ public class SPartition {
    */
   public boolean partition(int src, Object message, int flags) {
 //    final int dest = destinationSelector.next(src, message);
-
+    boolean issent;
     if ((flags & MessageFlags.BARRIER) != MessageFlags.BARRIER) {
       final int dest = destinationSelector.next(src, message);
 
@@ -85,7 +85,9 @@ public class SPartition {
       List<Integer> destinations = destinationSelector.getDestinations(src);
 
       for (int dest : destinations) {
-        partition.send(src, message, flags, dest);
+        while (!partition.send(src, message, flags, dest)) {
+          LOG.info("attempting to resend BARRIER message from " + src + " to " + dest);
+        }
       }
       return true;
     }
@@ -93,6 +95,7 @@ public class SPartition {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -110,6 +113,7 @@ public class SPartition {
 
   /**
    * Indicate the end of the communication
+   *
    * @param src the source that is ending
    */
   public void finish(int src) {
