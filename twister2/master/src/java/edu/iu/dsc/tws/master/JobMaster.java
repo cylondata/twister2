@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * JobMaster class
@@ -77,7 +78,7 @@ public class JobMaster {
   /**
    * name of the job this Job Master will manage
    */
-  private String jobName;
+  private JobAPI.Job job;
 
   /**
    * the network object to receive and send messages
@@ -107,6 +108,12 @@ public class JobMaster {
   private int numberOfWorkers;
 
   /**
+   * NodeInfo object for Job Master
+   * location of Job Master
+   */
+  private JobMasterAPI.NodeInfo nodeInfo;
+
+  /**
    * BarrierMonitor object
    */
   private BarrierMonitor barrierMonitor;
@@ -114,23 +121,15 @@ public class JobMaster {
   public JobMaster(Config config,
                    String masterAddress,
                    IJobTerminator jobTerminator,
-                   String jobName) {
-    this(config, masterAddress, jobTerminator, jobName, JobMasterContext.jobMasterPort(config),
-        JobMasterContext.workerInstances(config));
-  }
-
-  public JobMaster(Config config,
-                   String masterAddress,
-                   IJobTerminator jobTerminator,
-                   String jobName,
-                   int masterPort,
-                   int numWorkers) {
+                   JobAPI.Job job,
+                   JobMasterAPI.NodeInfo nodeInfo) {
     this.config = config;
     this.masterAddress = masterAddress;
     this.jobTerminator = jobTerminator;
-    this.jobName = jobName;
-    this.masterPort = masterPort;
-    this.numberOfWorkers = numWorkers;
+    this.job = job;
+    this.nodeInfo = nodeInfo;
+    this.masterPort = JobMasterContext.jobMasterPort(config);
+    this.numberOfWorkers = job.getNumberOfWorkers();
   }
 
   /**
@@ -144,7 +143,8 @@ public class JobMaster {
     rrServer =
         new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
-    workerMonitor = new WorkerMonitor(config, this, rrServer, numberOfWorkers);
+    workerMonitor = new WorkerMonitor(this, rrServer, numberOfWorkers,
+        JobMasterContext.jobMasterAssignsWorkerIDs(config));
     barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
@@ -225,7 +225,7 @@ public class JobMaster {
     looper.wakeup();
 
     if (jobTerminator != null) {
-      jobTerminator.terminateJob(jobName);
+      jobTerminator.terminateJob(job.getJobName());
     }
   }
 

@@ -25,10 +25,12 @@ package edu.iu.dsc.tws.examples.internal.jobmaster;
 
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public final class JobMasterExample {
   private static final Logger LOG = Logger.getLogger(JobMasterExample.class.getName());
@@ -63,7 +65,10 @@ public final class JobMasterExample {
     String host = JobMasterContext.jobMasterIP(configs);
     String jobName = Context.jobName(configs);
 
-    JobMaster jobMaster = new JobMaster(configs, host, null, jobName);
+    Twister2Job twister2Job = Twister2Job.loadTwister2Job(configs, null);
+    JobAPI.Job job = twister2Job.serialize();
+
+    JobMaster jobMaster = new JobMaster(configs, host, null, job, null);
     jobMaster.startJobMasterThreaded();
 
     LOG.info("Threaded Job Master started.");

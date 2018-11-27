@@ -34,13 +34,14 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-//import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
-import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+
+//import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 
 
 public final class MesosJobMasterStarter {
@@ -110,10 +111,11 @@ public final class MesosJobMasterStarter {
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
       JobMaster jobMaster;
       try {
+        //TODO: a valid NodeInfo object need to be provided to JobMaster constructor
+        JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
         jobMaster =
             new JobMaster(config, InetAddress.getLocalHost().getHostAddress(),
-                terminator, jobName, JobMasterContext.jobMasterPort(config),
-                MesosContext.numberOfContainers(config) - 1);
+                terminator, job, jobMasterNodeInfo);
         LOG.info("JobMaster host address:" + InetAddress.getLocalHost().getHostAddress());
         jobMaster.startJobMasterBlocking();
       } catch (Exception e) {
