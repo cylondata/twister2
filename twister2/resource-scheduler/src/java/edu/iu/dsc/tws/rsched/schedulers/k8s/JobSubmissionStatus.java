@@ -17,6 +17,7 @@ public class JobSubmissionStatus {
   private boolean serviceForWorkersCreated;
   private boolean serviceForJobMasterCreated;
   private boolean pvcCreated;
+  private boolean configMapCreated;
   private ArrayList<String> createdStatefulSetNames = new ArrayList<>();
 
   public JobSubmissionStatus() { }
@@ -37,6 +38,10 @@ public class JobSubmissionStatus {
     return pvcCreated;
   }
 
+  public boolean isConfigMapCreated() {
+    return configMapCreated;
+  }
+
   public void setServiceForWorkersCreated(boolean serviceForWorkersCreated) {
     this.serviceForWorkersCreated = serviceForWorkersCreated;
   }
@@ -51,5 +56,9 @@ public class JobSubmissionStatus {
 
   public void setPvcCreated(boolean pvcCreated) {
     this.pvcCreated = pvcCreated;
+  }
+
+  public void setConfigMapCreated(boolean configMapCreated) {
+    this.configMapCreated = configMapCreated;
   }
 }

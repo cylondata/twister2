@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -374,6 +375,12 @@ public final class JobMasterRequestObject {
     return service;
   }
 
+  /**
+   * create a ConfigMap object for Job Master
+   * It will have job as binary data and config files as text data
+   * @param job
+   * @return
+   */
   public static V1ConfigMap createJobMasterConfigMap(JobAPI.Job job) {
     String configMapName = KubernetesUtils.createJobMasterConfigMapName(jobName);
 
@@ -393,6 +400,30 @@ public final class JobMasterRequestObject {
     String fileContent = readYAMLFile(clientYaml);
     configMap.putDataItem("client.yaml", fileContent);
 
+    String taskYaml = Context.taskConfigurationFile(config);
+    fileContent = readYAMLFile(taskYaml);
+    configMap.putDataItem("task.yaml", fileContent);
+
+    String resourceYaml = Context.resourceSchedulerConfigurationFile(config);
+    fileContent = readYAMLFile(resourceYaml);
+    configMap.putDataItem("resource.yaml", fileContent);
+
+    String uploaderYaml = Context.uploaderConfigurationFile(config);
+    fileContent = readYAMLFile(uploaderYaml);
+    configMap.putDataItem("uploader.yaml", fileContent);
+
+    String networkYaml = Context.networkConfigurationFile(config);
+    fileContent = readYAMLFile(networkYaml);
+    configMap.putDataItem("network.yaml", fileContent);
+
+    String systemYaml = Context.systemConfigurationFile(config);
+    fileContent = readYAMLFile(systemYaml);
+    configMap.putDataItem("system.yaml", fileContent);
+
+    String dataYaml = Context.dataConfigurationFile(config);
+    fileContent = readYAMLFile(dataYaml);
+    configMap.putDataItem("data.yaml", fileContent);
+
     return configMap;
   }
 
@@ -402,10 +433,20 @@ public final class JobMasterRequestObject {
    * @return
    */
   private static String readYAMLFile(String filename) {
+
+    Path filepath = Paths.get(filename);
+
+    if (!Files.exists(filepath)) {
+      LOG.fine("Config file " + filename + " does not exist. "
+          + "It will not be transferred to JobMaster.");
+      return null;
+    }
+
     try {
-      return new String(Files.readAllBytes(Paths.get(filename)));
+      return new String(Files.readAllBytes(filepath));
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
+      LOG.log(Level.SEVERE, "Can not read the config file: " + filename
+          + " This config file will not be transferred to JobMaster.", e);
       return null;
     }
   }

@@ -86,7 +86,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     long jobFileSize = jobFile.length();
 
-    // start job package transfer threads to watch pods to start
+    // start job package transfer threads to watch pods to starting
     if (KubernetesContext.clientToPodsUploading(config)) {
       JobPackageTransferThread.startTransferThreads(
           namespace, job, jobPackageFile, KubernetesContext.watchBeforeUploadAttempts(config));
@@ -153,6 +153,17 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     return true;
   }
 
+  /**
+   * check whether there are any entities with the same name on Kubernetes master
+   * check the existence of all entities that will be created for this job
+   * if any one of them exist, return false,
+   * otherwise return true
+   * @return
+   */
+  private boolean checkEntitiesOnKubernetesMaster() {
+    return false;
+  }
+
   private boolean initServices(String jobName) {
     // first check whether there are services running with the same name
     String workersServiceName = KubernetesUtils.createServiceName(jobName);
@@ -164,7 +175,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       serviceNames.add(jobMasterServiceName);
     }
 
-    boolean serviceExists = controller.servicesExist(namespace, serviceNames);
+    boolean serviceExists = controller.existServices(namespace, serviceNames);
     if (serviceExists) {
       LOG.severe("Another job might be running. "
           + "\nFirst terminate that job or create a job with a different name."
@@ -255,7 +266,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       statefulSetNames.add(jobMasterStatefulSetName);
     }
 
-    boolean statefulSetExists = controller.statefulSetsExist(namespace, statefulSetNames);
+    boolean statefulSetExists = controller.existStatefulSets(namespace, statefulSetNames);
 
     if (statefulSetExists) {
       LOG.severe("First terminate the previously running job with the same name. "
@@ -270,6 +281,13 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       // create ConfigMap
       V1ConfigMap configMap = JobMasterRequestObject.createJobMasterConfigMap(job);
       boolean configMapCreated = controller.createConfigMap(namespace, configMap);
+      if (configMapCreated) {
+        jobSubmissionStatus.setConfigMapCreated(configMapCreated);
+      } else {
+        LOG.severe("Could not create ConfigMap."
+            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
+        return false;
+      }
 
       // create the StatefulSet object for this job
       V1beta2StatefulSet jobMasterStatefulSet = JobMasterRequestObject.createStatefulSetObject();
@@ -278,7 +296,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
         return false;
       }
 
-      boolean statefulSetCreated = controller.createStatefulSetJob(namespace, jobMasterStatefulSet);
+      boolean statefulSetCreated = controller.createStatefulSet(namespace, jobMasterStatefulSet);
       if (statefulSetCreated) {
         jobSubmissionStatus.addCreatedStatefulSetName(jobMasterStatefulSet.getMetadata().getName());
       } else {
@@ -322,7 +340,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
         return false;
       }
 
-      boolean statefulSetCreated = controller.createStatefulSetJob(namespace, statefulSet);
+      boolean statefulSetCreated = controller.createStatefulSet(namespace, statefulSet);
       if (statefulSetCreated) {
         jobSubmissionStatus.addCreatedStatefulSetName(statefulSet.getMetadata().getName());
       } else {
@@ -358,7 +376,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     // when OpenMPI is enabled, a Secret object has to be available in the cluster
     if (SchedulerContext.useOpenMPI(config)) {
       String secretName = KubernetesContext.secretName(config);
-      boolean secretExists = controller.secretExist(namespace, secretName);
+      boolean secretExists = controller.existSecret(namespace, secretName);
 
       if (!secretExists) {
         LOG.severe("No Secret object is available in the cluster with the name: " + secretName
@@ -462,13 +480,19 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     // delete created StatefulSet objects
     ArrayList<String> ssNameLists = jobSubmissionStatus.getCreatedStatefulSetNames();
     for (String ssName: ssNameLists) {
-      controller.deleteStatefulSetJob(namespace, ssName);
+      controller.deleteStatefulSet(namespace, ssName);
     }
 
     // delete the persistent volume claim
     if (jobSubmissionStatus.isPvcCreated()) {
       String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
       boolean claimDeleted = controller.deletePersistentVolumeClaim(namespace, pvcName);
+    }
+
+    // delete the ConfigMap for job master
+    if (jobSubmissionStatus.isConfigMapCreated()) {
+      String configMapName = KubernetesUtils.createJobMasterConfigMapName(jobName);
+      boolean configMapDeleted = controller.deleteConfigMap(namespace, configMapName);
     }
   }
 
@@ -480,12 +504,12 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // first delete the job master StatefulSet
     String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
-    boolean deleted = controller.deleteStatefulSetJob(namespace, jobMasterStatefulSetName);
+    boolean deleted = controller.deleteStatefulSet(namespace, jobMasterStatefulSetName);
 
     // delete workers the StatefulSets
     ArrayList<String> ssNameLists = controller.getStatefulSetsForJobWorkers(namespace, jobName);
     for (String ssName: ssNameLists) {
-      controller.deleteStatefulSetJob(namespace, ssName);
+      controller.deleteStatefulSet(namespace, ssName);
     }
 
     // delete the job service
@@ -499,6 +523,10 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     // delete the persistent volume claim
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
     boolean claimDeleted = controller.deletePersistentVolumeClaim(namespace, pvcName);
+
+    // delete the ConfigMap for job master
+    String configMapName = KubernetesUtils.createJobMasterConfigMapName(jobName);
+    boolean configMapDeleted = controller.deleteConfigMap(namespace, configMapName);
 
     return true;
   }

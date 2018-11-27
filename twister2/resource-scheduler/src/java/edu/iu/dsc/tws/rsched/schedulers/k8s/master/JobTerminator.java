@@ -34,7 +34,7 @@ public class JobTerminator implements IJobTerminator {
     ArrayList<String> ssNameLists = controller.getStatefulSetsForJobWorkers(namespace, jobName);
     boolean ssForWorkersDeleted = true;
     for (String ssName: ssNameLists) {
-      ssForWorkersDeleted &= controller.deleteStatefulSetJob(namespace, ssName);
+      ssForWorkersDeleted &= controller.deleteStatefulSet(namespace, ssName);
     }
 
     // delete the job service
@@ -49,15 +49,20 @@ public class JobTerminator implements IJobTerminator {
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
     boolean pvcDeleted = controller.deletePersistentVolumeClaim(namespace, pvcName);
 
+    // delete the ConfigMap for job master
+    String configMapName = KubernetesUtils.createJobMasterConfigMapName(jobName);
+    boolean configMapDeleted = controller.deleteConfigMap(namespace, configMapName);
+
     // last delete the job master StatefulSet
     String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
     boolean ssForJobMasterDeleted =
-        controller.deleteStatefulSetJob(namespace, jobMasterStatefulSetName);
+        controller.deleteStatefulSet(namespace, jobMasterStatefulSetName);
 
     return ssForWorkersDeleted
         && serviceForWorkersDeleted
         && serviceForJobMasterDeleted
         && pvcDeleted
-        && ssForJobMasterDeleted;
+        && ssForJobMasterDeleted
+        && configMapDeleted;
   }
 }
