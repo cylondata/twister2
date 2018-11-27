@@ -21,7 +21,9 @@ import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSet;
+import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
@@ -51,8 +53,14 @@ public abstract class BaseTSet<T> implements TSet<T> {
    */
   private Config config;
 
+  /**
+   * If there are sinks
+   */
+  private List<SinkOp<T>> sinks;
+
   public BaseTSet(Config cfg, TaskGraphBuilder bldr) {
     this.children = new ArrayList<>();
+    this.sinks = new ArrayList<>();
     this.builder = bldr;
     this.config = cfg;
   }
@@ -85,9 +93,18 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   @Override
+  public void sink(Sink<T> sink) {
+    sinks.add(new SinkOp<T>(sink));
+  }
+
+  @Override
   public void build() {
     for (BaseTSet<?> c : children) {
       c.build();
+    }
+
+    for (SinkOp<T> sink : sinks) {
+      builder.addSink(getName(), sink);
     }
   }
 
@@ -95,7 +112,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
    * Get the specific operation name
    * @return operation
    */
-  abstract protected Op getOp();
+  protected abstract Op getOp();
 
   static <P> void buildConnection(ComputeConnection connection, BaseTSet<P> parent) {
     if (parent.getOp() == Op.REDUCE) {

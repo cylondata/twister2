@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-public interface Source<T> extends TFunction {
-  boolean hasNext();
-
-  T next();
+public interface Sink<T> {
+  boolean add(T value);
 }

@@ -9,31 +9,29 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.api.tset.ops;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.impl.SourceTSet;
+import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
 
-public final class TSetBuilder {
-  private TSetBuilder(Config cfg) {
-    this.config = cfg;
-    this.builder = TaskGraphBuilder.newBuilder(cfg);
+public class SinkOp<T> implements ISink {
+  private Sink<T> sink;
+
+  public SinkOp(Sink<T> sink) {
+    this.sink = sink;
   }
 
-  private Config config;
-
-  private TaskGraphBuilder builder;
-
-  public static TSetBuilder newBuilder(Config cfg) {
-    return new TSetBuilder(cfg);
+  @SuppressWarnings("unchecked")
+  @Override
+  public boolean execute(IMessage message) {
+    T data = (T) message.getContent();
+    return sink.add(data);
   }
 
-  public <T> TSet<T> createSource(Source<T> source) {
-    return new SourceTSet<T>(config, builder, source);
-  }
-
-  public TaskGraphBuilder getBuilder() {
-    return builder;
+  @Override
+  public void prepare(Config cfg, TaskContext ctx) {
   }
 }

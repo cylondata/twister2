@@ -20,6 +20,7 @@ public interface TSet<T> {
 
   /**
    * Map
+   *
    * @param mapFn
    * @param <P>
    * @return
@@ -28,6 +29,7 @@ public interface TSet<T> {
 
   /**
    * Flatmap
+   *
    * @param mapFn
    * @param <P>
    * @return
@@ -36,10 +38,18 @@ public interface TSet<T> {
 
   /**
    * Reduce
+   *
    * @param reduceFn
    * @return
    */
   TSet<T> reduce(ReduceFunction<T> reduceFn);
+
+  /**
+   * Add a sink
+   *
+   * @param sink
+   */
+  void sink(Sink<T> sink);
 
   /**
    * Build this tset

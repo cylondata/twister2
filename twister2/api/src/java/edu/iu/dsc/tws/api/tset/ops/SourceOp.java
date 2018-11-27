@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceOp<T> implements ISource {
+
   private TaskContext context;
 
   private Source<T> dataSet;
@@ -28,9 +29,13 @@ public class SourceOp<T> implements ISource {
 
   @Override
   public void execute() {
-    T t = dataSet.next();
-    if (t != null) {
-      context.write(Constants.DEFAULT_EDGE, t);
+    if (dataSet.hasNext()) {
+      T t = dataSet.next();
+      if (t != null) {
+        context.write(Constants.DEFAULT_EDGE, t);
+      }
+    } else {
+      context.end(Constants.DEFAULT_EDGE);
     }
   }
 
