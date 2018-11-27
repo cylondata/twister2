@@ -442,20 +442,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
    */
   private boolean configParametersOK(JobAPI.Job job) {
 
-    // number of workers has to be divisible by workersPerPod in each ComputeResource
-    // all pods will have equal number of containers
-    // all pods will be identical
-    for (JobAPI.ComputeResource computeResource: job.getComputeResourceList()) {
-      int workersPerPod = computeResource.getWorkersPerPod();
-      int numberOfWorkers = computeResource.getNumberOfWorkers();
-      if (numberOfWorkers % workersPerPod != 0) {
-        LOG.log(Level.SEVERE, String.format("workersPerPod has to be divisible by worker instances."
-            + " workersPerPod: " + workersPerPod + " numberOfWorkers: " + numberOfWorkers
-            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++"));
-        return false;
-      }
-    }
-
     // when OpenMPI is enabled, all pods need to have equal numbers workers
     // we check whether all workersPerPod values are equal to first ComputeResource workersPerPod
     if (SchedulerContext.useOpenMPI(config)) {
