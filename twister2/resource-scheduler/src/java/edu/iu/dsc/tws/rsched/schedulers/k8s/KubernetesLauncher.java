@@ -151,19 +151,40 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // start the Job Master locally if requested
     if (JobMasterContext.jobMasterRunsInClient(config)) {
-      JobMaster jobMaster = null;
-      try {
-        jobMaster =
-            new JobMaster(config, InetAddress.getLocalHost().getHostAddress(), this, jobName);
-        jobMaster.addShutdownHook();
-        jobMaster.startJobMasterBlocking();
-      } catch (UnknownHostException e) {
-        LOG.log(Level.SEVERE, "Exception when getting local host address: "
-            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++", e);
+      boolean jobMasterCompleted = startJobMasterOnClient(job);
+      if (!jobMasterCompleted) {
+        LOG.log(Level.SEVERE, "JobMaster can not be started. "
+            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
         clearupWhenSubmissionFails(jobName);
         return false;
       }
     }
+
+    return true;
+  }
+
+  /**
+   * start the JobMaster locally on submitting client
+   * this is a blocking call
+   * it finishes after the job has completed
+   *
+   * @param job
+   * @return
+   */
+  private boolean startJobMasterOnClient(JobAPI.Job job) {
+
+    String hostAdress = null;
+    try {
+      hostAdress = InetAddress.getLocalHost().getHostAddress();
+    } catch (UnknownHostException e) {
+      LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+      return false;
+    }
+
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(hostAdress, null, null);
+    JobMaster jobMaster = new JobMaster(config, hostAdress, this, job, nodeInfo);
+    jobMaster.addShutdownHook();
+    jobMaster.startJobMasterBlocking();
 
     return true;
   }

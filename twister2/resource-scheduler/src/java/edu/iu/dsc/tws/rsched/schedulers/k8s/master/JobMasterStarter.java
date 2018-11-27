@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.master.JobMaster;
-import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -76,12 +75,9 @@ public final class JobMasterStarter {
 
     String namespace = KubernetesContext.namespace(config);
     JobTerminator jobTerminator = new JobTerminator(namespace);
-    int jobMasterPort = JobMasterContext.jobMasterPort(config);
-    int numberOfWorkers = job.getNumberOfWorkers();
 
     // start JobMaster
-    JobMaster jobMaster =
-        new JobMaster(config, podIP, jobTerminator, jobName, jobMasterPort, numberOfWorkers);
+    JobMaster jobMaster = new JobMaster(config, podIP, jobTerminator, job, nodeInfo);
     jobMaster.startJobMasterBlocking();
   }
 
