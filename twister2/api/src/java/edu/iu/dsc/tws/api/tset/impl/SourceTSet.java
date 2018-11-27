@@ -31,6 +31,6 @@ public class SourceTSet<T> extends BaseTSet<T> {
 
   @Override
   protected Op getOp() {
-    return null;
+    return Op.SOURCE;
   }
 }

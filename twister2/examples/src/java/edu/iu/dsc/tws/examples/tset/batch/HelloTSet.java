@@ -12,11 +12,13 @@
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.api.tset.MapFunction;
+import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public class HelloTSet extends TaskWorker {
   @Override
@@ -41,16 +43,16 @@ public class HelloTSet extends TaskWorker {
       }
     });
 
-    source.map(new MapFunction<String, Object>() {
+    source.sink(new Sink<String>() {
       @Override
-      public Object map(String s) {
-        return null;
-      }
-
-      @Override
-      public void prepare(TSetContext context) {
-
+      public boolean add(String value) {
+        System.out.println("Sink");
+        return false;
       }
     });
+
+    DataFlowTaskGraph graph = builder.getBuilder().build();
+    ExecutionPlan executionPlan = taskExecutor.plan(graph);
+    taskExecutor.execute(graph, executionPlan);
   }
 }

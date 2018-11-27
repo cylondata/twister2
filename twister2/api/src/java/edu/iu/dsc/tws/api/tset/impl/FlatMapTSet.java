@@ -36,6 +36,6 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
 
   @Override
   protected Op getOp() {
-    return null;
+    return Op.MAP;
   }
 }

@@ -18,4 +18,5 @@ public enum Op {
   ALL_REDUCE,
   MAP,
   PARTITION,
+  SOURCE,
 }

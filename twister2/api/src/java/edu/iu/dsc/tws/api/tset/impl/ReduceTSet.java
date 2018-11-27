@@ -30,6 +30,6 @@ public class ReduceTSet<T> extends BaseTSet<T> {
 
   @Override
   protected Op getOp() {
-    return null;
+    return Op.REDUCE;
   }
 }
