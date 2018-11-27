@@ -390,12 +390,12 @@ public class KubernetesController {
   }
 
   /**
-   * get the PersistentVolumeClaim with the given name
+   * check whether the given PersistentVolumeClaim exist on Kubernetes master
    * @param namespace
    * @param pvcName
    * @return
    */
-  public V1PersistentVolumeClaim getPersistentVolumeClaim(String namespace, String pvcName) {
+  public boolean existPersistentVolumeClaim(String namespace, String pvcName) {
     V1PersistentVolumeClaimList pvcList = null;
     try {
       pvcList = coreApi.listNamespacedPersistentVolumeClaim(
@@ -407,11 +407,12 @@ public class KubernetesController {
 
     for (V1PersistentVolumeClaim pvc : pvcList.getItems()) {
       if (pvcName.equals(pvc.getMetadata().getName())) {
-        return pvc;
+        LOG.severe("There is already a PersistentVolumeClaim with the name: " + pvcName);
+        return true;
       }
     }
 
-    return null;
+    return false;
   }
 
   /**
