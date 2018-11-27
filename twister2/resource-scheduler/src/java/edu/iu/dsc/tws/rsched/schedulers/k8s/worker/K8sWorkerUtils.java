@@ -165,7 +165,8 @@ public final class K8sWorkerUtils {
 
     int workerCount = 0;
     for (int i = 0; i < currentStatefulSetIndex; i++) {
-      workerCount += JobUtils.getComputeResource(job, i).getNumberOfWorkers();
+      JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, i);
+      workerCount += computeResource.getInstances() * computeResource.getWorkersPerPod();
     }
 
     return workerCount;

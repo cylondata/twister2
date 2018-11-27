@@ -108,7 +108,7 @@ public final class RequestObjectBuilder {
     // by default they are started sequentially
     setSpec.setPodManagementPolicy("Parallel");
 
-    int numberOfPods = computeResource.getNumberOfWorkers() / computeResource.getWorkersPerPod();
+    int numberOfPods = computeResource.getInstances();
     setSpec.setReplicas(numberOfPods);
 
     // add selector for the job
