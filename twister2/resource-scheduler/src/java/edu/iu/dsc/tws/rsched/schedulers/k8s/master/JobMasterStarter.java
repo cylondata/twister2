@@ -11,16 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class JobMasterStarter {
   private static final Logger LOG = Logger.getLogger(JobMasterStarter.class.getName());
@@ -32,49 +38,51 @@ public final class JobMasterStarter {
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
-    Config envConfigs = buildConfigFromEnvVariables();
-    String jobName = Context.jobName(envConfigs);
+    // get environment variables
+    String jobName = System.getenv(K8sEnvVariables.JOB_NAME + "");
+    String encodedNodeInfoList = System.getenv(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "");
+    String hostIP = System.getenv(K8sEnvVariables.HOST_IP + "");
 
-    K8sWorkerUtils.initLogger(envConfigs, "jobMaster");
+    String configDir = KubernetesConstants.CONFIG_MAP_VOLUME_MOUNT;
+    Config config = K8sWorkerUtils.loadConfig(configDir);
+
+    // read job description file
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
+    jobDescFileName = configDir + "/" + jobDescFileName;
+    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFileName);
+    LOG.info("Job description file is loaded: " + jobDescFileName);
+
+    // init logger
+    K8sWorkerUtils.initLogger(config, "jobMaster");
 
     LOG.info("JobMaster is starting. Current time: " + System.currentTimeMillis());
-    LOG.info("Received parameters as environment variables: \n" + envConfigs);
+    LOG.info("Number of configuration parameters: " + config.size());
 
-    String host = JobMasterContext.jobMasterIP(envConfigs);
-    String namespace = KubernetesContext.namespace(envConfigs);
+    // get podIP from localhost
+    InetAddress localHost = null;
+    try {
+      localHost = InetAddress.getLocalHost();
+    } catch (UnknownHostException e) {
+      throw new RuntimeException("Cannot get localHost.", e);
+    }
+    String podIP = localHost.getHostAddress();
+
+    // construct nodeInfo for Job Master
+    JobMasterAPI.NodeInfo nodeInfo = KubernetesContext.nodeLocationsFromConfig(config)
+        ? KubernetesContext.getNodeInfo(config, hostIP)
+        : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, hostIP);
+
+    LOG.info("NodeInfo for JobMaster: " + nodeInfo);
+
+    String namespace = KubernetesContext.namespace(config);
     JobTerminator jobTerminator = new JobTerminator(namespace);
+    int jobMasterPort = JobMasterContext.jobMasterPort(config);
+    int numberOfWorkers = job.getNumberOfWorkers();
 
-    JobMaster jobMaster = new JobMaster(envConfigs, host, jobTerminator, jobName);
+    // start JobMaster
+    JobMaster jobMaster =
+        new JobMaster(config, podIP, jobTerminator, jobName, jobMasterPort, numberOfWorkers);
     jobMaster.startJobMasterBlocking();
-  }
-
-
-  /**
-   * construct a Config object from environment variables
-   * @return
-   */
-  public static Config buildConfigFromEnvVariables() {
-    return Config.newBuilder()
-        .put(JobMasterContext.JOB_MASTER_IP,
-            System.getenv(K8sJobMasterEnvVariables.JOB_MASTER_IP + ""))
-        .put(JobMasterContext.JOB_MASTER_PORT, System.getenv(JobMasterContext.JOB_MASTER_PORT))
-        .put(Context.JOB_NAME, System.getenv(Context.JOB_NAME))
-        .put(KubernetesContext.KUBERNETES_NAMESPACE,
-            System.getenv(KubernetesContext.KUBERNETES_NAMESPACE))
-        .put(JobMasterContext.PERSISTENT_VOLUME,
-            System.getenv(JobMasterContext.PERSISTENT_VOLUME))
-        .put(Context.TWISTER2_WORKER_INSTANCES, System.getenv(Context.TWISTER2_WORKER_INSTANCES))
-        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS,
-            System.getenv(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS))
-        .put(JobMasterContext.PING_INTERVAL, System.getenv(JobMasterContext.PING_INTERVAL))
-        .put(LoggingContext.PERSISTENT_LOGGING_REQUESTED,
-            System.getenv(LoggingContext.PERSISTENT_LOGGING_REQUESTED))
-        .put(LoggingContext.LOGGING_LEVEL, System.getenv(LoggingContext.LOGGING_LEVEL))
-        .put(LoggingContext.REDIRECT_SYS_OUT_ERR,
-            System.getenv(LoggingContext.REDIRECT_SYS_OUT_ERR))
-        .put(LoggingContext.MAX_LOG_FILE_SIZE, System.getenv(LoggingContext.MAX_LOG_FILE_SIZE))
-        .put(LoggingContext.MAX_LOG_FILES, System.getenv(LoggingContext.MAX_LOG_FILES))
-        .build();
   }
 
 }

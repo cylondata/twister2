@@ -348,11 +348,25 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
   private boolean initStatefulSets(JobAPI.Job job, long jobFileSize) {
 
+    String encodedNodeInfoList = null;
+    // if node locations will be retrieved from Kubernetes master
+    if (!KubernetesContext.nodeLocationsFromConfig(config)) {
+      // first get Node list and build encoded NodeInfoUtils Strings
+      String rackLabelKey = KubernetesContext.rackLabelKeyForK8s(config);
+      String dcLabelKey = KubernetesContext.datacenterLabelKeyForK8s(config);
+      ArrayList<JobMasterAPI.NodeInfo> nodeInfoList =
+          controller.getNodeInfo(rackLabelKey, dcLabelKey);
+      encodedNodeInfoList = NodeInfoUtils.encodeNodeInfoList(nodeInfoList);
+      LOG.fine("NodeInfo objects: size " + nodeInfoList.size()
+          + "\n" + NodeInfoUtils.listToString(nodeInfoList));
+    }
+
     // create StatefulSet for the job master
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
 
       // create the StatefulSet object for this job
-      V1beta2StatefulSet jobMasterStatefulSet = JobMasterRequestObject.createStatefulSetObject();
+      V1beta2StatefulSet jobMasterStatefulSet =
+          JobMasterRequestObject.createStatefulSetObject(encodedNodeInfoList);
       if (jobMasterStatefulSet == null) {
         return false;
       }
@@ -365,19 +379,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
             + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
         return false;
       }
-    }
-
-    String encodedNodeInfoList = null;
-    // if node locations will be retrieved from Kubernetes master
-    if (!KubernetesContext.nodeLocationsFromConfig(config)) {
-      // first get Node list and build encoded NodeInfoUtils Strings
-      String rackLabelKey = KubernetesContext.rackLabelKeyForK8s(config);
-      String dcLabelKey = KubernetesContext.datacenterLabelKeyForK8s(config);
-      ArrayList<JobMasterAPI.NodeInfo> nodeInfoList =
-          controller.getNodeInfo(rackLabelKey, dcLabelKey);
-      encodedNodeInfoList = NodeInfoUtils.encodeNodeInfoList(nodeInfoList);
-      LOG.fine("NodeInfo objects: size " + nodeInfoList.size()
-          + "\n" + NodeInfoUtils.listToString(nodeInfoList));
     }
 
     // let the transfer threads know that we are about to submit the StatefulSets
