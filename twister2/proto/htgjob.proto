@@ -1,17 +1,30 @@
-//syntax = "proto3";
-//package tws.proto.htgjob;
-//
-//import "job.proto";
-//
-//option java_package = "edu.iu.dsc.tws.proto.system.htgjob";
-//option java_outer_classname = "HTGJobAPI";
-//
-//message HTGJob {
-//    job.Job job = 1;
-//    string job_name = 2;
-//    string worker_class_name = 3;
-//    //int32 number_of_workers = 4;
-//    //repeated ComputeResource compute_resource = 5;
-//    job.Config config = 4;
-//    job.JobFormat job_format = 5;
-//}
+syntax = "proto3";
+package tws.proto.htgjob;
+
+option java_package = "edu.iu.dsc.tws.proto.system.job";
+option java_outer_classname = "HTGJobAPI";
+
+message SubGraph {
+    double cpu = 1;
+    int32 ram_mega_bytes = 2;
+    double disk_giga_bytes = 3;
+    int32 number_of_workers = 4;
+    int32 workers_per_pod = 5;
+    oneof indexRequired {
+        int32 index = 6;
+    }
+    string name = 7;
+}
+
+message Relation {
+    string parent = 1;
+    string child = 2;
+    string operation = 3;
+}
+
+message HTGJob {
+    repeated Relation r = 1;
+    repeated SubGraph graphs = 2;
+    string htg_jobname = 3;
+}
+
