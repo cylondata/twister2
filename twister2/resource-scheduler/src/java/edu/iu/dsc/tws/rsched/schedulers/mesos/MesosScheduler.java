@@ -103,7 +103,7 @@ public class MesosScheduler implements Scheduler {
           return;
         }
         resourceInstanceCount = resourceInstanceCount + 1;
-        if (resourceInstanceCount == computeResource.getNumberOfWorkers() + 1) {
+        if (resourceInstanceCount == computeResource.getInstances() + 1) {
           resourceIndex = resourceIndex + 1;
         }
 //        LOG.info("Offer CPU ...:" + computeResource.getCpu());
