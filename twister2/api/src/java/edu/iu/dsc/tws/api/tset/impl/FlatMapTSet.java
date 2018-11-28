@@ -29,9 +29,10 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
     this.mapFn = mapFunc;
   }
 
-  public void build() {
-    ComputeConnection connection = builder.addCompute(getName(), new FlatMapOp<>(mapFn));
+  public boolean baseBuild() {
+    ComputeConnection connection = builder.addCompute(getName(), new FlatMapOp<>(mapFn), parallel);
     buildConnection(connection, parent);
+    return true;
   }
 
   @Override

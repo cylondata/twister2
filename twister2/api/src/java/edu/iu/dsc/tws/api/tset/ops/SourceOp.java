@@ -18,10 +18,13 @@ import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceOp<T> implements ISource {
-
   private TaskContext context;
 
   private Source<T> dataSet;
+
+  public SourceOp() {
+
+  }
 
   public SourceOp(Source<T> src) {
     this.dataSet = src;

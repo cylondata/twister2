@@ -20,6 +20,9 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 public class SinkOp<T> implements ISink {
   private Sink<T> sink;
 
+  public SinkOp() {
+  }
+
   public SinkOp(Sink<T> sink) {
     this.sink = sink;
   }

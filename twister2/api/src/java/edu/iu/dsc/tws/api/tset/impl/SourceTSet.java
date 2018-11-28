@@ -25,8 +25,9 @@ public class SourceTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public void build() {
-    builder.addSource(getName(), new SourceOp<T>(soruce));
+  public boolean baseBuild() {
+    builder.addSource(getName(), new SourceOp<T>(soruce), parallel);
+    return true;
   }
 
   @Override

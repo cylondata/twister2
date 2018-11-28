@@ -22,6 +22,9 @@ public class MapOp<T, R> implements ICompute {
 
   private TaskContext context;
 
+  public MapOp() {
+  }
+
   public MapOp(MapFunction<T, R> mapFn) {
     this.mapFn = mapFn;
   }

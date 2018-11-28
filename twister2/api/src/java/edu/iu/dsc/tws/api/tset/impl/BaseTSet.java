@@ -46,8 +46,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   /**
    * The parallelism of the set
    */
-  protected int parallel;
-
+  protected int parallel = 4;
   /**
    * The configuration
    */
@@ -71,6 +70,12 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   public int getParallelism() {
     return parallel;
+  }
+
+  @Override
+  public TSet<T> setName(String n) {
+    this.name = n;
+    return this;
   }
 
   @Override
@@ -99,14 +104,21 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public void build() {
+    // first build our selves
+    baseBuild();
+
+    // then build children
     for (BaseTSet<?> c : children) {
-      c.build();
+      c.baseBuild();
     }
 
+    // sinks are a special case
     for (SinkOp<T> sink : sinks) {
-      builder.addSink(getName(), sink);
+      builder.addSink(getName() + "-sink", sink, parallel).partition(getName());
     }
   }
+
+  public abstract boolean baseBuild();
 
   /**
    * Get the specific operation name

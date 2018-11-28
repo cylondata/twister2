@@ -11,13 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.impl.SourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
+/**
+ * The builder for creating a tset graph.
+ */
 public final class TSetBuilder {
+  private List<SourceTSet<?>> sources;
+
   private TSetBuilder(Config cfg) {
     this.config = cfg;
+    this.sources = new ArrayList<>();
     this.builder = TaskGraphBuilder.newBuilder(cfg);
   }
 
@@ -30,10 +40,15 @@ public final class TSetBuilder {
   }
 
   public <T> TSet<T> createSource(Source<T> source) {
-    return new SourceTSet<T>(config, builder, source);
+    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, builder, source);
+    sources.add(tSourceTSet);
+    return tSourceTSet;
   }
 
-  public TaskGraphBuilder getBuilder() {
-    return builder;
+  public DataFlowTaskGraph build() {
+    for (SourceTSet<?> set : sources) {
+      set.build();
+    }
+    return builder.build();
   }
 }

@@ -24,8 +24,9 @@ public class ReduceTSet<T> extends BaseTSet<T> {
     this.parent = prnt;
   }
 
-  public void build() {
-    // we cannot do anything here as reduce needs to be connected to another operation
+  @Override
+  public boolean baseBuild() {
+    return true;
   }
 
   @Override

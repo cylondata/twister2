@@ -22,6 +22,9 @@ public class FlatMapOp<T, R> implements ICompute {
 
   private TaskContext context;
 
+  public FlatMapOp() {
+  }
+
   public FlatMapOp(FlatMapFunction<T, R> mapFn) {
     this.mapFn = mapFn;
   }

@@ -19,6 +19,11 @@ package edu.iu.dsc.tws.api.tset;
 public interface TSet<T> {
 
   /**
+   * Name of the tset
+   */
+  TSet<T> setName(String name);
+
+  /**
    * Map
    *
    * @param mapFn

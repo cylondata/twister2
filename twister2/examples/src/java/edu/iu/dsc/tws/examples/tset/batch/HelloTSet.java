@@ -11,13 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset.batch;
 
+import java.util.HashMap;
+
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public class HelloTSet extends TaskWorker {
@@ -41,7 +48,7 @@ public class HelloTSet extends TaskWorker {
       @Override
       public void prepare(TSetContext context) {
       }
-    });
+    }).setName("Source");
 
     source.sink(new Sink<String>() {
       @Override
@@ -51,8 +58,28 @@ public class HelloTSet extends TaskWorker {
       }
     });
 
-    DataFlowTaskGraph graph = builder.getBuilder().build();
+    DataFlowTaskGraph graph = builder.build();
     ExecutionPlan executionPlan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, executionPlan);
+  }
+
+  public static void main(String[] args) {
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+    submitJob(config, 4, jobConfig, HelloTSet.class.getName());
+  }
+
+  private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
+    Twister2Job twister2Job;
+    twister2Job = Twister2Job.newBuilder()
+        .setJobName(clazz)
+        .setWorkerClass(clazz)
+        .addComputeResource(1, 512, containers)
+        .setConfig(jobConfig)
+        .build();
+    // now submit the job
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 }
