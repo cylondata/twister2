@@ -154,7 +154,7 @@ public final class Twister2HTGJob {
   private int countNumberOfWorkers() {
     int totalWorkers = 0;
     for (JobAPI.ComputeResource computeResource : computeResources) {
-      totalWorkers += computeResource.getNumberOfWorkers();
+      totalWorkers += computeResource.getInstances();
     }
     return totalWorkers;
   }
@@ -177,7 +177,7 @@ public final class Twister2HTGJob {
       JobAPI.ComputeResource cr = computeResources.get(i);
       jobStr += String.format("\nComputeResource[%d]: cpu: %.1f, ram: %d MB, disk: %.1f GB, "
               + "instances: %d, workersPerPod: %d", i, cr.getCpu(), cr.getRamMegaBytes(),
-          cr.getDiskGigaBytes(), cr.getNumberOfWorkers(), cr.getWorkersPerPod());
+          cr.getDiskGigaBytes(), cr.getInstances(), cr.getWorkersPerPod());
     }
 
     return jobStr;
@@ -220,7 +220,7 @@ public final class Twister2HTGJob {
           .setCpu(cpu)
           .setRamMegaBytes(ramMegaBytes)
           .setDiskGigaBytes(diskGigaBytes)
-          .setNumberOfWorkers(numberOfWorkers)
+          .setInstances(numberOfWorkers)
           .setWorkersPerPod(workersPerPod)
           .setIndex(computeResourceIndex++)
           //.setName(name)
@@ -276,7 +276,7 @@ public final class Twister2HTGJob {
           .setCpu(cpu)
           .setRamMegaBytes(ramMegaBytes)
           .setDiskGigaBytes(diskGigaBytes)
-          .setNumberOfWorkers(numberOfWorkers)
+          .setInstances(numberOfWorkers)
           .setWorkersPerPod(workersPerPod)
           .setIndex(computeResourceIndex++)
           .build();
