@@ -453,9 +453,11 @@ public final class RequestObjectBuilder {
         .name(K8sEnvVariables.UPLOAD_METHOD + "")
         .value(KubernetesContext.uploadMethod(config)));
 
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.DOWNLOAD_DIRECTORY + "")
-        .value(ScpContext.downloadDirectory(config)));
+    if (!KubernetesContext.clientToPodsUploading(config)) {
+      envVars.add(new V1EnvVar()
+          .name(K8sEnvVariables.DOWNLOAD_DIRECTORY + "")
+          .value(ScpContext.downloadDirectory(config)));
+    }
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "")
