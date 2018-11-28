@@ -15,6 +15,7 @@ public class HTGConstants {
 
   public static final String ARGS_WORKERS = "workers";
   public static final String ARGS_PARALLELISM_VALUE = "parallelism";
+  public static final String ARGS_DUMMY = "dummy"; // todo: remove this
 
   protected HTGConstants() {
   }
