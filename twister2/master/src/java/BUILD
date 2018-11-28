@@ -14,5 +14,9 @@ t2_java_lib(
         "//twister2/proto:proto_jobmaster_java",
         "//twister2/task/src/main/java:task-java",
         "@com_google_protobuf//:protobuf_java",
+        "@org_glassfish_jersey_core_jersey_client//jar",
+        "@org_glassfish_jersey_core_jersey_common//jar",
+        "@org_glassfish_hk2_external_javax_inject//jar",
+        "@javax_ws_rs_javax_ws_rs_api//jar",
     ],
 )

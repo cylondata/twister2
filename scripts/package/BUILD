@@ -32,6 +32,7 @@ load("//tools:rules/twister2_core.bzl", "twister2_core_lib_executor_files")
 load("//tools:rules/twister2_core.bzl", "twister2_core_lib_data_lmdb_files")
 load("//tools:rules/twister2_core.bzl", "twister2_harp_integration_files")
 load("//tools:rules/twister2_master.bzl", "twister2_master_lib_files")
+load("//tools:rules/twister2_master.bzl", "twister2_master_jersey_files")
 load(":pack_functions.bzl", "pack_tw2")
 load("//:t2_meta.bzl", "T2_VERSION")
 
@@ -83,6 +84,7 @@ pack_tw2(
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-third_party",
         ":twister2-master-lib",
+        ":twister2-master-jersey",
     ],
 )
 
@@ -106,6 +108,7 @@ pack_tw2(
         ":twister2-core-lib-third_party",
         ":twister2-harp-libs",
         ":twister2-master-lib",
+        ":twister2-master-jersey",
         ":twister2-ompi-bin",
         ":twister2-ompi-etc",
         ":twister2-ompi-include",
@@ -251,6 +254,7 @@ pack_tw2(
         ":twister2-lib-task-scheduler",
         ":twister2-lib-third_party",
         ":twister2-master-lib",
+        ":twister2-master-jersey",
     ],
 )
 
@@ -283,6 +287,7 @@ pack_tw2(
         ":twister2-lib-task-scheduler",
         ":twister2-lib-third_party",
         ":twister2-master-lib",
+        ":twister2-master-jersey",
         ":twister2-ompi-bin",
         ":twister2-ompi-etc",
         ":twister2-ompi-include",
@@ -426,6 +431,13 @@ pack_tw2(
 pack_tw2(
     name = "twister2-master-lib",
     srcs = twister2_master_lib_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-master-jersey",
+    srcs = twister2_master_jersey_files(),
     package_dir = "lib",
     version = T2_VERSION,
 )
