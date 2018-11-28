@@ -14,6 +14,7 @@ t2_java_lib(
         "//twister2/data/src/main/java:data-java",
         "//twister2/executor/src/java:executor-java",
         "//twister2/proto:proto_job_java",
+         "//twister2/proto:proto_htgjob_java",
         "//twister2/proto:proto_job_state_java",
         "//twister2/resource-scheduler/src/java:resource-scheduler-java",
         "//twister2/task/src/main/java:task-java",
