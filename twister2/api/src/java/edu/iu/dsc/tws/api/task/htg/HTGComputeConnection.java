@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
-import edu.iu.dsc.tws.task.graph.htgraph.HierarchicalTaskGraph;
+import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
 
 public class HTGComputeConnection {
 

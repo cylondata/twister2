@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.api.task.htg;
 
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.htgraph.HierarchicalTaskGraph;
+import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
 
 public class HTGSourceConnection {
 

@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.hierarchicaltaskgraph;
+package edu.iu.dsc.tws.examples.batch.htg;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,8 +31,8 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.api.task.htg.HTGBuilder;
 import edu.iu.dsc.tws.api.task.htg.HTGComputeConnection;
-import edu.iu.dsc.tws.api.task.htg.HierarchicalTaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
@@ -46,12 +46,12 @@ import edu.iu.dsc.tws.task.batch.BaseBatchSink;
 import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.graph.htgraph.HierarchicalTaskGraph;
+import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
 import edu.iu.dsc.tws.tsched.utils.HierarchicalTaskGraphParser;
 
-public class HTGraphExample extends TaskWorker {
+public class HTGExample extends TaskWorker {
 
-  private static final Logger LOG = Logger.getLogger(HTGraphExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(HTGExample.class.getName());
 
   private HTGJobParameters jobParameters;
 
@@ -82,8 +82,8 @@ public class HTGraphExample extends TaskWorker {
     graphBuilderY.setMode(OperationMode.BATCH);
     DataFlowTaskGraph streamingGraph = graphBuilderY.build();
 
-    HierarchicalTaskGraphBuilder hierarchicalTaskGraphBuilder =
-        HierarchicalTaskGraphBuilder.newBuilder(config);
+    HTGBuilder hierarchicalTaskGraphBuilder =
+        HTGBuilder.newBuilder(config);
     hierarchicalTaskGraphBuilder.addSourceTaskGraph("sourcetaskgraph", batchGraph);
     HTGComputeConnection htgComputeConnection = hierarchicalTaskGraphBuilder.addSinkTaskGraph(
         "sinktaskgraph", streamingGraph, "source2");
@@ -202,7 +202,7 @@ public class HTGraphExample extends TaskWorker {
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("HTGraph");
-    jobBuilder.setWorkerClass(HTGraphExample.class.getName());
+    jobBuilder.setWorkerClass(HTGExample.class.getName());
     jobBuilder.addComputeResource(2, 512, workers);
     jobBuilder.setConfig(jobConfig);
 

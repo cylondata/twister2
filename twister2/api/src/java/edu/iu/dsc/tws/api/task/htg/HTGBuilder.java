@@ -21,14 +21,14 @@ import edu.iu.dsc.tws.api.task.TaskConfigurations;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.graph.htgraph.HierarchicalTaskGraph;
+import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
 
 /**
  * This is the entry point for creating a task graph by the user.
  */
-public final class HierarchicalTaskGraphBuilder {
+public final class HTGBuilder {
 
-  private static final Logger LOG = Logger.getLogger(HierarchicalTaskGraphBuilder.class.getName());
+  private static final Logger LOG = Logger.getLogger(HTGBuilder.class.getName());
 
   /**
    * Keep track of the dataflow taskgraph with their names
@@ -61,11 +61,11 @@ public final class HierarchicalTaskGraphBuilder {
    * @param cfg configuration
    * @return new task graph builder instance
    */
-  public static HierarchicalTaskGraphBuilder newBuilder(Config cfg) {
-    return new HierarchicalTaskGraphBuilder(cfg);
+  public static HTGBuilder newBuilder(Config cfg) {
+    return new HTGBuilder(cfg);
   }
 
-  private HierarchicalTaskGraphBuilder(Config cfg) {
+  private HTGBuilder(Config cfg) {
     this.defaultParallelism = TaskConfigurations.getDefaultParallelism(cfg, 1);
   }
 
