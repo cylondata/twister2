@@ -120,7 +120,7 @@ public final class Twister2Job {
   private int countNumberOfWorkers() {
     int totalWorkers = 0;
     for (JobAPI.ComputeResource computeResource: computeResources) {
-      totalWorkers += computeResource.getInstances() * computeResource.getWorkersPerPod();
+      totalWorkers += computeResource.getNumberOfWorkers();
     }
     return totalWorkers;
   }
@@ -143,7 +143,7 @@ public final class Twister2Job {
       JobAPI.ComputeResource cr = computeResources.get(i);
       jobStr += String.format("\nComputeResource[%d]: cpu: %.1f, ram: %d MB, disk: %.1f GB, "
           + "instances: %d, workersPerPod: %d", i, cr.getCpu(), cr.getRamMegaBytes(),
-          cr.getDiskGigaBytes(), cr.getInstances(), cr.getWorkersPerPod());
+          cr.getDiskGigaBytes(), cr.getNumberOfWorkers(), cr.getWorkersPerPod());
     }
 
     return jobStr;
@@ -178,16 +178,16 @@ public final class Twister2Job {
 
     public Twister2JobBuilder addComputeResource(double cpu,
                                                  int ramMegaBytes,
-                                                 int instances) {
-      addComputeResource(cpu, ramMegaBytes, 0, instances, 1);
+                                                 int numberOfWorkers) {
+      addComputeResource(cpu, ramMegaBytes, 0, numberOfWorkers, 1);
       return this;
     }
 
     public Twister2JobBuilder addComputeResource(double cpu,
                                                  int ramMegaBytes,
                                                  double diskGigaBytes,
-                                                 int instances) {
-      addComputeResource(cpu, ramMegaBytes, diskGigaBytes, instances, 1);
+                                                 int numberOfWorkers) {
+      addComputeResource(cpu, ramMegaBytes, diskGigaBytes, numberOfWorkers, 1);
       return this;
     }
 
@@ -195,13 +195,13 @@ public final class Twister2Job {
     public Twister2JobBuilder addComputeResource(double cpu,
                                                  int ramMegaBytes,
                                                  double diskGigaBytes,
-                                                 int instances,
+                                                 int numberOfWorkers,
                                                  int workersPerPod) {
       JobAPI.ComputeResource computeResource = JobAPI.ComputeResource.newBuilder()
           .setCpu(cpu)
           .setRamMegaBytes(ramMegaBytes)
           .setDiskGigaBytes(diskGigaBytes)
-          .setInstances(instances)
+          .setNumberOfWorkers(numberOfWorkers)
           .setWorkersPerPod(workersPerPod)
           .setIndex(computeResourceIndex++)
           .build();
@@ -210,7 +210,7 @@ public final class Twister2Job {
       return this;
     }
 
-    @SuppressWarnings({"unchecked", "COMPACT_NO_ARRAY"})
+    @SuppressWarnings("unchecked")
     private Twister2JobBuilder loadComputeResources(Config config) {
       // to remove unchecked cast warnings:
       // https://stackoverflow.com/questions/19163453/
