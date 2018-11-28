@@ -50,7 +50,7 @@ public class BKeyedGather {
         edges, kType, dType);
     this.keyedGather.init(comm.getConfig(), dType, plan);
     this.destinationSelector = destSelector;
-    this.destinationSelector.prepare(sources, destinations);
+    this.destinationSelector.prepare(comm, sources, destinations);
   }
 
   public BKeyedGather(Communicator comm, TaskPlan plan,
@@ -70,7 +70,7 @@ public class BKeyedGather {
         kType, dType);
     this.keyedGather.init(comm.getConfig(), dType, plan);
     this.destinationSelector = destSelector;
-    this.destinationSelector.prepare(sources, destinations);
+    this.destinationSelector.prepare(comm, sources, destinations);
   }
 
   public boolean gather(int source, Object key, Object data, int flags) {
