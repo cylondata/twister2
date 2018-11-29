@@ -80,17 +80,23 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public <P> TSet<P> map(MapFunction<T, P> mapFn) {
-    return new MapTSet<P, T>(config, builder, this, mapFn);
+    BaseTSet<P> set = new MapTSet<P, T>(config, builder, this, mapFn);
+    children.add(set);
+    return set;
   }
 
   @Override
   public <P> TSet<P> flatMap(FlatMapFunction<T, P> mapFn) {
-    return new FlatMapTSet<P, T>(config, builder, this, mapFn);
+    BaseTSet<P> set = new FlatMapTSet<P, T>(config, builder, this, mapFn);
+    children.add(set);
+    return set;
   }
 
   @Override
   public TSet<T> reduce(ReduceFunction<T> reduceFn) {
-    return new ReduceTSet<T>(config, builder, this, reduceFn);
+    BaseTSet<T> reduce = new ReduceTSet<T>(config, builder, this, reduceFn);
+    children.add(reduce);
+    return reduce;
   }
 
   public TSet<T> partition(PartitionFunction<T> partitionFn) {
@@ -109,12 +115,13 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
     // then build children
     for (BaseTSet<?> c : children) {
-      c.baseBuild();
+      c.build();
     }
 
     // sinks are a special case
     for (SinkOp<T> sink : sinks) {
-      builder.addSink(getName() + "-sink", sink, parallel).partition(getName());
+      ComputeConnection connection = builder.addSink(getName() + "-sink", sink);
+      buildConnection(connection, this);
     }
   }
 

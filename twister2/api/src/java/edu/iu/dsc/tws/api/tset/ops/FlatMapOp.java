@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
+import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ICompute;
@@ -36,7 +37,7 @@ public class FlatMapOp<T, R> implements ICompute {
   public boolean execute(IMessage content) {
     T data = (T) content.getContent();
     mapFn.flatMap(data, null);
-    return context.write("DEFAULT", null);
+    return context.write(Constants.DEFAULT_EDGE, null);
   }
 
   @Override

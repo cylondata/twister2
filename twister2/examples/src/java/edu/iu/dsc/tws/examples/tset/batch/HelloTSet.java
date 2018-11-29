@@ -64,7 +64,7 @@ public class HelloTSet extends TaskWorker implements Serializable {
       public void prepare(TSetContext context) {
 
       }
-    });
+    }).setName("Reduce");
 
     reduce.sink(new Sink<String>() {
       @Override

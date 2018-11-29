@@ -18,10 +18,18 @@ import edu.iu.dsc.tws.common.config.Config;
 public class ReduceTSet<T> extends BaseTSet<T> {
   private ReduceFunction<T> reduceFn;
 
+  private BaseTSet<T> parent;
+
   public ReduceTSet(Config cfg, TaskGraphBuilder bldr,
                     BaseTSet<T> prnt, ReduceFunction<T> rFn) {
     super(cfg, bldr);
     this.reduceFn = rFn;
+    this.parent = prnt;
+  }
+
+  @Override
+  public String getName() {
+    return parent.getName();
   }
 
   @Override
