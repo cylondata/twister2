@@ -11,11 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.task.api.IFunction;
 
-public class ReduceOpFunction implements IFunction {
+public class ReduceOpFunction<T> implements IFunction {
+
+  private ReduceFunction<T> reduceFn;
+
+  public ReduceOpFunction(ReduceFunction<T> reduceFn) {
+    this.reduceFn = reduceFn;
+  }
+
+  @SuppressWarnings("unchecked")
   @Override
   public Object onMessage(Object object1, Object object2) {
-    return null;
+    T t1 = (T) object1;
+    T t2 = (T) object2;
+    return reduceFn.reduce(t1, t2);
   }
 }

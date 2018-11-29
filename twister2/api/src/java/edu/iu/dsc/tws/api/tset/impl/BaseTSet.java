@@ -128,17 +128,21 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   static <P> void buildConnection(ComputeConnection connection, BaseTSet<P> parent) {
     if (parent.getOp() == Op.REDUCE) {
-      connection.reduce(parent.getName(), Constants.DEFAULT_EDGE, new ReduceOpFunction(),
+      ReduceTSet<P> reduceTSet = (ReduceTSet<P>) parent;
+      connection.reduce(parent.getName(), Constants.DEFAULT_EDGE,
+          new ReduceOpFunction<P>(reduceTSet.getReduceFn()),
           DataType.OBJECT);
     } else if (parent.getOp() == Op.GATHER) {
-      connection.gather(parent.getName(), Constants.DEFAULT_EDGE, null);
+      connection.gather(parent.getName(), Constants.DEFAULT_EDGE, DataType.OBJECT);
     } else if (parent.getOp() == Op.ALL_REDUCE) {
-      connection.allreduce(parent.getName(), Constants.DEFAULT_EDGE, new ReduceOpFunction(),
+      AllReduceTSet<P> reduceTSet = (AllReduceTSet<P>) parent;
+      connection.allreduce(parent.getName(), Constants.DEFAULT_EDGE,
+          new ReduceOpFunction<P>(reduceTSet.getReduceFn()),
           DataType.OBJECT);
     } else if (parent.getOp() == Op.ALL_GATHER) {
-      connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, null);
+      connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, DataType.OBJECT);
     } else if (parent.getOp() == Op.PARTITION) {
-      connection.partition(parent.getName(), Constants.DEFAULT_EDGE, null);
+      connection.partition(parent.getName(), Constants.DEFAULT_EDGE, DataType.OBJECT);
     } else {
       throw new RuntimeException("Failed to build un-supported operation: " + parent.getOp());
     }

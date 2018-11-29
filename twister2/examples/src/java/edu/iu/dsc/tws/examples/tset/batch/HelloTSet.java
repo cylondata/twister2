@@ -11,12 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset.batch;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
@@ -27,13 +29,15 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public class HelloTSet extends TaskWorker {
+public class HelloTSet extends TaskWorker implements Serializable {
   @Override
   public void execute() {
     TSetBuilder builder = TSetBuilder.newBuilder(config);
-
     TSet<String> source = builder.createSource(new Source<String>() {
+      private static final long serialVersionUID = -1;
+
       private int count = 0;
+
       @Override
       public boolean hasNext() {
         return count < 1;
@@ -50,7 +54,19 @@ public class HelloTSet extends TaskWorker {
       }
     }).setName("Source");
 
-    source.sink(new Sink<String>() {
+    TSet<String> reduce = source.reduce(new ReduceFunction<String>() {
+      @Override
+      public String reduce(String t1, String t2) {
+        return t1 + t2;
+      }
+
+      @Override
+      public void prepare(TSetContext context) {
+
+      }
+    });
+
+    reduce.sink(new Sink<String>() {
       @Override
       public boolean add(String value) {
         System.out.println("Sink");

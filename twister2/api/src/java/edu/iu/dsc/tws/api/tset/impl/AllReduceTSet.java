@@ -9,34 +9,31 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.ops;
+package edu.iu.dsc.tws.api.tset.impl;
 
-import edu.iu.dsc.tws.api.tset.Sink;
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class SinkOp<T> implements ISink {
-  private static final long serialVersionUID = -2L;
+public class AllReduceTSet<T> extends BaseTSet<T> {
+  private ReduceFunction<T> reduceFn;
 
-  private Sink<T> sink;
-
-  public SinkOp() {
-  }
-
-  public SinkOp(Sink<T> sink) {
-    this.sink = sink;
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public boolean execute(IMessage message) {
-    T data = (T) message.getContent();
-    return sink.add(data);
+  public AllReduceTSet(Config cfg, TaskGraphBuilder bldr, ReduceFunction<T> rFn) {
+    super(cfg, bldr);
+    this.reduceFn = rFn;
   }
 
   @Override
-  public void prepare(Config cfg, TaskContext ctx) {
+  public boolean baseBuild() {
+    return false;
+  }
+
+  @Override
+  protected Op getOp() {
+    return Op.ALL_REDUCE;
+  }
+
+  public ReduceFunction<T> getReduceFn() {
+    return reduceFn;
   }
 }

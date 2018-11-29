@@ -11,8 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import java.io.Serializable;
-
-public interface Sink<T> extends Serializable {
-  boolean add(T value);
+public enum ReduceOp {
+  SUM,
+  MAX,
+  MUL,
+  MIN,
 }

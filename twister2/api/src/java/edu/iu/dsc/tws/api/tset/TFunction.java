@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-public interface TFunction {
+import java.io.Serializable;
+
+public interface TFunction extends Serializable {
   void prepare(TSetContext context);
 }

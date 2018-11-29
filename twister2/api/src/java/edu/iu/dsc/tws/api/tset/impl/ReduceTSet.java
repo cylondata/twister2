@@ -16,12 +16,12 @@ import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.common.config.Config;
 
 public class ReduceTSet<T> extends BaseTSet<T> {
-  private BaseTSet<T> parent;
+  private ReduceFunction<T> reduceFn;
 
   public ReduceTSet(Config cfg, TaskGraphBuilder bldr,
-                    BaseTSet<T> prnt, ReduceFunction<T> reduceFn) {
+                    BaseTSet<T> prnt, ReduceFunction<T> rFn) {
     super(cfg, bldr);
-    this.parent = prnt;
+    this.reduceFn = rFn;
   }
 
   @Override
@@ -32,5 +32,9 @@ public class ReduceTSet<T> extends BaseTSet<T> {
   @Override
   protected Op getOp() {
     return Op.REDUCE;
+  }
+
+  public ReduceFunction<T> getReduceFn() {
+    return reduceFn;
   }
 }
