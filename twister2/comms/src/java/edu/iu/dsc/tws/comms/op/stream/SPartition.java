@@ -86,6 +86,8 @@ public class SPartition {
 
       for (int dest : destinations) {
         while (!partition.send(src, message, flags, dest)) {
+          //TODO: would be better to have a map to track what has been sent without using the
+          //TODO: while loop
           LOG.info("attempting to resend BARRIER message from " + src + " to " + dest);
         }
       }

@@ -148,6 +148,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
   public boolean onMessage(int src, int path, int target, int flags, Object object) {
     lock.lock();
     try {
+
       if (!representSourceIsSet) {
         this.representSource = src;
       }
@@ -163,16 +164,15 @@ public class PartitionPartialReceiver implements MessageReceiver {
         barrierMessage.add(object);
         if (readyToSend.isEmpty()) {
           if (!dests.isEmpty()) {
-            while (!operation.sendPartial(representSource, new ArrayList<>(dests), 0,
-                target)) {
-              LOG.fine("attempting to resend BARRIER message");
+            if (!operation.sendPartial(representSource, new ArrayList<>(dests), 0, target)) {
+              return false;
+            } else {
+              dests.clear();
             }
           }
 
-          while (!operation.sendPartial(representSource, barrierMessage, MessageFlags.BARRIER,
-              target)) {
-            LOG.fine("attempting to resend BARRIER message");
-          }
+          return operation.sendPartial(representSource, barrierMessage, MessageFlags.BARRIER,
+              target);
         } else {
           Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
           while (it.hasNext()) {
@@ -184,19 +184,20 @@ public class PartitionPartialReceiver implements MessageReceiver {
               // lets remove from ready list and clear the list
               e.getValue().clear();
               it.remove();
+            } else {
+              return false;
             }
           }
           if (!dests.isEmpty()) {
-            while (!operation.sendPartial(representSource, new ArrayList<>(dests), 0,
-                target)) {
-              LOG.fine("attempting to resend BARRIER message");
+            if (!operation.sendPartial(representSource, new ArrayList<>(dests), 0, target)) {
+              return false;
+            } else {
+              dests.clear();
             }
           }
 
-          while (!operation.sendPartial(representSource, barrierMessage, MessageFlags.BARRIER,
-              target)) {
-            LOG.fine("attempting to resend BARRIER message");
-          }
+          return operation.sendPartial(representSource, barrierMessage, MessageFlags.BARRIER,
+              target);
         }
       } else {
         dests.add(object);
