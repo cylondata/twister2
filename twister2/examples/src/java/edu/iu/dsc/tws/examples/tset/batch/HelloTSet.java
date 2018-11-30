@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class HelloTSet extends TaskWorker implements Serializable {
   @Override
@@ -69,11 +70,12 @@ public class HelloTSet extends TaskWorker implements Serializable {
     reduce.sink(new Sink<String>() {
       @Override
       public boolean add(String value) {
-        System.out.println("Sink");
+        System.out.println(value);
         return false;
       }
     });
 
+    builder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph graph = builder.build();
     ExecutionPlan executionPlan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, executionPlan);

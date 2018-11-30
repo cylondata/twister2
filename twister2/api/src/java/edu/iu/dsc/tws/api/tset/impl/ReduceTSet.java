@@ -32,6 +32,7 @@ public class ReduceTSet<T> extends BaseTSet<T> {
     return parent.getName();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public boolean baseBuild() {
     return true;

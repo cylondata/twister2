@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.impl.SourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 /**
  * The builder for creating a tset graph.
@@ -31,12 +32,19 @@ public final class TSetBuilder {
     this.builder = TaskGraphBuilder.newBuilder(cfg);
   }
 
+  private OperationMode opMode = OperationMode.STREAMING;
+
   private Config config;
 
   private TaskGraphBuilder builder;
 
   public static TSetBuilder newBuilder(Config cfg) {
     return new TSetBuilder(cfg);
+  }
+
+  public TSetBuilder setMode(OperationMode mode) {
+    this.opMode = mode;
+    return this;
   }
 
   public <T> TSet<T> createSource(Source<T> source) {
@@ -46,6 +54,7 @@ public final class TSetBuilder {
   }
 
   public DataFlowTaskGraph build() {
+    builder.setMode(opMode);
     for (SourceTSet<?> set : sources) {
       set.build();
     }

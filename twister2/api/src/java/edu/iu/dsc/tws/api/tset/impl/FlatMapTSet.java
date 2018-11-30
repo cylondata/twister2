@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import java.lang.reflect.ParameterizedType;
+
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
@@ -29,7 +31,11 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
     this.mapFn = mapFunc;
   }
 
+  @SuppressWarnings("unchecked")
   public boolean baseBuild() {
+    Class<P> persistentClass = (Class<P>) ((ParameterizedType) getClass()
+        .getGenericSuperclass()).getActualTypeArguments()[0];
+
     ComputeConnection connection = builder.addCompute(getName(), new FlatMapOp<>(mapFn), parallel);
     buildConnection(connection, parent);
     return true;
