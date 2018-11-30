@@ -1,6 +1,8 @@
 syntax = "proto3";
 package tws.proto.htgjob;
 
+import "job.proto";
+
 option java_package = "edu.iu.dsc.tws.proto.system.job";
 option java_outer_classname = "HTGJobAPI";
 
@@ -8,7 +10,7 @@ message SubGraph {
     double cpu = 1;
     int32 ram_mega_bytes = 2;
     double disk_giga_bytes = 3;
-    int32 number_of_workers = 4;
+    int32 instances = 4;
     int32 workers_per_pod = 5;
     oneof indexRequired {
         int32 index = 6;
@@ -23,8 +25,9 @@ message Relation {
 }
 
 message HTGJob {
-    repeated Relation r = 1;
-    repeated SubGraph graphs = 2;
-    string htg_jobname = 3;
+    string htg_jobname = 1;
+    repeated Relation relations = 2;
+    repeated SubGraph graphs = 3;
+    tws.proto.job.Job job = 4; //Just for verification.
+    tws.proto.job.Config config = 5; //Just for verification.
 }
-
