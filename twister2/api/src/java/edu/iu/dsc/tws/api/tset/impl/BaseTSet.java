@@ -104,6 +104,31 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   @Override
+  public TSet<T> reduceByKey(ReduceFunction<T> reduceFn, PartitionFunction<T> partitioner) {
+    return null;
+  }
+
+  @Override
+  public TSet<T> gather() {
+    return null;
+  }
+
+  @Override
+  public TSet<T> gatherByKey(PartitionFunction<T> partitioner) {
+    return null;
+  }
+
+  @Override
+  public TSet<T> allReduce(ReduceFunction<T> reduceFn) {
+    return null;
+  }
+
+  @Override
+  public TSet<T> allGather() {
+    return null;
+  }
+
+  @Override
   public void sink(Sink<T> sink) {
     sinks.add(new SinkOp<T>(sink));
   }

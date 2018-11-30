@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceOp<T> implements ISource {
 
-  private static final long serialVersionUID = -1L;
+  private static final long serialVersionUID = -2400242961L;
 
   private TaskContext context;
 

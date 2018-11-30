@@ -50,6 +50,52 @@ public interface TSet<T> {
   TSet<T> reduce(ReduceFunction<T> reduceFn);
 
   /**
+   * Reduce
+   *
+   * @param reduceFn
+   * @return
+   */
+  TSet<T> allReduce(ReduceFunction<T> reduceFn);
+
+  /**
+   * Partition the data and reduce based on the reduce function
+   *
+   * @param reduceFn
+   * @param partitioner
+   * @return
+   */
+  TSet<T> reduceByKey(ReduceFunction<T> reduceFn, PartitionFunction<T> partitioner);
+
+  /**
+   * Partition the data according the to partition function
+   *
+   * @param partitionFn
+   * @return
+   */
+  TSet<T> partition(PartitionFunction<T> partitionFn);
+
+  /**
+   * Gather the set of values into a single partition
+   *
+   * @return
+   */
+  TSet<T> gather();
+
+  /**
+   * Partition the data according to partitioner and gather into different
+   * @param partitioner
+   * @return
+   */
+  TSet<T> gatherByKey(PartitionFunction<T> partitioner);
+
+  /**
+   * Gather the set of values into a single partition
+   *
+   * @return
+   */
+  TSet<T> allGather();
+
+  /**
    * Add a sink
    *
    * @param sink

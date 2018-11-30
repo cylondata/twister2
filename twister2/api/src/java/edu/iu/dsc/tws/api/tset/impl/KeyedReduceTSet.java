@@ -9,8 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.api.tset.impl;
 
-public interface PartitionFunction<T> extends TFunction {
-  int partition(T val);
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.common.config.Config;
+
+public class KeyedReduceTSet<T> extends BaseTSet<T> {
+
+  public KeyedReduceTSet(Config cfg, TaskGraphBuilder bldr) {
+    super(cfg, bldr);
+  }
+
+  @Override
+  public boolean baseBuild() {
+    return false;
+  }
+
+  @Override
+  protected Op getOp() {
+    return null;
+  }
 }

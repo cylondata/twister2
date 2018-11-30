@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SinkOp<T> implements ISink {
-  private static final long serialVersionUID = -2L;
+  private static final long serialVersionUID = -9398832570L;
 
   private Sink<T> sink;
 

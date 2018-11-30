@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class MapOp<T, R> implements ICompute {
-  private static final long serialVersionUID = -3L;
+  private static final long serialVersionUID = -1220168533L;
 
   private MapFunction<T, R> mapFn;
 

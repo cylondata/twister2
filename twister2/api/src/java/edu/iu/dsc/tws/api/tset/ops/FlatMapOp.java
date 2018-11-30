@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class FlatMapOp<T, R> implements ICompute {
-  private static final long serialVersionUID = -4L;
+  private static final long serialVersionUID = -5244396518L;
 
   private FlatMapFunction<T, R> mapFn;
 

@@ -15,6 +15,7 @@ import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.task.api.IFunction;
 
 public class ReduceOpFunction<T> implements IFunction {
+  private static final long serialVersionUID = -4344592105191874L;
 
   private ReduceFunction<T> reduceFn;
 
