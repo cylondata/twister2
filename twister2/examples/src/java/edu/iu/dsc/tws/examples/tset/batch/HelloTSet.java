@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -31,10 +32,11 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class HelloTSet extends TaskWorker implements Serializable {
+  private static final long serialVersionUID = -2;
   @Override
   public void execute() {
     TSetBuilder builder = TSetBuilder.newBuilder(config);
-    TSet<String> source = builder.createSource(new Source<String>() {
+    TSet<int[]> source = builder.createSource(new Source<int[]>() {
       private static final long serialVersionUID = -1;
 
       private int count = 0;
@@ -45,9 +47,9 @@ public class HelloTSet extends TaskWorker implements Serializable {
       }
 
       @Override
-      public String next() {
+      public int[] next() {
         count++;
-        return "Hello - tset";
+        return new int[]{1, 1, 1};
       }
 
       @Override
@@ -55,10 +57,15 @@ public class HelloTSet extends TaskWorker implements Serializable {
       }
     }).setName("Source");
 
-    TSet<String> reduce = source.reduce(new ReduceFunction<String>() {
+    TSet<int[]> reduce = source.reduce(new ReduceFunction<int[]>() {
+      private static final long serialVersionUID = -2;
       @Override
-      public String reduce(String t1, String t2) {
-        return t1 + t2;
+      public int[] reduce(int[] t1, int[] t2) {
+        int[] ret = new int[t1.length];
+        for (int i = 0; i < t1.length; i++) {
+          ret[i] = t1[i] + t2[i];
+        }
+        return ret;
       }
 
       @Override
@@ -67,10 +74,11 @@ public class HelloTSet extends TaskWorker implements Serializable {
       }
     }).setName("Reduce");
 
-    reduce.sink(new Sink<String>() {
+    reduce.sink(new Sink<int[]>() {
+      private static final long serialVersionUID = -3;
       @Override
-      public boolean add(String value) {
-        System.out.println(value);
+      public boolean add(int[] value) {
+        System.out.println(Arrays.toString(value));
         return false;
       }
     });

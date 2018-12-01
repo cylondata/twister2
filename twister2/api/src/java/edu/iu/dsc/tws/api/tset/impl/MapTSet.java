@@ -37,7 +37,7 @@ public class MapTSet<T, P> extends BaseTSet<T> {
         .getGenericSuperclass()).getActualTypeArguments()[0];
 
     ComputeConnection connection = builder.addCompute(getName(), new MapOp<P, T>(mapFn), parallel);
-    buildConnection(connection, parent);
+    buildConnection(connection, parent, getType());
     return true;
   }
 

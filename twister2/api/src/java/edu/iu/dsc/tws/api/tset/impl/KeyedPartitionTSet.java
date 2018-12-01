@@ -12,19 +12,12 @@
 package edu.iu.dsc.tws.api.tset.impl;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class AllReduceTSet<T> extends BaseTSet<T> {
-  private ReduceFunction<T> reduceFn;
+public class KeyedPartitionTSet<T> extends BaseTSet<T> {
 
-  private BaseTSet<T> parent;
-
-  public AllReduceTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-                       ReduceFunction<T> rFn) {
+  public KeyedPartitionTSet(Config cfg, TaskGraphBuilder bldr) {
     super(cfg, bldr);
-    this.reduceFn = rFn;
-    this.parent = prnt;
   }
 
   @Override
@@ -34,12 +27,6 @@ public class AllReduceTSet<T> extends BaseTSet<T> {
 
   @Override
   protected Op getOp() {
-    return Op.ALL_REDUCE;
+    return null;
   }
-
-  public ReduceFunction<T> getReduceFn() {
-    return reduceFn;
-  }
-
-
 }

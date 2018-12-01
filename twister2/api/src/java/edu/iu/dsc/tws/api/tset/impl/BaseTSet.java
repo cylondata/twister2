@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.api.tset.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.reflect.TypeToken;
+
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.Constants;
@@ -120,7 +122,9 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public TSet<T> allReduce(ReduceFunction<T> reduceFn) {
-    return null;
+    BaseTSet<T> reduce = new AllReduceTSet<T>(config, builder, this, reduceFn);
+    children.add(reduce);
+    return reduce;
   }
 
   @Override
@@ -146,7 +150,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
     // sinks are a special case
     for (SinkOp<T> sink : sinks) {
       ComputeConnection connection = builder.addSink(getName() + "-sink", sink);
-      buildConnection(connection, this);
+      buildConnection(connection, this, getType());
     }
   }
 
@@ -158,25 +162,50 @@ public abstract class BaseTSet<T> implements TSet<T> {
    */
   protected abstract Op getOp();
 
-  static <P> void buildConnection(ComputeConnection connection, BaseTSet<P> parent) {
+  static <P> void buildConnection(ComputeConnection connection, BaseTSet<P> parent, Class type) {
+    DataType dataType = getDataType(type);
+
     if (parent.getOp() == Op.REDUCE) {
       ReduceTSet<P> reduceTSet = (ReduceTSet<P>) parent;
       connection.reduce(parent.getName(), Constants.DEFAULT_EDGE,
           new ReduceOpFunction<P>(reduceTSet.getReduceFn()),
-          DataType.OBJECT);
+          dataType);
     } else if (parent.getOp() == Op.GATHER) {
-      connection.gather(parent.getName(), Constants.DEFAULT_EDGE, DataType.OBJECT);
+      connection.gather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
     } else if (parent.getOp() == Op.ALL_REDUCE) {
       AllReduceTSet<P> reduceTSet = (AllReduceTSet<P>) parent;
       connection.allreduce(parent.getName(), Constants.DEFAULT_EDGE,
           new ReduceOpFunction<P>(reduceTSet.getReduceFn()),
-          DataType.OBJECT);
+          dataType);
     } else if (parent.getOp() == Op.ALL_GATHER) {
-      connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, DataType.OBJECT);
+      connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
     } else if (parent.getOp() == Op.PARTITION) {
-      connection.partition(parent.getName(), Constants.DEFAULT_EDGE, DataType.OBJECT);
+      connection.partition(parent.getName(), Constants.DEFAULT_EDGE, dataType);
     } else {
       throw new RuntimeException("Failed to build un-supported operation: " + parent.getOp());
     }
+  }
+
+  public static DataType getDataType(Class type) {
+    if (type == int[].class) {
+      return DataType.INTEGER;
+    } else if (type == double[].class) {
+      return DataType.DOUBLE;
+    } else if (type == short[].class) {
+      return DataType.SHORT;
+    } else if (type == byte[].class) {
+      return DataType.BYTE;
+    } else if (type == long[].class) {
+      return DataType.LONG;
+    } else if (type == char[].class) {
+      return DataType.CHAR;
+    } else {
+      return DataType.OBJECT;
+    }
+  }
+
+  protected Class getType() {
+    TypeToken<T> typeToken = new TypeToken<T>(getClass()) { };
+    return typeToken.getRawType();
   }
 }
