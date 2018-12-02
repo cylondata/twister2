@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.dashboard.data_models.Worker;
 
 public interface WorkerRepository extends CrudRepository<Worker, Long> {
 
-  Iterable<Worker> findAllByJob_Id(String jobId);
+  Iterable<Worker> findAllByJob_JobId(String jobId);
 
   @Modifying
   @Query("update Worker worker set worker.state=?2 where worker.id=?1")

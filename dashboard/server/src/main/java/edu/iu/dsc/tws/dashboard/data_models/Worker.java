@@ -55,7 +55,7 @@ public class Worker {
   }
 
   @ManyToOne(optional = false)
-  @JoinColumn
+  @JoinColumn(referencedColumnName = "jobId")
   @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state"})
   private Job job;
 
@@ -110,12 +110,12 @@ public class Worker {
   @Override
   public String toString() {
     return "Worker{"
-        + "id=" + id
-        + ", host='" + host + '\''
-        + ", port=" + port
-        + ", cpuAllocation=" + cpuAllocation
-        + ", memoryAllocation=" + memoryAllocation
-        + ", job=" + job
-        + '}';
+            + "id=" + id
+            + ", host='" + host + '\''
+            + ", port=" + port
+            + ", cpuAllocation=" + cpuAllocation
+            + ", memoryAllocation=" + memoryAllocation
+            + ", job=" + job
+            + '}';
   }
 }

@@ -11,9 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.data_models;
 
+import io.swagger.annotations.ApiModelProperty;
+
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -29,58 +32,71 @@ import javax.persistence.OneToMany;
 public class Job {
 
   @Id
-  private String id;
+  private String jobId = UUID.randomUUID().toString();
 
   @Column(nullable = false)
-  private String name;
+  private String jobName;
 
   @Column
   private String description;
 
+  @ApiModelProperty(hidden = true)
   @Column
   private Date heartbeatTime; //job master heartbeat
 
+  @ApiModelProperty(hidden = true)
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "job",
-      orphanRemoval = true)
+          orphanRemoval = true)
   private Set<Worker> workers = new HashSet<>();
 
-  @ManyToOne
-  private Cluster cluster;
+  @OneToMany(fetch = FetchType.EAGER, mappedBy = "job", orphanRemoval = true)
+  private Set<ComputeResource> computeResources = new HashSet<>();
+
+  @ManyToOne(optional = false)
+  private Node node;
 
   @Column
   @Enumerated(EnumType.STRING)
-  private EntityState state;
+  private JobState state = JobState.STARTING;
 
-  public EntityState getState() {
+  public Node getNode() {
+    return node;
+  }
+
+  public void setNode(Node node) {
+    this.node = node;
+  }
+
+  public Set<ComputeResource> getComputeResources() {
+    return computeResources;
+  }
+
+  public void setComputeResources(Set<ComputeResource> computeResources) {
+    this.computeResources = computeResources;
+  }
+
+  public JobState getState() {
     return state;
   }
 
-  public void setState(EntityState state) {
+  public void setState(JobState state) {
     this.state = state;
   }
 
-  public Cluster getCluster() {
-    return cluster;
+  public String getJobId() {
+    return jobId;
   }
 
-  public void setCluster(Cluster cluster) {
-    this.cluster = cluster;
+  public void setJobId(String jobId) {
+    this.jobId = jobId;
   }
 
-  public String getId() {
-    return id;
+  public String getJobName() {
+    return jobName;
   }
 
-  public void setId(String id) {
-    this.id = id;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
+  public void setJobName(String jobName) {
+    this.jobName = jobName;
   }
 
   public String getDescription() {
@@ -110,11 +126,11 @@ public class Job {
   @Override
   public String toString() {
     return "Job{"
-        + "id='" + id + '\''
-        + ", name='" + name + '\''
-        + ", description='" + description + '\''
-        + ", heartbeatTime=" + heartbeatTime
-        + ", workers=" + workers
-        + '}';
+            + "jobId='" + jobId + '\''
+            + ", jobName='" + jobName + '\''
+            + ", description='" + description + '\''
+            + ", heartbeatTime=" + heartbeatTime
+            + ", workers=" + workers
+            + '}';
   }
 }

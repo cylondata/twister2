@@ -1,9 +1,9 @@
 {
-  "host": "1.0.0.2",
+  "ip": "1.0.0.2",
   "port": 8080,
   "cpuAllocation": 2.0,
   "memoryAllocation": 2048.0,
   "job": {
-    "id": "uuid-random-thing"
+    "jobId": "uuid-random-thing"
   }
 }

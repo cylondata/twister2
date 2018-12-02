@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 import edu.iu.dsc.tws.dashboard.data_models.Worker;
 import edu.iu.dsc.tws.dashboard.repositories.WorkerRepository;
-import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
+import edu.iu.dsc.tws.dashboard.rest_models.JobStateChangeRequest;
 
 @Service
 public class WorkerService {
@@ -15,7 +15,7 @@ public class WorkerService {
   private WorkerRepository workerRepository;
 
   public Iterable<Worker> getAllForJob(String jobId) {
-    return workerRepository.findAllByJob_Id(jobId);
+    return workerRepository.findAllByJob_JobId(jobId);
   }
 
   public Iterable<Worker> getAllWorkers() {
@@ -26,7 +26,7 @@ public class WorkerService {
     return this.workerRepository.save(worker);
   }
 
-  public void changeState(String workerId, StateChangeRequest stateChangeRequest) {
-    this.workerRepository.changeWorkerState(workerId, stateChangeRequest.getEntityState());
+  public void changeState(String workerId, JobStateChangeRequest jobStateChangeRequest) {
+    //this.workerRepository.changeWorkerState(workerId, jobStateChangeRequest.getJobState());
   }
 }

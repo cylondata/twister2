@@ -14,8 +14,12 @@ import edu.iu.dsc.tws.dashboard.services.WorkerService;
 @RequestMapping("workers")
 public class WorkerController {
 
+  private final WorkerService workerService;
+
   @Autowired
-  private WorkerService workerService;
+  public WorkerController(WorkerService workerService) {
+    this.workerService = workerService;
+  }
 
   @RequestMapping(value = "/", method = RequestMethod.GET)
   public Iterable<Worker> getAllWorkers() {

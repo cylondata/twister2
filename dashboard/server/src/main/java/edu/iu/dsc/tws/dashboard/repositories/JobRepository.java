@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.dashboard.repositories;
 
 import java.util.Date;
 
+import edu.iu.dsc.tws.dashboard.data_models.JobState;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -24,7 +25,7 @@ public interface JobRepository extends CrudRepository<Job, String> {
 
   @Modifying
   @Query("update Job job set job.state=?2 where job.id=?1")
-  int changeJobState(String jobId, EntityState entityState);
+  int changeJobState(String jobId, JobState jobState);
 
   @Modifying
   @Query("update Job job set job.heartbeatTime=?2 where job.id=?1")

@@ -17,11 +17,15 @@ import edu.iu.dsc.tws.dashboard.services.NodeService;
 @RequestMapping("clusters")
 public class ClusterController {
 
-  @Autowired
-  private ClusterService clusterService;
+  private final ClusterService clusterService;
+
+  private final NodeService nodeService;
 
   @Autowired
-  private NodeService nodeService;
+  public ClusterController(ClusterService clusterService, NodeService nodeService) {
+    this.clusterService = clusterService;
+    this.nodeService = nodeService;
+  }
 
   @RequestMapping(value = "/", method = RequestMethod.GET)
   public Iterable<Cluster> getAll() {
@@ -29,13 +33,13 @@ public class ClusterController {
   }
 
   @RequestMapping(value = "/", method = RequestMethod.POST,
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+          consumes = MediaType.APPLICATION_JSON_VALUE)
   public Cluster createCluster(@RequestBody Cluster cluster) {
     return clusterService.createCluster(cluster);
   }
 
   @RequestMapping(value = "/{id}/", method = RequestMethod.GET)
-  public Cluster getCluster(@PathVariable("id") Long id) {
+  public Cluster getCluster(@PathVariable("id") String id) {
     return clusterService.getClusterById(id);
   }
 
