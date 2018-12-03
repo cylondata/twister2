@@ -61,6 +61,7 @@ message WorkerInfo {
 
     NodeInfo nodeInfo = 4;
     tws.proto.job.ComputeResource computeResource = 5;
+    map<string, int32> additionalPort = 6;
 }
 
 // a worker informs the master that its state has changed

@@ -23,7 +23,7 @@ public class KubernetesContext extends SchedulerContext {
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
 
-  public static final int K8S_WORKER_BASE_PORT_DEFAULT = 9999;
+  public static final int K8S_WORKER_BASE_PORT_DEFAULT = 9000;
   public static final String K8S_WORKER_BASE_PORT = "kubernetes.worker.base.port";
 
   public static final boolean NODE_LOCATIONS_FROM_CONFIG_DEFAULT = true;

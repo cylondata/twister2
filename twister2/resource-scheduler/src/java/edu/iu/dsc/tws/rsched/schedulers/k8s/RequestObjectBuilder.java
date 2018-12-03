@@ -339,7 +339,8 @@ public final class RequestObjectBuilder {
 
     container.setVolumeMounts(volumeMounts);
 
-    int containerPort = KubernetesContext.workerBasePort(config) + containerIndex;
+    int containerPort = KubernetesContext.workerBasePort(config)
+        + containerIndex * (SchedulerContext.numberOfAdditionalPorts(config) + 1);
 
     V1ContainerPort port = new V1ContainerPort();
     port.name("port11"); // currently not used

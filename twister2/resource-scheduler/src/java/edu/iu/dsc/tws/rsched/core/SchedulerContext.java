@@ -70,6 +70,8 @@ public class SchedulerContext extends Context {
   public static final String RACKS_LIST = "racks.list";
   public static final String DATACENTERS_LIST = "datacenters.list";
 
+  public static final String WORKER_ADDITIONAL_PORTS = "worker.additional.ports";
+
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
   }
@@ -146,6 +148,17 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue("twister2.network.channel.class")
         .equals("edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel");
   }
+
+  public static List<String> workerAdditionalPorts(Config cfg) {
+    return cfg.getStringList(WORKER_ADDITIONAL_PORTS);
+  }
+
+  public static int numberOfAdditionalPorts(Config cfg) {
+    List<String> portNameList = workerAdditionalPorts(cfg);
+    return portNameList == null ? 0 : portNameList.size();
+  }
+
+
 
   public static JobMasterAPI.NodeInfo getNodeInfo(Config cfg, String nodeIP) {
 
