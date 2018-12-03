@@ -59,6 +59,28 @@ public class Job {
   @Enumerated(EnumType.STRING)
   private JobState state = JobState.STARTING;
 
+  @Column
+  private int numberOfWorkers = 0;
+
+  @Column
+  private String workerClass;
+
+  public String getWorkerClass() {
+    return workerClass;
+  }
+
+  public void setWorkerClass(String workerClass) {
+    this.workerClass = workerClass;
+  }
+
+  public int getNumberOfWorkers() {
+    return numberOfWorkers;
+  }
+
+  public void setNumberOfWorkers(int numberOfWorkers) {
+    this.numberOfWorkers = numberOfWorkers;
+  }
+
   public Node getNode() {
     return node;
   }
