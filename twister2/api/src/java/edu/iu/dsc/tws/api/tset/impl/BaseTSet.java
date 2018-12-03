@@ -112,7 +112,9 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public TSet<T> gather() {
-    return null;
+    BaseTSet<T> gather = new GatherTSet<>(config, builder, this);
+    children.add(gather);
+    return gather;
   }
 
   @Override
@@ -129,7 +131,9 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public TSet<T> allGather() {
-    return null;
+    BaseTSet<T> gather = new AllGatherTSet<>(config, builder, this);
+    children.add(gather);
+    return gather;
   }
 
   @Override
