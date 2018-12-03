@@ -98,7 +98,6 @@ def load_modules():
     _maven_import(artifact = "org.apache.curator:curator-recipes:4.0.0", licenses = ["notice"], sha256 = "b039635e54483aa7c8660fd089a1d053f8541eac21c0002e4830569dfdfa61e4")
     _maven_import(artifact = "org.apache.curator:curator-framework:4.0.0", licenses = ["notice"], sha256 = "e3d4a2341dce27a651dbd301742b428596fc9fd5ac0091bdce0c919d47aec6cb")
     _maven_import(artifact = "org.apache.httpcomponents:httpcore:4.4.5", licenses = ["notice"], sha256 = "64d5453874cab7e40a7065cb01a9a9ca1053845a9786b478878b679e0580cec3")
-    _maven_import(artifact = "org.javassist:javassist:3.18.1-GA", licenses = ["notice"], sha256 = "3fb71231afd098bb0f93f5eb97aa8291c8d0556379125e596f92ec8f944c6162")
     _maven_import(artifact = "commons-io:commons-io:2.6", licenses = ["notice"], sha256 = "f877d304660ac2a142f3865badfc971dec7ed73c747c7f8d5d2f5139ca736513")
     _maven_import(artifact = "com.fasterxml.jackson.core:jackson-core:2.8.8", licenses = ["notice"], sha256 = "d9bde8c72c22202bf17b05c7811db4964ff8e843d97c00a9bfb048c0fe7a726b")
     _maven_import(artifact = "com.esotericsoftware:kryo:3.0.3", licenses = ["notice"], sha256 = "5c295b23480225ff6e7d6770dfa904bedcec8556c27234fea0a271fe13195f69")
@@ -149,6 +148,14 @@ def load_modules():
     _maven_import(artifact = "javax.ws.rs:javax.ws.rs-api:2.1.1", licenses = ["notice"], sha256 = "2c309eb2c9455ffee9da8518c70a3b6d46be2a269b2e2a101c806a537efe79a4")
     _maven_import(artifact = "org.glassfish.hk2.external:javax.inject:2.5.0-b62", licenses = ["notice"], sha256 = "2877904ff2888842b52df5d0748c511df3e1a63b7292e2e326ec6ae329e769e6")
     _maven_import(artifact = "org.glassfish.jersey.core:jersey-common:2.27", licenses = ["notice"], sha256 = "9a9578c6dac52b96195a614150f696d455db6b6d267a645c3120a4d0ee495789")
+    _maven_import(artifact = "org.glassfish.hk2:hk2-locator:2.5.0-b63", licenses = ["notice"], sha256 = "4a162237e8cbe4ae96b8b8e230c364bd9ab6cb898513be9a6a0725e63097e975")
+    _maven_import(artifact = "org.glassfish.hk2:hk2-api:2.5.0-b63", licenses = ["notice"], sha256 = "468fdb35e70b5babd72ba7eca9a8ba409665b63c1681048700206253757abf55")
+    _maven_import(artifact = "org.javassist:javassist:3.24.0-GA", licenses = ["notice"], sha256 = "aba81efa678b621203fb89aeff81d6f126f7a9dd709401e5609c42976684ae23")
+    _maven_import(artifact = "org.glassfish.hk2:osgi-resource-locator:2.5.0-b42", licenses = ["notice"], sha256 = "803552cd82a5741fa6273194ad27275a3a8ed18aa7d6be5a04ad6ad5972853c9")
+    _maven_import(artifact = "org.glassfish.hk2:hk2-utils:2.5.0-b63", licenses = ["notice"], sha256 = "f5275b5b4956a61e1ca6ef3b7723315fc96b167f9991870d0264ef4fe1d2d603")
+    _maven_import(artifact = "org.glassfish.hk2.external:aopalliance-repackaged:2.5.0-b63", licenses = ["notice"], sha256 = "70bbc43cbdcdb51310085ed7780f845251b7b23a009d08e571fe1cb9f59e7511")
+    _maven_import(artifact = "org.glassfish.jersey.bundles.repackaged:jersey-guava:2.26-b03", licenses = ["notice"], sha256 = "95e6d574880062d255606e3ff1b8d41a548f85ff8cd41ca5e169acd595606da9")
+    _maven_import(artifact = "org.glassfish.jersey.inject:jersey-hk2:2.26", licenses = ["notice"], sha256 = "4e9ab17a051eaacae0829a45cbdb5c603876006fdc86b5d9c5005be10266dcf7")
 
     #dashboard
     _maven_import(artifact = "org.springframework.boot:spring-boot-starter:2.1.0.RELEASE", licenses = ["notice"], sha256 = "02450499d623deb3d5f5635258e615ed141642d7944d91fbd7c1614887ae8a29")
