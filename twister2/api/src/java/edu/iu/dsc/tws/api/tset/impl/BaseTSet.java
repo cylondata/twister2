@@ -204,6 +204,13 @@ public abstract class BaseTSet<T> implements TSet<T> {
       connection.reduce(parent.getName(), Constants.DEFAULT_EDGE,
           new ReduceOpFunction<P>(reduceTSet.getReduceFn()),
           dataType);
+    } else if (parent.getOp() == Op.KEYED_REDUCE) {
+      ReduceTSet<P> reduceTSet = (ReduceTSet<P>) parent;
+      connection.keyedReduce(parent.getName(), Constants.DEFAULT_EDGE,
+          new ReduceOpFunction<P>(reduceTSet.getReduceFn()),
+          dataType, dataType);
+    } else if (parent.getOp() == Op.KEYED_GATHER) {
+      connection.keyedGather(parent.getName(), Constants.DEFAULT_EDGE, dataType, dataType);
     } else if (parent.getOp() == Op.GATHER) {
       connection.gather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
     } else if (parent.getOp() == Op.ALL_REDUCE) {
@@ -215,6 +222,8 @@ public abstract class BaseTSet<T> implements TSet<T> {
       connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
     } else if (parent.getOp() == Op.PARTITION) {
       connection.partition(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+    } else if (parent.getOp() == Op.KEYED_PARTITION) {
+      connection.keyedPartition(parent.getName(), Constants.DEFAULT_EDGE, dataType, dataType);
     } else {
       throw new RuntimeException("Failed to build un-supported operation: " + parent.getOp());
     }
