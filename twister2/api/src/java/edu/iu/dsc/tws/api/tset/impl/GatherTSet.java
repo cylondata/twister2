@@ -14,6 +14,11 @@ package edu.iu.dsc.tws.api.tset.impl;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 
+/**
+ * Create a gather data set
+ *
+ * @param <T> the type of data
+ */
 public class GatherTSet<T> extends BaseTSet<T> {
   private BaseTSet<T> parent;
 

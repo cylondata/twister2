@@ -15,6 +15,11 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.common.config.Config;
 
+/**
+ * Represent a data set create by a all reduce opration
+ *
+ * @param <T> type of data
+ */
 public class AllReduceTSet<T> extends BaseTSet<T> {
   private ReduceFunction<T> reduceFn;
 

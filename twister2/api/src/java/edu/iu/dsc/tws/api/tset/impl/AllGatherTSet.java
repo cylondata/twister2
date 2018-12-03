@@ -14,6 +14,11 @@ package edu.iu.dsc.tws.api.tset.impl;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 
+/**
+ * Represent a data set created by an all gather operation
+ *
+ * @param <T> type of data
+ */
 public class AllGatherTSet<T> extends BaseTSet<T> {
   private BaseTSet<T> parent;
 

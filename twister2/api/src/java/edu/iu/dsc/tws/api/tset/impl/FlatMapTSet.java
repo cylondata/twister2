@@ -17,6 +17,12 @@ import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
+/**
+ * Apply a flat map operation
+ *
+ * @param <T> the input type
+ * @param <P> the output type
+ */
 public class FlatMapTSet<T, P> extends BaseTSet<T> {
   private BaseTSet<P> parent;
 
