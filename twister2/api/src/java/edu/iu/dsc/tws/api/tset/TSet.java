@@ -42,6 +42,24 @@ public interface TSet<T> {
   <P> TSet<P> flatMap(FlatMapFunction<T, P> mapFn);
 
   /**
+   * Map
+   *
+   * @param mapFn
+   * @param <P>
+   * @return
+   */
+  <P> TSet<P> map(IterableMapFunction<T, P> mapFn);
+
+  /**
+   * Flatmap
+   *
+   * @param mapFn
+   * @param <P>
+   * @return
+   */
+  <P> TSet<P> flatMap(IterableFlatMapFunction<T, P> mapFn);
+
+  /**
    * Reduce
    *
    * @param reduceFn

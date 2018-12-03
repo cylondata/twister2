@@ -20,6 +20,8 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
+import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
@@ -95,6 +97,20 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   @Override
+  public <P> TSet<P> map(IterableMapFunction<T, P> mapFn) {
+    BaseTSet<P> set = new IMapTSet<>(config, builder, this, mapFn);
+    children.add(set);
+    return set;
+  }
+
+  @Override
+  public <P> TSet<P> flatMap(IterableFlatMapFunction<T, P> mapFn) {
+    BaseTSet<P> set = new IFlatMapTSet<>(config, builder, this, mapFn);
+    children.add(set);
+    return set;
+  }
+
+  @Override
   public TSet<T> reduce(ReduceFunction<T> reduceFn) {
     BaseTSet<T> reduce = new ReduceTSet<T>(config, builder, this, reduceFn);
     children.add(reduce);
@@ -102,12 +118,23 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   public TSet<T> partition(PartitionFunction<T> partitionFn) {
-    return null;
+    BaseTSet<T> partition = new PartitionTSet<>(config, builder, this, partitionFn);
+    children.add(partition);
+    return partition;
   }
+
+  public TSet<T> keyedPartition(PartitionFunction<T> partitionFn) {
+    BaseTSet<T> partition = new KeyedPartitionTSet<>(config, builder, this, partitionFn);
+    children.add(partition);
+    return partition;
+  }
+
 
   @Override
   public TSet<T> reduceByKey(ReduceFunction<T> reduceFn, PartitionFunction<T> partitioner) {
-    return null;
+    BaseTSet<T> reduce = new KeyedReduceTSet<>(config, builder, this, reduceFn, partitioner);
+    children.add(reduce);
+    return reduce;
   }
 
   @Override
@@ -119,7 +146,9 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public TSet<T> gatherByKey(PartitionFunction<T> partitioner) {
-    return null;
+    BaseTSet<T> gather = new KeyedGatherTSet<>(config, builder, this, partitioner);
+    children.add(gather);
+    return gather;
   }
 
   @Override

@@ -12,32 +12,32 @@
 package edu.iu.dsc.tws.api.tset.ops;
 
 import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class FlatMapOp<T, R> implements ICompute {
-  private static final long serialVersionUID = -5244396518L;
+public class IterableFlatMapOp<T, R> implements ICompute {
+  private static final long serialVersionUID = -5244396519L;
 
-  private FlatMapFunction<T, R> mapFn;
+  private IterableFlatMapFunction<T, R> mapFn;
 
   private TaskContext context;
 
   private CollectorImpl<R> collector;
 
-  public FlatMapOp() {
+  public IterableFlatMapOp() {
   }
 
-  public FlatMapOp(FlatMapFunction<T, R> mapFn) {
+  public IterableFlatMapOp(IterableFlatMapFunction<T, R> mapFn) {
     this.mapFn = mapFn;
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public boolean execute(IMessage content) {
-    T data = (T) content.getContent();
+    Iterable<T> data = (Iterable<T>) content.getContent();
     mapFn.flatMap(data, collector);
 
     if (collector.isClosed()) {

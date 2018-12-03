@@ -17,6 +17,7 @@ public enum Op {
   ALL_GATHER,
   ALL_REDUCE,
   MAP,
+  IMAP,
   PARTITION,
   SOURCE,
   KEYED_GATHER,

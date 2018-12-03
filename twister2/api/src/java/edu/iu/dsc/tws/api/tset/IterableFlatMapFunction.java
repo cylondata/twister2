@@ -11,18 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-/**
- * Given a data, give the partition index
- *
- * @param <T> the type of data
- */
-public interface PartitionFunction<T> extends TFunction {
-
-  /**
-   * Computes the partition for the given key.
-   *
-   * @param val value.
-   * @return The partition index.
-   */
-  int partition(T val);
+public interface IterableFlatMapFunction<T, O> extends TFunction {
+  void flatMap(Iterable<T> t, Collector<O> collector);
 }

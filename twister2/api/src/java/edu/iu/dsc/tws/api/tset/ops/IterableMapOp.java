@@ -12,45 +12,36 @@
 package edu.iu.dsc.tws.api.tset.ops;
 
 import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class FlatMapOp<T, R> implements ICompute {
-  private static final long serialVersionUID = -5244396518L;
+public class IterableMapOp<T, R> implements ICompute {
+  private static final long serialVersionUID = -1220168533L;
 
-  private FlatMapFunction<T, R> mapFn;
+  private IterableMapFunction<T, R> mapFn;
 
   private TaskContext context;
 
-  private CollectorImpl<R> collector;
-
-  public FlatMapOp() {
+  public IterableMapOp() {
   }
 
-  public FlatMapOp(FlatMapFunction<T, R> mapFn) {
+  public IterableMapOp(IterableMapFunction<T, R> mapFn) {
     this.mapFn = mapFn;
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public boolean execute(IMessage content) {
-    T data = (T) content.getContent();
-    mapFn.flatMap(data, collector);
-
-    if (collector.isClosed()) {
-      if (!collector.hasPending()) {
-        context.end(Constants.DEFAULT_EDGE);
-      }
-    }
-    return true;
+    Iterable<T> data = (Iterable<T>) content.getContent();
+    R result = mapFn.map(data);
+    return context.write(Constants.DEFAULT_EDGE, result);
   }
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     this.context = ctx;
-    this.collector = new CollectorImpl<>(context, Constants.DEFAULT_EDGE);
   }
 }

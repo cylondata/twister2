@@ -13,6 +13,9 @@ package edu.iu.dsc.tws.api.tset;
 
 import java.io.Serializable;
 
+/**
+ * Base class for all the functions in TSet implementation
+ */
 public interface TFunction extends Serializable {
   void prepare(TSetContext context);
 }
