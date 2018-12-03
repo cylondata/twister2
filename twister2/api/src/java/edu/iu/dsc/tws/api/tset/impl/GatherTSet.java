@@ -15,17 +15,25 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 
 public class GatherTSet<T> extends BaseTSet<T> {
-  public GatherTSet(Config cfg, TaskGraphBuilder bldr) {
+  private BaseTSet<T> parent;
+
+  public GatherTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt) {
     super(cfg, bldr);
+    this.parent = prnt;
+  }
+
+  @Override
+  public String getName() {
+    return parent.getName();
   }
 
   @Override
   public boolean baseBuild() {
-    return false;
+    return true;
   }
 
   @Override
   protected Op getOp() {
-    return null;
+    return Op.GATHER;
   }
 }

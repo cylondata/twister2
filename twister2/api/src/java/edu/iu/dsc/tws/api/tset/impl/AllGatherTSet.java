@@ -12,18 +12,13 @@
 package edu.iu.dsc.tws.api.tset.impl;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class AllReduceTSet<T> extends BaseTSet<T> {
-  private ReduceFunction<T> reduceFn;
-
+public class AllGatherTSet<T> extends BaseTSet<T> {
   private BaseTSet<T> parent;
 
-  public AllReduceTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-                       ReduceFunction<T> rFn) {
+  public AllGatherTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt) {
     super(cfg, bldr);
-    this.reduceFn = rFn;
     this.parent = prnt;
   }
 
@@ -34,15 +29,11 @@ public class AllReduceTSet<T> extends BaseTSet<T> {
 
   @Override
   public boolean baseBuild() {
-    return false;
+    return true;
   }
 
   @Override
   protected Op getOp() {
-    return Op.ALL_REDUCE;
-  }
-
-  public ReduceFunction<T> getReduceFn() {
-    return reduceFn;
+    return Op.GATHER;
   }
 }
