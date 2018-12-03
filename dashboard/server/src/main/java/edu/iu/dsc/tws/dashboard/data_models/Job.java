@@ -49,7 +49,7 @@ public class Job {
           orphanRemoval = true)
   private Set<Worker> workers = new HashSet<>();
 
-  @OneToMany(fetch = FetchType.EAGER, mappedBy = "job", orphanRemoval = true)
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "job", orphanRemoval = true)
   private Set<ComputeResource> computeResources = new HashSet<>();
 
   @ManyToOne(optional = false)

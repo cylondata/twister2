@@ -11,15 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.repositories;
 
-import java.util.Date;
-
+import edu.iu.dsc.tws.dashboard.data_models.Job;
 import edu.iu.dsc.tws.dashboard.data_models.JobState;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-import edu.iu.dsc.tws.dashboard.data_models.EntityState;
-import edu.iu.dsc.tws.dashboard.data_models.Job;
+import java.util.Date;
 
 public interface JobRepository extends CrudRepository<Job, String> {
 

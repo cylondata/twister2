@@ -38,6 +38,14 @@ public class NodeService {
     return this.nodeRepository.save(node);
   }
 
+  public Node createNode(NodeId nodeId) {
+    Node node = new Node();
+    node.setDataCenter(nodeId.getDataCenter());
+    node.setIp(nodeId.getIp());
+    node.setRack(nodeId.getRack());
+    return this.createNode(node);
+  }
+
   public NodeId createNodeId(Node node) {
     NodeId nodeId = new NodeId();
     nodeId.setDataCenter(node.getDataCenter());
@@ -46,8 +54,8 @@ public class NodeService {
     return nodeId;
   }
 
-//  public void changeState(Long nodeId, JobStateChangeRequest stateChangeRequest) {
-//    this.nodeRepository.changeNodeState(nodeId, stateChangeRequest.getJobState());
+//  public void changeState(Long nodeId, StateChangeRequest stateChangeRequest) {
+//    this.nodeRepository.changeNodeState(nodeId, stateChangeRequest.getState());
 //  }
 
   public Iterable<Node> getNodesOfCluster(Long clusterId) {

@@ -2,6 +2,8 @@ package edu.iu.dsc.tws.dashboard.controllers;
 
 
 import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
+import edu.iu.dsc.tws.dashboard.data_models.JobState;
+import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import edu.iu.dsc.tws.dashboard.services.ComputeResourceService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import edu.iu.dsc.tws.dashboard.data_models.Job;
 import edu.iu.dsc.tws.dashboard.data_models.Worker;
-import edu.iu.dsc.tws.dashboard.rest_models.JobStateChangeRequest;
 import edu.iu.dsc.tws.dashboard.services.JobService;
 import edu.iu.dsc.tws.dashboard.services.WorkerService;
 
@@ -64,12 +65,18 @@ public class JobController {
     return workerService.getAllForJob(jobId);
   }
 
+//  @RequestMapping(value = "/{jobId}/workers/", method = RequestMethod.POST,
+//          consumes = MediaType.APPLICATION_JSON_VALUE)
+//  public Worker getWorkers(@PathVariable("jobId") String jobId, @RequestBody Worker worker) {
+//    return workerService.createWorker(jobId, worker);
+//  }
+
   @RequestMapping(value = "/{jobId}/state/", method = RequestMethod.POST,
           consumes = MediaType.APPLICATION_JSON_VALUE)
   public void changeState(@PathVariable String jobId,
-                          @RequestBody JobStateChangeRequest jobStateChangeRequest) {
-    LOG.debug("Changing state of the job {} to {}", jobId, jobStateChangeRequest.getJobState());
-    this.jobService.changeState(jobId, jobStateChangeRequest);
+                          @RequestBody StateChangeRequest<JobState> stateChangeRequest) {
+    LOG.debug("Changing state of the job {} to {}", jobId, stateChangeRequest.getState());
+    this.jobService.changeState(jobId, stateChangeRequest);
   }
 
   @RequestMapping(value = "/{jobId}/computeResources/", method = RequestMethod.POST,
@@ -80,7 +87,7 @@ public class JobController {
   }
 
   @RequestMapping(value = "/{jobId}/computeResources/{index}", method = RequestMethod.DELETE)
-  public void createComputeResource(@PathVariable String jobId,
+  public void deleteComputeResource(@PathVariable String jobId,
                                     @PathVariable Integer index) {
     computeResourceService.delete(jobId, index);
   }

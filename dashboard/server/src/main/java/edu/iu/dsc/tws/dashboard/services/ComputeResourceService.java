@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.Optional;
 
 @Service
@@ -28,6 +29,23 @@ public class ComputeResourceService {
     Job jobById = jobService.getJobById(jobId);
     computeResource.setJob(jobById);
     return computeResourceRepository.save(computeResource);
+  }
+
+  public ComputeResource findById(ComputeResourceId computeResourceId) {
+    Optional<ComputeResource> byId = computeResourceRepository.findById(
+            computeResourceId
+    );
+    if (byId.isPresent()) {
+      return byId.get();
+    }
+    throw new EntityNotFoundException("No such compute resource defined with id"
+            + computeResourceId.getIndex() + " for job " + computeResourceId.getJob());
+  }
+
+  public ComputeResource findById(String jobId, Integer index) {
+    return this.findById(
+            this.createComputerResourceId(jobId, index)
+    );
   }
 
   @Transactional

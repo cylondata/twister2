@@ -35,7 +35,7 @@ public class NodeController {
 //  @RequestMapping(value = "/{nodeId}/state/", method = RequestMethod.POST,
 //      consumes = MediaType.APPLICATION_JSON_VALUE)
 //  public void changeState(@PathVariable Long nodeId,
-//                          @RequestBody JobStateChangeRequest stateChangeRequest) {
+//                          @RequestBody StateChangeRequest stateChangeRequest) {
 //    this.nodeService.changeState(nodeId, stateChangeRequest);
 //  }
 }

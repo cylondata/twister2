@@ -12,9 +12,10 @@
 package edu.iu.dsc.tws.dashboard.services;
 
 import edu.iu.dsc.tws.dashboard.data_models.Job;
+import edu.iu.dsc.tws.dashboard.data_models.JobState;
 import edu.iu.dsc.tws.dashboard.data_models.Node;
 import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
-import edu.iu.dsc.tws.dashboard.rest_models.JobStateChangeRequest;
+import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,8 +64,8 @@ public class JobService {
   }
 
   @Transactional
-  public void changeState(String jobId, JobStateChangeRequest jobStateChangeRequest) {
-    int changeJobState = this.jobRepository.changeJobState(jobId, jobStateChangeRequest.getJobState());
+  public void changeState(String jobId, StateChangeRequest<JobState> stateChangeRequest) {
+    int changeJobState = this.jobRepository.changeJobState(jobId, stateChangeRequest.getState());
     if (changeJobState == 0) {
       throw new EntityNotFoundException("No Job found with ID " + jobId);
     }
