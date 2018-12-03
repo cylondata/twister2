@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.common.config.Config;
@@ -27,17 +30,27 @@ public class IterableFlatMapOp<T, R> implements ICompute {
 
   private CollectorImpl<R> collector;
 
+  private boolean inputIterator;
+
   public IterableFlatMapOp() {
   }
 
-  public IterableFlatMapOp(IterableFlatMapFunction<T, R> mapFn) {
+  public IterableFlatMapOp(IterableFlatMapFunction<T, R> mapFn, boolean inputItr) {
     this.mapFn = mapFn;
+    this.inputIterator = inputItr;
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public boolean execute(IMessage content) {
-    Iterable<T> data = (Iterable<T>) content.getContent();
+    Iterator<T> data;
+    if (inputIterator) {
+      data = (Iterator<T>) content.getContent();
+    } else {
+      ArrayList<T> itr = new ArrayList<>();
+      itr.add((T) content.getContent());
+      data = itr.iterator();
+    }
     mapFn.flatMap(data, collector);
 
     if (collector.isClosed()) {

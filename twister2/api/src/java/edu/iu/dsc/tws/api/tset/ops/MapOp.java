@@ -25,11 +25,14 @@ public class MapOp<T, R> implements ICompute {
 
   private TaskContext context;
 
+  private boolean iterable;
+
   public MapOp() {
   }
 
-  public MapOp(MapFunction<T, R> mapFn) {
+  public MapOp(MapFunction<T, R> mapFn, boolean itr) {
     this.mapFn = mapFn;
+    this.iterable = itr;
   }
 
   @SuppressWarnings("unchecked")

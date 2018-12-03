@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.common.config.Config;
@@ -25,17 +28,28 @@ public class IterableMapOp<T, R> implements ICompute {
 
   private TaskContext context;
 
+  private boolean inputIterator;
+
   public IterableMapOp() {
   }
 
-  public IterableMapOp(IterableMapFunction<T, R> mapFn) {
+  public IterableMapOp(IterableMapFunction<T, R> mapFn, boolean inputItr) {
     this.mapFn = mapFn;
+    this.inputIterator = inputItr;
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public boolean execute(IMessage content) {
-    Iterable<T> data = (Iterable<T>) content.getContent();
+    Iterator<T> data;
+    if (inputIterator) {
+      data = (Iterator<T>) content.getContent();
+    } else {
+      ArrayList<T> itr = new ArrayList<>();
+      itr.add((T) content.getContent());
+      data = itr.iterator();
+    }
+
     R result = mapFn.map(data);
     return context.write(Constants.DEFAULT_EDGE, result);
   }

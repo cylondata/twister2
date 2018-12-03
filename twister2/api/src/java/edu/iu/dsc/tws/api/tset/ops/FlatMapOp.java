@@ -30,7 +30,7 @@ public class FlatMapOp<T, R> implements ICompute {
   public FlatMapOp() {
   }
 
-  public FlatMapOp(FlatMapFunction<T, R> mapFn) {
+  public FlatMapOp(FlatMapFunction<T, R> mapFn, boolean itr) {
     this.mapFn = mapFn;
   }
 

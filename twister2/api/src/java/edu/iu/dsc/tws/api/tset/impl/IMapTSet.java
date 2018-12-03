@@ -31,8 +31,10 @@ public class IMapTSet<T, P> extends BaseTSet<T> {
 
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
+    boolean isIterable = isIterableInput(parent);
+
     ComputeConnection connection = builder.addCompute(getName(),
-        new IterableMapOp<>(mapFn), parallel);
+        new IterableMapOp<>(mapFn, isIterable), parallel);
     buildConnection(connection, parent, getType());
     return true;
   }

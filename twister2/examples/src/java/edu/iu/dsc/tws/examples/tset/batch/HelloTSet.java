@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
@@ -57,7 +58,18 @@ public class HelloTSet extends TaskWorker implements Serializable {
       }
     }).setName("Source");
 
-    TSet<int[]> reduce = source.reduce(new ReduceFunction<int[]>() {
+    TSet<int[]> partitioned = source.partition(new PartitionFunction<int[]>() {
+      @Override
+      public int partition(int source, int[] val) {
+        return 0;
+      }
+
+      @Override
+      public void prepare(TSetContext context) {
+      }
+    });
+
+    TSet<int[]> reduce = partitioned.reduce(new ReduceFunction<int[]>() {
       private static final long serialVersionUID = -2;
       @Override
       public int[] reduce(int[] t1, int[] t2) {

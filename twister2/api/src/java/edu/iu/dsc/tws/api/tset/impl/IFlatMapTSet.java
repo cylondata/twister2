@@ -31,8 +31,10 @@ public class IFlatMapTSet<T, P> extends BaseTSet<T> {
 
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
+    boolean isIterable = isIterableInput(parent);
+
     ComputeConnection connection = builder.addCompute(getName(),
-        new IterableFlatMapOp<>(mapFn), parallel);
+        new IterableFlatMapOp<>(mapFn, isIterable), parallel);
     buildConnection(connection, parent, getType());
     return true;
   }

@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import java.util.Iterator;
+
 public interface IterableFlatMapFunction<T, O> extends TFunction {
-  void flatMap(Iterable<T> t, Collector<O> collector);
+  void flatMap(Iterator<T> t, Collector<O> collector);
 }

@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSet;
+import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -219,7 +220,23 @@ public abstract class BaseTSet<T> implements TSet<T> {
     }
   }
 
-  public static DataType getDataType(Class type) {
+  static <T> boolean isIterableInput(BaseTSet<T> parent) {
+    if (parent.getOp() == Op.REDUCE || parent.getOp() == Op.KEYED_REDUCE) {
+      return false;
+    } else if (parent.getOp() == Op.GATHER || parent.getOp() == Op.KEYED_GATHER) {
+      return true;
+    } else if (parent.getOp() == Op.ALL_REDUCE) {
+      return true;
+    } else if (parent.getOp() == Op.ALL_GATHER) {
+      return false;
+    } else if (parent.getOp() == Op.PARTITION || parent.getOp() == Op.KEYED_PARTITION) {
+      return true;
+    } else {
+      throw new RuntimeException("Failed to build un-supported operation: " + parent.getOp());
+    }
+  }
+
+  private static DataType getDataType(Class type) {
     if (type == int[].class) {
       return DataType.INTEGER;
     } else if (type == double[].class) {

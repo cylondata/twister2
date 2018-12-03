@@ -24,5 +24,5 @@ public interface PartitionFunction<T> extends TFunction {
    * @param val value.
    * @return The partition index.
    */
-  int partition(T val);
+  int partition(int sourceIndex, T val);
 }
