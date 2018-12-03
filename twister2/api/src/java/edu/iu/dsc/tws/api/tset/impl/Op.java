@@ -19,4 +19,7 @@ public enum Op {
   MAP,
   PARTITION,
   SOURCE,
+  KEYED_GATHER,
+  KEYED_REDUCE,
+  KEYED_PARTITION
 }

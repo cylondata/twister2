@@ -12,20 +12,37 @@
 package edu.iu.dsc.tws.api.tset.impl;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.common.config.Config;
 
 public class PartitionTSet<T> extends BaseTSet<T> {
-  public PartitionTSet(Config cfg, TaskGraphBuilder bldr) {
+  private BaseTSet<T> parent;
+
+  private PartitionFunction<T> partitionFunction;
+
+  public PartitionTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
+                            PartitionFunction<T> parFn) {
     super(cfg, bldr);
+    this.parent = prnt;
+    this.partitionFunction = parFn;
+  }
+
+  @Override
+  public String getName() {
+    return parent.getName();
   }
 
   @Override
   public boolean baseBuild() {
-    return false;
+    return true;
   }
 
   @Override
   protected Op getOp() {
-    return null;
+    return Op.KEYED_PARTITION;
+  }
+
+  public PartitionFunction<T> getPartitionFunction() {
+    return partitionFunction;
   }
 }

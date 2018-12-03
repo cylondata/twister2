@@ -12,12 +12,28 @@
 package edu.iu.dsc.tws.api.tset.impl;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.common.config.Config;
 
 public class KeyedReduceTSet<T> extends BaseTSet<T> {
+  private ReduceFunction<T> reduceFn;
 
-  public KeyedReduceTSet(Config cfg, TaskGraphBuilder bldr) {
+  private BaseTSet<T> parent;
+
+  private PartitionFunction<T> partitionFunction;
+
+  public KeyedReduceTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
+                         ReduceFunction<T> rFn, PartitionFunction<T> parFn) {
     super(cfg, bldr);
+    this.parent = prnt;
+    this.reduceFn =  rFn;
+    this.partitionFunction = parFn;
+  }
+
+  @Override
+  public String getName() {
+    return parent.getName();
   }
 
   @Override
@@ -25,8 +41,16 @@ public class KeyedReduceTSet<T> extends BaseTSet<T> {
     return false;
   }
 
+  public ReduceFunction<T> getReduceFn() {
+    return reduceFn;
+  }
+
   @Override
   protected Op getOp() {
-    return null;
+    return Op.KEYED_REDUCE;
+  }
+
+  public PartitionFunction<T> getPartitionFunction() {
+    return partitionFunction;
   }
 }
