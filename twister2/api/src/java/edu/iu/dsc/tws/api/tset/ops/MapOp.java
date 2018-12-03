@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.common.config.Config;
@@ -38,9 +40,18 @@ public class MapOp<T, R> implements ICompute {
   @SuppressWarnings("unchecked")
   @Override
   public boolean execute(IMessage content) {
-    T data = (T) content.getContent();
-    R result = mapFn.map(data);
-    return context.write(Constants.DEFAULT_EDGE, result);
+    if (!iterable) {
+      T data = (T) content.getContent();
+      R result = mapFn.map(data);
+      return context.write(Constants.DEFAULT_EDGE, result);
+    } else {
+      Iterator<T> data = (Iterator<T>) content.getContent();
+      while (data.hasNext()) {
+        R result = mapFn.map(data.next());
+        context.write(Constants.DEFAULT_EDGE, result);
+      }
+    }
+    return true;
   }
 
   @Override
