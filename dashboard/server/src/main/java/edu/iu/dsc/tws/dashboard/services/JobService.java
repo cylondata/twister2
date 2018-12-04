@@ -43,6 +43,13 @@ public class JobService {
     job.getComputeResources().forEach(computeResource -> computeResource.setJob(job));
 
     //create non existing nodes : todo not appropriate, resolve once twister2 support nodes
+    //if node is defined without rack and data center, replace them with prefix+jobId
+    if (job.getNode().getDataCenter() == null) {
+      job.getNode().setDataCenter("dc-" + job.getJobId());
+    }
+    if (job.getNode().getRack() == null) {
+      job.getNode().setRack("rk-" + job.getJobId());
+    }
     Node node = nodeService.createNode(job.getNode());
     job.setNode(node);
 
