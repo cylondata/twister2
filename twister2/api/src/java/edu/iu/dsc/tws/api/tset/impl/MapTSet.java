@@ -35,12 +35,13 @@ public class MapTSet<T, P> extends BaseTSet<T> {
 
     ComputeConnection connection = builder.addCompute(getName(),
         new MapOp<P, T>(mapFn, isIterable), parallel);
-    buildConnection(connection, parent, getType());
+
+    parent.buildConnection(connection);
     return true;
   }
 
   @Override
-  protected Op getOp() {
-    return Op.MAP;
+  void buildConnection(ComputeConnection connection) {
+
   }
 }

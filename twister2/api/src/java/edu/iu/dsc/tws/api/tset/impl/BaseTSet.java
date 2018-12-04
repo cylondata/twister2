@@ -18,7 +18,6 @@ import com.google.common.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
@@ -28,7 +27,6 @@ import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -149,7 +147,8 @@ public abstract class BaseTSet<T> implements TSet<T> {
   @Override
   public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
                                        Selector<T, K> selector) {
-    GroupedTSet<T, K> groupedTSet = new GroupedTSet<>(config, builder, partitionFunction, selector);
+    GroupedTSet<T, K> groupedTSet = new GroupedTSet<>(config, builder, this,
+        partitionFunction, selector);
     children.add(groupedTSet);
     return groupedTSet;
   }
@@ -172,68 +171,30 @@ public abstract class BaseTSet<T> implements TSet<T> {
     // sinks are a special case
     for (SinkOp<T> sink : sinks) {
       ComputeConnection connection = builder.addSink(getName() + "-sink", sink);
-      buildConnection(connection, this, getType());
+      // call build connection of our selves
+      buildConnection(connection);
     }
   }
 
   public abstract boolean baseBuild();
 
-  /**
-   * Get the specific operation name
-   * @return operation
-   */
-  protected abstract Op getOp();
-
-  static <P> void buildConnection(ComputeConnection connection, BaseTSet<P> parent, Class type) {
-    DataType dataType = getDataType(type);
-
-    if (parent.getOp() == Op.REDUCE) {
-      ReduceTSet<P> reduceTSet = (ReduceTSet<P>) parent;
-      connection.reduce(parent.getName(), Constants.DEFAULT_EDGE,
-          new ReduceOpFunction<P>(reduceTSet.getReduceFn()),
-          dataType);
-    } else if (parent.getOp() == Op.KEYED_REDUCE) {
-      ReduceTSet<P> reduceTSet = (ReduceTSet<P>) parent;
-      connection.keyedReduce(parent.getName(), Constants.DEFAULT_EDGE,
-          new ReduceOpFunction<P>(reduceTSet.getReduceFn()),
-          dataType, dataType);
-    } else if (parent.getOp() == Op.KEYED_GATHER) {
-      connection.keyedGather(parent.getName(), Constants.DEFAULT_EDGE, dataType, dataType);
-    } else if (parent.getOp() == Op.GATHER) {
-      connection.gather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
-    } else if (parent.getOp() == Op.ALL_REDUCE) {
-      AllReduceTSet<P> reduceTSet = (AllReduceTSet<P>) parent;
-      connection.allreduce(parent.getName(), Constants.DEFAULT_EDGE,
-          new ReduceOpFunction<P>(reduceTSet.getReduceFn()),
-          dataType);
-    } else if (parent.getOp() == Op.ALL_GATHER) {
-      connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
-    } else if (parent.getOp() == Op.PARTITION) {
-      connection.partition(parent.getName(), Constants.DEFAULT_EDGE, dataType);
-    } else if (parent.getOp() == Op.KEYED_PARTITION) {
-      connection.keyedPartition(parent.getName(), Constants.DEFAULT_EDGE, dataType, dataType);
-    } else {
-      throw new RuntimeException("Failed to build un-supported operation: " + parent.getOp());
-    }
-  }
-
   static <T> boolean isIterableInput(BaseTSet<T> parent) {
-    if (parent.getOp() == Op.REDUCE || parent.getOp() == Op.KEYED_REDUCE) {
+    if (parent instanceof ReduceTSet || parent instanceof KeyedReduceTSet) {
       return false;
-    } else if (parent.getOp() == Op.GATHER || parent.getOp() == Op.KEYED_GATHER) {
+    } else if (parent instanceof GatherTSet || parent instanceof KeyedGatherTSet) {
       return true;
-    } else if (parent.getOp() == Op.ALL_REDUCE) {
-      return true;
-    } else if (parent.getOp() == Op.ALL_GATHER) {
+    } else if (parent instanceof AllReduceTSet) {
       return false;
-    } else if (parent.getOp() == Op.PARTITION || parent.getOp() == Op.KEYED_PARTITION) {
+    } else if (parent instanceof AllGatherTSet) {
+      return true;
+    } else if (parent instanceof PartitionTSet || parent instanceof KeyedPartitionTSet) {
       return true;
     } else {
-      throw new RuntimeException("Failed to build un-supported operation: " + parent.getOp());
+      throw new RuntimeException("Failed to build un-supported operation: " + parent);
     }
   }
 
-  private static DataType getDataType(Class type) {
+  protected static DataType getDataType(Class type) {
     if (type == int[].class) {
       return DataType.INTEGER;
     } else if (type == double[].class) {
@@ -251,8 +212,28 @@ public abstract class BaseTSet<T> implements TSet<T> {
     }
   }
 
+  protected static DataType getKeyType(Class type) {
+    if (type == Integer.class) {
+      return DataType.INTEGER;
+    } else if (type == Double.class) {
+      return DataType.DOUBLE;
+    } else if (type == Short.class) {
+      return DataType.SHORT;
+    } else if (type == Byte.class) {
+      return DataType.BYTE;
+    } else if (type == Long.class) {
+      return DataType.LONG;
+    } else if (type == Character.class) {
+      return DataType.CHAR;
+    } else {
+      return DataType.OBJECT;
+    }
+  }
+
   protected Class getType() {
     TypeToken<T> typeToken = new TypeToken<T>(getClass()) { };
     return typeToken.getRawType();
   }
+
+  abstract void buildConnection(ComputeConnection connection);
 }

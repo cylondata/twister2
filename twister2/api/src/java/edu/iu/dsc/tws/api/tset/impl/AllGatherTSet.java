@@ -11,8 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 
 /**
  * Represent a data set created by an all gather operation
@@ -28,17 +31,13 @@ public class AllGatherTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public String getName() {
-    return parent.getName();
-  }
-
-  @Override
   public boolean baseBuild() {
     return true;
   }
 
   @Override
-  protected Op getOp() {
-    return Op.GATHER;
+  void buildConnection(ComputeConnection connection) {
+    DataType dataType = getDataType(getType());
+    connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
 }

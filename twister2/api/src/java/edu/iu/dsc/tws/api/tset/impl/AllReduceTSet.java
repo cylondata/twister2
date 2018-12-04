@@ -11,9 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 
 /**
  * Represent a data set create by a all reduce opration
@@ -33,18 +37,18 @@ public class AllReduceTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public String getName() {
-    return parent.getName();
-  }
-
-  @Override
   public boolean baseBuild() {
-    return false;
+    return true;
   }
 
   @Override
-  protected Op getOp() {
-    return Op.ALL_REDUCE;
+  void buildConnection(ComputeConnection connection) {
+    DataType dataType = getDataType(getType());
+
+    AllReduceTSet<T> reduceTSet = (AllReduceTSet<T>) parent;
+    connection.allreduce(parent.getName(), Constants.DEFAULT_EDGE,
+        new ReduceOpFunction<T>(reduceTSet.getReduceFn()),
+        dataType);
   }
 
   public ReduceFunction<T> getReduceFn() {

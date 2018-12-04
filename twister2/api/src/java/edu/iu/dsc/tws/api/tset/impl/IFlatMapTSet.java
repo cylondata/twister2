@@ -35,13 +35,12 @@ public class IFlatMapTSet<T, P> extends BaseTSet<T> {
 
     ComputeConnection connection = builder.addCompute(getName(),
         new IterableFlatMapOp<>(mapFn, isIterable), parallel);
-    buildConnection(connection, parent, getType());
+    parent.buildConnection(connection);
     return true;
   }
 
   @Override
-  protected Op getOp() {
-    return Op.MAP;
+  void buildConnection(ComputeConnection connection) {
   }
 }
 

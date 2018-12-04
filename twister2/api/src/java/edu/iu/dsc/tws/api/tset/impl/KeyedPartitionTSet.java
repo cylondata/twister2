@@ -11,20 +11,27 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 
-public class KeyedPartitionTSet<T, K> extends BaseTSet<T> {
-  private BaseTSet<T> parent;
+public class KeyedPartitionTSet<T, K> extends KeyValueTSet<T, K> {
+  private GroupedTSet<T, K> parent;
 
   private PartitionFunction<K> partitionFunction;
 
-  public KeyedPartitionTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-                            PartitionFunction<K> parFn) {
+  private Selector<T, K> selector;
+
+  public KeyedPartitionTSet(Config cfg, TaskGraphBuilder bldr, GroupedTSet<T, K> prnt,
+                            PartitionFunction<K> parFn, Selector<T, K> selc) {
     super(cfg, bldr);
     this.parent = prnt;
     this.partitionFunction = parFn;
+    this.selector = selc;
   }
 
   @Override
@@ -32,17 +39,30 @@ public class KeyedPartitionTSet<T, K> extends BaseTSet<T> {
     return parent.getName();
   }
 
+  public GroupedTSet<T, K> getParent() {
+    return parent;
+  }
+
+  public void setParent(GroupedTSet<T, K> parent) {
+    this.parent = parent;
+  }
+
   @Override
   public boolean baseBuild() {
     return true;
   }
 
-  @Override
-  protected Op getOp() {
-    return Op.KEYED_PARTITION;
-  }
-
   public PartitionFunction<K> getPartitionFunction() {
     return partitionFunction;
+  }
+
+  public Selector<T, K> getSelector() {
+    return selector;
+  }
+
+  public void buildConnection(ComputeConnection connection) {
+    DataType keyType = getDataType(getClassK());
+    DataType dataType = getDataType(getClassT());
+    connection.keyedPartition(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType);
   }
 }

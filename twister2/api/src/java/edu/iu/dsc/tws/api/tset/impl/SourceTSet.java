@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
@@ -31,7 +32,6 @@ public class SourceTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  protected Op getOp() {
-    return Op.SOURCE;
+  void buildConnection(ComputeConnection connection) {
   }
 }

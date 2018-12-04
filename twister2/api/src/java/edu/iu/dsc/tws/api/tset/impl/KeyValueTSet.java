@@ -11,34 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import com.google.common.reflect.TypeToken;
+
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
 
-/**
- * Create a gather data set
- *
- * @param <T> the type of data
- */
-public class GatherTSet<T> extends BaseTSet<T> {
-  private BaseTSet<T> parent;
-
-  public GatherTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt) {
+public abstract class KeyValueTSet<T, K> extends BaseTSet<T> {
+  public KeyValueTSet(Config cfg, TaskGraphBuilder bldr) {
     super(cfg, bldr);
-    this.parent = prnt;
   }
 
-  @Override
-  public boolean baseBuild() {
-    return true;
+  Class<? super T> getClassT() {
+    return new TypeToken<T>(getClass()) {
+    }.getRawType();
   }
 
-  @Override
-  void buildConnection(ComputeConnection connection) {
-    DataType dataType = getDataType(getType());
-
-    connection.gather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+  Class<? super K> getClassK() {
+    return new TypeToken<K>(getClass()) {
+    }.getRawType();
   }
 }

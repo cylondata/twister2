@@ -11,20 +11,27 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 
-public class KeyedGatherTSet<T, K> extends BaseTSet<T> {
+public class KeyedGatherTSet<T, K> extends KeyValueTSet<T, K> {
   private BaseTSet<T> parent;
 
   private PartitionFunction<K> partitionFunction;
 
+  private Selector<T, K> selector;
+
   public KeyedGatherTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-                         PartitionFunction<K> parFn) {
+                         PartitionFunction<K> parFn, Selector<T, K> selc) {
     super(cfg, bldr);
     this.parent = prnt;
     this.partitionFunction = parFn;
+    this.selector = selc;
   }
 
   @Override
@@ -32,17 +39,26 @@ public class KeyedGatherTSet<T, K> extends BaseTSet<T> {
     return parent.getName();
   }
 
+  public BaseTSet<T> getParent() {
+    return parent;
+  }
+
   @Override
   public boolean baseBuild() {
     return true;
   }
 
-  @Override
-  protected Op getOp() {
-    return Op.KEYED_GATHER;
-  }
-
   public PartitionFunction<K> getPartitionFunction() {
     return partitionFunction;
+  }
+
+  public Selector<T, K> getSelector() {
+    return selector;
+  }
+
+  public void buildConnection(ComputeConnection connection) {
+    DataType keyType = getDataType(getClassK());
+    DataType dataType = getDataType(getClassT());
+    connection.keyedGather(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType);
   }
 }

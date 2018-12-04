@@ -11,12 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 
-public class KeyedReduceTSet<T, K> extends BaseTSet<T> {
+public class KeyedReduceTSet<T, K> extends KeyValueTSet<T, K> {
   private ReduceFunction<T> reduceFn;
 
   private BaseTSet<T> parent;
@@ -45,12 +49,14 @@ public class KeyedReduceTSet<T, K> extends BaseTSet<T> {
     return reduceFn;
   }
 
-  @Override
-  protected Op getOp() {
-    return Op.KEYED_REDUCE;
-  }
-
   public PartitionFunction<K> getPartitionFunction() {
     return partitionFunction;
+  }
+
+  public void buildConnection(ComputeConnection connection) {
+    DataType keyType = getDataType(getClassK());
+    DataType dataType = getDataType(getClassT());
+    connection.keyedReduce(parent.getName(), Constants.DEFAULT_EDGE,
+        new ReduceOpFunction<>(reduceFn), keyType, dataType);
   }
 }

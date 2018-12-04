@@ -11,9 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 
 public class PartitionTSet<T> extends BaseTSet<T> {
   private BaseTSet<T> parent;
@@ -38,8 +41,10 @@ public class PartitionTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  protected Op getOp() {
-    return Op.KEYED_PARTITION;
+  void buildConnection(ComputeConnection connection) {
+    DataType dataType = getDataType(getType());
+
+    connection.partition(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
 
   public PartitionFunction<T> getPartitionFunction() {

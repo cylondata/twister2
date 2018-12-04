@@ -11,9 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 
 public class ReduceTSet<T> extends BaseTSet<T> {
   private ReduceFunction<T> reduceFn;
@@ -39,8 +43,11 @@ public class ReduceTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  protected Op getOp() {
-    return Op.REDUCE;
+  void buildConnection(ComputeConnection connection) {
+    DataType dataType = getDataType(getType());
+
+    connection.reduce(parent.getName(), Constants.DEFAULT_EDGE,
+        new ReduceOpFunction<T>(getReduceFn()), dataType);
   }
 
   public ReduceFunction<T> getReduceFn() {

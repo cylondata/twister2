@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.impl;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
@@ -22,9 +23,14 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
 
   private Selector<T, K> selector;
 
-  public GroupedTSet(Config cfg, TaskGraphBuilder bldr, PartitionFunction<K> partitioner,
-                     Selector<T, K> selector) {
+  private BaseTSet<T> parent;
+
+  public GroupedTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
+                     PartitionFunction<K> partFn, Selector<T, K> selc) {
     super(cfg, bldr);
+    this.partitioner = partFn;
+    this.selector = selc;
+    this.parent = prnt;
   }
 
   public KeyedReduceTSet<T, K> keyedReduce(ReduceFunction<T> reduceFn) {
@@ -36,15 +42,20 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
 
   public KeyedPartitionTSet<T, K> keyedPartition() {
     KeyedPartitionTSet<T, K> partition = new KeyedPartitionTSet<>(config, builder,
-        this, partitioner);
+        this, partitioner, selector);
     children.add(partition);
     return partition;
   }
 
   public KeyedGatherTSet<T, K> keyedGather() {
-    KeyedGatherTSet<T, K> gather = new KeyedGatherTSet<>(config, builder, this, partitioner);
+    KeyedGatherTSet<T, K> gather = new KeyedGatherTSet<>(config, builder, this,
+        partitioner, selector);
     children.add(gather);
     return gather;
+  }
+
+  public BaseTSet<T> getParent() {
+    return parent;
   }
 
   @Override
@@ -53,7 +64,6 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
   }
 
   @Override
-  protected Op getOp() {
-    return Op.GROUPED;
+  void buildConnection(ComputeConnection connection) {
   }
 }
