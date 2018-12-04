@@ -15,13 +15,13 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class KeyedPartitionTSet<T> extends BaseTSet<T> {
+public class KeyedPartitionTSet<T, K> extends BaseTSet<T> {
   private BaseTSet<T> parent;
 
-  private PartitionFunction<T> partitionFunction;
+  private PartitionFunction<K> partitionFunction;
 
   public KeyedPartitionTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-                            PartitionFunction<T> parFn) {
+                            PartitionFunction<K> parFn) {
     super(cfg, bldr);
     this.parent = prnt;
     this.partitionFunction = parFn;
@@ -42,7 +42,7 @@ public class KeyedPartitionTSet<T> extends BaseTSet<T> {
     return Op.KEYED_PARTITION;
   }
 
-  public PartitionFunction<T> getPartitionFunction() {
+  public PartitionFunction<K> getPartitionFunction() {
     return partitionFunction;
   }
 }

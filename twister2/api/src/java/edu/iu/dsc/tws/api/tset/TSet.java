@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.tset.impl.FlatMapTSet;
+import edu.iu.dsc.tws.api.tset.impl.GroupedTSet;
 import edu.iu.dsc.tws.api.tset.impl.IFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.impl.IMapTSet;
 import edu.iu.dsc.tws.api.tset.impl.MapTSet;
@@ -101,6 +102,15 @@ public interface TSet<T> {
    * @return
    */
   TSet<T> allGather();
+
+  /**
+   * Select a set of values
+   * @param partitionFunction partition function
+   * @param selector the selector
+   * @param <K> the type for partitioning
+   * @return grouped set
+   */
+  <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction, Selector<T, K> selector);
 
   /**
    * Add a sink

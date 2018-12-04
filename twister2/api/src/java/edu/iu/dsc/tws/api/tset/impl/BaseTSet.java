@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
@@ -143,6 +144,14 @@ public abstract class BaseTSet<T> implements TSet<T> {
     BaseTSet<T> gather = new AllGatherTSet<>(config, builder, this);
     children.add(gather);
     return gather;
+  }
+
+  @Override
+  public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
+                                       Selector<T, K> selector) {
+    GroupedTSet<T, K> groupedTSet = new GroupedTSet<>(config, builder, partitionFunction, selector);
+    children.add(groupedTSet);
+    return groupedTSet;
   }
 
   @Override

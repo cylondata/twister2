@@ -14,29 +14,35 @@ package edu.iu.dsc.tws.api.tset.impl;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class GroupedTSet<T> extends BaseTSet<T> {
-  private PartitionFunction<T> partitioner;
+public class GroupedTSet<T, K> extends BaseTSet<T> {
+  private PartitionFunction<K> partitioner;
 
-  public GroupedTSet(Config cfg, TaskGraphBuilder bldr) {
+  private Selector<T, K> selector;
+
+  public GroupedTSet(Config cfg, TaskGraphBuilder bldr, PartitionFunction<K> partitioner,
+                     Selector<T, K> selector) {
     super(cfg, bldr);
   }
 
-  public KeyedReduceTSet<T> keyedReduce(ReduceFunction<T> reduceFn) {
-    KeyedReduceTSet<T> reduce = new KeyedReduceTSet<>(config, builder, this, reduceFn, partitioner);
+  public KeyedReduceTSet<T, K> keyedReduce(ReduceFunction<T> reduceFn) {
+    KeyedReduceTSet<T, K> reduce = new KeyedReduceTSet<>(config, builder, this,
+        reduceFn, partitioner);
     children.add(reduce);
     return reduce;
   }
 
-  public KeyedPartitionTSet<T> keyedPartition() {
-    KeyedPartitionTSet<T> partition = new KeyedPartitionTSet<>(config, builder, this, partitioner);
+  public KeyedPartitionTSet<T, K> keyedPartition() {
+    KeyedPartitionTSet<T, K> partition = new KeyedPartitionTSet<>(config, builder,
+        this, partitioner);
     children.add(partition);
     return partition;
   }
 
-  public KeyedGatherTSet<T> keyedGather() {
-    KeyedGatherTSet<T> gather = new KeyedGatherTSet<>(config, builder, this, partitioner);
+  public KeyedGatherTSet<T, K> keyedGather() {
+    KeyedGatherTSet<T, K> gather = new KeyedGatherTSet<>(config, builder, this, partitioner);
     children.add(gather);
     return gather;
   }

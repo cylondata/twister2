@@ -16,15 +16,15 @@ import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class KeyedReduceTSet<T> extends BaseTSet<T> {
+public class KeyedReduceTSet<T, K> extends BaseTSet<T> {
   private ReduceFunction<T> reduceFn;
 
   private BaseTSet<T> parent;
 
-  private PartitionFunction<T> partitionFunction;
+  private PartitionFunction<K> partitionFunction;
 
   public KeyedReduceTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-                         ReduceFunction<T> rFn, PartitionFunction<T> parFn) {
+                         ReduceFunction<T> rFn, PartitionFunction<K> parFn) {
     super(cfg, bldr);
     this.parent = prnt;
     this.reduceFn =  rFn;
@@ -50,7 +50,7 @@ public class KeyedReduceTSet<T> extends BaseTSet<T> {
     return Op.KEYED_REDUCE;
   }
 
-  public PartitionFunction<T> getPartitionFunction() {
+  public PartitionFunction<K> getPartitionFunction() {
     return partitionFunction;
   }
 }
