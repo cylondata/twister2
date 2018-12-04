@@ -60,10 +60,10 @@ public final class MesosContext extends SchedulerContext {
   public static final String MESOS_CONTAINER_CLASS = "twister2.job.worker.class";
 
 
-  public static final int DEFAULT_RAM_SIZE = 128; // 1GB
-  public static final int DEFAULT_DISK_SIZE = 128; // 1GB
+  public static final int DEFAULT_RAM_SIZE = 1024; // 1GB
+  public static final int DEFAULT_DISK_SIZE = 100; // 100 MB
   public static final int DEFAULT_CPU_AMOUNT = 1;
-  public static final int DEFAULT_NUMBER_OF_CONTAINERS = 1;
+  public static final int DEFAULT_NUMBER_OF_CONTAINERS = 5;
   public static final int DEFAULT_CONTAINER_PER_WORKER = 1;
   public static final int DEFAULT_WORKER_PORT = 31000;
   public static final String DEFAULT_DESIRED_NODE = "all";

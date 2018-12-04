@@ -11,18 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.repositories;
 
+import edu.iu.dsc.tws.dashboard.data_models.Worker;
+import edu.iu.dsc.tws.dashboard.data_models.WorkerState;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-import edu.iu.dsc.tws.dashboard.data_models.EntityState;
-import edu.iu.dsc.tws.dashboard.data_models.Worker;
-
 public interface WorkerRepository extends CrudRepository<Worker, Long> {
 
-  Iterable<Worker> findAllByJob_Id(String jobId);
+  Iterable<Worker> findAllByJob_JobId(String jobId);
 
   @Modifying
-  @Query("update Worker worker set worker.state=?2 where worker.id=?1")
-  int changeWorkerState(String workerId, EntityState entityState);
+  @Query("update Worker worker set worker.state=?3 where worker.job.jobId=?1 and worker.workerId=?2")
+  int changeWorkerState(String jobId, Long workerId, WorkerState workerState);
 }

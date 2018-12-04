@@ -24,6 +24,10 @@ rules:
   resources: ["services"]
   verbs: ["get", "list", "watch", "delete"]
 
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch", "delete"]
+
 - apiGroups: ["apps"]
   resources: ["statefulsets"]
   verbs: ["get", "list", "watch", "delete"]

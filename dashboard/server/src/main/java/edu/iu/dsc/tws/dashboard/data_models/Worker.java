@@ -11,53 +11,65 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.data_models;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
+import io.swagger.annotations.ApiModelProperty;
+
+import javax.persistence.*;
 
 @Entity
+@IdClass(WorkerId.class)
 public class Worker {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
-  private Long id;
+  private Long workerId;
 
   @Column
-  private String host;
+  private String workerIP;
 
   @Column
-  private Integer port;
+  private Integer workerPort;
 
-  @Column
-  private Double cpuAllocation;
-
-  @Column
-  private Double memoryAllocation;
+  @ApiModelProperty(hidden = true)
+  @Id
+  @ManyToOne(optional = false)
+  @JoinColumn(referencedColumnName = "jobId")
+  @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state", "computeResources", "node"})
+  private Job job;
 
   @Column
   @Enumerated(EnumType.STRING)
-  private EntityState state;
+  private WorkerState state = WorkerState.STARTING;
 
-  public EntityState getState() {
+  @ManyToOne(optional = false, cascade = CascadeType.PERSIST)
+  private ComputeResource computeResource;
+
+  @ManyToOne(optional = false)
+  private Node node;
+
+  public Node getNode() {
+    return node;
+  }
+
+  public void setNode(Node node) {
+    this.node = node;
+  }
+
+  public ComputeResource getComputeResource() {
+    return computeResource;
+  }
+
+  public void setComputeResource(ComputeResource computeResource) {
+    this.computeResource = computeResource;
+  }
+
+  public WorkerState getState() {
     return state;
   }
 
-  public void setState(EntityState state) {
+  public void setState(WorkerState state) {
     this.state = state;
   }
-
-  @ManyToOne(optional = false)
-  @JoinColumn
-  @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state"})
-  private Job job;
 
   public Job getJob() {
     return job;
@@ -67,55 +79,37 @@ public class Worker {
     this.job = job;
   }
 
-  public Long getId() {
-    return id;
+  public Long getWorkerId() {
+    return workerId;
   }
 
-  public void setId(Long id) {
-    this.id = id;
+  public void setWorkerId(Long workerId) {
+    this.workerId = workerId;
   }
 
-  public String getHost() {
-    return host;
+  public String getWorkerIP() {
+    return workerIP;
   }
 
-  public void setHost(String host) {
-    this.host = host;
+  public void setWorkerIP(String workerIP) {
+    this.workerIP = workerIP;
   }
 
-  public Integer getPort() {
-    return port;
+  public Integer getWorkerPort() {
+    return workerPort;
   }
 
-  public void setPort(Integer port) {
-    this.port = port;
-  }
-
-  public Double getCpuAllocation() {
-    return cpuAllocation;
-  }
-
-  public void setCpuAllocation(Double cpuAllocation) {
-    this.cpuAllocation = cpuAllocation;
-  }
-
-  public Double getMemoryAllocation() {
-    return memoryAllocation;
-  }
-
-  public void setMemoryAllocation(Double memoryAllocation) {
-    this.memoryAllocation = memoryAllocation;
+  public void setWorkerPort(Integer workerPort) {
+    this.workerPort = workerPort;
   }
 
   @Override
   public String toString() {
     return "Worker{"
-        + "id=" + id
-        + ", host='" + host + '\''
-        + ", port=" + port
-        + ", cpuAllocation=" + cpuAllocation
-        + ", memoryAllocation=" + memoryAllocation
-        + ", job=" + job
-        + '}';
+            + "workerId=" + workerId
+            + ", workerIP='" + workerIP + '\''
+            + ", workerPort=" + workerPort
+            + ", job=" + job
+            + '}';
   }
 }
