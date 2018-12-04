@@ -233,7 +233,7 @@ public final class K8sWorkerUtils {
   public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
 
     // if no port is requested, return null
-    List<String> portNames = SchedulerContext.workerAdditionalPorts(config);
+    List<String> portNames = SchedulerContext.additionalPorts(config);
     if (portNames == null) {
       return null;
     }
