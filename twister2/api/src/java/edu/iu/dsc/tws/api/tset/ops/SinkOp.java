@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.tset.ops;
 
 import edu.iu.dsc.tws.api.tset.Sink;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -38,5 +39,9 @@ public class SinkOp<T> implements ISink {
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
+    TSetContext tSetContext = new TSetContext(ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
+        ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
+
+    sink.prepare(tSetContext);
   }
 }

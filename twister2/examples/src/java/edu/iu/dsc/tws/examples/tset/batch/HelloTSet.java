@@ -87,6 +87,11 @@ public class HelloTSet extends TaskWorker implements Serializable {
     }).setName("Reduce");
 
     reduce.sink(new Sink<int[]>() {
+      @Override
+      public void prepare(TSetContext context) {
+
+      }
+
       private static final long serialVersionUID = -3;
       @Override
       public boolean add(int[] value) {

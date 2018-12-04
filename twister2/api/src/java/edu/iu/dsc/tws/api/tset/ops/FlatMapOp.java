@@ -15,6 +15,7 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -64,5 +65,10 @@ public class FlatMapOp<T, R> implements ICompute {
   public void prepare(Config cfg, TaskContext ctx) {
     this.context = ctx;
     this.collector = new CollectorImpl<>(context, Constants.DEFAULT_EDGE);
+
+    TSetContext tSetContext = new TSetContext(ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
+        ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
+
+    mapFn.prepare(tSetContext);
   }
 }

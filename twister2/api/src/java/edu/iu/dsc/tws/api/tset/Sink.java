@@ -13,6 +13,6 @@ package edu.iu.dsc.tws.api.tset;
 
 import java.io.Serializable;
 
-public interface Sink<T> extends Serializable {
+public interface Sink<T> extends TFunction, Serializable {
   boolean add(T value);
 }

@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.api.tset.ops;
 
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.Source;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -48,5 +49,9 @@ public class SourceOp<T> implements ISource {
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     this.context = ctx;
+
+    TSetContext tSetContext = new TSetContext(ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
+        ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
+    dataSet.prepare(tSetContext);
   }
 }
