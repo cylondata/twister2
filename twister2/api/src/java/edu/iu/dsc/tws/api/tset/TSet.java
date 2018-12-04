@@ -11,6 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import edu.iu.dsc.tws.api.tset.impl.FlatMapTSet;
+import edu.iu.dsc.tws.api.tset.impl.IFlatMapTSet;
+import edu.iu.dsc.tws.api.tset.impl.IMapTSet;
+import edu.iu.dsc.tws.api.tset.impl.MapTSet;
+
 /**
  * Twister data set.
  *
@@ -30,7 +35,7 @@ public interface TSet<T> {
    * @param <P>
    * @return
    */
-  <P> TSet<P> map(MapFunction<T, P> mapFn);
+  <P> MapTSet<P, T> map(MapFunction<T, P> mapFn);
 
   /**
    * Flatmap
@@ -39,7 +44,7 @@ public interface TSet<T> {
    * @param <P>
    * @return
    */
-  <P> TSet<P> flatMap(FlatMapFunction<T, P> mapFn);
+  <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn);
 
   /**
    * Map
@@ -48,7 +53,7 @@ public interface TSet<T> {
    * @param <P>
    * @return
    */
-  <P> TSet<P> map(IterableMapFunction<T, P> mapFn);
+  <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mapFn);
 
   /**
    * Flatmap
@@ -57,7 +62,7 @@ public interface TSet<T> {
    * @param <P>
    * @return
    */
-  <P> TSet<P> flatMap(IterableFlatMapFunction<T, P> mapFn);
+  <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn);
 
   /**
    * Reduce
@@ -76,15 +81,6 @@ public interface TSet<T> {
   TSet<T> allReduce(ReduceFunction<T> reduceFn);
 
   /**
-   * Partition the data and reduce based on the reduce function
-   *
-   * @param reduceFn
-   * @param partitioner
-   * @return
-   */
-  TSet<T> reduceByKey(ReduceFunction<T> reduceFn, PartitionFunction<T> partitioner);
-
-  /**
    * Partition the data according the to partition function
    *
    * @param partitionFn
@@ -98,13 +94,6 @@ public interface TSet<T> {
    * @return
    */
   TSet<T> gather();
-
-  /**
-   * Partition the data according to partitioner and gather into different
-   * @param partitioner
-   * @return
-   */
-  TSet<T> gatherByKey(PartitionFunction<T> partitioner);
 
   /**
    * Gather the set of values into a single partition

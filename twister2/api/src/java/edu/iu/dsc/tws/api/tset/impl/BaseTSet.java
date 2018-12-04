@@ -55,7 +55,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   /**
    * The configuration
    */
-  private Config config;
+  protected Config config;
 
   /**
    * If there are sinks
@@ -84,70 +84,49 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   @Override
-  public <P> TSet<P> map(MapFunction<T, P> mapFn) {
-    BaseTSet<P> set = new MapTSet<P, T>(config, builder, this, mapFn);
+  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
+    MapTSet<P, T> set = new MapTSet<P, T>(config, builder, this, mapFn);
     children.add(set);
     return set;
   }
 
   @Override
-  public <P> TSet<P> flatMap(FlatMapFunction<T, P> mapFn) {
-    BaseTSet<P> set = new FlatMapTSet<P, T>(config, builder, this, mapFn);
+  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
+    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, builder, this, mapFn);
     children.add(set);
     return set;
   }
 
   @Override
-  public <P> TSet<P> map(IterableMapFunction<T, P> mapFn) {
-    BaseTSet<P> set = new IMapTSet<>(config, builder, this, mapFn);
+  public <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
+    IMapTSet<P, T> set = new IMapTSet<>(config, builder, this, mapFn);
     children.add(set);
     return set;
   }
 
   @Override
-  public <P> TSet<P> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    BaseTSet<P> set = new IFlatMapTSet<>(config, builder, this, mapFn);
+  public <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
+    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, builder, this, mapFn);
     children.add(set);
     return set;
   }
 
   @Override
-  public TSet<T> reduce(ReduceFunction<T> reduceFn) {
-    BaseTSet<T> reduce = new ReduceTSet<T>(config, builder, this, reduceFn);
+  public ReduceTSet<T> reduce(ReduceFunction<T> reduceFn) {
+    ReduceTSet<T> reduce = new ReduceTSet<T>(config, builder, this, reduceFn);
     children.add(reduce);
     return reduce;
   }
 
-  public TSet<T> partition(PartitionFunction<T> partitionFn) {
-    BaseTSet<T> partition = new PartitionTSet<>(config, builder, this, partitionFn);
+  public PartitionTSet<T> partition(PartitionFunction<T> partitionFn) {
+    PartitionTSet<T> partition = new PartitionTSet<>(config, builder, this, partitionFn);
     children.add(partition);
     return partition;
   }
 
-  public TSet<T> keyedPartition(PartitionFunction<T> partitionFn) {
-    BaseTSet<T> partition = new KeyedPartitionTSet<>(config, builder, this, partitionFn);
-    children.add(partition);
-    return partition;
-  }
-
-
   @Override
-  public TSet<T> reduceByKey(ReduceFunction<T> reduceFn, PartitionFunction<T> partitioner) {
-    BaseTSet<T> reduce = new KeyedReduceTSet<>(config, builder, this, reduceFn, partitioner);
-    children.add(reduce);
-    return reduce;
-  }
-
-  @Override
-  public TSet<T> gather() {
-    BaseTSet<T> gather = new GatherTSet<>(config, builder, this);
-    children.add(gather);
-    return gather;
-  }
-
-  @Override
-  public TSet<T> gatherByKey(PartitionFunction<T> partitioner) {
-    BaseTSet<T> gather = new KeyedGatherTSet<>(config, builder, this, partitioner);
+  public GatherTSet<T> gather() {
+    GatherTSet<T> gather = new GatherTSet<>(config, builder, this);
     children.add(gather);
     return gather;
   }
