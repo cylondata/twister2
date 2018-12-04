@@ -14,8 +14,8 @@ kubernetes.secret.name: "twister2-openmpi-ssh-key"
 # the base port number workers will use internally to communicate with each other
 # when there are multiple workers in a pod, first worker will get this port number,
 # second worker will get the next port, and so on.
-# default value is 9999,
-# kubernetes.worker.base.port: 9999
+# default value is 9000,
+# kubernetes.worker.base.port: 9000
 
 # transport protocol for the worker. TCP or UDP
 # by default, it is TCP
