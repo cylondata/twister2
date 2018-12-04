@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.Calendar;
@@ -44,10 +45,11 @@ public class JobService {
 
     //create non existing nodes : todo not appropriate, resolve once twister2 support nodes
     //if node is defined without rack and data center, replace them with prefix+jobId
-    if (job.getNode().getDataCenter() == null) {
+
+    if (StringUtils.isEmpty(job.getNode().getDataCenter())) {
       job.getNode().setDataCenter("dc-" + job.getJobId());
     }
-    if (job.getNode().getRack() == null) {
+    if (StringUtils.isEmpty(job.getNode().getRack())) {
       job.getNode().setRack("rk-" + job.getJobId());
     }
     Node node = nodeService.createNode(job.getNode());
