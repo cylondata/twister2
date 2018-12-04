@@ -23,10 +23,9 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.htgjob.Twister2HTGJob;
-import edu.iu.dsc.tws.api.htgjob.Twister2HTGScheduler;
-import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.htgjob.Twister2Client;
+import edu.iu.dsc.tws.api.htgjob.Twister2MetagraphBuilder;
+import edu.iu.dsc.tws.api.htgjob.Twister2MetagraphConnection;
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
@@ -39,7 +38,6 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IFunction;
@@ -56,6 +54,8 @@ public class HTGExample extends TaskWorker {
   private static final Logger LOG = Logger.getLogger(HTGExample.class.getName());
 
   private HTGJobParameters jobParameters;
+
+  private static final long serialVersionUID = -5190777711234234L;
 
   @Override
   public void execute() {
@@ -173,6 +173,7 @@ public class HTGExample extends TaskWorker {
   }
 
   public static void main(String[] args) throws ParseException {
+
     LOG.log(Level.INFO, "HTG Graph Job");
 
     // first load the configurations from command line and config files
@@ -202,27 +203,27 @@ public class HTGExample extends TaskWorker {
     jobConfig.putAll(configurations);
 
     //TODO:Design the metagraph
-    //TODO:Optimize the metagraph creation
-    Twister2HTGJob.Twister2HTGMetaGraph htgMetaGraph = Twister2HTGJob.newBuilder();
-    htgMetaGraph.addSubGraphs(2, 512, 1.0, 2, 1, "subjob1");
-    htgMetaGraph.addSubGraphs(2, 512, 2.0, 2, 1, "subjob2");
-    htgMetaGraph.addRelation("subgraph1", "subgraph2", "broadcast");
-    htgMetaGraph.setHTGName("htg");
-    htgMetaGraph.build();
+    Twister2MetagraphBuilder twister2MetagraphBuilder = Twister2MetagraphBuilder.newBuilder(config);
+    twister2MetagraphBuilder.addSource("subgraph1", jobConfig);
+    Twister2MetagraphConnection twister2MetagraphConnection = twister2MetagraphBuilder.addSink(
+        "subgraph2", jobConfig);
+    twister2MetagraphConnection.broadcast("subgraph1", "broadcast");
+    twister2MetagraphBuilder.setHtgName("htg");
 
-    //TODO:Invoke HTG Scheduler and send the metagraph -> start with FIFO
-    HTGJobAPI.SubGraph subGraph = Twister2HTGScheduler.schedule(htgMetaGraph);
+    //TODO:Invoke HTG Client and send the metagraph -> start with FIFO
+    Twister2Client.execute(twister2MetagraphBuilder.build(), config, HTGExample.class.getName());
 
+    /*Twister2MetaGraph twister2MetaGraph = twister2MetagraphBuilder.build();
+    Twister2MetaGraph.SubGraph subGraph = Twister2HTGClient.execute(twister2MetaGraph);
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName(subGraph.getName());
     jobBuilder.setWorkerClass(HTGExample.class.getName());
     jobBuilder.setConfig(jobConfig);
-    jobBuilder.addComputeResource(
-        subGraph.getCpu(), subGraph.getRamMegaBytes(), subGraph.getInstances());
+    jobBuilder.addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
+        subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances());
 
     // now submit the job
-    Twister2Submitter.submitJob(jobBuilder.build(), config);
-
+    Twister2Submitter.submitJob(jobBuilder.build(), config);*/
   }
 }
 
