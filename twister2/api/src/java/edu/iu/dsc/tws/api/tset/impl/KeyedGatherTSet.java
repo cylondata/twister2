@@ -16,6 +16,8 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
+import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
+import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
@@ -59,6 +61,7 @@ public class KeyedGatherTSet<T, K> extends KeyValueTSet<T, K> {
   public void buildConnection(ComputeConnection connection) {
     DataType keyType = getDataType(getClassK());
     DataType dataType = getDataType(getClassT());
-    connection.keyedGather(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType);
+    connection.keyedGather(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
+        new TaskPartitionFunction<>(partitionFunction), new TaskKeySelectorImpl<>(selector));
   }
 }

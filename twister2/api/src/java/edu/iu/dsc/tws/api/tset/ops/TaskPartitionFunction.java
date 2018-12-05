@@ -18,8 +18,8 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
 public class TaskPartitionFunction<T> implements TaskPartitioner {
-
   private PartitionFunction<T> partitionFunction;
+  private int numDestinations;
 
   public TaskPartitionFunction(PartitionFunction<T> parFn) {
     this.partitionFunction = parFn;
@@ -27,16 +27,17 @@ public class TaskPartitionFunction<T> implements TaskPartitioner {
 
   @Override
   public void prepare(TaskContext context, Set<Integer> sources, Set<Integer> destinations) {
-
+    this.numDestinations = destinations.size();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public int partition(int source, Object data) {
-    return 0;
+    return partitionFunction.partition(source, numDestinations, (T) data);
   }
 
   @Override
   public void commit(int source, int partition) {
-
+    partitionFunction.commit(source, partition);
   }
 }

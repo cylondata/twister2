@@ -35,7 +35,7 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
 
   public KeyedReduceTSet<T, K> keyedReduce(ReduceFunction<T> reduceFn) {
     KeyedReduceTSet<T, K> reduce = new KeyedReduceTSet<>(config, builder, this,
-        reduceFn, partitioner);
+        reduceFn, partitioner, selector);
     children.add(reduce);
     return reduce;
   }
