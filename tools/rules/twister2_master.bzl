@@ -21,4 +21,12 @@ def twister2_master_jersey_files():
         "@org_glassfish_jersey_bundles_repackaged_jersey_guava//jar",
         "@org_glassfish_jersey_inject_jersey_hk2//jar",
         "@javax_annotation_javax_annotation_api//jar",
+        "@com_fasterxml_jackson_core_jackson_databind//jar",
+        "@com_fasterxml_jackson_core_jackson_core//jar",
+        "@org_glassfish_jersey_media_jersey_media_json_jackson//jar",
+        "@org_glassfish_jersey_ext_jersey_entity_filtering//jar",
+        "@com_fasterxml_jackson_jaxrs_jackson_jaxrs_base//jar",
+        "@com_fasterxml_jackson_jaxrs_jackson_jaxrs_json_provider//jar",
+        "@com_fasterxml_jackson_module_jackson_module_jaxb_annotations//jar",
+        "@com_fasterxml_jackson_core_jackson_annotations//jar",
     ]

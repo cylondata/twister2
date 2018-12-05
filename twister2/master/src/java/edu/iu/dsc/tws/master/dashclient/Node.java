@@ -11,76 +11,51 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.dashclient;
 
-public class Node {
-  private float id;
-  private String host;
-  private String os;
-  private String heartbeatTime;
-  private String state;
-  private Cluster clusterObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+public class Node {
+
+  @JsonProperty
+  private String ip;
+
+  @JsonProperty
+  private String rack;
+
+  @JsonProperty
+  private String dataCenter;
 
   // Getter Methods
-
-  public float getId() {
-    return id;
+  public String getDataCenter() {
+    return dataCenter;
   }
 
-  public String getHost() {
-    return host;
+  public String getIp() {
+    return ip;
   }
 
-  public String getOs() {
-    return os;
-  }
-
-  public String getHeartbeatTime() {
-    return heartbeatTime;
-  }
-
-  public String getState() {
-    return state;
-  }
-
-  public Cluster getCluster() {
-    return clusterObject;
+  public String getRack() {
+    return rack;
   }
 
   // Setter Methods
-
-  public void setId(float id) {
-    this.id = id;
+  public void setDataCenter(String dataCenter) {
+    this.dataCenter = dataCenter;
   }
 
-  public void setHost(String host) {
-    this.host = host;
+  public void setIp(String ip) {
+    this.ip = ip;
   }
 
-  public void setOs(String os) {
-    this.os = os;
-  }
-
-  public void setHeartbeatTime(String heartbeatTime) {
-    this.heartbeatTime = heartbeatTime;
-  }
-
-  public void setState(String state) {
-    this.state = state;
-  }
-
-  public void setCluster(Cluster cluster) {
-    this.clusterObject = cluster;
+  public void setRack(String rack) {
+    this.rack = rack;
   }
 
   @Override
   public String toString() {
-    return "Node{"
-        + "id=" + id
-        + ", host='" + host + '\''
-        + ", os='" + os + '\''
-        + ", heartbeatTime='" + heartbeatTime + '\''
-        + ", state='" + state + '\''
-        + ", clusterObject=" + clusterObject
+    return "\"node\": {"
+        + "\"ip\": " + "\"" + ip + "\", "
+        + "\"rack\": " + "\"" + rack + "\", "
+        + "\"dataCenter\": " + "\"" + dataCenter
         + '}';
   }
 }
