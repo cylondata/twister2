@@ -1,49 +1,64 @@
 package(default_visibility = ["//visibility:public"])
 
-proto_library(
+#JOB STATE
+native.proto_library(
     name = "proto_job_state",
-    src = "job_state.proto",
-    gen_cc = 0,
-    gen_java = 1,
-    gen_py = 0,
-    includes = ["twister2/proto"],
+    srcs = ["job_state.proto"],
+    proto_source_root = "twister2/proto",
 )
 
-proto_library(
+native.java_proto_library(
+    name = "proto_job_state_java",
+    deps = [":proto_job_state"],
+)
+
+#JOB
+native.proto_library(
     name = "proto_job",
-    src = "job.proto",
-    gen_cc = 0,
-    gen_java = 1,
-    gen_py = 0,
-    includes = ["twister2/proto"],
+    srcs = ["job.proto"],
+    proto_source_root = "twister2/proto",
 )
 
-proto_library(
+native.java_proto_library(
+    name = "proto_job_java",
+    deps = [":proto_job"],
+)
+
+#TASK SCHEDULE PLAN
+native.proto_library(
     name = "proto_taskscheduleplan",
-    src = "taskscheduleplan.proto",
-    gen_cc = 0,
-    gen_java = 1,
-    gen_py = 0,
-    includes = ["twister2/proto"],
+    srcs = ["taskscheduleplan.proto"],
+    proto_source_root = "twister2/proto",
 )
 
-proto_library(
+native.java_proto_library(
+    name = "proto_taskscheduleplan_java",
+    deps = [":proto_taskscheduleplan"],
+)
+
+#JOB MASTER
+native.proto_library(
     name = "proto_jobmaster",
-    src = "jobmaster.proto",
-    gen_cc = 0,
-    gen_java = 1,
-    gen_py = 0,
-    includes = ["twister2/proto"],
-    deps = ["proto_job"],
+    srcs = ["jobmaster.proto"],
+    deps = [":proto_job"],
+    proto_source_root = "twister2/proto",
 )
 
-proto_library(
+native.java_proto_library(
+    name = "proto_jobmaster_java",
+    deps = [":proto_jobmaster"],
+)
+
+#CHECKPOINT
+native.proto_library(
     name = "proto_checkpoint",
-    src = "checkpoint.proto",
-    gen_cc = 0,
-    gen_java = 1,
-    gen_py = 0,
-    includes = ["twister2/proto"],
+    srcs = ["checkpoint.proto"],
+    proto_source_root = "twister2/proto",
+)
+
+native.java_proto_library(
+    name = "proto_checkpoint_java",
+    deps = [":proto_checkpoint"],
 )
 
 filegroup(
