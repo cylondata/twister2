@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.op.Communicator;
 
 /**
  * Returns the destination id based on the key provided. This provides a random assignment based
@@ -27,18 +27,9 @@ public class SimpleKeyBasedSelector implements DestinationSelector {
   private List<Integer> sourceList = new ArrayList<>();
   private List<Integer> destinationList = new ArrayList<>();
   private int numDestinations = 0;
-  private MessageType keyType = MessageType.INTEGER;
 
   @Override
-  public void prepare(Set<Integer> sources, Set<Integer> destinations) {
-    sourceList.addAll(sources);
-    destinationList.addAll(destinations);
-    numDestinations = destinationList.size();
-  }
-
-  @Override
-  public void prepare(MessageType kType, Set<Integer> sources, Set<Integer> destinations) {
-    this.keyType = kType;
+  public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations) {
     sourceList.addAll(sources);
     destinationList.addAll(destinations);
     numDestinations = destinationList.size();

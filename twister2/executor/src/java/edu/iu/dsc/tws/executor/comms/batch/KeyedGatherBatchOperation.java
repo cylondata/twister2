@@ -17,30 +17,46 @@ import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.batch.BKeyedGather;
-import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
+import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
 public class KeyedGatherBatchOperation extends AbstractParallelOperation {
   protected BKeyedGather op;
 
+  private TaskKeySelector selector;
+
   public KeyedGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                    Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                                    DataType dataType, DataType keyType,
-                                   String edgeName) {
+                                   String edgeName, TaskPartitioner partitioner,
+                                   TaskKeySelector selec) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
+    this.selector = selec;
+
+    DestinationSelector destSelector = null;
+    if (selec != null) {
+      destSelector = new DefaultDestinationSelector(partitioner);
+    } else {
+      destSelector = new HashingSelector();
+    }
+
     op = new BKeyedGather(channel, taskPlan, sources, dests,
         Utils.dataTypeToMessageType(keyType),
         Utils.dataTypeToMessageType(dataType), new GatherRecvrImpl(),
-        new LoadBalanceSelector(), false);
+        destSelector, false);
 
     communicationEdge = e.generate(edgeName);
   }
@@ -48,7 +64,8 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
   @Override
   public boolean send(int source, IMessage message, int flags) {
     TaskMessage taskMessage = (TaskMessage) message;
-    return op.gather(source, taskMessage.getKey(), taskMessage.getContent(), flags);
+    Object key = extractKey(taskMessage, selector);
+    return op.gather(source, key, taskMessage.getContent(), flags);
   }
 
   @Override

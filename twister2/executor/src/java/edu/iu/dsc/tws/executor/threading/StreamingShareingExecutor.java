@@ -30,6 +30,13 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
 
   public boolean runExecution() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
+
+    if (nodes.size() == 0) {
+      LOG.log(Level.WARNING,
+          String.format("[%d] We have zero nodes assigned for execution", workerId));
+      return false;
+    }
+
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
 

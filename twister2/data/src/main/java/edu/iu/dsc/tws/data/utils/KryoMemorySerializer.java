@@ -43,7 +43,7 @@ public class KryoMemorySerializer {
   }
 
   public KryoMemorySerializer() {
-    kryo = new Kryo();
+    kryo = getKryo();
     kryo.setReferences(false);
     kryoOut = new Output(2000, 2000000000);
     kryoIn = new Input(1);
@@ -66,5 +66,14 @@ public class KryoMemorySerializer {
   public Object deserialize(InputStream inputStream) {
     Input input = new Input(inputStream);
     return kryo.readClassAndObject(input);
+  }
+
+  private Kryo getKryo() {
+    Kryo k = new Kryo();
+    k.setRegistrationRequired(false);
+
+    k.setReferences(false);
+    k.register(byte[].class);
+    return k;
   }
 }
