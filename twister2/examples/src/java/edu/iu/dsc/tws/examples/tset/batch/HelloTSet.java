@@ -65,6 +65,10 @@ public class HelloTSet extends TaskWorker implements Serializable {
       }
 
       @Override
+      public void commit(int source, int partition) {
+      }
+
+      @Override
       public void prepare(TSetContext context) {
       }
     });

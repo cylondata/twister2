@@ -25,4 +25,11 @@ public interface PartitionFunction<T> extends TFunction {
    * @return The partition index.
    */
   int partition(int sourceIndex, int numPartitions, T val);
+
+  /**
+   * Commit the partition
+   * @param source the source
+   * @param partition partition
+   */
+  void commit(int source, int partition);
 }
