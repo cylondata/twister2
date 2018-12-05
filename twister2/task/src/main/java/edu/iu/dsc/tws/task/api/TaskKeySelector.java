@@ -13,6 +13,14 @@ package edu.iu.dsc.tws.task.api;
 
 import java.io.Serializable;
 
+/**
+ * Given a object, select the key to be used
+ */
 public interface TaskKeySelector extends INode, Serializable {
+  /**
+   * Given a object select the key to be used
+   * @param data data
+   * @return key object
+   */
   Object select(Object data);
 }

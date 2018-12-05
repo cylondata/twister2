@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
@@ -26,11 +27,14 @@ import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.op.stream.SKeyedPartition;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
 public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(ReduceStreamingOperation.class.getName());
@@ -41,12 +45,16 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
 
   private MessageType keyType;
 
+  private TaskKeySelector selector;
+
   public KeyedPartitionStreamOperation(Config config, Communicator network, TaskPlan tPlan,
                                        Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                       DataType dType, DataType kType, String edgeName) {
+                                       DataType dType, DataType kType, String edgeName,
+                                       TaskPartitioner partitioner, TaskKeySelector selec) {
     super(config, network, tPlan);
-    dataType = Utils.dataTypeToMessageType(dType);
-    keyType = Utils.dataTypeToMessageType(kType);
+    this.dataType = Utils.dataTypeToMessageType(dType);
+    this.keyType = Utils.dataTypeToMessageType(kType);
+    this.selector = selec;
 
     if (sources.size() == 0) {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
@@ -56,15 +64,23 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
     }
 
+    DestinationSelector destSelector = null;
+    if (selec != null) {
+      destSelector = new DefaultDestinationSelector(partitioner);
+    } else {
+      destSelector = new HashingSelector();
+    }
+
     this.edgeGenerator = e;
     op = new SKeyedPartition(channel, taskPlan, sources, dests,
-        dataType, keyType, new PartitionRecvrImpl(), new HashingSelector());
+        dataType, keyType, new PartitionRecvrImpl(), destSelector);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
     TaskMessage taskMessage = (TaskMessage) message;
-    return op.partition(source, taskMessage.getKey(), taskMessage.getContent(), flags);
+    Object key = extractKey(taskMessage, selector);
+    return op.partition(source, key, taskMessage.getContent(), flags);
   }
 
   @Override

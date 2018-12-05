@@ -60,7 +60,7 @@ public class HelloTSet extends TaskWorker implements Serializable {
 
     TSet<int[]> partitioned = source.partition(new PartitionFunction<int[]>() {
       @Override
-      public int partition(int source, int[] val) {
+      public int partition(int sourceIndex, int numPartitions, int[] val) {
         return 0;
       }
 

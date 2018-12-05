@@ -115,13 +115,15 @@ public class ParallelOperationFactory {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
           return new KeyedReduceBatchOperation(config, channel, taskPlan, sources,
               dests, edgeGenerator, edge.getDataType(), edge.getKeyType(),
-              edge.getName(), edge.getFunction());
+              edge.getName(), edge.getFunction(), edge.getPartitioner(), edge.getSelector());
         } else if (OperationNames.KEYED_GATHER.equals(edge.getOperation())) {
           return new KeyedGatherBatchOperation(config, channel, taskPlan, sources,
-              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName());
+              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName(),
+              edge.getPartitioner(), edge.getSelector());
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
           return new KeyedPartitionBatchOperation(config, channel, taskPlan, sources,
-              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName(), false);
+              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName(),
+              false, edge.getPartitioner(), edge.getSelector());
         }
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {
@@ -165,14 +167,15 @@ public class ParallelOperationFactory {
           return new KeyedReduceStreamingOperation(
               config, channel, taskPlan, sources, dests,
               edgeGenerator, edge.getDataType(), edge.getKeyType(),
-              edge.getName(), edge.getFunction());
+              edge.getName(), edge.getFunction(), edge.getPartitioner(), edge.getSelector());
         } else if (OperationNames.KEYED_GATHER.equals(edge.getOperation())) {
           return new KeyedGatherStreamingOperation(config, channel, taskPlan, sources,
-              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName());
+              dests, edgeGenerator, edge.getDataType(), edge.getKeyType(), edge.getName(),
+              edge.getPartitioner(), edge.getSelector());
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
           return new KeyedPartitionStreamOperation(config, channel, taskPlan, sources, dests,
               edgeGenerator, edge.getDataType(), edge.getKeyType(),
-              edge.getName());
+              edge.getName(), edge.getPartitioner(), edge.getSelector());
         }
       }
     }

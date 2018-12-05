@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.core;
+package edu.iu.dsc.tws.executor.comms;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +19,10 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskKeySelector;
+import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public abstract class AbstractParallelOperation implements IParallelOperation {
   protected Config config;
@@ -52,5 +55,17 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
   @Override
   public boolean progress() {
     return true;
+  }
+
+  public static Object extractKey(TaskMessage taskMessage, TaskKeySelector selector) {
+    Object key = null;
+    if (taskMessage.getKey() == null && selector != null) {
+      key = selector.select(taskMessage.getContent());
+    } else if (taskMessage.getKey() != null) {
+      key = taskMessage.getKey();
+    } else if (taskMessage.getKey() == null && selector == null) {
+      throw new RuntimeException("Use should specify the key or use a selector");
+    }
+    return key;
   }
 }

@@ -9,20 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.ops;
+package edu.iu.dsc.tws.executor.comms;
 
 import java.util.Set;
 
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
-public class DestinationSelectorImpl<T> implements DestinationSelector {
+public class DefaultDestinationSelector implements DestinationSelector {
+  private TaskPartitioner partitioner;
 
-  private PartitionFunction<T> partitionFunction;
-
-  public DestinationSelectorImpl(PartitionFunction<T> parFn) {
-    this.partitionFunction = parFn;
+  public DefaultDestinationSelector(TaskPartitioner partitioner) {
+    this.partitioner = partitioner;
   }
 
   @Override
@@ -32,11 +31,16 @@ public class DestinationSelectorImpl<T> implements DestinationSelector {
 
   @Override
   public int next(int source, Object data) {
-    return partitionFunction.partition(source, (T) data);
+    return 0;
   }
 
   @Override
   public void commit(int source, int next) {
 
+  }
+
+  @Override
+  public int next(int source, Object key, Object data) {
+    return 0;
   }
 }
