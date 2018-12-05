@@ -34,6 +34,11 @@ twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWork
 # twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
 # twister2.job.worker.class: "edu.iu.dsc.tws.examples.batch.comms.batch.BReduceExample"
 
+# by default each worker has one port
+# additional ports can be requested for all workers in a job
+# please provide the requested port names as a list
+twister2.worker.additional.ports: ["port1", "port2", "port3"]
+
 ########################################################################
 # Kubernetes related settings
 ########################################################################

@@ -24,6 +24,7 @@
 package edu.iu.dsc.tws.common.resource;
 
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
@@ -38,14 +39,14 @@ public final class WorkerInfoUtils {
   public static WorkerInfo createWorkerInfo(int workerID,
                                             String workerIP,
                                             int workerPort) {
-    return createWorkerInfo(workerID, workerIP, workerPort, null, null);
+    return createWorkerInfo(workerID, workerIP, workerPort, null, null, null);
   }
 
   public static WorkerInfo createWorkerInfo(int workerID,
                                             String workerIP,
                                             int workerPort,
                                             NodeInfo nodeInfo) {
-    return createWorkerInfo(workerID, workerIP, workerPort, nodeInfo, null);
+    return createWorkerInfo(workerID, workerIP, workerPort, nodeInfo, null, null);
   }
 
   public static WorkerInfo createWorkerInfo(int workerID,
@@ -53,6 +54,15 @@ public final class WorkerInfoUtils {
                                             int workerPort,
                                             NodeInfo nodeInfo,
                                             JobAPI.ComputeResource computeResource) {
+    return createWorkerInfo(workerID, workerIP, workerPort, nodeInfo, computeResource, null);
+  }
+
+  public static WorkerInfo createWorkerInfo(int workerID,
+                                            String workerIP,
+                                            int workerPort,
+                                            NodeInfo nodeInfo,
+                                            JobAPI.ComputeResource computeResource,
+                                            Map<String, Integer> additionalPorts) {
 
     WorkerInfo.Builder builder = WorkerInfo.newBuilder();
     builder.setWorkerID(workerID);
@@ -67,6 +77,10 @@ public final class WorkerInfoUtils {
       builder.setComputeResource(computeResource);
     }
 
+    if (additionalPorts != null) {
+      builder.putAllAdditionalPort(additionalPorts);
+    }
+
     return builder.build();
   }
 
@@ -76,7 +90,8 @@ public final class WorkerInfoUtils {
         workerInfo.getWorkerIP(),
         workerInfo.getPort(),
         workerInfo.getNodeInfo(),
-        workerInfo.getComputeResource());
+        workerInfo.getComputeResource(),
+        workerInfo.getAdditionalPortMap());
   }
 
   /**
