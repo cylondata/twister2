@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -108,9 +109,13 @@ public final class K8sWorkerStarter {
     // get computeResource for this worker
     computeResource = K8sWorkerUtils.getComputeResource(job, podName);
 
-    // set workerInfo
+    // generate additional ports if requested
+    Map<String, Integer> additionalPorts =
+        K8sWorkerUtils.generateAdditionalPorts(config, workerPort);
+
+    // construct WorkerInfo
     workerInfo = WorkerInfoUtils.createWorkerInfo(
-        workerID, localHost.getHostAddress(), workerPort, nodeInfo, computeResource);
+        workerID, podIP, workerPort, nodeInfo, computeResource, additionalPorts);
 
     // initialize persistent volume
     K8sPersistentVolume pv = null;
