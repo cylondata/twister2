@@ -9,38 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master.dashclient;
+package edu.iu.dsc.tws.master.dashclient.messages;
 
-public class Cluster {
-  private float id;
-  private String name;
+public class JobStateChange {
+  private String state;
 
+  public JobStateChange() { }
 
-  // Getter Methods
-
-  public float getId() {
-    return id;
+  public JobStateChange(String state) {
+    this.state = state;
   }
 
-  public String getName() {
-    return name;
+  public String getState() {
+    return state;
   }
 
-  // Setter Methods
-
-  public void setId(float id) {
-    this.id = id;
+  public void setState(String state) {
+    this.state = state;
   }
 
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  @Override
-  public String toString() {
-    return "Cluster{"
-        + "id=" + id
-        + ", name='" + name + '\''
-        + '}';
-  }
 }

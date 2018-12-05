@@ -11,90 +11,162 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.dashclient;
 
+import java.util.logging.Logger;
+
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import edu.iu.dsc.tws.master.dashclient.messages.JobStateChange;
+import edu.iu.dsc.tws.master.dashclient.messages.RegisterJob;
+import edu.iu.dsc.tws.master.dashclient.messages.RegisterWorker;
+import edu.iu.dsc.tws.master.dashclient.messages.WorkerStateChange;
+import edu.iu.dsc.tws.master.dashclient.models.JobState;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
+
 public class DashboardClient {
+  private static final Logger LOG = Logger.getLogger(DashboardClient.class.getName());
 
-  private int n1 = 0;
+  private String dashHost;
+  private String jobID;
 
-  public DashboardClient() {
+  public DashboardClient(String dashHost, String jobID) {
+    this.dashHost = dashHost;
+    this.jobID = jobID;
   }
 
-  public static void main(String[] args) {
-    testCreateWorker();
-//    testWorkerStateChange();
+  /**
+   * send registerJob message to Dashboard
+   * when a job master starts, it sends this message to Dashboard
+   * @param job
+   * @param jobMasterNodeInfo
+   * @return
+   */
+  public boolean registerJob(JobAPI.Job job, JobMasterAPI.NodeInfo jobMasterNodeInfo) {
+
+    RegisterJob registerJob = new RegisterJob(jobID, job, jobMasterNodeInfo);
+    String path = "jobs/";
+
+    Response response = ClientBuilder.newClient()
+        .target(dashHost)
+        .path(path)
+        .request(MediaType.APPLICATION_JSON)
+        .post(Entity.json(registerJob));
+
+    if (response.getStatus() == 200) {
+      LOG.info("Sending RegisterJob message to Dashboard is successful");
+      return true;
+    } else {
+      LOG.severe("Sending RegisterJob message to Dashboard is unsuccessful. Response: "
+          + response.toString());
+      return false;
+    }
   }
 
-  public static void testWorkerStateChange() {
-    WorkerStateChange workerStateChange = new WorkerStateChange();
-    workerStateChange.setState("COMPLETED");
-    int workerID = 1;
-    String jobID = "job-0";
+  /**
+   * send JobStateChange message to Dashboard
+   * @param state
+   * @return
+   */
+  public boolean jobStateChange(JobState state) {
+    JobStateChange jobStateChange = new JobStateChange(state.name());
+
+    String path = "jobs/" + jobID + "/state/";
+
+    Response response = ClientBuilder.newClient()
+        .target(dashHost)
+        .path(path)
+        .request(MediaType.APPLICATION_JSON)
+        .post(Entity.json(jobStateChange));
+
+    if (response.getStatus() == 200) {
+      LOG.info("Sending JobStateChange message to Dashboard is successful");
+      return true;
+    } else {
+      LOG.severe("Sending JobStateChange message to Dashboard is unsuccessful. Response: "
+          + response.toString());
+      return false;
+    }
+  }
+
+  /**
+   * send RegisterWorker message to Dashboard
+   */
+  public boolean registerWorker(JobMasterAPI.WorkerInfo workerInfo) {
+
+    RegisterWorker registerWorker = new RegisterWorker(jobID, workerInfo);
+    String path = "workers/";
+
+    Response response = ClientBuilder.newClient()
+        .target(dashHost)
+        .path(path)
+        .request(MediaType.APPLICATION_JSON)
+        .post(Entity.json(registerWorker));
+
+    if (response.getStatus() == 200) {
+      LOG.info("Sending RegisterWorker message to Dashboard is successful");
+      return true;
+    } else {
+      LOG.severe("Sending RegisterWorker message to Dashboard is unsuccessful. Response: "
+          + response.toString());
+      return false;
+    }
+  }
+
+  /**
+   * send WorkerStateChange message to Dashboard
+   * @param workerID
+   * @param state
+   * @return
+   */
+  public boolean workerHeartbeat(int workerID, JobMasterAPI.WorkerState state) {
+    WorkerStateChange workerStateChange = new WorkerStateChange(state.name());
 
     String path = "workers/" + jobID + "/" + workerID + "/state/";
 
     Response response = ClientBuilder.newClient()
-        .target("http://localhost:8080")
+        .target(dashHost)
         .path(path)
         .request(MediaType.APPLICATION_JSON)
         .post(Entity.json(workerStateChange));
 
     if (response.getStatus() == 200) {
-      System.out.println("WorkerStateChange is successfull. :))) ");
+      LOG.info("Sending WorkerStateChange message to Dashboard is successful");
+      return true;
     } else {
-      System.out.println("WorkerStateChange failed. :(((( ");
-      System.out.println(response.toString());
+      LOG.severe("Sending WorkerStateChange message to Dashboard is unsuccessful. Response: "
+          + response.toString());
+      return false;
     }
-
   }
 
-  public static void testCreateWorker() {
+  /**
+   * send WorkerStateChange message to Dashboard
+   * @param workerID
+   * @param state
+   * @return
+   */
+  public boolean workerStateChange(int workerID, JobMasterAPI.WorkerState state) {
+    WorkerStateChange workerStateChange = new WorkerStateChange(state.name());
 
-    Node workerNode = new Node();
-    workerNode.setIp("111.111.111");
-    workerNode.setRack("rack-0");
-    workerNode.setDataCenter("dc-0");
-
-    RegisterWorker registerWorker = new RegisterWorker();
-    registerWorker.setWorkerId(2);
-    registerWorker.setWorkerIP("222.222.222");
-    registerWorker.setJobId("job-0");
-    registerWorker.setWorkerPort(1234);
-    registerWorker.setComputeResourceIndex(0);
-    registerWorker.setNode(workerNode);
-
-    System.out.println("json message to send: \n" + Entity.json(registerWorker).toString());
-
-    Entity<RegisterWorker> jsonEntity = Entity.json(registerWorker);
+    String path = "workers/" + jobID + "/" + workerID + "/state/";
 
     Response response = ClientBuilder.newClient()
-        .target("http://localhost:8080")
-        .path("workers/")
+        .target(dashHost)
+        .path(path)
         .request(MediaType.APPLICATION_JSON)
-        .post(Entity.json(registerWorker));
+        .post(Entity.json(workerStateChange));
 
     if (response.getStatus() == 200) {
-      System.out.println("RegisterWorker is successfull. :))) ");
+      LOG.info("Sending WorkerStateChange message to Dashboard is successful");
+      return true;
     } else {
-      System.out.println("RegisterWorker failed. :(((( ");
-      System.out.println(response.toString());
+      LOG.severe("Sending WorkerStateChange message to Dashboard is unsuccessful. Response: "
+          + response.toString());
+      return false;
     }
-  }
-
-
-
-  public static void test1(String[] args) {
-    Node node = ClientBuilder.newClient()
-        .target("http://localhost:8080")
-        .path("nodes")
-        .request(MediaType.APPLICATION_JSON_TYPE)
-        .get(Node.class);
-
-    System.out.println("Response received: ");
-    System.out.println(node);
   }
 
 }

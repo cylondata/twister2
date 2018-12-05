@@ -9,28 +9,44 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master.dashclient;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.master.dashclient.messages;
+
+import edu.iu.dsc.tws.master.dashclient.models.Node;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class RegisterWorker {
 
-//  @JsonProperty
-  private int workerId;
-
-//  @JsonProperty
-  private String workerIP;
-
-//  @JsonProperty
-  private int workerPort;
-
-//  @JsonProperty
   private String jobId;
-
-//  @JsonProperty
+  private int workerId;
+  private String workerIP;
+  private int workerPort;
   private int computeResourceIndex;
-
-//  @JsonProperty
+  private String state;
   private Node node;
 
+  public RegisterWorker() { }
+
+  public RegisterWorker(String jobId, JobMasterAPI.WorkerInfo workerInfo) {
+    this.jobId = jobId;
+    this.workerId = workerInfo.getWorkerID();
+    this.workerIP = workerInfo.getWorkerIP();
+    this.workerPort = workerInfo.getPort();
+    this.computeResourceIndex = workerInfo.getComputeResource().getIndex();
+    this.node = new Node(workerInfo.getNodeInfo());
+    this.state = JobMasterAPI.WorkerState.STARTING.name();
+  }
 
   // Getter Methods
 
@@ -58,6 +74,10 @@ public class RegisterWorker {
     return workerPort;
   }
 
+  public String getState() {
+    return state;
+  }
+
   // Setter Methods
 
   public void setComputeResourceIndex(int computeResourceIndex) {
@@ -82,6 +102,10 @@ public class RegisterWorker {
 
   public void setWorkerPort(int workerPort) {
     this.workerPort = workerPort;
+  }
+
+  public void setState(String state) {
+    this.state = state;
   }
 
   @Override

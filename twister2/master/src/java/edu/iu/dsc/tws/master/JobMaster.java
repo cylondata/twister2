@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.master;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -114,6 +115,12 @@ public class JobMaster {
   private JobMasterAPI.NodeInfo nodeInfo;
 
   /**
+   * a UUID is generated for each job
+   * it is primarily used when communicating with Dashboard
+   */
+  private String jobID;
+
+  /**
    * BarrierMonitor object
    */
   private BarrierMonitor barrierMonitor;
@@ -130,6 +137,7 @@ public class JobMaster {
     this.nodeInfo = nodeInfo;
     this.masterPort = JobMasterContext.jobMasterPort(config);
     this.numberOfWorkers = job.getNumberOfWorkers();
+    this.jobID = UUID.randomUUID().toString();
   }
 
   /**
