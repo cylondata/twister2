@@ -41,7 +41,7 @@ public class BPartitionBasedKeyedReduce {
         new PartitionBasedReducePartialReceiver(reduceFunction),
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
 
   public boolean partition(int source, Object key, Object message, int flags) {
