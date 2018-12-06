@@ -22,6 +22,8 @@ import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
+import edu.iu.dsc.tws.master.dashclient.DashboardClient;
+import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
@@ -121,6 +123,23 @@ public class JobMaster {
   private String jobID;
 
   /**
+   * host address of Dashboard server
+   * if it is set, job master will report to Dashboard
+   * otherwise, it will ignore Dashboard
+   */
+  private String dashboardHost;
+
+  /**
+   * the client that will handle Dashboard messaging
+   */
+  private DashboardClient dashClient;
+
+  /**
+   * shows whether Job master will connect to Dashboard server
+   */
+  private boolean dashboardUsed;
+
+  /**
    * BarrierMonitor object
    */
   private BarrierMonitor barrierMonitor;
@@ -137,7 +156,16 @@ public class JobMaster {
     this.nodeInfo = nodeInfo;
     this.masterPort = JobMasterContext.jobMasterPort(config);
     this.numberOfWorkers = job.getNumberOfWorkers();
+
     this.jobID = UUID.randomUUID().toString();
+    this.dashboardHost = JobMasterContext.dashboardHost(config);
+    if (dashboardHost == null) {
+      LOG.warning("Dashboard host address is null. Not connecting to Dashboard");
+      this.dashboardUsed = false;
+    } else {
+      this.dashClient = new DashboardClient(dashboardHost, jobID);
+      this.dashboardUsed = true;
+    }
   }
 
   /**
@@ -151,8 +179,9 @@ public class JobMaster {
     rrServer =
         new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
-    workerMonitor = new WorkerMonitor(this, rrServer, numberOfWorkers,
+    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, numberOfWorkers,
         JobMasterContext.jobMasterAssignsWorkerIDs(config));
+
     barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
@@ -178,6 +207,11 @@ public class JobMaster {
 
     rrServer.start();
     looper.loop();
+
+    // if Dashboard is used, register this job with that
+    if (dashboardUsed) {
+      dashClient.registerJob(job, nodeInfo);
+    }
   }
 
   /**
@@ -224,9 +258,25 @@ public class JobMaster {
   }
 
   /**
+   * this method is called when all workers became RUNNING
+   * we let the dashboard know that the job STARTED
+   */
+  public void allWorkersBecameRunning() {
+    // if Dashboard is used, tell it that the job has STARTED
+    if (dashboardUsed) {
+      dashClient.jobStateChange(JobState.STARTED);
+    }
+  }
+
+  /**
    * this method is executed when the worker completed message received from all workers
    */
   public void allWorkersCompleted() {
+
+    // if Dashboard is used, tell it that the job has completed
+    if (dashboardUsed) {
+      dashClient.jobStateChange(JobState.JOB_COMPLETED);
+    }
 
     LOG.info("All workers have completed. JobMaster is stopping.");
     workersCompleted = true;

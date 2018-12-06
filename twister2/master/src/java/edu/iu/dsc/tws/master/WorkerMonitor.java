@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
+import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
@@ -31,6 +32,7 @@ public class WorkerMonitor implements MessageHandler {
 
   private JobMaster jobMaster;
   private RRServer rrServer;
+  private DashboardClient dashClient;
 
   private boolean jobMasterAssignsWorkerIDs;
   private int numberOfWorkers;
@@ -38,10 +40,12 @@ public class WorkerMonitor implements MessageHandler {
   private HashMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
 
-  public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, int numWorkers,
-                       boolean jobMasterAssignsWorkerIDs) {
+  public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, DashboardClient dashClient,
+                       int numWorkers, boolean jobMasterAssignsWorkerIDs) {
     this.jobMaster = jobMaster;
     this.rrServer = rrServer;
+    this.dashClient = dashClient;
+
     this.numberOfWorkers = numWorkers;
     this.jobMasterAssignsWorkerIDs = jobMasterAssignsWorkerIDs;
 
@@ -101,7 +105,7 @@ public class WorkerMonitor implements MessageHandler {
       }
 
       WorkerWithState worker = new WorkerWithState(workerInfo);
-      worker.setWorkerState(JobMasterAPI.WorkerState.STARTING);
+      worker.addWorkerState(JobMasterAPI.WorkerState.STARTING);
       if (workers.containsKey(worker.getWorkerID())) {
         LOG.severe("Second worker STARTING message received for workerID: " + worker.getWorkerID()
             + "\nIgnoring this worker STARTING message. "
@@ -112,6 +116,7 @@ public class WorkerMonitor implements MessageHandler {
       }
       sendWorkerStateChangeResponse(id, worker.getWorkerID(), message.getNewState());
 
+      // if all workers registered, inform all workers
       if (workers.size() == numberOfWorkers) {
         sendListWorkersResponseToWaitList();
       }
@@ -129,9 +134,21 @@ public class WorkerMonitor implements MessageHandler {
           message.getNewState());
       return;
 
+    } else if (message.getNewState() == JobMasterAPI.WorkerState.RUNNING) {
+      workers.get(message.getWorkerID()).addWorkerState(message.getNewState());
+      LOG.info("WorkerStateChange RUNNING message received: \n" + message);
+
+      // send the response message
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
+
+      // if all workers have become RUNNING, send job STARTED message
+      if (haveAllWorkersBecomeRunning()) {
+        jobMaster.allWorkersBecameRunning();
+      }
+
     } else if (message.getNewState() == JobMasterAPI.WorkerState.COMPLETED) {
 
-      workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
+      workers.get(message.getWorkerID()).addWorkerState(message.getNewState());
       LOG.info("WorkerStateChange COMPLETED message received: \n" + message);
 
       // send the response message
@@ -146,13 +163,6 @@ public class WorkerMonitor implements MessageHandler {
 
       return;
 
-    } else if (message.getNewState() == JobMasterAPI.WorkerState.RUNNING) {
-      workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
-      LOG.info("WorkerStateChange RUNNING message received: \n" + message);
-
-      // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
-
     } else {
       LOG.warning("Unrecognized WorkerStateChange message received. Ignoring and sending reply: \n"
           + message);
@@ -161,13 +171,35 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
+  /**
+   * worker RUNNING message received from all workers
+   * if some workers may have already completed, that does not matter
+   * the important thing is whether they have became RUNNING in the past
+   */
+  private boolean haveAllWorkersBecomeRunning() {
+    if (numberOfWorkers != workers.size()) {
+      return false;
+    }
+
+    for (WorkerWithState worker: workers.values()) {
+      if (!worker.hasWorkerBecomeRunning()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * worker COMPLETED message received from all workers
+   */
   private boolean haveAllWorkersCompleted() {
     if (numberOfWorkers != workers.size()) {
       return false;
     }
 
     for (WorkerWithState worker: workers.values()) {
-      if (worker.getWorkerState() != JobMasterAPI.WorkerState.COMPLETED) {
+      if (!worker.hasWorkerCompleted()) {
         return false;
       }
     }

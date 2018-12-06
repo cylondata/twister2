@@ -24,5 +24,5 @@
 package edu.iu.dsc.tws.master.dashclient.models;
 
 public enum JobState {
-  STARTING, STARTED, COMPLETED, FAILED
+  STARTING, STARTED, JOB_COMPLETED, FAILED
 }

@@ -56,10 +56,10 @@ public class DashboardClient {
         .post(Entity.json(registerJob));
 
     if (response.getStatus() == 200) {
-      LOG.info("Sending RegisterJob message to Dashboard is successful");
+      LOG.info("Registering JobMaster with Dashboard is successful");
       return true;
     } else {
-      LOG.severe("Sending RegisterJob message to Dashboard is unsuccessful. Response: "
+      LOG.severe("Registering JobMaster with Dashboard is unsuccessful. Response: "
           + response.toString());
       return false;
     }
@@ -82,10 +82,10 @@ public class DashboardClient {
         .post(Entity.json(jobStateChange));
 
     if (response.getStatus() == 200) {
-      LOG.info("Sending JobStateChange message to Dashboard is successful");
+      LOG.info("Job " + state.name() + " message sent to Dashboard successfully.");
       return true;
     } else {
-      LOG.severe("Sending JobStateChange message to Dashboard is unsuccessful. Response: "
+      LOG.severe("Job " + state.name() + " message could not be sent to Dashboard. Response: "
           + response.toString());
       return false;
     }
