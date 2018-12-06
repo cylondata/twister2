@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 public class Pinger implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(Pinger.class.getName());
 
-  private JobMasterAPI.WorkerInfo thisWorker;
+  private JobMasterClient jmClient;
   private RRClient rrClient;
   private long interval;
 
@@ -33,8 +33,8 @@ public class Pinger implements MessageHandler {
 
   private RequestID requestID = null;
 
-  public Pinger(JobMasterAPI.WorkerInfo thisWorker, RRClient rrClient, long interval) {
-    this.thisWorker = thisWorker;
+  public Pinger(JobMasterClient jmClient, RRClient rrClient, long interval) {
+    this.jmClient = jmClient;
     this.rrClient = rrClient;
     this.interval = interval;
   }
@@ -54,7 +54,7 @@ public class Pinger implements MessageHandler {
     lastPingTime = System.currentTimeMillis();
 
     JobMasterAPI.Ping ping = JobMasterAPI.Ping.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerID(jmClient.getWorkerInfo().getWorkerID())
         .setPingMessage("Ping Message From the Worker to the Job Master")
         .setMessageType(JobMasterAPI.Ping.MessageType.WORKER_TO_MASTER)
         .build();

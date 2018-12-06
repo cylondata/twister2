@@ -185,6 +185,12 @@ public class JobMaster {
     barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
+
+    JobMasterAPI.RegisterWorker.Builder registerWorkerBuilder =
+        JobMasterAPI.RegisterWorker.newBuilder();
+    JobMasterAPI.RegisterWorkerResponse.Builder registerWorkerResponseBuilder
+        = JobMasterAPI.RegisterWorkerResponse.newBuilder();
+
     JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
         JobMasterAPI.WorkerStateChange.newBuilder();
     JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
@@ -198,6 +204,8 @@ public class JobMaster {
         JobMasterAPI.BarrierResponse.newBuilder();
 
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
+    rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
+    rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
     rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);

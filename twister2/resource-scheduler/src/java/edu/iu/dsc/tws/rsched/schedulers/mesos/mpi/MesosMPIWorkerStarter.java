@@ -121,8 +121,8 @@ public final class MesosMPIWorkerStarter {
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP().toString());
     jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP);
     jobMasterClient.startThreaded();
-    // we need to make sure that the worker starting message went through
-    jobMasterClient.sendWorkerStartingMessage();
+    // No need for sending workerStarting message anymore
+    // that is called in startThreaded method
   }
 
   public static void startWorker(IWorkerController workerController,

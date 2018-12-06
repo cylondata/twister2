@@ -100,9 +100,9 @@ public final class JobMasterClientExample {
       return;
     }
 
-    IWorkerController workerController = client.getJMWorkerController();
+//    client.registerWorker();
 
-    client.sendWorkerStartingMessage();
+    IWorkerController workerController = client.getJMWorkerController();
 
     // wait up to 2sec
     sleeeep((long) (Math.random() * 2000));

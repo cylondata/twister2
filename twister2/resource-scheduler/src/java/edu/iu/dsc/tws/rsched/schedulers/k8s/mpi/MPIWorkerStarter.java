@@ -171,9 +171,6 @@ public final class MPIWorkerStarter {
       throw new RuntimeException("Can not start JobMasterClient thread.");
     }
 
-    // we need to make sure that the worker starting message went through
-    jobMasterClient.sendWorkerStartingMessage();
-
     // we will be running the Worker, send running message
     jobMasterClient.sendWorkerRunningMessage();
 

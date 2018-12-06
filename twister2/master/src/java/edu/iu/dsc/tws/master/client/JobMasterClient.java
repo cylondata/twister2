@@ -29,8 +29,6 @@ import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 
 /**
@@ -71,7 +69,8 @@ public class JobMasterClient {
   private Pinger pinger;
   private JMWorkerController jmWorkerController;
 
-  private boolean startingMessageSent = false;
+  private boolean registerMessageSent = false;
+  private boolean registrationSucceeded;
 
   private int numberOfWorkers;
 
@@ -111,6 +110,14 @@ public class JobMasterClient {
   }
 
   /**
+   * return WorkerInfo for this worker
+   * @return
+   */
+  public WorkerInfo getWorkerInfo() {
+    return thisWorker;
+  }
+
+  /**
    * initialize JobMasterClient
    * wait until it connects to JobMaster
    * return false, if it can not connect to JobMaster
@@ -124,17 +131,15 @@ public class JobMasterClient {
         thisWorker.getWorkerID(), connectHandler);
 
     long interval = JobMasterContext.pingInterval(config);
-    pinger = new Pinger(thisWorker, rrClient, interval);
-
-    jmWorkerController = new JMWorkerController(config, thisWorker, rrClient, numberOfWorkers);
+    pinger = new Pinger(this, rrClient, interval);
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
     rrClient.registerResponseHandler(pingBuilder, pinger);
 
-    ListWorkersRequest.Builder listRequestBuilder = ListWorkersRequest.newBuilder();
-    ListWorkersResponse.Builder listResponseBuilder = ListWorkersResponse.newBuilder();
-    rrClient.registerResponseHandler(listRequestBuilder, jmWorkerController);
-    rrClient.registerResponseHandler(listResponseBuilder, jmWorkerController);
+    JobMasterAPI.RegisterWorker.Builder registerWorkerBuilder =
+        JobMasterAPI.RegisterWorker.newBuilder();
+    JobMasterAPI.RegisterWorkerResponse.Builder registerWorkerResponseBuilder
+        = JobMasterAPI.RegisterWorkerResponse.newBuilder();
 
     JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
         JobMasterAPI.WorkerStateChange.newBuilder();
@@ -142,15 +147,10 @@ public class JobMasterClient {
         = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
 
     ResponseMessageHandler responseMessageHandler = new ResponseMessageHandler();
+    rrClient.registerResponseHandler(registerWorkerBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(registerWorkerResponseBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
-
-    JobMasterAPI.BarrierRequest.Builder barrierRequestBuilder =
-        JobMasterAPI.BarrierRequest.newBuilder();
-    JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
-        JobMasterAPI.BarrierResponse.newBuilder();
-    rrClient.registerResponseHandler(barrierRequestBuilder, jmWorkerController);
-    rrClient.registerResponseHandler(barrierResponseBuilder, jmWorkerController);
 
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
@@ -161,6 +161,29 @@ public class JobMasterClient {
     }
 
     return true;
+  }
+
+  /**
+   * this will be initialized after worker registration
+   * since WorkerInfo may change when job master assigns workerIDs
+   */
+  private void initJMWorkerController() {
+
+    jmWorkerController = new JMWorkerController(config, thisWorker, rrClient, numberOfWorkers);
+
+    JobMasterAPI.ListWorkersRequest.Builder listRequestBuilder =
+        JobMasterAPI.ListWorkersRequest.newBuilder();
+    JobMasterAPI.ListWorkersResponse.Builder listResponseBuilder =
+        JobMasterAPI.ListWorkersResponse.newBuilder();
+    rrClient.registerResponseHandler(listRequestBuilder, jmWorkerController);
+    rrClient.registerResponseHandler(listResponseBuilder, jmWorkerController);
+
+    JobMasterAPI.BarrierRequest.Builder barrierRequestBuilder =
+        JobMasterAPI.BarrierRequest.newBuilder();
+    JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
+        JobMasterAPI.BarrierResponse.newBuilder();
+    rrClient.registerResponseHandler(barrierRequestBuilder, jmWorkerController);
+    rrClient.registerResponseHandler(barrierResponseBuilder, jmWorkerController);
   }
 
   public JMWorkerController getJMWorkerController() {
@@ -179,7 +202,7 @@ public class JobMasterClient {
 
     while (!stopLooper) {
       long timeToNextPing = pinger.timeToNextPing();
-      if (timeToNextPing < 30 && startingMessageSent) {
+      if (timeToNextPing < 30 && registrationSucceeded) {
         pinger.sendPingMessage();
       } else {
         looper.loopBlocking(timeToNextPing);
@@ -207,6 +230,11 @@ public class JobMasterClient {
 
     jmThread.start();
 
+    boolean registered = registerWorker();
+    if (!registered) {
+      return null;
+    }
+
     return jmThread;
   }
 
@@ -221,6 +249,11 @@ public class JobMasterClient {
     }
 
     startLooping();
+
+    boolean registered = registerWorker();
+    if (!registered) {
+      return false;
+    }
 
     return true;
   }
@@ -276,49 +309,42 @@ public class JobMasterClient {
   }
 
   /**
-   * send worker STARTING message
-   * put WorkerInfo in that message
+   * send RegisterWorker message to Job Master
+   * put WorkerInfo in this message
    * @return
    */
-  public boolean sendWorkerStartingMessage() {
+  private boolean registerWorker() {
 
-    JobMasterAPI.WorkerStateChange workerStateChange = JobMasterAPI.WorkerStateChange.newBuilder()
+    JobMasterAPI.RegisterWorker registerWorker = JobMasterAPI.RegisterWorker.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setWorkerInfo(thisWorker)
-        .setNewState(JobMasterAPI.WorkerState.STARTING)
         .build();
 
-    LOG.info("Sending Worker STARTING message: \n" + workerStateChange);
-    // if JobMaster assigns ID, wait for the response
-    if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
-      try {
-        rrClient.sendRequestWaitResponse(workerStateChange,
-            JobMasterContext.responseWaitDuration(config));
+    LOG.info("Sending RegisterWorker message: \n" + registerWorker);
 
-      } catch (BlockingSendException bse) {
-        LOG.log(Level.SEVERE, bse.getMessage(), bse);
-        return false;
+    // wait for the response
+    try {
+      rrClient.sendRequestWaitResponse(registerWorker,
+          JobMasterContext.responseWaitDuration(config));
+
+      if (registrationSucceeded) {
+        pinger.sendPingMessage();
+        initJMWorkerController();
       }
 
-    } else {
-      RequestID requestID = rrClient.sendRequest(workerStateChange);
-      if (requestID == null) {
-        LOG.severe("Couldn't send Worker STARTING message: " + workerStateChange);
-        return false;
-      }
+      return registrationSucceeded;
+
+    } catch (BlockingSendException bse) {
+      LOG.log(Level.SEVERE, bse.getMessage(), bse);
+      return false;
     }
-
-    startingMessageSent = true;
-    pinger.sendPingMessage();
-
-    return true;
   }
 
   public boolean sendWorkerRunningMessage() {
 
     JobMasterAPI.WorkerStateChange workerStateChange = JobMasterAPI.WorkerStateChange.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
-        .setNewState(JobMasterAPI.WorkerState.RUNNING)
+        .setState(JobMasterAPI.WorkerState.RUNNING)
         .build();
 
     RequestID requestID = rrClient.sendRequest(workerStateChange);
@@ -335,7 +361,7 @@ public class JobMasterClient {
 
     JobMasterAPI.WorkerStateChange workerStateChange = JobMasterAPI.WorkerStateChange.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
-        .setNewState(JobMasterAPI.WorkerState.COMPLETED)
+        .setState(JobMasterAPI.WorkerState.COMPLETED)
         .build();
 
     LOG.info("Sending Worker COMPLETED message: \n" + workerStateChange);
@@ -355,16 +381,23 @@ public class JobMasterClient {
     @Override
     public void onMessage(RequestID id, int workerId, Message message) {
 
-      if (message instanceof JobMasterAPI.WorkerStateChangeResponse) {
-        LOG.info("Received a WorkerStateChange response from the master. \n" + message);
+      if (message instanceof JobMasterAPI.RegisterWorkerResponse) {
 
-        JobMasterAPI.WorkerStateChangeResponse responseMessage =
-            (JobMasterAPI.WorkerStateChangeResponse) message;
+        LOG.info("Received a RegisterWorkerResponse message from the master. \n" + message);
 
-        if (JobMasterContext.jobMasterAssignsWorkerIDs(config)
-            && responseMessage.getSentState() == JobMasterAPI.WorkerState.STARTING) {
+        JobMasterAPI.RegisterWorkerResponse responseMessage =
+            (JobMasterAPI.RegisterWorkerResponse) message;
+
+        registrationSucceeded = responseMessage.getResult();
+
+        if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
           thisWorker = WorkerInfoUtils.updateWorkerID(thisWorker, responseMessage.getWorkerID());
         }
+
+      } else if (message instanceof JobMasterAPI.WorkerStateChangeResponse) {
+        LOG.info("Received a WorkerStateChange response from the master. \n" + message);
+
+        // nothing to do
 
       } else {
         LOG.warning("Received message unrecognized. \n" + message);
