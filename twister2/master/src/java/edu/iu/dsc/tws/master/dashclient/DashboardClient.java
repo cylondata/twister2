@@ -106,11 +106,12 @@ public class DashboardClient {
         .post(Entity.json(registerWorker));
 
     if (response.getStatus() == 200) {
-      LOG.info("Sending RegisterWorker message to Dashboard is successful");
+      LOG.info("Sent RegisterWorker message to Dashboard is successfully "
+          + "for workerID: " + workerInfo.getWorkerID());
       return true;
     } else {
-      LOG.severe("Sending RegisterWorker message to Dashboard is unsuccessful. Response: "
-          + response.toString());
+      LOG.severe("Sending RegisterWorker message to Dashboard is unsuccessful "
+          + "for workerID: " + workerInfo.getWorkerID() + ". Response: " + response.toString());
       return false;
     }
   }
@@ -133,11 +134,12 @@ public class DashboardClient {
         .post(Entity.json(workerStateChange));
 
     if (response.getStatus() == 200) {
-      LOG.info("Sending WorkerStateChange message to Dashboard is successful");
+      LOG.info("Sent WorkerStateChange message to Dashboard successfully for workerID: "
+          + workerID);
       return true;
     } else {
-      LOG.severe("Sending WorkerStateChange message to Dashboard is unsuccessful. Response: "
-          + response.toString());
+      LOG.severe("Sending WorkerStateChange message to Dashboard is unsuccessful. "
+          + "for workerID: " + workerID + " Response: " + response.toString());
       return false;
     }
   }
@@ -160,11 +162,12 @@ public class DashboardClient {
         .post(Entity.json(workerStateChange));
 
     if (response.getStatus() == 200) {
-      LOG.info("Sending WorkerStateChange message to Dashboard is successful");
+      LOG.info("Sent Worker " + state.name() + " message to Dashboard successfully "
+          + "for workerID: " + workerID);
       return true;
     } else {
-      LOG.severe("Sending WorkerStateChange message to Dashboard is unsuccessful. Response: "
-          + response.toString());
+      LOG.severe("Sending Worker " + state.name() + " message to Dashboard is unsuccessful "
+          + "for workerID: " + workerID + " Response: " + response.toString());
       return false;
     }
   }

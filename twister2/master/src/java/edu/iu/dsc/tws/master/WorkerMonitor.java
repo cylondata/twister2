@@ -124,6 +124,11 @@ public class WorkerMonitor implements MessageHandler {
     // send the response message
     sendRegisterWorkerResponse(id, worker.getWorkerID(), result);
 
+    // send worker registration message to dashboard
+    if (dashClient != null) {
+      dashClient.registerWorker(workerInfo);
+    }
+
     // if all workers registered, inform all workers
     if (workers.size() == numberOfWorkers) {
       sendListWorkersResponseToWaitList();
@@ -152,6 +157,11 @@ public class WorkerMonitor implements MessageHandler {
       // send the response message
       sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getState());
 
+      // send worker state change message to dashboard
+      if (dashClient != null) {
+        dashClient.workerStateChange(message.getWorkerID(), message.getState());
+      }
+
       // if all workers have become RUNNING, send job STARTED message
       if (haveAllWorkersBecomeRunning()) {
         jobMaster.allWorkersBecameRunning();
@@ -164,6 +174,11 @@ public class WorkerMonitor implements MessageHandler {
 
       // send the response message
       sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getState());
+
+      // send worker state change message to dashboard
+      if (dashClient != null) {
+        dashClient.workerStateChange(message.getWorkerID(), message.getState());
+      }
 
       // check whether all workers completed
       // if so, stop the job master
