@@ -1,12 +1,12 @@
 
-![](fox.png)
+<img src="fox.png" width="150" height="150">
+
 ### Geoffrey C. FOX
 
 
 # Tutorial on Twister 2 for 5th International Winter School on Big Data
 
 ## Summary
-
 
 In this tutorial, we review big data problems and systems, explain Twister2 architecture and features, provide examples for developing and running applications on Twister2 system. By learning Twister2, big data developers will have an experience with a flexible big data solution that can be used to solve all three types of big data problems.
 
