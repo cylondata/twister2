@@ -21,37 +21,38 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.core;
+package edu.iu.dsc.tws.api.tset;
 
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.ops.MapOp;
+import edu.iu.dsc.tws.common.config.Config;
 
-/**
- * Configurations specific to executor
- */
-public class ExecutorContext extends Context {
-  /**
-   * The size of the task pool assigned to the executors
-   */
-  public static final int EXECUTOR_CORE_POOL_SIZE = 4;
+public class MapTSet<T, P> extends BaseTSet<T> {
+  private BaseTSet<P> parent;
 
-  /**
-   * The maximum size of the task pool
-   */
-  public static final int EXECUTOR_MAX_POOL_SIZE = Integer.MAX_VALUE;
+  private MapFunction<P, T> mapFn;
 
-  /**
-   * The keep alive time for the tasks that are not in the core pool
-   */
-  public static final long EXECUTOR_POOL_KEEP_ALIVE_TIME = 1000 * 60;
-
-  /**
-   * sync lock used in the TaskExecutorFixedThread
-   */
-  public static final Integer FIXED_EXECUTOR_LOCK = new Integer(1);
-
-  public enum QueueType {
-    INPUT,
-    OUTPUT
+  public MapTSet(Config cfg, TaskGraphBuilder builder,
+                 BaseTSet<P> parent, MapFunction<P, T> mapFunc) {
+    super(cfg, builder);
+    this.parent = parent;
+    this.mapFn = mapFunc;
   }
 
+  @SuppressWarnings("unchecked")
+  public boolean baseBuild() {
+    boolean isIterable = isIterableInput(parent);
+
+    ComputeConnection connection = builder.addCompute(getName(),
+        new MapOp<P, T>(mapFn, isIterable), parallel);
+
+    parent.buildConnection(connection);
+    return true;
+  }
+
+  @Override
+  void buildConnection(ComputeConnection connection) {
+
+  }
 }
