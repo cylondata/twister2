@@ -24,12 +24,14 @@
 package edu.iu.dsc.tws.examples.internal.jobmaster;
 
 import java.net.InetAddress;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
@@ -38,6 +40,7 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JMWorkerController;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
@@ -60,34 +63,37 @@ public final class JobMasterClientExample {
    */
   public static void main(String[] args) {
 
-    if (args.length != 1) {
-      printUsage();
-      return;
-    }
+    // we assume that the twister2Home is the current directory
+    String configDir = "conf/kubernetes/";
+    String twister2Home = Paths.get("").toAbsolutePath().toString();
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir);
+    config = updateConfig(config);
+    LOG.info("Loaded: " + config.size() + " parameters from configuration directory: " + configDir);
 
-    String jobMasterAddress = "localhost";
-    int numberOfWorkers = Integer.parseInt(args[0]);
+    Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
+    JobAPI.Job job = twister2Job.serialize();
 
-    Config config = buildConfig(jobMasterAddress, numberOfWorkers);
-
-    int workerTempID = 0;
-
-    simulateClient(config, workerTempID);
+    simulateClient(config, job);
   }
 
   /**
    * a method to simulate JobMasterClient running in workers
    */
-  public static void simulateClient(Config config, int workerTempID) {
+  public static void simulateClient(Config config, JobAPI.Job job) {
 
     InetAddress workerIP = JMWorkerController.convertStringToIP("localhost");
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo("node.ip", "rack01", null);
-    JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
-        workerTempID, workerIP.getHostAddress(), workerPort, nodeInfo);
 
-    JobMasterClient client = new JobMasterClient(config, workerInfo);
+    int workerTempID = 0;
+    JobAPI.ComputeResource computeResource = job.getComputeResource(0);
+
+    JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
+        workerTempID, workerIP.getHostAddress(), workerPort, nodeInfo, computeResource);
+
+    String jobMasterAddress = "localhost";
+    JobMasterClient client = new JobMasterClient(config, workerInfo, jobMasterAddress);
     Thread clientThread = client.startThreaded();
     if (clientThread == null) {
       LOG.severe("JobMasterClient can not initialize. Exiting ...");
@@ -137,11 +143,9 @@ public final class JobMasterClientExample {
    * construct a Config object
    * @return
    */
-  public static Config buildConfig(String jobMasterAddress, int numberOfWorkers) {
+  public static Config updateConfig(Config config) {
     return Config.newBuilder()
-        .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
-        .put(JobMasterContext.PING_INTERVAL, 3000)
-        .put(JobMasterContext.JOB_MASTER_IP, jobMasterAddress)
+        .putAll(config)
         .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
         .build();
   }

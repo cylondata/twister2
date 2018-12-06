@@ -115,7 +115,7 @@ public class JobMaster {
   private JobMasterAPI.NodeInfo nodeInfo;
 
   /**
-   * a UUID is generated for each job
+   * a UUID generated for each job
    * it is primarily used when communicating with Dashboard
    */
   private String jobID;
