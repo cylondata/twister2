@@ -108,7 +108,7 @@ public final class RequestObjectBuilder {
     // by default they are started sequentially
     setSpec.setPodManagementPolicy("Parallel");
 
-    int numberOfPods = computeResource.getNumberOfWorkers() / computeResource.getWorkersPerPod();
+    int numberOfPods = computeResource.getInstances();
     setSpec.setReplicas(numberOfPods);
 
     // add selector for the job
@@ -339,7 +339,8 @@ public final class RequestObjectBuilder {
 
     container.setVolumeMounts(volumeMounts);
 
-    int containerPort = KubernetesContext.workerBasePort(config) + containerIndex;
+    int containerPort = KubernetesContext.workerBasePort(config)
+        + containerIndex * (SchedulerContext.numberOfAdditionalPorts(config) + 1);
 
     V1ContainerPort port = new V1ContainerPort();
     port.name("port11"); // currently not used
@@ -453,9 +454,11 @@ public final class RequestObjectBuilder {
         .name(K8sEnvVariables.UPLOAD_METHOD + "")
         .value(KubernetesContext.uploadMethod(config)));
 
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.DOWNLOAD_DIRECTORY + "")
-        .value(ScpContext.downloadDirectory(config)));
+    if (!KubernetesContext.clientToPodsUploading(config)) {
+      envVars.add(new V1EnvVar()
+          .name(K8sEnvVariables.DOWNLOAD_DIRECTORY + "")
+          .value(ScpContext.downloadDirectory(config)));
+    }
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "")

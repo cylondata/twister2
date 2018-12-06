@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.IController;
@@ -96,10 +97,10 @@ public class NomadLauncher implements ILauncher {
           hostAddress = InetAddress.getLocalHost().getHostAddress();
         }
         LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
+        //TODO: a valid NodeInfo object need to be provided to JobMaster constructor
+        JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
         jobMaster =
-            new JobMaster(config, hostAddress,
-                new NomadTerminator(), job.getJobName(),
-                port,  job.getNumberOfWorkers());
+            new JobMaster(config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo);
         jobMaster.addShutdownHook();
         jmThread = jobMaster.startJobMasterThreaded();
       } catch (UnknownHostException e) {

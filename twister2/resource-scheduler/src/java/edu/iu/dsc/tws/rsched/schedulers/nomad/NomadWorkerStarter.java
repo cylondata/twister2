@@ -30,6 +30,7 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
@@ -192,7 +193,12 @@ public final class NomadWorkerStarter {
 
     String workerClass = SchedulerContext.workerClass(config);
 
-    List<JobMasterAPI.WorkerInfo> workerInfos = workerController.getAllWorkers();
+    try {
+      List<JobMasterAPI.WorkerInfo> workerInfos = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
 
     try {
       Object object = ReflectionUtils.newInstance(workerClass);

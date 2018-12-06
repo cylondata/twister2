@@ -23,16 +23,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
@@ -40,6 +47,8 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
 
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
+import io.kubernetes.client.models.V1ConfigMap;
+import io.kubernetes.client.models.V1ConfigMapVolumeSource;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1ContainerPort;
 import io.kubernetes.client.models.V1EnvVar;
@@ -63,6 +72,7 @@ public final class JobMasterRequestObject {
 
   private static Config config;
   private static String jobName;
+  private static String encodedNodeInfoList;
 
   private JobMasterRequestObject() { }
 
@@ -75,12 +85,13 @@ public final class JobMasterRequestObject {
    * create StatefulSet object for a job
    * @return
    */
-  public static V1beta2StatefulSet createStatefulSetObject() {
+  public static V1beta2StatefulSet createStatefulSetObject(String nodeInfoListStr) {
 
     if (config == null) {
       LOG.severe("JobMasterRequestObject.init method has not been called.");
       return null;
     }
+    encodedNodeInfoList = nodeInfoListStr;
 
     V1beta2StatefulSet statefulSet = new V1beta2StatefulSet();
     statefulSet.setApiVersion("apps/v1beta2");
@@ -151,6 +162,9 @@ public final class JobMasterRequestObject {
       volumes.add(persistentVolume);
     }
 
+    V1Volume configMapVolume = createConfigMapVolume();
+    volumes.add(configMapVolume);
+
     podSpec.setVolumes(volumes);
 
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
@@ -160,6 +174,17 @@ public final class JobMasterRequestObject {
     template.setSpec(podSpec);
     return template;
   }
+
+  public static V1Volume createConfigMapVolume() {
+    V1Volume configMapVolume = new V1Volume();
+    configMapVolume.setName(KubernetesConstants.CONFIG_MAP_VOLUME_NAME);
+    V1ConfigMapVolumeSource volumeSource = new V1ConfigMapVolumeSource();
+    volumeSource.setName(KubernetesUtils.createJobMasterConfigMapName(jobName));
+    configMapVolume.setConfigMap(volumeSource);
+    return configMapVolume;
+  }
+
+
 
   /**
    * construct a container
@@ -206,6 +231,11 @@ public final class JobMasterRequestObject {
       volumeMounts.add(persVolumeMount);
     }
 
+    V1VolumeMount configMapVolumeMount = new V1VolumeMount();
+    configMapVolumeMount.setName(KubernetesConstants.CONFIG_MAP_VOLUME_NAME);
+    configMapVolumeMount.setMountPath(KubernetesConstants.CONFIG_MAP_VOLUME_MOUNT);
+    volumeMounts.add(configMapVolumeMount);
+
     container.setVolumeMounts(volumeMounts);
 
     V1ContainerPort port = new V1ContainerPort();
@@ -225,67 +255,31 @@ public final class JobMasterRequestObject {
   public static List<V1EnvVar> constructEnvironmentVariables() {
     ArrayList<V1EnvVar> envVars = new ArrayList<>();
 
-    // POD_IP with downward API
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.JOB_NAME + "")
+        .value(jobName));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "")
+        .value(encodedNodeInfoList));
+
+    // HOST_IP (node-ip) with downward API
     V1ObjectFieldSelector fieldSelector = new V1ObjectFieldSelector();
-    fieldSelector.setFieldPath("status.podIP");
+    fieldSelector.setFieldPath("status.hostIP");
     V1EnvVarSource varSource = new V1EnvVarSource();
     varSource.setFieldRef(fieldSelector);
 
     envVars.add(new V1EnvVar()
-        .name(JobMasterContext.JOB_MASTER_IP)
+        .name(K8sEnvVariables.HOST_IP + "")
         .valueFrom(varSource));
-
-    envVars.add(new V1EnvVar()
-        .name(JobMasterContext.JOB_MASTER_PORT)
-        .value(JobMasterContext.jobMasterPort(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(Context.JOB_NAME)
-        .value(jobName));
-
-    envVars.add(new V1EnvVar()
-        .name(KubernetesContext.KUBERNETES_NAMESPACE)
-        .value(KubernetesContext.namespace(config)));
-
-    envVars.add(new V1EnvVar()
-        .name(JobMasterContext.PERSISTENT_VOLUME)
-        .value(JobMasterContext.persistentVolumeSize(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(Context.TWISTER2_WORKER_INSTANCES)
-        .value(Context.workerInstances(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS)
-        .value(JobMasterContext.jobMasterAssignsWorkerIDs(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(JobMasterContext.PING_INTERVAL)
-        .value(JobMasterContext.pingInterval(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(LoggingContext.PERSISTENT_LOGGING_REQUESTED)
-        .value(LoggingContext.persistentLoggingRequested(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(LoggingContext.LOGGING_LEVEL)
-        .value(LoggingContext.loggingLevel(config)));
-
-    envVars.add(new V1EnvVar()
-        .name(LoggingContext.REDIRECT_SYS_OUT_ERR)
-        .value(LoggingContext.redirectSysOutErr(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(LoggingContext.MAX_LOG_FILE_SIZE)
-        .value(LoggingContext.maxLogFileSize(config) + ""));
-
-    envVars.add(new V1EnvVar()
-        .name(LoggingContext.MAX_LOG_FILES)
-        .value(LoggingContext.maxLogFiles(config) + ""));
 
     return envVars;
   }
 
+  /**
+   * create regular service for job master
+   * @return
+   */
   public static V1Service createJobMasterServiceObject() {
 
     String serviceName = KubernetesUtils.createJobMasterServiceName(jobName);
@@ -319,6 +313,10 @@ public final class JobMasterRequestObject {
     return service;
   }
 
+  /**
+   * create headless service for job master
+   * @return
+   */
   public static V1Service createJobMasterHeadlessServiceObject() {
 
     String serviceName = KubernetesUtils.createJobMasterServiceName(jobName);
@@ -345,6 +343,82 @@ public final class JobMasterRequestObject {
     service.setSpec(serviceSpec);
 
     return service;
+  }
+
+  /**
+   * create a ConfigMap object for Job Master
+   * It will have job as binary data and config files as text data
+   * @param job
+   * @return
+   */
+  public static V1ConfigMap createJobMasterConfigMap(JobAPI.Job job) {
+    String configMapName = KubernetesUtils.createJobMasterConfigMapName(jobName);
+
+    V1ConfigMap configMap = new V1ConfigMap();
+    configMap.apiVersion("v1");
+    configMap.setKind("ConfigMap");
+
+    // construct and set metadata
+    V1ObjectMeta meta = new V1ObjectMeta();
+    meta.setName(configMapName);
+    configMap.setMetadata(meta);
+
+    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(job.getJobName());
+    configMap.putBinaryDataItem(jobDescFileName, job.toByteArray());
+
+    String clientYaml = Context.clientConfigurationFile(config);
+    String fileContent = readYAMLFile(clientYaml);
+    configMap.putDataItem("client.yaml", fileContent);
+
+    String taskYaml = Context.taskConfigurationFile(config);
+    fileContent = readYAMLFile(taskYaml);
+    configMap.putDataItem("task.yaml", fileContent);
+
+    String resourceYaml = Context.resourceSchedulerConfigurationFile(config);
+    fileContent = readYAMLFile(resourceYaml);
+    configMap.putDataItem("resource.yaml", fileContent);
+
+    String uploaderYaml = Context.uploaderConfigurationFile(config);
+    fileContent = readYAMLFile(uploaderYaml);
+    configMap.putDataItem("uploader.yaml", fileContent);
+
+    String networkYaml = Context.networkConfigurationFile(config);
+    fileContent = readYAMLFile(networkYaml);
+    configMap.putDataItem("network.yaml", fileContent);
+
+    String systemYaml = Context.systemConfigurationFile(config);
+    fileContent = readYAMLFile(systemYaml);
+    configMap.putDataItem("system.yaml", fileContent);
+
+    String dataYaml = Context.dataConfigurationFile(config);
+    fileContent = readYAMLFile(dataYaml);
+    configMap.putDataItem("data.yaml", fileContent);
+
+    return configMap;
+  }
+
+  /**
+   * read the given YAML file as a single String
+   * @param filename
+   * @return
+   */
+  private static String readYAMLFile(String filename) {
+
+    Path filepath = Paths.get(filename);
+
+    if (!Files.exists(filepath)) {
+      LOG.fine("Config file " + filename + " does not exist. "
+          + "It will not be transferred to JobMaster.");
+      return null;
+    }
+
+    try {
+      return new String(Files.readAllBytes(filepath));
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Can not read the config file: " + filename
+          + " This config file will not be transferred to JobMaster.", e);
+      return null;
+    }
   }
 
 }

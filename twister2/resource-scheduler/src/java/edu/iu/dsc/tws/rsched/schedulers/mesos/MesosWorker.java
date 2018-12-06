@@ -24,6 +24,7 @@ import org.apache.mesos.Protos;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -106,6 +107,9 @@ public class MesosWorker implements Executor {
       workerController.close();
     } catch (UnknownHostException e) {
       LOG.severe("Host unkown " + e.getMessage());
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
     }
 
     //The below two lines can be used to send a message to the framework

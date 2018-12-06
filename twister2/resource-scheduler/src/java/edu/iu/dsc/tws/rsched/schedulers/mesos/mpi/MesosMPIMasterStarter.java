@@ -31,6 +31,7 @@ import java.io.Writer;
 import java.net.Inet4Address;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+//import java.util.List;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -76,7 +77,7 @@ public final class MesosMPIMasterStarter {
     logger.initLogging();
 
     MesosWorkerController workerController = null;
-    List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<>();
+    List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<JobMasterAPI.WorkerInfo>();
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + mpiMaster.jobName + ".job");

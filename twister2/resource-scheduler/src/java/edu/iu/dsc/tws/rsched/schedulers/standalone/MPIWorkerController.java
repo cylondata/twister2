@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -57,12 +58,11 @@ public class MPIWorkerController implements IWorkerController {
   }
 
   @Override
-  public List<JobMasterAPI.WorkerInfo> getAllWorkers() {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException {
     return new ArrayList<>(networkInfoMap.values());
   }
 
   @Override
-  public boolean waitOnBarrier() {
-    return false;
+  public void waitOnBarrier() throws TimeoutException {
   }
 }

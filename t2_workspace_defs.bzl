@@ -1,6 +1,7 @@
 #reference : https://github.com/google/bazel-common/blob/master/workspace_defs.bzl
 
 load("@bazel_tools//tools/build_defs/repo:java.bzl", "java_import_external")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 _MAVEN_MIRRORS = [
     "http://bazel-mirror.storage.googleapis.com/repo1.maven.org/maven2/",

@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -67,7 +68,12 @@ public abstract class BenchWorker implements IWorker {
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
     this.workerId = workerID;
-    this.workerList = workerController.getAllWorkers();
+    try {
+      this.workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(cfg, workerID,
         jobParameters.getTaskStages(), workerList);
@@ -83,7 +89,11 @@ public abstract class BenchWorker implements IWorker {
     // now communicationProgress
     progress();
     // wait for the sync
-    workerController.waitOnBarrier();
+    try {
+      workerController.waitOnBarrier();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+    }
     // lets terminate the communicator
     communicator.close();
   }

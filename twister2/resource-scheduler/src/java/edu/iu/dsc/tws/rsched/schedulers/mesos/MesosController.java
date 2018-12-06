@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import org.apache.mesos.Protos;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class MesosController {
@@ -74,7 +75,7 @@ public class MesosController {
     return builder.build();
   }
 
-  public boolean isResourceSatisfy(Protos.Offer offer) {
+  public boolean isResourceSatisfy(Protos.Offer offer, JobAPI.ComputeResource compResource) {
     double cpu = 0.0;
     double mem = 0.0;
     double disk = 0.0;
@@ -89,19 +90,19 @@ public class MesosController {
         disk = r.getScalar().getValue();
       }
     }
-    if (cpu < MesosContext.cpusPerContainer(config) * MesosContext.containerPerWorker(config)) {
+    if (cpu < compResource.getCpu() * MesosContext.containerPerWorker(config)) {
       LOG.info("CPU request can not be granted");
       return false;
     }
-    if (mem < MesosContext.ramPerContainer(config) * MesosContext.containerPerWorker(config)) {
+    if (mem < compResource.getRamMegaBytes() * MesosContext.containerPerWorker(config)) {
       LOG.info("Memory request can not be granted");
       return false;
     }
-    if (disk < MesosContext.diskPerContainer(config) * MesosContext.containerPerWorker(config)) {
+    if (disk < compResource.getDiskGigaBytes() * 1000 * MesosContext.containerPerWorker(config)) {
       LOG.info("disk request can not be granted");
       return false;
     }
-    //offer satisfies the needed resources
+   //offer satisfies the needed resources
     return true;
   }
 

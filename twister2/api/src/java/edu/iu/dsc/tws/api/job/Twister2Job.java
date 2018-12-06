@@ -120,7 +120,7 @@ public final class Twister2Job {
   private int countNumberOfWorkers() {
     int totalWorkers = 0;
     for (JobAPI.ComputeResource computeResource: computeResources) {
-      totalWorkers += computeResource.getNumberOfWorkers();
+      totalWorkers += computeResource.getInstances() * computeResource.getWorkersPerPod();
     }
     return totalWorkers;
   }
@@ -143,7 +143,7 @@ public final class Twister2Job {
       JobAPI.ComputeResource cr = computeResources.get(i);
       jobStr += String.format("\nComputeResource[%d]: cpu: %.1f, ram: %d MB, disk: %.1f GB, "
           + "instances: %d, workersPerPod: %d", i, cr.getCpu(), cr.getRamMegaBytes(),
-          cr.getDiskGigaBytes(), cr.getNumberOfWorkers(), cr.getWorkersPerPod());
+          cr.getDiskGigaBytes(), cr.getInstances(), cr.getWorkersPerPod());
     }
 
     return jobStr;
@@ -178,16 +178,16 @@ public final class Twister2Job {
 
     public Twister2JobBuilder addComputeResource(double cpu,
                                                  int ramMegaBytes,
-                                                 int numberOfWorkers) {
-      addComputeResource(cpu, ramMegaBytes, 0, numberOfWorkers, 1);
+                                                 int instances) {
+      addComputeResource(cpu, ramMegaBytes, 0, instances, 1);
       return this;
     }
 
     public Twister2JobBuilder addComputeResource(double cpu,
                                                  int ramMegaBytes,
                                                  double diskGigaBytes,
-                                                 int numberOfWorkers) {
-      addComputeResource(cpu, ramMegaBytes, diskGigaBytes, numberOfWorkers, 1);
+                                                 int instances) {
+      addComputeResource(cpu, ramMegaBytes, diskGigaBytes, instances, 1);
       return this;
     }
 
@@ -195,13 +195,13 @@ public final class Twister2Job {
     public Twister2JobBuilder addComputeResource(double cpu,
                                                  int ramMegaBytes,
                                                  double diskGigaBytes,
-                                                 int numberOfWorkers,
+                                                 int instances,
                                                  int workersPerPod) {
       JobAPI.ComputeResource computeResource = JobAPI.ComputeResource.newBuilder()
           .setCpu(cpu)
           .setRamMegaBytes(ramMegaBytes)
           .setDiskGigaBytes(diskGigaBytes)
-          .setNumberOfWorkers(numberOfWorkers)
+          .setInstances(instances)
           .setWorkersPerPod(workersPerPod)
           .setIndex(computeResourceIndex++)
           .build();

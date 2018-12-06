@@ -34,6 +34,7 @@ import org.apache.curator.utils.CloseableUtils;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
@@ -401,7 +402,7 @@ public class ZKWorkerController implements IWorkerController {
    * return null if the timeLimit is reached or en exception is thrown while waiting
    */
   @Override
-  public List<WorkerInfo> getAllWorkers() {
+  public List<WorkerInfo> getAllWorkers() throws TimeoutException {
 
     long timeLimit = ControllerContext.maxWaitTimeForAllToJoin(config);
     long duration = 0;
@@ -418,8 +419,8 @@ public class ZKWorkerController implements IWorkerController {
       }
     }
 
-    LOG.warning("Waited for all workers to join, but timeLimit has been reached.");
-    return null;
+    throw new TimeoutException("All workers have not joined the job on the specified time limit: "
+        + timeLimit + "ms.");
   }
 
   /**
@@ -504,9 +505,13 @@ public class ZKWorkerController implements IWorkerController {
    * @return
    */
   @Override
-  public boolean waitOnBarrier() {
+  public void waitOnBarrier() throws TimeoutException {
 
-    return incrementBarrierDAI(0, ControllerContext.maxWaitTimeOnBarrier(config));
+    boolean allArrived = incrementBarrierDAI(0, ControllerContext.maxWaitTimeOnBarrier(config));
+    if (!allArrived) {
+      throw new TimeoutException("All workers have not arrived at the barrier on the time limit: "
+          + ControllerContext.maxWaitTimeOnBarrier(config) + "ms.");
+    }
   }
 
 

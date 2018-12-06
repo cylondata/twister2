@@ -12,11 +12,13 @@
 package edu.iu.dsc.tws.api.task;
 
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -80,7 +82,13 @@ public abstract class TaskWorker implements IWorker {
     this.persistentVolume = pVolume;
     this.volatileVolume = vVolume;
 
-    List<JobMasterAPI.WorkerInfo> workerInfoList = wController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workerInfoList = null;
+    try {
+      workerInfoList = wController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
 
     // create the channel
     channel = Network.initializeChannel(config, workerController);
@@ -95,7 +103,11 @@ public abstract class TaskWorker implements IWorker {
     // call execute
     execute();
     // wait for the sync
-    workerController.waitOnBarrier();
+    try {
+      workerController.waitOnBarrier();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+    }
     // lets terminate the network
     communicator.close();
   }

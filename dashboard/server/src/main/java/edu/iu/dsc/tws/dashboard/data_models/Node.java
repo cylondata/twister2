@@ -11,29 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.data_models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.NodeId;
+import io.swagger.annotations.ApiModelProperty;
+
+import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 @Entity
-public class Node {
+@IdClass(NodeId.class)
+public class Node implements Serializable {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
-  private Long id;
-
   @Column(nullable = false)
-  private String host;
+  private String ip;
 
   @Column
   private String os;
@@ -41,22 +33,35 @@ public class Node {
   @Column
   private Date heartbeatTime;
 
+  @Id
   @Column
-  @Enumerated(EnumType.STRING)
-  private EntityState state;
+  private String rack = "default-rack";
 
-  public EntityState getState() {
-    return state;
-  }
+  @Id
+  @Column
+  private String dataCenter = "default-datacenter";
 
-  public void setState(EntityState state) {
-    this.state = state;
-  }
-
+  @ApiModelProperty(hidden = true) //till clusters are supported by twister2
   @ManyToOne(optional = false)
   @JoinColumn
   @JsonIgnoreProperties({"nodes", "description"})
   private Cluster cluster;
+
+  public String getRack() {
+    return rack;
+  }
+
+  public void setRack(String rack) {
+    this.rack = rack;
+  }
+
+  public String getDataCenter() {
+    return dataCenter;
+  }
+
+  public void setDataCenter(String dataCenter) {
+    this.dataCenter = dataCenter;
+  }
 
   public Cluster getCluster() {
     return cluster;
@@ -66,20 +71,12 @@ public class Node {
     this.cluster = cluster;
   }
 
-  public Long getId() {
-    return id;
+  public String getIp() {
+    return ip;
   }
 
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public String getHost() {
-    return host;
-  }
-
-  public void setHost(String host) {
-    this.host = host;
+  public void setIp(String ip) {
+    this.ip = ip;
   }
 
   public String getOs() {

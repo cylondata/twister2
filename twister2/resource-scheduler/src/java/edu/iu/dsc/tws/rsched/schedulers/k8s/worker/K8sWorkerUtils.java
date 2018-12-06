@@ -16,6 +16,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,6 +31,7 @@ import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
@@ -165,7 +169,8 @@ public final class K8sWorkerUtils {
 
     int workerCount = 0;
     for (int i = 0; i < currentStatefulSetIndex; i++) {
-      workerCount += JobUtils.getComputeResource(job, i).getNumberOfWorkers();
+      JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, i);
+      workerCount += computeResource.getInstances() * computeResource.getWorkersPerPod();
     }
 
     return workerCount;
@@ -218,6 +223,30 @@ public final class K8sWorkerUtils {
       throw new RuntimeException("Cannot get Job master IP from service name.", e);
     }
   }
+
+  /**
+   * generate the additional requested ports for this worker
+   * @param config
+   * @param workerPort
+   * @return
+   */
+  public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
+
+    // if no port is requested, return null
+    List<String> portNames = SchedulerContext.additionalPorts(config);
+    if (portNames == null) {
+      return null;
+    }
+
+    HashMap<String, Integer> ports = new HashMap<>();
+    int i = 1;
+    for (String portName: portNames) {
+      ports.put(portName, workerPort + i++);
+    }
+
+    return ports;
+  }
+
 
 
   /**

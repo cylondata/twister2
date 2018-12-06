@@ -30,6 +30,7 @@ import org.apache.hadoop.fs.Path;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
@@ -60,7 +61,13 @@ public class BasicK8sWorker implements IWorker {
     }
 
     // wait for all workers in this job to join
-    List<JobMasterAPI.WorkerInfo> workerList = workerController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
     if (workerList == null) {
       LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
       return;

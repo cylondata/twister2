@@ -196,6 +196,15 @@ public final class KubernetesUtils {
   }
 
   /**
+   * create ConfigMap name for the given job name
+   * add a suffix to job name
+   * @return
+   */
+  public static String createJobMasterConfigMapName(String jobName) {
+    return jobName + "-cm";
+  }
+
+  /**
    * create pod name for the job master
    * there will be one pod for the job master
    * we add a suffix to statefulset name
@@ -306,7 +315,7 @@ public final class KubernetesUtils {
     int podsCount = 0;
 
     for (JobAPI.ComputeResource computeResource: job.getComputeResourceList()) {
-      podsCount += computeResource.getNumberOfWorkers() / computeResource.getWorkersPerPod();
+      podsCount += computeResource.getInstances();
     }
 
     return podsCount;
@@ -325,7 +334,7 @@ public final class KubernetesUtils {
     for (int i = 0; i < resourceList.size(); i++) {
 
       JobAPI.ComputeResource computeResource = resourceList.get(i);
-      int podsCount = computeResource.getNumberOfWorkers() / computeResource.getWorkersPerPod();
+      int podsCount = computeResource.getInstances();
       int index = computeResource.getIndex();
 
       for (int j = 0; j < podsCount; j++) {

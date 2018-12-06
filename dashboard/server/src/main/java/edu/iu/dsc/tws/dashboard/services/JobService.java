@@ -11,27 +11,52 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.services;
 
-import java.util.Date;
-import java.util.Optional;
-
-import javax.persistence.EntityNotFoundException;
-
+import edu.iu.dsc.tws.dashboard.data_models.Job;
+import edu.iu.dsc.tws.dashboard.data_models.JobState;
+import edu.iu.dsc.tws.dashboard.data_models.Node;
+import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
+import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
-import edu.iu.dsc.tws.dashboard.data_models.Job;
-import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
-import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
+import javax.persistence.EntityNotFoundException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Optional;
 
 @Service
 public class JobService {
 
+  private final JobRepository jobRepository;
+
+  private final NodeService nodeService;
+
   @Autowired
-  private JobRepository jobRepository;
+  public JobService(JobRepository jobRepository, NodeService nodeService) {
+    this.jobRepository = jobRepository;
+    this.nodeService = nodeService;
+  }
 
   public Job createJob(Job job) {
     job.getWorkers().forEach(worker -> worker.setJob(job));
+    job.getComputeResources().forEach(computeResource -> computeResource.setJob(job));
+
+    //create non existing nodes : todo not appropriate, resolve once twister2 support nodes
+    //if node is defined without rack and data center, replace them with prefix+jobId
+
+    if (StringUtils.isEmpty(job.getNode().getDataCenter())) {
+      job.getNode().setDataCenter("dc-" + job.getJobId());
+    }
+    if (StringUtils.isEmpty(job.getNode().getRack())) {
+      job.getNode().setRack("rk-" + job.getJobId());
+    }
+    Node node = nodeService.createNode(job.getNode());
+    job.setNode(node);
+
+    job.setHeartbeatTime(Calendar.getInstance().getTime());
+
     return jobRepository.save(job);
   }
 
@@ -48,8 +73,11 @@ public class JobService {
   }
 
   @Transactional
-  public void changeState(String jobId, StateChangeRequest stateChangeRequest) {
-    this.jobRepository.changeJobState(jobId, stateChangeRequest.getEntityState());
+  public void changeState(String jobId, StateChangeRequest<JobState> stateChangeRequest) {
+    int changeJobState = this.jobRepository.changeJobState(jobId, stateChangeRequest.getState());
+    if (changeJobState == 0) {
+      throw new EntityNotFoundException("No Job found with ID " + jobId);
+    }
   }
 
   @Transactional

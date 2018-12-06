@@ -30,6 +30,8 @@ import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Configuration;
 import io.kubernetes.client.apis.AppsV1beta2Api;
 import io.kubernetes.client.apis.CoreV1Api;
+import io.kubernetes.client.models.V1ConfigMap;
+import io.kubernetes.client.models.V1ConfigMapList;
 import io.kubernetes.client.models.V1DeleteOptions;
 import io.kubernetes.client.models.V1Node;
 import io.kubernetes.client.models.V1NodeAddress;
@@ -77,7 +79,7 @@ public class KubernetesController {
    * return the StatefulSet object if it exists in the Kubernetes master,
    * otherwise return null
    */
-  public boolean statefulSetsExist(String namespace, List<String> statefulSetNames) {
+  public boolean existStatefulSets(String namespace, List<String> statefulSetNames) {
     V1beta2StatefulSetList setList = null;
     try {
       setList = beta2Api.listNamespacedStatefulSet(
@@ -126,9 +128,9 @@ public class KubernetesController {
   }
 
   /**
-   * create the given service on Kubernetes master
+   * create the given StatefulSet on Kubernetes master
    */
-  public boolean createStatefulSetJob(String namespace, V1beta2StatefulSet statefulSet) {
+  public boolean createStatefulSet(String namespace, V1beta2StatefulSet statefulSet) {
 
     String statefulSetName = statefulSet.getMetadata().getName();
     try {
@@ -136,8 +138,7 @@ public class KubernetesController {
           namespace, statefulSet, null, null, null).execute();
 
       if (response.isSuccessful()) {
-        LOG.log(Level.INFO, "StatefulSet [" + statefulSetName
-            + "] is created for the same named job.");
+        LOG.log(Level.INFO, "StatefulSet [" + statefulSetName + "] is created.");
         return true;
 
       } else {
@@ -158,7 +159,7 @@ public class KubernetesController {
   /**
    * delete the given StatefulSet from Kubernetes master
    */
-  public boolean deleteStatefulSetJob(String namespace, String statefulSetName) {
+  public boolean deleteStatefulSet(String namespace, String statefulSetName) {
 
     try {
       V1DeleteOptions deleteOptions = new V1DeleteOptions();
@@ -169,33 +170,120 @@ public class KubernetesController {
           statefulSetName, namespace, deleteOptions, null, null, null, null, null, null).execute();
 
       if (response.isSuccessful()) {
-        LOG.log(Level.INFO, "StatefulSet for the Job [" + statefulSetName + "] is deleted.");
+        LOG.log(Level.INFO, "StatefulSet [" + statefulSetName + "] is deleted.");
         return true;
 
       } else {
 
         if (response.code() == 404 && response.message().equals("Not Found")) {
-          LOG.log(Level.SEVERE, "There is no StatefulSet for the Job [" + statefulSetName
+          LOG.log(Level.SEVERE, "There is no StatefulSet [" + statefulSetName
               + "] to delete on Kubernetes master. It may have already terminated.");
           return true;
         }
 
-        LOG.log(Level.SEVERE, "Error when deleting the StatefulSet of the job ["
+        LOG.log(Level.SEVERE, "Error when deleting the StatefulSet ["
             + statefulSetName + "]: " + response);
         return false;
       }
 
     } catch (ApiException e) {
-      LOG.log(Level.SEVERE, "Exception when deleting the the StatefulSet of the job: "
-          + statefulSetName, e);
+      LOG.log(Level.SEVERE, "Exception when deleting the StatefulSet: " + statefulSetName, e);
       return false;
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Exception when deleting the the StatefulSet of the job: "
-          + statefulSetName, e);
+      LOG.log(Level.SEVERE, "Exception when deleting the StatefulSet: " + statefulSetName, e);
       return false;
     }
   }
 
+  /**
+   * create the given ConfigMap on Kubernetes master
+   */
+  public boolean createConfigMap(String namespace, V1ConfigMap configMap) {
+
+    String configMapName = configMap.getMetadata().getName();
+    try {
+      Response response = coreApi.createNamespacedConfigMapCall(
+          namespace, configMap, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "ConfigMap [" + configMapName + "] is created.");
+        return true;
+
+      } else {
+        LOG.log(Level.SEVERE, "Error when creating the ConfigMap [" + configMapName + "]: "
+            + response);
+        LOG.log(Level.SEVERE, "Submitted ConfigMap Object: " + configMap);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the StatefulSet: " + configMapName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when creating the StatefulSet: " + configMapName, e);
+    }
+    return false;
+  }
+
+  /**
+   * return true if there is already a ConfigMap object with the same name on Kubernetes master,
+   * otherwise return false
+   */
+  public boolean existConfigMap(String namespace, String configMapName) {
+    V1ConfigMapList configMapList = null;
+    try {
+      configMapList = coreApi.listNamespacedConfigMap(namespace,
+          null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting ConfigMap list.", e);
+      throw new RuntimeException(e);
+    }
+
+    for (V1ConfigMap configMap : configMapList.getItems()) {
+      if (configMapName.equals(configMap.getMetadata().getName())) {
+        LOG.severe("There is already a ConfigMap with the name: " + configMapName);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * delete the given ConfigMap from Kubernetes master
+   */
+  public boolean deleteConfigMap(String namespace, String configMapName) {
+
+    V1DeleteOptions deleteOptions = new V1DeleteOptions();
+    deleteOptions.setGracePeriodSeconds(0L);
+    deleteOptions.setPropagationPolicy(KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY);
+
+    try {
+      Response response = coreApi.deleteNamespacedConfigMapCall(
+          configMapName, namespace, deleteOptions, null, null, null, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.info("ConfigMap [" + configMapName + "] is deleted.");
+        return true;
+
+      } else {
+
+        if (response.code() == 404 && response.message().equals("Not Found")) {
+          LOG.warning("There is no ConfigMap [" + configMapName
+              + "] to delete on Kubernetes master. It may have already been deleted.");
+          return true;
+        }
+
+        LOG.severe("Error when deleting the ConfigMap [" + configMapName + "]: " + response);
+        return false;
+      }
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the ConfigMap: " + configMapName, e);
+      return false;
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when deleting the ConfigMap: " + configMapName, e);
+      return false;
+    }
+  }
 
   /**
    * create the given service on Kubernetes master
@@ -227,7 +315,7 @@ public class KubernetesController {
    * return true if one of the services exist in Kubernetes master,
    * otherwise return false
    */
-  public boolean servicesExist(String namespace, List<String> serviceNames) {
+  public boolean existServices(String namespace, List<String> serviceNames) {
 // sending the request with label does not work for list services call
 //    String label = "app=" + serviceLabel;
     V1ServiceList serviceList = null;
@@ -281,7 +369,7 @@ public class KubernetesController {
       LOG.log(Level.SEVERE, "Exception when deleting the service: " + serviceName, e);
       return false;
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Exception when deleting the the service: " + serviceName, e);
+      LOG.log(Level.SEVERE, "Exception when deleting the service: " + serviceName, e);
       return false;
     }
   }
@@ -302,12 +390,12 @@ public class KubernetesController {
   }
 
   /**
-   * get the PersistentVolumeClaim with the given name
+   * check whether the given PersistentVolumeClaim exist on Kubernetes master
    * @param namespace
    * @param pvcName
    * @return
    */
-  public V1PersistentVolumeClaim getPersistentVolumeClaim(String namespace, String pvcName) {
+  public boolean existPersistentVolumeClaim(String namespace, String pvcName) {
     V1PersistentVolumeClaimList pvcList = null;
     try {
       pvcList = coreApi.listNamespacedPersistentVolumeClaim(
@@ -319,11 +407,12 @@ public class KubernetesController {
 
     for (V1PersistentVolumeClaim pvc : pvcList.getItems()) {
       if (pvcName.equals(pvc.getMetadata().getName())) {
-        return pvc;
+        LOG.severe("There is already a PersistentVolumeClaim with the name: " + pvcName);
+        return true;
       }
     }
 
-    return null;
+    return false;
   }
 
   /**
@@ -467,7 +556,7 @@ public class KubernetesController {
    * return true if the Secret object with that name exists in Kubernetes master,
    * otherwise return false
    */
-  public boolean secretExist(String namespace, String secretName) {
+  public boolean existSecret(String namespace, String secretName) {
     V1SecretList secretList = null;
     try {
       secretList = coreApi.listNamespacedSecret(namespace,

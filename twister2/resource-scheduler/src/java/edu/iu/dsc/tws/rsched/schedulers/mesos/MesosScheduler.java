@@ -26,6 +26,8 @@ import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 
 public class MesosScheduler implements Scheduler {
@@ -37,15 +39,19 @@ public class MesosScheduler implements Scheduler {
   private int completedTaskCounter = 0;
   private int totalTaskCount;
   private int workerCounter = 0;
+  private int resourceIndex = 0;
+  private int resourceInstanceCount = 0;
+  private JobAPI.Job job;
   private int[] offerControl = new int[3];
   //private String jobMasterIP;
   private boolean mpiJob = true;
 
-  public MesosScheduler(MesosController controller, Config mconfig, String jobName) {
+  public MesosScheduler(MesosController controller, Config mconfig, JobAPI.Job myJob) {
     this.controller = controller;
     this.config = mconfig;
     totalTaskCount = MesosContext.numberOfContainers(config);
-    this.jobName = jobName;
+    this.job = myJob;
+    this.jobName = myJob.getJobName();
   }
 
   @Override
@@ -69,22 +75,50 @@ public class MesosScheduler implements Scheduler {
     return false;
   }
 
+  public JobAPI.ComputeResource getResource(JobAPI.Job myJob, int rIndex) {
+
+    JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(myJob, rIndex);
+    if (computeResource == null) {
+      LOG.severe("Something wrong with the job object. Can not get ComputeResource from job"
+          + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
+      return null;
+    }
+    return computeResource;
+  }
+
   @Override
   public void resourceOffers(SchedulerDriver schedulerDriver,
                              List<Protos.Offer> offers) {
 
     int index = 0;
+
     String[] desiredNodes = MesosContext.getDesiredNodes(config).split(",");
+
     if (taskIdCounter < totalTaskCount) {
       for (Protos.Offer offer : offers) {
+
+        //get the resource
+        JobAPI.ComputeResource computeResource = getResource(job, resourceIndex);
+        if (computeResource == null) {
+          return;
+        }
+        resourceInstanceCount = resourceInstanceCount + 1;
+        if (resourceInstanceCount == computeResource.getInstances() + 1) {
+          resourceIndex = resourceIndex + 1;
+        }
+//        LOG.info("Offer CPU ...:" + computeResource.getCpu());
+//        LOG.info("Offer MEMORY ...:" + computeResource.getRamMegaBytes());
+//        LOG.info("Offer DISK ...:" + computeResource.getDiskGigaBytes());
+//        LOG.info("Offer WORKER COUNT ...:" + computeResource.getNumberOfWorkers());
+//        LOG.info("Offer INSTANCE COUNT ...:" + resourceInstanceCount);
 
         if (!MesosContext.getDesiredNodes(config).equals("all")
             && !contains(desiredNodes, offer)) {
           continue;
         }
         LOG.info("Offer comes from host ...:" + offer.getHostname());
-        if (controller.isResourceSatisfy(offer)) {
 
+        if (controller.isResourceSatisfy(offer, computeResource)) {
           //creates job directory on nfs
           MesosPersistentVolume pv = new MesosPersistentVolume(
               controller.createPersistentJobDirName(jobName), workerCounter);
@@ -101,11 +135,22 @@ public class MesosScheduler implements Scheduler {
             // int begin = MesosContext.getWorkerPort(config) + taskIdCounter * 100;
             // int end = begin + 30;
 
-            Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
+ /*           Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
                 .setTaskId(taskId)
                 .setSlaveId(offer.getSlaveId())
                 .addResources(buildResource("cpus", MesosContext.cpusPerContainer(config)))
                 .addResources(buildResource("mem", MesosContext.ramPerContainer(config)))
+                .addResources(buildResource("disk", MesosContext.diskPerContainer(config)))
+                //.addResources(buildRangeResource("ports", begin, end))
+                .setData(ByteString.copyFromUtf8("" + taskId.getValue()));*/
+
+            Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
+                .setTaskId(taskId)
+                .setSlaveId(offer.getSlaveId())
+                .addResources(buildResource("cpus", computeResource.getCpu()))
+                .addResources(buildResource("mem", computeResource.getRamMegaBytes()))
+                .addResources(buildResource("disk",
+                    computeResource.getDiskGigaBytes() * 1000))
                 //.addResources(buildRangeResource("ports", begin, end))
                 .setData(ByteString.copyFromUtf8("" + taskId.getValue()));
 

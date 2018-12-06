@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -137,7 +138,13 @@ public class SimpleTaskGraphExample implements IWorker {
     builder.addConfiguration("task4", "inputdataset", sourceInputDataset);
 
     DataFlowTaskGraph graph = builder.build();
-    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    WorkerPlan workerPlan = null;
+    try {
+      workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
 
     LOG.info("Generated Dataflow Task Graph Is:" + graph.getTaskVertexSet());
 
