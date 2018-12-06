@@ -65,6 +65,19 @@
   * [Contributors](community/contributors.md)
 * [Tutorial](tutorial/README.md)
   * [introduction](tutorial/introduction.md)
- 
+  * [big data stack](tutorial/communication.md)
+  * [twister 2 overview](tutorial/twister2-overview.md)
+  * [resource scheduling](tutorial/resource-scheduling.md)
+  * [communication](tutorial/communication.md)
+  * [task scheduling and execution](tutorial/tasks.md)
+  * [data representation](tutorial/data-representation.md)
+  * [Developing big data solutions](tutorial/developing.md)
+  * [batch](tutorial/batch.md)
+  * [streaming](tutorial/streaming.md)
+  * [machine learning](tutorial/machine-learning.md)
+  * [conclusion](tutorial/conclusion.md)
+
+
+
 
 
