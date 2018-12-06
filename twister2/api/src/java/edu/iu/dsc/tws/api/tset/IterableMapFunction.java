@@ -11,8 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import java.util.Iterator;
-
+/**
+ * Iterable map function
+ *
+ * @param <T> input type
+ * @param <O> output type
+ */
 public interface IterableMapFunction<T, O> extends TFunction {
-  O map(Iterator<T> t);
+  /**
+   * Map with an iterable input
+   *
+   * @param t type of input
+   * @return object
+   */
+  O map(Iterable<T> t);
 }

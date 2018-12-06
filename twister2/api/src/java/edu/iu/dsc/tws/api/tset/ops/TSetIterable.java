@@ -9,24 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.api.tset.ops;
 
-/**
- * Represents a source producing values
- *
- * @param <T> type of values produced by source
- */
-public interface Source<T> extends TFunction {
-  /**
-   * Weather we have more data
-   *
-   * @return true if there is more data to be read
-   */
-  boolean hasNext();
+import java.util.Iterator;
 
-  /**
-   * Get the next value
-   * @return
-   */
-  T next();
+public class TSetIterable<T> implements Iterable<T> {
+  private Iterator<T> iterator;
+
+  public TSetIterable(Iterator<T> itr) {
+    this.iterator = itr;
+  }
+
+  @Override
+  public Iterator<T> iterator() {
+    return iterator;
+  }
 }

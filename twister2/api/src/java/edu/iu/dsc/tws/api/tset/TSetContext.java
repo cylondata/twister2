@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.api.tset;
 
 import java.util.Map;
 
+import edu.iu.dsc.tws.common.config.Config;
+
 public class TSetContext {
   /**
    * tSet index, which goes from 0 up to the number of parallel tSets
@@ -45,17 +47,24 @@ public class TSetContext {
   private int workerId;
 
   /**
+   * Configuration
+   */
+  private Config config;
+
+  /**
    * TSet context
    *
-   * @param tSetIndex
-   * @param tSetId
-   * @param tSetName
-   * @param parallelism
-   * @param wId
-   * @param configs
+   * @param cfg configuration
+   * @param tSetIndex index
+   * @param tSetId id
+   * @param tSetName name
+   * @param parallelism parallelism
+   * @param wId worker id
+   * @param configs configuration
    */
-  public TSetContext(int tSetIndex, int tSetId, String tSetName,
+  public TSetContext(Config cfg, int tSetIndex, int tSetId, String tSetName,
                      int parallelism, int wId, Map<String, Object> configs) {
+    this.config = cfg;
     this.tSetIndex = tSetIndex;
     this.tSetId = tSetId;
     this.tSetName = tSetName;
@@ -124,5 +133,14 @@ public class TSetContext {
    */
   public Object getConfig(String name) {
     return configs.get(name);
+  }
+
+  /**
+   * Configuration
+   *
+   * @return configuration
+   */
+  public Config getConfig() {
+    return config;
   }
 }

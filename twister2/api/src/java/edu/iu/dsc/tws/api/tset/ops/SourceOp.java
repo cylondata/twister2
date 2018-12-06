@@ -50,7 +50,7 @@ public class SourceOp<T> implements ISource {
   public void prepare(Config cfg, TaskContext ctx) {
     this.context = ctx;
 
-    TSetContext tSetContext = new TSetContext(ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
+    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
         ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
     dataSet.prepare(tSetContext);
   }

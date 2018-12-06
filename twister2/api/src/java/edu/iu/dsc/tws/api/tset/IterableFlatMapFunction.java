@@ -11,8 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import java.util.Iterator;
-
+/**
+ * Iterable flatmap function
+ *
+ * @param <T> input
+ * @param <O> output
+ */
 public interface IterableFlatMapFunction<T, O> extends TFunction {
-  void flatMap(Iterator<T> t, Collector<O> collector);
+  /**
+   * Input set of values and output set of values
+   *
+   * @param t input as an iteration
+   * @param collector collects output
+   */
+  void flatMap(Iterable<T> t, Collector<O> collector);
 }

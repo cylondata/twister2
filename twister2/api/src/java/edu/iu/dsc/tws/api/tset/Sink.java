@@ -13,6 +13,16 @@ package edu.iu.dsc.tws.api.tset;
 
 import java.io.Serializable;
 
+/**
+ * Add a value at the end of the graph
+ *
+ * @param <T> type of sink
+ */
 public interface Sink<T> extends TFunction, Serializable {
+  /**
+   * Add a value
+   * @param value the value to add
+   * @return true if success
+   */
   boolean add(T value);
 }

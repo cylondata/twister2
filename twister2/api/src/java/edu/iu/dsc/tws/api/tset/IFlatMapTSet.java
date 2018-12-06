@@ -9,22 +9,21 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.impl;
+package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.ops.IterableMapOp;
+import edu.iu.dsc.tws.api.tset.ops.IterableFlatMapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class IMapTSet<T, P> extends BaseTSet<T> {
+public class IFlatMapTSet<T, P> extends BaseTSet<T> {
   private BaseTSet<P> parent;
 
-  private IterableMapFunction<P, T> mapFn;
+  private IterableFlatMapFunction<P, T> mapFn;
 
-  public IMapTSet(Config cfg, TaskGraphBuilder builder,
-                  BaseTSet<P> parent, IterableMapFunction<P, T> mapFunc) {
-    super(cfg, builder);
+  public IFlatMapTSet(Config cfg, TaskGraphBuilder bldr,
+                     BaseTSet<P> parent, IterableFlatMapFunction<P, T> mapFunc) {
+    super(cfg, bldr);
     this.parent = parent;
     this.mapFn = mapFunc;
   }
@@ -34,7 +33,7 @@ public class IMapTSet<T, P> extends BaseTSet<T> {
     boolean isIterable = isIterableInput(parent);
 
     ComputeConnection connection = builder.addCompute(getName(),
-        new IterableMapOp<>(mapFn, isIterable), parallel);
+        new IterableFlatMapOp<>(mapFn, isIterable), parallel);
     parent.buildConnection(connection);
     return true;
   }
@@ -43,3 +42,4 @@ public class IMapTSet<T, P> extends BaseTSet<T> {
   void buildConnection(ComputeConnection connection) {
   }
 }
+

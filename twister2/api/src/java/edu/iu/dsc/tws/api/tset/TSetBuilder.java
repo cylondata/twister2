@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.impl.SourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -24,7 +23,25 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
  * The builder for creating a tset graph.
  */
 public final class TSetBuilder {
+  /**
+   * List of sources added to this builder
+   */
   private List<SourceTSet<?>> sources;
+
+  /**
+   * Operation mode
+   */
+  private OperationMode opMode = OperationMode.STREAMING;
+
+  /**
+   * Configuration
+   */
+  private Config config;
+
+  /**
+   * The task builder tobe used to build the task graph
+   */
+  private TaskGraphBuilder builder;
 
   private TSetBuilder(Config cfg) {
     this.config = cfg;
@@ -32,12 +49,12 @@ public final class TSetBuilder {
     this.builder = TaskGraphBuilder.newBuilder(cfg);
   }
 
-  private OperationMode opMode = OperationMode.STREAMING;
-
-  private Config config;
-
-  private TaskGraphBuilder builder;
-
+  /**
+   * This method is used to create a new builder
+   *
+   * @param cfg configuration
+   * @return the builder
+   */
   public static TSetBuilder newBuilder(Config cfg) {
     return new TSetBuilder(cfg);
   }

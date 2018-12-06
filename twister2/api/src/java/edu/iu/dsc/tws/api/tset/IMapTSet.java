@@ -9,25 +9,32 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.impl;
+package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.Source;
-import edu.iu.dsc.tws.api.tset.ops.SourceOp;
+import edu.iu.dsc.tws.api.tset.ops.IterableMapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class SourceTSet<T> extends BaseTSet<T> {
-  private Source<T> soruce;
+public class IMapTSet<T, P> extends BaseTSet<T> {
+  private BaseTSet<P> parent;
 
-  public SourceTSet(Config cfg, TaskGraphBuilder bldr, Source<T> src) {
-    super(cfg, bldr);
-    this.soruce = src;
+  private IterableMapFunction<P, T> mapFn;
+
+  public IMapTSet(Config cfg, TaskGraphBuilder builder,
+                  BaseTSet<P> parent, IterableMapFunction<P, T> mapFunc) {
+    super(cfg, builder);
+    this.parent = parent;
+    this.mapFn = mapFunc;
   }
 
-  @Override
+  @SuppressWarnings("unchecked")
   public boolean baseBuild() {
-    builder.addSource(getName(), new SourceOp<T>(soruce), parallel);
+    boolean isIterable = isIterableInput(parent);
+
+    ComputeConnection connection = builder.addCompute(getName(),
+        new IterableMapOp<>(mapFn, isIterable), parallel);
+    parent.buildConnection(connection);
     return true;
   }
 

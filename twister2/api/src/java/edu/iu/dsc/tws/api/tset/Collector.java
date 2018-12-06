@@ -11,8 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+/**
+ * Collector for map function
+ *
+ * @param <T> input type
+ */
 public interface Collector<T> {
+  /**
+   * Collect the record
+   *
+   * @param record this will be sent
+   */
   void collect(T record);
 
+  /**
+   * Close the collector
+   */
   void close();
 }

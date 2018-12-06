@@ -9,34 +9,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.impl;
+package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
-public class ReduceTSet<T> extends BaseTSet<T> {
-  private ReduceFunction<T> reduceFn;
-
+/**
+ * Represent a data set created by an all gather operation
+ *
+ * @param <T> type of data
+ */
+public class AllGatherTSet<T> extends BaseTSet<T> {
   private BaseTSet<T> parent;
 
-  public ReduceTSet(Config cfg, TaskGraphBuilder bldr,
-                    BaseTSet<T> prnt, ReduceFunction<T> rFn) {
+  public AllGatherTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt) {
     super(cfg, bldr);
-    this.reduceFn = rFn;
     this.parent = prnt;
   }
 
-  @Override
-  public String getName() {
-    return parent.getName();
-  }
-
-  @SuppressWarnings("unchecked")
   @Override
   public boolean baseBuild() {
     return true;
@@ -45,12 +37,6 @@ public class ReduceTSet<T> extends BaseTSet<T> {
   @Override
   void buildConnection(ComputeConnection connection) {
     DataType dataType = getDataType(getType());
-
-    connection.reduce(parent.getName(), Constants.DEFAULT_EDGE,
-        new ReduceOpFunction<T>(getReduceFn()), dataType);
-  }
-
-  public ReduceFunction<T> getReduceFn() {
-    return reduceFn;
+    connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
 }
