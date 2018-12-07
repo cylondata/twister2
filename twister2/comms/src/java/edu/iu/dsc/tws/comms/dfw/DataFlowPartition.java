@@ -430,6 +430,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void close() {
+    delegete.close();
   }
 
   @Override

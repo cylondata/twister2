@@ -86,11 +86,6 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
     this.finalReceiverProgress = new AtomicBoolean(false);
   }
 
-  protected void setupRouting() {
-
-  }
-
-
   /**
    * Initialize
    */
@@ -210,6 +205,7 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void close() {
+    delegete.close();
   }
 
   @Override

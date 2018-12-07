@@ -123,6 +123,9 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
   @Override
   public void close() {
+    for (DataFlowGather gather : gatherMap.values()) {
+      gather.close();
+    }
   }
 
   @Override
