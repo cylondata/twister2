@@ -101,7 +101,7 @@ def load_modules():
     _maven_import(artifact = "org.apache.httpcomponents:httpcore:4.4.5", licenses = ["notice"], sha256 = "64d5453874cab7e40a7065cb01a9a9ca1053845a9786b478878b679e0580cec3")
     _maven_import(artifact = "commons-io:commons-io:2.6", licenses = ["notice"], sha256 = "f877d304660ac2a142f3865badfc971dec7ed73c747c7f8d5d2f5139ca736513")
     _maven_import(artifact = "com.fasterxml.jackson.core:jackson-core:2.8.8", licenses = ["notice"], sha256 = "d9bde8c72c22202bf17b05c7811db4964ff8e843d97c00a9bfb048c0fe7a726b")
-    _maven_import(artifact = "com.esotericsoftware:kryo:3.0.3", licenses = ["notice"], sha256 = "5c295b23480225ff6e7d6770dfa904bedcec8556c27234fea0a271fe13195f69")
+    _maven_import(artifact = "com.esotericsoftware:kryo:4.0.2", licenses = ["notice"], sha256 = "8cd8bcb6920b165ff21b82f7a44f2c7e87dcb24560e52b9dc7d085fba9cfcce5")
     _maven_import(artifact = "com.hashicorp.nomad:nomad-sdk:0.7.0", licenses = ["notice"], sha256 = "d04dda58d0242f87e66b333f5143d0f3aabb7e8ce1653c0ed1293a648cb18541")
     _maven_import(artifact = "commons-codec:commons-codec:1.11", licenses = ["notice"], sha256 = "e599d5318e97aa48f42136a2927e6dfa4e8881dff0e6c8e3109ddbbff51d7b7d")
     _maven_import(artifact = "commons-configuration:commons-configuration:1.6", licenses = ["notice"], sha256 = "46b71b9656154f6a16ea4b1dc84026b52a9305f8eff046a2b4655fa1738e5eee")
