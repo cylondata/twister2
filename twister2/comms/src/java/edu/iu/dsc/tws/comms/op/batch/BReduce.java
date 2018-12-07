@@ -87,4 +87,9 @@ public class BReduce {
   public boolean progress() {
     return reduce.progress();
   }
+
+  public void close() {
+    // deregister from the channel
+    reduce.close();
+  }
 }
