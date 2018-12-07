@@ -53,25 +53,6 @@ public final class Twister2HTGSubmitter {
     //List<String> scheduleGraphs = schedule(twister2Metagraph);
 
     buildHTGJob(schedule(twister2Metagraph), twister2Metagraph, workerclassName, jobConfig);
-
-    /*HTGJobAPI.ExecuteMessage executeMessage = null;
-    Twister2Metagraph.SubGraph subGraph = null;
-
-    for (int i = 0; i < scheduleGraphs.size(); i++) {
-      String subgraphName = scheduleGraphs.get(i);
-      subGraph = twister2Metagraph.getMetaGraphMap(subgraphName);
-
-      //Set the subgraph to be executed from the metagraph
-      executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
-          .setSubgraphName(subgraphName)
-          .build();
-    }
-
-    //Submit the complete job using Twister2 Submitter
-    submitJob(subGraph, config, jobConfig, workerclassName);
-
-    //Send the HTG Job information to execute the part of the HTG
-    submitToJobMaster(htgJob, executeMessage, twister2Job);*/
   }
 
   /**
@@ -201,7 +182,6 @@ public final class Twister2HTGSubmitter {
       e.printStackTrace();
     }
   }
-
 
   /**
    * This schedule is the base method for making decisions to run the part of the task graph which
