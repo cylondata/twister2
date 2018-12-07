@@ -21,14 +21,14 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
 
-public class HierarchicalTaskGraphParser {
+public class HTGParser {
 
-  private static final Logger LOG = Logger.getLogger(HierarchicalTaskGraphParser.class.getName());
+  private static final Logger LOG = Logger.getLogger(HTGParser.class.getName());
 
   private HierarchicalTaskGraph hierarchicalTaskGraph;
   private List<DataFlowTaskGraph> taskgraphList = new LinkedList<>();
 
-  public HierarchicalTaskGraphParser(HierarchicalTaskGraph graph) {
+  public HTGParser(HierarchicalTaskGraph graph) {
     this.hierarchicalTaskGraph = graph;
   }
 
@@ -36,7 +36,7 @@ public class HierarchicalTaskGraphParser {
 
     Set<DataFlowTaskGraph> taskGraphSet = hierarchicalTaskGraph.getTaskGraphSet();
 
-    //To parse the hierachical dataflow task graph and its vertex names.
+    //To parse the hierarchical dataflow task graph and its vertex names.
     Iterator<DataFlowTaskGraph> iterator = taskGraphSet.iterator();
     while (iterator.hasNext()) {
       DataFlowTaskGraph dataFlowTaskGraph = iterator.next();
