@@ -25,6 +25,10 @@ package edu.iu.dsc.tws.master.dashclient.models;
 
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
+/**
+ * The ComputeResource to send with json to Dashboard from JobMaster
+ */
+
 public class ComputeResource {
   private double cpu;
   private int ram;

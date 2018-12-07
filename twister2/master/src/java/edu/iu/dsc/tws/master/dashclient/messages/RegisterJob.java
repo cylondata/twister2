@@ -29,6 +29,10 @@ import edu.iu.dsc.tws.master.dashclient.models.Node;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
+/**
+ * RegisterJob message to send with json to Dashboard from JobMaster
+ */
+
 public class RegisterJob {
   private String jobId;
   private String jobName;

@@ -26,6 +26,10 @@ package edu.iu.dsc.tws.master.dashclient.messages;
 import edu.iu.dsc.tws.master.dashclient.models.Node;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
+/**
+ * RegisterWorker message to send with json to Dashboard from JobMaster
+ */
+
 public class RegisterWorker {
 
   private String jobId;

@@ -23,6 +23,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.dashclient.messages;
 
+/**
+ * WorkerStateChange message to send with json to Dashboard from JobMaster
+ */
+
 public class WorkerStateChange {
   private String state;
 

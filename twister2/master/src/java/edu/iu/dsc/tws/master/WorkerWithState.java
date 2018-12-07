@@ -11,14 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+
+/**
+ * JobMaster keeps WorkerInfos with state
+ * we keep all state history in an ArrayList
+ */
 
 public class WorkerWithState {
   private static final Logger LOG = Logger.getLogger(WorkerWithState.class.getName());
@@ -31,17 +33,6 @@ public class WorkerWithState {
     this.workerInfo = workerInfo;
     states = new ArrayList<>();
     pingTimestamp = -1;
-  }
-
-  public static InetAddress covertToIPAddress(String ipStr) {
-    if (ipStr != null) {
-      try {
-        return InetAddress.getByName(ipStr);
-      } catch (UnknownHostException e) {
-        LOG.log(Level.SEVERE, "Can not covert the string to IP address. String: " + ipStr, e);
-      }
-    }
-    return null;
   }
 
   public void addWorkerState(JobMasterAPI.WorkerState workerState) {

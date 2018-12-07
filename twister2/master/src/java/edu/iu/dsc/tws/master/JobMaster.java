@@ -47,6 +47,10 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
  * If the user calls:
  *   startJobMasterBlocking()
  * It uses the calling thread and this call does not return unless the JobMaster completes
+ *
+ * JobMaster to Dashboard messaging
+ * JobMaster reports to Dashboard server when dashboard address is provided in the config
+ * If dashboard host address is not provided, it does not try to connect to dashboard server
  */
 
 public class JobMaster {
@@ -54,7 +58,7 @@ public class JobMaster {
 
   /**
    * Job Master ID is assigned as -1,
-   * workers will have IDs starting from 0 and icreasing by one
+   * workers will have IDs starting from 0 and increasing by one
    */
   public static final int JOB_MASTER_ID = -1;
 

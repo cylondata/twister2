@@ -27,6 +27,10 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 
+/**
+ * This class monitors the workers in a job
+ * It keeps the worker list and provides to list requests
+ */
 public class WorkerMonitor implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(WorkerMonitor.class.getName());
 

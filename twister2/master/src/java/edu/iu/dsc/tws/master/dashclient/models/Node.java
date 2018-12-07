@@ -25,6 +25,10 @@ package edu.iu.dsc.tws.master.dashclient.models;
 
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
+/**
+ * Node to send with json to Dashboard from JobMaster
+ */
+
 public class Node {
 
   private String ip;

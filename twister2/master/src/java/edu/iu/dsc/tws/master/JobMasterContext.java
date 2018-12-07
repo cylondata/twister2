@@ -14,6 +14,9 @@ package edu.iu.dsc.tws.master;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 
+/**
+ * Configuration parameters for JobMaster
+ */
 public class JobMasterContext extends Context {
 
   // if true, the job master runs in the submitting client

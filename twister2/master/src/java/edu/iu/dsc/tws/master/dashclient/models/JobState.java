@@ -23,6 +23,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.dashclient.models;
 
+/**
+ * JobState to send with json to Dashboard from JobMaster
+ */
+
 public enum JobState {
   STARTING, STARTED, JOB_COMPLETED, FAILED
 }

@@ -26,6 +26,11 @@ import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
+/**
+ * This client is used to send messages to Dashboard by JobMaster
+ *
+ */
+
 public class DashboardClient {
   private static final Logger LOG = Logger.getLogger(DashboardClient.class.getName());
 
