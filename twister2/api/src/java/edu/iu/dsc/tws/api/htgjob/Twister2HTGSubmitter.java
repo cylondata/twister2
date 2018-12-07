@@ -48,11 +48,15 @@ public final class Twister2HTGSubmitter {
     LOG.info("HTG Sub Graph Requirements:" + twister2Metagraph.getSubGraph()
         + "\nHTG Relationship Values:" + twister2Metagraph.getRelation());
 
-    HTGJobAPI.ExecuteMessage executeMessage = null;
+    //Call the schedule method to identify the graph to be executed
+
+    //List<String> scheduleGraphs = schedule(twister2Metagraph);
+
+    buildHTGJob(schedule(twister2Metagraph), twister2Metagraph, workerclassName, jobConfig);
+
+    /*HTGJobAPI.ExecuteMessage executeMessage = null;
     Twister2Metagraph.SubGraph subGraph = null;
 
-    //Call the schedule method to identify the graph to be executed
-    List<String> scheduleGraphs = schedule(twister2Metagraph);
     for (int i = 0; i < scheduleGraphs.size(); i++) {
       String subgraphName = scheduleGraphs.get(i);
       subGraph = twister2Metagraph.getMetaGraphMap(subgraphName);
@@ -63,6 +67,26 @@ public final class Twister2HTGSubmitter {
           .build();
     }
 
+    //Submit the complete job using Twister2 Submitter
+    submitJob(subGraph, config, jobConfig, workerclassName);
+
+    //Send the HTG Job information to execute the part of the HTG
+    submitToJobMaster(htgJob, executeMessage, twister2Job);*/
+  }
+
+  /**
+   * This method build the htg job object to be sent to the job master.
+   * @param scheduleGraphs
+   * @param twister2Metagraph
+   * @param workerclassName
+   * @param jobConfig
+   */
+  private void buildHTGJob(List<String> scheduleGraphs, Twister2Metagraph twister2Metagraph,
+                           String workerclassName, JobConfig jobConfig) {
+
+    HTGJobAPI.ExecuteMessage executeMessage = null;
+    Twister2Metagraph.SubGraph subGraph = null;
+
     //Construct the HTGJob object to be sent to Job Master
     HTGJobAPI.HTGJob htgJob = HTGJobAPI.HTGJob.newBuilder()
         .setHtgJobname(twister2Metagraph.getHTGName())
@@ -70,54 +94,55 @@ public final class Twister2HTGSubmitter {
         .addAllRelations(twister2Metagraph.getRelation())
         .build();
 
-    //TODO:Just for the reference to the job master (this statement could be removed)
-    Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setJobName(htgJob.getHtgJobname())
-        .setWorkerClass(workerclassName)
-        .addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
-            subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances())
-        .setConfig(jobConfig)
-        .build();
+    Twister2Job twister2Job = null;
 
-    //Submit the complete job using Twister2 Submitter
-    submitJob(subGraph, config, jobConfig, workerclassName);
+    for (int i = 0; i < scheduleGraphs.size(); i++) {
+      String subgraphName = scheduleGraphs.get(i);
 
-    //Send the HTG Job information to execute the part of the HTG
-    submitToJobMaster(htgJob, executeMessage, twister2Job);
+      //To retrieve the resource value for the graph to be scheduled.
+      subGraph = twister2Metagraph.getMetaGraphMap(subgraphName);
+
+      //Set the subgraph to be executed from the metagraph
+      executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
+          .setSubgraphName(subgraphName)
+          .build();
+
+      //TODO:Just for the reference to the job master (this statement could be removed)
+      twister2Job = Twister2Job.newBuilder()
+          .setJobName(htgJob.getHtgJobname())
+          .setWorkerClass(workerclassName)
+          .addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
+              subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances())
+          .setConfig(jobConfig)
+          .build();
+
+      //This is for validation start the job master
+      //TODO: Discuss with Ahmet for the order of execution.
+
+      if (i == 0) {
+        //Start Job Master
+        startJobMaster(twister2Job);
+      }
+
+      //Now submit the job
+      //Twister2Submitter.submitJob(twister2Job, cfg);
+
+      //Send the HTG Job information to execute the part of the HTG
+      submitToJobMaster(htgJob, executeMessage, twister2Job);
+      LOG.info("HTG Job Objects:" + htgJob + "\tsubgraph to be executed:" + executeMessage);
+    }
   }
 
   /**
-   * This schedule is the base method for making decisions to run the part of the task graph which
-   * will be improved further with the complex logic. Now, based on the relations(parent -> child)
-   * it will initiate the execution.
+   * To test start the job master
    */
-  private List<String> schedule(Twister2Metagraph twister2Metagraph) {
+  public void startJobMaster(Twister2Job twister2Job) {
 
-    List<String> scheduledGraph = new LinkedList<>();
+    JobAPI.Job job = twister2Job.serialize();
 
-    for (int i = 0; i < twister2Metagraph.getRelation().size(); i++) {
-      ((LinkedList<String>) scheduledGraph).addFirst(
-          twister2Metagraph.getRelation().iterator().next().getParent());
-      scheduledGraph.addAll(Collections.singleton(
-          twister2Metagraph.getRelation().iterator().next().getChild()));
-    }
-    LOG.info("Scheduled Graph list details:" + scheduledGraph);
-    return scheduledGraph;
-  }
-
-  private void submitJob(Twister2Metagraph.SubGraph subGraph,
-                         Config cfg, JobConfig jobConfig, String className) {
-
-    Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setJobName(subGraph.getName())
-        .setWorkerClass(className)
-        .addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
-            subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances())
-        .setConfig(jobConfig)
-        .build();
-
-    // now submit the job
-    //Twister2Submitter.submitJob(twister2Job, cfg);
+    //TODO:Starting Job Master for validation (It would be removed)
+    JobMaster jobMaster = new JobMaster(config, "localhost", null, job, null);
+    jobMaster.startJobMasterThreaded();
   }
 
   /**
@@ -127,11 +152,10 @@ public final class Twister2HTGSubmitter {
                                 HTGJobAPI.ExecuteMessage executeMessage,
                                 Twister2Job twister2Job) {
 
-    JobAPI.Job job = twister2Job.serialize();
-
     //TODO:Starting Job Master for validation (It would be removed)
-    JobMaster jobMaster = new JobMaster(config, "localhost", null, job, null);
-    jobMaster.startJobMasterThreaded();
+    //JobAPI.Job job = twister2Job.serialize();
+    //JobMaster jobMaster = new JobMaster(config, "localhost", null, job, null);
+    //jobMaster.startJobMasterThreaded();
 
     LOG.fine("HTG job to send jobmaster:::::::::::" + htgJob.getGraphsList()
         + "\t" + htgJob.getRelationsList() + "\t" + executeMessage.getSubgraphName());
@@ -176,6 +200,26 @@ public final class Twister2HTGSubmitter {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+  }
+
+
+  /**
+   * This schedule is the base method for making decisions to run the part of the task graph which
+   * will be improved further with the complex logic. Now, based on the relations(parent -> child)
+   * it will initiate the execution.
+   */
+  private List<String> schedule(Twister2Metagraph twister2Metagraph) {
+
+    List<String> scheduledGraph = new LinkedList<>();
+
+    for (int i = 0; i < twister2Metagraph.getRelation().size(); i++) {
+      ((LinkedList<String>) scheduledGraph).addFirst(
+          twister2Metagraph.getRelation().iterator().next().getParent());
+      scheduledGraph.addAll(Collections.singleton(
+          twister2Metagraph.getRelation().iterator().next().getChild()));
+    }
+    LOG.info("%%%% Scheduled Graph list details: %%%%" + scheduledGraph);
+    return scheduledGraph;
   }
 
   private static class HTGClientInfoUtils {
