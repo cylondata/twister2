@@ -296,7 +296,7 @@ public class Twister2HTGClient {
         .setExecuteMessage(executeMessage)
         .build();
 
-    //LOG.info("HTG Job Client Message and Execute Message:" + htgJob + "\t" + executeMessage);
+    LOG.info("HTG Job Client Message and Execute Message:" + htgJob + "\t" + executeMessage);
 
     if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
       try {
@@ -309,6 +309,7 @@ public class Twister2HTGClient {
 
     } else {
       RequestID requestID = rrClient.sendRequest(htgJobRequest);
+      LOG.info("%%%%%% I am entering else loop in htg client starting message");
       try {
         rrClient.sendRequestWaitResponse(htgJobRequest,
             JobMasterContext.responseWaitDuration(config));
@@ -326,29 +327,4 @@ public class Twister2HTGClient {
     //pinger.sendPingMessage();
     return true;
   }
-
-  public boolean sendHTGClientRunningMessage() {
-
-   /* JobMasterAPI.HTGJobResponse htgJobResponse = JobMasterAPI.HTGJobResponse.newBuilder()
-        .setHtgSubgraphname("completed")
-        .build();
-
-    RequestID requestID = rrClient.sendRequest(htgJobResponse);*/
-
-    JobMasterAPI.HTGJobRequest htgJobRequest = JobMasterAPI.HTGJobRequest.newBuilder()
-        .setHtgJob(htgJob)
-        .setExecuteMessage(executeMessage)
-        .build();
-
-    RequestID requestID = rrClient.sendRequest(htgJobRequest);
-    return true;
-  }
-
-  public boolean sendHTGClientCompleteMessage() {
-
-    //If the scheduled task graph size is zero then we could send the complete message to the
-    //Jobmaster.
-    return true;
-  }
-
 }

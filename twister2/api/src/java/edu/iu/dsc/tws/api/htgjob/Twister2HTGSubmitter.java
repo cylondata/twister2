@@ -45,14 +45,13 @@ public final class Twister2HTGSubmitter {
                       JobConfig jobConfig,
                       String workerclassName) {
 
-    LOG.info("HTG Sub Graph Requirements:" + twister2Metagraph.getSubGraph()
+    LOG.fine("HTG Sub Graph Requirements:" + twister2Metagraph.getSubGraph()
         + "\nHTG Relationship Values:" + twister2Metagraph.getRelation());
 
     //Call the schedule method to identify the graph to be executed
 
-    //List<String> scheduleGraphs = schedule(twister2Metagraph);
-
-    buildHTGJob(schedule(twister2Metagraph), twister2Metagraph, workerclassName, jobConfig);
+    List<String> scheduleGraphs = schedule(twister2Metagraph);
+    buildHTGJob(scheduleGraphs, twister2Metagraph, workerclassName, jobConfig);
   }
 
   /**
@@ -99,7 +98,6 @@ public final class Twister2HTGSubmitter {
 
       //This is for validation start the job master
       //TODO: Discuss with Ahmet for the order of execution.
-
       if (i == 0) {
         //Start Job Master
         startJobMaster(twister2Job);
@@ -109,8 +107,9 @@ public final class Twister2HTGSubmitter {
       //Twister2Submitter.submitJob(twister2Job, cfg);
 
       //Send the HTG Job information to execute the part of the HTG
-      submitToJobMaster(htgJob, executeMessage, twister2Job);
       LOG.info("HTG Job Objects:" + htgJob + "\tsubgraph to be executed:" + executeMessage);
+
+      submitToJobMaster(htgJob, executeMessage, twister2Job);
     }
   }
 
@@ -163,9 +162,7 @@ public final class Twister2HTGSubmitter {
     client.sendHTGClientStartingMessage();
 
     // wait up to 2sec
-    sleep((long) (Math.random() * 2000));
-
-    client.sendHTGClientRunningMessage();
+    sleep((long) (Math.random() * 4000));
 
     client.close();
 
