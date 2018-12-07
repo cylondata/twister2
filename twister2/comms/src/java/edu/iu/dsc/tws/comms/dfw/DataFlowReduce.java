@@ -352,6 +352,14 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void close() {
+    if (finalReceiver != null) {
+      finalReceiver.close();
+    }
+
+    if (partialReceiver != null) {
+      partialReceiver.close();
+    }
+
     delegete.close();
   }
 

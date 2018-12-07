@@ -191,6 +191,10 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void close() {
+    if (finalReceiver != null) {
+      finalReceiver.close();
+    }
+
     delegete.close();
   }
 

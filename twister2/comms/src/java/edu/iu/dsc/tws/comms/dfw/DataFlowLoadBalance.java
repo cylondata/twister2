@@ -206,6 +206,8 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
   @Override
   public void close() {
     delegete.close();
+
+    finalReceiver.close();
   }
 
   @Override

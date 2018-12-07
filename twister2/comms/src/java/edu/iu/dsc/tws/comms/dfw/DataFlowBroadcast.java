@@ -73,6 +73,9 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void close() {
+    if (finalReceiver != null) {
+      finalReceiver.close();
+    }
     delegete.close();
   }
 

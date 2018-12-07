@@ -344,6 +344,14 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void close() {
+    if (partialReceiver != null) {
+      partialReceiver.close();
+    }
+
+    if (finalReceiver != null) {
+      finalReceiver.close();
+    }
+
     delegete.close();
   }
 
