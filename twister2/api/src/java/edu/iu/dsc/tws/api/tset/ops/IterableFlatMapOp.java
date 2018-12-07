@@ -44,13 +44,13 @@ public class IterableFlatMapOp<T, R> implements ICompute {
   @SuppressWarnings("unchecked")
   @Override
   public boolean execute(IMessage content) {
-    Iterator<T> data;
+    Iterable<T> data;
     if (inputIterator) {
-      data = (Iterator<T>) content.getContent();
+      data = new TSetIterable<>((Iterator<T>) content.getContent());
     } else {
       ArrayList<T> itr = new ArrayList<>();
       itr.add((T) content.getContent());
-      data = itr.iterator();
+      data = new TSetIterable<>(itr.iterator());
     }
     mapFn.flatMap(data, collector);
 
@@ -67,7 +67,7 @@ public class IterableFlatMapOp<T, R> implements ICompute {
     this.context = ctx;
     this.collector = new CollectorImpl<>(context, Constants.DEFAULT_EDGE);
 
-    TSetContext tSetContext = new TSetContext(ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
+    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
         ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
 
     mapFn.prepare(tSetContext);

@@ -16,5 +16,12 @@ package edu.iu.dsc.tws.api.tset;
  * @param <T>
  */
 public interface ReduceFunction<T> extends TFunction {
+  /**
+   * Reduce the t1 and t2 into a single value
+   *
+   * @param t1 input one
+   * @param t2 input two
+   * @return the reduced object
+   */
   T reduce(T t1, T t2);
 }

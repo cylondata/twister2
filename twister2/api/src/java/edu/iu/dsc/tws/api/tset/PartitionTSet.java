@@ -9,39 +9,43 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.impl;
+package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.MapFunction;
-import edu.iu.dsc.tws.api.tset.ops.MapOp;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 
-public class MapTSet<T, P> extends BaseTSet<T> {
-  private BaseTSet<P> parent;
+public class PartitionTSet<T> extends BaseTSet<T> {
+  private BaseTSet<T> parent;
 
-  private MapFunction<P, T> mapFn;
+  private PartitionFunction<T> partitionFunction;
 
-  public MapTSet(Config cfg, TaskGraphBuilder builder,
-                 BaseTSet<P> parent, MapFunction<P, T> mapFunc) {
-    super(cfg, builder);
-    this.parent = parent;
-    this.mapFn = mapFunc;
+  public PartitionTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
+                            PartitionFunction<T> parFn) {
+    super(cfg, bldr);
+    this.parent = prnt;
+    this.partitionFunction = parFn;
   }
 
-  @SuppressWarnings("unchecked")
+  @Override
+  public String getName() {
+    return parent.getName();
+  }
+
+  @Override
   public boolean baseBuild() {
-    boolean isIterable = isIterableInput(parent);
-
-    ComputeConnection connection = builder.addCompute(getName(),
-        new MapOp<P, T>(mapFn, isIterable), parallel);
-
-    parent.buildConnection(connection);
     return true;
   }
 
   @Override
   void buildConnection(ComputeConnection connection) {
+    DataType dataType = getDataType(getType());
 
+    connection.partition(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+  }
+
+  public PartitionFunction<T> getPartitionFunction() {
+    return partitionFunction;
   }
 }

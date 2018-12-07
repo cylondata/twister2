@@ -12,12 +12,12 @@ In this tutorial, we review big data problems and systems, explain Twister2 arch
 ## Syllabus
 
 1. [Introduction to big data problems and systems](introduction.md)
-2. [Decoupling big data solutions (big data stack)](big-data-stack.md)
+2. [Decoupling big data solutions big data stack](big-data-stack.md)
 3. [Twister2 overview](twister2-overview.md)
-    1. [Resource scheduling (Kubernetes, Mesos)](resource-scheduling.md)
-    2. [Communication (MPI on Twister2)](communication.md)
-    3. [Task scheduling and execution (Fault Tolerance)](tasks.md)
-    4. [Data representation](data-representation)
+    1. [Resource scheduling Kubernetes, Mesos](resource-scheduling.md)
+    2. [Communication MPI on Twister2](communication.md)
+    3. [Task scheduling and execution Fault Tolerance](tasks.md)
+    4. [Data representation](data-representation.md)
 4. [Developing Big Data Solutions in Twister2](developing.md)
     1. [Batch Processing example](batch.md)
     2. [Streaming example](streaming.md)

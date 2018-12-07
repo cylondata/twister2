@@ -9,27 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.impl;
+package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
 import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
-public class KeyedGatherTSet<T, K> extends KeyValueTSet<T, K> {
-  private BaseTSet<T> parent;
+public class KeyedPartitionTSet<T, K> extends KeyValueTSet<T, K> {
+  private GroupedTSet<T, K> parent;
 
   private PartitionFunction<K> partitionFunction;
 
   private Selector<T, K> selector;
 
-  public KeyedGatherTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-                         PartitionFunction<K> parFn, Selector<T, K> selc) {
+  public KeyedPartitionTSet(Config cfg, TaskGraphBuilder bldr, GroupedTSet<T, K> prnt,
+                            PartitionFunction<K> parFn, Selector<T, K> selc) {
     super(cfg, bldr);
     this.parent = prnt;
     this.partitionFunction = parFn;
@@ -41,8 +38,12 @@ public class KeyedGatherTSet<T, K> extends KeyValueTSet<T, K> {
     return parent.getName();
   }
 
-  public BaseTSet<T> getParent() {
+  public GroupedTSet<T, K> getParent() {
     return parent;
+  }
+
+  public void setParent(GroupedTSet<T, K> parent) {
+    this.parent = parent;
   }
 
   @Override
@@ -61,7 +62,7 @@ public class KeyedGatherTSet<T, K> extends KeyValueTSet<T, K> {
   public void buildConnection(ComputeConnection connection) {
     DataType keyType = getDataType(getClassK());
     DataType dataType = getDataType(getClassT());
-    connection.keyedGather(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
-        new TaskPartitionFunction<>(partitionFunction), new TaskKeySelectorImpl<>(selector));
+    connection.keyedPartition(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
+        new TaskPartitionFunction<K>(partitionFunction), new TaskKeySelectorImpl<>(selector));
   }
 }

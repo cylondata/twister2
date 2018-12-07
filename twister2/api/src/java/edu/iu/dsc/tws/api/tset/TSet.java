@@ -11,12 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import edu.iu.dsc.tws.api.tset.impl.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.impl.GroupedTSet;
-import edu.iu.dsc.tws.api.tset.impl.IFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.impl.IMapTSet;
-import edu.iu.dsc.tws.api.tset.impl.MapTSet;
-
 /**
  * Twister data set.
  *
@@ -30,11 +24,11 @@ public interface TSet<T> {
   TSet<T> setName(String name);
 
   /**
-   * Map
+   * Apply a map function and create a map data set
    *
-   * @param mapFn
-   * @param <P>
-   * @return
+   * @param mapFn map function
+   * @param <P> return type of function
+   * @return a TSet
    */
   <P> MapTSet<P, T> map(MapFunction<T, P> mapFn);
 

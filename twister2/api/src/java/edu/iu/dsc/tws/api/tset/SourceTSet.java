@@ -11,8 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.ops.SourceOp;
+import edu.iu.dsc.tws.common.config.Config;
 
-public interface TType {
-  DataType type();
+public class SourceTSet<T> extends BaseTSet<T> {
+  private Source<T> source;
+
+  public SourceTSet(Config cfg, TaskGraphBuilder bldr, Source<T> src) {
+    super(cfg, bldr);
+    this.source = src;
+  }
+
+  @Override
+  public boolean baseBuild() {
+    builder.addSource(getName(), new SourceOp<T>(source), parallel);
+    return true;
+  }
+
+  @Override
+  void buildConnection(ComputeConnection connection) {
+  }
 }

@@ -39,7 +39,7 @@ public class SinkOp<T> implements ISink {
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
-    TSetContext tSetContext = new TSetContext(ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
+    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
         ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
 
     sink.prepare(tSetContext);
