@@ -38,4 +38,9 @@ public class WorkerController {
                           @RequestBody StateChangeRequest<WorkerState> stateChangeRequest) {
     this.workerService.changeState(jobId, workerId, stateChangeRequest);
   }
+
+  @RequestMapping(value = "/{jobId}/{workerId}/beat/", method = RequestMethod.POST)
+  public void heartbeat(@PathVariable String jobId, @PathVariable Long workerId) {
+    this.workerService.heartbeat(jobId, workerId);
+  }
 }

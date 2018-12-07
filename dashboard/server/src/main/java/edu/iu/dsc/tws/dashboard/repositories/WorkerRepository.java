@@ -17,11 +17,17 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
+import java.util.Date;
+
 public interface WorkerRepository extends CrudRepository<Worker, Long> {
 
-  Iterable<Worker> findAllByJob_JobId(String jobId);
+  Iterable<Worker> findAllByJob_JobID(String jobId);
 
   @Modifying
-  @Query("update Worker worker set worker.state=?3 where worker.job.jobId=?1 and worker.workerId=?2")
+  @Query("update Worker worker set worker.state=?3 where worker.job.jobID=?1 and worker.workerID=?2")
   int changeWorkerState(String jobId, Long workerId, WorkerState workerState);
+
+  @Modifying
+  @Query("update Worker worker set worker.heartbeatTime=?2 where worker.job=?1 and worker.workerID=?2")
+  int heartbeat(String jobId, Long workerId, Date now);
 }

@@ -32,13 +32,10 @@ import javax.persistence.OneToMany;
 public class Job {
 
   @Id
-  private String jobId = UUID.randomUUID().toString();
+  private String jobID = UUID.randomUUID().toString();
 
   @Column(nullable = false)
   private String jobName;
-
-  @Column
-  private String description;
 
   @ApiModelProperty(hidden = true)
   @Column
@@ -105,12 +102,12 @@ public class Job {
     this.state = state;
   }
 
-  public String getJobId() {
-    return jobId;
+  public String getJobID() {
+    return jobID;
   }
 
-  public void setJobId(String jobId) {
-    this.jobId = jobId;
+  public void setJobID(String jobID) {
+    this.jobID = jobID;
   }
 
   public String getJobName() {
@@ -119,14 +116,6 @@ public class Job {
 
   public void setJobName(String jobName) {
     this.jobName = jobName;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
   }
 
   public Date getHeartbeatTime() {
@@ -148,9 +137,8 @@ public class Job {
   @Override
   public String toString() {
     return "Job{"
-            + "jobId='" + jobId + '\''
+            + "jobID='" + jobID + '\''
             + ", jobName='" + jobName + '\''
-            + ", description='" + description + '\''
             + ", heartbeatTime=" + heartbeatTime
             + ", workers=" + workers
             + '}';

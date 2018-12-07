@@ -47,10 +47,10 @@ public class JobService {
     //if node is defined without rack and data center, replace them with prefix+jobId
 
     if (StringUtils.isEmpty(job.getNode().getDataCenter())) {
-      job.getNode().setDataCenter("dc-" + job.getJobId());
+      job.getNode().setDataCenter("dc-" + job.getJobID());
     }
     if (StringUtils.isEmpty(job.getNode().getRack())) {
-      job.getNode().setRack("rk-" + job.getJobId());
+      job.getNode().setRack("rk-" + job.getJobID());
     }
     Node node = nodeService.createNode(job.getNode());
     job.setNode(node);

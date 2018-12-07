@@ -2,14 +2,25 @@ package edu.iu.dsc.tws.dashboard.rest_models;
 
 import edu.iu.dsc.tws.dashboard.data_models.composite_ids.NodeId;
 
+import java.util.HashMap;
+
 public class WorkerCreateRequest {
 
-  private String jobId;
-  private Long workerId;
+  private String jobID;
+  private Long workerID;
   private String workerIP;
   private Integer workerPort;
   private NodeId node;
   private Integer computeResourceIndex;
+  private HashMap<String, Integer> additionalPorts = new HashMap<>();
+
+  public HashMap<String, Integer> getAdditionalPorts() {
+    return additionalPorts;
+  }
+
+  public void setAdditionalPorts(HashMap<String, Integer> additionalPorts) {
+    this.additionalPorts = additionalPorts;
+  }
 
   public Integer getWorkerPort() {
     return workerPort;
@@ -19,20 +30,20 @@ public class WorkerCreateRequest {
     this.workerPort = workerPort;
   }
 
-  public String getJobId() {
-    return jobId;
+  public String getJobID() {
+    return jobID;
   }
 
-  public void setJobId(String jobId) {
-    this.jobId = jobId;
+  public void setJobID(String jobID) {
+    this.jobID = jobID;
   }
 
-  public Long getWorkerId() {
-    return workerId;
+  public Long getWorkerID() {
+    return workerID;
   }
 
-  public void setWorkerId(Long workerId) {
-    this.workerId = workerId;
+  public void setWorkerID(Long workerID) {
+    this.workerID = workerID;
   }
 
   public String getWorkerIP() {
