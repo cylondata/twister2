@@ -2,7 +2,6 @@ syntax = "proto3";
 package tws.proto.jobmaster;
 
 import "job.proto";
-import "htgjob.proto";
 
 option java_package = "edu.iu.dsc.tws.proto.jobmaster";
 option java_outer_classname = "JobMasterAPI";
@@ -127,30 +126,5 @@ message BarrierRequest {
 message BarrierResponse {
     oneof required {
         int32 workerID = 1;
-    }
-}
-
-//Newly Added for HTG Integration
-message HTGClientInfo {
-    oneof required {
-        int32 clientID = 1;
-    }
-    string clientIP = 2;
-    int32 port = 3;
-
-    NodeInfo nodeInfo = 4;
-}
-
-message HTGJobRequest {
-    oneof required {
-        string htg_jobname = 1;
-    }
-    tws.proto.htgjob.HTGJob htgJob = 2;
-    tws.proto.htgjob.ExecuteMessage executeMessage = 3;
-}
-
-message HTGJobResponse {
-    oneof required {
-        string htg_subgraphname = 1;
     }
 }

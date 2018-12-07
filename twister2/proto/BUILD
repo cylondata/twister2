@@ -34,7 +34,7 @@ proto_library(
     gen_java = 1,
     gen_py = 0,
     includes = ["twister2/proto"],
-    deps = ["proto_job", "proto_htgjob"],
+    deps = ["proto_job"],
 )
 
 proto_library(
@@ -53,7 +53,6 @@ proto_library(
     gen_java = 1,
     gen_py = 0,
     includes = ["twister2/proto"],
-    deps = ["proto_job"],
 )
 
 filegroup(
