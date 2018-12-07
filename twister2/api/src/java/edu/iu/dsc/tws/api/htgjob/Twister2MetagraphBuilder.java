@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.task.TaskConfigurations;
 import edu.iu.dsc.tws.common.config.Config;
 
@@ -29,7 +28,7 @@ public final class Twister2MetagraphBuilder {
   private int defaultParallelism;
   private String htgName;
 
-  private Map<String, Twister2MetaGraph.SubGraph> subGraphsMap = new HashMap<>();
+  private Map<String, Twister2Metagraph.SubGraph> subGraphsMap = new HashMap<>();
 
   private List<Twister2MetagraphConnection> metagraphComputeConnections = new ArrayList<>();
   private List<Twister2MetagraphConnection> metagraphSourceConnections = new ArrayList<>();
@@ -58,11 +57,11 @@ public final class Twister2MetagraphBuilder {
     this.connectionMode = mode;
   }
 
-  public Twister2MetagraphConnection addSource(String name, JobConfig config) {
+  public Twister2MetagraphConnection addSource(String name, Config config) {
 
     //Assign the config value to the graphs.
-    Twister2MetaGraph.SubGraph subGraph = new Twister2MetaGraph.SubGraph(
-        name, 2.0, 512, 1.0, 2, 1);
+    Twister2Metagraph.SubGraph subGraph = new Twister2Metagraph.SubGraph(
+        name, 2.0, 512, 1.0, 2, 1, config);
     subGraphsMap.put(name, subGraph);
     return createTwister2MetagraphConnection(name);
   }
@@ -73,24 +72,24 @@ public final class Twister2MetagraphBuilder {
     return sc;
   }
 
-  public Twister2MetagraphConnection addSink(String name, JobConfig config) {
+  public Twister2MetagraphConnection addSink(String name, Config config) {
 
     //Assign the config value to the graphs.
-    Twister2MetaGraph.SubGraph subGraph = new Twister2MetaGraph.SubGraph(name,
-        2.0, 1024, 1.0, 2, 1);
+    Twister2Metagraph.SubGraph subGraph = new Twister2Metagraph.SubGraph(name,
+        2.0, 1024, 1.0, 2, 1, config);
     subGraphsMap.put(name, subGraph);
     return createTwister2MetagraphConnection(name);
   }
 
-  public Twister2MetaGraph build() {
+  public Twister2Metagraph build() {
 
-    Twister2MetaGraph twister2HTGMetaGraph = new Twister2MetaGraph();
+    Twister2Metagraph twister2HTGMetaGraph = new Twister2Metagraph();
     twister2HTGMetaGraph.setConnectionMode(connectionMode);
     twister2HTGMetaGraph.setHTGName(htgName);
 
-    for (Map.Entry<String, Twister2MetaGraph.SubGraph> e : subGraphsMap.entrySet()) {
+    for (Map.Entry<String, Twister2Metagraph.SubGraph> e : subGraphsMap.entrySet()) {
       twister2HTGMetaGraph.addSubGraph(e.getKey(), e.getValue());
-      LOG.info("Key and Value:" + e.getKey() + "\t" + e.getValue());
+      LOG.fine("Key and Value:" + e.getKey() + "\t" + e.getValue());
     }
 
     for (Twister2MetagraphConnection c : metagraphComputeConnections) {

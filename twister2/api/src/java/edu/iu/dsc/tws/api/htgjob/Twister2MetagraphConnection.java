@@ -21,7 +21,7 @@ public class Twister2MetagraphConnection {
 
   private String nodeName;
 
-  private Map<String, Twister2MetaGraph.Relation> inputs = new HashMap<>();
+  private Map<String, Twister2Metagraph.Relation> inputs = new HashMap<>();
 
   public Twister2MetagraphConnection(String nodeName) {
     this.nodeName = nodeName;
@@ -31,30 +31,30 @@ public class Twister2MetagraphConnection {
    * Create a broadcast connection
    */
   public Twister2MetagraphConnection broadcast(String parent, String name) {
-    Twister2MetaGraph.Relation relation = new Twister2MetaGraph.Relation(parent, name);
+    Twister2Metagraph.Relation relation = new Twister2Metagraph.Relation(parent, name);
     inputs.put(parent, relation);
     return this;
   }
 
-  void buildCompute(Twister2MetaGraph graph) {
-    for (Map.Entry<String, Twister2MetaGraph.Relation> e : inputs.entrySet()) {
-      Twister2MetaGraph.SubGraph graph1 = graph.getMetaGraphMap(nodeName);
+  void buildCompute(Twister2Metagraph graph) {
+    for (Map.Entry<String, Twister2Metagraph.Relation> e : inputs.entrySet()) {
+      Twister2Metagraph.SubGraph graph1 = graph.getMetaGraphMap(nodeName);
       if (graph1 == null) {
         throw new RuntimeException("Failed to connect non-existing subgraph: " + nodeName);
       }
 
-      Twister2MetaGraph.SubGraph graph2 = graph.getMetaGraphMap(e.getKey());
+      Twister2Metagraph.SubGraph graph2 = graph.getMetaGraphMap(e.getKey());
       if (graph2 == null) {
         throw new RuntimeException("Failed to connect non-existing subgraph:" + e.getKey());
       }
 
-      LOG.info("Graph name:" + graph2.getName() + "\t" + graph1.getName()
+      LOG.fine("Graph name:" + graph2.getName() + "\t" + graph1.getName()
           + "\tRelation Name:" + e.getValue().getOperation());
       graph.addRelation(graph2.getName(), graph1.getName(), e.getValue());
     }
   }
 
-  void buildSource(Twister2MetaGraph metaGraph) {
+  void buildSource(Twister2Metagraph metaGraph) {
   }
 
 }

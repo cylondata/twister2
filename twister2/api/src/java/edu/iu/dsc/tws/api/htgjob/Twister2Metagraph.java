@@ -17,40 +17,40 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 
-public final class Twister2MetaGraph {
+public final class Twister2Metagraph {
 
-  private static final Logger LOG = Logger.getLogger(Twister2MetaGraph.class.getName());
+  private static final Logger LOG = Logger.getLogger(Twister2Metagraph.class.getName());
 
-  private Twister2MetaGraph twister2Metagraph;
+  private Twister2Metagraph twister2Metagraph;
 
   public static Map<String, SubGraph> metaGraphMap = new HashMap<>();
 
   private ConnectionMode connectionMode;
 
   private String htgJobName;
-  private JobConfig config;
-
-  public String getExecuteMessage() {
-    return executeMessage;
-  }
-
-  public void setExecuteMessage(String executeMessage) {
-    this.executeMessage = executeMessage;
-  }
+  private Config config;
 
   private String executeMessage;
 
   private Set<HTGJobAPI.Relation> relations = new HashSet<>();
   private Set<HTGJobAPI.SubGraph> subGraphs = new HashSet<>();
 
-  public Twister2MetaGraph getTwister2Metagraph() {
+  public String getExecuteMessage() {
+    return executeMessage;
+  }
+
+  public void setExecuteMessage(String subgraphName) {
+    this.executeMessage = subgraphName;
+  }
+
+  public Twister2Metagraph getTwister2Metagraph() {
     return twister2Metagraph;
   }
 
-  public void setTwister2Metagraph(Twister2MetaGraph twister2MetaGraph) {
+  public void setTwister2Metagraph(Twister2Metagraph twister2MetaGraph) {
     twister2Metagraph = twister2MetaGraph;
   }
 
@@ -62,7 +62,7 @@ public final class Twister2MetaGraph {
     metaGraphMap = metagraphMap;
   }
 
-  public Twister2MetaGraph setHTGName(String htgName) {
+  public Twister2Metagraph setHTGName(String htgName) {
     this.htgJobName = htgName;
     return this;
   }
@@ -71,7 +71,7 @@ public final class Twister2MetaGraph {
     return this.htgJobName;
   }
 
-  public Twister2MetaGraph setConnectionMode(ConnectionMode connectionmode) {
+  public Twister2Metagraph setConnectionMode(ConnectionMode connectionmode) {
     this.connectionMode = connectionmode;
     return this;
   }
@@ -80,8 +80,8 @@ public final class Twister2MetaGraph {
     return this.connectionMode;
   }
 
-  public Twister2MetaGraph setConfig(JobConfig jobconfig) {
-    this.config = jobconfig;
+  public Twister2Metagraph setConfig(Config config1) {
+    this.config = config1;
     return this;
   }
 
@@ -132,8 +132,6 @@ public final class Twister2MetaGraph {
     private String name;
     private String operation;
 
-    private Map<String, Object> properties = new HashMap<>();
-
     public Relation(String name, String operation) {
       this.name = name;
       this.operation = operation;
@@ -155,17 +153,6 @@ public final class Twister2MetaGraph {
       this.operation = operation;
     }
 
-    public void addProperty(String key, Object value) {
-      properties.put(key, value);
-    }
-
-    public Object getProperty(String key) {
-      return properties.get(key);
-    }
-
-    public void addProperties(Map<String, Object> props) {
-      this.properties.putAll(props);
-    }
   }
 
   public static final class SubGraph {
@@ -179,16 +166,27 @@ public final class Twister2MetaGraph {
     private int numberOfInstances = 2;
     private int workersPerPod = 1;
 
+    private Config config;
+
     private Map<String, Object> properties = new HashMap<>();
 
+    public Config getConfig() {
+      return config;
+    }
+
+    public void setJobConfig(Config config1) {
+      this.config = config1;
+    }
+
     public SubGraph(String graphname, double cpuvalue, int ramMegabytes, double diskGigabytes,
-                    int numberOfinstances, int workersPerpod) {
+                    int numberOfinstances, int workersPerpod, Config config1) {
       this.name = graphname;
       this.cpu = cpuvalue;
       this.ramMegaBytes = ramMegabytes;
       this.diskGigaBytes = diskGigabytes;
       this.numberOfInstances = numberOfinstances;
       this.workersPerPod = workersPerpod;
+      this.config = config1;
     }
 
     public String getName() {
@@ -219,44 +217,17 @@ public final class Twister2MetaGraph {
       return ramMegaBytes;
     }
 
-    public void setRamMegaBytes(int ramMegaBytes) {
-      this.ramMegaBytes = ramMegaBytes;
-    }
-
     public double getDiskGigaBytes() {
       return diskGigaBytes;
-    }
-
-    public void setDiskGigaBytes(double diskGigaBytes) {
-      this.diskGigaBytes = diskGigaBytes;
     }
 
     public int getNumberOfInstances() {
       return numberOfInstances;
     }
 
-    public void setNumberOfInstances(int numberOfInstances) {
-      this.numberOfInstances = numberOfInstances;
-    }
-
     public int getWorkersPerPod() {
       return workersPerPod;
     }
 
-    public void setWorkersPerPod(int workersPerPod) {
-      this.workersPerPod = workersPerPod;
-    }
-
-    public void addProperty(String key, Object value) {
-      properties.put(key, value);
-    }
-
-    public Object getProperty(String key) {
-      return properties.get(key);
-    }
-
-    public void addProperties(Map<String, Object> props) {
-      this.properties.putAll(props);
-    }
   }
 }

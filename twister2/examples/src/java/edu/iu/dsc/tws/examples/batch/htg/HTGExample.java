@@ -23,7 +23,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.htgjob.Twister2Client;
+import edu.iu.dsc.tws.api.htgjob.Twister2HTGSubmitter;
 import edu.iu.dsc.tws.api.htgjob.Twister2MetagraphBuilder;
 import edu.iu.dsc.tws.api.htgjob.Twister2MetagraphConnection;
 import edu.iu.dsc.tws.api.task.Collector;
@@ -37,7 +37,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IFunction;
@@ -106,8 +105,7 @@ public class HTGExample extends TaskWorker {
         streamingGraph).iterator().next().getTaskGraphName());
 
     //Invoke HTG Parser
-    HTGParser hierarchicalTaskGraphParser =
-        new HTGParser(hierarchicalTaskGraph);
+    HTGParser hierarchicalTaskGraphParser = new HTGParser(hierarchicalTaskGraph);
     List<DataFlowTaskGraph> dataFlowTaskGraphList =
         hierarchicalTaskGraphParser.hierarchicalTaskGraphParse();
 
@@ -117,8 +115,8 @@ public class HTGExample extends TaskWorker {
 
     //TODO:Invoke HTG Executor
     //testing
-    ExecutionPlan plan = taskExecutor.plan(batchGraph);
-    LOG.info("########### Task Schedule Plan Details:##########" + plan);
+    //ExecutionPlan plan = taskExecutor.plan(batchGraph);
+    //LOG.info("########### Task Schedule Plan Details:##########" + plan);
     //taskExecutor.execute(batchGraph, plan);
 
   }//End of execute method
@@ -204,14 +202,19 @@ public class HTGExample extends TaskWorker {
 
     //TODO:Design the metagraph
     Twister2MetagraphBuilder twister2MetagraphBuilder = Twister2MetagraphBuilder.newBuilder(config);
-    twister2MetagraphBuilder.addSource("subgraph1", jobConfig);
+    twister2MetagraphBuilder.addSource("sourcetaskgraph", config);
     Twister2MetagraphConnection twister2MetagraphConnection = twister2MetagraphBuilder.addSink(
-        "subgraph2", jobConfig);
-    twister2MetagraphConnection.broadcast("subgraph1", "broadcast");
+        "sinktaskgraph", config);
+    twister2MetagraphConnection.broadcast("sourcetaskgraph", "broadcast");
     twister2MetagraphBuilder.setHtgName("htg");
 
     //TODO:Invoke HTG Client and send the metagraph -> start with FIFO
-    Twister2Client.execute(twister2MetagraphBuilder.build(), config, HTGExample.class.getName());
+    //Twister2Client.execute(
+    //    twister2MetagraphBuilder.build(), config, jobConfig, HTGExample.class.getName());
+
+    Twister2HTGSubmitter twister2HTGSubmitter = new Twister2HTGSubmitter(config);
+    twister2HTGSubmitter.execute(twister2MetagraphBuilder.build(),
+        jobConfig, HTGExample.class.getName());
 
     /*Twister2MetaGraph twister2MetaGraph = twister2MetagraphBuilder.build();
     Twister2MetaGraph.SubGraph subGraph = Twister2HTGClient.execute(twister2MetaGraph);
