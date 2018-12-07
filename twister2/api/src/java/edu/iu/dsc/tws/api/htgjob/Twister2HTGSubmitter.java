@@ -51,7 +51,6 @@ public final class Twister2HTGSubmitter {
     //Call the schedule method to identify the graph to be executed
 
     List<String> scheduleGraphs = schedule(twister2Metagraph);
-
     buildHTGJob(scheduleGraphs, twister2Metagraph, workerclassName, jobConfig);
   }
 

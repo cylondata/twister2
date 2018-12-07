@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.htgjob;
 
 import java.nio.channels.SocketChannel;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -19,6 +20,7 @@ import com.google.protobuf.Message;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
+import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
@@ -143,7 +145,6 @@ public class Twister2HTGClient {
   }
 
   public void close() {
-    LOG.info("Connection Closed");
     stopLooper = true;
     looper.wakeup();
   }
@@ -295,21 +296,35 @@ public class Twister2HTGClient {
         .setExecuteMessage(executeMessage)
         .build();
 
-    LOG.info("##### Execute Graph Name: #####" + executeMessage.getSubgraphName());
+    LOG.info("HTG Job Client Message and Execute Message:" + htgJob + "\t" + executeMessage);
 
-    //TODO: Proper Request/Response from the Job Master
-    RequestID requestID = rrClient.sendRequest(htgJobRequest);
-    /*try {
-      rrClient.sendRequestWaitResponse(htgJobRequest,
-          JobMasterContext.responseWaitDuration(config));
-    } catch (BlockingSendException e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-      return false;
-    }*/
+    if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
+      try {
+        rrClient.sendRequestWaitResponse(htgJobRequest,
+            JobMasterContext.responseWaitDuration(config));
+      } catch (BlockingSendException bse) {
+        LOG.log(Level.SEVERE, bse.getMessage(), bse);
+        return false;
+      }
 
-    //startingMessageSent = true;
+    } else {
+      RequestID requestID = rrClient.sendRequest(htgJobRequest);
+      LOG.info("%%%%%% I am entering else loop in htg client starting message");
+      try {
+        rrClient.sendRequestWaitResponse(htgJobRequest,
+            JobMasterContext.responseWaitDuration(config));
+      } catch (BlockingSendException e) {
+        e.printStackTrace();
+      }
+
+      if (requestID == null) {
+        LOG.severe("Couldn't send HTG Client starting message: " + htgJobRequest);
+        return false;
+      }
+    }
+
+    startingMessageSent = true;
     //pinger.sendPingMessage();
     return true;
   }
 }
-
