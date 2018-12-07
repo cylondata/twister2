@@ -42,7 +42,7 @@ public class Job {
   private Date heartbeatTime; //job master heartbeat
 
   @ApiModelProperty(hidden = true)
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "job",
+  @OneToMany(fetch = FetchType.EAGER, mappedBy = "job",
           orphanRemoval = true)
   private Set<Worker> workers = new HashSet<>();
 

@@ -36,8 +36,9 @@ public class Worker {
   @ApiModelProperty(hidden = true)
   @Id
   @ManyToOne(optional = false)
-  @JoinColumn(referencedColumnName = "jobID")
-  @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state", "computeResources", "node"})
+  @JoinColumn
+  @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state",
+          "computeResources", "node", "numberOfWorkers", "workerClass"})
   private Job job;
 
   @Column

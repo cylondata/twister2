@@ -10,6 +10,7 @@ import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import edu.iu.dsc.tws.dashboard.rest_models.WorkerCreateRequest;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.Calendar;
 import java.util.Date;
 
 @Service
@@ -44,6 +45,7 @@ public class WorkerService {
     worker.setWorkerID(workerCreateRequest.getWorkerID());
     worker.setWorkerIP(workerCreateRequest.getWorkerIP());
     worker.setWorkerPort(workerCreateRequest.getWorkerPort());
+    worker.setHeartbeatTime(Calendar.getInstance().getTime());
 
     //job
     Job jobById = jobService.getJobById(workerCreateRequest.getJobID());
@@ -65,9 +67,9 @@ public class WorkerService {
       WorkerPort workerPort = new WorkerPort();
       workerPort.setLabel(label);
       workerPort.setPort(port);
+      workerPort.setWorker(worker);
       worker.getWorkerPorts().add(workerPort);
     });
-
 
     return this.workerRepository.save(worker);
   }

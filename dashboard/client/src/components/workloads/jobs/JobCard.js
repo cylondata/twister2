@@ -1,42 +1,37 @@
 import React from "react";
-import {Card, Elevation, Icon, Button} from "@blueprintjs/core";
+import {Card, Elevation, Icon, Button, Tag} from "@blueprintjs/core";
 import "./JobCard.css";
+import {ComputeResourceCard} from "../../grid/compute-resource/ComputeResourceCard";
+import NodeTag from "../../grid/nodes/NodeTag";
+import WorkerTag from "../../grid/workers/WorkerTag";
 
 export default class JobCard extends React.Component {
 
     constructor(props) {
         super(props);
+        this.state = {
+            job: this.props.job
+        };
     }
 
     render() {
         return (
             <Card interactive={true} elevation={Elevation.ZERO} className="tw-node-card">
                 <div>
-                    <Icon icon="desktop" iconSize={50} className="tw-node-icon"/>
+                    <Icon icon="new-grid-item" iconSize={40} className="tw-node-icon"/>
                 </div>
                 <div className="tw-node-info-wrapper">
                     <h4>
-                        Job 1
+                        {this.state.job.jobName.toUpperCase()}
                     </h4>
                     <table className="bp3-html-table bp3-html-table-striped">
                         <tbody>
                         <tr>
                             <td>
-                                Name
+                                Worker Class
                             </td>
                             <td>
-                                Fraud detection job
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Description
-                            </td>
-                            <td>
-                                Cash Transaction Monitoring. Identify cash transactions just below regulatory reporting
-                                thresholds. Identify a series of cash disbursements by customer number that together
-                                exceed regulatory reporting threshold. Billing. Identify unusually large number of
-                                waived fee by branch or by employee.
+                                {this.state.job.workerClass}
                             </td>
                         </tr>
                         <tr>
@@ -44,35 +39,54 @@ export default class JobCard extends React.Component {
                                 Cluster
                             </td>
                             <td>
-                                <Button text="Cluster X" minimal={true} icon={"layout-sorted-clusters"} small={true}/>
+                                <Button text={this.state.job.node.cluster.name} minimal={true}
+                                        icon={"layout-sorted-clusters"} small={true}/>
                             </td>
                         </tr>
                         <tr>
                             <td>
-                                Tasks
+                                Node
                             </td>
                             <td>
-                                <Button text="Task 1" minimal={true} icon={"layers"} small={true}/>
-                                <Button text="Task 2" minimal={true} icon={"layers"} small={true}/>
-                                <Button text="Task 3" minimal={true} icon={"layers"} small={true}/>
-                                <Button text="Task 4" minimal={true} icon={"layers"} small={true}/>
-                                <Button text="Task 5" minimal={true} icon={"layers"} small={true}/>
+                                <NodeTag node={this.state.job.node}/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Number of Workers
+                            </td>
+                            <td>
+                                {this.state.job.numberOfWorkers}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Workers
+                            </td>
+                            <td>
+                                {
+                                    this.state.job.workers.map(worker => {
+                                        return <WorkerTag worker={worker}/>
+                                    })
+                                }
                             </td>
                         </tr>
                         <tr>
                             <td>
                                 State
                             </td>
-                            <td style={{color: "green"}}>
-                                Running
+                            <td>
+                                <Tag minimal={true}>{this.state.job.state}</Tag>
                             </td>
                         </tr>
                         <tr>
                             <td>
-                                Heartbeat
+                                Compute Resources
                             </td>
                             <td>
-                                {new Date().toTimeString()}
+                                {this.state.job.computeResources.map(cr => {
+                                    return <ComputeResourceCard cr={cr} index={cr.index}/>
+                                })}
                             </td>
                         </tr>
                         </tbody>

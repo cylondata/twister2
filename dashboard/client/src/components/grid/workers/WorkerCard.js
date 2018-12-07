@@ -13,7 +13,7 @@ export default class WorkerCard extends React.Component {
         return (
             <Card interactive={true} elevation={Elevation.ZERO} className="tw-node-card">
                 <div>
-                    <Icon icon="ninja" iconSize={50} className="tw-node-icon"/>
+                    <Icon icon="ninja" iconSize={40} className="tw-node-icon"/>
                 </div>
                 <div className="tw-node-info-wrapper">
                     <h4>
