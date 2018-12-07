@@ -296,7 +296,7 @@ public class Twister2HTGClient {
         .setExecuteMessage(executeMessage)
         .build();
 
-    LOG.info("HTG Job Client Message and Execute Message:" + htgJob + "\t" + executeMessage);
+    //LOG.info("HTG Job Client Message and Execute Message:" + htgJob + "\t" + executeMessage);
 
     if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
       try {
@@ -309,7 +309,6 @@ public class Twister2HTGClient {
 
     } else {
       RequestID requestID = rrClient.sendRequest(htgJobRequest);
-      LOG.info("%%%%%% I am entering else loop in htg client starting message");
       try {
         rrClient.sendRequestWaitResponse(htgJobRequest,
             JobMasterContext.responseWaitDuration(config));
