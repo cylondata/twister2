@@ -137,14 +137,12 @@ public final class K8sWorkerStarter {
         + "hostIP(nodeIP): " + hostIP + "\n"
     );
 
-    // start JobMasterClient
+    // construct JobMasterClient
     jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP,
         JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
 
-    Thread clientThread = jobMasterClient.startThreaded();
-    if (clientThread == null) {
-      throw new RuntimeException("Can not start JobMasterClient thread.");
-    }
+    // start JobMasterClient
+    jobMasterClient.startThreaded();
 
     // we will be running the Worker, send running message
     jobMasterClient.sendWorkerRunningMessage();

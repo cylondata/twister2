@@ -88,19 +88,16 @@ public final class JobMasterClientExample {
 
     int workerTempID = 0;
     JobAPI.ComputeResource computeResource = job.getComputeResource(0);
+    int numberOfWorkers = computeResource.getInstances() * computeResource.getWorkersPerPod();
 
     JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
         workerTempID, workerIP.getHostAddress(), workerPort, nodeInfo, computeResource);
 
     String jobMasterAddress = "localhost";
-    JobMasterClient client = new JobMasterClient(config, workerInfo, jobMasterAddress);
-    Thread clientThread = client.startThreaded();
-    if (clientThread == null) {
-      LOG.severe("JobMasterClient can not initialize. Exiting ...");
-      return;
-    }
-
-//    client.registerWorker();
+    int jobMasterPort = JobMasterContext.jobMasterPort(config);
+    JobMasterClient client =
+        new JobMasterClient(config, workerInfo, jobMasterAddress, jobMasterPort, numberOfWorkers);
+    client.startThreaded();
 
     IWorkerController workerController = client.getJMWorkerController();
 

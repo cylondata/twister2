@@ -69,7 +69,6 @@ public class JobMasterClient {
   private Pinger pinger;
   private JMWorkerController jmWorkerController;
 
-  private boolean registerMessageSent = false;
   private boolean registrationSucceeded;
 
   private int numberOfWorkers;
@@ -85,11 +84,6 @@ public class JobMasterClient {
    */
   private boolean connectionRefused = false;
 
-  public JobMasterClient(Config config, WorkerInfo thisWorker) {
-    this(config, thisWorker, JobMasterContext.jobMasterIP(config),
-        JobMasterContext.jobMasterPort(config), JobMasterContext.workerInstances(config));
-  }
-
   public JobMasterClient(Config config,
                          WorkerInfo thisWorker,
                          String masterHost,
@@ -100,13 +94,6 @@ public class JobMasterClient {
     this.masterAddress = masterHost;
     this.masterPort = masterPort;
     this.numberOfWorkers = numberOfWorkers;
-  }
-
-  public JobMasterClient(Config config, WorkerInfo thisWorker, String jobMasterIP) {
-    this.config = config;
-    this.thisWorker = thisWorker;
-    this.masterAddress = jobMasterIP;
-    this.masterPort = JobMasterContext.jobMasterPort(config);
   }
 
   /**
@@ -122,7 +109,7 @@ public class JobMasterClient {
    * wait until it connects to JobMaster
    * return false, if it can not connect to JobMaster
    */
-  private boolean init() {
+  private void init() {
 
     looper = new Progress();
 
@@ -131,8 +118,9 @@ public class JobMasterClient {
         thisWorker.getWorkerID(), connectHandler);
 
     long interval = JobMasterContext.pingInterval(config);
-    pinger = new Pinger(this, rrClient, interval);
+    pinger = new Pinger(thisWorker.getWorkerID(), rrClient, interval);
 
+    // protocol buffer message registrations
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
     rrClient.registerResponseHandler(pingBuilder, pinger);
 
@@ -156,11 +144,8 @@ public class JobMasterClient {
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
 
     if (!rrClient.isConnected()) {
-      LOG.severe("JobMasterClient can not connect to Job Master. Exiting .....");
-      return false;
+      throw new RuntimeException("JobMasterClient can not connect to Job Master. Exiting .....");
     }
-
-    return true;
   }
 
   /**
@@ -216,11 +201,8 @@ public class JobMasterClient {
    * start the Job Master Client in a Thread
    */
   public Thread startThreaded() {
-    // first call the init method
-    boolean initialized = init();
-    if (!initialized) {
-      return null;
-    }
+    // first initialize the client, connect to Job Master
+    init();
 
     Thread jmThread = new Thread() {
       public void run() {
@@ -232,7 +214,7 @@ public class JobMasterClient {
 
     boolean registered = registerWorker();
     if (!registered) {
-      return null;
+      throw new RuntimeException("Could not register JobMaster with Dashboard. Exiting .....");
     }
 
     return jmThread;
@@ -241,21 +223,16 @@ public class JobMasterClient {
   /**
    * start the Job Master Client in a blocking call
    */
-  public boolean startBlocking() {
-    // first call the init method
-    boolean initialized = init();
-    if (!initialized) {
-      return false;
-    }
+  public void startBlocking() {
+    // first initialize the client, connect to Job Master
+    init();
 
     startLooping();
 
     boolean registered = registerWorker();
     if (!registered) {
-      return false;
+      throw new RuntimeException("Could not register JobMaster with Dashboard. Exiting .....");
     }
-
-    return true;
   }
 
   /**
@@ -392,6 +369,8 @@ public class JobMasterClient {
 
         if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
           thisWorker = WorkerInfoUtils.updateWorkerID(thisWorker, responseMessage.getWorkerID());
+          pinger.setWorkerID(responseMessage.getWorkerID());
+          rrClient.setWorkerID(responseMessage.getWorkerID());
         }
 
       } else if (message instanceof JobMasterAPI.WorkerStateChangeResponse) {
