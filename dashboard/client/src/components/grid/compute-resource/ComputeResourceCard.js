@@ -23,13 +23,13 @@ export class ComputeResourceCard extends React.Component {
         return (
             <Card elevation={Elevation.ZERO} className="compute-resource-card">
                 <div>
-                    <Icon icon="database"/> 1GB
+                    <Icon icon="database"/> {this.props.cr.disk} GB
                 </div>
                 <div>
-                    <Icon icon="widget-button"/> 1GB
+                    <Icon icon="widget-button"/> {this.props.cr.ram} GB
                 </div>
                 <div>
-                    <Icon icon="calculator"/> 1 Core
+                    <Icon icon="calculator"/> {this.props.cr.cpu} Core{this.props.cr.cpu === 1 ? "" : "s"}
                 </div>
             </Card>
         );

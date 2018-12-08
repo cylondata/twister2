@@ -4,6 +4,7 @@ import "./JobCard.css";
 import {ComputeResourceCard} from "../../grid/compute-resource/ComputeResourceCard";
 import NodeTag from "../../grid/nodes/NodeTag";
 import WorkerTag from "../../grid/workers/WorkerTag";
+import ClusterTag from "../../grid/clusters/ClusterTag";
 
 export default class JobCard extends React.Component {
 
@@ -39,8 +40,7 @@ export default class JobCard extends React.Component {
                                 Cluster
                             </td>
                             <td>
-                                <Button text={this.state.job.node.cluster.name} minimal={true}
-                                        icon={"layout-sorted-clusters"} small={true}/>
+                                <ClusterTag cluster={this.state.job.node.cluster}/>
                             </td>
                         </tr>
                         <tr>
@@ -97,7 +97,7 @@ export default class JobCard extends React.Component {
                         {!this.props.finished &&
                         <Button icon="stop">Stop</Button>}
                         <Button icon="refresh">Sync</Button>
-                        <Button icon="ninja">Tasks</Button>
+                        {/*<Button icon="ninja">Tasks</Button>*/}
                     </div>
                 </div>
             </Card>

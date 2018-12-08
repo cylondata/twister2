@@ -47,6 +47,7 @@ export default class Dashboard extends React.Component {
                 break;
             case MENU_WORKERS:
                 this.props.history.push("/workers");
+                break;
             default:
                 break;
         }
@@ -165,8 +166,6 @@ export default class Dashboard extends React.Component {
                             <Route exact path='/clusters' component={ClustersComponents}/>
                             <Route exact path='/jobs' component={JobsComponents}/>
                             <Route exact path='/newjob' component={NewJobCreateComponent}/>
-
-
                             <Route exact path='/workers' component={WorkerComponents}/>
                             <Route exact path='/workers/:workerId' component={WorkerInfoComponent}/>
                         </Switch>

@@ -12,7 +12,7 @@ export default class DashboardHome extends React.Component {
     render() {
         let nodeCards = [];
         for (let i = 0; i < 5; i++) {
-            nodeCards.push(<JobCard key={i}/>);
+            //nodeCards.push(<JobCard key={i}/>);
         }
 
         return (
@@ -22,7 +22,7 @@ export default class DashboardHome extends React.Component {
                 </h1>
                 <div className="t2-quick-view-charts">
                     <div className="t2-quick-view-chart-wrapper">
-                        <h4 className="text-center">Clusters</h4>
+                        <h4 className="text-center">Workers</h4>
                         <Doughnut data={{
                             datasets: [{
                                 data: [10, 20, 1],
@@ -36,7 +36,7 @@ export default class DashboardHome extends React.Component {
                         }}/>
                     </div>
                     <div className="t2-quick-view-chart-wrapper">
-                        <h4 className="text-center">Nodes</h4>
+                        <h4 className="text-center">Jobs</h4>
                         <Doughnut data={{
                             datasets: [{
                                 data: [30, 60, 20],
@@ -45,34 +45,6 @@ export default class DashboardHome extends React.Component {
                             labels: [
                                 'Running',
                                 'Detached',
-                                'Error'
-                            ]
-                        }}/>
-                    </div>
-                    <div className="t2-quick-view-chart-wrapper">
-                        <h4 className="text-center">Workers</h4>
-                        <Doughnut data={{
-                            datasets: [{
-                                data: [50, 30, 20],
-                                backgroundColor: ["#FFA000", "#2E7D32", "#e53935"]
-                            }],
-                            labels: [
-                                'Running',
-                                'Completed',
-                                'Error'
-                            ]
-                        }}/>
-                    </div>
-                    <div className="t2-quick-view-chart-wrapper">
-                        <h4 className="text-center">Jobs</h4>
-                        <Doughnut data={{
-                            datasets: [{
-                                data: [100, 60, 100],
-                                backgroundColor: ["#FFA000", "#2E7D32", "#e53935"]
-                            }],
-                            labels: [
-                                'Running',
-                                'Completed',
                                 'Error'
                             ]
                         }}/>
