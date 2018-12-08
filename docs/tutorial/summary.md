@@ -1,5 +1,6 @@
 
-<img src="fox.png" width="150" height="150">
+<img align="left" width="125" height="125" src="fox.png">
+
 
 ### Geoffrey C. FOX
 
