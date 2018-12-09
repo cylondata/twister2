@@ -24,4 +24,10 @@ export class JobService {
             RestService.buildURL("jobs/" + jobId)
         );
     }
+
+    static getJobStats() {
+        return axios.get(
+            RestService.buildURL("jobs/stats/")
+        );
+    }
 }

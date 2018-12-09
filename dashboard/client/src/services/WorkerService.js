@@ -22,4 +22,10 @@ export class WorkerService {
             ["workers", jobId, workerIndex].join("/"))
         );
     }
+
+    static getWorkerStats() {
+        return axios.get(
+            RestService.buildURL("workers/stats/")
+        );
+    }
 }
