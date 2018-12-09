@@ -23,6 +23,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.data.api.DataType;
 
@@ -48,6 +54,32 @@ public final class Utils {
         return MessageType.SHORT;
       default:
         throw new RuntimeException("Un-expected type");
+    }
+  }
+
+  public static byte[] serialize(Object obj) {
+    try {
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      ObjectOutputStream oos = new ObjectOutputStream(bos);
+      oos.writeObject(obj);
+      oos.close();
+      return bos.toByteArray();
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
+  }
+
+  public static Object deserialize(byte[] serialized) {
+    try {
+      ByteArrayInputStream bis = new ByteArrayInputStream(serialized);
+      ObjectInputStream ois = new ObjectInputStream(bis);
+      Object ret = ois.readObject();
+      ois.close();
+      return ret;
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
     }
   }
 }

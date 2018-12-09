@@ -68,7 +68,7 @@ public class BPartition {
         finalRcvr, new PartitionPartialReceiver(),
         DataFlowPartition.PartitionStratergy.DIRECT, dataType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
 
   /**
