@@ -54,6 +54,7 @@ export default class DashboardHome extends React.Component {
                     <h4>Pinned Jobs</h4>
                     <div className="tw-dash-pinned-items-wrapper">
                         {nodeCards}
+                        {nodeCards.length === 0 ? "No pinned jobs available!" : ""}
                     </div>
                 </div>
             </div>

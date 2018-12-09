@@ -28,6 +28,9 @@ const MENU_WORKERS = 3;
 
 const MENU_JOBS = 4;
 
+const MENU_DOCS = 5;
+const MENU_ABOUT = 6;
+
 export const DashToaster = Toaster.create({
     position: Position.BOTTOM_RIGHT,
 });
@@ -51,6 +54,9 @@ export default class Dashboard extends React.Component {
                 break;
             case MENU_WORKERS:
                 this.props.history.push("/workers");
+                break;
+            case MENU_DOCS:
+                window.open('https://twister2.gitbook.io/twister2', '_blank');
                 break;
             default:
                 break;
@@ -151,7 +157,7 @@ export default class Dashboard extends React.Component {
                                     label: "Settings"
                                 },
                                 {
-                                    id: 7,
+                                    id: MENU_DOCS,
                                     icon: "document",
                                     label: "Documentation"
                                 },

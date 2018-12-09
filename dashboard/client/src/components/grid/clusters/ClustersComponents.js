@@ -27,17 +27,16 @@ export default class ClustersComponents extends React.Component {
 
     render() {
 
-        let nodeCards = [];
-        for (let i = 0; i < 5; i++) {
-            nodeCards.push(<ClusterCard key={i}/>);
-        }
+        let nodeCards = this.state.clusters.map(cluster => {
+           return <ClusterCard cluster={cluster}/>
+        });
 
         return (
             <div>
                 <h1 className="t2-page-heading">Clusters</h1>
                 <div className="t2-nodes-container">
                     {nodeCards}
-                    <NewClusterCard/>
+                    {/*<NewClusterCard/>*/}
                 </div>
             </div>
         );
