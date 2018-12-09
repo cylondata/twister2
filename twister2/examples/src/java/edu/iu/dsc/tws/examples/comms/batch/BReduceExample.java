@@ -91,6 +91,11 @@ public class BReduceExample extends BenchWorker {
   }
 
   @Override
+  public void close() {
+    reduce.close();
+  }
+
+  @Override
   protected boolean isDone() {
     return reduceDone && sourcesDone && !reduce.hasPending();
   }
