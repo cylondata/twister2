@@ -9,7 +9,7 @@ import {
     MenuItem,
     Divider,
     Tree,
-    Classes
+    Classes, Toaster
 } from "@blueprintjs/core";
 import LOGO from "./half.svg";
 import "./Dashboard.css";
@@ -27,6 +27,10 @@ const MENU_CLUSTERS = 2;
 const MENU_WORKERS = 3;
 
 const MENU_JOBS = 4;
+
+export const DashToaster = Toaster.create({
+    position: Position.BOTTOM_RIGHT,
+});
 
 export default class Dashboard extends React.Component {
 
@@ -134,11 +138,11 @@ export default class Dashboard extends React.Component {
                                             icon: "new-grid-item",
                                             label: "Jobs"
                                         },
-                                        {
-                                            id: 5,
-                                            icon: "layers",
-                                            label: "Tasks"
-                                        }
+                                        // {
+                                        //     id: 5,
+                                        //     icon: "layers",
+                                        //     label: "Tasks"
+                                        // }
                                     ]
                                 },
                                 {

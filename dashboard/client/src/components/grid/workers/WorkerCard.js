@@ -1,21 +1,71 @@
 import React from "react";
-import {Card, Elevation, Icon, Button, Tag} from "@blueprintjs/core";
+import {Button, Card, Elevation, Icon, Tag, Intent} from "@blueprintjs/core";
 import "./WorkerCard.css";
 import {Link} from "react-router-dom";
 import JobTag from "../../workloads/jobs/JobTag";
-import ClusterCard from "../clusters/ClusterCard";
 import ClusterTag from "../clusters/ClusterTag";
 import NodeTag from "../nodes/NodeTag";
 import {ComputeResourceCard} from "../compute-resource/ComputeResourceCard";
+import {WorkerService} from "../../../services/WorkerService";
+import {DashToaster} from "../../Dashboard";
 
 export default class WorkerCard extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            worker: this.props.worker
+            worker: this.props.worker,
+            workerSyncing: false,
+            workerStateIntent: this.getStateIntent(this.props.worker.state)
         }
     }
+
+    getStateIntent = (state) => {
+        switch (state) {
+            case "COMPLETED":
+                return Intent.SUCCESS;
+            case "KILLED":
+                return Intent.DANGER;
+            case "NOT_PINGING":
+                return Intent.WARNING;
+            case "FAILED":
+                return Intent.DANGER;
+            default:
+                return Intent.NONE;
+        }
+    };
+
+    setWorkerSyncing = (syncing) => {
+        this.setState({
+            workerSyncing: syncing
+        })
+    };
+
+    syncWorker = () => {
+        this.setWorkerSyncing(true);
+        WorkerService.getWorkerById(
+            this.state.worker.job.jobID,
+            this.state.worker.workerID
+        ).then(response => {
+            this.setState({
+                worker: response.data,
+                workerSyncing: false,
+                workerStateIntent: this.getStateIntent(response.data.state)
+            });
+            DashToaster.show({
+                message: "Successfully synced worker " + this.state.worker.workerID +
+                    " of Job " + this.state.worker.job.jobID,
+                intent: Intent.SUCCESS
+            });
+        }).catch(err => {
+            this.setWorkerSyncing(false);
+            DashToaster.show({
+                message: "Failed to sync worker " + this.state.worker.workerID +
+                    " of Job " + this.state.worker.job.jobID,
+                intent: Intent.DANGER
+            });
+        });
+    };
 
     render() {
         return (
@@ -74,7 +124,8 @@ export default class WorkerCard extends React.Component {
                                 State
                             </td>
                             <td>
-                                <Tag minimal={true}>{this.state.worker.state}</Tag>
+                                <Tag minimal={true}
+                                     intent={this.state.workerStateIntent}>{this.state.worker.state}</Tag>
                             </td>
                         </tr>
                         <tr>
@@ -122,7 +173,7 @@ export default class WorkerCard extends React.Component {
                         <Link to="/workers/worker1">
                             <Button icon="info-sign">Logs</Button>
                         </Link>
-                        <Button icon="refresh">Sync</Button>
+                        <Button icon="refresh" onClick={this.syncWorker}>Sync</Button>
                     </div>
                 </div>
             </Card>

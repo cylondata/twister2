@@ -16,4 +16,10 @@ export class WorkerService {
     static getAllWorkers() {
         return axios.get(RestService.buildURL("workers"));
     }
+
+    static getWorkerById(jobId, workerIndex) {
+        return axios.get(RestService.buildURL(
+            ["workers", jobId, workerIndex].join("/"))
+        );
+    }
 }

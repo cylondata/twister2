@@ -9,19 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-import axios from "axios";
+
 import {RestService} from "./RestService";
+import axios from "axios";
 
-export class JobService {
-    static getAllJobs() {
-        return axios.get(
-            RestService.buildURL("jobs")
-        );
-    }
-
-    static getJobById(jobId) {
-        return axios.get(
-            RestService.buildURL("jobs/" + jobId)
-        );
+export class NodeService {
+    static loadAllNodes() {
+        return axios.get(RestService.buildURL("nodes"));
     }
 }

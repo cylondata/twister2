@@ -1,19 +1,62 @@
 import React from "react";
-import {Card, Elevation, Icon, Button, Tag} from "@blueprintjs/core";
+import {Card, Elevation, Icon, Button, Tag, Intent} from "@blueprintjs/core";
 import "./JobCard.css";
 import {ComputeResourceCard} from "../../grid/compute-resource/ComputeResourceCard";
 import NodeTag from "../../grid/nodes/NodeTag";
 import WorkerTag from "../../grid/workers/WorkerTag";
 import ClusterTag from "../../grid/clusters/ClusterTag";
+import {JobService} from "../../../services/JobService";
+import {DashToaster} from "../../Dashboard";
 
 export default class JobCard extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            job: this.props.job
+            job: this.props.job,
+            syncing: false,
+            stateIntent: this.getStateIntent(this.props.job.state)
         };
     }
+
+    syncJob = () => {
+        this.setState({
+            syncing: true
+        });
+
+        JobService.getJobById(this.state.job.jobID).then(respone => {
+            this.setState({
+                job: respone.data,
+                syncing: false,
+                stateIntent: this.getStateIntent(respone.data.state)
+            });
+            DashToaster.show({
+                message: "Successfully synced Job: " + this.state.job.jobID,
+                intent: Intent.SUCCESS
+            });
+        }).catch(err => {
+            DashToaster.show({
+                message: "Failed to sync Job: " + this.state.job.jobID,
+                intent: Intent.DANGER
+            });
+            this.setState({
+                syncing: false
+            });
+        });
+    };
+
+    getStateIntent = (state) => {
+        switch (state) {
+            case "STARTED":
+                return Intent.PRIMARY;
+            case "COMPLETED":
+                return Intent.SUCCESS;
+            case "FAILED":
+                return Intent.DANGER;
+            default:
+                return Intent.NONE;
+        }
+    };
 
     render() {
         return (
@@ -76,7 +119,7 @@ export default class JobCard extends React.Component {
                                 State
                             </td>
                             <td>
-                                <Tag minimal={true}>{this.state.job.state}</Tag>
+                                <Tag minimal={true} intent={this.state.stateIntent}>{this.state.job.state}</Tag>
                             </td>
                         </tr>
                         <tr>
@@ -92,11 +135,13 @@ export default class JobCard extends React.Component {
                         </tbody>
                     </table>
                     <div className="tw-node-actions">
-                        {this.props.finished &&
-                        <Button icon="play">Start</Button>}
-                        {!this.props.finished &&
-                        <Button icon="stop">Stop</Button>}
-                        <Button icon="refresh">Sync</Button>
+                        {/*{this.props.finished &&*/}
+                        {/*<Button icon="play">Start</Button>}*/}
+                        {/*{!this.props.finished &&*/}
+                        {/*<Button icon="stop">Stop</Button>}*/}
+                        <Button icon="refresh" loading={this.state.syncing} onClick={this.syncJob}>
+                            Sync
+                        </Button>
                         {/*<Button icon="ninja">Tasks</Button>*/}
                     </div>
                 </div>
