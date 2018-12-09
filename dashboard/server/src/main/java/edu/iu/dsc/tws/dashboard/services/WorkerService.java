@@ -1,6 +1,7 @@
 package edu.iu.dsc.tws.dashboard.services;
 
 import edu.iu.dsc.tws.dashboard.data_models.*;
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,7 @@ import edu.iu.dsc.tws.dashboard.rest_models.WorkerCreateRequest;
 import javax.persistence.EntityNotFoundException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Optional;
 
 @Service
 public class WorkerService {
@@ -92,5 +94,19 @@ public class WorkerService {
   private void throwNoSuchWorker(String jobId, Long workerId) {
     throw new EntityNotFoundException("No such worker " + workerId
             + " found in job " + jobId);
+  }
+
+  public Worker getWorkerById(String jobId, Long workerId) {
+    WorkerId workerIdObj = new WorkerId();
+    workerIdObj.setJob(jobId);
+    workerIdObj.setWorkerID(workerId);
+
+    Optional<Worker> byId = this.workerRepository.findById(workerIdObj);
+    if (byId.isPresent()) {
+      return byId.get();
+    } else {
+      throwNoSuchWorker(jobId, workerId);
+      return null;
+    }
   }
 }

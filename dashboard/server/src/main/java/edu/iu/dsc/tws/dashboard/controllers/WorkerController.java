@@ -31,6 +31,12 @@ public class WorkerController {
     return this.workerService.createWorker(workerCreateRequest);
   }
 
+  @RequestMapping(value = "/{jobId}/{workerId}/", method = RequestMethod.GET)
+  public Worker getAllWorkers(@PathVariable String jobId,
+                              @PathVariable Long workerId) {
+    return workerService.getWorkerById(jobId, workerId);
+  }
+
   @RequestMapping(value = "/{jobId}/{workerId}/state/", method = RequestMethod.POST,
           consumes = MediaType.APPLICATION_JSON_VALUE)
   public void changeState(@PathVariable String jobId,

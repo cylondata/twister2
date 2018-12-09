@@ -13,13 +13,14 @@ package edu.iu.dsc.tws.dashboard.repositories;
 
 import edu.iu.dsc.tws.dashboard.data_models.Worker;
 import edu.iu.dsc.tws.dashboard.data_models.WorkerState;
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Date;
 
-public interface WorkerRepository extends CrudRepository<Worker, Long> {
+public interface WorkerRepository extends CrudRepository<Worker, WorkerId> {
 
   Iterable<Worker> findAllByJob_JobID(String jobId);
 
