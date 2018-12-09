@@ -109,4 +109,8 @@ public class WorkerService {
       return null;
     }
   }
+
+  public Object getStateStats() {
+    return this.workerRepository.getStateStats();
+  }
 }

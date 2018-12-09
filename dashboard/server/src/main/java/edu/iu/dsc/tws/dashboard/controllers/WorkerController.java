@@ -49,4 +49,9 @@ public class WorkerController {
   public void heartbeat(@PathVariable String jobId, @PathVariable Long workerId) {
     this.workerService.heartbeat(jobId, workerId);
   }
+
+  @RequestMapping(value = "/stats/", method = RequestMethod.GET)
+  public Object getStateStats() {
+    return this.workerService.getStateStats();
+  }
 }
