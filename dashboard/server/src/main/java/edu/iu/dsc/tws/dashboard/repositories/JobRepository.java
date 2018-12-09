@@ -18,6 +18,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Date;
+import java.util.List;
 
 public interface JobRepository extends CrudRepository<Job, String> {
 
@@ -28,4 +29,7 @@ public interface JobRepository extends CrudRepository<Job, String> {
   @Modifying
   @Query("update Job job set job.heartbeatTime=?2 where job.id=?1")
   int heartbeat(String jobId, Date now);
+
+  @Query("select job.state, count(job.state) from Job job group by job.state")
+  List<Object[]> getStateStats();
 }
