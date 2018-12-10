@@ -238,14 +238,14 @@ public final class MPIWorker {
   /**
    * Start the worker
    * @param config configuration
-   * @param rank rank
+   * @param rank global rank
    * @param intracomm communication
    */
   private static void startWorker(Config config, int rank, Intracomm intracomm) {
     try {
       String twister2Home = Context.twister2Home(config);
       // initialize the logger
-      initLogger(config, rank, twister2Home);
+      initLogger(config, intracomm.getRank(), twister2Home);
 
       JobAPI.Job job = (JobAPI.Job) config.get(MPIContext.JOB_OBJECT);
       // lets create the resource plan
@@ -261,7 +261,7 @@ public final class MPIWorker {
         if (object instanceof IWorker) {
           IWorker container = (IWorker) object;
           // now initialize the container
-          container.execute(config, rank, controller, null, null);
+          container.execute(config, intracomm.getRank(), controller, null, null);
         } else {
           throw new RuntimeException("Cannot instantiate class: " + object.getClass());
         }
@@ -315,8 +315,8 @@ public final class MPIWorker {
       sendBuffer.put(workerBytes);
 
       // now lets receive the process names of each rank
-      intracomm.allGatherv(sendBuffer, length, MPI.CHAR, receiveBuffer,
-          receiveSizes, displacements, MPI.CHAR);
+      intracomm.allGatherv(sendBuffer, length, MPI.BYTE, receiveBuffer,
+          receiveSizes, displacements, MPI.BYTE);
 
       Map<Integer, JobMasterAPI.WorkerInfo> processNames = new HashMap<>();
       for (int i = 0; i < receiveSizes.length; i++) {
