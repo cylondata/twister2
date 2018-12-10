@@ -82,6 +82,7 @@ public class WorkerService {
     }
   }
 
+  @Transactional
   public void heartbeat(String jobId, Long workerId) {
     int beatCount = this.workerRepository.heartbeat(jobId, workerId, new Date());
     if (beatCount == 0) {

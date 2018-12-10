@@ -28,6 +28,6 @@ public interface WorkerRepository extends CrudRepository<Worker, Long> {
   int changeWorkerState(String jobId, Long workerId, WorkerState workerState);
 
   @Modifying
-  @Query("update Worker worker set worker.heartbeatTime=?2 where worker.job=?1 and worker.workerID=?2")
+  @Query("update Worker worker set worker.heartbeatTime=?3 where worker.job.jobID=?1 and worker.workerID=?2")
   int heartbeat(String jobId, Long workerId, Date now);
 }
