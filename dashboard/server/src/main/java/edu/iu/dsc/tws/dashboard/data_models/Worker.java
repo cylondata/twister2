@@ -16,13 +16,16 @@ import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.persistence.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @IdClass(WorkerId.class)
 public class Worker {
 
   @Id
-  private Long workerId;
+  private Long workerID;
 
   @Column
   private String workerIP;
@@ -33,8 +36,9 @@ public class Worker {
   @ApiModelProperty(hidden = true)
   @Id
   @ManyToOne(optional = false)
-  @JoinColumn(referencedColumnName = "jobId")
-  @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state", "computeResources", "node"})
+  @JoinColumn
+  @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state",
+          "computeResources", "node", "numberOfWorkers", "workerClass"})
   private Job job;
 
   @Column
@@ -46,6 +50,29 @@ public class Worker {
 
   @ManyToOne(optional = false)
   private Node node;
+
+  @ApiModelProperty(hidden = true)
+  @Column
+  private Date heartbeatTime;
+
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "worker", orphanRemoval = true)
+  private Set<WorkerPort> workerPorts = new HashSet<>();
+
+  public Set<WorkerPort> getWorkerPorts() {
+    return workerPorts;
+  }
+
+  public void setWorkerPorts(Set<WorkerPort> workerPorts) {
+    this.workerPorts = workerPorts;
+  }
+
+  public Date getHeartbeatTime() {
+    return heartbeatTime;
+  }
+
+  public void setHeartbeatTime(Date heartbeatTime) {
+    this.heartbeatTime = heartbeatTime;
+  }
 
   public Node getNode() {
     return node;
@@ -79,12 +106,12 @@ public class Worker {
     this.job = job;
   }
 
-  public Long getWorkerId() {
-    return workerId;
+  public Long getWorkerID() {
+    return workerID;
   }
 
-  public void setWorkerId(Long workerId) {
-    this.workerId = workerId;
+  public void setWorkerID(Long workerID) {
+    this.workerID = workerID;
   }
 
   public String getWorkerIP() {
@@ -106,7 +133,7 @@ public class Worker {
   @Override
   public String toString() {
     return "Worker{"
-            + "workerId=" + workerId
+            + "workerID=" + workerID
             + ", workerIP='" + workerIP + '\''
             + ", workerPort=" + workerPort
             + ", job=" + job

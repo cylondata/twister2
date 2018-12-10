@@ -4,6 +4,7 @@ import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
 import edu.iu.dsc.tws.dashboard.data_models.Job;
 import edu.iu.dsc.tws.dashboard.data_models.composite_ids.ComputeResourceId;
 import edu.iu.dsc.tws.dashboard.repositories.ComputeResourceRepository;
+import edu.iu.dsc.tws.dashboard.rest_models.ComputeResourceScaleRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,8 +39,11 @@ public class ComputeResourceService {
     if (byId.isPresent()) {
       return byId.get();
     }
-    throw new EntityNotFoundException("No such compute resource defined with id"
-            + computeResourceId.getIndex() + " for job " + computeResourceId.getJob());
+    this.throwNoSuchComputeResourceException(
+            computeResourceId.getJob(),
+            computeResourceId.getIndex()
+    );
+    return null;
   }
 
   public ComputeResource findById(String jobId, Integer index) {
@@ -60,5 +64,18 @@ public class ComputeResourceService {
     computeResourceId.setIndex(index);
     computeResourceId.setJob(jobId);
     return computeResourceId;
+  }
+
+  @Transactional
+  public void scale(String jobId, Integer index, ComputeResourceScaleRequest computeResourceScaleRequest) {
+    int scaledAmount = this.computeResourceRepository.scale(jobId, index, computeResourceScaleRequest.getInstances());
+    if (scaledAmount == 0) {
+      this.throwNoSuchComputeResourceException(jobId, index);
+    }
+  }
+
+  private void throwNoSuchComputeResourceException(String jobId, Integer index) {
+    throw new EntityNotFoundException("No such compute resource defined with id"
+            + index + " for job " + jobId);
   }
 }
