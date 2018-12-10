@@ -12,13 +12,19 @@
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
-import java.nio.CharBuffer;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -34,12 +40,21 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
+import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.master.JobMaster;
+import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadContext;
+import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
+import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
 
@@ -71,7 +86,15 @@ public final class MPIWorker {
       Config config = loadConfigurations(cmd, rank);
       // normal worker
       LOG.log(Level.FINE, "A worker process is starting...");
-      worker(config, rank);
+
+      // lets split the comm
+      int color = rank == 0 ? 0 : 1;
+      Intracomm comm = MPI.COMM_WORLD.split(color, rank);
+      if (rank != 0) {
+        startWorker(config, rank, comm);
+      } else {
+        startMaster(config, rank);
+      }
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed the MPI process", e);
       throw new RuntimeException(e);
@@ -175,24 +198,59 @@ public final class MPIWorker {
         put(MPIContext.WORKER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
         put(MPIContext.JOB_NAME, jobName).
+        put(MPIContext.JOB_OBJECT, job).
         put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
     return updatedConfig;
   }
 
-  private static void master(Config config, int rank) {
+  /**
+   * Start the master
+   * @param config configuration
+   * @param rank mpi rank
+   */
+  private static void startMaster(Config config, int rank) {
     // lets do a barrier here so everyone is synchronized at the start
     // lets create the resource plan
-    createResourcePlan(config);
+    JobAPI.Job job = (JobAPI.Job) config.get(MPIContext.JOB_OBJECT);
+
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      try {
+        int port = JobMasterContext.jobMasterPort(config);
+        String hostAddress = JobMasterContext.jobMasterIP(config);
+        if (hostAddress == null) {
+          hostAddress = InetAddress.getLocalHost().getHostAddress();
+        }
+        LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
+        JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
+        JobMaster jobMaster =
+            new JobMaster(config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo);
+        jobMaster.addShutdownHook();
+        Thread jmThread = jobMaster.startJobMasterThreaded();
+
+        MPI.COMM_WORLD.barrier();
+      } catch (UnknownHostException | MPIException e) {
+        LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+        throw new RuntimeException(e);
+      }
+    }
   }
 
-  private static void worker(Config config, int rank) {
+  /**
+   * Start the worker
+   * @param config configuration
+   * @param rank rank
+   * @param intracomm communication
+   */
+  private static void startWorker(Config config, int rank, Intracomm intracomm) {
     try {
       String twister2Home = Context.twister2Home(config);
       // initialize the logger
       initLogger(config, rank, twister2Home);
 
+      JobAPI.Job job = (JobAPI.Job) config.get(MPIContext.JOB_OBJECT);
       // lets create the resource plan
-      Map<Integer, String> processNames = createResourcePlan(config);
+      Map<Integer, JobMasterAPI.WorkerInfo> processNames = createResourcePlan(config,
+          intracomm, job);
       // now create the worker
       IWorkerController controller = new MPIWorkerController(MPI.COMM_WORLD.getRank(),
           processNames);
@@ -215,8 +273,7 @@ public final class MPIWorker {
       }
 
       // lets do a barrier here so everyone is synchronized at the end
-
-      MPI.COMM_WORLD.barrier();
+      intracomm.barrier();
       LOG.log(Level.FINE, String.format("Worker %d: the cluster is ready...", rank));
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed to synchronize the workers at the start");
@@ -229,20 +286,20 @@ public final class MPIWorker {
    * @param config configuration
    * @return  a map of rank to hostname
    */
-  public static Map<Integer, String> createResourcePlan(Config config) {
+  public static Map<Integer, JobMasterAPI.WorkerInfo> createResourcePlan(Config config,
+                                                                         Intracomm intracomm,
+                                                                         JobAPI.Job job) {
     try {
-      String processName = MPI.getProcessorName();
-      char[] processNameChars = new char[processName.length()];
-      int length = processNameChars.length;
-      processName.getChars(0, length, processNameChars, 0);
+      JobMasterAPI.WorkerInfo workerInfo = createWorkerInfo(config, intracomm, job);
+      byte[] workerBytes = workerInfo.toByteArray();
+      int length = workerBytes.length;
 
       IntBuffer countSend = MPI.newIntBuffer(1);
-      int worldSize = MPI.COMM_WORLD.getSize();
+      int worldSize = intracomm.getSize();
       IntBuffer countReceive = MPI.newIntBuffer(worldSize);
       // now calculate the total number of characters
       countSend.put(length);
-      MPI.COMM_WORLD.allGather(countSend, 1, MPI.INT, countReceive,
-          1, MPI.INT);
+      intracomm.allGather(countSend, 1, MPI.INT, countReceive, 1, MPI.INT);
 
       int[] receiveSizes = new int[worldSize];
       int[] displacements = new int[worldSize];
@@ -252,31 +309,58 @@ public final class MPIWorker {
         displacements[i] = sum;
         sum += receiveSizes[i];
       }
-      // first we need to send the expected number of characters
-      //  MPI.COMM_WORLD.allGather(countSend, 1, MPI.INT, countReceive, worldSize, MPI.INT);
-
       // now we need to send this to all the nodes
-      CharBuffer sendBuffer = MPI.newCharBuffer(length);
-      CharBuffer receiveBuffer = MPI.newCharBuffer(sum);
-      sendBuffer.append(processName);
+      ByteBuffer sendBuffer = MPI.newByteBuffer(length);
+      ByteBuffer receiveBuffer = MPI.newByteBuffer(sum);
+      sendBuffer.put(workerBytes);
 
       // now lets receive the process names of each rank
-      MPI.COMM_WORLD.allGatherv(sendBuffer, length, MPI.CHAR, receiveBuffer,
+      intracomm.allGatherv(sendBuffer, length, MPI.CHAR, receiveBuffer,
           receiveSizes, displacements, MPI.CHAR);
 
-      Map<Integer, String> processNames = new HashMap<>();
-
+      Map<Integer, JobMasterAPI.WorkerInfo> processNames = new HashMap<>();
       for (int i = 0; i < receiveSizes.length; i++) {
-        char[] c = new char[receiveSizes[i]];
+        byte[] c = new byte[receiveSizes[i]];
         receiveBuffer.get(c);
-        processNames.put(i, new String(c));
+        JobMasterAPI.WorkerInfo info = JobMasterAPI.WorkerInfo.newBuilder().mergeFrom(c).build();
+        processNames.put(i, info);
         LOG.log(Level.FINE, String.format("Process %d name: %s", i, processNames.get(i)));
       }
-
       return processNames;
     } catch (MPIException e) {
       throw new RuntimeException("Failed to communicate", e);
+    } catch (InvalidProtocolBufferException e) {
+      throw new RuntimeException("Failed to create worker info", e);
     }
+  }
+
+  /**
+   * Create worker information
+   * @param config configuration
+   * @param intracomm communicator
+   * @param job job
+   * @return the worker information
+   * @throws MPIException if an error occurs
+   */
+  private static JobMasterAPI.WorkerInfo createWorkerInfo(Config config, Intracomm intracomm,
+                                                          JobAPI.Job job) throws MPIException {
+    String processName = MPI.getProcessorName();
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(processName,
+        "default", "default");
+    JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job,
+        intracomm.getRank());
+    List<String> portNames = SchedulerContext.additionalPorts(config);
+    Map<String, Integer> freePorts = new HashMap<>();
+    if (portNames == null) {
+      portNames = new ArrayList<>();
+    }
+    portNames.add("__worker__");
+    freePorts = NetworkUtils.findFreePorts(portNames);
+    Integer workerPort = freePorts.get("__worker__");
+    freePorts.remove("__worker__");
+
+    return WorkerInfoUtils.createWorkerInfo(intracomm.getRank(),
+        processName, workerPort, nodeInfo, computeResource, freePorts);
   }
 
   /**

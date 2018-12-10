@@ -13,6 +13,9 @@ package edu.iu.dsc.tws.common.util;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public final class NetworkUtils {
   private NetworkUtils() {
@@ -38,5 +41,37 @@ public final class NetworkUtils {
       s += e.toString() + "\n";
     }
     return s;
+  }
+
+  /**
+   * Returns a free port number on localhost.
+   *
+   * Heavily inspired from org.eclipse.jdt.launching.SocketUtil (to avoid a dependency to JDT just because of this).
+   * Slightly improved with close() missing in JDT. And throws exception instead of returning -1.
+   *
+   * @return a free port number on localhost
+   * @throws IllegalStateException if unable to find a free port
+   */
+  public static Map<String, Integer> findFreePorts(List<String> portNames) {
+    try {
+      Map<String, ServerSocket> serverSocketMap = new HashMap<>();
+      Map<String, Integer> freePorts = new HashMap<>();
+
+      for (String portName : portNames) {
+        ServerSocket socket = new ServerSocket(0);
+        socket.setReuseAddress(true);
+
+        serverSocketMap.put(portName, socket);
+      }
+
+      for (Map.Entry<String, ServerSocket> e : serverSocketMap.entrySet()) {
+        int port = e.getValue().getLocalPort();
+        freePorts.put(e.getKey(), port);
+        e.getValue().close();
+      }
+      return freePorts;
+    } catch (IOException e) {
+    }
+    throw new IllegalStateException("Could not find a free TCP/IP port");
   }
 }
