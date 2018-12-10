@@ -85,7 +85,7 @@ public class WorkerMonitor implements MessageHandler {
   private void pingMessageReceived(RequestID id, JobMasterAPI.Ping ping) {
 
     if (workers.containsKey(ping.getWorkerID())) {
-      LOG.info("Ping message received from a worker: \n" + ping);
+      LOG.fine("Ping message received from a worker: \n" + ping);
       workers.get(ping.getWorkerID()).setPingTimestamp(System.currentTimeMillis());
     } else {
       LOG.warning("Ping message received from a worker that has not joined the job yet: " + ping);
@@ -99,6 +99,12 @@ public class WorkerMonitor implements MessageHandler {
 
     rrServer.sendResponse(id, pingResponse);
     LOG.fine("Ping response sent to the worker: \n" + pingResponse);
+
+    // send Ping message to dashboard
+    if (dashClient != null) {
+      dashClient.workerHeartbeat(ping.getWorkerID());
+    }
+
   }
 
   private void registerWorkerMessageReceived(RequestID id, JobMasterAPI.RegisterWorker message) {

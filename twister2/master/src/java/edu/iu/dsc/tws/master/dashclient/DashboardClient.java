@@ -62,10 +62,10 @@ public class DashboardClient {
         .post(Entity.json(registerJob));
 
     if (response.getStatus() == 200) {
-      LOG.info("Registering JobMaster with Dashboard is successful. jobID: " + jobID);
+      LOG.info("Registered JobMaster with Dashboard. jobID: " + jobID);
       return true;
     } else {
-      LOG.severe("Registering JobMaster with Dashboard is unsuccessful for jobID: " + jobID
+      LOG.severe("Could not register JobMaster with Dashboard for jobID: " + jobID
           + ". Response: " + response.toString());
       return false;
     }
@@ -88,8 +88,7 @@ public class DashboardClient {
         .post(Entity.json(jobStateChange));
 
     if (response.getStatus() == 200) {
-      LOG.info("Job " + state.name() + " message sent to Dashboard successfully for jobID: "
-          + jobID);
+      LOG.info("Job " + state.name() + " message sent to Dashboard successfully.");
       return true;
     } else {
       LOG.severe("Job " + state.name() + " message could not be sent to Dashboard. Response: "
@@ -119,9 +118,9 @@ public class DashboardClient {
         .post(Entity.json(scaleComputeResource));
 
     if (response.getStatus() == 200) {
-      LOG.info("ScaleComputeResource message sent to Dashboard successfully. jobID: " + jobID
-          + ", computeResourceIndex: " + computeResourceIndex
-          + " New instances value: " + instances);
+      LOG.info("ScaleComputeResource message sent to Dashboard successfully."
+          + " computeResourceIndex: " + computeResourceIndex
+          + " instances new value: " + instances);
       return true;
     } else {
       LOG.severe("ScaleComputeResource message could not be sent to Dashboard. Response: "
@@ -145,7 +144,7 @@ public class DashboardClient {
         .post(Entity.json(registerWorker));
 
     if (response.getStatus() == 200) {
-      LOG.info("Sent RegisterWorker message to Dashboard is successfully "
+      LOG.info("Registered Worker with Dashboard successfully "
           + "for workerID: " + workerInfo.getWorkerID());
       return true;
     } else {
@@ -156,28 +155,24 @@ public class DashboardClient {
   }
 
   /**
-   * send WorkerStateChange message to Dashboard
+   * send HeartBeat message to Dashboard for the given worker
    * @param workerID
-   * @param state
    * @return
    */
-  public boolean workerHeartbeat(int workerID, JobMasterAPI.WorkerState state) {
-    WorkerStateChange workerStateChange = new WorkerStateChange(state.name());
-
-    String path = "workers/" + jobID + "/" + workerID + "/state/";
+  public boolean workerHeartbeat(int workerID) {
+    String path = "workers/" + jobID + "/" + workerID + "/beat/";
 
     Response response = ClientBuilder.newClient()
         .target(dashHost)
         .path(path)
         .request(MediaType.APPLICATION_JSON)
-        .post(Entity.json(workerStateChange));
+        .post(Entity.json(""));
 
     if (response.getStatus() == 200) {
-      LOG.info("Sent WorkerStateChange message to Dashboard successfully for workerID: "
-          + workerID);
+      LOG.fine("Sent HeartBeat message to Dashboard successfully for workerID: " + workerID);
       return true;
     } else {
-      LOG.severe("Sending WorkerStateChange message to Dashboard is unsuccessful. "
+      LOG.severe("Sending HeartBeat message to Dashboard is unsuccessful. "
           + "for workerID: " + workerID + " Response: " + response.toString());
       return false;
     }
