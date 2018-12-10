@@ -23,6 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.dashclient.messages;
 
+import java.util.Map;
+
 import edu.iu.dsc.tws.master.dashclient.models.Node;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -39,6 +41,7 @@ public class RegisterWorker {
   private int computeResourceIndex;
   private String state;
   private Node node;
+  private Map<String, Integer> additionalPorts;
 
   public RegisterWorker() { }
 
@@ -50,6 +53,8 @@ public class RegisterWorker {
     this.computeResourceIndex = workerInfo.getComputeResource().getIndex();
     this.node = new Node(workerInfo.getNodeInfo());
     this.state = JobMasterAPI.WorkerState.STARTING.name();
+    this.additionalPorts = workerInfo.getAdditionalPortMap();
+
   }
 
   // Getter Methods
@@ -82,6 +87,10 @@ public class RegisterWorker {
     return state;
   }
 
+  public Map<String, Integer> getAdditionalPorts() {
+    return additionalPorts;
+  }
+
   // Setter Methods
 
   public void setComputeResourceIndex(int computeResourceIndex) {
@@ -110,6 +119,10 @@ public class RegisterWorker {
 
   public void setState(String state) {
     this.state = state;
+  }
+
+  public void setAdditionalPorts(Map<String, Integer> additionalPorts) {
+    this.additionalPorts = additionalPorts;
   }
 
   @Override

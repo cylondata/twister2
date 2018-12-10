@@ -23,9 +23,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.jobmaster;
 
-import java.net.InetAddress;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,6 +42,7 @@ import edu.iu.dsc.tws.master.client.JMWorkerController;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
@@ -81,7 +83,7 @@ public final class JobMasterClientExample {
    */
   public static void simulateClient(Config config, JobAPI.Job job) {
 
-    InetAddress workerIP = JMWorkerController.convertStringToIP("localhost");
+    String workerIP = JMWorkerController.convertStringToIP("localhost").getHostAddress();
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo("node.ip", "rack01", null);
@@ -90,8 +92,10 @@ public final class JobMasterClientExample {
     JobAPI.ComputeResource computeResource = job.getComputeResource(0);
     int numberOfWorkers = computeResource.getInstances() * computeResource.getWorkersPerPod();
 
+    Map<String, Integer> additionalPorts = generateAdditionalPorts(config, workerPort);
+
     JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
-        workerTempID, workerIP.getHostAddress(), workerPort, nodeInfo, computeResource);
+        workerTempID, workerIP, workerPort, nodeInfo, computeResource, additionalPorts);
 
     String jobMasterAddress = "localhost";
     int jobMasterPort = JobMasterContext.jobMasterPort(config);
@@ -145,6 +149,29 @@ public final class JobMasterClientExample {
         .putAll(config)
         .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
         .build();
+  }
+
+  /**
+   * generate the additional requested ports for this worker
+   * @param config
+   * @param workerPort
+   * @return
+   */
+  public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
+
+    // if no port is requested, return null
+    List<String> portNames = SchedulerContext.additionalPorts(config);
+    if (portNames == null) {
+      return null;
+    }
+
+    HashMap<String, Integer> ports = new HashMap<>();
+    int i = 1;
+    for (String portName: portNames) {
+      ports.put(portName, workerPort + i++);
+    }
+
+    return ports;
   }
 
   public static void sleeeep(long duration) {
