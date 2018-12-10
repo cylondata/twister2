@@ -287,7 +287,7 @@ public class JobMaster {
 
     // if Dashboard is used, tell it that the job has completed
     if (dashboardUsed) {
-      dashClient.jobStateChange(JobState.JOB_COMPLETED);
+      dashClient.jobStateChange(JobState.COMPLETED);
     }
 
     LOG.info("All workers have completed. JobMaster is stopping.");

@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
  */
 
 public class RegisterJob {
-  private String jobId;
+  private String jobID;
   private String jobName;
   private int numberOfWorkers;
   private String state;
@@ -44,8 +44,8 @@ public class RegisterJob {
 
   public RegisterJob() { }
 
-  public RegisterJob(String jobId, JobAPI.Job job, JobMasterAPI.NodeInfo nodeInfo) {
-    this.jobId = jobId;
+  public RegisterJob(String jobID, JobAPI.Job job, JobMasterAPI.NodeInfo nodeInfo) {
+    this.jobID = jobID;
     this.jobName = job.getJobName();
     this.numberOfWorkers = job.getNumberOfWorkers();
     this.state = JobState.STARTING.name();
@@ -59,8 +59,8 @@ public class RegisterJob {
     }
   }
 
-  public String getJobId() {
-    return jobId;
+  public String getJobID() {
+    return jobID;
   }
 
   public String getJobName() {
@@ -87,8 +87,8 @@ public class RegisterJob {
     return computeResources;
   }
 
-  public void setJobId(String jobId) {
-    this.jobId = jobId;
+  public void setJobID(String jobID) {
+    this.jobID = jobID;
   }
 
   public void setJobName(String jobName) {

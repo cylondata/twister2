@@ -32,8 +32,8 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class RegisterWorker {
 
-  private String jobId;
-  private int workerId;
+  private String jobID;
+  private int workerID;
   private String workerIP;
   private int workerPort;
   private int computeResourceIndex;
@@ -42,9 +42,9 @@ public class RegisterWorker {
 
   public RegisterWorker() { }
 
-  public RegisterWorker(String jobId, JobMasterAPI.WorkerInfo workerInfo) {
-    this.jobId = jobId;
-    this.workerId = workerInfo.getWorkerID();
+  public RegisterWorker(String jobID, JobMasterAPI.WorkerInfo workerInfo) {
+    this.jobID = jobID;
+    this.workerID = workerInfo.getWorkerID();
     this.workerIP = workerInfo.getWorkerIP();
     this.workerPort = workerInfo.getPort();
     this.computeResourceIndex = workerInfo.getComputeResource().getIndex();
@@ -58,8 +58,8 @@ public class RegisterWorker {
     return computeResourceIndex;
   }
 
-  public String getJobId() {
-    return jobId;
+  public String getJobID() {
+    return jobID;
   }
 
   public Node getNode() {
@@ -70,8 +70,8 @@ public class RegisterWorker {
     return workerIP;
   }
 
-  public int getWorkerId() {
-    return workerId;
+  public int getWorkerID() {
+    return workerID;
   }
 
   public int getWorkerPort() {
@@ -88,8 +88,8 @@ public class RegisterWorker {
     this.computeResourceIndex = computeResourceIndex;
   }
 
-  public void setJobId(String jobId) {
-    this.jobId = jobId;
+  public void setJobID(String jobID) {
+    this.jobID = jobID;
   }
 
   public void setNode(Node nodeObject) {
@@ -100,8 +100,8 @@ public class RegisterWorker {
     this.workerIP = workerIP;
   }
 
-  public void setWorkerId(int workerId) {
-    this.workerId = workerId;
+  public void setWorkerID(int workerID) {
+    this.workerID = workerID;
   }
 
   public void setWorkerPort(int workerPort) {
@@ -115,10 +115,10 @@ public class RegisterWorker {
   @Override
   public String toString() {
     return "{"
-        + "\"workerId\": " + workerId + ", "
+        + "\"workerID\": " + workerID + ", "
         + "\"workerIP\": " + "\"" + workerIP + "\", "
         + "\"workerPort\": " + workerPort + ", "
-        + "\"jobId\": " + "\"" + jobId + "\", "
+        + "\"jobID\": " + "\"" + jobID + "\", "
         + "\"computeResourceIndex\": " + computeResourceIndex + ", "
         + node
         + '}';
