@@ -65,7 +65,7 @@
   * [Contributors](community/contributors.md)
 * [Tutorial](tutorial/README.md)
   * [introduction](tutorial/introduction.md)
-  * [big data stack](tutorial/communication.md)
+  * [big data stack](tutorial/big-data-stack.md)
   * [twister 2 overview](tutorial/twister2-overview.md)
     * [resource scheduling](tutorial/resource-scheduling.md)
     * [communication](tutorial/communication.md)
