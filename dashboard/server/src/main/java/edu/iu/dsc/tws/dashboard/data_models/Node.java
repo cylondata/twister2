@@ -17,7 +17,6 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Date;
 
 @Entity
 @IdClass(NodeId.class)
@@ -26,12 +25,6 @@ public class Node implements Serializable {
   @Id
   @Column(nullable = false)
   private String ip;
-
-  @Column
-  private String os;
-
-  @Column
-  private Date heartbeatTime;
 
   @Id
   @Column
@@ -77,21 +70,5 @@ public class Node implements Serializable {
 
   public void setIp(String ip) {
     this.ip = ip;
-  }
-
-  public String getOs() {
-    return os;
-  }
-
-  public void setOs(String os) {
-    this.os = os;
-  }
-
-  public Date getHeartbeatTime() {
-    return heartbeatTime;
-  }
-
-  public void setHeartbeatTime(Date heartbeatTime) {
-    this.heartbeatTime = heartbeatTime;
   }
 }

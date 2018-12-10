@@ -1,6 +1,7 @@
 package edu.iu.dsc.tws.dashboard.data_models.composite_ids;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class NodeId implements Serializable {
 
@@ -30,5 +31,21 @@ public class NodeId implements Serializable {
 
   public void setRack(String rack) {
     this.rack = rack;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    NodeId nodeId = (NodeId) o;
+    return Objects.equals(ip, nodeId.ip) &&
+            Objects.equals(dataCenter, nodeId.dataCenter) &&
+            Objects.equals(rack, nodeId.rack);
+  }
+
+  @Override
+  public int hashCode() {
+
+    return Objects.hash(ip, dataCenter, rack);
   }
 }
