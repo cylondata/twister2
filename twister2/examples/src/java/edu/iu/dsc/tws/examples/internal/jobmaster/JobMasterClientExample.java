@@ -54,8 +54,9 @@ public final class JobMasterClientExample {
    * First, a JobMaster instance should be started on a machine
    * This client should connect to that server
    *
-   * NumberOfWorkers to join must be given as a command line parameter
-   * Each worker waits for all workers to join
+   * It reads config files from conf/kubernetes directory
+   * It uses the first ComputeResource in that config file as the ComputeResource of this worker
+   * Number of workers is the number of workers in the first ComputeResource
    *
    * When all workers joined, they get the full worker list
    * Then, each worker sends a barrier message
