@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response;
 import edu.iu.dsc.tws.master.dashclient.messages.JobStateChange;
 import edu.iu.dsc.tws.master.dashclient.messages.RegisterJob;
 import edu.iu.dsc.tws.master.dashclient.messages.RegisterWorker;
+import edu.iu.dsc.tws.master.dashclient.messages.ScaleComputeResource;
 import edu.iu.dsc.tws.master.dashclient.messages.WorkerStateChange;
 import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -61,11 +62,11 @@ public class DashboardClient {
         .post(Entity.json(registerJob));
 
     if (response.getStatus() == 200) {
-      LOG.info("Registering JobMaster with Dashboard is successful");
+      LOG.info("Registering JobMaster with Dashboard is successful. jobID: " + jobID);
       return true;
     } else {
-      LOG.severe("Registering JobMaster with Dashboard is unsuccessful. Response: "
-          + response.toString());
+      LOG.severe("Registering JobMaster with Dashboard is unsuccessful for jobID: " + jobID
+          + ". Response: " + response.toString());
       return false;
     }
   }
@@ -87,10 +88,43 @@ public class DashboardClient {
         .post(Entity.json(jobStateChange));
 
     if (response.getStatus() == 200) {
-      LOG.info("Job " + state.name() + " message sent to Dashboard successfully.");
+      LOG.info("Job " + state.name() + " message sent to Dashboard successfully for jobID: "
+          + jobID);
       return true;
     } else {
       LOG.severe("Job " + state.name() + " message could not be sent to Dashboard. Response: "
+          + response.toString());
+      return false;
+    }
+  }
+
+  /**
+   * send ScaleComputeResource message to Dashboard
+   * instances shows the updated value of the instances for this compute resource
+   * instances may be smaller or higher than the original value
+   * if it is smaller, it means some instances of that resource removed
+   * if it is higher, it means some instances of that resource added
+   * @return
+   */
+  public boolean scaleComputeResource(int computeResourceIndex, int instances) {
+
+    ScaleComputeResource scaleComputeResource = new ScaleComputeResource(instances);
+
+    String path = "jobs/" + jobID + "/computeResources/" + computeResourceIndex + "/scale/";
+
+    Response response = ClientBuilder.newClient()
+        .target(dashHost)
+        .path(path)
+        .request(MediaType.APPLICATION_JSON)
+        .post(Entity.json(scaleComputeResource));
+
+    if (response.getStatus() == 200) {
+      LOG.info("ScaleComputeResource message sent to Dashboard successfully. jobID: " + jobID
+          + ", computeResourceIndex: " + computeResourceIndex
+          + " New instances value: " + instances);
+      return true;
+    } else {
+      LOG.severe("ScaleComputeResource message could not be sent to Dashboard. Response: "
           + response.toString());
       return false;
     }
