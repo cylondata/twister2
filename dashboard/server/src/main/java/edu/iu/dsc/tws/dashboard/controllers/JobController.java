@@ -90,8 +90,8 @@ public class JobController {
   @RequestMapping(value = "/{jobId}/computeResources/{index}/scale/", method = RequestMethod.POST,
           consumes = MediaType.APPLICATION_JSON_VALUE)
   public void createComputeResource(@PathVariable String jobId,
-                                               @PathVariable Integer index,
-                                               @RequestBody ComputeResourceScaleRequest computeResourceScaleRequest) {
+                                    @PathVariable Integer index,
+                                    @RequestBody ComputeResourceScaleRequest computeResourceScaleRequest) {
     computeResourceService.scale(jobId, index, computeResourceScaleRequest);
   }
 
@@ -99,6 +99,11 @@ public class JobController {
   public void deleteComputeResource(@PathVariable String jobId,
                                     @PathVariable Integer index) {
     computeResourceService.delete(jobId, index);
+  }
+
+  @RequestMapping(value = "/stats/", method = RequestMethod.GET)
+  public Object getStateStats() {
+    return this.jobService.getStateStats();
   }
 
 

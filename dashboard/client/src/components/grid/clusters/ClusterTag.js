@@ -21,37 +21,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.core;
 
-import edu.iu.dsc.tws.common.config.Context;
+import React from "react";
+import {Button} from "@blueprintjs/core";
 
-/**
- * Configurations specific to executor
- */
-public class ExecutorContext extends Context {
-  /**
-   * The size of the task pool assigned to the executors
-   */
-  public static final int EXECUTOR_CORE_POOL_SIZE = 4;
-
-  /**
-   * The maximum size of the task pool
-   */
-  public static final int EXECUTOR_MAX_POOL_SIZE = Integer.MAX_VALUE;
-
-  /**
-   * The keep alive time for the tasks that are not in the core pool
-   */
-  public static final long EXECUTOR_POOL_KEEP_ALIVE_TIME = 1000 * 60;
-
-  /**
-   * sync lock used in the TaskExecutorFixedThread
-   */
-  public static final Integer FIXED_EXECUTOR_LOCK = new Integer(1);
-
-  public enum QueueType {
-    INPUT,
-    OUTPUT
-  }
-
+export default class ClusterTag extends React.Component {
+    render() {
+        return (
+            <Button text={this.props.cluster.name} minimal={true}
+                    icon={"layout-sorted-clusters"} small={true}/>
+        );
+    }
 }

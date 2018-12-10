@@ -24,6 +24,7 @@ import org.springframework.util.StringUtils;
 import javax.persistence.EntityNotFoundException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -83,5 +84,9 @@ public class JobService {
   @Transactional
   public void heartbeat(String jobId) {
     this.jobRepository.heartbeat(jobId, new Date());
+  }
+
+  public Object getStateStats() {
+    return this.jobRepository.getStateStats();
   }
 }

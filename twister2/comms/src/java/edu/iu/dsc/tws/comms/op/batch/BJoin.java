@@ -84,7 +84,7 @@ public class BJoin {
 
     this.partitionLeft.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.partitionRight.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(sources, targets);
+    this.destinationSelector.prepare(comm, sources, targets);
   }
 
   /**

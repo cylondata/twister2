@@ -13,13 +13,15 @@ package edu.iu.dsc.tws.dashboard.repositories;
 
 import edu.iu.dsc.tws.dashboard.data_models.Worker;
 import edu.iu.dsc.tws.dashboard.data_models.WorkerState;
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Date;
+import java.util.List;
 
-public interface WorkerRepository extends CrudRepository<Worker, Long> {
+public interface WorkerRepository extends CrudRepository<Worker, WorkerId> {
 
   Iterable<Worker> findAllByJob_JobID(String jobId);
 
@@ -30,4 +32,7 @@ public interface WorkerRepository extends CrudRepository<Worker, Long> {
   @Modifying
   @Query("update Worker worker set worker.heartbeatTime=?3 where worker.job.jobID=?1 and worker.workerID=?2")
   int heartbeat(String jobId, Long workerId, Date now);
+
+  @Query("select worker.state, count(worker.state) from Worker worker group by worker.state")
+  List<Object[]> getStateStats();
 }
