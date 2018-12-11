@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
+import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class DGatherBatchFinalReceiver implements MessageReceiver {
@@ -202,5 +203,12 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
   private String getOperationName(int target) {
     String uid = gather.getUniqueId();
     return "gather-" + uid + "-" + target + "-" + UUID.randomUUID().toString();
+  }
+
+  @Override
+  public void close() {
+    for (Shuffle s : sortedMergers.values()) {
+      s.clean();
+    }
   }
 }

@@ -95,4 +95,9 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
       return outMessages.get(target).offer(msg);
     }
   }
+
+  @Override
+  public void close() {
+    op.close();
+  }
 }

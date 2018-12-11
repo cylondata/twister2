@@ -77,4 +77,8 @@ public class GatherBatchOperation extends AbstractParallelOperation {
     }
   }
 
+  @Override
+  public void close() {
+    op.close();
+  }
 }

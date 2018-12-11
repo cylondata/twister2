@@ -18,9 +18,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
@@ -33,9 +34,6 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 
 public class TWSTCPChannel implements TWSChannel {
   private static final Logger LOG = Logger.getLogger(TWSTCPChannel.class.getName());
-
-  // a lock object to be used
-  private Lock lock = new ReentrantLock();
 
   private int executor;
 
@@ -90,6 +88,8 @@ public class TWSTCPChannel implements TWSChannel {
     }
   }
 
+  private int completedReceives = 0;
+
   /**
    * Pending sends waiting to be posted
    */
@@ -105,7 +105,15 @@ public class TWSTCPChannel implements TWSChannel {
    */
   private List<TCPSendRequests> waitForCompletionSends;
 
+  /**
+   * The tcp channel
+   */
   private TCPChannel comm;
+
+  /**
+   * Holds requests that are pending for close
+   */
+  private List<Pair<Integer, Integer>> pendingCloseRequests = new ArrayList<>();
 
   public TWSTCPChannel(Config config, int exec, TCPChannel net) {
     this.pendingSends = new ArrayBlockingQueue<TCPSendRequests>(1024);
@@ -187,7 +195,6 @@ public class TWSTCPChannel implements TWSChannel {
     return comm.iRecv(byteBuffer.getByteBuffer(), byteBuffer.getCapacity(), rank, stream);
   }
 
-  private int completedReceives = 0;
   /**
    * Progress the communications that are pending
    */
@@ -257,11 +264,48 @@ public class TWSTCPChannel implements TWSChannel {
       }
     }
 
+    // handle the pending close requests
+    handlePendingCloseRequests();
+
     comm.progress();
+  }
+
+  /**
+   * Close all the pending requests
+   */
+  private void handlePendingCloseRequests() {
+    while (pendingCloseRequests.size() > 0) {
+      Pair<Integer, Integer> closeRequest = pendingCloseRequests.remove(0);
+
+      // clear up the receive requests
+      Iterator<TCPReceiveRequests> itr = registeredReceives.iterator();
+      while (itr.hasNext()) {
+        TCPReceiveRequests receiveRequests = itr.next();
+        if (receiveRequests.edge == closeRequest.getRight()
+            && receiveRequests.rank == closeRequest.getLeft()) {
+          for (Request r : receiveRequests.pendingRequests) {
+            r.request.isComplete();
+          }
+          receiveRequests.pendingRequests.clear();
+          itr.remove();
+        }
+      }
+      // lets not handle any send requests as they will complete eventually
+    }
   }
 
   @Override
   public ByteBuffer createBuffer(int capacity) {
     return ByteBuffer.allocate(capacity);
+  }
+
+  /**
+   * Close a worker id with edge
+   *
+   * @param workerId worker id
+   * @param e edge
+   */
+  public void releaseBuffers(int workerId, int e) {
+    pendingCloseRequests.add(new ImmutablePair<>(workerId, e));
   }
 }

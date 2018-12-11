@@ -21,7 +21,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -155,10 +154,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   private ProgressionTracker deserializeProgressTracker;
 
-  private Map<Integer, AtomicBoolean> sendsDone = new HashMap<>();
-
-  private Map<Integer, AtomicBoolean> receivesDone = new HashMap<>();
-
   private AtomicInteger externalSendsPending = new AtomicInteger(0);
 
   public ChannelDataFlowOperation(TWSChannel channel) {
@@ -217,14 +212,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     initSerializers();
 
     initProgressTrackers();
-
-    for (int sendSources : pendingSendMessagesPerSource.keySet()) {
-      sendsDone.put(sendSources, new AtomicBoolean(false));
-    }
-
-    for (int receiveTasks : pendingReceiveMessagesPerSource.keySet()) {
-      receivesDone.put(receiveTasks, new AtomicBoolean(false));
-    }
   }
 
   /**
@@ -398,9 +385,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       int sendId = sendProgressTracker.next();
       if (sendId != Integer.MIN_VALUE) {
         boolean done = sendProgress(pendingSendMessagesPerSource.get(sendId), sendId);
-//        LOG.log(Level.INFO, String.format("SendID %d - %b", sendId, done));
-        AtomicBoolean b = sendsDone.get(sendId);
-        b.set(done);
         sendProgressTracker.finish(sendId);
       }
     }
@@ -418,8 +402,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       int receiveId = receiveProgressTracker.next();
       if (receiveId != Integer.MIN_VALUE) {
         boolean done = receiveProgress(pendingReceiveMessagesPerSource.get(receiveId));
-        AtomicBoolean b = receivesDone.get(receiveId);
-        b.set(done);
         receiveProgressTracker.finish(receiveId);
       }
     }
@@ -776,5 +758,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
   public void setKeyType(MessageType keyType) {
     this.keyType = keyType;
+  }
+
+  public void close() {
+    for (int exec : receivingExecutors) {
+      channel.releaseBuffers(exec, edge);
+    }
   }
 }

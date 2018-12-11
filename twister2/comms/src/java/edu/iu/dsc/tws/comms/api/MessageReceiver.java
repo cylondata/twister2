@@ -69,4 +69,7 @@ public interface MessageReceiver {
    * @return true if needs further communicationProgress
    */
   boolean progress();
+
+  default void close() {
+  }
 }

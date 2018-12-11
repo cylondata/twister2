@@ -98,5 +98,6 @@ public class SAllReduce {
 
   public void close() {
     // deregister from the channel
+    reduce.close();
   }
 }
