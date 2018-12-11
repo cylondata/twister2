@@ -46,7 +46,7 @@ public class HTGClientMonitor implements MessageHandler {
   private void stateChangeMessageReceived(RequestID id, JobMasterAPI.HTGJobRequest wscMessage) {
 
     JobMasterAPI.HTGJobResponse htgJobResponse = JobMasterAPI.HTGJobResponse.newBuilder()
-        .setHtgSubgraphname(wscMessage.getExecuteMessage() + "graph finished")
+        .setHtgSubgraphname(wscMessage.getExecuteMessage() + "finished")
         .build();
 
     rrServer.sendResponse(id, htgJobResponse);
