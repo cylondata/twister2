@@ -77,26 +77,19 @@ public final class MPIWorker {
   private Config config;
 
   /**
-   * The worker controller
-   */
-  private IWorkerController workerController;
-
-
-  /**
    * Information of this worker
    */
   private JobMasterAPI.WorkerInfo wInfo;
 
   /**
    * Construct the MPIWorker starter
-   * @param args
+   * @param args the main args
    */
   private MPIWorker(String[] args) {
     Options cmdOptions = null;
     try {
       MPI.Init(args);
       int rank = MPI.COMM_WORLD.getRank();
-      int size = MPI.COMM_WORLD.getSize();
 
       cmdOptions = setupOptions();
       CommandLineParser parser = new DefaultParser();
@@ -201,12 +194,12 @@ public final class MPIWorker {
   }
 
   public static void main(String[] args) {
-    MPIWorker worker = new MPIWorker(args);
+    new MPIWorker(args);
   }
 
   /**
    * Create the resource plan
-   * @return
+   * @return the worker controller
    */
   private IWorkerController createWorkerController(JobAPI.Job job) {
     // first get the worker id
@@ -402,16 +395,13 @@ public final class MPIWorker {
       IWorkerController wc = createWorkerController(job);
       MPIJobWorkerController mpiWorkerContorller = new MPIJobWorkerController(wc);
       mpiWorkerContorller.add("comm", intracomm);
-      this.workerController = mpiWorkerContorller;
-
-
       String workerClass = MPIContext.workerClass(cfg);
       try {
         Object object = ReflectionUtils.newInstance(workerClass);
         if (object instanceof IWorker) {
           IWorker container = (IWorker) object;
           // now initialize the container
-          container.execute(cfg, intracomm.getRank(), this.workerController, null, null);
+          container.execute(cfg, intracomm.getRank(), mpiWorkerContorller, null, null);
         } else {
           throw new RuntimeException("Cannot instantiate class: " + object.getClass());
         }
