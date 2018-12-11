@@ -45,10 +45,6 @@ public final class NetworkUtils {
 
   /**
    * Returns a free port number on localhost.
-   *
-   * Heavily inspired from org.eclipse.jdt.launching.SocketUtil (to avoid a dependency to JDT just because of this).
-   * Slightly improved with close() missing in JDT. And throws exception instead of returning -1.
-   *
    * @return a free port number on localhost
    * @throws IllegalStateException if unable to find a free port
    */

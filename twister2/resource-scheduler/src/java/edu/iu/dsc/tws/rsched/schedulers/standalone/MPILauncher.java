@@ -26,6 +26,8 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.master.JobMaster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -187,14 +189,18 @@ public class MPILauncher implements ILauncher {
     Thread jmThread = null;
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       try {
-        int port = JobMasterContext.jobMasterPort(config);
+        int port = NetworkUtils.getFreePort();
         String hostAddress = JobMasterContext.jobMasterIP(config);
         if (hostAddress == null) {
           hostAddress = InetAddress.getLocalHost().getHostAddress();
         }
+        // add the port and ip to config
+        newConfig = Config.newBuilder().putAll(newConfig).put("__job_master_port__", port).
+            put("__job_master_ip__", hostAddress).build();
+
         LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
-        //TODO: a valid NodeInfo object need to be provided to JobMaster constructor
-        JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
+        JobMasterAPI.NodeInfo jobMasterNodeInfo = NodeInfoUtils.createNodeInfo(hostAddress,
+            "default", "default");
         jobMaster =
             new JobMaster(config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo);
         jobMaster.addShutdownHook();
