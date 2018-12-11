@@ -76,6 +76,11 @@ public class BAllReduceExample extends BenchWorker {
   }
 
   @Override
+  public void close() {
+    reduce.close();
+  }
+
+  @Override
   protected void progressCommunication() {
     reduce.progress();
   }

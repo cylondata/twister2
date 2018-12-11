@@ -108,4 +108,9 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
       return true;
     }
   }
+
+  @Override
+  public void close() {
+    op.close();
+  }
 }
