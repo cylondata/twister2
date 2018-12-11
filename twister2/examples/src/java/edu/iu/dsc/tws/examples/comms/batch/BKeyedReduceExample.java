@@ -93,6 +93,11 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
   }
 
   @Override
+  public void close() {
+    keyedReduce.close();
+  }
+
+  @Override
   protected void progressCommunication() {
     keyedReduce.progress();
   }

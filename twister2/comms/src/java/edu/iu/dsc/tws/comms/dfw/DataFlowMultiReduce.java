@@ -147,6 +147,9 @@ public class DataFlowMultiReduce implements DataFlowOperation {
 
   @Override
   public void close() {
+    for (DataFlowReduce reduce : reduceMap.values()) {
+      reduce.close();
+    }
   }
 
   @Override
