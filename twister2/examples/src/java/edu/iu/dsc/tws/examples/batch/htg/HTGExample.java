@@ -83,16 +83,14 @@ public class HTGExample extends TaskWorker {
     graphBuilderY.setMode(OperationMode.BATCH);
     DataFlowTaskGraph streamingGraph = graphBuilderY.build();
 
-    HTGBuilder hierarchicalTaskGraphBuilder =
-        HTGBuilder.newBuilder(config);
-    hierarchicalTaskGraphBuilder.addSourceTaskGraph("sourcetaskgraph", batchGraph);
-    HTGComputeConnection htgComputeConnection = hierarchicalTaskGraphBuilder.addSinkTaskGraph(
+    HTGBuilder htgBuilder = HTGBuilder.newBuilder(config);
+    htgBuilder.addSourceTaskGraph("sourcetaskgraph", batchGraph);
+    HTGComputeConnection htgComputeConnection = htgBuilder.addSinkTaskGraph(
         "sinktaskgraph", streamingGraph, "source2");
     htgComputeConnection.partition("sourcetaskgraph", "sink1");
-    hierarchicalTaskGraphBuilder.setMode(OperationMode.BATCH);
+    htgBuilder.setMode(OperationMode.BATCH);
 
-    HierarchicalTaskGraph hierarchicalTaskGraph =
-        hierarchicalTaskGraphBuilder.buildHierarchicalTaskGraph();
+    HierarchicalTaskGraph hierarchicalTaskGraph = htgBuilder.buildHierarchicalTaskGraph();
 
     LOG.info("Batch Task Graph:" + batchGraph.getTaskVertexSet() + "\t"
         + batchGraph.getTaskVertexSet().size() + "\t"
@@ -109,9 +107,8 @@ public class HTGExample extends TaskWorker {
     List<DataFlowTaskGraph> dataFlowTaskGraphList =
         hierarchicalTaskGraphParser.hierarchicalTaskGraphParse();
 
-    for (int i = 0; i < dataFlowTaskGraphList.size(); i++) {
-      LOG.fine("dataflow task graph list:" + dataFlowTaskGraphList.get(i).getTaskGraphName());
-    }
+    dataFlowTaskGraphList.stream().map(
+        graph -> "dataflow task graph list:" + graph.getTaskGraphName()).forEach(LOG::fine);
 
     //TODO:Invoke HTG Executor
     //testing
@@ -209,9 +206,6 @@ public class HTGExample extends TaskWorker {
     twister2MetagraphBuilder.setHtgName("htg");
 
     //TODO:Invoke HTG Client and send the metagraph -> start with FIFO
-    //Twister2Client.execute(
-    //    twister2MetagraphBuilder.build(), config, jobConfig, HTGExample.class.getName());
-
     Twister2HTGSubmitter twister2HTGSubmitter = new Twister2HTGSubmitter(config);
     twister2HTGSubmitter.execute(twister2MetagraphBuilder.build(),
         jobConfig, HTGExample.class.getName());

@@ -118,6 +118,11 @@ public class JobMaster {
    */
   private BarrierMonitor barrierMonitor;
 
+  //Newly Added for HTG Integration
+  private HTGClientMonitor htgClientMonitor;
+
+  private boolean htgClientsCompleted = false;
+
   public JobMaster(Config config,
                    String masterAddress,
                    IJobTerminator jobTerminator,
@@ -147,6 +152,9 @@ public class JobMaster {
         JobMasterContext.jobMasterAssignsWorkerIDs(config));
     barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
 
+    //newly added for HTG Integration
+    htgClientMonitor = new HTGClientMonitor(this, rrServer);
+
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
     JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
         JobMasterAPI.WorkerStateChange.newBuilder();
@@ -167,6 +175,15 @@ public class JobMaster {
     rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
     rrServer.registerRequestHandler(barrierRequestBuilder, barrierMonitor);
     rrServer.registerRequestHandler(barrierResponseBuilder, barrierMonitor);
+
+    //Newly added for HTG Testing
+    JobMasterAPI.HTGJobRequest.Builder htgjobRequestBuilder
+        = JobMasterAPI.HTGJobRequest.newBuilder();
+    JobMasterAPI.HTGJobResponse.Builder htgjobResponseBuilder
+        = JobMasterAPI.HTGJobResponse.newBuilder();
+
+    rrServer.registerRequestHandler(htgjobRequestBuilder, htgClientMonitor);
+    rrServer.registerRequestHandler(htgjobResponseBuilder, htgClientMonitor);
 
     rrServer.start();
     looper.loop();
@@ -211,6 +228,11 @@ public class JobMaster {
       looper.loopBlocking();
     }
 
+    //Newly Added for HTG Integration
+    while (!htgClientsCompleted) {
+      looper.loopBlocking();
+    }
+
     // send the remaining messages if any and stop
     rrServer.stopGraceFully(2000);
   }
@@ -227,6 +249,12 @@ public class JobMaster {
     if (jobTerminator != null) {
       jobTerminator.terminateJob(job.getJobName());
     }
+  }
+
+  //Newly Added for HTG Integration
+  public void allHTGClientsCompleted() {
+    htgClientsCompleted = true;
+    looper.wakeup();
   }
 
   public void addShutdownHook() {
@@ -259,3 +287,4 @@ public class JobMaster {
   }
 
 }
+

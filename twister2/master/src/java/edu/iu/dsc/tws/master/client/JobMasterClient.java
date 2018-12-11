@@ -350,7 +350,7 @@ public class JobMasterClient {
     return true;
   }
 
-  class ResponseMessageHandler implements MessageHandler {
+  public class ResponseMessageHandler implements MessageHandler {
 
     @Override
     public void onMessage(RequestID id, int workerId, Message message) {
