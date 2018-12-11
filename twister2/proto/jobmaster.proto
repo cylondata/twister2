@@ -145,8 +145,8 @@ message HTGJobRequest {
     oneof required {
         string htg_jobname = 1;
     }
-    tws.proto.htgjob.HTGJob htgJob = 2;
-    tws.proto.htgjob.ExecuteMessage executeMessage = 3;
+    tws.proto.htgjob.HTGJob htg_job = 2;
+    tws.proto.htgjob.ExecuteMessage execute_message = 3;
 }
 
 message HTGJobResponse {

@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.htgjob;
 
 import java.nio.channels.SocketChannel;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -20,12 +19,10 @@ import com.google.protobuf.Message;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
-import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JMWorkerController;
 import edu.iu.dsc.tws.master.client.Pinger;
@@ -52,8 +49,6 @@ public class Twister2HTGClient {
   private JMWorkerController jmWorkerController;
 
   private boolean startingMessageSent = false;
-
-  private int numberOfWorkers;
 
   public HTGJobAPI.HTGJob getHtgJob() {
     return htgJob;
@@ -85,6 +80,15 @@ public class Twister2HTGClient {
    * to control the connection error when we repeatedly try connecting
    */
   private boolean connectionRefused = false;
+
+
+  public Twister2HTGClient(Config config,
+                           JobMasterAPI.HTGClientInfo thisClient,
+                           HTGJobAPI.HTGJob htgJob) {
+    this(config, thisClient, JobMasterContext.jobMasterIP(config),
+        JobMasterContext.jobMasterPort(config), htgJob, null);
+  }
+
 
   public Twister2HTGClient(Config config,
                            JobMasterAPI.HTGClientInfo thisClient,
@@ -119,6 +123,12 @@ public class Twister2HTGClient {
 
     rrClient = new RRClient(masterAddress, masterPort, null, looper,
         thisClient.getClientID(), connectHandler);
+
+    long interval = JobMasterContext.pingInterval(config);
+
+    //TODO: dO we need this?
+    pinger = new Pinger(thisWorker, rrClient, interval);
+    //pinger = new Pinger(thisClient, rrClient, interval);
 
     //jmWorkerController = new JMWorkerController(config, thisClient, rrClient, numberOfWorkers);
 
@@ -175,7 +185,7 @@ public class Twister2HTGClient {
 
     Thread jmThread = new Thread() {
       public void run() {
-        //startLooping();
+        startLooping();
       }
     };
 
@@ -235,28 +245,15 @@ public class Twister2HTGClient {
     return false;
   }
 
-  class ResponseMessageHandler implements MessageHandler {
+  public class ResponseMessageHandler implements MessageHandler {
 
     @Override
     public void onMessage(RequestID id, int clientId, Message message) {
 
-      LOG.info("message received (for htg):" + message);
-
-      if (message instanceof JobMasterAPI.WorkerStateChangeResponse) {
-        LOG.info("Received a WorkerStateChange response from the master. \n" + message);
-
-        JobMasterAPI.WorkerStateChangeResponse responseMessage =
-            (JobMasterAPI.WorkerStateChangeResponse) message;
-
-        if (JobMasterContext.jobMasterAssignsWorkerIDs(config)
-            && responseMessage.getSentState() == JobMasterAPI.WorkerState.STARTING) {
-          thisWorker = WorkerInfoUtils.updateWorkerID(thisWorker, responseMessage.getWorkerID());
-        }
-
-      } else {
-        LOG.info("Received HTG Message. \n" + message);
+      if (message instanceof JobMasterAPI.HTGJobResponse) {
+        LOG.info("HTG Job Response Received:"
+            + ((JobMasterAPI.HTGJobResponse) message).getHtgSubgraphname());
       }
-
     }
   }
 
@@ -268,8 +265,7 @@ public class Twister2HTGClient {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       if (status == StatusCode.SUCCESS) {
-        LOG.info(thisClient.getClientID()
-            + "JobMasterClient connected to JobMaster: " + channel);
+        LOG.info(thisClient.getClientID() + "HTG Client connected to JobMaster: " + channel);
       }
 
       if (status == StatusCode.CONNECTION_REFUSED) {
@@ -289,40 +285,23 @@ public class Twister2HTGClient {
   /**
    * This method sends the htg job object to the job master.
    */
-  public boolean sendHTGClientStartingMessage() {
+  public boolean sendHTGClientRequestMessage() {
 
     JobMasterAPI.HTGJobRequest htgJobRequest = JobMasterAPI.HTGJobRequest.newBuilder()
         .setHtgJob(htgJob)
         .setExecuteMessage(executeMessage)
         .build();
 
-    LOG.info("HTG Job Client Message and Execute Message:" + htgJob + "\t" + executeMessage);
+    LOG.fine("HTG Job Client Message and Execute Message:" + htgJob + "\t" + executeMessage);
 
-    if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
-      try {
-        rrClient.sendRequestWaitResponse(htgJobRequest,
-            JobMasterContext.responseWaitDuration(config));
-      } catch (BlockingSendException bse) {
-        LOG.log(Level.SEVERE, bse.getMessage(), bse);
-        return false;
-      }
-
-    } else {
-      RequestID requestID = rrClient.sendRequest(htgJobRequest);
-      LOG.info("%%%%%% I am entering else loop in htg client starting message");
-      try {
-        rrClient.sendRequestWaitResponse(htgJobRequest,
-            JobMasterContext.responseWaitDuration(config));
-      } catch (BlockingSendException e) {
-        e.printStackTrace();
-      }
-
-      if (requestID == null) {
-        LOG.severe("Couldn't send HTG Client starting message: " + htgJobRequest);
-        return false;
-      }
+    //RequestID requestID = rrClient.sendRequest(htgJobRequest);
+    //TODO: This should be properly defined for receiving the response from the JobMaster
+    try {
+      rrClient.sendRequestWaitResponse(htgJobRequest,
+          JobMasterContext.responseWaitDuration(config));
+    } catch (edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException e) {
+      e.printStackTrace();
     }
-
     startingMessageSent = true;
     //pinger.sendPingMessage();
     return true;
