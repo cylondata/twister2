@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.rsched.schedulers.standalone;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -24,10 +26,14 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.master.JobMaster;
+import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
+import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadTerminator;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
@@ -176,11 +182,44 @@ public class MPILauncher implements ILauncher {
 
     Config newConfig = Config.newBuilder().putAll(config).put(
         SchedulerContext.WORKING_DIRECTORY, jobWorkingDirectory).build();
-    // now start the controller, which will get the resources from
-    // slurm and start the job
+
+    JobMaster jobMaster = null;
+    Thread jmThread = null;
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      try {
+        int port = JobMasterContext.jobMasterPort(config);
+        String hostAddress = JobMasterContext.jobMasterIP(config);
+        if (hostAddress == null) {
+          hostAddress = InetAddress.getLocalHost().getHostAddress();
+        }
+        LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
+        //TODO: a valid NodeInfo object need to be provided to JobMaster constructor
+        JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
+        jobMaster =
+            new JobMaster(config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo);
+        jobMaster.addShutdownHook();
+        jmThread = jobMaster.startJobMasterThreaded();
+      } catch (UnknownHostException e) {
+        LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+        throw new RuntimeException(e);
+      }
+    }
+    // now start the controller, which will get the resources and start
     IController controller = new MPIController(true);
     controller.initialize(newConfig);
-    return controller.start(job);
+    boolean start = controller.start(job);
+
+    // now lets wait on client
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      try {
+        if (jmThread != null) {
+          jmThread.join();
+        }
+      } catch (InterruptedException ignore) {
+      }
+    }
+
+    return start;
   }
 
   /**

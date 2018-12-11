@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -69,7 +70,11 @@ public abstract class MPICommand {
   protected Map<String, Object> mpiCommandArguments(Config cfg, JobAPI.Job job) {
     Map<String, Object> commands = new HashMap<>();
     // lets get the configurations
-    commands.put("procs", job.getNumberOfWorkers());
+    int numberOfWorkers = job.getNumberOfWorkers();
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      numberOfWorkers++;
+    }
+    commands.put("procs", numberOfWorkers);
 
     String jobClassPath = JobUtils.jobClassPath(cfg, job, workingDirectory);
     LOG.log(Level.INFO, "Job class path: " + jobClassPath);

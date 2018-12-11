@@ -88,12 +88,19 @@ public final class MPIWorker {
       LOG.log(Level.FINE, "A worker process is starting...");
 
       // lets split the comm
-      int color = rank == 0 ? 0 : 1;
-      Intracomm comm = MPI.COMM_WORLD.split(color, rank);
-      if (rank != 0) {
-        startWorker(config, rank, comm);
+      if (!JobMasterContext.jobMasterRunsInClient(config)) {
+        // broadcast the port of jobmaster
+
+
+        int color = rank == 0 ? 0 : 1;
+        Intracomm comm = MPI.COMM_WORLD.split(color, rank);
+        if (rank != 0) {
+          startWorker(config, rank, comm);
+        } else {
+          startMaster(config, rank);
+        }
       } else {
-        startMaster(config, rank);
+        startWorker(config, rank, MPI.COMM_WORLD);
       }
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed the MPI process", e);
