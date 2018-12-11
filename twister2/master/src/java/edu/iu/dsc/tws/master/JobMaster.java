@@ -139,11 +139,6 @@ public class JobMaster {
   private DashboardClient dashClient;
 
   /**
-   * shows whether Job master will connect to Dashboard server
-   */
-  private boolean dashboardUsed;
-
-  /**
    * BarrierMonitor object
    */
   private BarrierMonitor barrierMonitor;
@@ -165,10 +160,9 @@ public class JobMaster {
     this.dashboardHost = JobMasterContext.dashboardHost(config);
     if (dashboardHost == null) {
       LOG.warning("Dashboard host address is null. Not connecting to Dashboard");
-      this.dashboardUsed = false;
+      this.dashClient = null;
     } else {
       this.dashClient = new DashboardClient(dashboardHost, jobID);
-      this.dashboardUsed = true;
     }
   }
 
@@ -178,6 +172,15 @@ public class JobMaster {
   private void init() {
 
     looper = new Progress();
+
+    // if Dashboard is used, register this job with that
+    if (dashClient != null) {
+      boolean registered = dashClient.registerJob(job, nodeInfo);
+      if (!registered) {
+        LOG.warning("Not using Dashboard since it can not register with it.");
+        dashClient = null;
+      }
+    }
 
     ServerConnectHandler connectHandler = new ServerConnectHandler();
     rrServer =
@@ -220,10 +223,6 @@ public class JobMaster {
     rrServer.start();
     looper.loop();
 
-    // if Dashboard is used, register this job with that
-    if (dashboardUsed) {
-      dashClient.registerJob(job, nodeInfo);
-    }
   }
 
   /**
@@ -275,7 +274,7 @@ public class JobMaster {
    */
   public void allWorkersBecameRunning() {
     // if Dashboard is used, tell it that the job has STARTED
-    if (dashboardUsed) {
+    if (dashClient != null) {
       dashClient.jobStateChange(JobState.STARTED);
     }
   }
@@ -286,7 +285,7 @@ public class JobMaster {
   public void allWorkersCompleted() {
 
     // if Dashboard is used, tell it that the job has completed
-    if (dashboardUsed) {
+    if (dashClient != null) {
       dashClient.jobStateChange(JobState.COMPLETED);
     }
 

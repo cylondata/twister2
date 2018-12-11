@@ -30,9 +30,11 @@ Job Master manages the job related activities during job execution such as fault
 
 The processes that perform the computations in a job.
 
-### Twister2 Web UI \(To Be Added\):
+### Twister2 Dashboard:
 
-This will present the job related data to users through a web page. Users will be able to monitor their jobs on that web page. Only one instance will run in the cluster and it will provide data for all jobs running in the cluster.
+Twister2 Dashboard is a web site that helps users to monitor their jobs. 
+Only one instance of Dashboard runs in the cluster and it will provide data for all jobs running in the cluster.
+It is a long running service. It is installed and started once and it runs continually. 
 
 Following sections describe some of these components in detail.
 

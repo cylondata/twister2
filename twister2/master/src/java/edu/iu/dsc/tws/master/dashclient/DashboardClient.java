@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.dashclient;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.ClientBuilder;
@@ -55,18 +56,28 @@ public class DashboardClient {
     RegisterJob registerJob = new RegisterJob(jobID, job, jobMasterNodeInfo);
     String path = "jobs/";
 
-    Response response = ClientBuilder.newClient()
-        .target(dashHost)
-        .path(path)
-        .request(MediaType.APPLICATION_JSON)
-        .post(Entity.json(registerJob));
+    try {
+      Response response = ClientBuilder.newClient()
+          .target(dashHost)
+          .path(path)
+          .request(MediaType.APPLICATION_JSON)
+          .post(Entity.json(registerJob));
 
-    if (response.getStatus() == 200) {
-      LOG.info("Registered JobMaster with Dashboard. jobID: " + jobID);
-      return true;
-    } else {
-      LOG.severe("Could not register JobMaster with Dashboard for jobID: " + jobID
-          + ". Response: " + response.toString());
+      if (response.getStatus() == 200) {
+        LOG.info("Registered JobMaster with Dashboard. jobID: " + jobID);
+        return true;
+      } else {
+        LOG.severe("Could not register JobMaster with Dashboard for jobID: " + jobID
+            + ". Response: " + response.toString());
+        return false;
+      }
+    } catch (javax.ws.rs.ProcessingException pe) {
+      if (pe.getCause() instanceof java.net.ConnectException) {
+        LOG.log(Level.SEVERE, "Could not connect to Dashboard at: " + dashHost, pe);
+        return false;
+      }
+
+      LOG.log(Level.SEVERE, "Could not register the job with Dashboard at: " + dashHost, pe);
       return false;
     }
   }
