@@ -288,7 +288,7 @@ public class JobMasterClient {
         .setNewState(JobMasterAPI.WorkerState.STARTING)
         .build();
 
-    LOG.info("Sending Worker STARTING message: \n" + workerStateChange);
+    LOG.fine("Sending Worker STARTING message: \n" + workerStateChange);
     // if JobMaster assigns ID, wait for the response
     if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
       try {
@@ -327,7 +327,7 @@ public class JobMasterClient {
       return false;
     }
 
-    LOG.info("Sent Worker RUNNING message: \n" + workerStateChange);
+    LOG.fine("Sent Worker RUNNING message: \n" + workerStateChange);
     return true;
   }
 
@@ -338,7 +338,7 @@ public class JobMasterClient {
         .setNewState(JobMasterAPI.WorkerState.COMPLETED)
         .build();
 
-    LOG.info("Sending Worker COMPLETED message: \n" + workerStateChange);
+    LOG.fine("Sending Worker COMPLETED message: \n" + workerStateChange);
     try {
       rrClient.sendRequestWaitResponse(workerStateChange,
           JobMasterContext.responseWaitDuration(config));
@@ -356,7 +356,7 @@ public class JobMasterClient {
     public void onMessage(RequestID id, int workerId, Message message) {
 
       if (message instanceof JobMasterAPI.WorkerStateChangeResponse) {
-        LOG.info("Received a WorkerStateChange response from the master. \n" + message);
+        LOG.fine("Received a WorkerStateChange response from the master. \n" + message);
 
         JobMasterAPI.WorkerStateChangeResponse responseMessage =
             (JobMasterAPI.WorkerStateChangeResponse) message;

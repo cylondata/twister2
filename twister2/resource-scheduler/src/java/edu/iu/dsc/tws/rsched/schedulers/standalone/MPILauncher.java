@@ -198,11 +198,11 @@ public class MPILauncher implements ILauncher {
         newConfig = Config.newBuilder().putAll(newConfig).put("__job_master_port__", port).
             put("__job_master_ip__", hostAddress).build();
 
-        LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
+        LOG.log(Level.INFO, String.format("Starting the job master: %s:%d", hostAddress, port));
         JobMasterAPI.NodeInfo jobMasterNodeInfo = NodeInfoUtils.createNodeInfo(hostAddress,
             "default", "default");
         jobMaster =
-            new JobMaster(config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo);
+            new JobMaster(config, hostAddress, port, new NomadTerminator(), job, jobMasterNodeInfo);
         jobMaster.addShutdownHook();
         jmThread = jobMaster.startJobMasterThreaded();
       } catch (UnknownHostException e) {

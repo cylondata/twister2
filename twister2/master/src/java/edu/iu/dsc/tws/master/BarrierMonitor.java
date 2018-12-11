@@ -44,9 +44,9 @@ public class BarrierMonitor implements MessageHandler {
 
       // log first and last workers messages as INFO, others as FINE
       if (waitList.size() == 0) {
-        LOG.info("BarrierRequest message received from the first worker:\n" + barrierRequest);
+        LOG.fine("BarrierRequest message received from the first worker:\n" + barrierRequest);
       } else if (waitList.size() == (numberOfWorkers - 1)) {
-        LOG.info("BarrierRequest message received from the last worker:\n" + barrierRequest);
+        LOG.fine("BarrierRequest message received from the last worker:\n" + barrierRequest);
       } else {
         LOG.fine("BarrierRequest message received:\n" + barrierRequest);
       }
@@ -67,7 +67,7 @@ public class BarrierMonitor implements MessageHandler {
    */
   private void sendBarrierResponseToWaitList() {
 
-    LOG.info("All workers reached the barrier. "
+    LOG.fine("All workers reached the barrier. "
         + "BarrierResponse message will be sent to all workers.");
 
     for (Map.Entry<Integer, RequestID> entry: waitList.entrySet()) {

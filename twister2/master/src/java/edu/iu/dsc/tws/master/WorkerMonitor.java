@@ -61,7 +61,7 @@ public class WorkerMonitor implements MessageHandler {
       stateChangeMessageReceived(id, wscMessage);
 
     } else if (message instanceof JobMasterAPI.ListWorkersRequest) {
-      LOG.log(Level.INFO, "ListWorkersRequest received: " + message.toString());
+      LOG.log(Level.FINE, "ListWorkersRequest received: " + message.toString());
       JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
 
@@ -92,7 +92,7 @@ public class WorkerMonitor implements MessageHandler {
   private void stateChangeMessageReceived(RequestID id, JobMasterAPI.WorkerStateChange message) {
 
     if (message.getNewState() == JobMasterAPI.WorkerState.STARTING) {
-      LOG.info("WorkerStateChange STARTING message received: \n" + message);
+      LOG.fine("WorkerStateChange STARTING message received: \n" + message);
       JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
 
       if (jobMasterAssignsWorkerIDs) {
@@ -132,7 +132,7 @@ public class WorkerMonitor implements MessageHandler {
     } else if (message.getNewState() == JobMasterAPI.WorkerState.COMPLETED) {
 
       workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
-      LOG.info("WorkerStateChange COMPLETED message received: \n" + message);
+      LOG.fine("WorkerStateChange COMPLETED message received: \n" + message);
 
       // send the response message
       sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
@@ -148,7 +148,7 @@ public class WorkerMonitor implements MessageHandler {
 
     } else if (message.getNewState() == JobMasterAPI.WorkerState.RUNNING) {
       workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
-      LOG.info("WorkerStateChange RUNNING message received: \n" + message);
+      LOG.fine("WorkerStateChange RUNNING message received: \n" + message);
 
       // send the response message
       sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
@@ -185,7 +185,7 @@ public class WorkerMonitor implements MessageHandler {
         .build();
 
     rrServer.sendResponse(id, response);
-    LOG.info("WorkerStateChangeResponse sent:\n" + response);
+    LOG.fine("WorkerStateChangeResponse sent:\n" + response);
 
   }
 
@@ -194,7 +194,7 @@ public class WorkerMonitor implements MessageHandler {
     if (listMessage.getRequestType() == ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE) {
 
       sendListWorkersResponse(listMessage.getWorkerID(), id);
-      LOG.log(Level.INFO, String.format("Expecting %d workers, %d joined",
+      LOG.log(Level.FINE, String.format("Expecting %d workers, %d joined",
           numberOfWorkers, workers.size()));
     } else if (listMessage.getRequestType()
         == JobMasterAPI.ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED) {
@@ -208,7 +208,7 @@ public class WorkerMonitor implements MessageHandler {
         waitList.put(listMessage.getWorkerID(), id);
       }
 
-      LOG.log(Level.INFO, String.format("Expecting %d workers, %d joined",
+      LOG.log(Level.FINE, String.format("Expecting %d workers, %d joined",
           numberOfWorkers, workers.size()));
     }
   }
@@ -224,7 +224,7 @@ public class WorkerMonitor implements MessageHandler {
 
     JobMasterAPI.ListWorkersResponse response = responseBuilder.build();
     rrServer.sendResponse(requestID, response);
-    LOG.info("ListWorkersResponse sent:\n" + response);
+    LOG.fine("ListWorkersResponse sent:\n" + response);
   }
 
   private void sendListWorkersResponseToWaitList() {
