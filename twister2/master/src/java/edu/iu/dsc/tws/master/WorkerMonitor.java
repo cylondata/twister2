@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
@@ -31,19 +32,23 @@ public class WorkerMonitor implements MessageHandler {
 
   private JobMaster jobMaster;
   private RRServer rrServer;
+  private Config config;
 
-  private boolean jobMasterAssignsWorkerIDs;
   private int numberOfWorkers;
 
   private HashMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
 
-  public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, int numWorkers,
-                       boolean jobMasterAssignsWorkerIDs) {
+  public WorkerMonitor(Config config, JobMaster jobMaster, RRServer rrServer) {
+    this(config, jobMaster, rrServer, JobMasterContext.workerInstances(config));
+  }
+
+  public WorkerMonitor(Config config, JobMaster jobMaster,
+                       RRServer rrServer, int numWorkers) {
+    this.config = config;
     this.jobMaster = jobMaster;
     this.rrServer = rrServer;
     this.numberOfWorkers = numWorkers;
-    this.jobMasterAssignsWorkerIDs = jobMasterAssignsWorkerIDs;
 
     workers = new HashMap<>();
     waitList = new HashMap<>();
@@ -95,7 +100,7 @@ public class WorkerMonitor implements MessageHandler {
       LOG.info("WorkerStateChange STARTING message received: \n" + message);
       JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
 
-      if (jobMasterAssignsWorkerIDs) {
+      if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
         int workerID = workers.size();
         workerInfo = WorkerInfoUtils.updateWorkerID(workerInfo, workerID);
       }

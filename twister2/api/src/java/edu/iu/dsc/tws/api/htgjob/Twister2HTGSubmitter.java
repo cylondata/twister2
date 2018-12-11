@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
@@ -33,7 +32,7 @@ public final class Twister2HTGSubmitter {
   private static final Logger LOG = Logger.getLogger(Twister2HTGSubmitter.class.getName());
 
   private Config config;
-  private Twister2HTGClient client;
+  //private Twister2HTGClient client;
   private JobMaster jobMaster;
 
   public Twister2HTGSubmitter(Config cfg) {
@@ -63,9 +62,11 @@ public final class Twister2HTGSubmitter {
   private void buildHTGJob(List<String> scheduleGraphs, Twister2Metagraph twister2Metagraph,
                            String workerclassName, JobConfig jobConfig) {
 
-    Twister2Job twister2Job;
+    Twister2Job twister2Job = null;
     Twister2Metagraph.SubGraph subGraph;
     HTGJobAPI.ExecuteMessage executeMessage;
+
+    List<HTGJobAPI.ExecuteMessage> executeMessageList = new LinkedList<>();
 
     //Construct the HTGJob object to be sent to Job Master
     HTGJobAPI.HTGJob htgJob = HTGJobAPI.HTGJob.newBuilder()
@@ -94,106 +95,53 @@ public final class Twister2HTGSubmitter {
           .setConfig(jobConfig)
           .build();
 
+      executeMessageList.add(executeMessage);
+
       //Now submit the job
-      Twister2Submitter.submitJob(twister2Job, config);
+      //Twister2Submitter.submitJob(twister2Job, config);
 
-      //This is for validation to start the job master
-      //TODO: Discuss with Ahmet for the order of execution.
+      //This is for validation to start the job master once
       if (i == 0) {
-        //startJobMaster(twister2Job);
-
-        //Create the connection between the HTGClient and JobMaster
-        createHTGMasterClient(htgJob);
+        startJobMaster(twister2Job);
       }
+    }
+    //Send the htgjob object and execution order of the graph.
+    submitHTGToJobMaster(htgJob, executeMessageList);
+  }
 
-      //Submit the HTG Job and the execute message
-      //submitToJobMaster(htgJob, executeMessage);
+  /**
+   * This method initializes the HTGClient and send the generated HTG Job object and the name of
+   * the graph to be executed (executeMessage).
+   */
+  public String submitHTGToJobMaster(HTGJobAPI.HTGJob htgJob,
+                                     List<HTGJobAPI.ExecuteMessage> executeMessage) {
 
-      client.setExecuteMessage(executeMessage);
+    InetAddress htgClientIP = JMWorkerController.convertStringToIP("localhost");
+    int htgClientPort = 10000 + (int) (Math.random() * 10000);
+    int htgClientTempID = 0;
+
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(
+        "htg.client.ip", "rack01", null);
+    JobMasterAPI.HTGClientInfo htgClientInfo = HTGClientInfoUtils.createHTGClientInfo(
+        htgClientTempID, htgClientIP.getHostAddress(), htgClientPort, nodeInfo);
+
+    Twister2HTGClient client = new Twister2HTGClient(config, htgClientInfo, htgJob);
+    Thread clientThread = client.startThreaded();
+
+    if (clientThread == null) {
+      LOG.severe("HTG Client can not initialize. Exiting ...");
+      return null;
+    }
+
+    for (int i = 0; i < executeMessage.size(); i++) {
+      client.setExecuteMessage(executeMessage.get(i));
+      sleep((long) (Math.random() * 4000));
       client.sendHTGClientRequestMessage();
-
-      //client.getHTGClientResponseMessage();
-
-      sleep((long) (Math.random() * 2000));
     }
-    client.close();
+    client.sendHTGCompleteMessage();
+    return "HTG finished Completely";
   }
 
-
-  /**
-   * This method initializes the HTGClient and send the generated HTG Job object and the name of
-   * the graph to be executed (executeMessage).
-   */
-  public Twister2HTGClient createHTGMasterClient(HTGJobAPI.HTGJob htgJob) {
-
-    //Send the HTG Job information to execute the part of the HTG
-    LOG.fine("HTG Job Objects:" + htgJob);
-
-    InetAddress htgClientIP = JMWorkerController.convertStringToIP("localhost");
-    int htgClientPort = 10000 + (int) (Math.random() * 10000);
-    int htgClientTempID = 0;
-
-    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(
-        "htg.client.ip", "rack01", null);
-    JobMasterAPI.HTGClientInfo htgClientInfo = HTGClientInfoUtils.createHTGClientInfo(
-        htgClientTempID, htgClientIP.getHostAddress(), htgClientPort, nodeInfo);
-
-    //client = new Twister2HTGClient(config, htgClientInfo, htgJob, executeMessage);
-
-    client = new Twister2HTGClient(config, htgClientInfo, htgJob);
-    Thread clientThread = client.startThreaded();
-
-    if (clientThread == null) {
-      LOG.severe("HTG Client can not initialize. Exiting ...");
-      return null;
-    }
-
-    //IWorkerController workerController = client.getJMWorkerController();
-    //client.sendHTGClientRequestMessage();
-
-    // wait up to 4sec
-    //sleep((long) (Math.random() * 4000));
-    return client;
-  }
-
-
-  /**
-   * This method initializes the HTGClient and send the generated HTG Job object and the name of
-   * the graph to be executed (executeMessage).
-   */
-  public String submitToJobMaster(HTGJobAPI.HTGJob htgJob,
-                                  HTGJobAPI.ExecuteMessage executeMessage) {
-
-    //Send the HTG Job information to execute the part of the HTG
-    LOG.fine("HTG Job Objects:" + htgJob + "\tsubgraph to be executed:" + executeMessage);
-
-    InetAddress htgClientIP = JMWorkerController.convertStringToIP("localhost");
-    int htgClientPort = 10000 + (int) (Math.random() * 10000);
-    int htgClientTempID = 0;
-
-    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(
-        "htg.client.ip", "rack01", null);
-    JobMasterAPI.HTGClientInfo htgClientInfo = HTGClientInfoUtils.createHTGClientInfo(
-        htgClientTempID, htgClientIP.getHostAddress(), htgClientPort, nodeInfo);
-
-    //client = new Twister2HTGClient(config, htgClientInfo, htgJob, executeMessage);
-
-    client = new Twister2HTGClient(config, htgClientInfo, htgJob);
-    Thread clientThread = client.startThreaded();
-
-    if (clientThread == null) {
-      LOG.severe("HTG Client can not initialize. Exiting ...");
-      return null;
-    }
-
-    //IWorkerController workerController = client.getJMWorkerController();
-    client.sendHTGClientRequestMessage();
-
-    // wait up to 4sec
-    sleep((long) (Math.random() * 4000));
-
-    return "Finished Graph Execution";
-  }
 
   //TODO:Starting Job Master for validation (It would be removed)
   public void startJobMaster(Twister2Job twister2Job) {

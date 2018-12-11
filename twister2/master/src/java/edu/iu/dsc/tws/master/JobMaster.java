@@ -148,8 +148,7 @@ public class JobMaster {
     rrServer =
         new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
-    workerMonitor = new WorkerMonitor(this, rrServer, numberOfWorkers,
-        JobMasterContext.jobMasterAssignsWorkerIDs(config));
+    workerMonitor = new WorkerMonitor(config, this, rrServer, numberOfWorkers);
     barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
 
     //newly added for HTG Integration

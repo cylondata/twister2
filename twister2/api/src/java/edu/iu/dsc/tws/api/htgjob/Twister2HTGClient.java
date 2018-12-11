@@ -50,22 +50,6 @@ public class Twister2HTGClient {
 
   private boolean startingMessageSent = false;
 
-  public HTGJobAPI.HTGJob getHtgJob() {
-    return htgJob;
-  }
-
-  public void setHtgJob(HTGJobAPI.HTGJob htgJob) {
-    this.htgJob = htgJob;
-  }
-
-  public HTGJobAPI.ExecuteMessage getExecuteMessage() {
-    return executeMessage;
-  }
-
-  public void setExecuteMessage(HTGJobAPI.ExecuteMessage executeMessage) {
-    this.executeMessage = executeMessage;
-  }
-
   //NEWLY Added
   private HTGJobAPI.HTGJob htgJob;
   private HTGJobAPI.ExecuteMessage executeMessage;
@@ -114,6 +98,10 @@ public class Twister2HTGClient {
     this.executeMessage = message;
   }
 
+  public void setExecuteMessage(HTGJobAPI.ExecuteMessage executeMessage) {
+    this.executeMessage = executeMessage;
+  }
+
   private boolean init() {
 
     looper = new Progress();
@@ -126,9 +114,8 @@ public class Twister2HTGClient {
 
     long interval = JobMasterContext.pingInterval(config);
 
-    //TODO: dO we need this?
+    //TODO: Do we need this here?
     pinger = new Pinger(thisWorker, rrClient, interval);
-    //pinger = new Pinger(thisClient, rrClient, interval);
 
     //jmWorkerController = new JMWorkerController(config, thisClient, rrClient, numberOfWorkers);
 
@@ -306,4 +293,10 @@ public class Twister2HTGClient {
     //pinger.sendPingMessage();
     return true;
   }
+
+  public boolean sendHTGCompleteMessage() {
+
+    return true;
+  }
+
 }
