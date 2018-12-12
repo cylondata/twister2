@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,49 +19,47 @@ import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-public class MPIWorkerController implements IWorkerController {
-  private int thisWorkerID;
-
-  private Map<Integer, JobMasterAPI.WorkerInfo> networkInfoMap = new HashMap<>();
-
+public class MPIJobWorkerController implements IWorkerController {
   private Map<String, Object> runtimeObjects = new HashMap<>();
 
-  public MPIWorkerController(int thisWorkerID, Map<Integer, JobMasterAPI.WorkerInfo> processNames) {
-    this.thisWorkerID = thisWorkerID;
-    this.networkInfoMap = processNames;
+  private IWorkerController delegate;
+
+  public MPIJobWorkerController(IWorkerController original) {
+    this.delegate = original;
+  }
+
+  public void add(String name, Object value) {
+    runtimeObjects.put(name, value);
   }
 
   @Override
   public JobMasterAPI.WorkerInfo getWorkerInfo() {
-    return networkInfoMap.get(thisWorkerID);
+    return delegate.getWorkerInfo();
   }
 
   @Override
   public JobMasterAPI.WorkerInfo getWorkerInfoForID(int id) {
-    return networkInfoMap.get(id);
+    return delegate.getWorkerInfoForID(id);
   }
 
   @Override
   public int getNumberOfWorkers() {
-    return networkInfoMap.size();
+    return delegate.getNumberOfWorkers();
   }
 
   @Override
   public List<JobMasterAPI.WorkerInfo> getJoinedWorkers() {
-    return new ArrayList<>(networkInfoMap.values());
+    return delegate.getJoinedWorkers();
   }
 
   @Override
   public List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException {
-    return new ArrayList<>(networkInfoMap.values());
+    return delegate.getAllWorkers();
   }
 
   @Override
   public void waitOnBarrier() throws TimeoutException {
-  }
-
-  public void add(String name, Object obj) {
-    runtimeObjects.put(name, obj);
+    delegate.waitOnBarrier();
   }
 
   @Override

@@ -31,7 +31,6 @@ import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerUtils;
-import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;
@@ -165,7 +164,8 @@ public final class MesosMPIWorkerStarter {
 //    }
 
     // lets create the resource plan
-    Map<Integer, String> processNames = MPIWorker.createResourcePlan(config);
+//    Map<Integer, JobMasterAPI.WorkerInfo> processNames =
+//        MPIWorker.createResourcePlan(config, MPI.COMM_WORLD, null);
     // now create the resource plan
     //AllocatedResources resourcePlan = MPIWorker.addContainers(config, processNames);
 //    AllocatedResources resourcePlan = MesosWorkerUtils.createAllocatedResources("mesos",

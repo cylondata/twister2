@@ -145,6 +145,21 @@ public class JobMaster {
 
   public JobMaster(Config config,
                    String masterAddress,
+                   int port,
+                   IJobTerminator jobTerminator,
+                   JobAPI.Job job,
+                   JobMasterAPI.NodeInfo nodeInfo) {
+    this.config = config;
+    this.masterAddress = masterAddress;
+    this.jobTerminator = jobTerminator;
+    this.job = job;
+    this.nodeInfo = nodeInfo;
+    this.masterPort = port;
+    this.numberOfWorkers = job.getNumberOfWorkers();
+  }
+
+  public JobMaster(Config config,
+                   String masterAddress,
                    IJobTerminator jobTerminator,
                    JobAPI.Job job,
                    JobMasterAPI.NodeInfo nodeInfo) {
@@ -316,7 +331,7 @@ public class JobMaster {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       try {
-        LOG.info("Client connected from:" + channel.getRemoteAddress());
+        LOG.fine("Client connected from:" + channel.getRemoteAddress());
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Exception when getting RemoteAddress", e);
       }

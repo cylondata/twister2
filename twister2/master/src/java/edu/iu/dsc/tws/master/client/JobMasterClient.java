@@ -297,7 +297,7 @@ public class JobMasterClient {
         .setWorkerInfo(thisWorker)
         .build();
 
-    LOG.info("Sending RegisterWorker message: \n" + registerWorker);
+    LOG.fine("Sending RegisterWorker message: \n" + registerWorker);
 
     // wait for the response
     try {
@@ -330,7 +330,7 @@ public class JobMasterClient {
       return false;
     }
 
-    LOG.info("Sent Worker RUNNING message: \n" + workerStateChange);
+    LOG.fine("Sent Worker RUNNING message: \n" + workerStateChange);
     return true;
   }
 
@@ -341,7 +341,7 @@ public class JobMasterClient {
         .setState(JobMasterAPI.WorkerState.COMPLETED)
         .build();
 
-    LOG.info("Sending Worker COMPLETED message: \n" + workerStateChange);
+    LOG.fine("Sending Worker COMPLETED message: \n" + workerStateChange);
     try {
       rrClient.sendRequestWaitResponse(workerStateChange,
           JobMasterContext.responseWaitDuration(config));
@@ -360,7 +360,7 @@ public class JobMasterClient {
 
       if (message instanceof JobMasterAPI.RegisterWorkerResponse) {
 
-        LOG.info("Received a RegisterWorkerResponse message from the master. \n" + message);
+        LOG.fine("Received a RegisterWorkerResponse message from the master. \n" + message);
 
         JobMasterAPI.RegisterWorkerResponse responseMessage =
             (JobMasterAPI.RegisterWorkerResponse) message;
@@ -374,7 +374,7 @@ public class JobMasterClient {
         }
 
       } else if (message instanceof JobMasterAPI.WorkerStateChangeResponse) {
-        LOG.info("Received a WorkerStateChange response from the master. \n" + message);
+        LOG.fine("Received a WorkerStateChange response from the master. \n" + message);
 
         // nothing to do
 
