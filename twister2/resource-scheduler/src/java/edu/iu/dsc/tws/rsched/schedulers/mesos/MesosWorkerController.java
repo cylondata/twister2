@@ -15,6 +15,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,6 +56,20 @@ public class MesosWorkerController implements IWorkerController {
         SchedulerContext.getNodeInfo(config, ip));
   }
 
+  public MesosWorkerController(Config cfg, JobAPI.Job job, String ip, int port, int workerID,
+                               JobAPI.ComputeResource computeResource,
+                               Map<String, Integer> additionalPorts) {
+    config = cfg;
+    this.jobName = job.getJobName();
+    this.job = job;
+    this.workerIp = ip;
+    this.workerPort = port;
+    numberOfWorkers = MesosContext.numberOfContainers(config) - 1;
+    containerPerWorker = MesosContext.containerPerWorker(config);
+    workerList = new ArrayList<>();
+    thisWorker = WorkerInfoUtils.createWorkerInfo(workerID, ip, port,
+        SchedulerContext.getNodeInfo(config, ip), computeResource, additionalPorts);
+  }
   /**
    * covert the given string to ip address object
    */
