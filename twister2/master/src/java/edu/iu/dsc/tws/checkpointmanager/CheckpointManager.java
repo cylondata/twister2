@@ -85,7 +85,7 @@ public class CheckpointManager {
     TaskMonitor taskMonitor = new TaskMonitor(cfg, this, rrServer);
 
     rrServer = new RRServer(cfg, "localhost", 6789, looper,
-        -2, new ServerConnectHandler());
+        -2, new ServerConnectHandler(), false);
 
     rrServer.registerRequestHandler(Checkpoint.TaskDiscovery.newBuilder(), taskMonitor);
 

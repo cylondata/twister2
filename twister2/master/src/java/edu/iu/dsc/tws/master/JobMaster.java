@@ -57,10 +57,9 @@ public class JobMaster {
   private static final Logger LOG = Logger.getLogger(JobMaster.class.getName());
 
   /**
-   * Job Master ID is assigned as -1,
-   * workers will have IDs starting from 0 and increasing by one
+   * an id to be used when comminicating with workers and the client
    */
-  public static final int JOB_MASTER_ID = -1;
+  public static final int JOB_MASTER_ID = -10;
 
   /**
    * A singleton Progress object monitors network channel
@@ -183,8 +182,8 @@ public class JobMaster {
     }
 
     ServerConnectHandler connectHandler = new ServerConnectHandler();
-    rrServer =
-        new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
+    rrServer = new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID,
+        connectHandler, JobMasterContext.jobMasterAssignsWorkerIDs(config));
 
     workerMonitor = new WorkerMonitor(this, rrServer, dashClient, numberOfWorkers,
         JobMasterContext.jobMasterAssignsWorkerIDs(config));
