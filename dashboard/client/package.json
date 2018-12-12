@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@blueprintjs/core": "^3.7.0",
+    "axios": "^0.18.0",
     "chart.js": "^2.7.3",
     "file-saver": "^2.0.0-rc.4",
     "react": "^16.6.0",
@@ -15,7 +16,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && mv build/* ../server/src/main/webapp/",
+    "build": "react-scripts build && rm ../server/src/main/webapp/* -r -f && mv build/* ../server/src/main/webapp/",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

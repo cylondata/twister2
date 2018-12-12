@@ -3,6 +3,7 @@ package edu.iu.dsc.tws.dashboard.controllers;
 
 import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
 import edu.iu.dsc.tws.dashboard.data_models.JobState;
+import edu.iu.dsc.tws.dashboard.rest_models.ComputeResourceScaleRequest;
 import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import edu.iu.dsc.tws.dashboard.services.ComputeResourceService;
 import org.apache.logging.log4j.LogManager;
@@ -86,17 +87,30 @@ public class JobController {
     return computeResourceService.save(jobId, computeResource);
   }
 
+  @RequestMapping(value = "/{jobId}/computeResources/{index}/scale/", method = RequestMethod.POST,
+          consumes = MediaType.APPLICATION_JSON_VALUE)
+  public void createComputeResource(@PathVariable String jobId,
+                                    @PathVariable Integer index,
+                                    @RequestBody ComputeResourceScaleRequest computeResourceScaleRequest) {
+    computeResourceService.scale(jobId, index, computeResourceScaleRequest);
+  }
+
   @RequestMapping(value = "/{jobId}/computeResources/{index}", method = RequestMethod.DELETE)
   public void deleteComputeResource(@PathVariable String jobId,
                                     @PathVariable Integer index) {
     computeResourceService.delete(jobId, index);
   }
 
-
-  @RequestMapping(value = "/{jobId}/beat/", method = RequestMethod.POST)
-  public void heartbeat(@PathVariable String jobId) {
-    LOG.debug("heartbeat signal received for job {}", jobId);
-    this.jobService.heartbeat(jobId);
+  @RequestMapping(value = "/stats/", method = RequestMethod.GET)
+  public Object getStateStats() {
+    return this.jobService.getStateStats();
   }
+
+
+//  @RequestMapping(value = "/{jobId}/beat/", method = RequestMethod.POST)
+//  public void heartbeat(@PathVariable String jobId) {
+//    LOG.debug("heartbeat signal received for job {}", jobId);
+//    this.jobService.heartbeat(jobId);
+//  }
 
 }

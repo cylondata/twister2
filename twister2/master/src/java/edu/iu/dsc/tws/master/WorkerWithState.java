@@ -11,48 +11,40 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Objects;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
+/**
+ * JobMaster keeps WorkerInfos with state
+ * we keep all state history in an ArrayList
+ */
+
 public class WorkerWithState {
   private static final Logger LOG = Logger.getLogger(WorkerWithState.class.getName());
 
-  private JobMasterAPI.WorkerState workerState;
   private JobMasterAPI.WorkerInfo workerInfo;
+  private ArrayList<JobMasterAPI.WorkerState> states;
   private long pingTimestamp;
 
   public WorkerWithState(JobMasterAPI.WorkerInfo workerInfo) {
     this.workerInfo = workerInfo;
-    workerState = JobMasterAPI.WorkerState.UNASSIGNED;
+    states = new ArrayList<>();
     pingTimestamp = -1;
   }
 
-  public static InetAddress covertToIPAddress(String ipStr) {
-    if (ipStr != null) {
-      try {
-        return InetAddress.getByName(ipStr);
-      } catch (UnknownHostException e) {
-        LOG.log(Level.SEVERE, "Can not covert the string to IP address. String: " + ipStr, e);
-      }
-    }
-    return null;
-  }
-
-  public void setWorkerState(JobMasterAPI.WorkerState workerState) {
-    this.workerState = workerState;
+  public void addWorkerState(JobMasterAPI.WorkerState workerState) {
+    states.add(workerState);
   }
 
   public JobMasterAPI.WorkerInfo getWorkerInfo() {
     return workerInfo;
   }
 
-  public JobMasterAPI.WorkerState getWorkerState() {
-    return workerState;
+  public JobMasterAPI.WorkerState getLastWorkerState() {
+    return states.get(states.size() - 1);
   }
 
   public String getIp() {
@@ -97,6 +89,23 @@ public class WorkerWithState {
 
   public long getPingTimestamp() {
     return pingTimestamp;
+  }
+
+  /**
+   * if the worker became RUNNING in the past, return true.
+   * Its current status can be RUNNING, COMPLETED or something else
+   * @return
+   */
+  public boolean hasWorkerBecomeRunning() {
+    return states.contains(JobMasterAPI.WorkerState.RUNNING) ? true : false;
+  }
+
+  /**
+   * if the worker has COMPLETED in its state history
+   * @return
+   */
+  public boolean hasWorkerCompleted() {
+    return states.contains(JobMasterAPI.WorkerState.COMPLETED) ? true : false;
   }
 
   @Override

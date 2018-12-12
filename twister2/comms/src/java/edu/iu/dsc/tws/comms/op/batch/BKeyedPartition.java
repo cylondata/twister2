@@ -112,4 +112,9 @@ public class BKeyedPartition {
   public boolean progress() {
     return partition.progress();
   }
+
+  public void close() {
+    // deregister from the channel
+    partition.close();
+  }
 }

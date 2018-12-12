@@ -76,6 +76,11 @@ public class BGatherExample extends BenchWorker {
   }
 
   @Override
+  public void close() {
+    gather.close();
+  }
+
+  @Override
   protected void progressCommunication() {
     gather.progress();
   }

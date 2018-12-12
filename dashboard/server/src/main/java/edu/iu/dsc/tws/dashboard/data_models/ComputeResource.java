@@ -31,7 +31,8 @@ public class ComputeResource implements Serializable {
   @Id
   @ManyToOne(optional = false)
   @JoinColumn
-  @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state", "computeResources", "node"})
+  @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state", "computeResources",
+          "node", "numberOfWorkers", "workerClass"})
   private Job job;
 
   public Job getJob() {

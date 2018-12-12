@@ -122,4 +122,9 @@ public class SKeyedGather {
   public boolean progress() {
     return keyedGather.progress();
   }
+
+  public void close() {
+    // deregister from the channel
+    keyedGather.close();
+  }
 }

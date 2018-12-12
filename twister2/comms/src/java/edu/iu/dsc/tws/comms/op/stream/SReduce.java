@@ -85,6 +85,7 @@ public class SReduce {
 
   public void close() {
     // deregister from the channel
+    reduce.close();
   }
 
   /**
