@@ -217,12 +217,10 @@ public class MPILauncher implements ILauncher {
     boolean start = controller.start(job);
 
     // now lets wait on client
-    if (JobMasterContext.isJobMasterUsed(config)
+    if (jmThread != null && JobMasterContext.isJobMasterUsed(config)
         && JobMasterContext.jobMasterRunsInClient(config)) {
       try {
-        if (jmThread != null) {
-          jmThread.join();
-        }
+        jmThread.join();
       } catch (InterruptedException ignore) {
       }
     }

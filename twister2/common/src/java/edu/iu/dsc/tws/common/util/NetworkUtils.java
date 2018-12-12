@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.common.util;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,26 +45,24 @@ public final class NetworkUtils {
   }
 
   /**
-   * Returns a free port number on localhost.
-   * @return a free port number on localhost
-   * @throws IllegalStateException if unable to find a free port
+   * Returns a map of free ports on localhost.
+   * @return a map from port name to port number
+   * @throws IllegalStateException if unable to find specified free ports
    */
   public static Map<String, Integer> findFreePorts(List<String> portNames) {
     try {
-      Map<String, ServerSocket> serverSocketMap = new HashMap<>();
+      List<ServerSocket> serverSockets = new ArrayList<>();
       Map<String, Integer> freePorts = new HashMap<>();
 
       for (String portName : portNames) {
         ServerSocket socket = new ServerSocket(0);
         socket.setReuseAddress(true);
-
-        serverSocketMap.put(portName, socket);
+        freePorts.put(portName, socket.getLocalPort());
+        serverSockets.add(socket);
       }
 
-      for (Map.Entry<String, ServerSocket> e : serverSocketMap.entrySet()) {
-        int port = e.getValue().getLocalPort();
-        freePorts.put(e.getKey(), port);
-        e.getValue().close();
+      for (ServerSocket socket : serverSockets) {
+        socket.close();
       }
       return freePorts;
     } catch (IOException e) {
