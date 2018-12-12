@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -71,9 +72,11 @@ public class MesosDockerWorker {
 
     MesosWorkerController workerController = null;
     List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<>();
+    int numberOfWorkers = 0;
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
+      numberOfWorkers = job.getNumberOfWorkers();
       workerController = new MesosWorkerController(worker.config, job,
           Inet4Address.getLocalHost().getHostAddress(), 2022, workerId);
       LOG.info("Initializing with zookeeper");
@@ -96,7 +99,7 @@ public class MesosDockerWorker {
     LOG.info("Worker count..: " + workerCount);
 
     //start job master client
-    worker.startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP);
+    worker.startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP, numberOfWorkers);
 
     //mpi master has the id equals to 1
     //id==0 is job master
@@ -130,14 +133,17 @@ public class MesosDockerWorker {
   }
 
 
-  public void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP) {
+  public void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP,
+                                   int numberOfWorkers) {
 
     LOG.info("JobMasterIP..: " + jobMasterIP);
+    int jobMasterPort = JobMasterContext.jobMasterPort(config);
 
-    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP);
+    jobMasterClient =
+        new JobMasterClient(config, workerInfo, jobMasterIP, jobMasterPort, numberOfWorkers);
     jobMasterClient.startThreaded();
-    // we need to make sure that the worker starting message went through
-    jobMasterClient.sendWorkerStartingMessage();
+    // No need for sending workerStarting message anymore
+    // that is called in startThreaded method
   }
 
 

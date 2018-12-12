@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -93,7 +94,9 @@ public final class MesosMPIWorkerStarter {
     String jobMasterIP = args[1];
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("Worker ID..: " + workerID);
-    startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP);
+    int jobMasterPort = JobMasterContext.jobMasterPort(config);
+    startJobMasterClient(
+        workerController.getWorkerInfo(), jobMasterIP, jobMasterPort);
 
     LOG.info("\nWorker Controller\nWorker ID..: "
         + workerController.getWorkerInfo().getWorkerID()
@@ -115,14 +118,16 @@ public final class MesosMPIWorkerStarter {
     //workerController.close();
   }
 
-  public static void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP) {
+  public static void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP,
+                                          int jobMasterPort) {
 
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP().toString());
-    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP);
+    jobMasterClient =
+        new JobMasterClient(config, workerInfo, jobMasterIP, jobMasterPort, numberOfWorkers);
     jobMasterClient.startThreaded();
-    // we need to make sure that the worker starting message went through
-    jobMasterClient.sendWorkerStartingMessage();
+    // No need for sending workerStarting message anymore
+    // that is called in startThreaded method
   }
 
   public static void startWorker(IWorkerController workerController,
