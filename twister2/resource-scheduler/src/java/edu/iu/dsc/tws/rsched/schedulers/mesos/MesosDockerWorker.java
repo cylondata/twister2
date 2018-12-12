@@ -120,7 +120,8 @@ public class MesosDockerWorker {
 
     finder.close();
 
-    String jobMasterPort = jobMasterIPandPort.substring(jobMasterIPandPort.lastIndexOf(":") + 1);
+    String jobMasterPortStr = jobMasterIPandPort.substring(jobMasterIPandPort.lastIndexOf(":") + 1);
+    int jobMasterPort = Integer.parseInt(jobMasterPortStr);
     String jobMasterIP = jobMasterIPandPort.substring(0, jobMasterIPandPort.lastIndexOf(":"));
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("Worker ID..: " + workerId);
@@ -130,7 +131,8 @@ public class MesosDockerWorker {
 
 
    //start job master client
-    worker.startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP);
+    worker.startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP, jobMasterPort,
+        workerCount);
 
 
     config = JobUtils.overrideConfigs(job, config);
@@ -194,14 +196,16 @@ public class MesosDockerWorker {
     jobMasterClient.close();
   }
 
-  public void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP) {
+  public void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP,
+                                   int jobMasterPort, int numberOfWorkers) {
 
-    LOG.info("JobMasterIP..: " + jobMasterIP);
-
-    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP);
+    LOG.info("JobMaster IP..: " + jobMasterIP);
+    LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP());
+    jobMasterClient =
+        new JobMasterClient(config, workerInfo, jobMasterIP, jobMasterPort, numberOfWorkers);
     jobMasterClient.startThreaded();
-    // we need to make sure that the worker starting message went through
-    jobMasterClient.sendWorkerStartingMessage();
+    // No need for sending workerStarting message anymore
+    // that is called in startThreaded method
   }
 
 /* //mpi master has the id equals to 1
