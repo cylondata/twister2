@@ -32,6 +32,11 @@ worker.compute.resources:
   instances: 4 # number of compute resource instances with this specification
 #  workersPerPod: 2 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
 
+# by default each worker has one port
+# additional ports can be requested for all workers in a job
+# please provide the requested port names as a list
+twister2.worker.additional.ports: ["port1", "port2", "port3"]
+
 # nfs server address
 nfs.server.address: "149.165.150.81"
 
@@ -46,6 +51,8 @@ twister2.worker_port: "31000"
 twister2.desired_nodes: "all"
 
 twister2.use_docker_container: "true"
+
+twister2.enable_mpi: "false"
 
 # rack label key for Mesos nodes in a cluster
 # each rack should have a unique label

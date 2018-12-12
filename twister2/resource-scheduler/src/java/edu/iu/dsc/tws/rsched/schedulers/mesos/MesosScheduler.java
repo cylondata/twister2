@@ -44,7 +44,7 @@ public class MesosScheduler implements Scheduler {
   private JobAPI.Job job;
   private int[] offerControl = new int[3];
   //private String jobMasterIP;
-  private boolean mpiJob = true;
+  private boolean mpiJob = false;
 
   public MesosScheduler(MesosController controller, Config mconfig, JobAPI.Job myJob) {
     this.controller = controller;
@@ -52,6 +52,9 @@ public class MesosScheduler implements Scheduler {
     totalTaskCount = MesosContext.numberOfContainers(config);
     this.job = myJob;
     this.jobName = myJob.getJobName();
+    if (MesosContext.getEnableMpi(mconfig).equals("true")) {
+      mpiJob = true;
+    }
   }
 
   @Override
@@ -161,10 +164,14 @@ public class MesosScheduler implements Scheduler {
                   .setValue("JOB_NAME=" + jobName).build();
 
               Protos.Parameter workerIdParam = Protos.Parameter.newBuilder().setKey("env")
-                  .setValue("WORKER_ID=" + workerCounter++).build();
+                  .setValue("WORKER_ID=" + (workerCounter - 1)).build();
+              workerCounter++;
 
               Protos.Parameter frameworkIdParam = Protos.Parameter.newBuilder().setKey("env")
                   .setValue("FRAMEWORK_ID=" + offer.getFrameworkId().getValue()).build();
+
+              Protos.Parameter computeResourceParam = Protos.Parameter.newBuilder().setKey("env")
+                  .setValue("COMPUTE_RESOURCE_INDEX=" + resourceIndex).build();
 
               Protos.Parameter classNameParam = null;
 
@@ -193,11 +200,8 @@ public class MesosScheduler implements Scheduler {
                         .build();
                   }
                 } else {
-                  if (taskId.getValue().equals("1")) {
-                    ((TaskInfo.Builder) taskBuilder).setName("MPI Master " + taskId);
-                  } else {
-                    ((TaskInfo.Builder) taskBuilder).setName("task " + taskId);
-                  }
+
+                  ((TaskInfo.Builder) taskBuilder).setName("task " + taskId);
                   classNameParam = Protos.Parameter.newBuilder().setKey("env")
                       .setValue("CLASS_NAME="
                           + "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosDockerWorker")
@@ -214,6 +218,7 @@ public class MesosScheduler implements Scheduler {
               dockerInfoBuilder.setNetwork(Protos.ContainerInfo.DockerInfo.Network.USER);
               dockerInfoBuilder.addParameters(jobNameParam);
               dockerInfoBuilder.addParameters(workerIdParam);
+              dockerInfoBuilder.addParameters(computeResourceParam);
               dockerInfoBuilder.addParameters(classNameParam);
               dockerInfoBuilder.addParameters(frameworkIdParam);
               Protos.Volume volume = Protos.Volume.newBuilder()
