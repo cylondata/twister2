@@ -77,6 +77,11 @@ public class WorkerMonitor implements MessageHandler {
       JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
 
+    } else if (message instanceof JobMasterAPI.ScaleComputeResource) {
+      LOG.log(Level.INFO, "ScaleComputeResource received: " + message.toString());
+      JobMasterAPI.ScaleComputeResource scaleMessage = (JobMasterAPI.ScaleComputeResource) message;
+      scaleMessageReceived(id, scaleMessage);
+
     } else {
       LOG.log(Level.SEVERE, "Un-known message received: " + message);
     }
@@ -207,11 +212,33 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
-  /**
-   * worker RUNNING message received from all workers
-   * if some workers may have already completed, that does not matter
-   * the important thing is whether they have became RUNNING in the past
-   */
+  private void scaleMessageReceived(RequestID id, JobMasterAPI.ScaleComputeResource scaleMessage) {
+
+    JobMasterAPI.ScaleResponse scaleResponse = JobMasterAPI.ScaleResponse.newBuilder()
+        .setIndex(scaleMessage.getIndex())
+        .setInstances(scaleMessage.getInstances())
+        .build();
+
+    rrServer.sendResponse(id, scaleResponse);
+    LOG.fine("ScaleResponse sent to the client: \n" + scaleResponse);
+
+    // let all workers know about the scale message
+    for (int workerID: workers.keySet()) {
+      rrServer.sendMessage(scaleMessage, workerID);
+    }
+
+    // send Scale message to dashboard
+    if (dashClient != null) {
+      dashClient.scaleComputeResource(scaleMessage.getIndex(), scaleMessage.getInstances());
+    }
+
+  }
+
+    /**
+     * worker RUNNING message received from all workers
+     * if some workers may have already completed, that does not matter
+     * the important thing is whether they have became RUNNING in the past
+     */
   private boolean haveAllWorkersBecomeRunning() {
     if (numberOfWorkers != workers.size()) {
       return false;

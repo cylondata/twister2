@@ -146,3 +146,25 @@ message BarrierResponse {
         int32 workerID = 1;
     }
 }
+
+// Submitting Client to Job Master communication related messages
+// let the job master know that
+// the number of instances of the scalable compute resource has hanged
+message ScaleComputeResource {
+    oneof indexRequired {
+        int32 index = 1;
+    }
+    oneof instancesRequired {
+        int32 instances = 2;
+    }
+}
+
+message ScaleResponse {
+    oneof indexRequired {
+        int32 index = 1;
+    }
+    oneof instancesRequired {
+        int32 instances = 2;
+    }
+}
+

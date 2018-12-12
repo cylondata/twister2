@@ -134,11 +134,15 @@ public class JobMasterClient {
     JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
         = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
 
+    JobMasterAPI.ScaleComputeResource.Builder scaleMessageBuilder =
+        JobMasterAPI.ScaleComputeResource.newBuilder();
+
     ResponseMessageHandler responseMessageHandler = new ResponseMessageHandler();
     rrClient.registerResponseHandler(registerWorkerBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(registerWorkerResponseBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(scaleMessageBuilder, responseMessageHandler);
 
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
@@ -375,6 +379,10 @@ public class JobMasterClient {
 
       } else if (message instanceof JobMasterAPI.WorkerStateChangeResponse) {
         LOG.fine("Received a WorkerStateChange response from the master. \n" + message);
+
+        // nothing to do
+      } else if (message instanceof JobMasterAPI.ScaleComputeResource) {
+        LOG.info("Received ScaleComputeResource message from the master. \n" + message);
 
         // nothing to do
 
