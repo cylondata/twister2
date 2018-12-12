@@ -23,59 +23,77 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.mesos;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.net.Inet4Address;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+
+import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IWorker;
+
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
+//import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 
 public class MesosDockerWorker {
 
   public static final Logger LOG = Logger.getLogger(MesosDockerWorker.class.getName());
   public static JobMasterClient jobMasterClient;
-  private Config config;
-  private String jobName;
+  private static Config config;
+  private static String jobName;
+  private static int startingPort = 30000;
+  private static int resourceIndex = 0;
+  private static int workerId = 0;
 
   public static void main(String[] args) throws Exception {
 
-    Thread.sleep(20000);
+    //Thread.sleep(1000);
 
     //gets the docker home directory
     //String homeDir = System.getenv("HOME");
-    int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
-    String jobName = System.getenv("JOB_NAME");
+    workerId = Integer.parseInt(System.getenv("WORKER_ID"));
+    jobName = System.getenv("JOB_NAME");
     MesosDockerWorker worker = new MesosDockerWorker();
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
     String configDir = "twister2-job/mesos/";
-    worker.config = ConfigLoader.loadConfig(twister2Home, configDir);
-    worker.jobName = jobName;
+    config = ConfigLoader.loadConfig(twister2Home, configDir);
 
-    MesosWorkerLogger logger = new MesosWorkerLogger(worker.config,
+    resourceIndex = Integer.parseInt(System.getenv("COMPUTE_RESOURCE_INDEX"));
+
+    MesosWorkerLogger logger = new MesosWorkerLogger(config,
         "/persistent-volume/logs", "worker" + workerId);
     logger.initLogging();
 
+    Map<String, Integer> additionalPorts =
+        MesosWorkerUtils.generateAdditionalPorts(config, startingPort);
+
     MesosWorkerController workerController = null;
     List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<>();
+
+    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
+        + jobName + ".job");
     try {
-      JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
-          + jobName + ".job");
-      workerController = new MesosWorkerController(worker.config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2022, workerId);
+
+
+
+      JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
+
+      workerController = new MesosWorkerController(config, job,
+          Inet4Address.getLocalHost().getHostAddress(), 2023, workerId, computeResource,
+          additionalPorts);
+
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
@@ -87,18 +105,110 @@ public class MesosDockerWorker {
       LOG.severe("Error " + e.getMessage());
     }
 
-    //job master is the one with the id==0
-    String jobMasterIP = workerInfoList.get(0).getWorkerIP();
-    LOG.info("JobMasterIP..: " + jobMasterIP);
+
+    ZKJobMasterFinder finder = new ZKJobMasterFinder(config);
+    finder.initialize();
+
+    String jobMasterIPandPort = finder.getJobMasterIPandPort();
+    if (jobMasterIPandPort == null) {
+      LOG.info("Job Master has not joined yet. Will wait and try to get the address ...");
+      jobMasterIPandPort = finder.waitAndGetJobMasterIPandPort(20000);
+      LOG.info("Job Master address: " + jobMasterIPandPort);
+    } else {
+      LOG.info("Job Master address: " + jobMasterIPandPort);
+    }
+
+    finder.close();
+
+    String jobMasterPortStr = jobMasterIPandPort.substring(jobMasterIPandPort.lastIndexOf(":") + 1);
+    int jobMasterPort = Integer.parseInt(jobMasterPortStr);
+    String jobMasterIP = jobMasterIPandPort.substring(0, jobMasterIPandPort.lastIndexOf(":"));
+    LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("Worker ID..: " + workerId);
     StringBuilder outputBuilder = new StringBuilder();
     int workerCount = workerController.getNumberOfWorkers();
-    LOG.info("Worker count..: " + workerCount);
+    LOG.info("Worker Count..: " + workerCount);
 
-    //start job master client
-    worker.startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP);
 
-    //mpi master has the id equals to 1
+   //start job master client
+    worker.startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP, jobMasterPort,
+        workerCount);
+
+
+    config = JobUtils.overrideConfigs(job, config);
+    config = JobUtils.updateConfigs(job, config);
+
+    startWorker(workerController, null);
+
+    try {
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      LOG.info("sleep exception" + e.getMessage());
+    }
+
+    closeWorker();
+  }
+
+  public static void startWorker(IWorkerController workerController,
+                                 IPersistentVolume pv) {
+
+
+    JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
+    String workerClass = job.getWorkerClassName();
+    LOG.info("Worker class---->>>" + workerClass);
+    IWorker worker;
+    try {
+      Object object = ReflectionUtils.newInstance(workerClass);
+      worker = (IWorker) object;
+      LOG.info("Loaded worker class..: " + workerClass);
+    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+      LOG.severe(String.format("Failed to load the worker class %s", workerClass));
+      throw new RuntimeException(e);
+    }
+
+    MesosVolatileVolume volatileVolume = null;
+    //TODO method SchedulerContext.volatileDiskRequested deleted
+    //volatileVolume needs to be checked from job object
+//    if (SchedulerContext.volatileDiskRequested(config)) {
+//      volatileVolume =
+//          new MesosVolatileVolume(SchedulerContext.jobName(config), workerID);
+//    }
+
+    // lets create the resource plan
+    //Map<Integer, String> processNames = MPIWorker.createResourcePlan(config);
+    // now create the resource plan
+    //AllocatedResources resourcePlan = MPIWorker.addContainers(config, processNames);
+//    AllocatedResources resourcePlan = MesosWorkerUtils.createAllocatedResources("mesos",
+//        workerID, job);
+    //resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config), workerID);
+    worker.execute(config, workerId, workerController,
+        pv, volatileVolume);
+  }
+
+  /**
+   * last method to call to close the worker
+   */
+  public static void closeWorker() {
+
+    // send worker completed message to the Job Master and finish
+    // Job master will delete the StatefulSet object
+    jobMasterClient.sendWorkerCompletedMessage();
+    jobMasterClient.close();
+  }
+
+  public void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP,
+                                   int jobMasterPort, int numberOfWorkers) {
+
+    LOG.info("JobMaster IP..: " + jobMasterIP);
+    LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP());
+    jobMasterClient =
+        new JobMasterClient(config, workerInfo, jobMasterIP, jobMasterPort, numberOfWorkers);
+    jobMasterClient.startThreaded();
+    // No need for sending workerStarting message anymore
+    // that is called in startThreaded method
+  }
+
+/* //mpi master has the id equals to 1
     //id==0 is job master
     if (workerId == 1) {
 
@@ -124,21 +234,7 @@ public class MesosDockerWorker {
           new File("."), true);
       workerController.close();
       LOG.info("Job DONE");
-    }
 
-    jobMasterClient.sendWorkerCompletedMessage();
-  }
-
-
-  public void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP) {
-
-    LOG.info("JobMasterIP..: " + jobMasterIP);
-
-    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP);
-    jobMasterClient.startThreaded();
-    // we need to make sure that the worker starting message went through
-    jobMasterClient.sendWorkerStartingMessage();
-  }
-
+    }*/
 
 }

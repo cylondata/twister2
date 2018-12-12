@@ -9,12 +9,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master;
+package edu.iu.dsc.tws.master.dashclient.messages;
 
 /**
- * Job Master will call this method to terminate the jobs
- * It calls this method when all workers in a job sent COMPLETED message
+ * JobStateChange message to send with json to Dashboard from JobMaster
  */
-public interface IJobTerminator {
-  boolean terminateJob(String jobName);
+
+public class JobStateChange {
+  private String state;
+
+  public JobStateChange() { }
+
+  public JobStateChange(String state) {
+    this.state = state;
+  }
+
+  public String getState() {
+    return state;
+  }
+
+  public void setState(String state) {
+    this.state = state;
+  }
+
 }

@@ -36,6 +36,7 @@ public class SchedulerContext extends Context {
   public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
 
   public static final String WORKER_COMPUTE_RESOURCES = "worker.compute.resources";
+
   /**
    * These are specified as system properties when deploying a job
    */
@@ -157,8 +158,6 @@ public class SchedulerContext extends Context {
     List<String> portNameList = additionalPorts(cfg);
     return portNameList == null ? 0 : portNameList.size();
   }
-
-
 
   public static JobMasterAPI.NodeInfo getNodeInfo(Config cfg, String nodeIP) {
 
