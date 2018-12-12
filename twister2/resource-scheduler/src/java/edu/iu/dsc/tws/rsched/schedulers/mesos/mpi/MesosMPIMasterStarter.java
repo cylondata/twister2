@@ -33,6 +33,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 //import java.util.List;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -43,6 +44,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
+import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
@@ -54,6 +56,8 @@ public final class MesosMPIMasterStarter {
   private Config config;
   private String jobName;
   private JobMasterClient jobMasterClient;
+  private static int startingPort = 30000;
+  private static int resourceIndex = 0;
 
   private MesosMPIMasterStarter() {
   }
@@ -67,6 +71,7 @@ public final class MesosMPIMasterStarter {
     String homeDir = System.getenv("HOME");
     int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     mpiMaster.jobName = System.getenv("JOB_NAME");
+    resourceIndex = Integer.parseInt(System.getenv("COMPUTE_RESOURCE_INDEX"));
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
     String configDir = "twister2-job/mesos/";
@@ -76,15 +81,22 @@ public final class MesosMPIMasterStarter {
         "/persistent-volume/logs", "mpiMaster");
     logger.initLogging();
 
+    Map<String, Integer> additionalPorts =
+        MesosWorkerUtils.generateAdditionalPorts(mpiMaster.config, startingPort);
+
     MesosWorkerController workerController = null;
     List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<JobMasterAPI.WorkerInfo>();
     int numberOfWorkers = 0;
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + mpiMaster.jobName + ".job");
-      numberOfWorkers = job.getNumberOfWorkers();
+
+      JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
+
+
       workerController = new MesosWorkerController(mpiMaster.config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2023, workerId);
+          Inet4Address.getLocalHost().getHostAddress(), 2023, workerId, computeResource,
+          additionalPorts);
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");

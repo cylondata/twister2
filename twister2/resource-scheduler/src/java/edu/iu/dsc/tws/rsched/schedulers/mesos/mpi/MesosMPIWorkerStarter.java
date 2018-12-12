@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
+import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerUtils;
 import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -44,6 +45,8 @@ public final class MesosMPIWorkerStarter {
   private static JobMasterClient jobMasterClient;
   private static int workerID;
   private static int numberOfWorkers;
+  private static int resourceIndex = 0;
+  private static int startingPort = 30000;
 
   private MesosMPIWorkerStarter() { }
   public static void main(String[] args) {
@@ -72,6 +75,10 @@ public final class MesosMPIWorkerStarter {
 
     MesosWorkerController workerController = null;
     //List<WorkerNetworkInfo> workerNetworkInfoList = new ArrayList<>();
+
+    Map<String, Integer> additionalPorts =
+        MesosWorkerUtils.generateAdditionalPorts(config, startingPort);
+
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
@@ -81,10 +88,12 @@ public final class MesosMPIWorkerStarter {
       // job file configurations will override
       config = JobUtils.overrideConfigs(job, config);
       config = JobUtils.updateConfigs(job, config);
-
+      //this will change to get proper resource index.
+      JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
       LOG.info("in worker starter...... job worker count:" + job.getNumberOfWorkers());
       workerController = new MesosWorkerController(config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2023, workerID);
+          Inet4Address.getLocalHost().getHostAddress(), 2023, workerID, computeResource,
+          additionalPorts);
       workerController.initializeWithZooKeeper();
     } catch (Exception e) {
       LOG.severe("Error " + e.getMessage());
