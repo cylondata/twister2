@@ -109,7 +109,7 @@ public class WorkerMonitor implements MessageHandler {
 
   private void registerWorkerMessageReceived(RequestID id, JobMasterAPI.RegisterWorker message) {
 
-    LOG.fne("RegisterWorker message received: \n" + message);
+    LOG.fine("RegisterWorker message received: \n" + message);
     JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
 
     if (jobMasterAssignsWorkerIDs) {
@@ -162,7 +162,7 @@ public class WorkerMonitor implements MessageHandler {
 
     } else if (message.getState() == JobMasterAPI.WorkerState.RUNNING) {
       workers.get(message.getWorkerID()).addWorkerState(message.getState());
-      LOG.info("WorkerStateChange RUNNING message received: \n" + message);
+      LOG.fine("WorkerStateChange RUNNING message received: \n" + message);
 
       // send the response message
       sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getState());
@@ -180,7 +180,7 @@ public class WorkerMonitor implements MessageHandler {
     } else if (message.getState() == JobMasterAPI.WorkerState.COMPLETED) {
 
       workers.get(message.getWorkerID()).addWorkerState(message.getState());
-      LOG.info("WorkerStateChange COMPLETED message received: \n" + message);
+      LOG.fine("WorkerStateChange COMPLETED message received: \n" + message);
 
       // send the response message
       sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getState());
@@ -252,7 +252,7 @@ public class WorkerMonitor implements MessageHandler {
             .build();
 
     rrServer.sendResponse(id, response);
-    LOG.info("RegisterWorkerResponse sent:\n" + response);
+    LOG.fine("RegisterWorkerResponse sent:\n" + response);
   }
 
   private void sendWorkerStateChangeResponse(RequestID id, int workerID,

@@ -229,8 +229,6 @@ public final class MPIWorker {
         workerInfo, masterHost, masterPort, numberContainers);
     LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
     jobMasterClient.startThreaded();
-    // now lets send the starting message
-    jobMasterClient.sendWorkerStartingMessage();
 
     // now lets send the starting message
     jobMasterClient.sendWorkerRunningMessage();

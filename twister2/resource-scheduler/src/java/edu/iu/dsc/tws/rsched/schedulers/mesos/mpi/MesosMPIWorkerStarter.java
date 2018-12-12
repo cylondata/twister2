@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.mesos.mpi;
 
 import java.net.Inet4Address;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +31,6 @@ import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerUtils;
-import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;
