@@ -71,10 +71,9 @@ public abstract class MPICommand {
     Map<String, Object> commands = new HashMap<>();
     // lets get the configurations
     int numberOfWorkers = job.getNumberOfWorkers();
-    if (JobMasterContext.isJobMasterUsed(config)) {
-      if (!JobMasterContext.jobMasterRunsInClient(config)) {
-        numberOfWorkers++;
-      }
+    if (JobMasterContext.isJobMasterUsed(config)
+        && !JobMasterContext.jobMasterRunsInClient(config)) {
+      numberOfWorkers++;
     }
     commands.put("procs", numberOfWorkers);
 
