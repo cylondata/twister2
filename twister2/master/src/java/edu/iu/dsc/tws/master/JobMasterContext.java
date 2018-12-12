@@ -15,6 +15,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 
 public class JobMasterContext extends Context {
+  // weather to use job master
+  public static final String JOB_MASTER_USED = "twister2.job.master.used";
 
   // if true, the job master runs in the submitting client
   public static final boolean JOB_MASTER_RUNS_IN_CLIENT_DEFAULT = false;
@@ -105,4 +107,7 @@ public class JobMasterContext extends Context {
     return cfg.getIntegerValue(JOB_MASTER_RAM, JOB_MASTER_RAM_DEFAULT);
   }
 
+  public static boolean isJobMasterUsed(Config cfg) {
+    return cfg.getBooleanValue(JOB_MASTER_USED, true);
+  }
 }

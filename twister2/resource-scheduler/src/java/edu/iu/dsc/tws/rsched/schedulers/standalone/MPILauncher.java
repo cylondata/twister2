@@ -187,7 +187,8 @@ public class MPILauncher implements ILauncher {
 
     JobMaster jobMaster = null;
     Thread jmThread = null;
-    if (JobMasterContext.jobMasterRunsInClient(config)) {
+    if (JobMasterContext.isJobMasterUsed(config)
+        && JobMasterContext.jobMasterRunsInClient(config)) {
       try {
         int port = NetworkUtils.getFreePort();
         String hostAddress = JobMasterContext.jobMasterIP(config);
@@ -216,7 +217,8 @@ public class MPILauncher implements ILauncher {
     boolean start = controller.start(job);
 
     // now lets wait on client
-    if (JobMasterContext.jobMasterRunsInClient(config)) {
+    if (JobMasterContext.isJobMasterUsed(config)
+        && JobMasterContext.jobMasterRunsInClient(config)) {
       try {
         if (jmThread != null) {
           jmThread.join();

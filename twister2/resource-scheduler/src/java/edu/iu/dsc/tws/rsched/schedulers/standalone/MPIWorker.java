@@ -107,31 +107,36 @@ public final class MPIWorker {
       JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
 
       // lets split the comm
-      if (!JobMasterContext.jobMasterRunsInClient(config)) {
-        // lets broadcast the worker info
-        // broadcast the port of jobmaster
-        int color = rank == 0 ? 0 : 1;
-        Intracomm comm = MPI.COMM_WORLD.split(color, rank);
+      if (JobMasterContext.isJobMasterUsed(config)) {
+        if (!JobMasterContext.jobMasterRunsInClient(config)) {
+          // lets broadcast the worker info
+          // broadcast the port of jobmaster
+          int color = rank == 0 ? 0 : 1;
+          Intracomm comm = MPI.COMM_WORLD.split(color, rank);
 
-        if (rank != 0) {
-          wInfo = createWorkerInfo(config, comm.getRank(), job);
+          if (rank != 0) {
+            wInfo = createWorkerInfo(config, comm.getRank(), job);
+          } else {
+            wInfo = createWorkerInfo(config, -1, job);
+          }
+
+          // lets broadcast the master information
+          broadCastMasterInformation(rank);
+
+          if (rank != 0) {
+            startWorker(config, rank, comm, job);
+            closeWorker();
+          } else {
+            startMaster(config, rank);
+          }
         } else {
-          wInfo = createWorkerInfo(config, -1, job);
-        }
-
-        // lets broadcast the master information
-        broadCastMasterInformation(rank);
-
-        if (rank != 0) {
-          startWorker(config, rank, comm, job);
+          wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
+          startWorker(config, rank, MPI.COMM_WORLD, job);
           closeWorker();
-        } else {
-          startMaster(config, rank);
         }
       } else {
         wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
-        startWorker(config, rank, MPI.COMM_WORLD, job);
-        closeWorker();
+        startWorkerWithoutMaster(config, rank, MPI.COMM_WORLD, job);
       }
 
       // lets do a barrier here so everyone is synchronized at the end
@@ -402,6 +407,46 @@ public final class MPIWorker {
           IWorker container = (IWorker) object;
           // now initialize the container
           container.execute(cfg, intracomm.getRank(), mpiWorkerContorller, null, null);
+        } else {
+          throw new RuntimeException("Cannot instantiate class: " + object.getClass());
+        }
+        LOG.log(Level.FINE, "loaded worker class: " + workerClass);
+      } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+        LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+            workerClass), e);
+        throw new RuntimeException(e);
+      }
+
+      LOG.log(Level.FINE, String.format("Worker %d: the cluster is ready...", rank));
+    } catch (MPIException e) {
+      LOG.log(Level.SEVERE, "Failed to synchronize the workers at the start");
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Start the worker
+   * @param cfg configuration
+   * @param rank global rank
+   * @param intracomm communication
+   */
+  private void startWorkerWithoutMaster(Config cfg, int rank, Intracomm intracomm, JobAPI.Job job) {
+    try {
+      String twister2Home = Context.twister2Home(cfg);
+      // initialize the logger
+      initLogger(cfg, intracomm.getRank(), twister2Home);
+
+      Map<Integer, JobMasterAPI.WorkerInfo> infos = createResourcePlan(cfg, intracomm, job);
+      MPIWorkerController wc = new MPIWorkerController(intracomm.getRank(), infos);
+      // now create the worker
+      wc.add("comm", intracomm);
+      String workerClass = MPIContext.workerClass(cfg);
+      try {
+        Object object = ReflectionUtils.newInstance(workerClass);
+        if (object instanceof IWorker) {
+          IWorker container = (IWorker) object;
+          // now initialize the container
+          container.execute(cfg, intracomm.getRank(), wc, null, null);
         } else {
           throw new RuntimeException("Cannot instantiate class: " + object.getClass());
         }
