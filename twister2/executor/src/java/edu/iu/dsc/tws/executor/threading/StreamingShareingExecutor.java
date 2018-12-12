@@ -69,6 +69,10 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
           if (nodeInstance != null) {
             nodeInstance.execute();
             tasks.offer(nodeInstance);
+          } else {
+            LOG.log(Level.INFO, "Thread existing as more threads than tasks "
+                + "are been assigned");
+            break;
           }
         } catch (Throwable t) {
           LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);

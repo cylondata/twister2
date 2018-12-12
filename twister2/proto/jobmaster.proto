@@ -50,7 +50,7 @@ message NodeInfo {
 }
 
 //
-// Networking Data about a Twister2 Worker
+// Information about a worker in a job
 //
 message WorkerInfo {
     oneof required {
@@ -64,19 +64,36 @@ message WorkerInfo {
     map<string, int32> additionalPort = 6;
 }
 
+// this message is sent when the worker is about to start
+// it registers itself with the job master
+// its status in job master becomes: STARTING when this message is received
+message RegisterWorker {
+    oneof idRequired {
+        int32 workerID = 1;
+    }
+    WorkerInfo workerInfo = 2;
+}
+
+message RegisterWorkerResponse {
+    oneof idRequired {
+        int32 workerID = 1;
+    }
+    oneof resultRequired {
+        bool result = 2;
+    }
+}
+
 // a worker informs the master that its state has changed
-// if the worker state becomes STARTING,
-//   the worker has to provide its IP address and the port number
-//   optionally its node info: nodeIP, rackName and dataCenterName
-// for other states, just the workerID and newState is enough
+// this message is not sent for STARTING state, it is covered by RegisterWorker message
+// this message is sent for states: RUNNING and COMPLETED
+// later on, we may add more states
 message WorkerStateChange {
     oneof idRequired {
         int32 workerID = 1;
     }
     oneof stateRequired {
-        WorkerState newState = 2;
+        WorkerState state = 2;
     }
-    WorkerInfo workerInfo = 3;
 }
 
 // sent by the master to the worker
@@ -86,7 +103,7 @@ message WorkerStateChangeResponse {
         int32 workerID = 1;
     }
     oneof stateRequired {
-        WorkerState sentState = 2;
+        WorkerState state = 2;
     }
 }
 

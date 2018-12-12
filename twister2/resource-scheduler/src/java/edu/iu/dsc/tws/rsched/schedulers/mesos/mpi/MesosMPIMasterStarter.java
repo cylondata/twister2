@@ -78,9 +78,11 @@ public final class MesosMPIMasterStarter {
 
     MesosWorkerController workerController = null;
     List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<JobMasterAPI.WorkerInfo>();
+    int numberOfWorkers = 0;
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + mpiMaster.jobName + ".job");
+      numberOfWorkers = job.getNumberOfWorkers();
       workerController = new MesosWorkerController(mpiMaster.config, job,
           Inet4Address.getLocalHost().getHostAddress(), 2023, workerId);
       LOG.info("Initializing with zookeeper");
@@ -115,7 +117,8 @@ public final class MesosMPIMasterStarter {
     //old way of finding
     //String jobMasterIP = workerNetworkInfoList.get(0).getWorkerIP().getHostAddress();
 
-    String jobMasterPort = jobMasterIPandPort.substring(jobMasterIPandPort.lastIndexOf(":") + 1);
+    String jobMasterPortStr = jobMasterIPandPort.substring(jobMasterIPandPort.lastIndexOf(":") + 1);
+    int jobMasterPort = Integer.parseInt(jobMasterPortStr);
     String jobMasterIP = jobMasterIPandPort.substring(0, jobMasterIPandPort.lastIndexOf(":"));
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("Worker ID..: " + workerId);
@@ -123,7 +126,8 @@ public final class MesosMPIMasterStarter {
     int workerCount = workerController.getNumberOfWorkers();
     LOG.info("Worker Count..: " + workerCount);
 
-    mpiMaster.startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP);
+    mpiMaster.startJobMasterClient(
+        workerController.getWorkerInfo(), jobMasterIP, jobMasterPort, numberOfWorkers);
 
     Writer writer = new BufferedWriter(new OutputStreamWriter(
         new FileOutputStream("/twister2/hostFile", true)));
@@ -161,15 +165,16 @@ public final class MesosMPIMasterStarter {
 
   }
 
-  public void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP) {
+  public void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP,
+                                   int jobMasterPort, int numberOfWorkers) {
 
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP());
-    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP);
+    jobMasterClient =
+        new JobMasterClient(config, workerInfo, jobMasterIP, jobMasterPort, numberOfWorkers);
     jobMasterClient.startThreaded();
-    // we need to make sure that the worker starting message went through
-    jobMasterClient.sendWorkerStartingMessage();
+    // No need for sending workerStarting message anymore
+    // that is called in startThreaded method
   }
-
 
 }

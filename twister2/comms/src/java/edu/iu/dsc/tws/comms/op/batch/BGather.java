@@ -95,4 +95,9 @@ public class BGather {
   public boolean progress() {
     return gather.progress();
   }
+
+  public void close() {
+    // deregister from the channel
+    gather.close();
+  }
 }

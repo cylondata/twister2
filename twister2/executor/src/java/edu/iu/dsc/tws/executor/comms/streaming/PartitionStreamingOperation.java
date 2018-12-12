@@ -157,4 +157,9 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   public boolean progress() {
     return op.progress();
   }
+
+  @Override
+  public void close() {
+    op.close();
+  }
 }

@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.executor.threading;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
@@ -19,6 +20,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
+import edu.iu.dsc.tws.executor.api.IParallelOperation;
 
 public class BatchSharingExecutor extends ThreadSharingExecutor {
   private static final Logger LOG = Logger.getLogger(BatchSharingExecutor.class.getName());
@@ -69,6 +71,12 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
         t.join();
       } catch (InterruptedException e) {
       }
+    }
+
+    // lets close the operations
+    List<IParallelOperation> ops = executionPlan.getParallelOperations();
+    for (IParallelOperation op : ops) {
+      op.close();
     }
 
     return true;

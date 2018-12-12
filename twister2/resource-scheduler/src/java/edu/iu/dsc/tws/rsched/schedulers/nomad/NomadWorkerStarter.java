@@ -264,8 +264,8 @@ public final class NomadWorkerStarter {
         workerInfo, masterHost, masterPort, numberContainers);
     LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
     jobMasterClient.startThreaded();
-    // now lets send the starting message
-    jobMasterClient.sendWorkerStartingMessage();
+    // No need for sending workerStarting message anymore
+    // that is called in startThreaded method
 
     // now lets send the starting message
     jobMasterClient.sendWorkerRunningMessage();

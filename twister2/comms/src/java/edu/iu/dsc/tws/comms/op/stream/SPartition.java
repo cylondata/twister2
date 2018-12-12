@@ -104,5 +104,6 @@ public class SPartition {
 
   public void close() {
     // deregister from the channel
+    partition.close();
   }
 }
