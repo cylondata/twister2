@@ -147,7 +147,7 @@ public class RRServer {
       LOG.log(Level.SEVERE, "Channel is NULL for response");
     }
 
-    if (!workerChannels.containsKey(channel)) {
+    if (!workerChannels.containsKey(channel) && !channel.equals(clientChannel)) {
       LOG.log(Level.WARNING, "Failed to send response on disconnected socket");
       return false;
     }
@@ -317,6 +317,7 @@ public class RRServer {
     // since it does not harm setting again
     if (senderID == CLIENT_ID) {
       clientChannel = channel;
+      LOG.info("Message received from submitting client. Channel set.");
       return senderID;
     }
 
