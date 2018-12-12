@@ -243,6 +243,10 @@ public class RRServer {
     public void onClose(SocketChannel channel) {
       workerChannels.remove(channel);
       connectHandler.onClose(channel);
+
+      if (channel.equals(clientChannel)) {
+        clientChannel = null;
+      }
     }
 
     @Override

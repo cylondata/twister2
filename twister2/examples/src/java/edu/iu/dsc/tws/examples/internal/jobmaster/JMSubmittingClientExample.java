@@ -44,6 +44,8 @@ public final class JMSubmittingClientExample {
 
     client.sendScaleMessage(0, 7);
 
+    client.close();
+
   }
 
 }
