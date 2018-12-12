@@ -68,7 +68,7 @@ public final class MesosContext extends SchedulerContext {
   public static final int DEFAULT_WORKER_PORT = 31000;
   public static final String DEFAULT_DESIRED_NODE = "all";
   public static final String DEFAULT_USE_DOCKER_CONTAINER = "false";
- 
+
   private MesosContext() {
   }
 
