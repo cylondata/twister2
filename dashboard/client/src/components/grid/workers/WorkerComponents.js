@@ -1,19 +1,34 @@
 import React from "react";
 import WorkerCard from "./WorkerCard";
 import "./WorkerComponent.css";
+import {WorkerService} from "../../../services/WorkerService";
 
 export default class WorkerComponents extends React.Component {
 
     constructor(props) {
         super(props);
+        this.state = {
+            workers: []
+        };
     }
+
+    componentDidMount() {
+        this.loadWorkers();
+    }
+
+    loadWorkers = () => {
+        WorkerService.getAllWorkers().then(response => {
+            this.setState({
+                workers: response.data
+            });
+        })
+    };
 
     render() {
 
-        let nodeCards = [];
-        for (let i = 0; i < 5; i++) {
-            nodeCards.push(<WorkerCard key={i}/>);
-        }
+        let nodeCards = this.state.workers.map(worker => {
+            return <WorkerCard worker={worker} index={worker.job.jobID + worker.workerID}/>
+        });
 
         return (
             <div>

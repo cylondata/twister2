@@ -121,4 +121,9 @@ public class SKeyedReduce {
   public boolean progress() {
     return keyedReduce.progress();
   }
+
+  public void close() {
+    // deregister from the channel
+    keyedReduce.close();
+  }
 }

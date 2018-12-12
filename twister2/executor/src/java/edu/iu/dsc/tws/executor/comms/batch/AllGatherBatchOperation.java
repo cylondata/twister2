@@ -93,4 +93,9 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
       return true;
     }
   }
+
+  @Override
+  public void close() {
+    op.close();
+  }
 }

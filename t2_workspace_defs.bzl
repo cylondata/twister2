@@ -19,10 +19,10 @@ def _maven_import(artifact, sha256, licenses, **kwargs):
     name = ("%s_%s" % (group_id, artifact_id)).replace(".", "_").replace("-", "_")
     url_suffix = "{0}/{1}/{2}/{1}-{2}.jar".format(group_id.replace(".", "/"), artifact_id, version)
 
-#    if (name in deps):
-#        print("%s has defined multiple times" % name)
-#
-#    deps.append(name)
+    #    if (name in deps):
+    #        print("%s has defined multiple times" % name)
+    #
+    #    deps.append(name)
 
     java_import_external(
         name = name,
@@ -99,7 +99,6 @@ def load_modules():
     _maven_import(artifact = "org.apache.curator:curator-recipes:4.0.0", licenses = ["notice"], sha256 = "b039635e54483aa7c8660fd089a1d053f8541eac21c0002e4830569dfdfa61e4")
     _maven_import(artifact = "org.apache.curator:curator-framework:4.0.0", licenses = ["notice"], sha256 = "e3d4a2341dce27a651dbd301742b428596fc9fd5ac0091bdce0c919d47aec6cb")
     _maven_import(artifact = "org.apache.httpcomponents:httpcore:4.4.5", licenses = ["notice"], sha256 = "64d5453874cab7e40a7065cb01a9a9ca1053845a9786b478878b679e0580cec3")
-    _maven_import(artifact = "org.javassist:javassist:3.18.1-GA", licenses = ["notice"], sha256 = "3fb71231afd098bb0f93f5eb97aa8291c8d0556379125e596f92ec8f944c6162")
     _maven_import(artifact = "commons-io:commons-io:2.6", licenses = ["notice"], sha256 = "f877d304660ac2a142f3865badfc971dec7ed73c747c7f8d5d2f5139ca736513")
     _maven_import(artifact = "com.fasterxml.jackson.core:jackson-core:2.8.8", licenses = ["notice"], sha256 = "d9bde8c72c22202bf17b05c7811db4964ff8e843d97c00a9bfb048c0fe7a726b")
     _maven_import(artifact = "com.esotericsoftware:kryo:4.0.2", licenses = ["notice"], sha256 = "8cd8bcb6920b165ff21b82f7a44f2c7e87dcb24560e52b9dc7d085fba9cfcce5")
@@ -133,7 +132,7 @@ def load_modules():
     _maven_import(artifact = "com.puppycrawl.tools:checkstyle:6.17", licenses = ["notice"], sha256 = "61a8b52d03a5b163d0983cdc4b03396a92ea7f8dc8c007dda30f4db673e9e60c")
     _maven_import(artifact = "org.apache.htrace:htrace-core4:4.2.0-incubating", licenses = ["notice"], sha256 = "fcab21b4ae0829e99142d77240fa2963a85f6ff1ca3fc0f386f8b4ff3cae3b82")
     _maven_import(artifact = "org.apache.hadoop:hadoop-mapreduce-client-core:2.9.0", licenses = ["notice"], sha256 = "5582e4c08f218f0fef2765532279b5c7d9047a4599b29baf6b30e83760daa202")
-    _maven_import(artifact = "com.fasterxml.jackson.core:jackson-databind:2.8.8", licenses = ["notice"], sha256 = "bd2959a21974cb361cea6a9295b6e8600e8b6a8c866a768d22b952016bce3248")
+    _maven_import(artifact = "com.fasterxml.jackson.core:jackson-databind:2.9.7",licenses = ["notice"],sha256 = "675376decfc070b039d2be773a97002f1ee1e1346d95bd99feee0d56683a92bf")
     _maven_import(artifact = "org.apache.curator:curator-client:4.0.0", licenses = ["notice"], sha256 = "c5c47e39c7756196c57eb89ffaf06877be42ce6e3478c89b4cb6df5cb4c250c9")
     _maven_import(artifact = "org.bouncycastle:bcprov-jdk15on:1.56", licenses = ["notice"], sha256 = "963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349")
     _maven_import(artifact = "org.bouncycastle:bcprov-jdk15on:1.56", licenses = ["notice"], sha256 = "963e1ee14f808ffb99897d848ddcdb28fa91ddda867eb18d303e82728f878349")
@@ -146,6 +145,24 @@ def load_modules():
     _maven_import(artifact = "org.codehaus.woodstox:stax2-api:3.0.1", licenses = ["notice"], sha256 = "68ed11b72b138356063b8baf8551b9d67f46717b3c0001890949195c5b153199")
     _maven_import(artifact = "log4j:log4j:1.2.17", licenses = ["notice"], sha256 = "1d31696445697720527091754369082a6651bd49781b6005deb94e56753406f9")
     _maven_import(artifact = "it.unimi.dsi:fastutil:7.0.13", licenses = ["notice"], sha256 = "2ec909c77642b9c0220ab3e1c69bfcad3072789e2bcae5acdb5fb1df1ca14f04")
+    _maven_import(artifact = "org.glassfish.jersey.core:jersey-client:2.27", licenses = ["notice"], sha256 = "aba407bda94df54f590041b4cde5f2fa31db45bd8b4cf7575af48c1f8f81bb04")
+    _maven_import(artifact = "javax.ws.rs:javax.ws.rs-api:2.1.1", licenses = ["notice"], sha256 = "2c309eb2c9455ffee9da8518c70a3b6d46be2a269b2e2a101c806a537efe79a4")
+    _maven_import(artifact = "org.glassfish.hk2.external:javax.inject:2.5.0-b62", licenses = ["notice"], sha256 = "2877904ff2888842b52df5d0748c511df3e1a63b7292e2e326ec6ae329e769e6")
+    _maven_import(artifact = "org.glassfish.jersey.core:jersey-common:2.27", licenses = ["notice"], sha256 = "9a9578c6dac52b96195a614150f696d455db6b6d267a645c3120a4d0ee495789")
+    _maven_import(artifact = "org.glassfish.hk2:hk2-locator:2.5.0-b63", licenses = ["notice"], sha256 = "4a162237e8cbe4ae96b8b8e230c364bd9ab6cb898513be9a6a0725e63097e975")
+    _maven_import(artifact = "org.glassfish.hk2:hk2-api:2.5.0-b63", licenses = ["notice"], sha256 = "468fdb35e70b5babd72ba7eca9a8ba409665b63c1681048700206253757abf55")
+    _maven_import(artifact = "org.javassist:javassist:3.24.0-GA", licenses = ["notice"], sha256 = "aba81efa678b621203fb89aeff81d6f126f7a9dd709401e5609c42976684ae23")
+    _maven_import(artifact = "org.glassfish.hk2:osgi-resource-locator:2.5.0-b42", licenses = ["notice"], sha256 = "803552cd82a5741fa6273194ad27275a3a8ed18aa7d6be5a04ad6ad5972853c9")
+    _maven_import(artifact = "org.glassfish.hk2:hk2-utils:2.5.0-b63", licenses = ["notice"], sha256 = "f5275b5b4956a61e1ca6ef3b7723315fc96b167f9991870d0264ef4fe1d2d603")
+    _maven_import(artifact = "org.glassfish.hk2.external:aopalliance-repackaged:2.5.0-b63", licenses = ["notice"], sha256 = "70bbc43cbdcdb51310085ed7780f845251b7b23a009d08e571fe1cb9f59e7511")
+    _maven_import(artifact = "org.glassfish.jersey.bundles.repackaged:jersey-guava:2.26-b03", licenses = ["notice"], sha256 = "95e6d574880062d255606e3ff1b8d41a548f85ff8cd41ca5e169acd595606da9")
+    _maven_import(artifact = "org.glassfish.jersey.inject:jersey-hk2:2.26", licenses = ["notice"], sha256 = "4e9ab17a051eaacae0829a45cbdb5c603876006fdc86b5d9c5005be10266dcf7")
+    _maven_import(artifact = "org.glassfish.jersey.media:jersey-media-json-jackson:2.27", licenses = ["notice"], sha256 = "815a783428d87e3f74591c6a9e4fd9c4bf37f5492e4c574b0a3e26a731dabc86")
+    _maven_import(artifact = "org.glassfish.jersey.ext:jersey-entity-filtering:2.27", licenses = ["notice"], sha256 = "529b7ee7830441cffe98851b1e6edc0edd30e8b066052999daa5de63c56302b2")
+    _maven_import(artifact = "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.9.7", licenses = ["notice"], sha256 = "aa392e17f53f8a4bfa30a7b871d4c8847dadf8a51bd2345c778c8c24ad1546bf")
+    _maven_import(artifact = "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.7", licenses = ["notice"], sha256 = "e2822cb192420154ad648b6e73ce91426b2b8a829698819505b1a6bfc02b08ea")
+    _maven_import(artifact = "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.7", licenses = ["notice"], sha256 = "027a1ddfc6e2372166b8825346476f8f62e5f6fac0546c5db1ee3bec0e8d104b")
+    _maven_import(artifact = "com.fasterxml.jackson.core:jackson-annotations:2.9.7", licenses = ["notice"], sha256 = "8bf8c224e9205f77a0e239e96e473bdb263772db4ab85ecd1810e14c04132c5e")
 
     #dashboard
     _maven_import(artifact = "org.springframework.boot:spring-boot-starter:2.1.0.RELEASE",licenses = ["notice"],sha256 = "02450499d623deb3d5f5635258e615ed141642d7944d91fbd7c1614887ae8a29",)

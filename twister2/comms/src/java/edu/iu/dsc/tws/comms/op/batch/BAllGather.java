@@ -93,4 +93,9 @@ public class BAllGather {
   public void finish(int source) {
     gather.finish(source);
   }
+
+  public void close() {
+    // deregister from the channel
+    gather.close();
+  }
 }

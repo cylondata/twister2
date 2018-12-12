@@ -23,6 +23,13 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
+/**
+ * all workers in a job may wait on a barrier point
+ * BarrierMonitor will get barrier requests from all workers
+ * It will send response message to all workers,
+ * when it gets the request from the last worker in a job
+ */
+
 public class BarrierMonitor implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(BarrierMonitor.class.getName());
 

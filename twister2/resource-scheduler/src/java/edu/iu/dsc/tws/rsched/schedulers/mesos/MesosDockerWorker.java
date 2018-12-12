@@ -32,10 +32,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+
 import edu.iu.dsc.tws.master.client.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -79,6 +81,7 @@ public class MesosDockerWorker {
 
     MesosWorkerController workerController = null;
     List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<>();
+
     JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
         + jobName + ".job");
     try {
@@ -90,6 +93,7 @@ public class MesosDockerWorker {
       workerController = new MesosWorkerController(config, job,
           Inet4Address.getLocalHost().getHostAddress(), 2023, workerId, computeResource,
           additionalPorts);
+
       LOG.info("Initializing with zookeeper");
       workerController.initializeWithZooKeeper();
       LOG.info("Waiting for all workers to join");
@@ -124,8 +128,10 @@ public class MesosDockerWorker {
     int workerCount = workerController.getNumberOfWorkers();
     LOG.info("Worker Count..: " + workerCount);
 
+
    //start job master client
     worker.startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP);
+
 
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
@@ -224,5 +230,7 @@ public class MesosDockerWorker {
           new File("."), true);
       workerController.close();
       LOG.info("Job DONE");
+
     }*/
+
 }

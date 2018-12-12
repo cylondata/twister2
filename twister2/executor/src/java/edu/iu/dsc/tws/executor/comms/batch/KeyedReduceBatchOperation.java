@@ -126,4 +126,9 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
   public void finish(int source) {
     op.finish(source);
   }
+
+  @Override
+  public void close() {
+    op.close();
+  }
 }

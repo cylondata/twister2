@@ -22,15 +22,21 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
+import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 
+/**
+ * This class monitors the workers in a job
+ * It keeps the worker list and provides to list requests
+ */
 public class WorkerMonitor implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(WorkerMonitor.class.getName());
 
   private JobMaster jobMaster;
   private RRServer rrServer;
+  private DashboardClient dashClient;
 
   private boolean jobMasterAssignsWorkerIDs;
   private int numberOfWorkers;
@@ -38,10 +44,12 @@ public class WorkerMonitor implements MessageHandler {
   private HashMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
 
-  public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, int numWorkers,
-                       boolean jobMasterAssignsWorkerIDs) {
+  public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, DashboardClient dashClient,
+                       int numWorkers, boolean jobMasterAssignsWorkerIDs) {
     this.jobMaster = jobMaster;
     this.rrServer = rrServer;
+    this.dashClient = dashClient;
+
     this.numberOfWorkers = numWorkers;
     this.jobMasterAssignsWorkerIDs = jobMasterAssignsWorkerIDs;
 
@@ -55,6 +63,10 @@ public class WorkerMonitor implements MessageHandler {
     if (message instanceof JobMasterAPI.Ping) {
       JobMasterAPI.Ping ping = (JobMasterAPI.Ping) message;
       pingMessageReceived(id, ping);
+
+    } else if (message instanceof JobMasterAPI.RegisterWorker) {
+      JobMasterAPI.RegisterWorker rwMessage = (JobMasterAPI.RegisterWorker) message;
+      registerWorkerMessageReceived(id, rwMessage);
 
     } else if (message instanceof JobMasterAPI.WorkerStateChange) {
       JobMasterAPI.WorkerStateChange wscMessage = (JobMasterAPI.WorkerStateChange) message;
@@ -87,55 +99,96 @@ public class WorkerMonitor implements MessageHandler {
 
     rrServer.sendResponse(id, pingResponse);
     LOG.fine("Ping response sent to the worker: \n" + pingResponse);
+
+    // send Ping message to dashboard
+    if (dashClient != null) {
+      dashClient.workerHeartbeat(ping.getWorkerID());
+    }
+
+  }
+
+  private void registerWorkerMessageReceived(RequestID id, JobMasterAPI.RegisterWorker message) {
+
+    LOG.info("RegisterWorker message received: \n" + message);
+    JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
+
+    if (jobMasterAssignsWorkerIDs) {
+      int workerID = workers.size();
+      workerInfo = WorkerInfoUtils.updateWorkerID(workerInfo, workerID);
+    }
+
+    WorkerWithState worker = new WorkerWithState(workerInfo);
+    worker.addWorkerState(JobMasterAPI.WorkerState.STARTING);
+
+    boolean result = true;
+    if (workers.containsKey(worker.getWorkerID())) {
+      LOG.severe("Second RegisterWorker message received for workerID: " + worker.getWorkerID()
+          + "\nIgnoring this RegisterWorker message. "
+          + "\nReceived Message: " + message
+          + "\nPrevious Worker with that workerID: " + workers.get(worker.getWorkerID()));
+      result = false;
+    } else {
+      workers.put(worker.getWorkerID(), worker);
+    }
+
+    // send the response message
+    sendRegisterWorkerResponse(id, worker.getWorkerID(), result);
+
+    // send worker registration message to dashboard
+    if (dashClient != null) {
+      dashClient.registerWorker(workerInfo);
+    }
+
+    // if all workers registered, inform all workers
+    if (workers.size() == numberOfWorkers) {
+      sendListWorkersResponseToWaitList();
+    }
+
+    return;
   }
 
   private void stateChangeMessageReceived(RequestID id, JobMasterAPI.WorkerStateChange message) {
 
-    if (message.getNewState() == JobMasterAPI.WorkerState.STARTING) {
-      LOG.info("WorkerStateChange STARTING message received: \n" + message);
-      JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
-
-      if (jobMasterAssignsWorkerIDs) {
-        int workerID = workers.size();
-        workerInfo = WorkerInfoUtils.updateWorkerID(workerInfo, workerID);
-      }
-
-      WorkerWithState worker = new WorkerWithState(workerInfo);
-      worker.setWorkerState(JobMasterAPI.WorkerState.STARTING);
-      if (workers.containsKey(worker.getWorkerID())) {
-        LOG.severe("Second worker STARTING message received for workerID: " + worker.getWorkerID()
-            + "\nIgnoring this worker STARTING message. "
-            + "\nReceived Message: " + message
-            + "\nPrevious Worker with that workerID: " + workers.get(worker.getWorkerID()));
-      } else {
-        workers.put(worker.getWorkerID(), worker);
-      }
-      sendWorkerStateChangeResponse(id, worker.getWorkerID(), message.getNewState());
-
-      if (workers.size() == numberOfWorkers) {
-        sendListWorkersResponseToWaitList();
-      }
-
-      return;
-
-    } else if (!workers.containsKey(message.getWorkerInfo().getWorkerID())) {
+    // if this worker has not registered
+    if (!workers.containsKey(message.getWorkerID())) {
 
       LOG.warning("WorkerStateChange message received from a worker "
           + "that has not joined the job yet.\n"
           + "Not processing the message, just sending a response"
           + message);
 
-      sendWorkerStateChangeResponse(id, message.getWorkerInfo().getWorkerID(),
-          message.getNewState());
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getState());
       return;
 
-    } else if (message.getNewState() == JobMasterAPI.WorkerState.COMPLETED) {
+    } else if (message.getState() == JobMasterAPI.WorkerState.RUNNING) {
+      workers.get(message.getWorkerID()).addWorkerState(message.getState());
+      LOG.info("WorkerStateChange RUNNING message received: \n" + message);
 
-      workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
+      // send the response message
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getState());
+
+      // send worker state change message to dashboard
+      if (dashClient != null) {
+        dashClient.workerStateChange(message.getWorkerID(), message.getState());
+      }
+
+      // if all workers have become RUNNING, send job STARTED message
+      if (haveAllWorkersBecomeRunning()) {
+        jobMaster.allWorkersBecameRunning();
+      }
+
+    } else if (message.getState() == JobMasterAPI.WorkerState.COMPLETED) {
+
+      workers.get(message.getWorkerID()).addWorkerState(message.getState());
       LOG.info("WorkerStateChange COMPLETED message received: \n" + message);
 
       // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getState());
+
+      // send worker state change message to dashboard
+      if (dashClient != null) {
+        dashClient.workerStateChange(message.getWorkerID(), message.getState());
+      }
 
       // check whether all workers completed
       // if so, stop the job master
@@ -146,28 +199,26 @@ public class WorkerMonitor implements MessageHandler {
 
       return;
 
-    } else if (message.getNewState() == JobMasterAPI.WorkerState.RUNNING) {
-      workers.get(message.getWorkerID()).setWorkerState(message.getNewState());
-      LOG.info("WorkerStateChange RUNNING message received: \n" + message);
-
-      // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
-
     } else {
       LOG.warning("Unrecognized WorkerStateChange message received. Ignoring and sending reply: \n"
           + message);
       // send the response message
-      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getNewState());
+      sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getState());
     }
   }
 
-  private boolean haveAllWorkersCompleted() {
+  /**
+   * worker RUNNING message received from all workers
+   * if some workers may have already completed, that does not matter
+   * the important thing is whether they have became RUNNING in the past
+   */
+  private boolean haveAllWorkersBecomeRunning() {
     if (numberOfWorkers != workers.size()) {
       return false;
     }
 
     for (WorkerWithState worker: workers.values()) {
-      if (worker.getWorkerState() != JobMasterAPI.WorkerState.COMPLETED) {
+      if (!worker.hasWorkerBecomeRunning()) {
         return false;
       }
     }
@@ -175,18 +226,46 @@ public class WorkerMonitor implements MessageHandler {
     return true;
   }
 
+  /**
+   * worker COMPLETED message received from all workers
+   */
+  private boolean haveAllWorkersCompleted() {
+    if (numberOfWorkers != workers.size()) {
+      return false;
+    }
+
+    for (WorkerWithState worker: workers.values()) {
+      if (!worker.hasWorkerCompleted()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private void sendRegisterWorkerResponse(RequestID id, int workerID, boolean result) {
+
+    JobMasterAPI.RegisterWorkerResponse response =
+        JobMasterAPI.RegisterWorkerResponse.newBuilder()
+            .setWorkerID(workerID)
+            .setResult(result)
+            .build();
+
+    rrServer.sendResponse(id, response);
+    LOG.info("RegisterWorkerResponse sent:\n" + response);
+  }
+
   private void sendWorkerStateChangeResponse(RequestID id, int workerID,
                                              JobMasterAPI.WorkerState sentState) {
 
     JobMasterAPI.WorkerStateChangeResponse response =
         JobMasterAPI.WorkerStateChangeResponse.newBuilder()
-        .setWorkerID(workerID)
-        .setSentState(sentState)
-        .build();
+            .setWorkerID(workerID)
+            .setState(sentState)
+            .build();
 
     rrServer.sendResponse(id, response);
     LOG.info("WorkerStateChangeResponse sent:\n" + response);
-
   }
 
   private void listWorkersMessageReceived(RequestID id, ListWorkersRequest listMessage) {
