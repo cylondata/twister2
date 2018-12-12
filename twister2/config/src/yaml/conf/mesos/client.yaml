@@ -52,8 +52,6 @@ twister2.desired_nodes: "all"
 
 twister2.use_docker_container: "true"
 
-twister2.enable_mpi: "false"
-
 # rack label key for Mesos nodes in a cluster
 # each rack should have a unique label
 # all nodes in a rack should share this label

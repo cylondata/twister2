@@ -54,7 +54,6 @@ public final class MesosContext extends SchedulerContext {
   public static final String WORKER_PORT = "twister2.worker_port";
   public static final String DESIRED_NODES = "twister2.desired_nodes";
   public static final String USE_DOCKER_CONTAINER = "twister2.use_docker_container";
-  public static final String ENABLE_MPI = "twister2.enable.mpi";
   public static final String MESOS_OVERLAY_NETWORK_NAME = "twister2.mesos.overlay.network.name";
   public static final String DOCKER_IMAGE_NAME = "twister2.docker.image.name";
   public static final String MESOS_WORKER_CLASS = "twister2.class.mesos.worker";
@@ -69,8 +68,7 @@ public final class MesosContext extends SchedulerContext {
   public static final int DEFAULT_WORKER_PORT = 31000;
   public static final String DEFAULT_DESIRED_NODE = "all";
   public static final String DEFAULT_USE_DOCKER_CONTAINER = "false";
-  public static final String DEFAULT_ENABLE_MPI = "false";
-
+ 
   private MesosContext() {
   }
 
@@ -86,9 +84,7 @@ public final class MesosContext extends SchedulerContext {
     return cfg.getStringValue(USE_DOCKER_CONTAINER, DEFAULT_USE_DOCKER_CONTAINER);
   }
 
-  public static String getEnableMpi(Config cfg) {
-    return cfg.getStringValue(ENABLE_MPI, DEFAULT_ENABLE_MPI);
-  }
+
   public static String getMesosOverlayNetworkName(Config cfg) {
     return cfg.getStringValue(MESOS_OVERLAY_NETWORK_NAME);
   }

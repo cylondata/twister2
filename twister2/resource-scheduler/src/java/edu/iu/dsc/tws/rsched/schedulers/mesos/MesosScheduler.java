@@ -27,6 +27,7 @@ import org.apache.mesos.SchedulerDriver;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 
@@ -44,7 +45,7 @@ public class MesosScheduler implements Scheduler {
   private JobAPI.Job job;
   private int[] offerControl = new int[3];
   //private String jobMasterIP;
-  private boolean mpiJob = false;
+  //private boolean mpiJob = false;
 
   public MesosScheduler(MesosController controller, Config mconfig, JobAPI.Job myJob) {
     this.controller = controller;
@@ -52,9 +53,7 @@ public class MesosScheduler implements Scheduler {
     totalTaskCount = MesosContext.numberOfContainers(config);
     this.job = myJob;
     this.jobName = myJob.getJobName();
-    if (MesosContext.getEnableMpi(mconfig).equals("true")) {
-      mpiJob = true;
-    }
+
   }
 
   @Override
@@ -185,7 +184,7 @@ public class MesosScheduler implements Scheduler {
                         + "edu.iu.dsc.tws.rsched.schedulers.mesos.master.MesosJobMasterStarter")
                     .build();
               } else {
-                if (mpiJob) {
+                if (SchedulerContext.useOpenMPI(config)) {
                   if (taskId.getValue().equals("1")) {
                     ((TaskInfo.Builder) taskBuilder).setName("MPI Master " + taskId);
                     classNameParam = Protos.Parameter.newBuilder().setKey("env")
