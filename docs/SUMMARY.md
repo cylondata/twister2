@@ -64,6 +64,8 @@
   * [Contributing to Twister2](community/contributing-to-twister2.md)
   * [Contributors](community/contributors.md)
 * [Configurations](configurations/README.md)
+  * [Standalone](configurations/standalone/README.md)
+    * [Resources.yml](configurations/standalone/resource.md)
 * [Tutorial](tutorial/README.md)
   * [introduction](tutorial/introduction.md)
   * [big data stack](tutorial/big-data-stack.md)
