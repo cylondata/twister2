@@ -42,9 +42,10 @@ message ComputeResource {
     double disk_giga_bytes = 3;
     int32 instances = 4;
     int32 workers_per_pod = 5;
+    bool scalable = 6;
 
     oneof indexRequired {
-        int32 index = 6;
+        int32 index = 7;
     }
 }
 

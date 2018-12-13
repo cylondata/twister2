@@ -87,4 +87,4 @@ twister2.worker.controller.max.wait.time.on.barrier: 100000
 ###################################################################
 # Dashboard server host address and port
 # if this parameter is not specified, then job master will not try to connect to Dashboard
-twister2.dashboard.host: "http://localhost:8080"
+# twister2.dashboard.host: "http://localhost:8080"
