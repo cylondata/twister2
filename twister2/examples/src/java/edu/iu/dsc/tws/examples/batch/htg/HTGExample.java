@@ -26,7 +26,6 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.htgjob.Twister2HTGSubmitter;
 import edu.iu.dsc.tws.api.htgjob.Twister2MetagraphBuilder;
 import edu.iu.dsc.tws.api.htgjob.Twister2MetagraphConnection;
-import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
@@ -200,14 +199,13 @@ public class HTGExample extends TaskWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    /*Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("HTG");
     jobBuilder.setWorkerClass(HTGExample.class.getName());
     jobBuilder.setConfig(jobConfig);
     jobBuilder.addComputeResource(2.0, 512, 2);
 
-    // now submit the job
-    //Twister2Submitter.submitJob(jobBuilder.build(), config);
+    Twister2Submitter.submitJob(jobBuilder.build(), config);*/
 
     //TODO:Design the metagraph
     Twister2MetagraphBuilder twister2MetagraphBuilder = Twister2MetagraphBuilder.newBuilder(config);
@@ -217,22 +215,10 @@ public class HTGExample extends TaskWorker {
     twister2MetagraphConnection.broadcast("sourcetaskgraph", "broadcast");
     twister2MetagraphBuilder.setHtgName("htg");
 
-    //TODO:Invoke HTG Client and send the metagraph -> start with FIFO
+    //TODO:Invoke HTG Submitter and send the metagraph
     Twister2HTGSubmitter twister2HTGSubmitter = new Twister2HTGSubmitter(config);
     twister2HTGSubmitter.execute(twister2MetagraphBuilder.build(),
         jobConfig, HTGExample.class.getName());
-
-    /*Twister2MetaGraph twister2MetaGraph = twister2MetagraphBuilder.build();
-    Twister2MetaGraph.SubGraph subGraph = Twister2HTGClient.execute(twister2MetaGraph);
-    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName(subGraph.getName());
-    jobBuilder.setWorkerClass(HTGExample.class.getName());
-    jobBuilder.setConfig(jobConfig);
-    jobBuilder.addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
-        subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances());
-
-    // now submit the job
-    Twister2Submitter.submitJob(jobBuilder.build(), config);*/
   }
 }
 

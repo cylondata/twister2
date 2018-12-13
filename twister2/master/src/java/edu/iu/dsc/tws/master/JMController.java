@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.net.tcp.request;
+package edu.iu.dsc.tws.master;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -29,29 +29,32 @@ import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.Server;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
+import edu.iu.dsc.tws.common.net.tcp.request.ByteUtils;
+import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
+import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
+import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 
 /**
- * RRServer class is used by Job Master
- * It works in request/response messaging
- *
+ * JMController class works in request/response messages
  * Workers and the client always send a request message, and
  * JobMaster sends a single response message to each request message
- *
+ * <p>
  * However, sometimes job master may send messages to workers that are not response messages
- * For example, a client request message may result in Job Master sending a message to all workers
- *
+ * For example, a client request message may result in Job Master to send a message to all workers
+ * <p>
  * Message Format:
  * RequestID (32 bytes), message type length, message type data, senderID (4 bytes), message data
  * message type is the class name of the protocol buffer for that message
- *
+ * <p>
  * RequestID is generated in request senders (worker or client),
  * and the same requestID is used in the response message.
- *
+ * <p>
  * When job master sends a message that is not a response to a request,
  * it uses the DUMMY_REQUEST_ID as the requestID.
  */
-public class RRServer {
-  private static final Logger LOG = Logger.getLogger(RRServer.class.getName());
+
+public class JMController {
+  private static final Logger LOG = Logger.getLogger(JMController.class.getName());
 
   private Server server;
 
@@ -76,24 +79,19 @@ public class RRServer {
   private Map<String, Message.Builder> messageBuilders = new HashMap<>();
 
   /**
-   * Keep track of the requests
+   * requestID waiting map
    */
   private Map<RequestID, SocketChannel> requestChannels = new HashMap<>();
 
   /**
    * Job Master ID
    */
-  private int serverID;
+  public static final int JOB_MASTER_ID = -10;
 
   /**
    * The client id
    */
   public static final int CLIENT_ID = -100;
-
-  /**
-   * whether JobMaster assigns workerIDs
-   */
-  private boolean jobMasterAssignsWorkerID;
 
   /**
    * Connection handler
@@ -102,13 +100,13 @@ public class RRServer {
 
   private Progress loop;
 
-  public RRServer(Config cfg, String host, int port, Progress looper, int serverID,
-                  ConnectHandler cHandler, boolean jobMasterAssignsWorkerID) {
+  private boolean jobMasterAssignsWorkerID;
+
+  public JMController(Config cfg, String host, int port, Progress looper, ConnectHandler cHandler) {
     this.connectHandler = cHandler;
     this.loop = looper;
-    this.serverID = serverID;
-    this.jobMasterAssignsWorkerID = jobMasterAssignsWorkerID;
     server = new Server(cfg, host, port, loop, new Handler(), false);
+    jobMasterAssignsWorkerID = JobMasterContext.jobMasterAssignsWorkerIDs(cfg);
   }
 
   public void registerRequestHandler(Message.Builder builder, MessageHandler handler) {
@@ -130,6 +128,7 @@ public class RRServer {
 
   /**
    * Send a response to a request id
+   *
    * @param requestID request id
    * @param message message
    * @return true if response was accepted
@@ -147,14 +146,29 @@ public class RRServer {
       LOG.log(Level.SEVERE, "Channel is NULL for response");
     }
 
-    if (!workerChannels.containsKey(channel) && !channel.equals(clientChannel)) {
+    if (workerChannels.get(channel) != null) {
       LOG.log(Level.WARNING, "Failed to send response on disconnected socket");
       return false;
     }
 
-    TCPMessage tcpMessage = sendMessage(message, requestID, channel);
+    byte[] data = message.toByteArray();
+    String messageType = message.getDescriptorForType().getFullName();
 
-    if (tcpMessage != null) {
+    // lets serialize the message
+    int capacity = requestID.getId().length + data.length + 4 + messageType.getBytes().length + 4;
+    ByteBuffer buffer = ByteBuffer.allocate(capacity);
+    // we send message id, worker id and data
+    buffer.put(requestID.getId());
+    // pack the name of the message
+    ByteUtils.packString(messageType, buffer);
+    // pack the worker id
+    buffer.putInt(JOB_MASTER_ID);
+    // pack data
+    buffer.put(data);
+
+    TCPMessage request = server.send(channel, buffer, capacity, 0);
+
+    if (request != null) {
       requestChannels.remove(requestID);
       return true;
     } else {
@@ -163,7 +177,7 @@ public class RRServer {
   }
 
   /**
-   * Send a non-response message to a worker or to the client
+   * Send message to a worker or to the client
    *
    * @param message message
    * @return true if response was accepted
@@ -191,31 +205,27 @@ public class RRServer {
       return false;
     }
 
-    // since this is not a request/response message, we put the dummy request id
-    RequestID dummyRequestID = RequestID.DUMMY_REQUEST_ID;
-
-    TCPMessage tcpMessage = sendMessage(message, dummyRequestID, channel);
-
-    return tcpMessage == null ? false : true;
-  }
-
-  private TCPMessage sendMessage(Message message, RequestID requestID, SocketChannel channel) {
     byte[] data = message.toByteArray();
     String messageType = message.getDescriptorForType().getFullName();
 
+    // since this is not a request/response message, we put the dummy request id
+    RequestID dummyRequestID = RequestID.DUMMY_REQUEST_ID;
+
     // lets serialize the message
-    int capacity = requestID.getId().length + data.length + messageType.getBytes().length + 8;
+    int capacity = dummyRequestID.getId().length + data.length + messageType.getBytes().length + 8;
     ByteBuffer buffer = ByteBuffer.allocate(capacity);
     // we send message id, worker id and data
-    buffer.put(requestID.getId());
+    buffer.put(dummyRequestID.getId());
     // pack the name of the message
     ByteUtils.packString(messageType, buffer);
     // pack the worker id
-    buffer.putInt(serverID);
+    buffer.putInt(JOB_MASTER_ID);
     // pack data
     buffer.put(data);
 
-    return server.send(channel, buffer, capacity, 0);
+    TCPMessage tcpMessage = server.send(channel, buffer, capacity, 0);
+
+    return tcpMessage == null ? false : true;
   }
 
   private class Handler implements ChannelHandler {
@@ -236,7 +246,7 @@ public class RRServer {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-//      socketChannels.add(channel);
+//      workerChannels.add(channel);
       connectHandler.onConnect(channel, status);
     }
 
@@ -244,15 +254,12 @@ public class RRServer {
     public void onClose(SocketChannel channel) {
       workerChannels.remove(channel);
       connectHandler.onClose(channel);
-
-      if (channel.equals(clientChannel)) {
-        clientChannel = null;
-      }
     }
 
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPMessage readRequest) {
-      // read headers amd the message
+      // read the request id and worker id
+      // read the id and message
       ByteBuffer data = readRequest.getByteBuffer();
 
       // read requestID
@@ -263,7 +270,7 @@ public class RRServer {
       // unpack the string
       String messageType = ByteUtils.unPackString(data);
 
-      // now get the worker id
+      // now get the worker id of the sender
       int senderID = data.getInt();
 
       // it can be a worker that will get its id from the job master
@@ -281,10 +288,12 @@ public class RRServer {
         int headerLength = 8 + requestIDBytes.length + messageType.getBytes().length;
         int dataLength = readRequest.getLength() - headerLength;
 
-        // reconstruct protocol buffer message
-        byte[] d = new byte[dataLength];
-        data.get(d);
-        builder.mergeFrom(d);
+        // get data
+        byte[] messageDataBytes = new byte[dataLength];
+        data.get(messageDataBytes);
+
+        // build protocol buffer message
+        builder.mergeFrom(messageDataBytes);
         Message m = builder.build();
 
         if (channel == null) {
@@ -322,7 +331,6 @@ public class RRServer {
     // since it does not harm setting again
     if (senderID == CLIENT_ID) {
       clientChannel = channel;
-      LOG.info("Message received from submitting client. Channel set.");
       return senderID;
     }
 
@@ -338,4 +346,3 @@ public class RRServer {
 
   }
 }
-

@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.client.JMWorkerController;
 import edu.iu.dsc.tws.master.client.Pinger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
@@ -37,7 +36,6 @@ public class Twister2HTGClient {
   private boolean stopLooper = false;
 
   private Config config;
-  private JobMasterAPI.WorkerInfo thisWorker;
 
   private JobMasterAPI.HTGClientInfo thisClient;
 
@@ -46,9 +44,6 @@ public class Twister2HTGClient {
 
   private RRClient rrClient;
   private Pinger pinger;
-  private JMWorkerController jmWorkerController;
-
-  private boolean startingMessageSent = false;
 
   //NEWLY Added
   private HTGJobAPI.HTGJob htgJob;
@@ -71,15 +66,6 @@ public class Twister2HTGClient {
                            HTGJobAPI.HTGJob htgJob) {
     this(config, thisClient, JobMasterContext.jobMasterIP(config),
         JobMasterContext.jobMasterPort(config), htgJob, null);
-  }
-
-
-  public Twister2HTGClient(Config config,
-                           JobMasterAPI.HTGClientInfo thisClient,
-                           HTGJobAPI.HTGJob htgJob,
-                           HTGJobAPI.ExecuteMessage executeMessage) {
-    this(config, thisClient, JobMasterContext.jobMasterIP(config),
-        JobMasterContext.jobMasterPort(config), htgJob, executeMessage);
   }
 
   public Twister2HTGClient(Config config,
@@ -112,12 +98,8 @@ public class Twister2HTGClient {
     rrClient = new RRClient(masterAddress, masterPort, null, looper,
         thisClient.getClientID(), connectHandler);
 
-    long interval = JobMasterContext.pingInterval(config);
-
-    //TODO: Do we need this here?
-    pinger = new Pinger(thisWorker, rrClient, interval);
-
-    //jmWorkerController = new JMWorkerController(config, thisClient, rrClient, numberOfWorkers);
+    /*rrClient = new RRClient(masterAddress, masterPort, config, looper,
+        RRServer.CLIENT_ID, connectHandler);*/
 
     JobMasterAPI.HTGJobRequest.Builder htgjobRequestBuilder
         = JobMasterAPI.HTGJobRequest.newBuilder();
@@ -149,26 +131,25 @@ public class Twister2HTGClient {
   private void startLooping() {
 
     while (!stopLooper) {
-      long timeToNextPing = pinger.timeToNextPing();
-      if (timeToNextPing < 30 && startingMessageSent) {
-        pinger.sendPingMessage();
-      } else {
-        looper.loopBlocking(timeToNextPing);
-      }
+      looper.loopBlocking();
     }
 
     rrClient.disconnect();
   }
 
+  public void startBlocking() {
+    // first initialize the client, connect to Job Master
+    init();
+    startLooping();
+  }
+
+
   /**
    * start the Job Master Client in a Thread
    */
   public Thread startThreaded() {
-    // first call the init method
-    boolean initialized = init();
-    if (!initialized) {
-      return null;
-    }
+
+    init();
 
     Thread jmThread = new Thread() {
       public void run() {
@@ -265,10 +246,6 @@ public class Twister2HTGClient {
     }
   }
 
-  public JMWorkerController getJMWorkerController() {
-    return jmWorkerController;
-  }
-
   /**
    * This method sends the htg job object to the job master.
    */
@@ -279,24 +256,15 @@ public class Twister2HTGClient {
         .setExecuteMessage(executeMessage)
         .build();
 
-    LOG.fine("HTG Job Client Message and Execute Message:" + htgJob + "\t" + executeMessage);
+    LOG.info("HTG Job Client Message and Execute Message:" + htgJob + "\t" + executeMessage);
 
-    //RequestID requestID = rrClient.sendRequest(htgJobRequest);
-    //TODO: This should be properly defined for receiving the response from the JobMaster
     try {
       rrClient.sendRequestWaitResponse(htgJobRequest,
           JobMasterContext.responseWaitDuration(config));
+      return true;
     } catch (edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException e) {
       e.printStackTrace();
+      return false;
     }
-    startingMessageSent = true;
-    //pinger.sendPingMessage();
-    return true;
   }
-
-  public boolean sendHTGCompleteMessage() {
-
-    return true;
-  }
-
 }

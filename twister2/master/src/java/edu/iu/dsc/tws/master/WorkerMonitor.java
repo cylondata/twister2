@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
@@ -32,23 +31,19 @@ public class WorkerMonitor implements MessageHandler {
 
   private JobMaster jobMaster;
   private RRServer rrServer;
-  private Config config;
 
+  private boolean jobMasterAssignsWorkerIDs;
   private int numberOfWorkers;
 
   private HashMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
 
-  public WorkerMonitor(Config config, JobMaster jobMaster, RRServer rrServer) {
-    this(config, jobMaster, rrServer, JobMasterContext.workerInstances(config));
-  }
-
-  public WorkerMonitor(Config config, JobMaster jobMaster,
-                       RRServer rrServer, int numWorkers) {
-    this.config = config;
+  public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, int numWorkers,
+                       boolean jobMasterAssignsWorkerIDs) {
     this.jobMaster = jobMaster;
     this.rrServer = rrServer;
     this.numberOfWorkers = numWorkers;
+    this.jobMasterAssignsWorkerIDs = jobMasterAssignsWorkerIDs;
 
     workers = new HashMap<>();
     waitList = new HashMap<>();
@@ -70,9 +65,22 @@ public class WorkerMonitor implements MessageHandler {
       JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
 
+    } else if (message instanceof JobMasterAPI.HTGJobRequest) {
+      JobMasterAPI.HTGJobRequest wscMessage = (JobMasterAPI.HTGJobRequest) message;
+      stateChangeMessageReceived(id, wscMessage);
     } else {
       LOG.log(Level.SEVERE, "Un-known message received: " + message);
     }
+  }
+
+  private void stateChangeMessageReceived(RequestID id, JobMasterAPI.HTGJobRequest wscMessage) {
+
+    JobMasterAPI.HTGJobResponse htgJobResponse = JobMasterAPI.HTGJobResponse.newBuilder()
+        .setHtgSubgraphname(wscMessage.getExecuteMessage() + "finished")
+        .build();
+
+    rrServer.sendResponse(id, htgJobResponse);
+    LOG.info("HTGClient response sent to the HTGClient: \n" + htgJobResponse);
   }
 
   private void pingMessageReceived(RequestID id, JobMasterAPI.Ping ping) {
@@ -100,7 +108,7 @@ public class WorkerMonitor implements MessageHandler {
       LOG.info("WorkerStateChange STARTING message received: \n" + message);
       JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
 
-      if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
+      if (jobMasterAssignsWorkerIDs) {
         int workerID = workers.size();
         workerInfo = WorkerInfoUtils.updateWorkerID(workerInfo, workerID);
       }

@@ -86,9 +86,18 @@ public class JobMasterClient {
    */
   private boolean connectionRefused = false;
 
-  public JobMasterClient(Config config, WorkerInfo thisWorker) {
-    this(config, thisWorker, JobMasterContext.jobMasterIP(config),
-        JobMasterContext.jobMasterPort(config), JobMasterContext.workerInstances(config));
+  public JobMasterClient(Config config,
+                         WorkerInfo thisWorker) {
+    this.config = config;
+    this.thisWorker = thisWorker;
+  }
+
+  public JobMasterClient(Config config,
+                         WorkerInfo thisWorker,
+                         String masterHost) {
+    this.config = config;
+    this.thisWorker = thisWorker;
+    this.masterAddress = masterHost;
   }
 
   public JobMasterClient(Config config,
@@ -101,13 +110,6 @@ public class JobMasterClient {
     this.masterAddress = masterHost;
     this.masterPort = masterPort;
     this.numberOfWorkers = numberOfWorkers;
-  }
-
-  public JobMasterClient(Config config, WorkerInfo thisWorker, String jobMasterIP) {
-    this.config = config;
-    this.thisWorker = thisWorker;
-    this.masterAddress = jobMasterIP;
-    this.masterPort = JobMasterContext.jobMasterPort(config);
   }
 
   /**
@@ -151,6 +153,10 @@ public class JobMasterClient {
         JobMasterAPI.BarrierResponse.newBuilder();
     rrClient.registerResponseHandler(barrierRequestBuilder, jmWorkerController);
     rrClient.registerResponseHandler(barrierResponseBuilder, jmWorkerController);
+
+    JobMasterAPI.HTGJobRequest.Builder htgjobRequestBuilder
+        = JobMasterAPI.HTGJobRequest.newBuilder();
+    rrClient.registerResponseHandler(htgjobRequestBuilder, responseMessageHandler);
 
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
@@ -225,6 +231,34 @@ public class JobMasterClient {
     return true;
   }
 
+  /*private boolean registerWorker() {
+
+    JobMasterAPI.RegisterWorker registerWorker = JobMasterAPI.RegisterWorker.newBuilder()
+        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerInfo(thisWorker)
+        .build();
+
+    LOG.info("Sending RegisterWorker message: \n" + registerWorker);
+
+    // wait for the response
+    try {
+      rrClient.sendRequestWaitResponse(registerWorker,
+          JobMasterContext.responseWaitDuration(config));
+
+      if (registrationSucceeded) {
+        pinger.sendPingMessage();
+        initJMWorkerController();
+      }
+
+      return registrationSucceeded;
+
+    } catch (BlockingSendException bse) {
+      LOG.log(Level.SEVERE, bse.getMessage(), bse);
+      return false;
+    }
+  }*/
+
+
   /**
    * try connecting until the time limit is reached
    */
@@ -276,9 +310,40 @@ public class JobMasterClient {
   }
 
   /**
+   * send RegisterWorker message to Job Master
+   * put WorkerInfo in this message
+   * @return
+   */
+  /*private boolean registerWorker() {
+
+    JobMasterAPI.RegisterWorker registerWorker = JobMasterAPI.RegisterWorker.newBuilder()
+        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerInfo(thisWorker)
+        .build();
+
+    LOG.info("Sending RegisterWorker message: \n" + registerWorker);
+
+    // wait for the response
+    try {
+      rrClient.sendRequestWaitResponse(registerWorker,
+          JobMasterContext.responseWaitDuration(config));
+
+      if (registrationSucceeded) {
+        pinger.sendPingMessage();
+        initJMWorkerController();
+      }
+
+      return registrationSucceeded;
+
+    } catch (BlockingSendException bse) {
+      LOG.log(Level.SEVERE, bse.getMessage(), bse);
+      return false;
+    }
+  }*/
+
+  /**
    * send worker STARTING message
    * put WorkerInfo in that message
-   * @return
    */
   public boolean sendWorkerStartingMessage() {
 
@@ -365,7 +430,9 @@ public class JobMasterClient {
             && responseMessage.getSentState() == JobMasterAPI.WorkerState.STARTING) {
           thisWorker = WorkerInfoUtils.updateWorkerID(thisWorker, responseMessage.getWorkerID());
         }
-
+      } else if (message instanceof JobMasterAPI.HTGJobRequest) {
+        LOG.info("Received HTG Job Request from the master. \n" + message);
+        // nothing to do
       } else {
         LOG.warning("Received message unrecognized. \n" + message);
       }

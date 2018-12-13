@@ -53,7 +53,7 @@ public class JobMaster {
    * Job Master ID is assigned as -1,
    * workers will have IDs starting from 0 and icreasing by one
    */
-  public static final int JOB_MASTER_ID = -1;
+  public static final int JOB_MASTER_ID = -10;
 
   /**
    * A singleton Progress object monitors network channel
@@ -121,8 +121,6 @@ public class JobMaster {
   //Newly Added for HTG Integration
   private HTGClientMonitor htgClientMonitor;
 
-  private boolean htgClientsCompleted = false;
-
   public JobMaster(Config config,
                    String masterAddress,
                    IJobTerminator jobTerminator,
@@ -145,14 +143,12 @@ public class JobMaster {
     looper = new Progress();
 
     ServerConnectHandler connectHandler = new ServerConnectHandler();
-    rrServer =
-        new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
+    rrServer = new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID,
+        connectHandler, JobMasterContext.jobMasterAssignsWorkerIDs(config));
 
-    workerMonitor = new WorkerMonitor(config, this, rrServer, numberOfWorkers);
+    workerMonitor = new WorkerMonitor(this, rrServer, numberOfWorkers,
+        JobMasterContext.jobMasterAssignsWorkerIDs(config));
     barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
-
-    //newly added for HTG Integration
-    htgClientMonitor = new HTGClientMonitor(this, rrServer);
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
     JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
@@ -175,14 +171,25 @@ public class JobMaster {
     rrServer.registerRequestHandler(barrierRequestBuilder, barrierMonitor);
     rrServer.registerRequestHandler(barrierResponseBuilder, barrierMonitor);
 
-    //Newly added for HTG Testing
+    //Newly added for HTG Integration
+    htgClientMonitor = new HTGClientMonitor(this, rrServer);
+
     JobMasterAPI.HTGJobRequest.Builder htgjobRequestBuilder
         = JobMasterAPI.HTGJobRequest.newBuilder();
     JobMasterAPI.HTGJobResponse.Builder htgjobResponseBuilder
         = JobMasterAPI.HTGJobResponse.newBuilder();
 
-    rrServer.registerRequestHandler(htgjobRequestBuilder, htgClientMonitor);
-    rrServer.registerRequestHandler(htgjobResponseBuilder, htgClientMonitor);
+    /* Error Message:Dec 12, 2018 4:19:43 PM edu.iu.dsc.tws.common.net.tcp.BaseNetworkChannel
+    readFromChannel SEVERE: channel read returned negative -1
+    Dec 12, 2018 4:19:43 PM edu.iu.dsc.tws.common.net.tcp.Server handleError
+    INFO: Connection is closed: /127.0.0.1:50862 */
+
+    //If I enabled this...
+    //rrServer.registerRequestHandler(htgjobRequestBuilder, htgClientMonitor);
+    //rrServer.registerRequestHandler(htgjobResponseBuilder, htgClientMonitor);
+
+    rrServer.registerRequestHandler(htgjobRequestBuilder, workerMonitor);
+    rrServer.registerRequestHandler(htgjobResponseBuilder, workerMonitor);
 
     rrServer.start();
     looper.loop();
@@ -227,11 +234,6 @@ public class JobMaster {
       looper.loopBlocking();
     }
 
-    //Newly Added for HTG Integration
-    while (!htgClientsCompleted) {
-      looper.loopBlocking();
-    }
-
     // send the remaining messages if any and stop
     rrServer.stopGraceFully(2000);
   }
@@ -248,12 +250,6 @@ public class JobMaster {
     if (jobTerminator != null) {
       jobTerminator.terminateJob(job.getJobName());
     }
-  }
-
-  //Newly Added for HTG Integration
-  public void allHTGClientsCompleted() {
-    htgClientsCompleted = true;
-    looper.wakeup();
   }
 
   public void addShutdownHook() {
@@ -286,4 +282,3 @@ public class JobMaster {
   }
 
 }
-
