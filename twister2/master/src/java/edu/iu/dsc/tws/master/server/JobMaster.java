@@ -324,7 +324,7 @@ public class JobMaster {
       dashClient.jobStateChange(JobState.COMPLETED);
     }
 
-    LOG.info("All workers have completed. JobMaster is stopping.");
+    LOG.info("All " + numberOfWorkers + " workers have completed. JobMaster is stopping.");
     workersCompleted = true;
     looper.wakeup();
 

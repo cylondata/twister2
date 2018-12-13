@@ -158,6 +158,7 @@ public class WorkerMonitor implements MessageHandler {
 
     // if all workers registered, inform all workers
     if (workers.size() == numberOfWorkers) {
+      LOG.info("All " + workers.size() + " workers joined the job.");
       sendListWorkersResponseToWaitList();
     }
 
