@@ -140,6 +140,17 @@ public class DataFlowAllGather implements DataFlowOperation {
   }
 
   @Override
+  public void clean() {
+    if (gather != null) {
+      gather.clean();
+    }
+
+    if (broadcast != null) {
+      broadcast.clean();
+    }
+  }
+
+  @Override
   public void finish(int source) {
     gather.finish(source);
   }
