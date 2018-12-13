@@ -28,12 +28,12 @@ import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 
 public class StreamingTaskExampleKafka implements IWorker {
   @Override
@@ -76,7 +76,7 @@ public class StreamingTaskExampleKafka implements IWorker {
     TaskUtils.execute(config, workerID, graph, workerController);
   }
 
-  private static class RecevingTask extends BaseStreamSink {
+  private static class RecevingTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

@@ -20,9 +20,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
 public class BTGatherExample extends BenchTaskWorker {
 
@@ -35,8 +35,8 @@ public class BTGatherExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    BaseBatchSource g = new SourceBatchTask(edge);
-    BaseBatchSink r = new GatherSinkTask();
+    BaseSource g = new SourceBatchTask(edge);
+    BaseSink r = new GatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
@@ -44,7 +44,7 @@ public class BTGatherExample extends BenchTaskWorker {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class GatherSinkTask extends BaseBatchSink {
+  protected static class GatherSinkTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private static int count = 0;
 

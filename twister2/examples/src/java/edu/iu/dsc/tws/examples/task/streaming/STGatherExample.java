@@ -21,9 +21,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STGatherExample extends BenchTaskWorker {
 
@@ -36,8 +36,8 @@ public class STGatherExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    BaseStreamSource g = new SourceStreamTask(edge);
-    BaseStreamSink r = new GatherSinkTask();
+    BaseSource g = new SourceStreamTask(edge);
+    BaseSink r = new GatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
@@ -45,7 +45,7 @@ public class STGatherExample extends BenchTaskWorker {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class GatherSinkTask extends BaseStreamSink {
+  protected static class GatherSinkTask extends BaseSink {
     private int count = 0;
     private static final long serialVersionUID = -254264903510284798L;
 
