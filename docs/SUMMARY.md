@@ -63,6 +63,7 @@
   * [Mailing List & Resources](community/mailing-list-and-resources.md)
   * [Contributing to Twister2](community/contributing-to-twister2.md)
   * [Contributors](community/contributors.md)
+* [Configurations](configurations/README.md)
 * [Tutorial](tutorial/README.md)
   * [introduction](tutorial/introduction.md)
   * [big data stack](tutorial/big-data-stack.md)
