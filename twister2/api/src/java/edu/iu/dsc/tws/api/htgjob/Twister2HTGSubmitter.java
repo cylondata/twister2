@@ -61,7 +61,7 @@ public final class Twister2HTGSubmitter {
   private void buildHTGJob(List<String> scheduleGraphs, Twister2Metagraph twister2Metagraph,
                            String workerclassName, JobConfig jobConfig) {
 
-    Twister2Job twister2Job = null;
+    Twister2Job twister2Job;
     Twister2Metagraph.SubGraph subGraph;
     HTGJobAPI.ExecuteMessage executeMessage;
 
@@ -74,41 +74,30 @@ public final class Twister2HTGSubmitter {
         .addAllRelations(twister2Metagraph.getRelation())
         .build();
 
-    for (int i = 0; i < scheduleGraphs.size(); i++) {
+    String subGraphName = scheduleGraphs.get(0);
 
-      String subgraphName = scheduleGraphs.get(i);
+    subGraph = twister2Metagraph.getMetaGraphMap(subGraphName);
 
-      //Retrieve the resource value for the graph to be scheduled.
-      subGraph = twister2Metagraph.getMetaGraphMap(subgraphName);
+    twister2Job = Twister2Job.newBuilder()
+        .setJobName(htgJob.getHtgJobname())
+        .setWorkerClass(workerclassName)
+        .addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
+            subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances())
+        .setConfig(jobConfig)
+        .build();
+
+    for (String subgraphName : scheduleGraphs) {
 
       //Set the subgraph to be executed from the metagraph
       executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
           .setSubgraphName(subgraphName)
           .build();
 
-      twister2Job = Twister2Job.newBuilder()
-          .setJobName(htgJob.getHtgJobname())
-          .setWorkerClass(workerclassName)
-          .addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
-              subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances())
-          .setConfig(jobConfig)
-          .build();
-
       executeMessageList.add(executeMessage);
-
-      LOG.info(subGraph.getCpu() + "\t" + subGraph.getRamMegaBytes() + "\t"
-          + subGraph.getDiskGigaBytes() + "\t" + subGraph.getNumberOfInstances());
-
-      //This is for validation to start the job master once
-      if (i == 0) {
-        //Now submit the job
-        //Twister2Submitter.submitJob(twister2Job, config);
-        startJobMaster(twister2Job);
-      }
     }
 
     //Send the htgjob object and execution order of the graph.
-    submitHTGToJobMaster(htgJob, executeMessageList);
+    submitHTGToJobMaster(htgJob, executeMessageList, twister2Job, config);
   }
 
   /**
@@ -116,7 +105,11 @@ public final class Twister2HTGSubmitter {
    * the graph to be executed (executeMessage).
    */
   private String submitHTGToJobMaster(HTGJobAPI.HTGJob htgJob,
-                                      List<HTGJobAPI.ExecuteMessage> executeMessage) {
+                                      List<HTGJobAPI.ExecuteMessage> executeMessage,
+                                      Twister2Job twister2Job, Config cfg) {
+    //TODO:Remove this line after the integration
+    startJobMaster(twister2Job);
+    //submitJob(twister2Job, cfg);
 
     InetAddress htgClientIP = JMWorkerController.convertStringToIP("localhost");
     int htgClientPort = 10000 + (int) (Math.random() * 10000);
@@ -127,27 +120,26 @@ public final class Twister2HTGSubmitter {
     JobMasterAPI.HTGClientInfo htgClientInfo = HTGClientInfoUtils.createHTGClientInfo(
         htgClientTempID, htgClientIP.getHostAddress(), htgClientPort, nodeInfo);
 
+    //Now, we are starting only one client
     Twister2HTGClient client = new Twister2HTGClient(config, htgClientInfo, htgJob);
     Thread clientThread = client.startThreaded();
 
     if (clientThread == null) {
-      LOG.severe("HTG Client can not initialize. Exiting ...");
+      LOG.severe("HTG CClient can not initialize. Exiting ...");
       return null;
     }
 
     for (int i = 0; i < executeMessage.size(); i++) {
+
       client.setExecuteMessage(executeMessage.get(i));
-      try {
-        Thread.sleep(4000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
+
       client.sendHTGClientRequestMessage();
+      sleep(2000);
     }
 
+    //TODO:Remove this part after the integration
     jobMaster.allWorkersCompleted();
     client.close();
-
     return "HTG finished Completely";
   }
 

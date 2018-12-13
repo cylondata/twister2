@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
+import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.client.Pinger;
@@ -95,11 +96,8 @@ public class Twister2HTGClient {
     Twister2HTGClient.ClientConnectHandler connectHandler
         = new Twister2HTGClient.ClientConnectHandler();
 
-    rrClient = new RRClient(masterAddress, masterPort, null, looper,
-        thisClient.getClientID(), connectHandler);
-
-    /*rrClient = new RRClient(masterAddress, masterPort, config, looper,
-        RRServer.CLIENT_ID, connectHandler);*/
+    rrClient = new RRClient(masterAddress, masterPort, config, looper,
+        RRServer.CLIENT_ID, connectHandler);
 
     JobMasterAPI.HTGJobRequest.Builder htgjobRequestBuilder
         = JobMasterAPI.HTGJobRequest.newBuilder();

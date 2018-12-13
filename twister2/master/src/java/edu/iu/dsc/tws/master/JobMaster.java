@@ -179,11 +179,6 @@ public class JobMaster {
     JobMasterAPI.HTGJobResponse.Builder htgjobResponseBuilder
         = JobMasterAPI.HTGJobResponse.newBuilder();
 
-    /* Error Message:Dec 12, 2018 4:19:43 PM edu.iu.dsc.tws.common.net.tcp.BaseNetworkChannel
-    readFromChannel SEVERE: channel read returned negative -1
-    Dec 12, 2018 4:19:43 PM edu.iu.dsc.tws.common.net.tcp.Server handleError
-    INFO: Connection is closed: /127.0.0.1:50862 */
-
     //If I enabled this...
     //rrServer.registerRequestHandler(htgjobRequestBuilder, htgClientMonitor);
     //rrServer.registerRequestHandler(htgjobResponseBuilder, htgClientMonitor);
