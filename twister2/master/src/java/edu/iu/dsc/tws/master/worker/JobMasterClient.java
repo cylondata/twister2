@@ -10,7 +10,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.master.client;
+package edu.iu.dsc.tws.master.worker;
 
 import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
