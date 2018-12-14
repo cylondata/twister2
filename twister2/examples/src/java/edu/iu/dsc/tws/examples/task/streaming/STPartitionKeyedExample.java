@@ -20,9 +20,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STPartitionKeyedExample extends BenchTaskWorker {
 
@@ -36,15 +36,15 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
     DataType keyType = DataType.INTEGER;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    BaseStreamSource g = new KeyedSourceStreamTask(edge);
-    BaseStreamSink r = new SKeyedPartitionSinkTask();
+    BaseSource g = new KeyedSourceStreamTask(edge);
+    BaseSink r = new SKeyedPartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class SKeyedPartitionSinkTask extends BaseStreamSink {
+  protected static class SKeyedPartitionSinkTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

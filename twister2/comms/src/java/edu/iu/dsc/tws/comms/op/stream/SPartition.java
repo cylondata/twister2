@@ -56,7 +56,7 @@ public class SPartition {
     this.partition = new DataFlowPartition(comm.getChannel(), sources, targets, rcvr,
         new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT, dataType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
 
   /**
@@ -104,5 +104,6 @@ public class SPartition {
 
   public void close() {
     // deregister from the channel
+    partition.close();
   }
 }

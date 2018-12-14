@@ -11,6 +11,8 @@ Here are the things that you need to do to run Twister2 jobs on Kubernetes clust
 * **Providing Rack and Datacenter information**: This is required only if you want Twister2 to perform rack and data center aware scheduling. 
 * **Job Package Uploader Settings**: This is required only if you want to upload the job package through a web server. 
 
+**Requirement**: Twister2 requires Kubernetes version v1.10 or higher.  
+
 ## Authorization of Pods
 
 Twister2 Worker pods need to watch Job Master pod and get its IP address. In addition, Job Master needs to be able to delete used resources after the job has completed. Therefore, before submitting a job, a Role and a RoleBinding object need to be created. We prepared the following YAML file: twister2-auth.yaml.

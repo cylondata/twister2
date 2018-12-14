@@ -25,6 +25,7 @@ public class SchedulerContext extends Context {
   public static final String LAUNCHER_CLASS = "twister2.class.launcher";
   public static final String UPLOADER_CLASS = "twister2.class.uploader";
   public static final String WORKER_CLASS = "twister2.job.worker.class";
+  public static final String DRIVER_CLASS = "twister2.job.driver.class";
   public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
 
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
@@ -36,6 +37,7 @@ public class SchedulerContext extends Context {
   public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
 
   public static final String WORKER_COMPUTE_RESOURCES = "worker.compute.resources";
+
   /**
    * These are specified as system properties when deploying a job
    */
@@ -70,6 +72,8 @@ public class SchedulerContext extends Context {
   public static final String RACKS_LIST = "racks.list";
   public static final String DATACENTERS_LIST = "datacenters.list";
 
+  public static final String ADDITIONAL_PORTS = "twister2.worker.additional.ports";
+
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
   }
@@ -80,6 +84,10 @@ public class SchedulerContext extends Context {
 
   public static String workerClass(Config cfg) {
     return cfg.getStringValue(WORKER_CLASS);
+  }
+
+  public static String driverClass(Config cfg) {
+    return cfg.getStringValue(DRIVER_CLASS);
   }
 
   public static String packagesPath(Config cfg) {
@@ -145,6 +153,15 @@ public class SchedulerContext extends Context {
   public static boolean useOpenMPI(Config cfg) {
     return cfg.getStringValue("twister2.network.channel.class")
         .equals("edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel");
+  }
+
+  public static List<String> additionalPorts(Config cfg) {
+    return cfg.getStringList(ADDITIONAL_PORTS);
+  }
+
+  public static int numberOfAdditionalPorts(Config cfg) {
+    List<String> portNameList = additionalPorts(cfg);
+    return portNameList == null ? 0 : portNameList.size();
   }
 
   public static JobMasterAPI.NodeInfo getNodeInfo(Config cfg, String nodeIP) {

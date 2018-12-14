@@ -41,7 +41,7 @@ public class BKeyedPartition {
         new PartitionPartialReceiver(),
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
 
   public BKeyedPartition(Communicator comm, TaskPlan plan,
@@ -55,7 +55,7 @@ public class BKeyedPartition {
         new PartitionPartialReceiver(),
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
 
   public BKeyedPartition(Communicator comm, TaskPlan plan,
@@ -73,7 +73,7 @@ public class BKeyedPartition {
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType, recvKeyType,
         recvDataType, OperationSemantics.STREAMING_BATCH, e);
     this.partition.init(comm.getConfig(), dataType, plan, e);
-    this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
 
   public BKeyedPartition(Communicator comm, TaskPlan plan,
@@ -91,7 +91,7 @@ public class BKeyedPartition {
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType, recvKeyType,
         recvDataType, OperationSemantics.STREAMING_BATCH, e);
     this.partition.init(comm.getConfig(), dataType, plan, e);
-    this.destinationSelector.prepare(partition.getSources(), partition.getDestinations());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
 
   public boolean partition(int source, Object key, Object message, int flags) {
@@ -111,5 +111,10 @@ public class BKeyedPartition {
 
   public boolean progress() {
     return partition.progress();
+  }
+
+  public void close() {
+    // deregister from the channel
+    partition.close();
   }
 }

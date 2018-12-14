@@ -11,6 +11,7 @@ common_deps_files = [
     "//twister2/data/src/main/java:data-java",
     "//twister2/resource-scheduler/src/java:resource-scheduler-java",
     "//twister2/master/src/java:master-java",
+    "//twister2/proto:proto-java",
     "@com_google_guava_guava//jar",
 ]
 

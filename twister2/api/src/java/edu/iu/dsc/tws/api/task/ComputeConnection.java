@@ -21,9 +21,12 @@ import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IFunction;
+import edu.iu.dsc.tws.task.api.TaskKeySelector;
+import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
 
 /**
  * Represents a compute connection.
@@ -198,6 +201,26 @@ public class ComputeConnection {
     return this;
   }
 
+  /**
+   * Create a keyed reduce connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param function the reduce function
+   * @param keyTpe the key data type
+   * @param dataType the data type
+   * @return the ComputeConnection
+   */
+  public ComputeConnection keyedReduce(String parent, String name,
+                                       IFunction function, DataType keyTpe, DataType dataType,
+                                       TaskPartitioner partitioner, TaskKeySelector selector) {
+    Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
+        function, partitioner, selector);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
   public ComputeConnection keyedReduce(String parent, String name,
                                        Op op, DataType keyTpe, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
@@ -261,6 +284,27 @@ public class ComputeConnection {
   public ComputeConnection keyedGather(String parent, String name,
                                        DataType keyTpe, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.KEYED_GATHER, dataType, keyTpe);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
+   * Create a keyed gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param keyTpe the key data type
+   * @param dataType the data type
+   * @param partitioner the partitioner
+   * @param  selector selector
+   * @return the ComputeConnection
+   */
+  public ComputeConnection keyedGather(String parent, String name,
+                                       DataType keyTpe, DataType dataType,
+                                       TaskPartitioner partitioner, TaskKeySelector selector) {
+    Edge edge = new Edge(name, OperationNames.KEYED_GATHER, dataType, keyTpe,
+        null, partitioner, selector);
     inputs.put(parent, edge);
 
     return this;
@@ -363,6 +407,28 @@ public class ComputeConnection {
 
     return this;
   }
+
+  /**
+   * Create a keyed partition
+   *
+   * @param parent the parent to connection
+   * @param edgeName name of the edge
+   * @param keyTpe the key data type
+   * @param dataType the data type
+   * @param partitioner the partitioner
+   * @param  selector selector
+   * @return compute connection
+   */
+  public ComputeConnection keyedPartition(String parent, String edgeName,
+                                          DataType keyTpe, DataType dataType,
+                                          TaskPartitioner partitioner, TaskKeySelector selector) {
+    Edge edge = new Edge(edgeName, OperationNames.KEYED_PARTITION, dataType, keyTpe,
+        null, partitioner, selector);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
 
   /**
    * Create a reduce connection
@@ -534,6 +600,27 @@ public class ComputeConnection {
         throw new RuntimeException("Failed to connect non-existing task: " + e.getKey());
       }
       graph.addTaskEdge(v2, v1, e.getValue());
+    }
+  }
+
+
+  void build(HierarchicalTaskGraph graph) {
+    for (Map.Entry<String, Edge> e : inputs.entrySet()) {
+      DataFlowTaskGraph graph1 = graph.dataFlowTaskGraph(nodeName);
+      if (graph1 == null) {
+        throw new RuntimeException("Failed to connect non-existing taskgraph: " + nodeName);
+      }
+
+      DataFlowTaskGraph graph2 = graph.dataFlowTaskGraph(e.getKey());
+      if (graph2 == null) {
+        throw new RuntimeException("Failed to connect non-existing task graph: " + e.getKey());
+      }
+
+      try {
+        graph.addTaskGraphEdge(graph2, graph1, e.getValue());
+      } catch (IllegalArgumentException ee) {
+        ee.printStackTrace();
+      }
     }
   }
 

@@ -16,8 +16,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.harp.HarpWorker;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.harp.HarpWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;

@@ -36,6 +36,7 @@ import edu.iu.dsc.tws.executor.core.batch.TaskBatchInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SinkStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SourceStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.TaskStreamingInstance;
+import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.INode;
@@ -272,8 +273,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
                                         Vertex vertex, OperationMode operationMode,
                                         Set<String> inEdges, Set<String> outEdges) {
     // lets add the task
-    byte[] taskBytes = kryoMemorySerializer.serialize(vertex.getTask());
-    INode newInstance = (INode) kryoMemorySerializer.deserialize(taskBytes);
+    byte[] taskBytes = Utils.serialize(vertex.getTask());
+    INode newInstance = (INode) Utils.deserialize(taskBytes);
     int taskId = taskIdGenerator.generateGlobalTaskId(vertex.getName(),
         ip.getTaskId(), ip.getTaskIndex());
 

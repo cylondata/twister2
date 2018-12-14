@@ -20,9 +20,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STAllReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(STAllReduceExample.class.getName());
@@ -34,8 +34,8 @@ public class STAllReduceExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
 
     String edge = "edge";
-    BaseStreamSource g = new SourceStreamTask(edge);
-    BaseStreamSink r = new AllReduceSinkTask();
+    BaseSource g = new SourceStreamTask(edge);
+    BaseSink r = new AllReduceSinkTask();
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
@@ -44,7 +44,7 @@ public class STAllReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class AllReduceSinkTask extends BaseStreamSink {
+  protected static class AllReduceSinkTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

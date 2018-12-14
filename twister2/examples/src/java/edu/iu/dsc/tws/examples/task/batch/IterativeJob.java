@@ -34,9 +34,9 @@ import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -69,7 +69,7 @@ public class IterativeJob extends TaskWorker {
     }
   }
 
-  private static class IterativeSourceTask extends BaseBatchSource implements Receptor {
+  private static class IterativeSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
     private DataSet<Object> input;
@@ -96,7 +96,7 @@ public class IterativeJob extends TaskWorker {
     }
   }
 
-  private static class PartitionTask extends BaseBatchSink implements Collector<Object> {
+  private static class PartitionTask extends BaseSink implements Collector<Object> {
     private static final long serialVersionUID = -5190777711234234L;
 
     private List<String> list = new ArrayList<>();

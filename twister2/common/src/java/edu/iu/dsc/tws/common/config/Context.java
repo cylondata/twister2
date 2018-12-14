@@ -70,6 +70,7 @@ public class Context {
       "twister2.hadoop.home", "${HADOOP_HOME}", null, "HADOOP_HOME");
 
   public static final String JOB_NAME = "twister2.job.name";
+  public static final String JOB_OBJECT = "twister2.job.object";
 
   // an internal property to represent the container id
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";

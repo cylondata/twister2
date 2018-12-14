@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.op.Communicator;
 
 /**
  * Hashing selector, that does hash based selection for keys
@@ -30,7 +30,7 @@ public class HashingSelector implements DestinationSelector {
   private Map<Integer, List<Integer>> destination = new HashMap<>();
 
   @Override
-  public void prepare(Set<Integer> sources, Set<Integer> destinations) {
+  public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations) {
     initialize(sources, destinations);
   }
 
@@ -39,11 +39,6 @@ public class HashingSelector implements DestinationSelector {
       ArrayList<Integer> destList = new ArrayList<>(destinations);
       destination.put(s, destList);
     }
-  }
-
-  @Override
-  public void prepare(MessageType type, Set<Integer> sources, Set<Integer> destinations) {
-    initialize(sources, destinations);
   }
 
   @Override

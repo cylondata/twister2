@@ -22,10 +22,9 @@ import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public abstract class BenchTaskWorker extends TaskWorker {
   private static final Logger LOG = Logger.getLogger(BenchTaskWorker.class.getName());
@@ -71,7 +70,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   public abstract TaskGraphBuilder buildTaskGraph();
 
-  protected static class SourceBatchTask extends BaseBatchSource {
+  protected static class SourceBatchTask extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
     private int count = 0;
     private String edge;
@@ -102,7 +101,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
     }
   }
 
-  protected static class KeyedSourceBatchTask extends BaseBatchSource {
+  protected static class KeyedSourceBatchTask extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
 
     private String edge;
@@ -134,7 +133,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
     }
   }
 
-  protected static class SourceStreamTask extends BaseStreamSource {
+  protected static class SourceStreamTask extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
     private int count = 0;
     private String edge;
@@ -161,7 +160,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
     }
   }
 
-  protected static class KeyedSourceStreamTask extends BaseStreamSource {
+  protected static class KeyedSourceStreamTask extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
 
     private String edge;

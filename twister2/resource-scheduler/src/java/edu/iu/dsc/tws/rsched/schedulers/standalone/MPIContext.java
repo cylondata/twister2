@@ -31,6 +31,10 @@ public class MPIContext extends SchedulerContext {
 
   public static final String NODES_ON_SHARED_FS = "twister2.resource.sharedfs";
 
+  public static final String JIP = "__job_master_ip__";
+
+  public static final String JPORT = "__job_master_port__";
+
   public static String workingDirectory(Config config) {
     return TokenSub.substitute(config, config.getStringValue(WORKING_DIRECTORY,
         "${HOME}/.twister2/jobs"), Context.substitutions);

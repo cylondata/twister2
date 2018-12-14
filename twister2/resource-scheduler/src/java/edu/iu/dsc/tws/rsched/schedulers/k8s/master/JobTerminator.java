@@ -25,38 +25,38 @@ public class JobTerminator implements IJobTerminator {
   public JobTerminator(String namespace) {
     this.namespace = namespace;
     controller = new KubernetesController();
-    controller.init();
+    controller.init(namespace);
   }
 
   @Override
   public boolean terminateJob(String jobName) {
     // delete the StatefulSets for workers
-    ArrayList<String> ssNameLists = controller.getStatefulSetsForJobWorkers(namespace, jobName);
+    ArrayList<String> ssNameLists = controller.getStatefulSetsForJobWorkers(jobName);
     boolean ssForWorkersDeleted = true;
     for (String ssName: ssNameLists) {
-      ssForWorkersDeleted &= controller.deleteStatefulSet(namespace, ssName);
+      ssForWorkersDeleted &= controller.deleteStatefulSet(ssName);
     }
 
     // delete the job service
     String serviceName = KubernetesUtils.createServiceName(jobName);
-    boolean serviceForWorkersDeleted = controller.deleteService(namespace, serviceName);
+    boolean serviceForWorkersDeleted = controller.deleteService(serviceName);
 
     // delete the job master service
     String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobName);
-    boolean serviceForJobMasterDeleted = controller.deleteService(namespace, jobMasterServiceName);
+    boolean serviceForJobMasterDeleted = controller.deleteService(jobMasterServiceName);
 
     // delete the persistent volume claim
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
-    boolean pvcDeleted = controller.deletePersistentVolumeClaim(namespace, pvcName);
+    boolean pvcDeleted = controller.deletePersistentVolumeClaim(pvcName);
 
     // delete the ConfigMap for job master
     String configMapName = KubernetesUtils.createJobMasterConfigMapName(jobName);
-    boolean configMapDeleted = controller.deleteConfigMap(namespace, configMapName);
+    boolean configMapDeleted = controller.deleteConfigMap(configMapName);
 
     // last delete the job master StatefulSet
     String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
     boolean ssForJobMasterDeleted =
-        controller.deleteStatefulSet(namespace, jobMasterStatefulSetName);
+        controller.deleteStatefulSet(jobMasterStatefulSetName);
 
     return ssForWorkersDeleted
         && serviceForWorkersDeleted

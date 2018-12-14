@@ -33,6 +33,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.dfw.ChannelListener;
@@ -52,24 +55,10 @@ import mpi.Status;
  * The transport threads doesn't handle the message serialization and it is left to the
  * application level.
  */
+@SuppressWarnings("VisibilityModifier")
 public class TWSMPIChannel implements TWSChannel {
   private static final Logger LOG = Logger.getLogger(TWSMPIChannel.class.getName());
 
-  /**
-   * Worker id
-   */
-  private int executor;
-
-  /**
-   * Some debug counters
-   */
-  private int sendCount = 0;
-  private int completedSendCount = 0;
-  private int receiveCount = 0;
-  private int pendingReceiveCount = 0;
-  private boolean debug = false;
-
-  @SuppressWarnings("VisibilityModifier")
   private class MPIRequest {
     Request request;
     DataBuffer buffer;
@@ -80,7 +69,6 @@ public class TWSMPIChannel implements TWSChannel {
     }
   }
 
-  @SuppressWarnings("VisibilityModifier")
   private class MPIReceiveRequests {
     List<MPIRequest> pendingRequests;
     int rank;
@@ -88,8 +76,7 @@ public class TWSMPIChannel implements TWSChannel {
     ChannelListener callback;
     Queue<DataBuffer> availableBuffers;
 
-    MPIReceiveRequests(int rank, int e,
-                       ChannelListener callback, Queue<DataBuffer> buffers) {
+    MPIReceiveRequests(int rank, int e, ChannelListener callback, Queue<DataBuffer> buffers) {
       this.rank = rank;
       this.edge = e;
       this.callback = callback;
@@ -98,7 +85,6 @@ public class TWSMPIChannel implements TWSChannel {
     }
   }
 
-  @SuppressWarnings("VisibilityModifier")
   private class MPISendRequests {
     List<MPIRequest> pendingSends;
     int rank;
@@ -106,8 +92,7 @@ public class TWSMPIChannel implements TWSChannel {
     ChannelMessage message;
     ChannelListener callback;
 
-    MPISendRequests(int rank, int e,
-                    ChannelMessage message, ChannelListener callback) {
+    MPISendRequests(int rank, int e, ChannelMessage message, ChannelListener callback) {
       this.rank = rank;
       this.edge = e;
       this.message = message;
@@ -136,40 +121,62 @@ public class TWSMPIChannel implements TWSChannel {
    */
   private List<MPISendRequests> waitForCompletionSends;
 
+  /**
+   * Holds requests that are pending for close
+   */
+  private List<Pair<Integer, Integer>> pendingCloseRequests = new ArrayList<>();
 
-  public TWSMPIChannel(Config config, Intracomm comm, int exec) {
+  /**
+   * Worker id
+   */
+  private int workerId;
+
+  /**
+   * Some debug counters
+   */
+  private int sendCount = 0;
+  private int completedSendCount = 0;
+  private int receiveCount = 0;
+  private int pendingReceiveCount = 0;
+  private boolean debug = false;
+  private int completedReceives = 0;
+
+  /**
+   * Constructs the MPI channel
+   * @param config configuration
+   * @param comm communicator
+   * @param worker worker id
+   */
+  public TWSMPIChannel(Config config, Intracomm comm, int worker) {
     this.comm = comm;
     int pendingSize = DataFlowContext.networkChannelPendingSize(config);
     this.pendingSends = new ArrayBlockingQueue<MPISendRequests>(pendingSize);
     this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
     this.waitForCompletionSends = Collections.synchronizedList(new ArrayList<>(1024));
-    this.executor = exec;
+    this.workerId = worker;
   }
 
   /**
    * Send messages to the particular id
    *
-   * @param id id to be used for sending messages
+   * @param wId id to be used for sending messages
    * @param message the message
    * @return true if the message is accepted to be sent
    */
-  public boolean sendMessage(int id, ChannelMessage message, ChannelListener callback) {
-    boolean offer = pendingSends.offer(
-        new MPISendRequests(id, message.getHeader().getEdge(), message, callback));
-//    LOG.info(String.format("%d Pending sends count: %d wait: %d",
-//        executor, pendingSends.size(), waitForCompletionSends.size()));
-    return offer;
+  public boolean sendMessage(int wId, ChannelMessage message, ChannelListener callback) {
+    return pendingSends.offer(
+        new MPISendRequests(wId, message.getHeader().getEdge(), message, callback));
   }
 
   /**
    * Register our interest to receive messages from particular rank using a stream
    *
+   * @param wId worker id to listen to
    * @return true if the message is accepted
    */
-  public boolean receiveMessage(int rank, int stream,
+  public boolean receiveMessage(int wId, int e,
                                 ChannelListener callback, Queue<DataBuffer> receiveBuffers) {
-    return registeredReceives.add(new MPIReceiveRequests(rank, stream, callback,
-        receiveBuffers));
+    return registeredReceives.add(new MPIReceiveRequests(wId, e, callback, receiveBuffers));
   }
 
   @Override
@@ -226,13 +233,6 @@ public class TWSMPIChannel implements TWSChannel {
     }
   }
 
-
-  public void setDebug(boolean deb) {
-    debug = deb;
-  }
-
-  private int completedReceives = 0;
-
   /**
    * Progress the communications that are pending
    */
@@ -251,7 +251,7 @@ public class TWSMPIChannel implements TWSChannel {
     for (int i = 0; i < registeredReceives.size(); i++) {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
       if (debug) {
-        LOG.info(String.format("%d available receive %d %d %s", executor, receiveRequests.rank,
+        LOG.info(String.format("%d available receive %d %d %s", workerId, receiveRequests.rank,
             receiveRequests.availableBuffers.size(), receiveRequests.availableBuffers.peek()));
       }
       // okay we have more buffers to be posted
@@ -294,7 +294,7 @@ public class TWSMPIChannel implements TWSChannel {
     if (debug) {
       LOG.info(String.format(
           "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
-          executor, sendCount, completedSendCount, receiveCount,
+          workerId, sendCount, completedSendCount, receiveCount,
           pendingReceiveCount, pendingSends.size(), waitForCompletionSends.size()));
     }
 
@@ -307,15 +307,12 @@ public class TWSMPIChannel implements TWSChannel {
           Status status = r.request.testStatus();
           if (status != null) {
             if (!status.isCancelled()) {
-//              LOG.info(String.format("%d Receive completed: from %d size %d %d",
-//                  executor, receiveRequests.rank, status.getCount(MPI.BYTE), ++receiveCount));
               ++receiveCount;
               // lets call the callback about the receive complete
               r.buffer.setSize(status.getCount(MPI.BYTE));
 
               receiveRequests.callback.onReceiveComplete(
                   receiveRequests.rank, receiveRequests.edge, r.buffer);
-//              LOG.info(String.format("%d finished calling the on complete method", executor));
               requestIterator.remove();
               if (receiveRequests.pendingRequests.size() == 0
                   && receiveRequests.availableBuffers.size() == 0) {
@@ -336,11 +333,53 @@ public class TWSMPIChannel implements TWSChannel {
         throw new RuntimeException("Twister2Network failure", e);
       }
     }
+
+    // if there are pending close requests, lets handle them
+    handlePendingCloseRequests();
+  }
+
+  /**
+   * Close all the pending requests
+   */
+  private void handlePendingCloseRequests() {
+    while (pendingCloseRequests.size() > 0) {
+      Pair<Integer, Integer> closeRequest = pendingCloseRequests.remove(0);
+
+      // clear up the receive requests
+      Iterator<MPIReceiveRequests> itr = registeredReceives.iterator();
+      while (itr.hasNext()) {
+        MPIReceiveRequests receiveRequests = itr.next();
+        if (receiveRequests.edge == closeRequest.getRight()
+            && receiveRequests.rank == closeRequest.getLeft()) {
+          for (MPIRequest r : receiveRequests.pendingRequests) {
+            try {
+              r.request.cancel();
+            } catch (MPIException e) {
+              LOG.log(Level.WARNING, String.format("MPI Receive cancel error: rank %d edge %d",
+                  closeRequest.getLeft(), closeRequest.getRight()));
+            }
+          }
+          receiveRequests.pendingRequests.clear();
+          itr.remove();
+        }
+      }
+      // lets not handle any send requests as they will complete eventually
+    }
   }
 
   @Override
   public ByteBuffer createBuffer(int capacity) {
     return MPI.newByteBuffer(capacity);
+  }
+
+  /**
+   * Close a worker id with edge
+   *
+   * @param wId worker id
+   * @param e edge
+   */
+  public void releaseBuffers(int wId, int e) {
+    pendingCloseRequests.add(new ImmutablePair<>(wId, e));
   }
 }
 
