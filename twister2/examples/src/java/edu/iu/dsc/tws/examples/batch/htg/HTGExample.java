@@ -39,10 +39,10 @@ import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
@@ -118,7 +118,7 @@ public class HTGExample extends TaskWorker {
 
   }//End of execute method
 
-  private static class HTGSourceTask extends BaseBatchSource implements Receptor {
+  private static class HTGSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
     @Override
@@ -133,7 +133,7 @@ public class HTGExample extends TaskWorker {
     }
   }
 
-  private static class HTGReduceTask extends BaseBatchSink implements Collector<Object> {
+  private static class HTGReduceTask extends BaseSink implements Collector<Object> {
     private static final long serialVersionUID = -5190777711234234L;
 
     @Override

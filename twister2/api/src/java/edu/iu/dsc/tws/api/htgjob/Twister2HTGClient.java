@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.client.JMWorkerController;
-import edu.iu.dsc.tws.master.client.Pinger;
+import edu.iu.dsc.tws.master.worker.JMWorkerController;
+import edu.iu.dsc.tws.master.worker.Pinger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 
@@ -127,7 +127,8 @@ public class Twister2HTGClient {
     long interval = JobMasterContext.pingInterval(config);
 
     //TODO: dO we need this?
-    pinger = new Pinger(thisWorker, rrClient, interval);
+//    pinger = new Pinger(thisWorker, rrClient, interval);
+// todo: pinger constructor has changed. hence removing this temporarily
     //pinger = new Pinger(thisClient, rrClient, interval);
 
     //jmWorkerController = new JMWorkerController(config, thisClient, rrClient, numberOfWorkers);

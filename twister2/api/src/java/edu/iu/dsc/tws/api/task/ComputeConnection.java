@@ -25,8 +25,8 @@ import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
-import edu.iu.dsc.tws.task.graph.HierarchicalTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
 
 /**
  * Represents a compute connection.

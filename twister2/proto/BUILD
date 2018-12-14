@@ -72,6 +72,7 @@ native.proto_library(
         "job_state.proto",
         "jobmaster.proto",
         "taskscheduleplan.proto",
+        "htgjob.proto",
     ],
     proto_source_root = "twister2/proto",
 )
