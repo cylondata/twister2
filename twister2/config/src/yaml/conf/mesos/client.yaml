@@ -37,6 +37,9 @@ worker.compute.resources:
 # please provide the requested port names as a list
 twister2.worker.additional.ports: ["port1", "port2", "port3"]
 
+# driver class to run
+twister2.job.driver.class: "edu.iu.dsc.tws.examples.internal.rsched.DriverExample"
+
 # nfs server address
 nfs.server.address: "149.165.150.81"
 

@@ -73,7 +73,7 @@ public class BasicK8sWorker implements IWorker {
       return;
     }
 
-    LOG.info("All workers joined. Current time: " + System.currentTimeMillis());
+    LOG.info(workerList.size() + " workers joined. Current time: " + System.currentTimeMillis());
 
     Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode =
         WorkerResourceUtils.getWorkersPerNode(workerList);

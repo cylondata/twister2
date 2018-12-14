@@ -29,12 +29,36 @@ public final class ComputeResourceUtils {
         .build();
   }
 
+  public static JobAPI.ComputeResource updateComputeResourceIndex(int newIndex,
+                                                           JobAPI.ComputeResource computeResource) {
+    return JobAPI.ComputeResource.newBuilder()
+        .setIndex(newIndex)
+        .setCpu(computeResource.getCpu())
+        .setRamMegaBytes(computeResource.getRamMegaBytes())
+        .setDiskGigaBytes(computeResource.getDiskGigaBytes())
+        .setInstances(computeResource.getInstances())
+        .setScalable(computeResource.getScalable())
+        .setWorkersPerPod(computeResource.getWorkersPerPod())
+        .build();
+  }
+
   public static long getRamInBytes(JobAPI.ComputeResource computeResource) {
     return computeResource.getRamMegaBytes() * 1024L * 1024;
   }
 
   public static long getDiskInBytes(JobAPI.ComputeResource computeResource) {
     return (long) (computeResource.getDiskGigaBytes() * 1024 * 1024 * 1024);
+  }
+
+  /**
+   * covert the given ComputeResource to a one line String for logging output
+   * @return
+   */
+  public static String toString(JobAPI.ComputeResource cr) {
+    return String.format("ComputeResource[%d]: cpu: %.1f, ram: %d MB, disk: %.1f GB, "
+            + "instances: %d, scalable: %b workersPerPod: %d",
+        cr.getIndex(), cr.getCpu(), cr.getRamMegaBytes(), cr.getDiskGigaBytes(),
+        cr.getInstances(), cr.getScalable(), cr.getWorkersPerPod());
   }
 
 }

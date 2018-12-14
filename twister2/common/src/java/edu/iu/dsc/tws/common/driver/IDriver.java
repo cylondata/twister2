@@ -9,7 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master.sclient;
+package edu.iu.dsc.tws.common.driver;
 
-public class JMClientController {
+/**
+ * An instance of this class will be executed in the submitting client,
+ * if it is specified in Twister2Job
+ */
+public interface IDriver {
+
+  /**
+   * After the job is submitted,
+   * an instance of this method will be executed in the submitting client
+   *
+   * Implementing Driver program can communicate with the JobMaster and workers
+   * with the provided IDriverController
+   *
+   * @param driverController
+   */
+  void execute(IDriverController driverController);
 }

@@ -25,6 +25,7 @@ public class SchedulerContext extends Context {
   public static final String LAUNCHER_CLASS = "twister2.class.launcher";
   public static final String UPLOADER_CLASS = "twister2.class.uploader";
   public static final String WORKER_CLASS = "twister2.job.worker.class";
+  public static final String DRIVER_CLASS = "twister2.job.driver.class";
   public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
 
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
@@ -83,6 +84,10 @@ public class SchedulerContext extends Context {
 
   public static String workerClass(Config cfg) {
     return cfg.getStringValue(WORKER_CLASS);
+  }
+
+  public static String driverClass(Config cfg) {
+    return cfg.getStringValue(DRIVER_CLASS);
   }
 
   public static String packagesPath(Config cfg) {
