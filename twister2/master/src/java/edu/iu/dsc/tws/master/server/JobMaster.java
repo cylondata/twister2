@@ -214,7 +214,7 @@ public class JobMaster {
     rrServer = new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID,
         connectHandler, JobMasterContext.jobMasterAssignsWorkerIDs(config));
 
-    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, numberOfWorkers,
+    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job,
         JobMasterContext.jobMasterAssignsWorkerIDs(config));
 
     barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);

@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * This class monitors the workers in a job
@@ -56,14 +57,22 @@ public class WorkerMonitor implements MessageHandler {
   private HashMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
 
+  // workersPerPod in scalable compute resource and replicas of that resource
+  private int workersPerPod;
+  private int replicas;
+
   public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, DashboardClient dashClient,
-                       int numWorkers, boolean jobMasterAssignsWorkerIDs) {
+                       JobAPI.Job job, boolean jobMasterAssignsWorkerIDs) {
     this.jobMaster = jobMaster;
     this.rrServer = rrServer;
     this.dashClient = dashClient;
 
-    this.numberOfWorkers = numWorkers;
+    this.numberOfWorkers = job.getNumberOfWorkers();
     this.jobMasterAssignsWorkerIDs = jobMasterAssignsWorkerIDs;
+
+    this.replicas = job.getComputeResource(job.getComputeResourceCount() - 1).getInstances();
+    this.workersPerPod =
+        job.getComputeResource(job.getComputeResourceCount() - 1).getWorkersPerPod();
 
     workers = new HashMap<>();
     waitList = new HashMap<>();
@@ -234,6 +243,10 @@ public class WorkerMonitor implements MessageHandler {
         .setIndex(scaleMessage.getIndex())
         .setInstances(scaleMessage.getInstances())
         .build();
+
+    // modify numberOfWorkers and replicas
+    numberOfWorkers += (scaleMessage.getInstances() - replicas) * workersPerPod;
+    replicas = scaleMessage.getInstances();
 
     rrServer.sendResponse(id, scaleResponse);
     LOG.fine("ScaleResponse sent to the client: \n" + scaleResponse);

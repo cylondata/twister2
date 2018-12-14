@@ -11,5 +11,47 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.rsched;
 
-public class DriverExample {
+import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.common.driver.IDriver;
+import edu.iu.dsc.tws.common.driver.IDriverController;
+
+public class DriverExample implements IDriver {
+  private static final Logger LOG = Logger.getLogger(DriverExample.class.getName());
+
+  @Override
+  public void execute(IDriverController driverController) {
+
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    LOG.info("Will scale up workers by 4");
+    driverController.scaleUpWorkers(4);
+
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    LOG.info("Will scale up workers by 2");
+    driverController.scaleUpWorkers(2);
+
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    LOG.info("Will scale down workers by 4");
+    driverController.scaleDownWorkers(4);
+
+    LOG.info("Driver finished execution.");
+  }
 }

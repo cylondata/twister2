@@ -177,7 +177,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     K8SDriverController driverController =
         new K8SDriverController(config, jobMasterIP, job, jobPackageFile, controller);
 
-    String driverClass = job.getWorkerClassName();
+    String driverClass = job.getDriverClassName();
     IDriver driver;
     try {
       Object object = ReflectionUtils.newInstance(driverClass);
@@ -189,6 +189,8 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     }
 
     driver.execute(driverController);
+    driverController.close();
+
     return true;
   }
 

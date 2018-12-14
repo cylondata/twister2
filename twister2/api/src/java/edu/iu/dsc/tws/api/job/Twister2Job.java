@@ -206,6 +206,7 @@ public final class Twister2Job {
     return Twister2Job.newBuilder()
         .setJobName(Context.jobName(config))
         .setWorkerClass(SchedulerContext.workerClass(config))
+        .setDriverClass(SchedulerContext.driverClass(config))
         .loadComputeResources(config)
         .setConfig(jobConfig)
         .build();

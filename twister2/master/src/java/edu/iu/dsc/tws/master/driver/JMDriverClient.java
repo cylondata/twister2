@@ -188,7 +188,7 @@ public class JMDriverClient {
     startLooping();
   }
 
-  public boolean sendScaleMessage(int computeResourceIndex, int instances) {
+  public boolean sendScaledMessage(int computeResourceIndex, int instances) {
     JobMasterAPI.ScaledComputeResource scaleComputeResource =
         JobMasterAPI.ScaledComputeResource.newBuilder()
             .setIndex(computeResourceIndex)

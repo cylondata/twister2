@@ -33,11 +33,16 @@ public class K8SDriverController implements IDriverController {
   private JMDriverClient driverClient;
   private JobAPI.Job job;
   private KubernetesController k8sController;
-  private String scalableSSName;
   private Config config;
-  private String jobPackageFile;
-  private int scalableSSReplicas;
+
+  // replicas and workersPerPod values for scalable compute resource (scalable statefulSet)
+  private String scalableSSName;
+  private int replicas;
   private int workersPerPod;
+  private int computeResourceIndex;
+
+  // job package file to be transferred to newly created pods
+  private String jobPackageFile;
 
   public K8SDriverController(Config config, String jmHost, JobAPI.Job job, String jobPackageFile,
                              KubernetesController k8sController) {
@@ -46,18 +51,16 @@ public class K8SDriverController implements IDriverController {
     this.jobPackageFile = jobPackageFile;
     this.k8sController = k8sController;
 
-    this.scalableSSReplicas =
-        job.getComputeResource(job.getComputeResourceCount() - 1).getInstances();
-
-    this.workersPerPod =
-        job.getComputeResource(job.getComputeResourceCount() - 1).getWorkersPerPod();
+    computeResourceIndex = job.getComputeResourceCount() - 1;
+    this.replicas = job.getComputeResource(computeResourceIndex).getInstances();
+    this.workersPerPod = job.getComputeResource(computeResourceIndex).getWorkersPerPod();
 
     scalableSSName = KubernetesUtils.createWorkersStatefulSetName(
         job.getJobName(), job.getComputeResourceCount() - 1);
 
     int jmPort = JobMasterContext.jobMasterPort(config);
     driverClient = new JMDriverClient(config, jmHost, jmPort);
-
+    driverClient.startThreaded();
   }
 
   /**
@@ -88,7 +91,7 @@ public class K8SDriverController implements IDriverController {
     }
 
     boolean scaledUp =
-        k8sController.patchStatefulSet(scalableSSName, scalableSSReplicas + podsToAdd);
+        k8sController.patchStatefulSet(scalableSSName, replicas + podsToAdd);
     if (!scaledUp) {
       return false;
     }
@@ -100,12 +103,14 @@ public class K8SDriverController implements IDriverController {
       // if scaling up pods is successful but uploading is unsuccessful,
       // scale down again
       if (!uploaded) {
-        k8sController.patchStatefulSet(scalableSSName, scalableSSReplicas);
+        k8sController.patchStatefulSet(scalableSSName, replicas);
         return false;
       }
     }
 
-    scalableSSReplicas = scalableSSReplicas + podsToAdd;
+    replicas = replicas + podsToAdd;
+
+    driverClient.sendScaledMessage(computeResourceIndex, replicas);
     return true;
   }
 
@@ -128,16 +133,22 @@ public class K8SDriverController implements IDriverController {
 
     int podsToRemove = instancesToRemove / workersPerPod;
 
-    if (podsToRemove > scalableSSReplicas) {
+    if (podsToRemove > replicas) {
       LOG.severe(String.format("There are %d instances of scalable ComputeResource, "
-          + "and %d instances requested to be removed", scalableSSReplicas, podsToRemove));
+          + "and %d instances requested to be removed", replicas, podsToRemove));
       return false;
     }
 
-    boolean scaledDown =
-        k8sController.patchStatefulSet(scalableSSName, scalableSSReplicas - podsToRemove);
+    boolean scaledDown = k8sController.patchStatefulSet(scalableSSName, replicas - podsToRemove);
+    if (!scaledDown) {
+      return false;
+    }
 
-    return scaledDown;
+    // update replicas
+    replicas = replicas - podsToRemove;
+
+    // send scaled message to job master
+    return driverClient.sendScaledMessage(computeResourceIndex, replicas);
   }
 
   /**
@@ -161,7 +172,7 @@ public class K8SDriverController implements IDriverController {
     ArrayList<String> podNames = new ArrayList<>();
 
     // this is the index of the first pod that will be created
-    int podIndex = scalableSSReplicas;
+    int podIndex = replicas;
 
     for (int i = 0; i < instancesToAdd; i++) {
       String podName = KubernetesUtils.podNameFromStatefulSetName(scalableSSName, podIndex + i);
@@ -170,4 +181,12 @@ public class K8SDriverController implements IDriverController {
 
     return podNames;
   }
+
+  /**
+   * close the connection to the
+   */
+  public void close() {
+    driverClient.close();
+  }
+
 }
