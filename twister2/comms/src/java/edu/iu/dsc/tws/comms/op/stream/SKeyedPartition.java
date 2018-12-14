@@ -56,7 +56,7 @@ public class SKeyedPartition {
         DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
 
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(keyType, partition.getSources(), partition.getDestinations());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
 
   /**
@@ -102,5 +102,10 @@ public class SKeyedPartition {
    */
   public boolean hasPending() {
     return !partition.isComplete();
+  }
+
+  public void close() {
+    // deregister from the channel
+    partition.close();
   }
 }

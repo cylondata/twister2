@@ -84,6 +84,7 @@ public class SGather {
 
   public void close() {
     // deregister from the channel
+    gather.close();
   }
 
   /**

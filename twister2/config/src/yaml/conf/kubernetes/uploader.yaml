@@ -1,31 +1,51 @@
-# the directory where the file will be uploaded, make sure the user has the necessary permissions
-# to upload the file here.
+#########################################################################
+# When a job is submitted, the job package needs to be transferred to worker pods
+# Two upload methods are provided:
+#   a) Job Package Transfer Using kubectl file copy (default)
+#   b) Job Package Transfer Through a Web Server
+#
+# Following two configuration parameters control the uploading with the first method
+# when the submitting client uploads the job package directly to pods using kubectl copy
+#########################################################################
 
-twister2.uploader.directory: "/var/www/html/twister2/k8s/"
-twister2.uploader.directory.repository: "/var/www/html/twister2/k8s"
+# if the value of this parameter is true,
+# the job package is transferred from submitting client to pods directly
+# if it is false, the job package will be transferred to pods through the upload web server
+# default value is true
+twister2.kubernetes.client.to.pods.uploading: true
 
-twister2.download.directory: "http://149.165.150.81:8082/twister2/k8s"
+# When the job package is transferred from submitting client to pods directly,
+# upload attempts can either start after watching pods or immediately when StatefulSets are created
+# watching pods before starting file upload attempts is more accurate
+# it may be slightly slower to transfer the job package by watching pods though
+# default value is true
+twister2.kubernetes.uploader.watch.pods.starting: true
 
-# twister2.uploader.directory: "/root/.twister2/repository/"
-# twister2.uploader.directory.repository: "/root/.twister2/repository/"
+#########################################################################
+# Following configuration parameters sets up the upload web server,
+# when the job package is transferred through a webserver
+# Workers download the job package from this web server
+#########################################################################
+
+# the directory where the job package file will be uploaded,
+# make sure the user has the necessary permissions to upload the file there.
+
+# full directory path to upload the job package with scp
+twister2.uploader.directory: "/absolute/path/to/uploder/directory/"
+twister2.uploader.directory.repository: "/absolute/path/to/uploder/directory/"
+
+# web server link of the job package download directory
+# this is the same directory as the uploader directory
+twister2.download.directory: "http://webserver.address:port/download/dir/path"
+
 # This is the scp command options that will be used by the uploader, this can be used to
 # specify custom options such as the location of ssh keys.
 twister2.uploader.scp.command.options: "--chmod=+rwx"
 # The scp connection string sets the remote user name and host used by the uploader.
-twister2.uploader.scp.command.connection: "research@149.165.150.81"
+twister2.uploader.scp.command.connection: "user@uploadserver.address"
 # The ssh command options that will be used when connecting to the uploading host to execute
 # command such as delete files, make directories.
 twister2.uploader.ssh.command.options: ""
 # The ssh connection string sets the remote user name and host used by the uploader.
-twister2.uploader.ssh.command.connection: "research@149.165.150.81"
+twister2.uploader.ssh.command.connection: "user@uploadserver.address"
 
-# this is to upload the job package from submitting client to pods directly in Kubernetes
-# if this is false, job package will be transferred to pods through the upload web server
-# default value is true
-twister2.kubernetes.client.to.pods.uploading: true
-
-# When the uploading method is "client-to-pods",
-# upload attempts can either start after watching pods or immediately when StatefulSets are created
-# watching pods before starting file upload attempts is more accurate
-# it may be slightly slower to transfer the job package by watching pods though
-twister2.kubernetes.uploader.watch.pods.starting: true

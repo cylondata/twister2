@@ -61,11 +61,9 @@ def twister2_client_lib_resource_scheduler_files():
     return [
         "//twister2/resource-scheduler/src/java:resource-scheduler-java",
         "@commons_cli_commons_cli//jar",
-        "//twister2/proto:proto_job_java",
-        "//twister2/proto:proto_htgjob_java",
+        "//twister2/proto:proto-java",
         "//third_party:ompi_javabinding_java",
         "@com_google_guava_guava//jar",
-        "//twister2/proto:proto_job_state_java",
         "@commons_io_commons_io//jar",
         "@org_apache_commons_commons_compress//jar",
         "@org_apache_curator_curator_client//jar",

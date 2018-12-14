@@ -153,6 +153,8 @@ public class DataFlowAllReduce implements DataFlowOperation {
 
   @Override
   public void close() {
+    reduce.close();
+    broadcast.close();
   }
 
   @Override

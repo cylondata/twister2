@@ -36,6 +36,7 @@ public class SchedulerContext extends Context {
   public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
 
   public static final String WORKER_COMPUTE_RESOURCES = "worker.compute.resources";
+
   /**
    * These are specified as system properties when deploying a job
    */
@@ -69,6 +70,8 @@ public class SchedulerContext extends Context {
   public static final String DATACENTER_LABEL_KEY = "datacenter.labey.key";
   public static final String RACKS_LIST = "racks.list";
   public static final String DATACENTERS_LIST = "datacenters.list";
+
+  public static final String ADDITIONAL_PORTS = "twister2.worker.additional.ports";
 
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
@@ -145,6 +148,15 @@ public class SchedulerContext extends Context {
   public static boolean useOpenMPI(Config cfg) {
     return cfg.getStringValue("twister2.network.channel.class")
         .equals("edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel");
+  }
+
+  public static List<String> additionalPorts(Config cfg) {
+    return cfg.getStringList(ADDITIONAL_PORTS);
+  }
+
+  public static int numberOfAdditionalPorts(Config cfg) {
+    List<String> portNameList = additionalPorts(cfg);
+    return portNameList == null ? 0 : portNameList.size();
   }
 
   public static JobMasterAPI.NodeInfo getNodeInfo(Config cfg, String nodeIP) {

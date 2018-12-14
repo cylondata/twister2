@@ -11,22 +11,25 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.repositories;
 
-import java.util.Date;
-
+import edu.iu.dsc.tws.dashboard.data_models.Job;
+import edu.iu.dsc.tws.dashboard.data_models.JobState;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-import edu.iu.dsc.tws.dashboard.data_models.EntityState;
-import edu.iu.dsc.tws.dashboard.data_models.Job;
+import java.util.Date;
+import java.util.List;
 
 public interface JobRepository extends CrudRepository<Job, String> {
 
   @Modifying
   @Query("update Job job set job.state=?2 where job.id=?1")
-  int changeJobState(String jobId, EntityState entityState);
+  int changeJobState(String jobId, JobState jobState);
 
   @Modifying
   @Query("update Job job set job.heartbeatTime=?2 where job.id=?1")
   int heartbeat(String jobId, Date now);
+
+  @Query("select job.state, count(job.state) from Job job group by job.state")
+  List<Object[]> getStateStats();
 }

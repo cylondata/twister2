@@ -101,6 +101,14 @@ public abstract class KeyedBenchWorker implements IWorker {
     execute();
     // now progress
     progress();
+    // wait for the sync
+    try {
+      workerController.waitOnBarrier();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+    }
+    // let allows the specific example to close
+    close();
     // lets terminate the communicator
     communicator.close();
   }
@@ -116,6 +124,9 @@ public abstract class KeyedBenchWorker implements IWorker {
       // we should progress the communication directive
       progressCommunication();
     }
+  }
+
+  public void close() {
   }
 
   protected abstract void progressCommunication();

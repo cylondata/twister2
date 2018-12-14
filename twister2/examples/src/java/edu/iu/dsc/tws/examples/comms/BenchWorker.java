@@ -94,6 +94,8 @@ public abstract class BenchWorker implements IWorker {
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
+    // let allows the specific example to close
+    close();
     // lets terminate the communicator
     communicator.close();
   }
@@ -117,6 +119,9 @@ public abstract class BenchWorker implements IWorker {
   protected abstract boolean isDone();
 
   protected abstract boolean sendMessages(int task, Object data, int flag);
+
+  public void close() {
+  }
 
   protected void finishCommunication(int src) {
   }

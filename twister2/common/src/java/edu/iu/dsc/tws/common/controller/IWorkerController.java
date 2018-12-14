@@ -78,4 +78,13 @@ public interface IWorkerController {
    * @return
    */
   void waitOnBarrier() throws TimeoutException;
+
+  /**
+   * Get object with a given name
+   * @param name name
+   * @return the object
+   */
+  default Object getRuntimeObject(String name) {
+    return null;
+  }
 }

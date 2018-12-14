@@ -95,4 +95,9 @@ public class BAllReduce {
   public void finish(int source) {
     reduce.finish(source);
   }
+
+  public void close() {
+    // deregister from the channel
+    reduce.close();
+  }
 }

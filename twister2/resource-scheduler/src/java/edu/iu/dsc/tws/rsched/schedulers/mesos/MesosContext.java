@@ -84,6 +84,7 @@ public final class MesosContext extends SchedulerContext {
     return cfg.getStringValue(USE_DOCKER_CONTAINER, DEFAULT_USE_DOCKER_CONTAINER);
   }
 
+
   public static String getMesosOverlayNetworkName(Config cfg) {
     return cfg.getStringValue(MESOS_OVERLAY_NETWORK_NAME);
   }
