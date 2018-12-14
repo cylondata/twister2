@@ -143,6 +143,10 @@ public class JobMasterClient {
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(scaleMessageBuilder, responseMessageHandler);
 
+    JobMasterAPI.HTGJobRequest.Builder htgJobRequestBuilder
+        = JobMasterAPI.HTGJobRequest.newBuilder();
+    rrClient.registerResponseHandler(htgJobRequestBuilder, responseMessageHandler);
+
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
 

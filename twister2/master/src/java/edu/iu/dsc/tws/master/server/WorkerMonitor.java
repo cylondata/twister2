@@ -104,9 +104,23 @@ public class WorkerMonitor implements MessageHandler {
           (JobMasterAPI.ScaledComputeResource) message;
       scaledMessageReceived(id, scaleMessage);
 
+    } else if (message instanceof JobMasterAPI.HTGJobRequest) {
+      JobMasterAPI.HTGJobRequest wscMessage = (JobMasterAPI.HTGJobRequest) message;
+      stateChangeMessageReceived(id, wscMessage);
+
     } else {
       LOG.log(Level.SEVERE, "Un-known message received: " + message);
     }
+  }
+
+  private void stateChangeMessageReceived(RequestID id, JobMasterAPI.HTGJobRequest wscMessage) {
+
+    JobMasterAPI.HTGJobResponse htgJobResponse = JobMasterAPI.HTGJobResponse.newBuilder()
+        .setHtgSubgraphname(wscMessage.getExecuteMessage() + "finished")
+        .build();
+
+    rrServer.sendResponse(id, htgJobResponse);
+    LOG.info("HTGClient response sent to the HTGClient: \n" + htgJobResponse);
   }
 
   private void pingMessageReceived(RequestID id, JobMasterAPI.Ping ping) {

@@ -29,8 +29,8 @@ public final class ComputeResourceUtils {
         .build();
   }
 
-  public static JobAPI.ComputeResource updateComputeResourceIndex(int newIndex,
-                                                                  JobAPI.ComputeResource computeResource) {
+  public static JobAPI.ComputeResource updateComputeResourceIndex(
+      int newIndex, JobAPI.ComputeResource computeResource) {
     return JobAPI.ComputeResource.newBuilder()
         .setIndex(newIndex)
         .setCpu(computeResource.getCpu())

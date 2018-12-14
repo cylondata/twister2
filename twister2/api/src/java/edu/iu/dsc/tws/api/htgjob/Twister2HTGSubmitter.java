@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
@@ -83,6 +84,7 @@ public final class Twister2HTGSubmitter {
         .setWorkerClass(workerclassName)
         .addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
             subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances())
+        .setDriverClass(Twister2HTGDriverClient.class.getName())
         .setConfig(jobConfig)
         .build();
 
@@ -108,8 +110,9 @@ public final class Twister2HTGSubmitter {
                                       List<HTGJobAPI.ExecuteMessage> executeMessage,
                                       Twister2Job twister2Job, Config cfg) {
     //TODO:Remove this line after the integration
-    startJobMaster(twister2Job);
-    //submitJob(twister2Job, cfg);
+    //startJobMaster(twister2Job);
+
+    Twister2Submitter.submitJob(twister2Job, cfg);
 
     InetAddress htgClientIP = JMWorkerController.convertStringToIP("localhost");
     int htgClientPort = 10000 + (int) (Math.random() * 10000);
@@ -121,25 +124,24 @@ public final class Twister2HTGSubmitter {
         htgClientTempID, htgClientIP.getHostAddress(), htgClientPort, nodeInfo);
 
     //Now, we are starting only one client
-    Twister2HTGClient client = new Twister2HTGClient(config, htgClientInfo, htgJob);
-    Thread clientThread = client.startThreaded();
+    Twister2HTGDriverClient driver = new Twister2HTGDriverClient(config, htgClientInfo, htgJob);
+    Thread driverThread = driver.startThreaded();
 
-    if (clientThread == null) {
+    if (driverThread == null) {
       LOG.severe("HTG CClient can not initialize. Exiting ...");
       return null;
     }
 
-    for (int i = 0; i < executeMessage.size(); i++) {
+    for (HTGJobAPI.ExecuteMessage anExecuteMessage : executeMessage) {
+      driver.setExecuteMessage(anExecuteMessage);
+      driver.sendHTGDriverRequestMessage();
 
-      client.setExecuteMessage(executeMessage.get(i));
-
-      client.sendHTGClientRequestMessage();
       sleep(2000);
     }
 
     //TODO:Remove this part after the integration
     jobMaster.allWorkersCompleted();
-    client.close();
+    driver.close();
     return "HTG finished Completely";
   }
 
