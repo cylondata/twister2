@@ -76,10 +76,10 @@ public class JMSubmittingClient {
         RRServer.CLIENT_ID, connectHandler);
 
     // protocol buffer message registrations
-    JobMasterAPI.ScaleComputeResource.Builder scaleMessageBuilder =
-        JobMasterAPI.ScaleComputeResource.newBuilder();
-    JobMasterAPI.ScaleResponse.Builder scaleResponseBuilder
-        = JobMasterAPI.ScaleResponse.newBuilder();
+    JobMasterAPI.ScaledComputeResource.Builder scaleMessageBuilder =
+        JobMasterAPI.ScaledComputeResource.newBuilder();
+    JobMasterAPI.ScaledResponse.Builder scaleResponseBuilder
+        = JobMasterAPI.ScaledResponse.newBuilder();
 
     ResponseMessageHandler responseMessageHandler = new ResponseMessageHandler();
     rrClient.registerResponseHandler(scaleMessageBuilder, responseMessageHandler);
@@ -189,8 +189,8 @@ public class JMSubmittingClient {
   }
 
   public boolean sendScaleMessage(int computeResourceIndex, int instances) {
-    JobMasterAPI.ScaleComputeResource scaleComputeResource =
-        JobMasterAPI.ScaleComputeResource.newBuilder()
+    JobMasterAPI.ScaledComputeResource scaleComputeResource =
+        JobMasterAPI.ScaledComputeResource.newBuilder()
             .setIndex(computeResourceIndex)
             .setInstances(instances)
             .build();
@@ -215,7 +215,7 @@ public class JMSubmittingClient {
     @Override
     public void onMessage(RequestID id, int workerId, Message message) {
 
-      if (message instanceof JobMasterAPI.ScaleResponse) {
+      if (message instanceof JobMasterAPI.ScaledResponse) {
 
         LOG.info("Received ScaleResponse message from JobMaster. \n" + message);
 

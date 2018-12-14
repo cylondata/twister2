@@ -238,10 +238,10 @@ public class JobMaster {
     JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
         JobMasterAPI.BarrierResponse.newBuilder();
 
-    JobMasterAPI.ScaleComputeResource.Builder scaleMessageBuilder =
-        JobMasterAPI.ScaleComputeResource.newBuilder();
-    JobMasterAPI.ScaleResponse.Builder scaleResponseBuilder
-        = JobMasterAPI.ScaleResponse.newBuilder();
+    JobMasterAPI.ScaledComputeResource.Builder scaleMessageBuilder =
+        JobMasterAPI.ScaledComputeResource.newBuilder();
+    JobMasterAPI.ScaledResponse.Builder scaleResponseBuilder
+        = JobMasterAPI.ScaledResponse.newBuilder();
 
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
     rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);

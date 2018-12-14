@@ -11,5 +11,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.rsched;
 
-public class BasicDriver {
+public class DriverExample {
 }

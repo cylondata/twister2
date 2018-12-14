@@ -78,7 +78,7 @@ public class WorkerMonitor implements MessageHandler {
 
     } else if (message instanceof JobMasterAPI.RegisterWorker) {
       JobMasterAPI.RegisterWorker rwMessage = (JobMasterAPI.RegisterWorker) message;
-      registerWorkerMessageReceived(id, rwMessage);
+      registerWorkerMessageReceived(id, workerId, rwMessage);
 
     } else if (message instanceof JobMasterAPI.WorkerStateChange) {
       JobMasterAPI.WorkerStateChange wscMessage = (JobMasterAPI.WorkerStateChange) message;
@@ -89,10 +89,11 @@ public class WorkerMonitor implements MessageHandler {
       JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
 
-    } else if (message instanceof JobMasterAPI.ScaleComputeResource) {
+    } else if (message instanceof JobMasterAPI.ScaledComputeResource) {
       LOG.log(Level.INFO, "ScaleComputeResource received: " + message.toString());
-      JobMasterAPI.ScaleComputeResource scaleMessage = (JobMasterAPI.ScaleComputeResource) message;
-      scaleMessageReceived(id, scaleMessage);
+      JobMasterAPI.ScaledComputeResource scaleMessage =
+          (JobMasterAPI.ScaledComputeResource) message;
+      scaledMessageReceived(id, scaleMessage);
 
     } else {
       LOG.log(Level.SEVERE, "Un-known message received: " + message);
@@ -124,7 +125,8 @@ public class WorkerMonitor implements MessageHandler {
 
   }
 
-  private void registerWorkerMessageReceived(RequestID id, JobMasterAPI.RegisterWorker message) {
+  private void registerWorkerMessageReceived(RequestID id, int workerId,
+                                             JobMasterAPI.RegisterWorker message) {
 
     LOG.fine("RegisterWorker message received: \n" + message);
     JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
@@ -225,9 +227,10 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
-  private void scaleMessageReceived(RequestID id, JobMasterAPI.ScaleComputeResource scaleMessage) {
+  private void scaledMessageReceived(RequestID id,
+                                     JobMasterAPI.ScaledComputeResource scaleMessage) {
 
-    JobMasterAPI.ScaleResponse scaleResponse = JobMasterAPI.ScaleResponse.newBuilder()
+    JobMasterAPI.ScaledResponse scaleResponse = JobMasterAPI.ScaledResponse.newBuilder()
         .setIndex(scaleMessage.getIndex())
         .setInstances(scaleMessage.getInstances())
         .build();

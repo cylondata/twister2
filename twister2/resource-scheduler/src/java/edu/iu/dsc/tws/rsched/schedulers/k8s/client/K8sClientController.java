@@ -57,6 +57,7 @@ public class K8sClientController implements IClientController {
 
     int jmPort = JobMasterContext.jobMasterPort(config);
     submittingClient = new JMSubmittingClient(config, jmHost, jmPort);
+
   }
 
   /**
