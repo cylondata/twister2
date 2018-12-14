@@ -85,6 +85,11 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
   }
 
   @Override
+  public void close() {
+    keyedGather.close();
+  }
+
+  @Override
   protected void progressCommunication() {
     keyedGather.progress();
   }

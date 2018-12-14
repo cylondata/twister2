@@ -39,10 +39,10 @@ import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
@@ -218,7 +218,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     return new WorkerPlan(workers);
   }
 
-  private static class SourceTask1 extends BaseBatchSource {
+  private static class SourceTask1 extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
 
     @Override
@@ -227,7 +227,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     }
   }
 
-  private static class SourceTask2 extends BaseBatchSource {
+  private static class SourceTask2 extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
 
     @Override
@@ -236,7 +236,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     }
   }
 
-  private static class ReceivingTask extends BaseBatchSink {
+  private static class ReceivingTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
     private Config config;
@@ -271,7 +271,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     }
   }
 
-  private static class MergingTask extends BaseBatchSink {
+  private static class MergingTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -285,7 +285,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     }
   }
 
-  private static class FinalTask extends BaseBatchSink {
+  private static class FinalTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

@@ -14,7 +14,12 @@ package edu.iu.dsc.tws.master;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 
+/**
+ * Configuration parameters for JobMaster
+ */
 public class JobMasterContext extends Context {
+  // weather to use job master
+  public static final String JOB_MASTER_USED = "twister2.job.master.used";
 
   // if true, the job master runs in the submitting client
   public static final boolean JOB_MASTER_RUNS_IN_CLIENT_DEFAULT = false;
@@ -33,6 +38,8 @@ public class JobMasterContext extends Context {
   public static final String JOB_MASTER_PORT = "twister2.job.master.port";
 
   public static final String JOB_MASTER_IP = "twister2.job.master.ip";
+
+  public static final String DASHBOARD_HOST = "twister2.dashboard.host";
 
   // worker to master response wait time in milliseconds
   public static final long WORKER_TO_JOB_MASTER_RESPONSE_WAIT_DURATION_DEFAULT = 1000;
@@ -103,6 +110,14 @@ public class JobMasterContext extends Context {
 
   public static int jobMasterRAM(Config cfg) {
     return cfg.getIntegerValue(JOB_MASTER_RAM, JOB_MASTER_RAM_DEFAULT);
+  }
+
+  public static String dashboardHost(Config cfg) {
+    return cfg.getStringValue(DASHBOARD_HOST);
+  }
+
+  public static boolean isJobMasterUsed(Config cfg) {
+    return cfg.getBooleanValue(JOB_MASTER_USED, true);
   }
 
 }

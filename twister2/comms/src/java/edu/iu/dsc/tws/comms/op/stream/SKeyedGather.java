@@ -78,7 +78,7 @@ public class SKeyedGather {
         new GatherMultiStreamingPartialReceiver(), edges, keyType, dataType);
     this.keyedGather.init(comm.getConfig(), dataType, plan);
     this.destinationSelector = destSelector;
-    this.destinationSelector.prepare(keyType, sources, targets);
+    this.destinationSelector.prepare(comm, sources, targets);
 
   }
 
@@ -121,5 +121,10 @@ public class SKeyedGather {
    */
   public boolean progress() {
     return keyedGather.progress();
+  }
+
+  public void close() {
+    // deregister from the channel
+    keyedGather.close();
   }
 }

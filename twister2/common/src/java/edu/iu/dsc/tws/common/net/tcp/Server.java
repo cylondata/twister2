@@ -201,7 +201,7 @@ public class Server implements SelectHandler {
   public void handleAccept(SelectableChannel ch) {
     try {
       SocketChannel socketChannel = serverSocketChannel.accept();
-      LOG.log(Level.INFO, "Accepted connection: " + socketChannel);
+      LOG.log(Level.FINE, "Accepted connection: " + socketChannel);
       if (socketChannel != null) {
         socketChannel.configureBlocking(false);
         socketChannel.socket().setTcpNoDelay(true);

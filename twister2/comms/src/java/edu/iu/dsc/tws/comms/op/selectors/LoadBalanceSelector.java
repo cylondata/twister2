@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.op.Communicator;
 
 public class LoadBalanceSelector implements DestinationSelector {
   private static final Logger LOG = Logger.getLogger(
@@ -32,7 +32,7 @@ public class LoadBalanceSelector implements DestinationSelector {
   private Map<Integer, Map<Integer, Integer>> invertedIndexes = new HashMap<>();
 
   @Override
-  public void prepare(Set<Integer> sources, Set<Integer> destinations) {
+  public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations) {
     for (int s : sources) {
       ArrayList<Integer> destList = new ArrayList<>(destinations);
       destination.put(s, destList);
@@ -43,10 +43,6 @@ public class LoadBalanceSelector implements DestinationSelector {
         value.put(destList.get(i), i);
       }
     }
-  }
-
-  @Override
-  public void prepare(MessageType type, Set<Integer> sources, Set<Integer> destinations) {
   }
 
   @Override

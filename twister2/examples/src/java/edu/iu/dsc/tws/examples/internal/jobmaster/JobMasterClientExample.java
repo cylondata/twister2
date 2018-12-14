@@ -23,21 +23,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.jobmaster;
 
-import java.net.InetAddress;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.client.JMWorkerController;
-import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.master.worker.JMWorkerController;
+import edu.iu.dsc.tws.master.worker.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
@@ -49,8 +54,9 @@ public final class JobMasterClientExample {
    * First, a JobMaster instance should be started on a machine
    * This client should connect to that server
    *
-   * NumberOfWorkers to join must be given as a command line parameter
-   * Each worker waits for all workers to join
+   * It reads config files from conf/kubernetes directory
+   * It uses the first ComputeResource in that config file as the ComputeResource of this worker
+   * Number of workers is the number of workers in the first ComputeResource
    *
    * When all workers joined, they get the full worker list
    * Then, each worker sends a barrier message
@@ -60,43 +66,45 @@ public final class JobMasterClientExample {
    */
   public static void main(String[] args) {
 
-    if (args.length != 1) {
-      printUsage();
-      return;
-    }
+    // we assume that the twister2Home is the current directory
+    String configDir = "conf/kubernetes/";
+    String twister2Home = Paths.get("").toAbsolutePath().toString();
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir);
+    config = updateConfig(config);
+    LOG.info("Loaded: " + config.size() + " parameters from configuration directory: " + configDir);
 
-    String jobMasterAddress = "localhost";
-    int numberOfWorkers = Integer.parseInt(args[0]);
+    Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
+    JobAPI.Job job = twister2Job.serialize();
 
-    Config config = buildConfig(jobMasterAddress, numberOfWorkers);
-
-    int workerTempID = 0;
-
-    simulateClient(config, workerTempID);
+    simulateClient(config, job);
   }
 
   /**
    * a method to simulate JobMasterClient running in workers
    */
-  public static void simulateClient(Config config, int workerTempID) {
+  public static void simulateClient(Config config, JobAPI.Job job) {
 
-    InetAddress workerIP = JMWorkerController.convertStringToIP("localhost");
+    String workerIP = JMWorkerController.convertStringToIP("localhost").getHostAddress();
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo("node.ip", "rack01", null);
-    JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
-        workerTempID, workerIP.getHostAddress(), workerPort, nodeInfo);
 
-    JobMasterClient client = new JobMasterClient(config, workerInfo);
-    Thread clientThread = client.startThreaded();
-    if (clientThread == null) {
-      LOG.severe("JobMasterClient can not initialize. Exiting ...");
-      return;
-    }
+    int workerTempID = 0;
+    JobAPI.ComputeResource computeResource = job.getComputeResource(0);
+    int numberOfWorkers = computeResource.getInstances() * computeResource.getWorkersPerPod();
+
+    Map<String, Integer> additionalPorts = generateAdditionalPorts(config, workerPort);
+
+    JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
+        workerTempID, workerIP, workerPort, nodeInfo, computeResource, additionalPorts);
+
+    String jobMasterAddress = "localhost";
+    int jobMasterPort = JobMasterContext.jobMasterPort(config);
+    JobMasterClient client =
+        new JobMasterClient(config, workerInfo, jobMasterAddress, jobMasterPort, numberOfWorkers);
+    client.startThreaded();
 
     IWorkerController workerController = client.getJMWorkerController();
-
-    client.sendWorkerStartingMessage();
 
     // wait up to 2sec
     sleeeep((long) (Math.random() * 2000));
@@ -115,9 +123,13 @@ public final class JobMasterClientExample {
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     // wait up to 10sec
-    sleeeep((long) (Math.random() * 10000));
-    client.getJMWorkerController().waitOnBarrier();
-    LOG.info("All workers reached the barrier. Proceeding.");
+    sleeeep((long) (Math.random() * 1000000));
+    try {
+      client.getJMWorkerController().waitOnBarrier();
+      LOG.info("All workers reached the barrier. Proceeding.");
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+    }
 
     // wait up to 3sec
     sleeeep((long) (Math.random() * 3000));
@@ -133,13 +145,34 @@ public final class JobMasterClientExample {
    * construct a Config object
    * @return
    */
-  public static Config buildConfig(String jobMasterAddress, int numberOfWorkers) {
+  public static Config updateConfig(Config config) {
     return Config.newBuilder()
-        .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
-        .put(JobMasterContext.PING_INTERVAL, 3000)
-        .put(JobMasterContext.JOB_MASTER_IP, jobMasterAddress)
+        .putAll(config)
         .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
         .build();
+  }
+
+  /**
+   * generate the additional requested ports for this worker
+   * @param config
+   * @param workerPort
+   * @return
+   */
+  public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
+
+    // if no port is requested, return null
+    List<String> portNames = SchedulerContext.additionalPorts(config);
+    if (portNames == null) {
+      return null;
+    }
+
+    HashMap<String, Integer> ports = new HashMap<>();
+    int i = 1;
+    for (String portName: portNames) {
+      ports.put(portName, workerPort + i++);
+    }
+
+    return ports;
   }
 
   public static void sleeeep(long duration) {

@@ -39,3 +39,18 @@ def t2_java_lib(name, srcs = [], deps = [], artifact_name = "", generate_pom = T
             artifact_name = artifact_name,
             targets = [":%s" % name],
         )
+
+def t2_proto_java_lib(name, deps = [], artifact_name = "", generate_pom = True):
+    native.java_proto_library(
+        name = name,
+        deps = deps,
+        tags = mvn_tag("edu.iu.dsc.tws", name, T2_VERSION),
+    )
+
+    if (generate_pom):
+        pom_file(
+            name = "pom",
+            artifact_id = name,
+            artifact_name = artifact_name,
+            targets = [":%s" % name],
+        )

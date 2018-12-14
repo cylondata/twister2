@@ -22,6 +22,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -174,5 +175,19 @@ public final class JobUtils {
 
     return null;
   }
+
+  public static String toString(JobAPI.Job job) {
+    String jobStr = "[jobName=" + job.getJobName() + "], "
+        + "[numberOfWorkers=" + job.getNumberOfWorkers() + "]"
+        + "\n[workerClass=" + job.getWorkerClassName() + "]";
+
+    for (JobAPI.ComputeResource cr: job.getComputeResourceList()) {
+      jobStr += "\n" + ComputeResourceUtils.toString(cr);
+    }
+
+    return jobStr;
+  }
+
+
 
 }

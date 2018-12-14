@@ -22,10 +22,10 @@ import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
-import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.client.Pinger;
+import edu.iu.dsc.tws.master.worker.JMWorkerController;
+import edu.iu.dsc.tws.master.worker.Pinger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 
@@ -37,6 +37,7 @@ public class Twister2HTGClient {
   private boolean stopLooper = false;
 
   private Config config;
+  private JobMasterAPI.WorkerInfo thisWorker;
 
   private JobMasterAPI.HTGClientInfo thisClient;
 
@@ -45,6 +46,25 @@ public class Twister2HTGClient {
 
   private RRClient rrClient;
   private Pinger pinger;
+  private JMWorkerController jmWorkerController;
+
+  private boolean startingMessageSent = false;
+
+  public HTGJobAPI.HTGJob getHtgJob() {
+    return htgJob;
+  }
+
+  public void setHtgJob(HTGJobAPI.HTGJob htgJob) {
+    this.htgJob = htgJob;
+  }
+
+  public HTGJobAPI.ExecuteMessage getExecuteMessage() {
+    return executeMessage;
+  }
+
+  public void setExecuteMessage(HTGJobAPI.ExecuteMessage executeMessage) {
+    this.executeMessage = executeMessage;
+  }
 
   //NEWLY Added
   private HTGJobAPI.HTGJob htgJob;
@@ -69,6 +89,15 @@ public class Twister2HTGClient {
         JobMasterContext.jobMasterPort(config), htgJob, null);
   }
 
+
+  public Twister2HTGClient(Config config,
+                           JobMasterAPI.HTGClientInfo thisClient,
+                           HTGJobAPI.HTGJob htgJob,
+                           HTGJobAPI.ExecuteMessage executeMessage) {
+    this(config, thisClient, JobMasterContext.jobMasterIP(config),
+        JobMasterContext.jobMasterPort(config), htgJob, executeMessage);
+  }
+
   public Twister2HTGClient(Config config,
                            JobMasterAPI.HTGClientInfo thisClient,
                            String masterHost,
@@ -83,10 +112,6 @@ public class Twister2HTGClient {
     //newly added
     this.htgJob = htgjob;
     this.executeMessage = message;
-  }
-
-  public void setExecuteMessage(HTGJobAPI.ExecuteMessage executeMessage) {
-    this.executeMessage = executeMessage;
   }
 
   private boolean init() {

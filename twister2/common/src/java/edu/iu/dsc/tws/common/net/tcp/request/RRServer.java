@@ -164,7 +164,6 @@ public class RRServer {
 
   /**
    * Send a non-response message to a worker or to the client
-   *
    * @param message message
    * @return true if response was accepted
    */
@@ -338,4 +337,3 @@ public class RRServer {
 
   }
 }
-

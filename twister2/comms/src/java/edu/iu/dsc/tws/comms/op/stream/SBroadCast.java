@@ -69,4 +69,8 @@ public class SBroadCast {
   public boolean hasPending() {
     return !bCast.isComplete();
   }
+
+  public void close() {
+    bCast.close();
+  }
 }

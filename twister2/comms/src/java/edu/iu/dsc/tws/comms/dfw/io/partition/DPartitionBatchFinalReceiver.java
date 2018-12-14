@@ -227,4 +227,11 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   @Override
   public void onFinish(int source) {
   }
+
+  @Override
+  public void close() {
+    for (Shuffle s : sortedMergers.values()) {
+      s.clean();
+    }
+  }
 }

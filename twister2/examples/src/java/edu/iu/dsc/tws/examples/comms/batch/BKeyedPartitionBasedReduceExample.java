@@ -79,6 +79,11 @@ public class BKeyedPartitionBasedReduceExample extends KeyedBenchWorker {
   }
 
   @Override
+  public void close() {
+    partitionBasedKeyedReduce.close();
+  }
+
+  @Override
   protected void progressCommunication() {
     partitionBasedKeyedReduce.progress();
   }
