@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.client.IClient;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.client.K8sClientController;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8SDriverController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -174,21 +174,21 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   private boolean startDriver(JobAPI.Job job, String jobPackageFile) {
 
     String jobMasterIP = getJobMasterIP(job);
-    K8sClientController clientController =
-        new K8sClientController(config, jobMasterIP, job, jobPackageFile, controller);
+    K8SDriverController driverController =
+        new K8SDriverController(config, jobMasterIP, job, jobPackageFile, controller);
 
     String driverClass = job.getWorkerClassName();
-    IClient driver;
+    IDriver driver;
     try {
       Object object = ReflectionUtils.newInstance(driverClass);
-      driver = (IClient) object;
+      driver = (IDriver) object;
       LOG.info("loaded driver class: " + driverClass);
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       LOG.severe(String.format("failed to load the driver class %s", driverClass));
       throw new RuntimeException(e);
     }
 
-    driver.execute(clientController);
+    driver.execute(driverController);
     return true;
   }
 

@@ -9,28 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.k8s.client;
+package edu.iu.dsc.tws.rsched.schedulers.k8s.driver;
 
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
-import edu.iu.dsc.tws.common.client.IClientController;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.driver.IDriverController;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.sclient.JMSubmittingClient;
+import edu.iu.dsc.tws.master.driver.JMDriverClient;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.JobPackageTransferThread;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 
-public class K8sClientController implements IClientController {
+public class K8SDriverController implements IDriverController {
 
-  private static final Logger LOG = Logger.getLogger(K8sClientController.class.getName());
+  private static final Logger LOG = Logger.getLogger(K8SDriverController.class.getName());
 
-  private JMSubmittingClient submittingClient;
+  private JMDriverClient driverClient;
   private JobAPI.Job job;
   private KubernetesController k8sController;
   private String scalableSSName;
@@ -39,7 +39,7 @@ public class K8sClientController implements IClientController {
   private int scalableSSReplicas;
   private int workersPerPod;
 
-  public K8sClientController(Config config, String jmHost, JobAPI.Job job, String jobPackageFile,
+  public K8SDriverController(Config config, String jmHost, JobAPI.Job job, String jobPackageFile,
                              KubernetesController k8sController) {
     this.config = config;
     this.job = job;
@@ -56,7 +56,7 @@ public class K8sClientController implements IClientController {
         job.getJobName(), job.getComputeResourceCount() - 1);
 
     int jmPort = JobMasterContext.jobMasterPort(config);
-    submittingClient = new JMSubmittingClient(config, jmHost, jmPort);
+    driverClient = new JMDriverClient(config, jmHost, jmPort);
 
   }
 

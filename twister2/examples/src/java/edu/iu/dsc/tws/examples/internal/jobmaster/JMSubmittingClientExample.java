@@ -16,7 +16,7 @@ import java.nio.file.Paths;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.sclient.JMSubmittingClient;
+import edu.iu.dsc.tws.master.driver.JMDriverClient;
 
 public final class JMSubmittingClientExample {
 
@@ -31,7 +31,7 @@ public final class JMSubmittingClientExample {
     String jmHost = "localhost";
     int jmPort = JobMasterContext.jobMasterPort(config);
 
-    JMSubmittingClient client = new JMSubmittingClient(config, jmHost, jmPort);
+    JMDriverClient client = new JMDriverClient(config, jmHost, jmPort);
     client.startThreaded();
 
     client.sendScaleMessage(0, 10);

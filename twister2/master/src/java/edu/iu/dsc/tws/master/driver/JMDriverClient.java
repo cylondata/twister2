@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master.sclient;
+package edu.iu.dsc.tws.master.driver;
 
 import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
@@ -29,8 +29,8 @@ import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-public class JMSubmittingClient {
-  private static final Logger LOG = Logger.getLogger(JMSubmittingClient.class.getName());
+public class JMDriverClient {
+  private static final Logger LOG = Logger.getLogger(JMDriverClient.class.getName());
 
   private static Progress looper;
   private boolean stopLooper = false;
@@ -53,16 +53,16 @@ public class JMSubmittingClient {
    */
   private boolean connectionRefused = false;
 
-  public JMSubmittingClient(Config config,
-                         String masterHost,
-                         int masterPort) {
+  public JMDriverClient(Config config,
+                        String masterHost,
+                        int masterPort) {
     this.config = config;
     this.masterAddress = masterHost;
     this.masterPort = masterPort;
   }
 
   /**
-   * initialize JMSubmittingClient
+   * initialize JMDriverClient
    * wait until it connects to JobMaster
    * return false, if it can not connect to JobMaster
    */
@@ -235,7 +235,7 @@ public class JMSubmittingClient {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       if (status == StatusCode.SUCCESS) {
-        LOG.info("JMSubmittingClient connected to JobMaster: " + channel);
+        LOG.info("JMDriverClient connected to JobMaster: " + channel);
       }
 
       if (status == StatusCode.CONNECTION_REFUSED) {

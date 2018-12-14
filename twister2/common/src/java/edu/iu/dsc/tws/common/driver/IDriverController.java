@@ -9,11 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.client;
+package edu.iu.dsc.tws.common.driver;
 
 import com.google.protobuf.Message;
 
-public interface IClientController {
+public interface IDriverController {
 
   /**
    * add new instances of the scalable ComputeResource in the job
