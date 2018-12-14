@@ -1,14 +1,8 @@
 package edu.iu.dsc.tws.dashboard.controllers;
 
 
-import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
-import edu.iu.dsc.tws.dashboard.data_models.JobState;
-import edu.iu.dsc.tws.dashboard.rest_models.ComputeResourceScaleRequest;
-import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
-import edu.iu.dsc.tws.dashboard.services.ComputeResourceService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,8 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
 import edu.iu.dsc.tws.dashboard.data_models.Job;
+import edu.iu.dsc.tws.dashboard.data_models.JobState;
 import edu.iu.dsc.tws.dashboard.data_models.Worker;
+import edu.iu.dsc.tws.dashboard.rest_models.ComputeResourceScaleRequest;
+import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
+import edu.iu.dsc.tws.dashboard.services.ComputeResourceService;
 import edu.iu.dsc.tws.dashboard.services.JobService;
 import edu.iu.dsc.tws.dashboard.services.WorkerService;
 

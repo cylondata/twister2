@@ -198,6 +198,7 @@ public class Edge {
 
   /**
    * Get selector
+   *
    * @return the selector
    */
   public TaskKeySelector getSelector() {
@@ -206,6 +207,7 @@ public class Edge {
 
   /**
    * Get the partitioner
+   *
    * @return partitioner
    */
   public TaskPartitioner getPartitioner() {

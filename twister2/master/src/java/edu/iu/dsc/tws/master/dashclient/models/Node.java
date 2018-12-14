@@ -35,7 +35,8 @@ public class Node {
   private String rack;
   private String dataCenter;
 
-  public Node() { }
+  public Node() {
+  }
 
   public Node(JobMasterAPI.NodeInfo nodeInfo) {
     this.ip = nodeInfo.getNodeIP();

@@ -122,7 +122,7 @@ public class Twister2HTGClient {
         = new Twister2HTGClient.ClientConnectHandler();
 
     rrClient = new RRClient(masterAddress, masterPort, config, looper,
-        RRServer.CLIENT_ID, connectHandler);
+        thisClient.getClientID(), connectHandler);
 
     JobMasterAPI.HTGJobRequest.Builder htgjobRequestBuilder
         = JobMasterAPI.HTGJobRequest.newBuilder();

@@ -297,7 +297,7 @@ public class ComputeConnection {
    * @param keyTpe the key data type
    * @param dataType the data type
    * @param partitioner the partitioner
-   * @param  selector selector
+   * @param selector selector
    * @return the ComputeConnection
    */
   public ComputeConnection keyedGather(String parent, String name,
@@ -416,7 +416,7 @@ public class ComputeConnection {
    * @param keyTpe the key data type
    * @param dataType the data type
    * @param partitioner the partitioner
-   * @param  selector selector
+   * @param selector selector
    * @return compute connection
    */
   public ComputeConnection keyedPartition(String parent, String edgeName,

@@ -20,11 +20,9 @@ public interface IDriver {
   /**
    * After the job is submitted,
    * an instance of this method will be executed in the submitting client
-   *
+   * <p>
    * Implementing Driver program can communicate with the JobMaster and workers
    * with the provided IDriverController
-   *
-   * @param driverController
    */
   void execute(IDriverController driverController);
 }

@@ -36,7 +36,8 @@ public class ComputeResource {
   private int index;
   private int instances;
 
-  public ComputeResource() { }
+  public ComputeResource() {
+  }
 
   public ComputeResource(JobAPI.ComputeResource computeResource) {
     cpu = computeResource.getCpu();

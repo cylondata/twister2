@@ -252,7 +252,7 @@ public class WorkerMonitor implements MessageHandler {
     LOG.fine("ScaleResponse sent to the client: \n" + scaleResponse);
 
     // let all workers know about the scale message
-    for (int workerID: workers.keySet()) {
+    for (int workerID : workers.keySet()) {
       rrServer.sendMessage(scaleMessage, workerID);
     }
 
@@ -263,17 +263,17 @@ public class WorkerMonitor implements MessageHandler {
 
   }
 
-    /**
-     * worker RUNNING message received from all workers
-     * if some workers may have already completed, that does not matter
-     * the important thing is whether they have became RUNNING in the past
-     */
+  /**
+   * worker RUNNING message received from all workers
+   * if some workers may have already completed, that does not matter
+   * the important thing is whether they have became RUNNING in the past
+   */
   private boolean haveAllWorkersBecomeRunning() {
     if (numberOfWorkers != workers.size()) {
       return false;
     }
 
-    for (WorkerWithState worker: workers.values()) {
+    for (WorkerWithState worker : workers.values()) {
       if (!worker.hasWorkerBecomeRunning()) {
         return false;
       }
@@ -290,7 +290,7 @@ public class WorkerMonitor implements MessageHandler {
       return false;
     }
 
-    for (WorkerWithState worker: workers.values()) {
+    for (WorkerWithState worker : workers.values()) {
       if (!worker.hasWorkerCompleted()) {
         return false;
       }
@@ -339,7 +339,7 @@ public class WorkerMonitor implements MessageHandler {
       if (workers.size() == numberOfWorkers) {
         sendListWorkersResponse(listMessage.getWorkerID(), id);
 
-      // if some workers have not joined yet, put this worker into the wait list
+        // if some workers have not joined yet, put this worker into the wait list
       } else {
         waitList.put(listMessage.getWorkerID(), id);
       }
@@ -354,7 +354,7 @@ public class WorkerMonitor implements MessageHandler {
     JobMasterAPI.ListWorkersResponse.Builder responseBuilder = ListWorkersResponse.newBuilder()
         .setWorkerID(workerID);
 
-    for (WorkerWithState worker: workers.values()) {
+    for (WorkerWithState worker : workers.values()) {
       responseBuilder.addWorker(worker.getWorkerInfo());
     }
 
@@ -364,7 +364,7 @@ public class WorkerMonitor implements MessageHandler {
   }
 
   private void sendListWorkersResponseToWaitList() {
-    for (Map.Entry<Integer, RequestID> entry: waitList.entrySet()) {
+    for (Map.Entry<Integer, RequestID> entry : waitList.entrySet()) {
       sendListWorkersResponse(entry.getKey(), entry.getValue());
     }
 

@@ -26,7 +26,6 @@ public interface Source<T> extends TFunction {
 
   /**
    * Get the next value
-   * @return
    */
   T next();
 }

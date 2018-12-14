@@ -43,7 +43,8 @@ public class RegisterWorker {
   private Node node;
   private Map<String, Integer> additionalPorts;
 
-  public RegisterWorker() { }
+  public RegisterWorker() {
+  }
 
   public RegisterWorker(String jobID, JobMasterAPI.WorkerInfo workerInfo) {
     this.jobID = jobID;

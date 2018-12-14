@@ -98,7 +98,6 @@ public class JobMasterClient {
 
   /**
    * return WorkerInfo for this worker
-   * @return
    */
   public WorkerInfo getWorkerInfo() {
     return thisWorker;

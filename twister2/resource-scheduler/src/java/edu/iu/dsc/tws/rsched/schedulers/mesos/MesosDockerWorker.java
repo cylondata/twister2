@@ -87,7 +87,6 @@ public class MesosDockerWorker {
     try {
 
 
-
       JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
 
       workerController = new MesosWorkerController(config, job,
@@ -130,7 +129,7 @@ public class MesosDockerWorker {
     LOG.info("Worker Count..: " + workerCount);
 
 
-   //start job master client
+    //start job master client
     worker.startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP, jobMasterPort,
         workerCount);
 

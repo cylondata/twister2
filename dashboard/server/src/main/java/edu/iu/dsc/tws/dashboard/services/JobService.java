@@ -11,21 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.services;
 
-import edu.iu.dsc.tws.dashboard.data_models.Job;
-import edu.iu.dsc.tws.dashboard.data_models.JobState;
-import edu.iu.dsc.tws.dashboard.data_models.Node;
-import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
-import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Optional;
+
+import javax.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import edu.iu.dsc.tws.dashboard.data_models.Job;
+import edu.iu.dsc.tws.dashboard.data_models.JobState;
+import edu.iu.dsc.tws.dashboard.data_models.Node;
+import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
+import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 
 @Service
 public class JobService {

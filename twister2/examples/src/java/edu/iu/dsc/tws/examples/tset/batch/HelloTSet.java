@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class HelloTSet extends TaskWorker implements Serializable {
   private static final long serialVersionUID = -2;
+
   @Override
   public void execute() {
     TSetBuilder builder = TSetBuilder.newBuilder(config);
@@ -75,6 +76,7 @@ public class HelloTSet extends TaskWorker implements Serializable {
 
     TSet<int[]> reduce = partitioned.reduce(new ReduceFunction<int[]>() {
       private static final long serialVersionUID = -2;
+
       @Override
       public int[] reduce(int[] t1, int[] t2) {
         int[] ret = new int[t1.length];
@@ -97,6 +99,7 @@ public class HelloTSet extends TaskWorker implements Serializable {
       }
 
       private static final long serialVersionUID = -3;
+
       @Override
       public boolean add(int[] value) {
         System.out.println(Arrays.toString(value));

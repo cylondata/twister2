@@ -169,7 +169,6 @@ message ScaledResponse {
     }
 }
 
-
 //Newly Added for HTG Integration
 message HTGClientInfo {
     oneof required {

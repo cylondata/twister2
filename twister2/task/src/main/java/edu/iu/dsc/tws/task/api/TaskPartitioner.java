@@ -20,24 +20,16 @@ import java.util.Set;
 public interface TaskPartitioner extends Serializable {
   /**
    * Prepare the partition
-   * @param context
-   * @param sources
-   * @param destinations
    */
   void prepare(TaskContext context, Set<Integer> sources, Set<Integer> destinations);
 
   /**
    * Get a partition
-   * @param source
-   * @param data
-   * @return
    */
   int partition(int source, Object data);
 
   /**
    * Indicate that we are using this partition
-   * @param source
-   * @param partition
    */
   void commit(int source, int partition);
 }

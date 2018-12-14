@@ -1,11 +1,13 @@
 package edu.iu.dsc.tws.dashboard.data_models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import edu.iu.dsc.tws.dashboard.data_models.composite_ids.ComputeResourceId;
-import io.swagger.annotations.ApiModelProperty;
+import java.io.Serializable;
 
 import javax.persistence.*;
-import java.io.Serializable;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.ComputeResourceId;
+import io.swagger.annotations.ApiModelProperty;
 
 @Entity
 @IdClass(ComputeResourceId.class)

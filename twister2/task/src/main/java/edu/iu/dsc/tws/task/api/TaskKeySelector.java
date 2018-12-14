@@ -19,6 +19,7 @@ import java.io.Serializable;
 public interface TaskKeySelector extends INode, Serializable {
   /**
    * Given a object select the key to be used
+   *
    * @param data data
    * @return key object
    */

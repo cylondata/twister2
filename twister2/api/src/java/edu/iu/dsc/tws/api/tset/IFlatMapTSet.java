@@ -22,7 +22,7 @@ public class IFlatMapTSet<T, P> extends BaseTSet<T> {
   private IterableFlatMapFunction<P, T> mapFn;
 
   public IFlatMapTSet(Config cfg, TaskGraphBuilder bldr,
-                     BaseTSet<P> parent, IterableFlatMapFunction<P, T> mapFunc) {
+                      BaseTSet<P> parent, IterableFlatMapFunction<P, T> mapFunc) {
     super(cfg, bldr);
     this.parent = parent;
     this.mapFn = mapFunc;

@@ -124,12 +124,8 @@ public final class JobMasterClientExample {
 
     // wait up to 10sec
     sleeeep((long) (Math.random() * 1000000));
-    try {
-      client.getJMWorkerController().waitOnBarrier();
-      LOG.info("All workers reached the barrier. Proceeding.");
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-    }
+    client.getJMWorkerController().waitOnBarrier();
+    LOG.info("All workers reached the barrier. Proceeding.");
 
     // wait up to 3sec
     sleeeep((long) (Math.random() * 3000));
@@ -154,9 +150,6 @@ public final class JobMasterClientExample {
 
   /**
    * generate the additional requested ports for this worker
-   * @param config
-   * @param workerPort
-   * @return
    */
   public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
 
@@ -168,7 +161,7 @@ public final class JobMasterClientExample {
 
     HashMap<String, Integer> ports = new HashMap<>();
     int i = 1;
-    for (String portName: portNames) {
+    for (String portName : portNames) {
       ports.put(portName, workerPort + i++);
     }
 

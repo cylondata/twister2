@@ -30,7 +30,8 @@ package edu.iu.dsc.tws.master.dashclient.messages;
 public class WorkerStateChange {
   private String state;
 
-  public WorkerStateChange() { }
+  public WorkerStateChange() {
+  }
 
   public WorkerStateChange(String state) {
     this.state = state;

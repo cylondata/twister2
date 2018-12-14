@@ -11,15 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.repositories;
 
-import edu.iu.dsc.tws.dashboard.data_models.Worker;
-import edu.iu.dsc.tws.dashboard.data_models.WorkerState;
-import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
+import java.util.Date;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-import java.util.Date;
-import java.util.List;
+import edu.iu.dsc.tws.dashboard.data_models.Worker;
+import edu.iu.dsc.tws.dashboard.data_models.WorkerState;
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
 
 public interface WorkerRepository extends CrudRepository<Worker, WorkerId> {
 

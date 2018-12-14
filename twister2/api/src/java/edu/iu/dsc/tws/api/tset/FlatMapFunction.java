@@ -13,9 +13,6 @@ package edu.iu.dsc.tws.api.tset;
 
 /**
  * Flat map function interface
- *
- * @param <T>
- * @param <O>
  */
 public interface FlatMapFunction<T, O> extends TFunction {
   void flatMap(T t, Collector<O> collector);

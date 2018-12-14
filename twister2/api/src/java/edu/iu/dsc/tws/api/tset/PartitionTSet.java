@@ -22,7 +22,7 @@ public class PartitionTSet<T> extends BaseTSet<T> {
   private PartitionFunction<T> partitionFunction;
 
   public PartitionTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-                            PartitionFunction<T> parFn) {
+                       PartitionFunction<T> parFn) {
     super(cfg, bldr);
     this.parent = prnt;
     this.partitionFunction = parFn;

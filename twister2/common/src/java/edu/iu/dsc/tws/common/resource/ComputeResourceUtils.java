@@ -30,7 +30,7 @@ public final class ComputeResourceUtils {
   }
 
   public static JobAPI.ComputeResource updateComputeResourceIndex(int newIndex,
-                                                           JobAPI.ComputeResource computeResource) {
+                                                                  JobAPI.ComputeResource computeResource) {
     return JobAPI.ComputeResource.newBuilder()
         .setIndex(newIndex)
         .setCpu(computeResource.getCpu())
@@ -52,7 +52,6 @@ public final class ComputeResourceUtils {
 
   /**
    * covert the given ComputeResource to a one line String for logging output
-   * @return
    */
   public static String toString(JobAPI.ComputeResource cr) {
     return String.format("ComputeResource[%d]: cpu: %.1f, ram: %d MB, disk: %.1f GB, "

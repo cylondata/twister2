@@ -20,7 +20,8 @@ import edu.iu.dsc.tws.master.driver.JMDriverClient;
 
 public final class JMSubmittingClientExample {
 
-  private JMSubmittingClientExample() { }
+  private JMSubmittingClientExample() {
+  }
 
   public static void main(String[] args) {
     // we assume that the twister2Home is the current directory

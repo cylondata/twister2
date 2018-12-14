@@ -106,7 +106,6 @@ public class WorkerWithState {
   /**
    * if the worker became RUNNING in the past, return true.
    * Its current status can be RUNNING, COMPLETED or something else
-   * @return
    */
   public boolean hasWorkerBecomeRunning() {
     return states.contains(JobMasterAPI.WorkerState.RUNNING) ? true : false;
@@ -114,7 +113,6 @@ public class WorkerWithState {
 
   /**
    * if the worker has COMPLETED in its state history
-   * @return
    */
   public boolean hasWorkerCompleted() {
     return states.contains(JobMasterAPI.WorkerState.COMPLETED) ? true : false;
