@@ -41,17 +41,17 @@ import io.kubernetes.client.util.Watch;
  *
  * static methods:
  * Watcher gets events from previously finished pods also, if there were pods with the same name
- * We need to wait some time after starting watchers go ignore events from previously completed pods
+ * We need to wait some time after starting watchers to ignore events from previously completed pods
  *   startTransferThreads is called immediately when KubernetesLauncher starts.
  *     While services and job master are started,
  *     watchers get events from previously finished pods with the same name if any.
  *   Then, setSubmittingStatefulSets method is called.
  *     we assume that events from previous pods have already been received upto this point.
- *     we get the first the Started event after this method is called
- *     and tell the transfer thread to start transfer attemps
+ *     we get the first Started event after this method is called
+ *     and tell the transfer thread to start transferring attempts
  *   completeFileTransfers method is called, when StatefulSets are created.
  *     This method waits for all transfer threads to finish.
- *   cancelTrasfers: this method cancels file transfers
+ *   cancelTransfers: this method cancels file transfers
  *   if some thing goes wrong during job submission
  *
  */
@@ -238,6 +238,24 @@ public class JobPackageTransferThread extends Thread {
     watchBeforeUploading = watchBefore;
 
     ArrayList<String> podNames = KubernetesUtils.generatePodNames(job);
+    transferThreads = new JobPackageTransferThread[podNames.size()];
+
+    for (int i = 0; i < podNames.size(); i++) {
+      transferThreads[i] = new JobPackageTransferThread(namespace, podNames.get(i), jobPackageFile);
+      transferThreads[i].start();
+    }
+  }
+
+  /**
+   * start job package transfer threads for scaled up pods
+   * @param namespace
+   * @param jobPackageFile
+   */
+  public static void startTransferThreadsForScaledUpPods(String namespace,
+                                          ArrayList<String> podNames,
+                                          String jobPackageFile) {
+    watchBeforeUploading = false;
+    cancelFileTransfer = false;
     transferThreads = new JobPackageTransferThread[podNames.size()];
 
     for (int i = 0; i < podNames.size(); i++) {

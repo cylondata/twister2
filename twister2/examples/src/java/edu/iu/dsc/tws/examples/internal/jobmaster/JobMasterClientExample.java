@@ -123,7 +123,7 @@ public final class JobMasterClientExample {
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     // wait up to 10sec
-    sleeeep((long) (Math.random() * 10000));
+    sleeeep((long) (Math.random() * 1000000));
     try {
       client.getJMWorkerController().waitOnBarrier();
       LOG.info("All workers reached the barrier. Proceeding.");

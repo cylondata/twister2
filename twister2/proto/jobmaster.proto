@@ -151,7 +151,7 @@ message BarrierResponse {
 // Submitting Client to Job Master communication related messages
 // let the job master know that
 // the number of instances of the scalable compute resource has hanged
-message ScaleComputeResource {
+message ScaledComputeResource {
     oneof indexRequired {
         int32 index = 1;
     }
@@ -160,7 +160,7 @@ message ScaleComputeResource {
     }
 }
 
-message ScaleResponse {
+message ScaledResponse {
     oneof indexRequired {
         int32 index = 1;
     }

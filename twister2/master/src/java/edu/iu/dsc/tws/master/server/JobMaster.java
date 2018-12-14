@@ -220,7 +220,7 @@ public class JobMaster {
     rrServer = new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID,
         connectHandler, JobMasterContext.jobMasterAssignsWorkerIDs(config));
 
-    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, numberOfWorkers,
+    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job,
         JobMasterContext.jobMasterAssignsWorkerIDs(config));
 
     barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
@@ -247,10 +247,10 @@ public class JobMaster {
     JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
         JobMasterAPI.BarrierResponse.newBuilder();
 
-    JobMasterAPI.ScaleComputeResource.Builder scaleMessageBuilder =
-        JobMasterAPI.ScaleComputeResource.newBuilder();
-    JobMasterAPI.ScaleResponse.Builder scaleResponseBuilder
-        = JobMasterAPI.ScaleResponse.newBuilder();
+    JobMasterAPI.ScaledComputeResource.Builder scaleMessageBuilder =
+        JobMasterAPI.ScaledComputeResource.newBuilder();
+    JobMasterAPI.ScaledResponse.Builder scaleResponseBuilder
+        = JobMasterAPI.ScaledResponse.newBuilder();
 
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
     rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
@@ -347,7 +347,7 @@ public class JobMaster {
       dashClient.jobStateChange(JobState.COMPLETED);
     }
 
-    LOG.info("All workers have completed. JobMaster is stopping.");
+    LOG.info("All " + numberOfWorkers + " workers have completed. JobMaster is stopping.");
     workersCompleted = true;
     looper.wakeup();
 

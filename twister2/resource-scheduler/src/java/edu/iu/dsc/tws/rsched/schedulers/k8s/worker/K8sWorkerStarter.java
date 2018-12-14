@@ -199,7 +199,7 @@ public final class K8sWorkerStarter {
   public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
 
-    String workerClass = SchedulerContext.workerClass(config);
+    String workerClass = job.getWorkerClassName();
     IWorker worker;
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
