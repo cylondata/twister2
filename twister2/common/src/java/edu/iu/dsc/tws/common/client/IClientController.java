@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.client;
 
+import com.google.protobuf.Message;
+
 public interface IClientController {
 
   /**
@@ -18,20 +20,19 @@ public interface IClientController {
    * @param instancesToAdd
    * @return true if successful
    */
-  boolean scaleUpComputeResource(int instancesToAdd);
+  boolean scaleUpWorkers(int instancesToAdd);
 
   /**
    * remove some instances of the scalable ComputeResource in the job
    * @param instancesToRemove
    * @return true if successful
    */
-  boolean scaleDownComputeResource(int instancesToRemove);
+  boolean scaleDownWorkers(int instancesToRemove);
 
   /**
    * the client can send data to all workers in the job
-   * @param data
    * @return
    */
-  boolean broadcastToAllWorkers(byte[] data);
+  boolean broadcastToAllWorkers(String className, Message message);
 
 }

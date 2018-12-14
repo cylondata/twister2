@@ -38,6 +38,7 @@ public final class Twister2Job {
 
   private String jobName;
   private String workerClass;
+  private String driverClass;
   private ArrayList<JobAPI.ComputeResource> computeResources = new ArrayList<>();
   private JobConfig config;
 
@@ -62,8 +63,9 @@ public final class Twister2Job {
     });
 
     jobBuilder.setConfig(configBuilder);
-    jobBuilder.setWorkerClassName(workerClass);
     jobBuilder.setJobName(jobName);
+    jobBuilder.setWorkerClassName(workerClass);
+    jobBuilder.setDriverClassName(driverClass);
     jobBuilder.setNumberOfWorkers(countNumberOfWorkers());
 
     for (JobAPI.ComputeResource computeResource: computeResources) {
@@ -229,6 +231,11 @@ public final class Twister2Job {
 
     public Twister2JobBuilder setWorkerClass(String workerClass) {
       twister2Job.workerClass = workerClass;
+      return this;
+    }
+
+    public Twister2JobBuilder setDriverClass(String driverClass) {
+      twister2Job.driverClass = driverClass;
       return this;
     }
 

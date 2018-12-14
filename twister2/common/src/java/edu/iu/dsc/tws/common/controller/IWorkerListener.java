@@ -9,15 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master.sclient;
+package edu.iu.dsc.tws.common.controller;
 
-import edu.iu.dsc.tws.common.config.Config;
+import com.google.protobuf.Message;
 
-public class JMClientController {
+public interface IWorkerListener {
 
-  private JMSubmittingClient submittingClient;
+  boolean workersScaledUp(int instancesAdded);
 
-  public JMClientController(Config config, String jmHost, int jmPort) {
+  boolean workersScaledDown(int instancesRemoved);
 
-  }
+  boolean dataReceivedFromClient(Message message);
+
 }
