@@ -83,8 +83,8 @@ pack_tw2(
         ":twister2-core-lib-task",
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-third_party",
-#        ":twister2-master-lib",
-#        ":twister2-master-jersey",
+        ":twister2-master-jersey",
+        ":twister2-master-lib",
     ],
 )
 
@@ -107,8 +107,8 @@ pack_tw2(
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-third_party",
         ":twister2-harp-libs",
-#        ":twister2-master-lib",
-#        ":twister2-master-jersey",
+        ":twister2-master-jersey",
+        ":twister2-master-lib",
         ":twister2-ompi-bin",
         ":twister2-ompi-etc",
         ":twister2-ompi-include",
@@ -253,8 +253,8 @@ pack_tw2(
         ":twister2-lib-task",
         ":twister2-lib-task-scheduler",
         ":twister2-lib-third_party",
-        ":twister2-master-lib",
         ":twister2-master-jersey",
+        ":twister2-master-lib",
     ],
 )
 
@@ -286,8 +286,8 @@ pack_tw2(
         ":twister2-lib-task",
         ":twister2-lib-task-scheduler",
         ":twister2-lib-third_party",
-        ":twister2-master-lib",
         ":twister2-master-jersey",
+        ":twister2-master-lib",
         ":twister2-ompi-bin",
         ":twister2-ompi-etc",
         ":twister2-ompi-include",
