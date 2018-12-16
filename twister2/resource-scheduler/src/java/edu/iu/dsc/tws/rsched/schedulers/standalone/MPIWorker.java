@@ -12,13 +12,19 @@
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
-import java.nio.CharBuffer;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -34,12 +40,22 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
+import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.server.JobMaster;
+import edu.iu.dsc.tws.master.worker.JobMasterClient;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadContext;
+import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
+import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
 
@@ -50,16 +66,30 @@ import mpi.MPIException;
 public final class MPIWorker {
   private static final Logger LOG = Logger.getLogger(MPIWorker.class.getName());
 
-  private MPIWorker() {
-  }
+  /**
+   * The jobmaster client
+   */
+  private JobMasterClient masterClient;
 
-  public static void main(String[] args) {
+  /**
+   * Configuration
+   */
+  private Config config;
+
+  /**
+   * Information of this worker
+   */
+  private JobMasterAPI.WorkerInfo wInfo;
+
+  /**
+   * Construct the MPIWorker starter
+   * @param args the main args
+   */
+  private MPIWorker(String[] args) {
     Options cmdOptions = null;
     try {
       MPI.Init(args);
-
       int rank = MPI.COMM_WORLD.getRank();
-      int size = MPI.COMM_WORLD.getSize();
 
       cmdOptions = setupOptions();
       CommandLineParser parser = new DefaultParser();
@@ -68,10 +98,49 @@ public final class MPIWorker {
 
       // load the configuration
       // we are loading the configuration for all the components
-      Config config = loadConfigurations(cmd, rank);
+      this.config = loadConfigurations(cmd, rank);
       // normal worker
       LOG.log(Level.FINE, "A worker process is starting...");
-      worker(config, rank);
+
+      String jobName = MPIContext.jobName(config);
+      String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
+      JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+
+      // lets split the comm
+      if (JobMasterContext.isJobMasterUsed(config)) {
+        if (!JobMasterContext.jobMasterRunsInClient(config)) {
+          // lets broadcast the worker info
+          // broadcast the port of jobmaster
+          int color = rank == 0 ? 0 : 1;
+          Intracomm comm = MPI.COMM_WORLD.split(color, rank);
+
+          if (rank != 0) {
+            wInfo = createWorkerInfo(config, comm.getRank(), job);
+          } else {
+            wInfo = createWorkerInfo(config, -1, job);
+          }
+
+          // lets broadcast the master information
+          broadCastMasterInformation(rank);
+
+          if (rank != 0) {
+            startWorker(config, rank, comm, job);
+            closeWorker();
+          } else {
+            startMaster(config, rank);
+          }
+        } else {
+          wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
+          startWorker(config, rank, MPI.COMM_WORLD, job);
+          closeWorker();
+        }
+      } else {
+        wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
+        startWorkerWithoutMaster(config, rank, MPI.COMM_WORLD, job);
+      }
+
+      // lets do a barrier here so everyone is synchronized at the end
+      MPI.COMM_WORLD.barrier();
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed the MPI process", e);
       throw new RuntimeException(e);
@@ -92,10 +161,86 @@ public final class MPIWorker {
   }
 
   /**
+   * Broadcast the master information to workers
+   *
+   * @param rank rank
+   * @throws MPIException if an error occurs
+   * @throws InvalidProtocolBufferException if an error occurs
+   */
+  private void broadCastMasterInformation(int rank) throws MPIException,
+      InvalidProtocolBufferException {
+    byte[] workerBytes = wInfo.toByteArray();
+    int length = workerBytes.length;
+    IntBuffer countSend = MPI.newIntBuffer(1);
+    if (rank == 0) {
+      countSend.put(length);
+    }
+    MPI.COMM_WORLD.bcast(countSend, 1, MPI.INT, 0);
+    length = countSend.get(0);
+
+    ByteBuffer sendBuffer = MPI.newByteBuffer(length);
+    if (rank == 0) {
+      sendBuffer.put(workerBytes);
+    }
+    MPI.COMM_WORLD.bcast(sendBuffer, length, MPI.BYTE, 0);
+    byte[] c = new byte[length];
+    if (rank != 0) {
+      sendBuffer.get(c);
+      JobMasterAPI.WorkerInfo masterInfo = JobMasterAPI.WorkerInfo.
+          newBuilder().mergeFrom(c).build();
+      config = Config.newBuilder().putAll(config).
+          put(JobMasterContext.JOB_MASTER_PORT, masterInfo.getPort()).
+          put(JobMasterContext.JOB_MASTER_IP, masterInfo.getNodeInfo().getNodeIP()).build();
+    } else {
+      config = Config.newBuilder().putAll(config).
+          put(JobMasterContext.JOB_MASTER_PORT, wInfo.getPort()).
+          put(JobMasterContext.JOB_MASTER_IP, wInfo.getNodeInfo().getNodeIP()).build();
+    }
+  }
+
+  public static void main(String[] args) {
+    new MPIWorker(args);
+  }
+
+  /**
+   * Create the resource plan
+   * @return the worker controller
+   */
+  private IWorkerController createWorkerController(JobAPI.Job job) {
+    // first get the worker id
+    String jobMasterIP = JobMasterContext.jobMasterIP(config);
+    int jobMasterPort = JobMasterContext.jobMasterPort(config);
+    int numberOfWorkers = job.getNumberOfWorkers();
+
+    this.masterClient = createMasterClient(config, jobMasterIP, jobMasterPort,
+        wInfo, numberOfWorkers);
+
+    return masterClient.getJMWorkerController();
+  }
+
+  /**
+   * Create the job master client to get information about the workers
+   */
+  private JobMasterClient createMasterClient(Config cfg, String masterHost, int masterPort,
+                                             JobMasterAPI.WorkerInfo workerInfo,
+                                             int numberContainers) {
+    // we start the job master client
+    JobMasterClient jobMasterClient = new JobMasterClient(cfg,
+        workerInfo, masterHost, masterPort, numberContainers);
+    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
+    jobMasterClient.startThreaded();
+
+    // now lets send the starting message
+    jobMasterClient.sendWorkerRunningMessage();
+
+    return jobMasterClient;
+  }
+
+  /**
    * Setup the command line options for the MPI process
    * @return cli options
    */
-  private static Options setupOptions() {
+  private Options setupOptions() {
     Options options = new Options();
 
     Option containerClass = Option.builder("c")
@@ -137,29 +282,50 @@ public final class MPIWorker {
         .argName("job name")
         .required()
         .build();
+
+    Option jobMasterIP = Option.builder("i")
+        .desc("Job master ip")
+        .longOpt("job_master_ip")
+        .hasArgs()
+        .argName("job master ip")
+        .required()
+        .build();
+
+    Option jobMasterPort = Option.builder("p")
+        .desc("Job master ip")
+        .longOpt("job_master_port")
+        .hasArgs()
+        .argName("job master port")
+        .required()
+        .build();
+
     options.addOption(twister2Home);
     options.addOption(containerClass);
     options.addOption(configDirectory);
     options.addOption(clusterType);
     options.addOption(jobName);
+    options.addOption(jobMasterIP);
+    options.addOption(jobMasterPort);
 
     return options;
   }
 
-  private static Config loadConfigurations(CommandLine cmd, int id) {
+  private Config loadConfigurations(CommandLine cmd, int id) {
     String twister2Home = cmd.getOptionValue("twister2_home");
     String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
     String clusterType = cmd.getOptionValue("cluster_type");
     String jobName = cmd.getOptionValue("job_name");
+    String jIp = cmd.getOptionValue("job_master_ip");
+    int jPort = Integer.parseInt(cmd.getOptionValue("job_master_port"));
 
     LOG.log(Level.FINE, String.format("Initializing process with "
         + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
 
-    Config workerConfig = Config.newBuilder().putAll(config).
+    Config workerConfig = Config.newBuilder().putAll(cfg).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(MPIContext.WORKER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
@@ -168,42 +334,77 @@ public final class MPIWorker {
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
 
-    Config updatedConfig = JobUtils.overrideConfigs(job, config);
+    Config updatedConfig = JobUtils.overrideConfigs(job, cfg);
 
     updatedConfig = Config.newBuilder().putAll(updatedConfig).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).
         put(MPIContext.WORKER_CLASS, container).
         put(MPIContext.TWISTER2_CONTAINER_ID, id).
         put(MPIContext.JOB_NAME, jobName).
-        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
+        put(MPIContext.JOB_OBJECT, job).
+        put(MPIContext.TWISTER2_CLUSTER_TYPE, clusterType).
+        put(JobMasterContext.JOB_MASTER_IP, jIp).
+        put(JobMasterContext.JOB_MASTER_PORT, jPort).build();
     return updatedConfig;
   }
 
-  private static void master(Config config, int rank) {
+  /**
+   * Start the master
+   * @param cfg configuration
+   * @param rank mpi rank
+   */
+  private void startMaster(Config cfg, int rank) {
     // lets do a barrier here so everyone is synchronized at the start
     // lets create the resource plan
-    createResourcePlan(config);
+    JobAPI.Job job = (JobAPI.Job) cfg.get(MPIContext.JOB_OBJECT);
+
+    try {
+      int port = JobMasterContext.jobMasterPort(cfg);
+      String hostAddress = InetAddress.getLocalHost().getHostAddress();
+      LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
+      JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
+      JobMaster jobMaster =
+          new JobMaster(cfg, hostAddress, port, new NomadTerminator(), job, jobMasterNodeInfo);
+      jobMaster.addShutdownHook();
+      Thread jmThread = jobMaster.startJobMasterThreaded();
+
+      try {
+        if (jmThread != null) {
+          jmThread.join();
+        }
+      } catch (InterruptedException ignore) {
+      }
+
+      LOG.log(Level.INFO, "Master done... ");
+    } catch (UnknownHostException e) {
+      LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+      throw new RuntimeException(e);
+    }
   }
 
-  private static void worker(Config config, int rank) {
+  /**
+   * Start the worker
+   * @param cfg configuration
+   * @param rank global rank
+   * @param intracomm communication
+   */
+  private void startWorker(Config cfg, int rank, Intracomm intracomm, JobAPI.Job job) {
     try {
-      String twister2Home = Context.twister2Home(config);
+      String twister2Home = Context.twister2Home(cfg);
       // initialize the logger
-      initLogger(config, rank, twister2Home);
+      initLogger(cfg, intracomm.getRank(), twister2Home);
 
-      // lets create the resource plan
-      Map<Integer, String> processNames = createResourcePlan(config);
       // now create the worker
-      IWorkerController controller = new MPIWorkerController(MPI.COMM_WORLD.getRank(),
-          processNames);
-
-      String workerClass = MPIContext.workerClass(config);
+      IWorkerController wc = createWorkerController(job);
+      MPIJobWorkerController mpiWorkerContorller = new MPIJobWorkerController(wc);
+      mpiWorkerContorller.add("comm", intracomm);
+      String workerClass = MPIContext.workerClass(cfg);
       try {
         Object object = ReflectionUtils.newInstance(workerClass);
         if (object instanceof IWorker) {
           IWorker container = (IWorker) object;
           // now initialize the container
-          container.execute(config, rank, controller, null, null);
+          container.execute(cfg, intracomm.getRank(), mpiWorkerContorller, null, null);
         } else {
           throw new RuntimeException("Cannot instantiate class: " + object.getClass());
         }
@@ -214,9 +415,6 @@ public final class MPIWorker {
         throw new RuntimeException(e);
       }
 
-      // lets do a barrier here so everyone is synchronized at the end
-
-      MPI.COMM_WORLD.barrier();
       LOG.log(Level.FINE, String.format("Worker %d: the cluster is ready...", rank));
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed to synchronize the workers at the start");
@@ -225,24 +423,75 @@ public final class MPIWorker {
   }
 
   /**
+   * Start the worker
+   * @param cfg configuration
+   * @param rank global rank
+   * @param intracomm communication
+   */
+  private void startWorkerWithoutMaster(Config cfg, int rank, Intracomm intracomm, JobAPI.Job job) {
+    try {
+      String twister2Home = Context.twister2Home(cfg);
+      // initialize the logger
+      initLogger(cfg, intracomm.getRank(), twister2Home);
+
+      Map<Integer, JobMasterAPI.WorkerInfo> infos = createResourcePlan(cfg, intracomm, job);
+      MPIWorkerController wc = new MPIWorkerController(intracomm.getRank(), infos);
+      // now create the worker
+      wc.add("comm", intracomm);
+      String workerClass = MPIContext.workerClass(cfg);
+      try {
+        Object object = ReflectionUtils.newInstance(workerClass);
+        if (object instanceof IWorker) {
+          IWorker container = (IWorker) object;
+          // now initialize the container
+          container.execute(cfg, intracomm.getRank(), wc, null, null);
+        } else {
+          throw new RuntimeException("Cannot instantiate class: " + object.getClass());
+        }
+        LOG.log(Level.FINE, "loaded worker class: " + workerClass);
+      } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+        LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
+            workerClass), e);
+        throw new RuntimeException(e);
+      }
+
+      LOG.log(Level.FINE, String.format("Worker %d: the cluster is ready...", rank));
+    } catch (MPIException e) {
+      LOG.log(Level.SEVERE, "Failed to synchronize the workers at the start");
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * last method to call to close the worker
+   */
+  private void closeWorker() {
+    LOG.log(Level.INFO, "Workers done... ");
+    // send worker completed message to the Job Master and finish
+    // Job master will delete the StatefulSet object
+    masterClient.sendWorkerCompletedMessage();
+    masterClient.close();
+  }
+
+  /**
    * create a AllocatedResources
-   * @param config configuration
+   * @param cfg configuration
    * @return  a map of rank to hostname
    */
-  public static Map<Integer, String> createResourcePlan(Config config) {
+  public Map<Integer, JobMasterAPI.WorkerInfo> createResourcePlan(Config cfg,
+                                                                         Intracomm intracomm,
+                                                                         JobAPI.Job job) {
     try {
-      String processName = MPI.getProcessorName();
-      char[] processNameChars = new char[processName.length()];
-      int length = processNameChars.length;
-      processName.getChars(0, length, processNameChars, 0);
+      JobMasterAPI.WorkerInfo workerInfo = createWorkerInfo(cfg, intracomm.getRank(), job);
+      byte[] workerBytes = workerInfo.toByteArray();
+      int length = workerBytes.length;
 
       IntBuffer countSend = MPI.newIntBuffer(1);
-      int worldSize = MPI.COMM_WORLD.getSize();
+      int worldSize = intracomm.getSize();
       IntBuffer countReceive = MPI.newIntBuffer(worldSize);
       // now calculate the total number of characters
       countSend.put(length);
-      MPI.COMM_WORLD.allGather(countSend, 1, MPI.INT, countReceive,
-          1, MPI.INT);
+      intracomm.allGather(countSend, 1, MPI.INT, countReceive, 1, MPI.INT);
 
       int[] receiveSizes = new int[worldSize];
       int[] displacements = new int[worldSize];
@@ -252,31 +501,63 @@ public final class MPIWorker {
         displacements[i] = sum;
         sum += receiveSizes[i];
       }
-      // first we need to send the expected number of characters
-      //  MPI.COMM_WORLD.allGather(countSend, 1, MPI.INT, countReceive, worldSize, MPI.INT);
-
       // now we need to send this to all the nodes
-      CharBuffer sendBuffer = MPI.newCharBuffer(length);
-      CharBuffer receiveBuffer = MPI.newCharBuffer(sum);
-      sendBuffer.append(processName);
+      ByteBuffer sendBuffer = MPI.newByteBuffer(length);
+      ByteBuffer receiveBuffer = MPI.newByteBuffer(sum);
+      sendBuffer.put(workerBytes);
 
       // now lets receive the process names of each rank
-      MPI.COMM_WORLD.allGatherv(sendBuffer, length, MPI.CHAR, receiveBuffer,
-          receiveSizes, displacements, MPI.CHAR);
+      intracomm.allGatherv(sendBuffer, length, MPI.BYTE, receiveBuffer,
+          receiveSizes, displacements, MPI.BYTE);
 
-      Map<Integer, String> processNames = new HashMap<>();
-
+      Map<Integer, JobMasterAPI.WorkerInfo> processNames = new HashMap<>();
       for (int i = 0; i < receiveSizes.length; i++) {
-        char[] c = new char[receiveSizes[i]];
+        byte[] c = new byte[receiveSizes[i]];
         receiveBuffer.get(c);
-        processNames.put(i, new String(c));
+        JobMasterAPI.WorkerInfo info = JobMasterAPI.WorkerInfo.newBuilder().mergeFrom(c).build();
+        processNames.put(i, info);
         LOG.log(Level.FINE, String.format("Process %d name: %s", i, processNames.get(i)));
       }
-
       return processNames;
     } catch (MPIException e) {
       throw new RuntimeException("Failed to communicate", e);
+    } catch (InvalidProtocolBufferException e) {
+      throw new RuntimeException("Failed to create worker info", e);
     }
+  }
+
+  /**
+   * Create worker information
+   * @param cfg configuration
+   * @param workerId communicator
+   * @param job job
+   * @return the worker information
+   * @throws MPIException if an error occurs
+   */
+  private JobMasterAPI.WorkerInfo createWorkerInfo(Config cfg, int workerId,
+                                                          JobAPI.Job job) throws MPIException {
+    String processName;
+    try {
+      processName = InetAddress.getLocalHost().getHostAddress();
+    } catch (UnknownHostException e) {
+      throw new RuntimeException("Failed to get ip address", e);
+    }
+
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(processName,
+        "default", "default");
+    JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, workerId);
+    List<String> portNames = SchedulerContext.additionalPorts(cfg);
+    Map<String, Integer> freePorts = new HashMap<>();
+    if (portNames == null) {
+      portNames = new ArrayList<>();
+    }
+    portNames.add("__worker__");
+    freePorts = NetworkUtils.findFreePorts(portNames);
+    Integer workerPort = freePorts.get("__worker__");
+    freePorts.remove("__worker__");
+
+    return WorkerInfoUtils.createWorkerInfo(workerId,
+        processName, workerPort, nodeInfo, computeResource, freePorts);
   }
 
   /**
@@ -284,7 +565,7 @@ public final class MPIWorker {
    * @param cfg the configuration
    * @param workerID worker id
    */
-  private static void initLogger(Config cfg, int workerID, String logDirectory) {
+  private void initLogger(Config cfg, int workerID, String logDirectory) {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
     LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);

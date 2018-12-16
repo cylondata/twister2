@@ -17,9 +17,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
 public class BTPartitionKeyedExample extends BenchTaskWorker {
 
@@ -33,8 +33,8 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     DataType keyType = DataType.INTEGER;
     String edge = "edge";
-    BaseBatchSource g = new KeyedSourceBatchTask(edge);
-    BaseBatchSink r = new KeyedPartitionSinkTask();
+    BaseSource g = new KeyedSourceBatchTask(edge);
+    BaseSink r = new KeyedPartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
@@ -42,7 +42,7 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     //keyed partition not implemented yet
   }
 
-  protected static class KeyedPartitionSinkTask extends BaseBatchSink {
+  protected static class KeyedPartitionSinkTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

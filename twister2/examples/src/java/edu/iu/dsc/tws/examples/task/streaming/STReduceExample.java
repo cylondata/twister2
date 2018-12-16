@@ -20,9 +20,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(STReduceExample.class.getName());
@@ -34,8 +34,8 @@ public class STReduceExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
 
     String edge = "edge";
-    BaseStreamSource g = new SourceStreamTask(edge);
-    BaseStreamSink r = new ReduceSinkTask();
+    BaseSource g = new SourceStreamTask(edge);
+    BaseSink r = new ReduceSinkTask();
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
@@ -44,7 +44,7 @@ public class STReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class ReduceSinkTask extends BaseStreamSink {
+  protected static class ReduceSinkTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
 
     private int count = 0;
@@ -61,12 +61,6 @@ public class STReduceExample extends BenchTaskWorker {
           LOG.info("Exception Message : " + e.getMessage());
         }
       }
-      /*if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        if (object instanceof int[]) {
-          LOG.info("Stream Reduce Message Received : " + Arrays.toString((int[]) object));
-        }
-      }*/
       return true;
     }
   }

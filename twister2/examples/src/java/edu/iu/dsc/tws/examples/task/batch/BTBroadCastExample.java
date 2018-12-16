@@ -19,9 +19,9 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
 public class BTBroadCastExample extends BenchTaskWorker {
 
@@ -33,15 +33,15 @@ public class BTBroadCastExample extends BenchTaskWorker {
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     String edge = "edge";
-    BaseBatchSource g = new SourceBatchTask(edge);
-    BaseBatchSink r = new BroadcastSinkTask();
+    BaseSource g = new SourceBatchTask(edge);
+    BaseSink r = new BroadcastSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
     return taskGraphBuilder;
   }
 
-  protected static class BroadcastSinkTask extends BaseBatchSink {
+  protected static class BroadcastSinkTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

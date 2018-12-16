@@ -26,13 +26,13 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.BaseCompute;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamCompute;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class MultiStageGraph extends TaskWorker {
   private static final Logger LOG = Logger.getLogger(MultiStageGraph.class.getName());
@@ -61,7 +61,7 @@ public class MultiStageGraph extends TaskWorker {
     taskExecutor.execute(graph, plan);
   }
 
-  private static class GeneratorTask extends BaseStreamSource {
+  private static class GeneratorTask extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
 
     private int count = 0;
@@ -80,7 +80,7 @@ public class MultiStageGraph extends TaskWorker {
     }
   }
 
-  private static class ReduceTask extends BaseStreamSink {
+  private static class ReduceTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284791L;
     private int count = 0;
 
@@ -94,7 +94,7 @@ public class MultiStageGraph extends TaskWorker {
   }
 
   @SuppressWarnings("rawtypes")
-  private static class PartitionTask extends BaseStreamCompute {
+  private static class PartitionTask extends BaseCompute {
     private static final long serialVersionUID = -254264903510284798L;
 
     private int count = 0;

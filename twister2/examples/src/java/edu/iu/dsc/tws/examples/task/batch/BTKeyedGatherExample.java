@@ -22,9 +22,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
 public class BTKeyedGatherExample extends BenchTaskWorker {
 
@@ -38,15 +38,15 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
     DataType keyType = DataType.OBJECT;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    BaseBatchSource g = new SourceBatchTask(edge);
-    BaseBatchSink r = new KeyedGatherSinkTask();
+    BaseSource g = new SourceBatchTask(edge);
+    BaseSink r = new KeyedGatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class KeyedGatherSinkTask extends BaseBatchSink {
+  protected static class KeyedGatherSinkTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

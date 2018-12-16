@@ -95,5 +95,6 @@ public class SAllGather {
 
   public void close() {
     // deregister from the channel
+    gather.close();
   }
 }

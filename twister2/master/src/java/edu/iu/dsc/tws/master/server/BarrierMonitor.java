@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.master.server;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +34,13 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+
+/**
+ * all workers in a job may wait on a barrier point
+ * BarrierMonitor will get barrier requests from all workers
+ * It will send response message to all workers,
+ * when it gets the request from the last worker in a job
+ */
 
 public class BarrierMonitor implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(BarrierMonitor.class.getName());
@@ -44,9 +63,9 @@ public class BarrierMonitor implements MessageHandler {
 
       // log first and last workers messages as INFO, others as FINE
       if (waitList.size() == 0) {
-        LOG.info("BarrierRequest message received from the first worker:\n" + barrierRequest);
+        LOG.fine("BarrierRequest message received from the first worker:\n" + barrierRequest);
       } else if (waitList.size() == (numberOfWorkers - 1)) {
-        LOG.info("BarrierRequest message received from the last worker:\n" + barrierRequest);
+        LOG.fine("BarrierRequest message received from the last worker:\n" + barrierRequest);
       } else {
         LOG.fine("BarrierRequest message received:\n" + barrierRequest);
       }
@@ -67,7 +86,7 @@ public class BarrierMonitor implements MessageHandler {
    */
   private void sendBarrierResponseToWaitList() {
 
-    LOG.info("All workers reached the barrier. "
+    LOG.fine("All workers reached the barrier. "
         + "BarrierResponse message will be sent to all workers.");
 
     for (Map.Entry<Integer, RequestID> entry: waitList.entrySet()) {

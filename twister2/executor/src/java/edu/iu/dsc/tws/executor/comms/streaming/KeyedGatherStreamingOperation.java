@@ -91,4 +91,9 @@ public class KeyedGatherStreamingOperation extends AbstractParallelOperation {
       }
     }
   }
+
+  @Override
+  public void close() {
+    op.close();
+  }
 }

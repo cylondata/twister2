@@ -10,7 +10,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.master.client;
+package edu.iu.dsc.tws.master.worker;
 
 import java.util.logging.Logger;
 
@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 public class Pinger implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(Pinger.class.getName());
 
-  private JobMasterAPI.WorkerInfo thisWorker;
+  private int workerID;
   private RRClient rrClient;
   private long interval;
 
@@ -33,10 +33,14 @@ public class Pinger implements MessageHandler {
 
   private RequestID requestID = null;
 
-  public Pinger(JobMasterAPI.WorkerInfo thisWorker, RRClient rrClient, long interval) {
-    this.thisWorker = thisWorker;
+  public Pinger(int workerID, RRClient rrClient, long interval) {
+    this.workerID = workerID;
     this.rrClient = rrClient;
     this.interval = interval;
+  }
+
+  public void setWorkerID(int workerID) {
+    this.workerID = workerID;
   }
 
   public long timeToNextPing() {
@@ -54,7 +58,7 @@ public class Pinger implements MessageHandler {
     lastPingTime = System.currentTimeMillis();
 
     JobMasterAPI.Ping ping = JobMasterAPI.Ping.newBuilder()
-        .setWorkerID(thisWorker.getWorkerID())
+        .setWorkerID(workerID)
         .setPingMessage("Ping Message From the Worker to the Job Master")
         .setMessageType(JobMasterAPI.Ping.MessageType.WORKER_TO_MASTER)
         .build();

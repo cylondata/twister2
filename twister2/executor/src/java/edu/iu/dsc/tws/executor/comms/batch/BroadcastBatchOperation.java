@@ -81,4 +81,9 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
       return false;
     }
   }
+
+  @Override
+  public void close() {
+    op.close();
+  }
 }

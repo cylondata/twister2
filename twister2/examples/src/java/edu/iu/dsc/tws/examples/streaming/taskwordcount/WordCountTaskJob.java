@@ -31,10 +31,10 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -62,7 +62,7 @@ public class WordCountTaskJob extends TaskWorker {
     taskExecutor.execute(graph, plan);
   }
 
-  private static class WordSource extends BaseBatchSource {
+  private static class WordSource extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
 
     private static final int MAX_CHARS = 5;
@@ -97,7 +97,7 @@ public class WordCountTaskJob extends TaskWorker {
     }
   }
 
-  private static class WordAggregator extends BaseBatchSink {
+  private static class WordAggregator extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
 
     @Override

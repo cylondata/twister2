@@ -19,9 +19,9 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 
 public class STBroadCastExample extends BenchTaskWorker {
 
@@ -34,8 +34,8 @@ public class STBroadCastExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
 
     String edge = "edge";
-    BaseStreamSource g = new SourceStreamTask(edge);
-    BaseStreamSink r = new BroadCastSinkTask();
+    BaseSource g = new SourceStreamTask(edge);
+    BaseSink r = new BroadCastSinkTask();
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
@@ -43,7 +43,7 @@ public class STBroadCastExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class BroadCastSinkTask extends BaseStreamSink {
+  protected static class BroadCastSinkTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

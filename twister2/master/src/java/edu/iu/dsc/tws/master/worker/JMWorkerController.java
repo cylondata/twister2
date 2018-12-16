@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master.client;
+package edu.iu.dsc.tws.master.worker;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -119,7 +119,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
         .setRequestType(requestType)
         .build();
 
-    LOG.info("Sending ListWorkers message to the master: \n" + listRequest);
+    LOG.fine("Sending ListWorkers message to the master: \n" + listRequest);
     try {
       rrClient.sendRequestWaitResponse(listRequest, timeLimit);
       return true;
@@ -134,7 +134,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   @Override
   public void onMessage(RequestID id, int workerId, Message message) {
     if (message instanceof ListWorkersResponse) {
-      LOG.info("ListWorkersResponse message received from the master: \n" + message);
+      LOG.fine("ListWorkersResponse message received from the master: \n" + message);
 
       ListWorkersResponse listResponse = (ListWorkersResponse) message;
       List<JobMasterAPI.WorkerInfo> receivedWorkerInfos =
@@ -152,7 +152,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
       }
 
     } else if (message instanceof JobMasterAPI.BarrierResponse) {
-      LOG.info("Received a BarrierResponse message from the master. \n" + message);
+      LOG.fine("Received a BarrierResponse message from the master. \n" + message);
 
     } else {
       LOG.warning("Received message unrecognized. \n" + message);
@@ -166,7 +166,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
         .setWorkerID(thisWorker.getWorkerID())
         .build();
 
-    LOG.info("Sending BarrierRequest message: \n" + barrierRequest.toString());
+    LOG.fine("Sending BarrierRequest message: \n" + barrierRequest.toString());
     try {
       rrClient.sendRequestWaitResponse(barrierRequest,
           ControllerContext.maxWaitTimeOnBarrier(config));

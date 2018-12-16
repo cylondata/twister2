@@ -23,13 +23,14 @@ import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.worker.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
-import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker;
+import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;
@@ -43,6 +44,8 @@ public final class MesosMPIWorkerStarter {
   private static JobMasterClient jobMasterClient;
   private static int workerID;
   private static int numberOfWorkers;
+  private static int resourceIndex = 0;
+  private static int startingPort = 30000;
 
   private MesosMPIWorkerStarter() { }
   public static void main(String[] args) {
@@ -71,6 +74,10 @@ public final class MesosMPIWorkerStarter {
 
     MesosWorkerController workerController = null;
     //List<WorkerNetworkInfo> workerNetworkInfoList = new ArrayList<>();
+
+    Map<String, Integer> additionalPorts =
+        MesosWorkerUtils.generateAdditionalPorts(config, startingPort);
+
     try {
       JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
@@ -80,10 +87,12 @@ public final class MesosMPIWorkerStarter {
       // job file configurations will override
       config = JobUtils.overrideConfigs(job, config);
       config = JobUtils.updateConfigs(job, config);
-
+      //this will change to get proper resource index.
+      JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
       LOG.info("in worker starter...... job worker count:" + job.getNumberOfWorkers());
       workerController = new MesosWorkerController(config, job,
-          Inet4Address.getLocalHost().getHostAddress(), 2023, workerID);
+          Inet4Address.getLocalHost().getHostAddress(), 2023, workerID, computeResource,
+          additionalPorts);
       workerController.initializeWithZooKeeper();
     } catch (Exception e) {
       LOG.severe("Error " + e.getMessage());
@@ -93,7 +102,9 @@ public final class MesosMPIWorkerStarter {
     String jobMasterIP = args[1];
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("Worker ID..: " + workerID);
-    startJobMasterClient(workerController.getWorkerInfo(), jobMasterIP);
+    int jobMasterPort = JobMasterContext.jobMasterPort(config);
+    startJobMasterClient(
+        workerController.getWorkerInfo(), jobMasterIP, jobMasterPort);
 
     LOG.info("\nWorker Controller\nWorker ID..: "
         + workerController.getWorkerInfo().getWorkerID()
@@ -115,14 +126,16 @@ public final class MesosMPIWorkerStarter {
     //workerController.close();
   }
 
-  public static void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP) {
+  public static void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP,
+                                          int jobMasterPort) {
 
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP().toString());
-    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP);
+    jobMasterClient =
+        new JobMasterClient(config, workerInfo, jobMasterIP, jobMasterPort, numberOfWorkers);
     jobMasterClient.startThreaded();
-    // we need to make sure that the worker starting message went through
-    jobMasterClient.sendWorkerStartingMessage();
+    // No need for sending workerStarting message anymore
+    // that is called in startThreaded method
   }
 
   public static void startWorker(IWorkerController workerController,
@@ -151,7 +164,8 @@ public final class MesosMPIWorkerStarter {
 //    }
 
     // lets create the resource plan
-    Map<Integer, String> processNames = MPIWorker.createResourcePlan(config);
+//    Map<Integer, JobMasterAPI.WorkerInfo> processNames =
+//        MPIWorker.createResourcePlan(config, MPI.COMM_WORLD, null);
     // now create the resource plan
     //AllocatedResources resourcePlan = MPIWorker.addContainers(config, processNames);
 //    AllocatedResources resourcePlan = MesosWorkerUtils.createAllocatedResources("mesos",

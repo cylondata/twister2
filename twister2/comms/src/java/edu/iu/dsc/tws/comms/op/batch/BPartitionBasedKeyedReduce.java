@@ -63,4 +63,8 @@ public class BPartitionBasedKeyedReduce {
     return partition.progress();
   }
 
+  public void close() {
+    // deregister from the channel
+    partition.close();
+  }
 }

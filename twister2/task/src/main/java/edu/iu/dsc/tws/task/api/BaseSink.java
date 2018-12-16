@@ -9,22 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.batch;
+package edu.iu.dsc.tws.task.api;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ICompute;
-import edu.iu.dsc.tws.task.api.TaskContext;
 
-public abstract class BaseBatchCompute implements ICompute {
-  private static final long serialVersionUID = -254264120110286748L;
-
+public abstract class BaseSink implements ISink {
   protected TaskContext context;
 
   protected Config config;
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
-    this.config = cfg;
     this.context = ctx;
+    this.config = cfg;
   }
 }

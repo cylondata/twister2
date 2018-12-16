@@ -9,10 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.master.server;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,6 +34,10 @@ import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
+import edu.iu.dsc.tws.master.IJobTerminator;
+import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.dashclient.DashboardClient;
+import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
@@ -44,16 +61,19 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
  * If the user calls:
  *   startJobMasterBlocking()
  * It uses the calling thread and this call does not return unless the JobMaster completes
+ *
+ * JobMaster to Dashboard messaging
+ * JobMaster reports to Dashboard server when dashboard address is provided in the config
+ * If dashboard host address is not provided, it does not try to connect to dashboard server
  */
 
 public class JobMaster {
   private static final Logger LOG = Logger.getLogger(JobMaster.class.getName());
 
   /**
-   * Job Master ID is assigned as -1,
-   * workers will have IDs starting from 0 and icreasing by one
+   * an id to be used when comminicating with workers and the client
    */
-  public static final int JOB_MASTER_ID = -1;
+  public static final int JOB_MASTER_ID = -10;
 
   /**
    * A singleton Progress object monitors network channel
@@ -114,9 +134,42 @@ public class JobMaster {
   private JobMasterAPI.NodeInfo nodeInfo;
 
   /**
+   * a UUID generated for each job
+   * it is primarily used when communicating with Dashboard
+   */
+  private String jobID;
+
+  /**
+   * host address of Dashboard server
+   * if it is set, job master will report to Dashboard
+   * otherwise, it will ignore Dashboard
+   */
+  private String dashboardHost;
+
+  /**
+   * the client that will handle Dashboard messaging
+   */
+  private DashboardClient dashClient;
+
+  /**
    * BarrierMonitor object
    */
   private BarrierMonitor barrierMonitor;
+
+  public JobMaster(Config config,
+                   String masterAddress,
+                   int port,
+                   IJobTerminator jobTerminator,
+                   JobAPI.Job job,
+                   JobMasterAPI.NodeInfo nodeInfo) {
+    this.config = config;
+    this.masterAddress = masterAddress;
+    this.jobTerminator = jobTerminator;
+    this.job = job;
+    this.nodeInfo = nodeInfo;
+    this.masterPort = port;
+    this.numberOfWorkers = job.getNumberOfWorkers();
+  }
 
   public JobMaster(Config config,
                    String masterAddress,
@@ -130,6 +183,15 @@ public class JobMaster {
     this.nodeInfo = nodeInfo;
     this.masterPort = JobMasterContext.jobMasterPort(config);
     this.numberOfWorkers = job.getNumberOfWorkers();
+
+    this.jobID = UUID.randomUUID().toString();
+    this.dashboardHost = JobMasterContext.dashboardHost(config);
+    if (dashboardHost == null) {
+      LOG.warning("Dashboard host address is null. Not connecting to Dashboard");
+      this.dashClient = null;
+    } else {
+      this.dashClient = new DashboardClient(dashboardHost, jobID);
+    }
   }
 
   /**
@@ -139,15 +201,31 @@ public class JobMaster {
 
     looper = new Progress();
 
-    ServerConnectHandler connectHandler = new ServerConnectHandler();
-    rrServer =
-        new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
+    // if Dashboard is used, register this job with that
+    if (dashClient != null) {
+      boolean registered = dashClient.registerJob(job, nodeInfo);
+      if (!registered) {
+        LOG.warning("Not using Dashboard since it can not register with it.");
+        dashClient = null;
+      }
+    }
 
-    workerMonitor = new WorkerMonitor(this, rrServer, numberOfWorkers,
+    ServerConnectHandler connectHandler = new ServerConnectHandler();
+    rrServer = new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID,
+        connectHandler, JobMasterContext.jobMasterAssignsWorkerIDs(config));
+
+    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job,
         JobMasterContext.jobMasterAssignsWorkerIDs(config));
+
     barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
+
+    JobMasterAPI.RegisterWorker.Builder registerWorkerBuilder =
+        JobMasterAPI.RegisterWorker.newBuilder();
+    JobMasterAPI.RegisterWorkerResponse.Builder registerWorkerResponseBuilder
+        = JobMasterAPI.RegisterWorkerResponse.newBuilder();
+
     JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
         JobMasterAPI.WorkerStateChange.newBuilder();
     JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
@@ -160,16 +238,26 @@ public class JobMaster {
     JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
         JobMasterAPI.BarrierResponse.newBuilder();
 
+    JobMasterAPI.ScaledComputeResource.Builder scaleMessageBuilder =
+        JobMasterAPI.ScaledComputeResource.newBuilder();
+    JobMasterAPI.ScaledResponse.Builder scaleResponseBuilder
+        = JobMasterAPI.ScaledResponse.newBuilder();
+
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
+    rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
+    rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
     rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
     rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
     rrServer.registerRequestHandler(barrierRequestBuilder, barrierMonitor);
     rrServer.registerRequestHandler(barrierResponseBuilder, barrierMonitor);
+    rrServer.registerRequestHandler(scaleMessageBuilder, workerMonitor);
+    rrServer.registerRequestHandler(scaleResponseBuilder, workerMonitor);
 
     rrServer.start();
     looper.loop();
+
   }
 
   /**
@@ -216,11 +304,27 @@ public class JobMaster {
   }
 
   /**
+   * this method is called when all workers became RUNNING
+   * we let the dashboard know that the job STARTED
+   */
+  public void allWorkersBecameRunning() {
+    // if Dashboard is used, tell it that the job has STARTED
+    if (dashClient != null) {
+      dashClient.jobStateChange(JobState.STARTED);
+    }
+  }
+
+  /**
    * this method is executed when the worker completed message received from all workers
    */
   public void allWorkersCompleted() {
 
-    LOG.info("All workers have completed. JobMaster is stopping.");
+    // if Dashboard is used, tell it that the job has completed
+    if (dashClient != null) {
+      dashClient.jobStateChange(JobState.COMPLETED);
+    }
+
+    LOG.info("All " + numberOfWorkers + " workers have completed. JobMaster is stopping.");
     workersCompleted = true;
     looper.wakeup();
 
@@ -247,7 +351,7 @@ public class JobMaster {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       try {
-        LOG.info("Client connected from:" + channel.getRemoteAddress());
+        LOG.fine("Client connected from:" + channel.getRemoteAddress());
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Exception when getting RemoteAddress", e);
       }

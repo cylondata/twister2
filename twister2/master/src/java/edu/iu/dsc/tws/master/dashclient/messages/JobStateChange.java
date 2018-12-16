@@ -9,23 +9,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.master.dashclient.messages;
 
-package edu.iu.dsc.tws.task.streaming;
+/**
+ * JobStateChange message to send with json to Dashboard from JobMaster
+ */
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.TaskContext;
+public class JobStateChange {
+  private String state;
 
-public abstract class BaseStreamSource implements ISource {
-  private static final long serialVersionUID = -254264120110286748L;
+  public JobStateChange() { }
 
-  protected TaskContext context;
-
-  protected Config config;
-
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    this.context = ctx;
-    this.config = cfg;
+  public JobStateChange(String state) {
+    this.state = state;
   }
+
+  public String getState() {
+    return state;
+  }
+
+  public void setState(String state) {
+    this.state = state;
+  }
+
 }

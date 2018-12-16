@@ -9,22 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.streaming;
+package edu.iu.dsc.tws.master.dashclient.messages;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ICompute;
-import edu.iu.dsc.tws.task.api.TaskContext;
+public class ScaleComputeResource {
+  private int instances;
 
-public abstract class BaseStreamCompute implements ICompute {
-  private static final long serialVersionUID = -254264120110286748L;
+  public ScaleComputeResource() {
+  }
 
-  protected Config config;
+  public ScaleComputeResource(int instances) {
+    this.instances = instances;
+  }
 
-  protected TaskContext context;
+  public void setInstances(int instances) {
+    this.instances = instances;
+  }
 
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    this.config = cfg;
-    this.context = ctx;
+  public int getInstances() {
+    return instances;
   }
 }

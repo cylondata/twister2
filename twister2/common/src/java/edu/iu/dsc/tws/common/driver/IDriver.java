@@ -9,23 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.common.driver;
 
-package edu.iu.dsc.tws.task.streaming;
+/**
+ * An instance of this class will be executed in the submitting client,
+ * if it is specified in Twister2Job
+ */
+public interface IDriver {
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.TaskContext;
-
-public abstract class BaseStreamSink implements ISink {
-  protected static final long serialVersionUID = -254264120110286748L;
-
-  protected TaskContext context;
-
-  protected Config config;
-
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    this.context = ctx;
-    this.config = cfg;
-  }
+  /**
+   * After the job is submitted,
+   * an instance of this method will be executed in the submitting client
+   *
+   * Implementing Driver program can communicate with the JobMaster and workers
+   * with the provided IDriverController
+   *
+   * @param driverController
+   */
+  void execute(IDriverController driverController);
 }

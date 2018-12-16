@@ -23,13 +23,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.jobmaster;
 
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
+import java.nio.file.Paths;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.master.JobMaster;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.server.JobMaster;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public final class JobMasterExample {
@@ -52,44 +58,50 @@ public final class JobMasterExample {
    */
   public static void main(String[] args) {
 
-    if (args.length != 1) {
-      printUsage();
-      return;
-    }
+    // we assume that the twister2Home is the current directory
+    String configDir = "conf/kubernetes/";
+    String twister2Home = Paths.get("").toAbsolutePath().toString();
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir);
+    config = updateConfig(config);
+    LOG.info("Loaded: " + config.size() + " parameters from configuration directory: " + configDir);
 
-    int numberOfWorkers = Integer.parseInt(args[0]);
-    Config configs = buildConfig(numberOfWorkers);
-
-    LOG.info("Config parameters: \n" + configs);
-
-    String host = JobMasterContext.jobMasterIP(configs);
-    String jobName = Context.jobName(configs);
-
-    Twister2Job twister2Job = Twister2Job.loadTwister2Job(configs, null);
+    Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
     JobAPI.Job job = twister2Job.serialize();
 
-    JobMaster jobMaster = new JobMaster(configs, host, null, job, null);
+    String ip = null;
+    try {
+      ip = Inet4Address.getLocalHost().getHostAddress();
+    } catch (UnknownHostException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return;
+    }
+    JobMasterAPI.NodeInfo jobMasterNode = NodeInfoUtils.createNodeInfo(ip, null, null);
+
+    String host = "localhost";
+    JobMaster jobMaster = new JobMaster(config, host, null, job, jobMasterNode);
     jobMaster.startJobMasterThreaded();
 
-    LOG.info("Threaded Job Master started.");
+    LOG.info("Threaded Job Master started:"
+        + "\nnumberOfWorkers: " + job.getNumberOfWorkers()
+        + "\njobName: " + job.getJobName()
+    );
+
   }
 
   /**
    * construct a Config object
    * @return
    */
-  public static Config buildConfig(int numberOfWorkers) {
+  public static Config updateConfig(Config config) {
     return Config.newBuilder()
-        .put(JobMasterContext.JOB_MASTER_IP, "localhost")
-        .put(Context.JOB_NAME, "basic-kube")
-        .put(Context.TWISTER2_WORKER_INSTANCES, numberOfWorkers)
-        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, "true")
+        .putAll(config)
+        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
         .build();
   }
 
   public static void printUsage() {
     LOG.info("Usage:\n"
-        + "java JobMasterExample numberOfWorkers");
+        + "java JobMasterExample");
   }
 
 }

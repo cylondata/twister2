@@ -57,4 +57,10 @@ public interface IParallelOperation {
    */
   default void finish(int source) {
   }
+
+  /**
+   * Close the parallel operation
+   */
+  default void close() {
+  }
 }
