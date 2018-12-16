@@ -103,8 +103,12 @@ def write_rows(rows, config):
             md += "<tr><td>default</td>" + "<td>" + row.default_value + "</td>"
             if len(row.value_options) != 0:
                 md += "<tr><td>options</td><td>"
+                first_option = True
                 for option in row.value_options:
-                    md += option + "<br/>"
+                    if not first_option:
+                        md += "<br/>"
+                    md += option
+                    first_option = False
                 md += "</td>"
             md += "<tr><td>description</td>" + "<td>" + row.description + "</td>"
             md += "</table>\n\n"
