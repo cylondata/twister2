@@ -110,7 +110,7 @@ def write_rows(rows, config):
                     md += option
                     first_option = False
                 md += "</td>"
-            md += "<tr><td>description</td>" + "<td>" + row.description + "</td>"
+            md += "<tr><td>description</td>" + "<td>" + row.description.strip() + "</td>"
             md += "</table>\n\n"
         doc_file = os.path.join(twister2_root, config["doc"])
     doc_parent = os.path.dirname(doc_file)
