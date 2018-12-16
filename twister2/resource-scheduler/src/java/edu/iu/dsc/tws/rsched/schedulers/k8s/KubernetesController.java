@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.squareup.okhttp.Response;
 
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
@@ -54,11 +56,13 @@ import io.kubernetes.client.models.V1beta2StatefulSetList;
 public class KubernetesController {
   private static final Logger LOG = Logger.getLogger(KubernetesController.class.getName());
 
+  private String namespace;
   private ApiClient client = null;
   private CoreV1Api coreApi;
   private AppsV1beta2Api beta2Api;
 
-  public void init() {
+  public void init(String nspace) {
+    this.namespace = nspace;
     createApiInstances();
   }
 
@@ -79,7 +83,7 @@ public class KubernetesController {
    * return the StatefulSet object if it exists in the Kubernetes master,
    * otherwise return null
    */
-  public boolean existStatefulSets(String namespace, List<String> statefulSetNames) {
+  public boolean existStatefulSets(List<String> statefulSetNames) {
     V1beta2StatefulSetList setList = null;
     try {
       setList = beta2Api.listNamespacedStatefulSet(
@@ -105,7 +109,7 @@ public class KubernetesController {
    * they must be in the form of "jobName-index"
    * otherwise return an empty ArrayList
    */
-  public ArrayList<String> getStatefulSetsForJobWorkers(String namespace, String jobName) {
+  public ArrayList<String> getStatefulSetsForJobWorkers(String jobName) {
     V1beta2StatefulSetList setList = null;
     try {
       setList = beta2Api.listNamespacedStatefulSet(
@@ -130,7 +134,7 @@ public class KubernetesController {
   /**
    * create the given StatefulSet on Kubernetes master
    */
-  public boolean createStatefulSet(String namespace, V1beta2StatefulSet statefulSet) {
+  public boolean createStatefulSet(V1beta2StatefulSet statefulSet) {
 
     String statefulSetName = statefulSet.getMetadata().getName();
     try {
@@ -159,7 +163,7 @@ public class KubernetesController {
   /**
    * delete the given StatefulSet from Kubernetes master
    */
-  public boolean deleteStatefulSet(String namespace, String statefulSetName) {
+  public boolean deleteStatefulSet(String statefulSetName) {
 
     try {
       V1DeleteOptions deleteOptions = new V1DeleteOptions();
@@ -196,9 +200,42 @@ public class KubernetesController {
   }
 
   /**
+   * scale up or down the given StatefulSet
+   */
+  public boolean patchStatefulSet(String ssName, int replicas) {
+
+    String jsonPatchStr =
+        "{\"op\":\"replace\",\"path\":\"/spec/replicas\",\"value\":" + replicas + "}";
+    Object obj = (new Gson()).fromJson(jsonPatchStr, JsonElement.class);
+    ArrayList<Object> objectList = new ArrayList<>();
+    objectList.add(obj);
+
+    try {
+      Response response = beta2Api.patchNamespacedStatefulSetCall(
+          ssName, namespace, objectList, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "StatefulSet [" + ssName + "] is patched.");
+        return true;
+
+      } else {
+        LOG.log(Level.SEVERE, "Error when patching the StatefulSet [" + ssName + "]: "
+            + response);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the StatefulSet: " + ssName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the StatefulSet: " + ssName, e);
+    }
+    return false;
+  }
+
+  /**
    * create the given ConfigMap on Kubernetes master
    */
-  public boolean createConfigMap(String namespace, V1ConfigMap configMap) {
+  public boolean createConfigMap(V1ConfigMap configMap) {
 
     String configMapName = configMap.getMetadata().getName();
     try {
@@ -228,7 +265,7 @@ public class KubernetesController {
    * return true if there is already a ConfigMap object with the same name on Kubernetes master,
    * otherwise return false
    */
-  public boolean existConfigMap(String namespace, String configMapName) {
+  public boolean existConfigMap(String configMapName) {
     V1ConfigMapList configMapList = null;
     try {
       configMapList = coreApi.listNamespacedConfigMap(namespace,
@@ -251,7 +288,7 @@ public class KubernetesController {
   /**
    * delete the given ConfigMap from Kubernetes master
    */
-  public boolean deleteConfigMap(String namespace, String configMapName) {
+  public boolean deleteConfigMap(String configMapName) {
 
     V1DeleteOptions deleteOptions = new V1DeleteOptions();
     deleteOptions.setGracePeriodSeconds(0L);
@@ -288,7 +325,7 @@ public class KubernetesController {
   /**
    * create the given service on Kubernetes master
    */
-  public boolean createService(String namespace, V1Service service) {
+  public boolean createService(V1Service service) {
 
     String serviceName = service.getMetadata().getName();
     try {
@@ -315,7 +352,7 @@ public class KubernetesController {
    * return true if one of the services exist in Kubernetes master,
    * otherwise return false
    */
-  public boolean existServices(String namespace, List<String> serviceNames) {
+  public boolean existServices(List<String> serviceNames) {
 // sending the request with label does not work for list services call
 //    String label = "app=" + serviceLabel;
     V1ServiceList serviceList = null;
@@ -340,7 +377,7 @@ public class KubernetesController {
   /**
    * delete the given service from Kubernetes master
    */
-  public boolean deleteService(String namespace, String serviceName) {
+  public boolean deleteService(String serviceName) {
 
     V1DeleteOptions deleteOptions = new V1DeleteOptions();
     deleteOptions.setGracePeriodSeconds(0L);
@@ -391,11 +428,10 @@ public class KubernetesController {
 
   /**
    * check whether the given PersistentVolumeClaim exist on Kubernetes master
-   * @param namespace
    * @param pvcName
    * @return
    */
-  public boolean existPersistentVolumeClaim(String namespace, String pvcName) {
+  public boolean existPersistentVolumeClaim(String pvcName) {
     V1PersistentVolumeClaimList pvcList = null;
     try {
       pvcList = coreApi.listNamespacedPersistentVolumeClaim(
@@ -418,7 +454,7 @@ public class KubernetesController {
   /**
    * create the given PersistentVolumeClaim on Kubernetes master
    */
-  public boolean createPersistentVolumeClaim(String namespace, V1PersistentVolumeClaim pvc) {
+  public boolean createPersistentVolumeClaim(V1PersistentVolumeClaim pvc) {
 
     String pvcName = pvc.getMetadata().getName();
     try {
@@ -443,7 +479,7 @@ public class KubernetesController {
     return false;
   }
 
-  public boolean deletePersistentVolumeClaim(String namespace, String pvcName) {
+  public boolean deletePersistentVolumeClaim(String pvcName) {
 
     try {
       Response response = coreApi.deleteNamespacedPersistentVolumeClaimCall(
@@ -556,7 +592,7 @@ public class KubernetesController {
    * return true if the Secret object with that name exists in Kubernetes master,
    * otherwise return false
    */
-  public boolean existSecret(String namespace, String secretName) {
+  public boolean existSecret(String secretName) {
     V1SecretList secretList = null;
     try {
       secretList = coreApi.listNamespacedSecret(namespace,
