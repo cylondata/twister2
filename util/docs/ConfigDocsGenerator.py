@@ -53,12 +53,13 @@ def parse_config(config_dic):
 def write_rows(rows, config):
     md = "# " + config["title"] + "\n\n"
     md += config["description"] + "\n\n"
+    md += "<table>"
     for row in rows:
-        md += "<table>"
         md += "<tr><td>property</td>" + "<td>" + row.property + "</td>"
-        md += "<tr><td>default value</td>" + "<td>" + row.default_value + "</td>"
+        md += "<tr><td>default</td>" + "<td>" + row.default_value + "</td>"
         md += "<tr><td>description</td>" + "<td>" + row.description + "</td>"
-        md += "</table>\n\n"
+        md += "<tr><td></td><td></td></tr>"
+    md += "</table>\n\n"
     doc_file = os.path.join(twister2_root, config["doc"])
     doc_parent = os.path.dirname(doc_file)
     if not os.path.exists(doc_parent):
