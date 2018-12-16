@@ -1,6 +1,9 @@
 import re, os
 
 configs = {
+
+    # STANDALONE
+
     "standalone_resource": {
         "title": "Standalone Resource Configuration",
         "description": "",
@@ -36,7 +39,46 @@ configs = {
         "description": "",
         "yml": "twister2/config/src/yaml/conf/standalone/uploader.yaml",
         "doc": "docs/configurations/standalone/uploader.md"
-    }
+    },
+
+    # SLURM
+    "slurm_data": {
+        "title": "Slurm Data Configuration",
+        "description": "",
+        "yml": "twister2/config/src/yaml/conf/slurm/data.yaml",
+        "doc": "docs/configurations/slurm/data.md"
+    },
+    "slurm_network": {
+        "title": "Slurm Network Configuration",
+        "description": "",
+        "yml": "twister2/config/src/yaml/conf/slurm/network.yaml",
+        "doc": "docs/configurations/slurm/network.md"
+    },
+    "slurm_resource": {
+        "title": "Slurm Resource Configuration",
+        "description": "",
+        "yml": "twister2/config/src/yaml/conf/slurm/resource.yaml",
+        "doc": "docs/configurations/slurm/resource.md"
+    },
+    "slurm_system": {
+        "title": "Slurm System Configuration",
+        "description": "",
+        "yml": "twister2/config/src/yaml/conf/slurm/system.yaml",
+        "doc": "docs/configurations/slurm/system.md"
+    },
+    "slurm_task": {
+        "title": "Slurm Task Configuration",
+        "description": "",
+        "yml": "twister2/config/src/yaml/conf/slurm/task.yaml",
+        "doc": "docs/configurations/slurm/task.md"
+    },
+    "slurm_uploader": {
+        "title": "Slurm Uploader Configuration",
+        "description": "",
+        "yml": "twister2/config/src/yaml/conf/slurm/uploader.yaml",
+        "doc": "docs/configurations/slurm/uploader.md"
+    },
+
 }
 
 
