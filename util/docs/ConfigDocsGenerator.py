@@ -55,8 +55,8 @@ def write_rows(rows, config):
     md += config["description"] + "\n\n"
     for row in rows:
         md += "## " + row.property + "\n"
-        md += "<table>\n"
-        md += "<tr><td>default value</td>" + "<td>" + row.property + "</td>"
+        md += "<table>"
+        md += "<tr><td>default value</td>" + "<td>" + row.default_value + "</td>"
         md += "<tr><td>description</td>" + "<td>" + row.description + "</td>"
         md += "</table>\n\n"
     doc_file = os.path.join(twister2_root, config["doc"])
