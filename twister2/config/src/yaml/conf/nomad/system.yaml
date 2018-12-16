@@ -77,6 +77,7 @@ twister2.job.master.ip: "127.0.0.1"
 ###################################################################################
 # WorkerController related config parameters
 ###################################################################################
+
 # amount of timeout for all workers to join the job
 # in milli seconds
 twister2.worker.controller.max.wait.time.for.all.workers.to.join: 100000
@@ -88,6 +89,7 @@ twister2.worker.controller.max.wait.time.on.barrier: 100000
 ###################################################################
 # Dashboard related settings
 ###################################################################
+
 # Dashboard server host address and port
 # if this parameter is not specified, then job master will not try to connect to Dashboard
 # twister2.dashboard.host: "http://localhost:8080"

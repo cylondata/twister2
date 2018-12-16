@@ -2,85 +2,50 @@ import re, os
 
 configs = {
 
-    # STANDALONE
+    # AURORA
+    # "aurora_client": {
+    #     "title": "Aurora Client Configuration",
+    #     "description": "",
+    #     "yml": "twister2/config/src/yaml/conf/aurora/client.yaml",
+    #     "doc": "docs/configurations/aurora/client.md"
+    # },
 
-    "standalone_resource": {
-        "title": "Standalone Resource Configuration",
-        "description": "",
-        "yml": "twister2/config/src/yaml/conf/standalone/resource.yaml",
-        "doc": "docs/configurations/standalone/resource.md"
-    },
-    "standalone_data": {
-        "title": "Standalone Data Configuration",
-        "description": "",
-        "yml": "twister2/config/src/yaml/conf/standalone/data.yaml",
-        "doc": "docs/configurations/standalone/data.md"
-    },
-    "standalone_network": {
-        "title": "Standalone Network Configuration",
-        "description": "",
-        "yml": "twister2/config/src/yaml/conf/standalone/network.yaml",
-        "doc": "docs/configurations/standalone/network.md"
-    },
-    "standalone_system": {
-        "title": "Standalone System Configuration",
-        "description": "",
-        "yml": "twister2/config/src/yaml/conf/standalone/system.yaml",
-        "doc": "docs/configurations/standalone/system.md"
-    },
-    "standalone_task": {
-        "title": "Standalone Task Configuration",
-        "description": "",
-        "yml": "twister2/config/src/yaml/conf/standalone/task.yaml",
-        "doc": "docs/configurations/standalone/task.md"
-    },
-    "standalone_uploader": {
-        "title": "Standalone Uploader Configuration",
-        "description": "",
-        "yml": "twister2/config/src/yaml/conf/standalone/uploader.yaml",
-        "doc": "docs/configurations/standalone/uploader.md"
-    },
+    # K8s
+    # "kubernetes_client": {
+    #     "title": "Kubernetes Client Configuration",
+    #     "description": "",
+    #     "yml": "twister2/config/src/yaml/conf/kubernetes/client.yaml",
+    #     "doc": "docs/configurations/kubernetes/client.md"
+    # },
 
-    # SLURM
-    "slurm_data": {
-        "title": "Slurm Data Configuration",
-        "description": "",
-        "yml": "twister2/config/src/yaml/conf/slurm/data.yaml",
-        "doc": "docs/configurations/slurm/data.md"
-    },
-    "slurm_network": {
-        "title": "Slurm Network Configuration",
-        "description": "",
-        "yml": "twister2/config/src/yaml/conf/slurm/network.yaml",
-        "doc": "docs/configurations/slurm/network.md"
-    },
-    "slurm_resource": {
-        "title": "Slurm Resource Configuration",
-        "description": "",
-        "yml": "twister2/config/src/yaml/conf/slurm/resource.yaml",
-        "doc": "docs/configurations/slurm/resource.md"
-    },
-    "slurm_system": {
-        "title": "Slurm System Configuration",
-        "description": "",
-        "yml": "twister2/config/src/yaml/conf/slurm/system.yaml",
-        "doc": "docs/configurations/slurm/system.md"
-    },
-    "slurm_task": {
-        "title": "Slurm Task Configuration",
-        "description": "",
-        "yml": "twister2/config/src/yaml/conf/slurm/task.yaml",
-        "doc": "docs/configurations/slurm/task.md"
-    },
-    "slurm_uploader": {
-        "title": "Slurm Uploader Configuration",
-        "description": "",
-        "yml": "twister2/config/src/yaml/conf/slurm/uploader.yaml",
-        "doc": "docs/configurations/slurm/uploader.md"
-    },
-
+    # mesos
+    # "mesos_client": {
+    #     "title": "Mesos Client Configuration",
+    #     "description": "",
+    #     "yml": "twister2/config/src/yaml/conf/mesos/client.yaml",
+    #     "doc": "docs/configurations/mesos/client.md"
+    # },
 }
 
+# Common config files definitions will be generated here. Please add other configs to above dictionary
+modes = ["standalone", "slurm", "aurora", "kubernetes", "mesos", "nomad"]
+common_files = ["data", "network", "resource", "system", "task", "uploader"]
+
+descriptions = {
+    "standalone_data": ""  # example
+}
+
+for mode in modes:
+    for file in common_files:
+        key = mode + "_" + file
+        configs[key] = {}
+        configs[key]["title"] = mode.capitalize() + " " + file.capitalize() + " Configuration"
+        configs[key]["description"] = "" if not descriptions.has_key(key) else descriptions[key]
+        configs[key]["yml"] = "twister2/config/src/yaml/conf/" + mode + "/" + file + ".yaml"
+        configs[key]["doc"] = "docs/configurations/" + mode + "/" + file + ".md"
+
+
+# End of common configuration generation
 
 class TableRow:
     property = None
@@ -124,7 +89,7 @@ def parse_config(config_dic):
                 if current_row.description is None:
                     current_row.description = comment_regex.group(1)
                 else:
-                    current_row.description += " " + comment_regex.group(1)
+                    current_row.description += "<br/>" + comment_regex.group(1)
             elif property_regex:
                 current_row.property = property_regex.group(1)
                 current_row.default_value = property_regex.group(2)
@@ -154,7 +119,7 @@ def write_rows(rows, config):
                 md += "</td>"
             md += "<tr><td>description</td>" + "<td>" + row.description.strip() + "</td>"
             md += "</table>\n\n"
-        doc_file = os.path.join(twister2_root, config["doc"])
+    doc_file = os.path.join(twister2_root, config["doc"])
     doc_parent = os.path.dirname(doc_file)
     if not os.path.exists(doc_parent):
         os.makedirs(os.path.dirname(doc_file))

@@ -50,6 +50,7 @@ kubernetes.worker.mapping.values: ['e012', 'e013']
 ###################################################################################
 # ZooKeeper related config parameters
 ###################################################################################
+
 # ZooKeeper server addresses: comma separated host:port pairs
 # example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
 twister2.zookeeper.server.addresses: "ip:port"
