@@ -54,7 +54,7 @@ def write_rows(rows, config):
     md = "# " + config["title"] + "\n\n"
     md += config["description"] + "\n\n"
     for row in rows:
-        md += row.property + "\n"
+        md += "**" + row.property + "**\n"
         md += "<table>"
         md += "<tr><td>default</td>" + "<td>" + row.default_value + "</td>"
         md += "<tr><td>description</td>" + "<td>" + row.description + "</td>"
