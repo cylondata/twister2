@@ -1,6 +1,6 @@
 # Standalone Resource Configuration
 
-description
+
 
 **twister2.resource.scheduler.mpi.working.directory**
 <table><tr><td>default</td><td>"${HOME}/.twister2/jobs"</td><tr><td>description</td><td> working directory</td></table>

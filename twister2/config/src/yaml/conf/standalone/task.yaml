@@ -1,11 +1,11 @@
-#Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware"
-#twister2.streaming.taskscheduler: "firstfit"
+# Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware"
 twister2.streaming.taskscheduler: "roundrobin"
+# twister2.streaming.taskscheduler: "firstfit"
 
-#Streaming Task Scheduler Class
+# Streaming Task Scheduler Class
 twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
-#twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.ResourceAwareRoundRobinTaskScheduler"
-#twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"
+# twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.ResourceAwareRoundRobinTaskScheduler"
+# twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"
 
 #Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware"
 twister2.batch.taskscheduler: "roundrobin"
@@ -15,25 +15,36 @@ twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.Roun
 
 #Default Task Instance Values
 twister2.task.instances: 2
+
 twister2.task.instance.ram: 512.0
+
 twister2.task.instance.disk: 500.0
+
 twister2.task.instance.cpu: 2.0
 
 #Default Container Padding Values
 twister2.ram.padding.container: 2.0
+
 twister2.disk.padding.container: 12.0
+
 twister2.cpu.padding.container: 1.0
+
 twister2.container.padding.percentage: 2
 
 #Default Container Instance Values
 twister2.container.instance.ram: 4096.0
+
 twister2.container.instance.disk: 8000.0
+
 twister2.container.instance.cpu: 16.0
 
 #For Network Parameters
 twister2.container.instance.bandwidth: 10 #Mbps
+
 twister2.container.instance.latency: 0.002 #Milliseconds
+
 twister2.datanode.instance.bandwidth: 20 #Mbps
+
 twister2.datanode.instance.latency: 0.01 #Milliseconds
 
 #Default Task Parallelism Value
