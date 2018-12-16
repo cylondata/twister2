@@ -3,17 +3,16 @@
 # for Twister2 workers
 ###################################################################
 
-# logging level: FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE
-# default value is INFO
+# logging level, FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE
 twister2.logging.level: "INFO"
 
 # Do workers request persistent logging? it could be true or false
 # default value is false
 persistent.logging.requested: true
 
-# whether System.out and System.err should be redircted to log files
+# whether System.out and System.err should be redirected to log files
 # When System.out and System.err are redirected to log file,
-# All messages are only saved in log files. Only a few intial messages are shown on Dashboard.
+# All messages are only saved in log files. Only a few initial messages are shown on Dashboard.
 # Otherwise, Dashboard has the complete messages,
 # log files has the log messages except System.out and System.err.
 twister2.logging.redirect.sysouterr: false
@@ -37,7 +36,7 @@ twister2.logging.sandbox.logging: true
 twister2.job.master.runs.in.client: true
 
 # if true, job master assigns the worker IDs,
-# if false, workers have their IDs when regitering with the job master
+# if false, workers have their IDs when registering with the job master
 twister2.job.master.assigns.worker.ids: false
 
 # ping message intervals from workers to the job master in milliseconds

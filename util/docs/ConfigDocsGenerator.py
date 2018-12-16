@@ -86,7 +86,7 @@ def parse_config(config_dic):
                 else:
                     current_row.value_options.append(commented_property_regex.group(2))
             elif comment_regex:
-                if current_row.description is None:
+                if current_row.description == "":
                     current_row.description = comment_regex.group(1)
                 else:
                     current_row.description += "<br/>" + comment_regex.group(1)

@@ -3,10 +3,10 @@
 
 
 **twister2.streaming.taskscheduler**
-<table><tr><td>default</td><td>"roundrobin"</td><tr><td>options</td><td>"firstfit"</td><tr><td>description</td><td><br/>Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware"</td></table>
+<table><tr><td>default</td><td>"roundrobin"</td><tr><td>options</td><td>"firstfit"</td><tr><td>description</td><td>Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware"</td></table>
 
 **twister2.streaming.taskscheduler.class**
-<table><tr><td>default</td><td>"edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"</td><tr><td>options</td><td>"edu.iu.dsc.tws.tsched.streaming.roundrobin.ResourceAwareRoundRobinTaskScheduler"<br/>"edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"</td><tr><td>description</td><td><br/>Streaming Task Scheduler Class</td></table>
+<table><tr><td>default</td><td>"edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"</td><tr><td>options</td><td>"edu.iu.dsc.tws.tsched.streaming.roundrobin.ResourceAwareRoundRobinTaskScheduler"<br/>"edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"</td><tr><td>description</td><td>Streaming Task Scheduler Class</td></table>
 
 **twister2.batch.taskscheduler**
 <table><tr><td>default</td><td>"roundrobin"</td><tr><td>description</td><td></td></table>
