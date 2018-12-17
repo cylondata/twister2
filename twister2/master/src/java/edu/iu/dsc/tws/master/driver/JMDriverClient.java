@@ -53,6 +53,12 @@ public class JMDriverClient {
    */
   private boolean connectionRefused = false;
 
+  /**
+   * broadcast response message
+   * it is used to transfer from message listener to sending method
+   */
+  private JobMasterAPI.BroadcastResponse broadcastResponse;
+
   public JMDriverClient(Config config,
                         String masterHost,
                         int masterPort) {
@@ -76,14 +82,20 @@ public class JMDriverClient {
         RRServer.CLIENT_ID, connectHandler);
 
     // protocol buffer message registrations
-    JobMasterAPI.ScaledComputeResource.Builder scaleMessageBuilder =
+    JobMasterAPI.ScaledComputeResource.Builder scaledMessageBuilder =
         JobMasterAPI.ScaledComputeResource.newBuilder();
-    JobMasterAPI.ScaledResponse.Builder scaleResponseBuilder
+    JobMasterAPI.ScaledResponse.Builder scaledResponseBuilder
         = JobMasterAPI.ScaledResponse.newBuilder();
 
+    JobMasterAPI.Broadcast.Builder broadcastBuilder = JobMasterAPI.Broadcast.newBuilder();
+    JobMasterAPI.BroadcastResponse.Builder broadcastResponseBuilder
+        = JobMasterAPI.BroadcastResponse.newBuilder();
+
     ResponseMessageHandler responseMessageHandler = new ResponseMessageHandler();
-    rrClient.registerResponseHandler(scaleMessageBuilder, responseMessageHandler);
-    rrClient.registerResponseHandler(scaleResponseBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(scaledMessageBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(scaledResponseBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(broadcastBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(broadcastResponseBuilder, responseMessageHandler);
 
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
@@ -221,7 +233,13 @@ public class JMDriverClient {
     // wait for the response
     try {
       rrClient.sendRequestWaitResponse(broadcast, JobMasterContext.responseWaitDuration(config));
-      return true;
+      if (broadcastResponse != null && broadcastResponse.getSucceeded()) {
+        broadcastResponse = null;
+        return true;
+      } else {
+        broadcastResponse = null;
+        return false;
+      }
 
     } catch (BlockingSendException bse) {
       LOG.log(Level.SEVERE, bse.getMessage(), bse);
@@ -240,7 +258,12 @@ public class JMDriverClient {
 
       } else if (message instanceof JobMasterAPI.BroadcastResponse) {
 
-        LOG.info("Received BroadcastResponse message from JobMaster.");
+        broadcastResponse = (JobMasterAPI.BroadcastResponse) message;
+        if (!broadcastResponse.getSucceeded()) {
+          LOG.severe("Broadcasting the message is unsuccessful. Response: \n" + broadcastResponse);
+        } else {
+          LOG.info("Broadcasting the message is successful.");
+        }
 
       } else {
 

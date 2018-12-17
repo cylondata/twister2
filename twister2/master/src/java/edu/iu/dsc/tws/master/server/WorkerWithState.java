@@ -55,7 +55,7 @@ public class WorkerWithState {
     return workerInfo;
   }
 
-  public JobMasterAPI.WorkerState getLastWorkerState() {
+  public JobMasterAPI.WorkerState getLastState() {
     return states.get(states.size() - 1);
   }
 

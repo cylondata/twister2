@@ -177,7 +177,11 @@ message Broadcast {
 }
 
 // Broadcast response message
-// nothing in it
+// if it fails, reason will have a string explaining the problem
 message BroadcastResponse {
+    oneof required {
+        bool succeeded = 1;
+    }
+    string reason = 2;
 }
 

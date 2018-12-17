@@ -238,10 +238,14 @@ public class JobMaster {
     JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
         JobMasterAPI.BarrierResponse.newBuilder();
 
-    JobMasterAPI.ScaledComputeResource.Builder scaleMessageBuilder =
+    JobMasterAPI.ScaledComputeResource.Builder scaledMessageBuilder =
         JobMasterAPI.ScaledComputeResource.newBuilder();
-    JobMasterAPI.ScaledResponse.Builder scaleResponseBuilder
+    JobMasterAPI.ScaledResponse.Builder scaledResponseBuilder
         = JobMasterAPI.ScaledResponse.newBuilder();
+
+    JobMasterAPI.Broadcast.Builder broadcastBuilder = JobMasterAPI.Broadcast.newBuilder();
+    JobMasterAPI.BroadcastResponse.Builder broadcastResponseBuilder
+        = JobMasterAPI.BroadcastResponse.newBuilder();
 
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
     rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
@@ -252,8 +256,10 @@ public class JobMaster {
     rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
     rrServer.registerRequestHandler(barrierRequestBuilder, barrierMonitor);
     rrServer.registerRequestHandler(barrierResponseBuilder, barrierMonitor);
-    rrServer.registerRequestHandler(scaleMessageBuilder, workerMonitor);
-    rrServer.registerRequestHandler(scaleResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(scaledMessageBuilder, workerMonitor);
+    rrServer.registerRequestHandler(scaledResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(broadcastBuilder, workerMonitor);
+    rrServer.registerRequestHandler(broadcastResponseBuilder, workerMonitor);
 
     rrServer.start();
     looper.loop();

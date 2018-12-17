@@ -66,6 +66,13 @@ public class DriverExample implements IDriver {
 
   private void broadcastExample(IDriverController driverController) {
 
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
     // construct an example protocol buffer message and broadcast it to all workers
     JobMasterAPI.NodeInfo nodeInfo =
         NodeInfoUtils.createNodeInfo("example.nodeIP", "rack-01", "dc-01");
