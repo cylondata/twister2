@@ -195,13 +195,32 @@ public class JMDriverClient {
             .setInstances(instances)
             .build();
 
-    LOG.info("Sending ScaleComputeResource message: \n" + scaleComputeResource);
+    LOG.info("Sending ScaledComputeResource message: \n" + scaleComputeResource);
 
     // wait for the response
     try {
       rrClient.sendRequestWaitResponse(scaleComputeResource,
           JobMasterContext.responseWaitDuration(config));
 
+      return true;
+
+    } catch (BlockingSendException bse) {
+      LOG.log(Level.SEVERE, bse.getMessage(), bse);
+      return false;
+    }
+  }
+
+  public boolean sendBroadcastMessage(Message message, int numberOfWorkers) {
+    JobMasterAPI.Broadcast broadcast = JobMasterAPI.Broadcast.newBuilder()
+        .setMessage(message.toByteString())
+        .setNumberOfWorkers(numberOfWorkers)
+        .build();
+
+    LOG.info("Sending Broadcast message: \n" + broadcast);
+
+    // wait for the response
+    try {
+      rrClient.sendRequestWaitResponse(broadcast, JobMasterContext.responseWaitDuration(config));
       return true;
 
     } catch (BlockingSendException bse) {
@@ -217,12 +236,17 @@ public class JMDriverClient {
 
       if (message instanceof JobMasterAPI.ScaledResponse) {
 
-        LOG.info("Received ScaleResponse message from JobMaster. \n" + message);
+        LOG.info("Received ScaledResponse message from JobMaster.");
+
+      } else if (message instanceof JobMasterAPI.BroadcastResponse) {
+
+        LOG.info("Received BroadcastResponse message from JobMaster.");
 
       } else {
-        LOG.warning("Received message unrecognized. \n" + message);
-      }
 
+        LOG.warning("Received message unrecognized. \n" + message);
+
+      }
     }
   }
 

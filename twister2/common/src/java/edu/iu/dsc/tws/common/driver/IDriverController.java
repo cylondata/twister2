@@ -30,9 +30,9 @@ public interface IDriverController {
   boolean scaleDownWorkers(int instancesToRemove);
 
   /**
-   * the client can send data to all workers in the job
+   * the driver can send a brotocol buffer message to all workers in the job
    * @return
    */
-  boolean broadcastToAllWorkers(String className, Message message);
+  boolean broadcastToAllWorkers(Message message);
 
 }

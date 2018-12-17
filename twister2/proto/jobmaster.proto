@@ -147,7 +147,7 @@ message BarrierResponse {
     }
 }
 
-// Submitting Client to Job Master communication related messages
+// Submitting Driver to Job Master communication related messages
 // let the job master know that
 // the number of instances of the scalable compute resource has hanged
 message ScaledComputeResource {
@@ -166,5 +166,18 @@ message ScaledResponse {
     oneof instancesRequired {
         int32 instances = 2;
     }
+}
+
+// Driver to worker broadcast message
+// Driver can send any Message to workers
+// It is encoded as a byte array
+message Broadcast {
+    bytes message = 1;
+    int32 numberOfWorkers = 2;
+}
+
+// Broadcast response message
+// nothing in it
+message BroadcastResponse {
 }
 

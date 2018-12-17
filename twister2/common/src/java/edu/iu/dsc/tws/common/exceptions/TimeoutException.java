@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.common.exceptions;
 
 public class TimeoutException extends Exception {
+  private static final long serialVersionUID = -254264900110286748L;
 
   public TimeoutException(String message) {
     super(message);
