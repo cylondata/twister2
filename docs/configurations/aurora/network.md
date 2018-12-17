@@ -5,12 +5,27 @@
 **twister2.network.channel.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.comms.dfw.DataFlowCommunication"</td><tr><td>description</td><td></td></table>
 
+**network.buffer.size**
+<table><tr><td>default</td><td>1024000</td><tr><td>description</td><td>the buffer size to be used</td></table>
+
+**network.sendBuffer.count**
+<table><tr><td>default</td><td>4</td><tr><td>description</td><td>number of send buffers to be used</td></table>
+
+**network.receiveBuffer.count**
+<table><tr><td>default</td><td>4</td><tr><td>description</td><td>number of receive buffers to be used</td></table>
+
+**network.channel.pending.size**
+<table><tr><td>default</td><td>2048</td><tr><td>description</td><td>channel pending messages</td></table>
+
 **network.send.pending.max**
-<table><tr><td>default</td><td>4</td><tr><td>description</td><td>the buffer size to be used<br/>number of send buffers to be used<br/>number of receive buffers to be used<br/>channel pending messages<br/>the send pending messages</td></table>
+<table><tr><td>default</td><td>4</td><tr><td>description</td><td>the send pending messages</td></table>
+
+**network.partition.message.group.low_water_mark**
+<table><tr><td>default</td><td>8</td><tr><td>description</td><td>group up to 8 ~ 16 messages<br/>this is the max number of messages to group</td></table>
 
 **network.partition.message.group.high_water_mark**
-<table><tr><td>default</td><td>16</td><tr><td>description</td><td>group up to 8 ~ 16 messages<br/>this is the max number of messages to group</td></table>
+<table><tr><td>default</td><td>16</td><tr><td>description</td><td></td></table>
 
 **shuffle.memory.bytes.max**
-<table><tr><td>default</td><td>1024000</td><tr><td>description</td><td>the maximum amount of bytes kept in memory for operations that goes to disk<br/>the maximum number of records kept in memory for operations that goes to dist</td></table>
+<table><tr><td>default</td><td>1024000</td><tr><td>description</td><td>the maximum amount of bytes kept in memory for operations that goes to disk</td></table>
 
