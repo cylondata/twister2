@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.tset.batch.TSetGatherExample;
+import edu.iu.dsc.tws.examples.tset.batch.TSetPartitionExample;
 import edu.iu.dsc.tws.examples.tset.batch.TSetReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
@@ -126,6 +127,9 @@ public final class TSetExampleMain {
           break;
         case "gather":
           submitJob(config, workers, jobConfig, TSetGatherExample.class.getName());
+          break;
+        case "partition":
+          submitJob(config, workers, jobConfig, TSetPartitionExample.class.getName());
           break;
         default:
           System.out.println("Un-supported");
