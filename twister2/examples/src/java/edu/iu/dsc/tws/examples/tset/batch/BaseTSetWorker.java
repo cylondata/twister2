@@ -19,10 +19,13 @@ import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 
+/**
+ * We need to keep variable static as this class is serialized
+ */
 public class BaseTSetWorker extends TaskWorker implements Serializable {
   protected static JobParameters jobParameters;
 
-  protected TSetBuilder tSetBuilder;
+  protected static TSetBuilder tSetBuilder;
 
   @Override
   public void execute() {
@@ -33,19 +36,25 @@ public class BaseTSetWorker extends TaskWorker implements Serializable {
   public static class BaseSource implements Source<int[]> {
     private int count = 0;
 
+    private int[] values;
+
     @Override
     public boolean hasNext() {
-      return count < 1;
+      return count < jobParameters.getIterations();
     }
 
     @Override
     public int[] next() {
       count++;
-      return new int[]{1, 1, 1};
+      return values;
     }
 
     @Override
     public void prepare(TSetContext context) {
+      values = new int[jobParameters.getSize()];
+      for (int i = 0; i < jobParameters.getSize(); i++) {
+        values[i] = 1;
+      }
     }
   }
 }

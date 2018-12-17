@@ -32,8 +32,11 @@ public class IFlatMapTSet<T, P> extends BaseTSet<T> {
   public boolean baseBuild() {
     boolean isIterable = isIterableInput(parent);
 
+    // lets override the parallelism
+    int p = getOverrideParallel();
+
     ComputeConnection connection = builder.addCompute(getName(),
-        new IterableFlatMapOp<>(mapFn, isIterable), parallel);
+        new IterableFlatMapOp<>(mapFn, isIterable), p);
     parent.buildConnection(connection);
     return true;
   }

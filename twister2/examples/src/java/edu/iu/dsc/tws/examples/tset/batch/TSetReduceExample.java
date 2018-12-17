@@ -24,7 +24,9 @@ public class TSetReduceExample extends BaseTSetWorker {
   public void execute() {
     super.execute();
 
-    TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source");
+    // set the parallelism of source to task stage 0
+    TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
+        setParallelism(jobParameters.getTaskStages().get(0));
     TSet<int[]> reduce = source.reduce(new ReduceFunction<int[]>() {
       @Override
       public int[] reduce(int[] t1, int[] t2) {

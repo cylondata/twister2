@@ -40,4 +40,9 @@ public class GatherTSet<T> extends BaseTSet<T> {
 
     connection.gather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
+
+  @Override
+  protected int overrideParallelism() {
+    return 1;
+  }
 }

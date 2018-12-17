@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.api.tset;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.common.reflect.TypeToken;
 
@@ -23,6 +25,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
 public abstract class BaseTSet<T> implements TSet<T> {
+  private static final Logger LOG = Logger.getLogger(BaseTSet.class.getName());
   /**
    * The children of this set
    */
@@ -65,6 +68,12 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   public int getParallelism() {
     return parallel;
+  }
+
+  @Override
+  public TSet<T> setParallelism(int parallelism) {
+    this.parallel = parallelism;
+    return this;
   }
 
   @Override
@@ -226,5 +235,33 @@ public abstract class BaseTSet<T> implements TSet<T> {
     return typeToken.getRawType();
   }
 
+  /**
+   * Build the connection
+   * @param connection connection
+   */
   abstract void buildConnection(ComputeConnection connection);
+
+  /**
+   * Override the parallelism
+   * @return if overide, return value, otherwise -1
+   */
+  protected int overrideParallelism() {
+    return -1;
+  }
+
+  /**
+   * Override the parallelism if operations require differently
+   * @return new parallelism
+   */
+  protected int getOverrideParallel() {
+    int p;
+    if (overrideParallelism() != -1) {
+      p = overrideParallelism();
+      LOG.log(Level.WARNING, String.format("Overriding parallelism "
+          + "specified %d override value %d", parallel, p));
+    } else {
+      p = parallel;
+    }
+    return p;
+  }
 }

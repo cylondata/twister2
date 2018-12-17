@@ -51,4 +51,9 @@ public class ReduceTSet<T> extends BaseTSet<T> {
   public ReduceFunction<T> getReduceFn() {
     return reduceFn;
   }
+
+  @Override
+  protected int overrideParallelism() {
+    return 1;
+  }
 }
