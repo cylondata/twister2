@@ -73,6 +73,11 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
   }
 
   @Override
+  public void close() {
+    partition.close();
+  }
+
+  @Override
   protected void progressCommunication() {
     partition.progress();
   }

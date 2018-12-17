@@ -20,9 +20,10 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.ISource;
 
 public class BTAllGatherExample extends BenchTaskWorker {
 
@@ -35,8 +36,8 @@ public class BTAllGatherExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    BaseBatchSource g = new SourceBatchTask(edge);
-    BaseBatchSink r = new AllGatherSinkTask();
+    ISource g = new SourceBatchTask(edge);
+    ISink r = new AllGatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.allgather(SOURCE, edge, dataType);
@@ -44,7 +45,7 @@ public class BTAllGatherExample extends BenchTaskWorker {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class AllGatherSinkTask extends BaseBatchSink {
+  protected static class AllGatherSinkTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private static int count = 0;
 
@@ -70,12 +71,6 @@ public class BTAllGatherExample extends BenchTaskWorker {
             }
           }
         }
-        /*if (count % jobParameters.getPrintInterval() == 0) {
-          LOG.info("AllGathered : " + message.getContent().getClass().getJobName()
-              + " numberOfElements: " + numberOfElements
-              + " total: " + totalValues);
-        }*/
-
       }
       return true;
     }

@@ -31,6 +31,8 @@ twister2.logging.format: "[%1$tF %1$tT] [%4$s] %3$s: %5$s %6$s %n"
 # Twister2 Job Master related settings
 ###################################################################
 
+twister2.job.master.used: false
+
 # if true, the job master runs in the submitting client
 # if false, job master runs as a separate process in the cluster
 # by default, it is true
@@ -44,6 +46,7 @@ twister2.job.master.assigns.worker.ids: false
 ###################################################################################
 # WorkerController related config parameters
 ###################################################################################
+
 # amount of timeout for all workers to join the job
 # in milli seconds
 twister2.worker.controller.max.wait.time.for.all.workers.to.join: 100000
@@ -51,3 +54,11 @@ twister2.worker.controller.max.wait.time.for.all.workers.to.join: 100000
 # amount of timeout on barriers for all workers to arrive
 # in milli seconds
 twister2.worker.controller.max.wait.time.on.barrier: 100000
+
+###################################################################
+# Dashboard related settings
+###################################################################
+
+# Dashboard server host address and port
+# if this parameter is not specified, then job master will not try to connect to Dashboard
+# twister2.dashboard.host: "http://localhost:8080"

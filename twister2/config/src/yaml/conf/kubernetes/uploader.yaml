@@ -32,6 +32,7 @@ twister2.kubernetes.uploader.watch.pods.starting: true
 
 # full directory path to upload the job package with scp
 twister2.uploader.directory: "/absolute/path/to/uploder/directory/"
+
 twister2.uploader.directory.repository: "/absolute/path/to/uploder/directory/"
 
 # web server link of the job package download directory
@@ -41,11 +42,14 @@ twister2.download.directory: "http://webserver.address:port/download/dir/path"
 # This is the scp command options that will be used by the uploader, this can be used to
 # specify custom options such as the location of ssh keys.
 twister2.uploader.scp.command.options: "--chmod=+rwx"
+
 # The scp connection string sets the remote user name and host used by the uploader.
 twister2.uploader.scp.command.connection: "user@uploadserver.address"
+
 # The ssh command options that will be used when connecting to the uploading host to execute
 # command such as delete files, make directories.
 twister2.uploader.ssh.command.options: ""
+
 # The ssh connection string sets the remote user name and host used by the uploader.
 twister2.uploader.ssh.command.connection: "user@uploadserver.address"
 

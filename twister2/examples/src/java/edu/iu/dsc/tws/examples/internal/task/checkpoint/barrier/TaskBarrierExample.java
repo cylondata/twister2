@@ -36,13 +36,13 @@ import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -91,7 +91,7 @@ public class TaskBarrierExample implements IWorker {
 
   }
 
-  private static class GeneratorBarrierTask extends BaseStreamSource {
+  private static class GeneratorBarrierTask extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
     private long id = 5555;
 
@@ -108,7 +108,7 @@ public class TaskBarrierExample implements IWorker {
     }
   }
 
-  private static final class RecevingBarrierTask extends BaseStreamSink {
+  private static final class RecevingBarrierTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

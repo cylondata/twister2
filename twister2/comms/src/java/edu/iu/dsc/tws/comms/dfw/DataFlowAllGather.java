@@ -135,6 +135,8 @@ public class DataFlowAllGather implements DataFlowOperation {
 
   @Override
   public void close() {
+    broadcast.close();
+    gather.close();
   }
 
   @Override

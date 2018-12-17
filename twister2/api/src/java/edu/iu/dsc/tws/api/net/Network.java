@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
 import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
+import mpi.Intracomm;
 import mpi.MPI;
 
 public final class Network {
@@ -46,8 +47,15 @@ public final class Network {
 
   private static TWSChannel initializeMPIChannel(Config config,
                                                  IWorkerController wController) {
+    Object commObject = wController.getRuntimeObject("comm");
+    Intracomm intracomm;
+    if (commObject == null) {
+      intracomm = MPI.COMM_WORLD;
+    } else {
+      intracomm = (Intracomm) commObject;
+    }
     //first get the communication config file
-    return new TWSMPIChannel(config, MPI.COMM_WORLD, wController.getWorkerInfo().getWorkerID());
+    return new TWSMPIChannel(config, intracomm, wController.getWorkerInfo().getWorkerID());
   }
 
   private static TWSChannel initializeTCPNetwork(Config config,

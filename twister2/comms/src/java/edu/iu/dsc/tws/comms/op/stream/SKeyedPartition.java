@@ -103,4 +103,9 @@ public class SKeyedPartition {
   public boolean hasPending() {
     return !partition.isComplete();
   }
+
+  public void close() {
+    // deregister from the channel
+    partition.close();
+  }
 }

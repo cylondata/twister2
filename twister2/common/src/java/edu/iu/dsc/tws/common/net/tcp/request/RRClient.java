@@ -58,7 +58,7 @@ public class RRClient {
   /**
    * The client id
    */
-  private int workerId;
+  private int workerID;
 
   /**
    * Connection handler
@@ -76,9 +76,13 @@ public class RRClient {
   public RRClient(String host, int port, Config cfg, Progress looper,
                   int wId, ConnectHandler cHandler) {
     this.connectHandler = cHandler;
-    this.workerId = wId;
+    this.workerID = wId;
     this.loop = looper;
     client = new Client(host, port, cfg, looper, new Handler(), false);
+  }
+
+  public void setWorkerID(int workerID) {
+    this.workerID = workerID;
   }
 
   public boolean connect() {
@@ -159,7 +163,7 @@ public class RRClient {
     // pack the name of the message
     ByteUtils.packString(messageType, buffer);
     // pack the worker id
-    buffer.putInt(workerId);
+    buffer.putInt(workerID);
     // pack data
     buffer.put(data);
 
