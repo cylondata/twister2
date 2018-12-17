@@ -26,6 +26,8 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.Constants;
+import edu.iu.dsc.tws.examples.tset.batch.TSetAllGatherExample;
+import edu.iu.dsc.tws.examples.tset.batch.TSetAllReduceExample;
 import edu.iu.dsc.tws.examples.tset.batch.TSetGatherExample;
 import edu.iu.dsc.tws.examples.tset.batch.TSetPartitionExample;
 import edu.iu.dsc.tws.examples.tset.batch.TSetReduceExample;
@@ -130,6 +132,12 @@ public final class TSetExampleMain {
           break;
         case "partition":
           submitJob(config, workers, jobConfig, TSetPartitionExample.class.getName());
+          break;
+        case "allgather":
+          submitJob(config, workers, jobConfig, TSetAllGatherExample.class.getName());
+          break;
+        case "allreduce":
+          submitJob(config, workers, jobConfig, TSetAllReduceExample.class.getName());
           break;
         default:
           System.out.println("Un-supported");

@@ -22,8 +22,8 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class TSetGatherExample extends BaseTSetWorker {
-  private static final Logger LOG = Logger.getLogger(TSetGatherExample.class.getName());
+public class TSetAllGatherExample extends BaseTSetWorker {
+  private static final Logger LOG = Logger.getLogger(TSetAllGatherExample.class.getName());
 
   @Override
   public void execute() {
@@ -32,13 +32,13 @@ public class TSetGatherExample extends BaseTSetWorker {
     // set the parallelism of source to task stage 0
     TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
-    TSet<int[]> gather = source.gather().setParallelism(10);
+    TSet<int[]> gather = source.allGather().setParallelism(10);
     gather.sink(new Sink<int[]>() {
       @Override
       public boolean add(int[] value) {
         experimentData.setOutput(value);
         try {
-          verify(OperationNames.GATHER);
+          verify(OperationNames.ALLGATHER);
         } catch (VerificationException e) {
           LOG.info("Exception Message : " + e.getMessage());
         }
