@@ -46,6 +46,7 @@ public final class NetworkUtils {
 
   /**
    * Returns a map of free ports on localhost.
+   *
    * @return a map from port name to port number
    * @throws IllegalStateException if unable to find specified free ports
    */

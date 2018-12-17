@@ -33,7 +33,7 @@ public class KeyedReduceTSet<T, K> extends KeyValueTSet<T, K> {
                          Selector<T, K> selec) {
     super(cfg, bldr);
     this.parent = prnt;
-    this.reduceFn =  rFn;
+    this.reduceFn = rFn;
     this.partitionFunction = parFn;
     this.selector = selec;
   }

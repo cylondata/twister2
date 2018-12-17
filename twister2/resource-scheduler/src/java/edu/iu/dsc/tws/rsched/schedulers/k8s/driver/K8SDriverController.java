@@ -65,7 +65,6 @@ public class K8SDriverController implements IDriverController {
 
   /**
    * add new workers to the scalable compute resource
-   * @return
    */
   @Override
   public boolean scaleUpWorkers(int instancesToAdd) {
@@ -116,8 +115,6 @@ public class K8SDriverController implements IDriverController {
 
   /**
    * remove workers from the scalable compute resource
-   * @param instancesToRemove
-   * @return
    */
   @Override
   public boolean scaleDownWorkers(int instancesToRemove) {
@@ -153,9 +150,6 @@ public class K8SDriverController implements IDriverController {
 
   /**
    * send this message to all workers in the job
-   * @param className
-   * @param message
-   * @return
    */
   @Override
   public boolean broadcastToAllWorkers(String className, Message message) {
@@ -164,10 +158,8 @@ public class K8SDriverController implements IDriverController {
 
   /**
    * generate the pod names that will be scaled up, newly created
-   * @param instancesToAdd
-   * @return
    */
-  private  ArrayList<String> generatePodNames(int instancesToAdd) {
+  private ArrayList<String> generatePodNames(int instancesToAdd) {
 
     ArrayList<String> podNames = new ArrayList<>();
 

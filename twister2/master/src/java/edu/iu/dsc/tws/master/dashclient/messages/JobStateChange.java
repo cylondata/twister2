@@ -18,7 +18,8 @@ package edu.iu.dsc.tws.master.dashclient.messages;
 public class JobStateChange {
   private String state;
 
-  public JobStateChange() { }
+  public JobStateChange() {
+  }
 
   public JobStateChange(String state) {
     this.state = state;

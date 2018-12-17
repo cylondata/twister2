@@ -28,6 +28,7 @@ public interface PartitionFunction<T> extends TFunction {
 
   /**
    * Commit the partition
+   *
    * @param source the source
    * @param partition partition
    */

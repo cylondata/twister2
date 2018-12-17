@@ -25,11 +25,9 @@ public final class MesosWorkerUtils {
   private MesosWorkerUtils() {
 
   }
+
   /**
    * generate the additional requested ports for this worker
-   * @param config
-   * @param workerPort
-   * @return
    */
   public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
     // if no port is requested, return null
@@ -39,7 +37,7 @@ public final class MesosWorkerUtils {
     }
     HashMap<String, Integer> ports = new HashMap<>();
     int i = 1;
-    for (String portName: portNames) {
+    for (String portName : portNames) {
       ports.put(portName, workerPort + i++);
     }
     return ports;

@@ -222,7 +222,8 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   protected Class getType() {
-    TypeToken<T> typeToken = new TypeToken<T>(getClass()) { };
+    TypeToken<T> typeToken = new TypeToken<T>(getClass()) {
+    };
     return typeToken.getRawType();
   }
 

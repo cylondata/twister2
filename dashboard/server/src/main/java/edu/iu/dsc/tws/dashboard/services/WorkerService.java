@@ -1,19 +1,20 @@
 package edu.iu.dsc.tws.dashboard.services;
 
-import edu.iu.dsc.tws.dashboard.data_models.*;
-import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Optional;
+
+import javax.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import edu.iu.dsc.tws.dashboard.data_models.*;
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
 import edu.iu.dsc.tws.dashboard.repositories.WorkerRepository;
 import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import edu.iu.dsc.tws.dashboard.rest_models.WorkerCreateRequest;
-
-import javax.persistence.EntityNotFoundException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Optional;
 
 @Service
 public class WorkerService {

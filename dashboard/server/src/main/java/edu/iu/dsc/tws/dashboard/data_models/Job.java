@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.data_models;
 
-import io.swagger.annotations.ApiModelProperty;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,6 +25,8 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+
+import io.swagger.annotations.ApiModelProperty;
 
 @Entity
 public class Job {

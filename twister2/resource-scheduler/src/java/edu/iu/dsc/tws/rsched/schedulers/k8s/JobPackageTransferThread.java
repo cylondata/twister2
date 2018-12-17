@@ -248,12 +248,10 @@ public class JobPackageTransferThread extends Thread {
 
   /**
    * start job package transfer threads for scaled up pods
-   * @param namespace
-   * @param jobPackageFile
    */
   public static void startTransferThreadsForScaledUpPods(String namespace,
-                                          ArrayList<String> podNames,
-                                          String jobPackageFile) {
+                                                         ArrayList<String> podNames,
+                                                         String jobPackageFile) {
     watchBeforeUploading = false;
     cancelFileTransfer = false;
     transferThreads = new JobPackageTransferThread[podNames.size()];

@@ -42,7 +42,8 @@ public class RegisterJob {
   private Node node;
   private ComputeResource[] computeResources;
 
-  public RegisterJob() { }
+  public RegisterJob() {
+  }
 
   public RegisterJob(String jobID, JobAPI.Job job, JobMasterAPI.NodeInfo nodeInfo) {
     this.jobID = jobID;
@@ -54,7 +55,7 @@ public class RegisterJob {
 
     this.computeResources = new ComputeResource[job.getComputeResourceList().size()];
     int i = 0;
-    for (JobAPI.ComputeResource cr: job.getComputeResourceList()) {
+    for (JobAPI.ComputeResource cr : job.getComputeResourceList()) {
       computeResources[i++] = new ComputeResource(cr);
     }
   }

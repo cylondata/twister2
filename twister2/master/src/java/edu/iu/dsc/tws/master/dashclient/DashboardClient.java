@@ -30,7 +30,6 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * This client is used to send messages to Dashboard by JobMaster
- *
  */
 
 public class DashboardClient {
@@ -47,9 +46,6 @@ public class DashboardClient {
   /**
    * send registerJob message to Dashboard
    * when a job master starts, it sends this message to Dashboard
-   * @param job
-   * @param jobMasterNodeInfo
-   * @return
    */
   public boolean registerJob(JobAPI.Job job, JobMasterAPI.NodeInfo jobMasterNodeInfo) {
 
@@ -84,8 +80,6 @@ public class DashboardClient {
 
   /**
    * send JobStateChange message to Dashboard
-   * @param state
-   * @return
    */
   public boolean jobStateChange(JobState state) {
     JobStateChange jobStateChange = new JobStateChange(state.name());
@@ -114,7 +108,6 @@ public class DashboardClient {
    * instances may be smaller or higher than the original value
    * if it is smaller, it means some instances of that resource removed
    * if it is higher, it means some instances of that resource added
-   * @return
    */
   public boolean scaleComputeResource(int computeResourceIndex, int instances) {
 
@@ -167,8 +160,6 @@ public class DashboardClient {
 
   /**
    * send HeartBeat message to Dashboard for the given worker
-   * @param workerID
-   * @return
    */
   public boolean workerHeartbeat(int workerID) {
     String path = "workers/" + jobID + "/" + workerID + "/beat/";
@@ -191,9 +182,6 @@ public class DashboardClient {
 
   /**
    * send WorkerStateChange message to Dashboard
-   * @param workerID
-   * @param state
-   * @return
    */
   public boolean workerStateChange(int workerID, JobMasterAPI.WorkerState state) {
     WorkerStateChange workerStateChange = new WorkerStateChange(state.name());

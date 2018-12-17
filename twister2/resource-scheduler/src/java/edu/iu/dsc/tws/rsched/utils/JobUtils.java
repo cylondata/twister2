@@ -181,7 +181,7 @@ public final class JobUtils {
         + "[numberOfWorkers=" + job.getNumberOfWorkers() + "]"
         + "\n[workerClass=" + job.getWorkerClassName() + "]";
 
-    for (JobAPI.ComputeResource cr: job.getComputeResourceList()) {
+    for (JobAPI.ComputeResource cr : job.getComputeResourceList()) {
       jobStr += "\n" + ComputeResourceUtils.toString(cr);
     }
 

@@ -143,6 +143,7 @@ public class TWSMPIChannel implements TWSChannel {
 
   /**
    * Constructs the MPI channel
+   *
    * @param config configuration
    * @param comm communicator
    * @param worker worker id

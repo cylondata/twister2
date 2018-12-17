@@ -11,14 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.data_models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
-import io.swagger.annotations.ApiModelProperty;
-
-import javax.persistence.*;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
+import io.swagger.annotations.ApiModelProperty;
 
 @Entity
 @IdClass(WorkerId.class)

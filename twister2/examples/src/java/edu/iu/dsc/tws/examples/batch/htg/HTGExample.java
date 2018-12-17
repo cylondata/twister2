@@ -37,6 +37,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.BaseSink;
@@ -97,26 +98,27 @@ public class HTGExample extends TaskWorker {
         + "Streaming Task Graph:" + streamingGraph.getTaskVertexSet() + "\t"
         + streamingGraph.getTaskVertexSet().size());
 
-    //To print the hierarchical dataflow task graph and its vertex names.
-    LOG.info("Parent Task Graph:" + hierarchicalTaskGraph.parentsOfTaskGraph(streamingGraph)
-        + "\t" + hierarchicalTaskGraph.parentsOfTaskGraph(
-        streamingGraph).iterator().next().getTaskGraphName());
-
     //Invoke HTG Parser
     HTGParser hierarchicalTaskGraphParser = new HTGParser(hierarchicalTaskGraph);
     List<DataFlowTaskGraph> dataFlowTaskGraphList =
         hierarchicalTaskGraphParser.hierarchicalTaskGraphParse();
 
     dataFlowTaskGraphList.stream().map(
-        graph -> "dataflow task graph list:" + graph.getTaskGraphName()).forEach(LOG::fine);
+        graph -> "dataflow task graph list:" + graph.getTaskGraphName()).forEach(LOG::info);
 
-    //TODO:Invoke HTG Executor
-    //testing
-    //ExecutionPlan plan = taskExecutor.plan(batchGraph);
-    //LOG.info("########### Task Schedule Plan Details:##########" + plan);
-    //taskExecutor.execute(batchGraph, plan);
-
+    //Select it from the list...!
+    ExecutionPlan plan = taskExecutor.plan(batchGraph);
+    taskExecutor.execute(batchGraph, plan);
   }//End of execute method
+
+  public static void sleep(long duration) {
+    LOG.info("Sleeping " + duration + "ms............");
+    try {
+      Thread.sleep(duration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
 
   private static class HTGSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
@@ -205,22 +207,10 @@ public class HTGExample extends TaskWorker {
     twister2MetagraphConnection.broadcast("sourcetaskgraph", "broadcast");
     twister2MetagraphBuilder.setHtgName("htg");
 
-    //TODO:Invoke HTG Client and send the metagraph -> start with FIFO
+    //TODO:Invoke HTG Submitter and send the metagraph
     Twister2HTGSubmitter twister2HTGSubmitter = new Twister2HTGSubmitter(config);
     twister2HTGSubmitter.execute(twister2MetagraphBuilder.build(),
         jobConfig, HTGExample.class.getName());
-
-    /*Twister2MetaGraph twister2MetaGraph = twister2MetagraphBuilder.build();
-    Twister2MetaGraph.SubGraph subGraph = Twister2HTGClient.execute(twister2MetaGraph);
-    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName(subGraph.getName());
-    jobBuilder.setWorkerClass(HTGExample.class.getName());
-    jobBuilder.setConfig(jobConfig);
-    jobBuilder.addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
-        subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances());
-
-    // now submit the job
-    Twister2Submitter.submitJob(jobBuilder.build(), config);*/
   }
 }
 

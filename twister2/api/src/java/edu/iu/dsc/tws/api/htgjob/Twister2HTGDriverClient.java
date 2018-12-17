@@ -22,51 +22,28 @@ import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
+import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.worker.JMWorkerController;
-import edu.iu.dsc.tws.master.worker.Pinger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 
-public class Twister2HTGClient {
+public class Twister2HTGDriverClient {
 
-  private static final Logger LOG = Logger.getLogger(Twister2HTGClient.class.getName());
+  private static final Logger LOG = Logger.getLogger(Twister2HTGDriverClient.class.getName());
 
   private static Progress looper;
   private boolean stopLooper = false;
 
   private Config config;
-  private JobMasterAPI.WorkerInfo thisWorker;
-
-  private JobMasterAPI.HTGClientInfo thisClient;
 
   private String masterAddress;
   private int masterPort;
 
   private RRClient rrClient;
-  private Pinger pinger;
-  private JMWorkerController jmWorkerController;
 
-  private boolean startingMessageSent = false;
+  private JobMasterAPI.HTGClientInfo thisClient;
 
-  public HTGJobAPI.HTGJob getHtgJob() {
-    return htgJob;
-  }
-
-  public void setHtgJob(HTGJobAPI.HTGJob htgJob) {
-    this.htgJob = htgJob;
-  }
-
-  public HTGJobAPI.ExecuteMessage getExecuteMessage() {
-    return executeMessage;
-  }
-
-  public void setExecuteMessage(HTGJobAPI.ExecuteMessage executeMessage) {
-    this.executeMessage = executeMessage;
-  }
-
-  //NEWLY Added
   private HTGJobAPI.HTGJob htgJob;
   private HTGJobAPI.ExecuteMessage executeMessage;
 
@@ -81,29 +58,26 @@ public class Twister2HTGClient {
    */
   private boolean connectionRefused = false;
 
-
-  public Twister2HTGClient(Config config,
-                           JobMasterAPI.HTGClientInfo thisClient,
-                           HTGJobAPI.HTGJob htgJob) {
-    this(config, thisClient, JobMasterContext.jobMasterIP(config),
-        JobMasterContext.jobMasterPort(config), htgJob, null);
+  public void setExecuteMessage(HTGJobAPI.ExecuteMessage executeMessage) {
+    this.executeMessage = executeMessage;
   }
 
-
-  public Twister2HTGClient(Config config,
-                           JobMasterAPI.HTGClientInfo thisClient,
-                           HTGJobAPI.HTGJob htgJob,
-                           HTGJobAPI.ExecuteMessage executeMessage) {
-    this(config, thisClient, JobMasterContext.jobMasterIP(config),
-        JobMasterContext.jobMasterPort(config), htgJob, executeMessage);
+  public HTGJobAPI.ExecuteMessage getExecuteMessage() {
+    return executeMessage;
   }
 
-  public Twister2HTGClient(Config config,
-                           JobMasterAPI.HTGClientInfo thisClient,
-                           String masterHost,
-                           int masterPort,
-                           HTGJobAPI.HTGJob htgjob,
-                           HTGJobAPI.ExecuteMessage message) {
+  public Twister2HTGDriverClient(Config config,
+                                 JobMasterAPI.HTGClientInfo thisClient,
+                                 HTGJobAPI.HTGJob htgJob) {
+    this(config, thisClient, JobMasterContext.jobMasterIP(config),
+        JobMasterContext.jobMasterPort(config), htgJob);
+  }
+
+  public Twister2HTGDriverClient(Config config,
+                                 JobMasterAPI.HTGClientInfo thisClient,
+                                 String masterHost,
+                                 int masterPort,
+                                 HTGJobAPI.HTGJob htgjob) {
     this.config = config;
     this.thisClient = thisClient;
     this.masterAddress = masterHost;
@@ -111,35 +85,25 @@ public class Twister2HTGClient {
 
     //newly added
     this.htgJob = htgjob;
-    this.executeMessage = message;
   }
 
   private boolean init() {
 
     looper = new Progress();
 
-    Twister2HTGClient.ClientConnectHandler connectHandler
-        = new Twister2HTGClient.ClientConnectHandler();
+    Twister2HTGDriverClient.ClientConnectHandler connectHandler
+        = new Twister2HTGDriverClient.ClientConnectHandler();
 
-    rrClient = new RRClient(masterAddress, masterPort, null, looper,
-        thisClient.getClientID(), connectHandler);
-
-    long interval = JobMasterContext.pingInterval(config);
-
-    //TODO: dO we need this?
-//    pinger = new Pinger(thisWorker, rrClient, interval);
-// todo: pinger constructor has changed. hence removing this temporarily
-    //pinger = new Pinger(thisClient, rrClient, interval);
-
-    //jmWorkerController = new JMWorkerController(config, thisClient, rrClient, numberOfWorkers);
+    rrClient = new RRClient(masterAddress, masterPort, config, looper,
+        RRServer.CLIENT_ID, connectHandler);
 
     JobMasterAPI.HTGJobRequest.Builder htgjobRequestBuilder
         = JobMasterAPI.HTGJobRequest.newBuilder();
     JobMasterAPI.HTGJobResponse.Builder htgjobResponseBUilder
         = JobMasterAPI.HTGJobResponse.newBuilder();
 
-    Twister2HTGClient.ResponseMessageHandler responseMessageHandler
-        = new Twister2HTGClient.ResponseMessageHandler();
+    Twister2HTGDriverClient.ResponseMessageHandler responseMessageHandler
+        = new Twister2HTGDriverClient.ResponseMessageHandler();
 
     rrClient.registerResponseHandler(htgjobRequestBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(htgjobResponseBUilder, responseMessageHandler);
@@ -155,48 +119,8 @@ public class Twister2HTGClient {
     return true;
   }
 
-  public void close() {
-    stopLooper = true;
-    looper.wakeup();
-  }
-
-  private void startLooping() {
-
-    while (!stopLooper) {
-      long timeToNextPing = pinger.timeToNextPing();
-      if (timeToNextPing < 30 && startingMessageSent) {
-        pinger.sendPingMessage();
-      } else {
-        looper.loopBlocking(timeToNextPing);
-      }
-    }
-
-    rrClient.disconnect();
-  }
-
   /**
-   * start the Job Master Client in a Thread
-   */
-  public Thread startThreaded() {
-    // first call the init method
-    boolean initialized = init();
-    if (!initialized) {
-      return null;
-    }
-
-    Thread jmThread = new Thread() {
-      public void run() {
-        startLooping();
-      }
-    };
-
-    jmThread.start();
-
-    return jmThread;
-  }
-
-  /**
-   * Try until connect the job master
+   * try connecting until the time limit is reached
    */
   public boolean tryUntilConnected(long timeLimit) {
     long startTime = System.currentTimeMillis();
@@ -237,8 +161,7 @@ public class Twister2HTGClient {
       duration = System.currentTimeMillis() - startTime;
 
       if (duration > nextLogTime) {
-        LOG.info("Still trying to connect to the Job Master: "
-            + masterAddress + ":" + masterPort);
+        LOG.info("Still trying to connect to the Job Master: " + masterAddress + ":" + masterPort);
         nextLogTime += logInterval;
       }
     }
@@ -246,7 +169,52 @@ public class Twister2HTGClient {
     return false;
   }
 
-  public class ResponseMessageHandler implements MessageHandler {
+  /**
+   * stop the JobMasterClient
+   */
+  public void close() {
+    stopLooper = true;
+    looper.wakeup();
+  }
+
+  private void startLooping() {
+
+    while (!stopLooper) {
+      looper.loopBlocking();
+    }
+
+    rrClient.disconnect();
+  }
+
+  /**
+   * start the Job Master Client in a Thread
+   */
+  public Thread startThreaded() {
+    // first initialize the client, connect to Job Master
+    init();
+
+    Thread jmThread = new Thread() {
+      public void run() {
+        startLooping();
+      }
+    };
+
+    jmThread.start();
+
+    return jmThread;
+  }
+
+  /**
+   * start the Job Master Client in a blocking call
+   */
+  public void startBlocking() {
+    // first initialize the client, connect to Job Master
+    init();
+
+    startLooping();
+  }
+
+  private class ResponseMessageHandler implements MessageHandler {
 
     @Override
     public void onMessage(RequestID id, int clientId, Message message) {
@@ -258,7 +226,7 @@ public class Twister2HTGClient {
     }
   }
 
-  public class ClientConnectHandler implements ConnectHandler {
+  private class ClientConnectHandler implements ConnectHandler {
     @Override
     public void onError(SocketChannel channel) {
     }
@@ -279,32 +247,26 @@ public class Twister2HTGClient {
     }
   }
 
-  public JMWorkerController getJMWorkerController() {
-    return jmWorkerController;
-  }
-
   /**
    * This method sends the htg job object to the job master.
    */
-  public boolean sendHTGClientRequestMessage() {
+  public boolean sendHTGDriverRequestMessage() {
 
     JobMasterAPI.HTGJobRequest htgJobRequest = JobMasterAPI.HTGJobRequest.newBuilder()
         .setHtgJob(htgJob)
         .setExecuteMessage(executeMessage)
         .build();
 
-    LOG.fine("HTG Job Client Message and Execute Message:" + htgJob + "\t" + executeMessage);
+    LOG.info("HTG Job Client Message and Execute Message:" + htgJob + "\t" + executeMessage);
 
-    //RequestID requestID = rrClient.sendRequest(htgJobRequest);
-    //TODO: This should be properly defined for receiving the response from the JobMaster
     try {
       rrClient.sendRequestWaitResponse(htgJobRequest,
           JobMasterContext.responseWaitDuration(config));
+      return true;
     } catch (edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException e) {
       e.printStackTrace();
+      return false;
     }
-    startingMessageSent = true;
-    //pinger.sendPingMessage();
-    return true;
   }
 }
+

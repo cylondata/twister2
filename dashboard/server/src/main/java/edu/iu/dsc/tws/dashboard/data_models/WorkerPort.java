@@ -11,10 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.data_models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.UUID;
 
 import javax.persistence.*;
-import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 public class WorkerPort {

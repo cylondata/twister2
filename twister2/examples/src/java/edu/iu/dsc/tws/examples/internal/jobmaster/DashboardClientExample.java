@@ -23,7 +23,8 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public final class DashboardClientExample {
 
-  private DashboardClientExample() { }
+  private DashboardClientExample() {
+  }
 
   public static void main(String[] args) {
 

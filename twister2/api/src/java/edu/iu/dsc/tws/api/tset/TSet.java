@@ -34,71 +34,47 @@ public interface TSet<T> {
 
   /**
    * Flatmap
-   *
-   * @param mapFn
-   * @param <P>
-   * @return
    */
   <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn);
 
   /**
    * Map
-   *
-   * @param mapFn
-   * @param <P>
-   * @return
    */
   <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mapFn);
 
   /**
    * Flatmap
-   *
-   * @param mapFn
-   * @param <P>
-   * @return
    */
   <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn);
 
   /**
    * Reduce
-   *
-   * @param reduceFn
-   * @return
    */
   TSet<T> reduce(ReduceFunction<T> reduceFn);
 
   /**
    * Reduce
-   *
-   * @param reduceFn
-   * @return
    */
   TSet<T> allReduce(ReduceFunction<T> reduceFn);
 
   /**
    * Partition the data according the to partition function
-   *
-   * @param partitionFn
-   * @return
    */
   TSet<T> partition(PartitionFunction<T> partitionFn);
 
   /**
    * Gather the set of values into a single partition
-   *
-   * @return
    */
   TSet<T> gather();
 
   /**
    * Gather the set of values into a single partition
-   *
-   * @return
    */
   TSet<T> allGather();
 
   /**
    * Select a set of values
+   *
    * @param partitionFunction partition function
    * @param selector the selector
    * @param <K> the type for partitioning
@@ -108,8 +84,6 @@ public interface TSet<T> {
 
   /**
    * Add a sink
-   *
-   * @param sink
    */
   void sink(Sink<T> sink);
 

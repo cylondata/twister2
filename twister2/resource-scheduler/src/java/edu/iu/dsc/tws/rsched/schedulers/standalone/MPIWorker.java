@@ -83,6 +83,7 @@ public final class MPIWorker {
 
   /**
    * Construct the MPIWorker starter
+   *
    * @param args the main args
    */
   private MPIWorker(String[] args) {
@@ -204,6 +205,7 @@ public final class MPIWorker {
 
   /**
    * Create the resource plan
+   *
    * @return the worker controller
    */
   private IWorkerController createWorkerController(JobAPI.Job job) {
@@ -350,6 +352,7 @@ public final class MPIWorker {
 
   /**
    * Start the master
+   *
    * @param cfg configuration
    * @param rank mpi rank
    */
@@ -384,6 +387,7 @@ public final class MPIWorker {
 
   /**
    * Start the worker
+   *
    * @param cfg configuration
    * @param rank global rank
    * @param intracomm communication
@@ -424,6 +428,7 @@ public final class MPIWorker {
 
   /**
    * Start the worker
+   *
    * @param cfg configuration
    * @param rank global rank
    * @param intracomm communication
@@ -479,8 +484,8 @@ public final class MPIWorker {
    * @return  a map of rank to hostname
    */
   public Map<Integer, JobMasterAPI.WorkerInfo> createResourcePlan(Config cfg,
-                                                                         Intracomm intracomm,
-                                                                         JobAPI.Job job) {
+                                                                  Intracomm intracomm,
+                                                                  JobAPI.Job job) {
     try {
       JobMasterAPI.WorkerInfo workerInfo = createWorkerInfo(cfg, intracomm.getRank(), job);
       byte[] workerBytes = workerInfo.toByteArray();
@@ -528,6 +533,7 @@ public final class MPIWorker {
 
   /**
    * Create worker information
+   *
    * @param cfg configuration
    * @param workerId communicator
    * @param job job
@@ -535,7 +541,7 @@ public final class MPIWorker {
    * @throws MPIException if an error occurs
    */
   private JobMasterAPI.WorkerInfo createWorkerInfo(Config cfg, int workerId,
-                                                          JobAPI.Job job) throws MPIException {
+                                                   JobAPI.Job job) throws MPIException {
     String processName;
     try {
       processName = InetAddress.getLocalHost().getHostAddress();

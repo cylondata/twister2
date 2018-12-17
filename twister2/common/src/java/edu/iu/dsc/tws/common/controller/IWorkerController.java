@@ -81,6 +81,7 @@ public interface IWorkerController {
 
   /**
    * Get object with a given name
+   *
    * @param name name
    * @return the object
    */

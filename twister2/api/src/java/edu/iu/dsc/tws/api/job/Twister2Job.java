@@ -115,12 +115,11 @@ public final class Twister2Job {
 
   /**
    * find the index of the first scalable ComputeResource in the list
-   * @return
    */
   private int indexOfFirstScalableComputeResource() {
 
     int index = 0;
-    for (JobAPI.ComputeResource computeResource: computeResources) {
+    for (JobAPI.ComputeResource computeResource : computeResources) {
       if (computeResource.getScalable()) {
         return index;
       }
@@ -133,12 +132,11 @@ public final class Twister2Job {
 
   /**
    * count the number of scalable indexes
-   * @return
    */
   private int countScalableComputeResources() {
 
     int counter = 0;
-    for (JobAPI.ComputeResource computeResource: computeResources) {
+    for (JobAPI.ComputeResource computeResource : computeResources) {
       if (computeResource.getScalable()) {
         counter++;
       }
@@ -315,7 +313,7 @@ public final class Twister2Job {
       List<Map<String, Object>> list =
           (List) (config.get(SchedulerContext.WORKER_COMPUTE_RESOURCES));
 
-      for (Map<String, Object> computeResource: list) {
+      for (Map<String, Object> computeResource : list) {
         double cpu = (Double) computeResource.get("cpu");
         int ram = (Integer) computeResource.get("ram");
         double disk = (Double) computeResource.get("disk");

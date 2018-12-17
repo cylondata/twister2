@@ -98,7 +98,6 @@ public class JobMasterClient {
 
   /**
    * return WorkerInfo for this worker
-   * @return
    */
   public WorkerInfo getWorkerInfo() {
     return thisWorker;
@@ -143,6 +142,10 @@ public class JobMasterClient {
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(scaleMessageBuilder, responseMessageHandler);
+
+    JobMasterAPI.HTGJobRequest.Builder htgJobRequestBuilder
+        = JobMasterAPI.HTGJobRequest.newBuilder();
+    rrClient.registerResponseHandler(htgJobRequestBuilder, responseMessageHandler);
 
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);

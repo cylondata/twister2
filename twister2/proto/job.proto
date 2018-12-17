@@ -71,7 +71,7 @@ message Job {
     int32 number_of_workers = 4;
     // the requested resources
     repeated ComputeResource compute_resource = 5;
-//    JobResources job_resources = 4;
+    //    JobResources job_resources = 4;
     // the configurations specified
     Config config = 6;
     // how the job is layed out
