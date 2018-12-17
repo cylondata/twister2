@@ -32,3 +32,6 @@
 **twister2.resource.scheduler.mpi.mpirun.file**
 <table><tr><td>default</td><td>"twister2-core/ompi/bin/mpirun"</td><tr><td>description</td><td>mpi run file, this assumes a mpirun that is shipped with the product<br/>change this to just mpirun if you are using a system wide installation of OpenMPI<br/>or complete path of OpenMPI in case you have something custom</td></table>
 
+**twister2.resource.sharedfs**
+<table><tr><td>default</td><td>true</td><tr><td>description</td><td>Indicates whether bootstrap process needs to be run and distribute job file and core<br/>between MPI nodes. Twister2 assumes job file is accessible to all nodes if this property is set<br/>to true, else it will run the bootstrap process</td></table>
+

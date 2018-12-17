@@ -1,8 +1,10 @@
 # the package uri
 twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.1.0.tar.gz"
+
 # launcher class for aurora submission
 twister2.class.launcher: edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraLauncher
-# the uplaoder class
+
+# the uploader class
 twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
@@ -16,6 +18,7 @@ twister2.class.aurora.worker: "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWor
 ###################################################################################
 # ZooKeeper related config parameters
 ###################################################################################
+
 # ZooKeeper server addresses: comma separated host:port pairs
 # example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
 twister2.zookeeper.server.addresses: "149.165.150.81:2181"
