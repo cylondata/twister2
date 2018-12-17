@@ -117,7 +117,7 @@ public interface TSet<T> {
    *
    * @param sink sink function
    */
-  void sink(Sink<T> sink);
+  SinkTSet<T> sink(Sink<T> sink);
 
   /**
    * Build this tset

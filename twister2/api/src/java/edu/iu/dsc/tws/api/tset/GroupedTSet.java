@@ -28,6 +28,7 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
     this.partitioner = partFn;
     this.selector = selc;
     this.parent = prnt;
+    this.name = "grouped-" + parent.getName();
   }
 
   public KeyedReduceTSet<T, K> keyedReduce(ReduceFunction<T> reduceFn) {

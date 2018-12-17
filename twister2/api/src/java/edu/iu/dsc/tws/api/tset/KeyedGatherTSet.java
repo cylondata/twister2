@@ -31,6 +31,7 @@ public class KeyedGatherTSet<T, K> extends KeyValueTSet<T, K> {
     this.parent = prnt;
     this.partitionFunction = parFn;
     this.selector = selc;
+    this.name = "keyed-gather-" + parent.getName();
   }
 
   @Override

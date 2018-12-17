@@ -32,6 +32,7 @@ public class AllReduceTSet<T> extends BaseTSet<T> {
     super(cfg, bldr);
     this.reduceFn = rFn;
     this.parent = prnt;
+    this.name = "all-reduce-" + parent.getName();
   }
 
   @Override

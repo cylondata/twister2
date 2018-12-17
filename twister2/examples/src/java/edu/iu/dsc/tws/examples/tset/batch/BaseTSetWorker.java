@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
+import edu.iu.dsc.tws.examples.verification.ExperimentData;
 
 /**
  * We need to keep variable static as this class is serialized
@@ -26,6 +27,8 @@ public class BaseTSetWorker extends TaskWorker implements Serializable {
   protected static JobParameters jobParameters;
 
   protected static TSetBuilder tSetBuilder;
+
+  protected static ExperimentData experimentData;
 
   @Override
   public void execute() {

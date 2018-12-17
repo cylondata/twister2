@@ -42,9 +42,10 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
   public boolean baseBuild() {
     boolean isIterable = isIterableInput(parent);
 
-    int p = getOverrideParallel();
+    int p = calculateParallelism(parent);
+    String newName = generateName("flat-map", parent);
 
-    ComputeConnection connection = builder.addCompute(getName(),
+    ComputeConnection connection = builder.addCompute(newName,
         new FlatMapOp<>(mapFn, isIterable), p);
     parent.buildConnection(connection);
     return true;

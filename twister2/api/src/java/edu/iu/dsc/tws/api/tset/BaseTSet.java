@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.api.tset;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,7 +21,6 @@ import com.google.common.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
@@ -50,14 +50,8 @@ public abstract class BaseTSet<T> implements TSet<T> {
    */
   protected Config config;
 
-  /**
-   * If there are sinks
-   */
-  private List<SinkOp<T>> sinks;
-
   public BaseTSet(Config cfg, TaskGraphBuilder bldr) {
     this.children = new ArrayList<>();
-    this.sinks = new ArrayList<>();
     this.builder = bldr;
     this.config = cfg;
   }
@@ -131,15 +125,15 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   @Override
-  public TSet<T> allReduce(ReduceFunction<T> reduceFn) {
-    BaseTSet<T> reduce = new AllReduceTSet<T>(config, builder, this, reduceFn);
+  public AllReduceTSet<T> allReduce(ReduceFunction<T> reduceFn) {
+    AllReduceTSet<T> reduce = new AllReduceTSet<T>(config, builder, this, reduceFn);
     children.add(reduce);
     return reduce;
   }
 
   @Override
-  public TSet<T> allGather() {
-    BaseTSet<T> gather = new AllGatherTSet<>(config, builder, this);
+  public AllGatherTSet<T> allGather() {
+    AllGatherTSet<T> gather = new AllGatherTSet<>(config, builder, this);
     children.add(gather);
     return gather;
   }
@@ -154,8 +148,10 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   @Override
-  public void sink(Sink<T> sink) {
-    sinks.add(new SinkOp<T>(sink));
+  public SinkTSet<T> sink(Sink<T> sink) {
+    SinkTSet<T> sinkTSet = new SinkTSet<>(config, builder, this, sink);
+    children.add(sinkTSet);
+    return sinkTSet;
   }
 
   @Override
@@ -166,13 +162,6 @@ public abstract class BaseTSet<T> implements TSet<T> {
     // then build children
     for (BaseTSet<?> c : children) {
       c.build();
-    }
-
-    // sinks are a special case
-    for (SinkOp<T> sink : sinks) {
-      ComputeConnection connection = builder.addSink(getName() + "-sink", sink);
-      // call build connection of our selves
-      buildConnection(connection);
     }
   }
 
@@ -253,15 +242,27 @@ public abstract class BaseTSet<T> implements TSet<T> {
    * Override the parallelism if operations require differently
    * @return new parallelism
    */
-  protected int getOverrideParallel() {
+  protected <K> int calculateParallelism(BaseTSet<K> parent) {
     int p;
-    if (overrideParallelism() != -1) {
-      p = overrideParallelism();
+    if (parent.overrideParallelism() != -1) {
+      p = parent.overrideParallelism();
       LOG.log(Level.WARNING, String.format("Overriding parallelism "
           + "specified %d override value %d", parallel, p));
     } else {
       p = parallel;
     }
     return p;
+  }
+
+  protected String generateName(String prefix, BaseTSet parent) {
+    if (name != null) {
+      return name;
+    } else {
+      if (parent == null) {
+        return prefix + "-" + new Random().nextInt(100);
+      } else {
+        return prefix + "-" + parent.getName();
+      }
+    }
   }
 }

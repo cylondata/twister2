@@ -13,36 +13,33 @@ package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.ops.IterableFlatMapOp;
+import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class IFlatMapTSet<T, P> extends BaseTSet<T> {
-  private BaseTSet<P> parent;
+public class SinkTSet<T> extends BaseTSet<T> {
+  private Sink<T> sink;
 
-  private IterableFlatMapFunction<P, T> mapFn;
+  private BaseTSet<T> parent;
 
-  public IFlatMapTSet(Config cfg, TaskGraphBuilder bldr,
-                     BaseTSet<P> parent, IterableFlatMapFunction<P, T> mapFunc) {
+  public SinkTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt, Sink<T> s) {
     super(cfg, bldr);
-    this.parent = parent;
-    this.mapFn = mapFunc;
+    this.sink = s;
+    this.parent = prnt;
+    this.name = "sink-" + parent.getName();
   }
 
-  @SuppressWarnings("unchecked")
+  @Override
   public boolean baseBuild() {
-    boolean isIterable = isIterableInput(parent);
-
     // lets override the parallelism
     int p = calculateParallelism(parent);
 
-    ComputeConnection connection = builder.addCompute(generateName("i-flat-map", parent),
-        new IterableFlatMapOp<>(mapFn, isIterable), p);
+    ComputeConnection connection = builder.addSink(getName(), new SinkOp<T>(sink), p);
     parent.buildConnection(connection);
     return true;
   }
 
   @Override
   void buildConnection(ComputeConnection connection) {
+
   }
 }
-

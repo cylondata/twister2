@@ -40,7 +40,7 @@ public class TSetReduceExample extends BaseTSetWorker {
       @Override
       public void prepare(TSetContext context) {
       }
-    });
+    }).setParallelism(10);
 
     reduce.sink(new Sink<int[]>() {
       @Override

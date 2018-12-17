@@ -32,9 +32,9 @@ public class IMapTSet<T, P> extends BaseTSet<T> {
   public boolean baseBuild() {
     boolean isIterable = isIterableInput(parent);
 
-    int p = overrideParallelism() != -1 ? overrideParallelism() : parallel;
+    int p = calculateParallelism(parent);
 
-    ComputeConnection connection = builder.addCompute(getName(),
+    ComputeConnection connection = builder.addCompute(generateName("i-map", parent),
         new IterableMapOp<>(mapFn, isIterable), p);
     parent.buildConnection(connection);
     return true;
