@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.driver;
 
-import com.google.protobuf.Message;
-
 public interface DriverListener {
 
   /**
@@ -29,8 +27,8 @@ public interface DriverListener {
 
   /**
    * received a broadcast message from the driver
-   * @param message received message from the driver
+   * @param data received message from the driver
    */
-  void broadcastReceived(Message message);
+  void broadcastReceived(byte[] data);
 
 }

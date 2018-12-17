@@ -78,7 +78,7 @@ public class DriverExample implements IDriver {
         NodeInfoUtils.createNodeInfo("example.nodeIP", "rack-01", "dc-01");
 
     LOG.info("Broadcasting an example protocol buffer message: " + nodeInfo);
-    driverController.broadcastToAllWorkers(nodeInfo);
+    driverController.broadcastToAllWorkers(nodeInfo.toByteArray());
 
     try {
       LOG.info("Sleeping 5 seconds ....");
@@ -91,7 +91,7 @@ public class DriverExample implements IDriver {
         ComputeResourceUtils.createComputeResource(10, 0.5, 2048, 2.0);
 
     LOG.info("Broadcasting another example protocol buffer message: " + computeResource);
-    driverController.broadcastToAllWorkers(computeResource);
+    driverController.broadcastToAllWorkers(computeResource.toByteArray());
 
     LOG.info("Driver has finished execution.");
   }

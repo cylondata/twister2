@@ -175,7 +175,7 @@ message ScaledResponse {
 // Driver can send any Message to workers
 // It is encoded as a byte array
 message Broadcast {
-    bytes message = 1;
+    bytes data = 1;
     int32 numberOfWorkers = 2;
 }
 

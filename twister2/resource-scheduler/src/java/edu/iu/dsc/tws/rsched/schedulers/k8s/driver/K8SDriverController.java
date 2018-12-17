@@ -14,8 +14,6 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.driver;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import com.google.protobuf.Message;
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.driver.IDriverController;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -167,13 +165,12 @@ public class K8SDriverController implements IDriverController {
 
   /**
    * send this message to all workers in the job
-   * @param message
    * @return
    */
   @Override
-  public boolean broadcastToAllWorkers(Message message) {
+  public boolean broadcastToAllWorkers(byte[] data) {
 
-    return driverClient.sendBroadcastMessage(message, numberOfWorkers);
+    return driverClient.sendBroadcastMessage(data, numberOfWorkers);
   }
 
   /**

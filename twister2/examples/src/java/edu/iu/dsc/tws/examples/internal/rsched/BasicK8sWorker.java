@@ -30,14 +30,16 @@ import org.apache.hadoop.fs.Path;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.driver.DriverListener;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.master.worker.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-public class BasicK8sWorker implements IWorker {
+public class BasicK8sWorker implements IWorker, DriverListener {
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
 
   @Override
@@ -47,6 +49,7 @@ public class BasicK8sWorker implements IWorker {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
+    JobMasterClient.addDriverListener(this);
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
     if (volatileVolume != null) {
@@ -82,6 +85,23 @@ public class BasicK8sWorker implements IWorker {
 //    listHdfsDir();
 //    sleepSomeTime(50);
     echoServer(workerController.getWorkerInfo());
+  }
+
+  @Override
+  public void workersScaledUp(int instancesAdded) {
+    LOG.info("Workers scaled up. Instances added: " + instancesAdded);
+  }
+
+  @Override
+  public void workersScaledDown(int instancesRemoved) {
+    LOG.info("Workers scaled down. Instances removed: " + instancesRemoved);
+  }
+
+  @Override
+  public void broadcastReceived(byte[] data) {
+
+    LOG.info("Broadcast data received: ");
+
   }
 
   /**

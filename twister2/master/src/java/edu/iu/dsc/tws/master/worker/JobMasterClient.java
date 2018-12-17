@@ -442,14 +442,20 @@ public final class JobMasterClient {
 
         JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
         if (driverListener != null) {
-
+          if (scaledMessage.getChange() > 0) {
+            driverListener.workersScaledUp(scaledMessage.getChange());
+          } else if (scaledMessage.getChange() < 0) {
+            driverListener.workersScaledDown(scaledMessage.getChange());
+          }
         }
-        // nothing to do
 
       } else if (message instanceof JobMasterAPI.Broadcast) {
         LOG.info("Received Broadcast message from the master. \n" + message);
 
-        // nothing to do
+        if (driverListener != null) {
+          JobMasterAPI.Broadcast broadcast = (JobMasterAPI.Broadcast) message;
+          driverListener.broadcastReceived(broadcast.toByteArray());
+        }
 
       } else {
         LOG.warning("Received message unrecognized. \n" + message);
