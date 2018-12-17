@@ -42,13 +42,11 @@ twister2.system.job.uri: "http://149.165.150.81:8082/twister2/mesos/twister2-job
 
 # launcher class for mesos submission
 twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosLauncher"
+
 # the uploader class
 twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
-
-
-
 
 # container class to run in workers
 #twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicMesosWorker"
@@ -61,6 +59,7 @@ twister2.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker
 ###################################################################################
 # ZooKeeper related config parameters
 ###################################################################################
+
 # ZooKeeper server addresses: comma separated host:port pairs
 # example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
 twister2.zookeeper.server.addresses: "149.165.150.81:2181"

@@ -12,6 +12,7 @@ t2_java_lib(
         "//twister2/proto:proto-java",
         "//twister2/task/src/main/java:task-java",
         "@javax_ws_rs_javax_ws_rs_api//jar",
+        "@com_google_protobuf_protobuf_java//jar",
         #"@com_google_protobuf//:protobuf_java",
         #"@com_fasterxml_jackson_core_jackson_annotations//jar",
         #"@com_fasterxml_jackson_core_jackson_core//jar",
