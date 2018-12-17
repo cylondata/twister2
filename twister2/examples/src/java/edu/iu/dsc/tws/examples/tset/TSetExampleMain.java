@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.examples.tset.batch.TSetAllReduceExample;
 import edu.iu.dsc.tws.examples.tset.batch.TSetGatherExample;
 import edu.iu.dsc.tws.examples.tset.batch.TSetPartitionExample;
 import edu.iu.dsc.tws.examples.tset.batch.TSetReduceExample;
+import edu.iu.dsc.tws.examples.tset.streaming.STSetReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public final class TSetExampleMain {
@@ -138,6 +139,14 @@ public final class TSetExampleMain {
           break;
         case "allreduce":
           submitJob(config, workers, jobConfig, TSetAllReduceExample.class.getName());
+          break;
+        default:
+          System.out.println("Un-supported");
+      }
+    } else {
+      switch (operation) {
+        case "reduce":
+          submitJob(config, workers, jobConfig, STSetReduceExample.class.getName());
           break;
         default:
           System.out.println("Un-supported");
