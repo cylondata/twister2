@@ -82,8 +82,8 @@ public class JMDriverClient {
         RRServer.CLIENT_ID, connectHandler);
 
     // protocol buffer message registrations
-    JobMasterAPI.ScaledComputeResource.Builder scaledMessageBuilder =
-        JobMasterAPI.ScaledComputeResource.newBuilder();
+    JobMasterAPI.WorkersScaled.Builder scaledMessageBuilder =
+        JobMasterAPI.WorkersScaled.newBuilder();
     JobMasterAPI.ScaledResponse.Builder scaledResponseBuilder
         = JobMasterAPI.ScaledResponse.newBuilder();
 
@@ -200,18 +200,18 @@ public class JMDriverClient {
     startLooping();
   }
 
-  public boolean sendScaledMessage(int computeResourceIndex, int instances) {
-    JobMasterAPI.ScaledComputeResource scaleComputeResource =
-        JobMasterAPI.ScaledComputeResource.newBuilder()
-            .setIndex(computeResourceIndex)
-            .setInstances(instances)
+  public boolean sendScaledMessage(int change, int numberOfWorkers) {
+    JobMasterAPI.WorkersScaled scaledMessage =
+        JobMasterAPI.WorkersScaled.newBuilder()
+            .setChange(change)
+            .setNumberOfWorkers(numberOfWorkers)
             .build();
 
-    LOG.info("Sending ScaledComputeResource message: \n" + scaleComputeResource);
+    LOG.info("Sending WorkersScaled message: \n" + scaledMessage);
 
     // wait for the response
     try {
-      rrClient.sendRequestWaitResponse(scaleComputeResource,
+      rrClient.sendRequestWaitResponse(scaledMessage,
           JobMasterContext.responseWaitDuration(config));
 
       return true;

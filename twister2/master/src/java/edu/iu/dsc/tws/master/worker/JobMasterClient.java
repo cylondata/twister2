@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.driver.DriverListener;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
@@ -74,17 +75,19 @@ public final class JobMasterClient {
   private int numberOfWorkers;
 
   /**
-   * the maximum duration this client will try to connect to the Job Master
-   * in milli seconds
-   */
-  private static final long CONNECTION_TRY_TIME_LIMIT = 100000;
-
-  /**
    * to control the connection error when we repeatedly try connecting
    */
   private boolean connectionRefused = false;
 
+  private DriverListener driverListener;
+
   private static JobMasterClient jmClient;
+
+  /**
+   * the maximum duration this client will try to connect to the Job Master
+   * in milli seconds
+   */
+  private static final long CONNECTION_TRY_TIME_LIMIT = 100000;
 
   /**
    * Singleton JobMasterClient
@@ -154,8 +157,8 @@ public final class JobMasterClient {
     JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
         = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
 
-    JobMasterAPI.ScaledComputeResource.Builder scaledMessageBuilder =
-        JobMasterAPI.ScaledComputeResource.newBuilder();
+    JobMasterAPI.WorkersScaled.Builder scaledMessageBuilder =
+        JobMasterAPI.WorkersScaled.newBuilder();
 
     JobMasterAPI.Broadcast.Builder broadcastBuilder = JobMasterAPI.Broadcast.newBuilder();
 
@@ -320,11 +323,18 @@ public final class JobMasterClient {
   }
 
   /**
-   * stop the JobMasterClient
+   * only one DriverListener can be added
+   * if the second driver listener tried to be added, false returned
+   * @param driverListener
+   * @return
    */
-  public void close() {
-    stopLooper = true;
-    looper.wakeup();
+  public static boolean addDriverListener(DriverListener driverListener) {
+    if (jmClient.driverListener != null) {
+      return false;
+    }
+
+    jmClient.driverListener = driverListener;
+    return true;
   }
 
   /**
@@ -395,6 +405,14 @@ public final class JobMasterClient {
     return true;
   }
 
+  /**
+   * stop the JobMasterClient
+   */
+  public void close() {
+    stopLooper = true;
+    looper.wakeup();
+  }
+
   class ResponseMessageHandler implements MessageHandler {
 
     @Override
@@ -419,9 +437,13 @@ public final class JobMasterClient {
         LOG.fine("Received a WorkerStateChange response from the master. \n" + message);
 
         // nothing to do
-      } else if (message instanceof JobMasterAPI.ScaledComputeResource) {
-        LOG.info("Received ScaledComputeResource message from the master. \n" + message);
+      } else if (message instanceof JobMasterAPI.WorkersScaled) {
+        LOG.info("Received WorkersScaled message from the master. \n" + message);
 
+        JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
+        if (driverListener != null) {
+
+        }
         // nothing to do
 
       } else if (message instanceof JobMasterAPI.Broadcast) {

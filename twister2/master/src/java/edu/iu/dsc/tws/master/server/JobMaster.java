@@ -238,8 +238,8 @@ public class JobMaster {
     JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
         JobMasterAPI.BarrierResponse.newBuilder();
 
-    JobMasterAPI.ScaledComputeResource.Builder scaledMessageBuilder =
-        JobMasterAPI.ScaledComputeResource.newBuilder();
+    JobMasterAPI.WorkersScaled.Builder scaledMessageBuilder =
+        JobMasterAPI.WorkersScaled.newBuilder();
     JobMasterAPI.ScaledResponse.Builder scaledResponseBuilder
         = JobMasterAPI.ScaledResponse.newBuilder();
 

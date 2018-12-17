@@ -59,8 +59,7 @@ public class WorkerMonitor implements MessageHandler {
   private HashMap<Integer, RequestID> waitList;
 
   // workersPerPod in scalable compute resource and replicas of that resource
-  private int workersPerPod;
-  private int replicas;
+  private JobAPI.ComputeResource scalableComputeResource;
 
   public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, DashboardClient dashClient,
                        JobAPI.Job job, boolean jobMasterAssignsWorkerIDs) {
@@ -71,9 +70,7 @@ public class WorkerMonitor implements MessageHandler {
     this.numberOfWorkers = job.getNumberOfWorkers();
     this.jobMasterAssignsWorkerIDs = jobMasterAssignsWorkerIDs;
 
-    this.replicas = job.getComputeResource(job.getComputeResourceCount() - 1).getInstances();
-    this.workersPerPod =
-        job.getComputeResource(job.getComputeResourceCount() - 1).getWorkersPerPod();
+    this.scalableComputeResource = job.getComputeResource(job.getComputeResourceCount() - 1);
 
     workers = new TreeMap<>();
     waitList = new HashMap<>();
@@ -99,10 +96,9 @@ public class WorkerMonitor implements MessageHandler {
       JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
 
-    } else if (message instanceof JobMasterAPI.ScaledComputeResource) {
-      LOG.log(Level.INFO, "ScaledComputeResource message received: " + message.toString());
-      JobMasterAPI.ScaledComputeResource scaledMessage =
-          (JobMasterAPI.ScaledComputeResource) message;
+    } else if (message instanceof JobMasterAPI.WorkersScaled) {
+      LOG.log(Level.INFO, "WorkersScaled message received: " + message.toString());
+      JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
       scaledMessageReceived(id, scaledMessage);
 
     } else if (message instanceof JobMasterAPI.Broadcast) {
@@ -243,16 +239,14 @@ public class WorkerMonitor implements MessageHandler {
   }
 
   private void scaledMessageReceived(RequestID id,
-                                     JobMasterAPI.ScaledComputeResource scaledMessage) {
+                                     JobMasterAPI.WorkersScaled scaledMessage) {
 
     JobMasterAPI.ScaledResponse scaledResponse = JobMasterAPI.ScaledResponse.newBuilder()
-        .setIndex(scaledMessage.getIndex())
-        .setInstances(scaledMessage.getInstances())
+        .setSucceeded(true)
         .build();
 
     // modify numberOfWorkers and replicas
-    numberOfWorkers += (scaledMessage.getInstances() - replicas) * workersPerPod;
-    replicas = scaledMessage.getInstances();
+    numberOfWorkers = scaledMessage.getNumberOfWorkers();
 
     rrServer.sendResponse(id, scaledResponse);
     LOG.fine("ScaledResponse sent to the driver: \n" + scaledResponse);
@@ -266,7 +260,9 @@ public class WorkerMonitor implements MessageHandler {
 
     // send Scale message to the dashboard
     if (dashClient != null) {
-      dashClient.scaleComputeResource(scaledMessage.getIndex(), scaledMessage.getInstances());
+      int index = scalableComputeResource.getIndex();
+      int replicas = numberOfWorkers / scalableComputeResource.getWorkersPerPod();
+      dashClient.scaleComputeResource(index, replicas);
     }
 
   }

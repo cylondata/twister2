@@ -115,7 +115,7 @@ public class K8SDriverController implements IDriverController {
       }
     }
 
-    boolean sent = driverClient.sendScaledMessage(computeResourceIndex, replicas);
+    boolean sent = driverClient.sendScaledMessage(instancesToAdd, numberOfWorkers + instancesToAdd);
     if (!sent) {
       // if the message can not be sent, scale down to the previous value
       k8sController.patchStatefulSet(scalableSSName, replicas);
@@ -162,7 +162,7 @@ public class K8SDriverController implements IDriverController {
     numberOfWorkers -= instancesToRemove;
 
     // send scaled message to job master
-    return driverClient.sendScaledMessage(computeResourceIndex, replicas);
+    return driverClient.sendScaledMessage(0 - instancesToRemove, numberOfWorkers);
   }
 
   /**
