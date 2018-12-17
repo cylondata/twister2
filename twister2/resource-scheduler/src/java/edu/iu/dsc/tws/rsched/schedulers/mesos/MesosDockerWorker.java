@@ -201,8 +201,8 @@ public class MesosDockerWorker {
 
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP());
-    jobMasterClient =
-        new JobMasterClient(config, workerInfo, jobMasterIP, jobMasterPort, numberOfWorkers);
+    jobMasterClient = JobMasterClient.createJobMasterClient(config, workerInfo, jobMasterIP,
+        jobMasterPort, numberOfWorkers);
     jobMasterClient.startThreaded();
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method

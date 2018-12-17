@@ -100,8 +100,9 @@ public final class JobMasterClientExample {
 
     String jobMasterAddress = "localhost";
     int jobMasterPort = JobMasterContext.jobMasterPort(config);
-    JobMasterClient client =
-        new JobMasterClient(config, workerInfo, jobMasterAddress, jobMasterPort, numberOfWorkers);
+    JobMasterClient client = JobMasterClient.createJobMasterClient(
+        config, workerInfo, jobMasterAddress, jobMasterPort, numberOfWorkers);
+
     client.startThreaded();
 
     IWorkerController workerController = client.getJMWorkerController();

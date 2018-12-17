@@ -260,7 +260,7 @@ public final class NomadWorkerStarter {
                                                     JobMasterAPI.WorkerInfo workerInfo,
                                                     int numberContainers) {
     // we start the job master client
-    JobMasterClient jobMasterClient = new JobMasterClient(cfg,
+    JobMasterClient jobMasterClient = JobMasterClient.createJobMasterClient(cfg,
         workerInfo, masterHost, masterPort, numberContainers);
     LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
     jobMasterClient.startThreaded();

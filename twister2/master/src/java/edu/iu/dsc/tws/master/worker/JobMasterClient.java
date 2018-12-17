@@ -53,7 +53,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
  * It uses the calling thread and this call does not return unless the close method is called
  */
 
-public class JobMasterClient {
+public final class JobMasterClient {
   private static final Logger LOG = Logger.getLogger(JobMasterClient.class.getName());
 
   private static Progress looper;
@@ -84,7 +84,17 @@ public class JobMasterClient {
    */
   private boolean connectionRefused = false;
 
-  public JobMasterClient(Config config,
+  private static JobMasterClient jmClient;
+
+  /**
+   * Singleton JobMasterClient
+   * @param config
+   * @param thisWorker
+   * @param masterHost
+   * @param masterPort
+   * @param numberOfWorkers
+   */
+  private JobMasterClient(Config config,
                          WorkerInfo thisWorker,
                          String masterHost,
                          int masterPort,
@@ -97,11 +107,21 @@ public class JobMasterClient {
   }
 
   /**
-   * return WorkerInfo for this worker
+   * create the singleton JobMasterClient
+   * if it is already created, return the previous one.
    * @return
    */
-  public WorkerInfo getWorkerInfo() {
-    return thisWorker;
+  public static JobMasterClient createJobMasterClient(Config config,
+                                                      WorkerInfo thisWorker,
+                                                      String masterHost,
+                                                      int masterPort,
+                                                      int numberOfWorkers) {
+    if (jmClient != null) {
+      return jmClient;
+    }
+
+    jmClient = new JobMasterClient(config, thisWorker, masterHost, masterPort, numberOfWorkers);
+    return jmClient;
   }
 
   /**
@@ -134,15 +154,18 @@ public class JobMasterClient {
     JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
         = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
 
-    JobMasterAPI.ScaledComputeResource.Builder scaleMessageBuilder =
+    JobMasterAPI.ScaledComputeResource.Builder scaledMessageBuilder =
         JobMasterAPI.ScaledComputeResource.newBuilder();
+
+    JobMasterAPI.Broadcast.Builder broadcastBuilder = JobMasterAPI.Broadcast.newBuilder();
 
     ResponseMessageHandler responseMessageHandler = new ResponseMessageHandler();
     rrClient.registerResponseHandler(registerWorkerBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(registerWorkerResponseBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
-    rrClient.registerResponseHandler(scaleMessageBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(scaledMessageBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(broadcastBuilder, responseMessageHandler);
 
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
@@ -175,18 +198,9 @@ public class JobMasterClient {
     rrClient.registerResponseHandler(barrierResponseBuilder, jmWorkerController);
   }
 
-  public JMWorkerController getJMWorkerController() {
-    return jmWorkerController;
-  }
-
   /**
-   * stop the JobMasterClient
+   * start the client to listen for messages
    */
-  public void close() {
-    stopLooper = true;
-    looper.wakeup();
-  }
-
   private void startLooping() {
 
     while (!stopLooper) {
@@ -290,6 +304,30 @@ public class JobMasterClient {
   }
 
   /**
+   * return WorkerInfo for this worker
+   * @return
+   */
+  public WorkerInfo getWorkerInfo() {
+    return thisWorker;
+  }
+
+  /**
+   * return JMWorkerController for this worker
+   * @return
+   */
+  public JMWorkerController getJMWorkerController() {
+    return jmWorkerController;
+  }
+
+  /**
+   * stop the JobMasterClient
+   */
+  public void close() {
+    stopLooper = true;
+    looper.wakeup();
+  }
+
+  /**
    * send RegisterWorker message to Job Master
    * put WorkerInfo in this message
    * @return
@@ -382,7 +420,12 @@ public class JobMasterClient {
 
         // nothing to do
       } else if (message instanceof JobMasterAPI.ScaledComputeResource) {
-        LOG.info("Received ScaleComputeResource message from the master. \n" + message);
+        LOG.info("Received ScaledComputeResource message from the master. \n" + message);
+
+        // nothing to do
+
+      } else if (message instanceof JobMasterAPI.Broadcast) {
+        LOG.info("Received Broadcast message from the master. \n" + message);
 
         // nothing to do
 

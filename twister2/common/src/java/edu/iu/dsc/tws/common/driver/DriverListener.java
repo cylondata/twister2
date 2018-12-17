@@ -13,26 +13,24 @@ package edu.iu.dsc.tws.common.driver;
 
 import com.google.protobuf.Message;
 
-public interface IDriverController {
+public interface DriverListener {
 
   /**
-   * add new instances of workers to the job
-   * @param instancesToAdd
-   * @return true if successful
+   * called when new instances of workers are added the job
+   * @param instancesAdded
    */
-  boolean scaleUpWorkers(int instancesToAdd);
+  void workersScaledUp(int instancesAdded);
 
   /**
-   * remove some instances of the workers from the job
-   * @param instancesToRemove
-   * @return true if successful
+   * called when new instances of workers are removed from the job
+   * @param instancesRemoved
    */
-  boolean scaleDownWorkers(int instancesToRemove);
+  void workersScaledDown(int instancesRemoved);
 
   /**
-   * send a protocol buffer message to all workers in the job
-   * @return
+   * received a broadcast message from the driver
+   * @param message received message from the driver
    */
-  boolean broadcastToAllWorkers(Message message);
+  void broadcastReceived(Message message);
 
 }

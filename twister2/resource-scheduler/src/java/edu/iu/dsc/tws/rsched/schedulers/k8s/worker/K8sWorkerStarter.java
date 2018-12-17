@@ -138,7 +138,7 @@ public final class K8sWorkerStarter {
     );
 
     // construct JobMasterClient
-    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP,
+    jobMasterClient = JobMasterClient.createJobMasterClient(config, workerInfo, jobMasterIP,
         JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
 
     // start JobMasterClient
