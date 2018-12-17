@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.common.config.Config;
@@ -23,18 +25,29 @@ public class SinkOp<T> implements ISink {
 
   private Sink<T> sink;
 
+  private boolean iterable;
+
   public SinkOp() {
   }
 
-  public SinkOp(Sink<T> sink) {
+  public SinkOp(Sink<T> sink, boolean itr) {
     this.sink = sink;
+    this.iterable = itr;
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public boolean execute(IMessage message) {
-    T data = (T) message.getContent();
-    return sink.add(data);
+    if (!iterable) {
+      T data = (T) message.getContent();
+      sink.add(data);
+    } else {
+      Iterator<T> data = (Iterator<T>) message.getContent();
+      while (data.hasNext()) {
+        sink.add(data.next());
+      }
+    }
+    return true;
   }
 
   @Override
