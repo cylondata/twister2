@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.io.Serializable;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.api.tset.Source;
@@ -19,11 +20,16 @@ import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
+import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 /**
  * We need to keep variable static as this class is serialized
  */
 public class BaseTSetWorker extends TaskWorker implements Serializable {
+  private static final Logger LOG = Logger.getLogger(BaseTSetWorker.class.getName());
+
   protected static JobParameters jobParameters;
 
   protected static TSetBuilder tSetBuilder;
@@ -34,6 +40,20 @@ public class BaseTSetWorker extends TaskWorker implements Serializable {
   public void execute() {
     tSetBuilder = TSetBuilder.newBuilder(config);
     jobParameters = JobParameters.build(config);
+
+    experimentData = new ExperimentData();
+    experimentData.setTaskStages(jobParameters.getTaskStages());
+    if (jobParameters.isStream()) {
+      tSetBuilder.setMode(OperationMode.STREAMING);
+      experimentData.setOperationMode(OperationMode.STREAMING);
+      //streaming application doesn't consider iteration as a looping of the action on the
+      //same data set. It's rather producing an streaming of data
+      experimentData.setIterations(1);
+    } else {
+      tSetBuilder.setMode(OperationMode.BATCH);
+      experimentData.setOperationMode(OperationMode.BATCH);
+      experimentData.setIterations(jobParameters.getIterations());
+    }
   }
 
   public static class BaseSource implements Source<int[]> {
@@ -49,6 +69,7 @@ public class BaseTSetWorker extends TaskWorker implements Serializable {
     @Override
     public int[] next() {
       count++;
+      experimentData.setInput(values);
       return values;
     }
 
@@ -57,6 +78,22 @@ public class BaseTSetWorker extends TaskWorker implements Serializable {
       values = new int[jobParameters.getSize()];
       for (int i = 0; i < jobParameters.getSize(); i++) {
         values[i] = 1;
+      }
+    }
+  }
+
+  public static void verify(String operationNames) throws VerificationException {
+    boolean doVerify = jobParameters.isDoVerify();
+    boolean isVerified = false;
+    if (doVerify) {
+      LOG.info("Verifying results ...");
+      ExperimentVerification experimentVerification
+          = new ExperimentVerification(experimentData, operationNames);
+      isVerified = experimentVerification.isVerified();
+      if (isVerified) {
+        LOG.info("Results generated from the experiment are verified.");
+      } else {
+        throw new VerificationException("Results do not match");
       }
     }
   }
