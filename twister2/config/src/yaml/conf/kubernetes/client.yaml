@@ -113,6 +113,7 @@ racks.list:
 ########################################################################
 # persistent volume related settings
 ########################################################################
+
 # persistent volume size per worker in GB as double
 # default value is 0.0Gi
 # set this value to zero, if you have not persistent disk support
