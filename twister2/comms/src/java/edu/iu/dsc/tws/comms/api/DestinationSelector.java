@@ -61,5 +61,11 @@ public interface DestinationSelector {
     return 0;
   }
 
-  void commit(int source, int next);
+  /**
+   * Say that we have used the obtained destination
+   *
+   * @param source source
+   * @param obtained obtained destination
+   */
+  void commit(int source, int obtained);
 }

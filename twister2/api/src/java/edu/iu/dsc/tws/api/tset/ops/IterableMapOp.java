@@ -31,12 +31,15 @@ public class IterableMapOp<T, R> implements ICompute {
 
   private boolean inputIterator;
 
+  private boolean keyed;
+
   public IterableMapOp() {
   }
 
-  public IterableMapOp(IterableMapFunction<T, R> mapFn, boolean inputItr) {
+  public IterableMapOp(IterableMapFunction<T, R> mapFn, boolean inputItr, boolean kyd) {
     this.mapFn = mapFn;
     this.inputIterator = inputItr;
+    this.keyed = kyd;
   }
 
   @SuppressWarnings("unchecked")

@@ -36,6 +36,7 @@ public class KeyedReduceTSet<T, K> extends KeyValueTSet<T, K> {
     this.reduceFn =  rFn;
     this.partitionFunction = parFn;
     this.selector = selec;
+    this.name = "keyed-reduce-" + parent.getName();
   }
 
   @Override

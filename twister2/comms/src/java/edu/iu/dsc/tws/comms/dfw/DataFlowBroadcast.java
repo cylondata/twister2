@@ -80,6 +80,13 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
+  public void clean() {
+    if (finalReceiver != null) {
+      finalReceiver.clean();
+    }
+  }
+
+  @Override
   public void finish(int target) {
 
   }

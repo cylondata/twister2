@@ -364,6 +364,17 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
+  public void clean() {
+    if (partialReceiver != null) {
+      partialReceiver.clean();
+    }
+
+    if (finalReceiver != null) {
+      finalReceiver.clean();
+    }
+  }
+
+  @Override
   public void finish(int source) {
     while (!send(source, new byte[0], MessageFlags.END)) {
       // lets progress until finish

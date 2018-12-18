@@ -442,6 +442,17 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
+  public void clean() {
+    if (partialReceiver != null) {
+      partialReceiver.clean();
+    }
+
+    if (finalReceiver != null) {
+      finalReceiver.clean();
+    }
+  }
+
+  @Override
   public void finish(int source) {
     // first we need to call finish on the partial receivers
     if (partialReceiver != null) {

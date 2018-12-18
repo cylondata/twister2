@@ -62,7 +62,7 @@ public final class Network {
                                                  IWorkerController wController) {
     TCPChannel channel;
     int index = wController.getWorkerInfo().getWorkerID();
-    Integer workerPort = wController.getWorkerInfo().getPort();
+    int workerPort = wController.getWorkerInfo().getPort();
     String localIp = wController.getWorkerInfo().getWorkerIP();
 
     channel = createChannel(config, localIp, workerPort, index);

@@ -13,42 +13,36 @@ package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
+import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
 
-/**
- * Represent a data set create by a all reduce opration
- *
- * @param <T> type of data
- */
-public class AllReduceTSet<T> extends BaseTSet<T> {
-  private ReduceFunction<T> reduceFn;
+public class SinkTSet<T> extends BaseTSet<T> {
+  private Sink<T> sink;
 
   private BaseTSet<T> parent;
 
-  public AllReduceTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-                       ReduceFunction<T> rFn) {
+  public SinkTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt, Sink<T> s) {
     super(cfg, bldr);
-    this.reduceFn = rFn;
+    this.sink = s;
     this.parent = prnt;
-    this.name = "all-reduce-" + parent.getName();
+    this.name = "sink-" + parent.getName();
   }
 
   @Override
   public boolean baseBuild() {
+    boolean isIterable = isIterableInput(parent);
+    boolean keyed = isKeyedInput(parent);
+    // lets override the parallelism
+    int p = calculateParallelism(parent);
+
+    ComputeConnection connection = builder.addSink(getName(),
+        new SinkOp<T>(sink, isIterable, keyed), p);
+    parent.buildConnection(connection);
     return true;
   }
 
   @Override
   void buildConnection(ComputeConnection connection) {
-    DataType dataType = getDataType(getType());
 
-    connection.allreduce(parent.getName(), Constants.DEFAULT_EDGE,
-        new ReduceOpFunction<T>(getReduceFn()), dataType);
-  }
-
-  public ReduceFunction<T> getReduceFn() {
-    return reduceFn;
   }
 }
