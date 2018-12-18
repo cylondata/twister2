@@ -14,11 +14,8 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.driver;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import com.google.protobuf.Message;
-
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.driver.IDriverController;
-import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.JobPackageTransferThread;
@@ -26,12 +23,11 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 
-public class K8SDriverController implements IDriverController {
+public class K8sScaler implements IScaler {
 
-  private static final Logger LOG = Logger.getLogger(K8SDriverController.class.getName());
+  private static final Logger LOG = Logger.getLogger(K8sScaler.class.getName());
 
   private JMDriverAgent driverAgent;
-  private JobAPI.Job job;
   private KubernetesController k8sController;
   private Config config;
 
@@ -49,10 +45,9 @@ public class K8SDriverController implements IDriverController {
   // it shows the up-to-date value
   private int numberOfWorkers;
 
-  public K8SDriverController(Config config, String jmHost, JobAPI.Job job, String jobPackageFile,
-                             KubernetesController k8sController) {
+  public K8sScaler(Config config, JMDriverAgent driverAgent, JobAPI.Job job,
+                   String jobPackageFile, KubernetesController k8sController) {
     this.config = config;
-    this.job = job;
     this.jobPackageFile = jobPackageFile;
     this.k8sController = k8sController;
 
@@ -65,9 +60,7 @@ public class K8SDriverController implements IDriverController {
 
     this.numberOfWorkers = job.getNumberOfWorkers();
 
-    int jmPort = JobMasterContext.jobMasterPort(config);
-    driverAgent = new JMDriverAgent(config, jmHost, jmPort);
-    driverAgent.startThreaded();
+    this.driverAgent = driverAgent;
   }
 
   /**
@@ -124,6 +117,8 @@ public class K8SDriverController implements IDriverController {
 
     replicas = replicas + podsToAdd;
     numberOfWorkers += instancesToAdd;
+    driverAgent.setNumberOfWorkers(numberOfWorkers);
+
     return true;
   }
 
@@ -160,19 +155,10 @@ public class K8SDriverController implements IDriverController {
     // update replicas
     replicas = replicas - podsToRemove;
     numberOfWorkers -= instancesToRemove;
+    driverAgent.setNumberOfWorkers(numberOfWorkers);
 
     // send scaled message to job master
     return driverAgent.sendScaledMessage(0 - instancesToRemove, numberOfWorkers);
-  }
-
-  /**
-   * send this message to all workers in the job
-   * @return
-   */
-  @Override
-  public boolean broadcastToAllWorkers(Message message) {
-
-    return driverAgent.sendBroadcastMessage(message, numberOfWorkers);
   }
 
   /**
@@ -193,13 +179,6 @@ public class K8SDriverController implements IDriverController {
     }
 
     return podNames;
-  }
-
-  /**
-   * close the connection to the
-   */
-  public void close() {
-    driverAgent.close();
   }
 
 }

@@ -14,7 +14,8 @@ package edu.iu.dsc.tws.examples.internal.rsched;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.driver.IDriver;
-import edu.iu.dsc.tws.common.driver.IDriverController;
+import edu.iu.dsc.tws.common.driver.IDriverMessenger;
+import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -24,13 +25,15 @@ public class DriverExample implements IDriver {
   private static final Logger LOG = Logger.getLogger(DriverExample.class.getName());
 
   @Override
-  public void execute(IDriverController driverController) {
-    broadcastExample(driverController);
-//    scalingExample(driverController);
+  public void execute(IScaler scaler, IDriverMessenger messenger) {
+    broadcastExample(messenger);
+    scalingExample(scaler);
+
+    LOG.info("Driver has finished execution.");
   }
 
-  private void scalingExample(IDriverController driverController) {
-
+  private void scalingExample(IScaler scaler) {
+    LOG.info("Testing scaling up and down ............................. ");
     try {
       LOG.info("Sleeping 5 seconds ....");
       Thread.sleep(5000);
@@ -39,7 +42,7 @@ public class DriverExample implements IDriver {
     }
 
     LOG.info("Will scale up workers by 4");
-    driverController.scaleUpWorkers(4);
+    scaler.scaleUpWorkers(4);
 
     try {
       LOG.info("Sleeping 5 seconds ....");
@@ -49,7 +52,7 @@ public class DriverExample implements IDriver {
     }
 
     LOG.info("Will scale up workers by 2");
-    driverController.scaleUpWorkers(2);
+    scaler.scaleUpWorkers(2);
 
     try {
       LOG.info("Sleeping 5 seconds ....");
@@ -59,13 +62,12 @@ public class DriverExample implements IDriver {
     }
 
     LOG.info("Will scale down workers by 4");
-    driverController.scaleDownWorkers(4);
-
-    LOG.info("Driver finished execution.");
+    scaler.scaleDownWorkers(4);
   }
 
-  private void broadcastExample(IDriverController driverController) {
+  private void broadcastExample(IDriverMessenger messenger) {
 
+    LOG.info("Testing broadcasting  ............................. ");
     try {
       LOG.info("Sleeping 5 seconds ....");
       Thread.sleep(5000);
@@ -78,7 +80,7 @@ public class DriverExample implements IDriver {
         NodeInfoUtils.createNodeInfo("example.nodeIP", "rack-01", "dc-01");
 
     LOG.info("Broadcasting an example protocol buffer message: " + nodeInfo);
-    driverController.broadcastToAllWorkers(nodeInfo);
+    messenger.broadcastToAllWorkers(nodeInfo);
 
     try {
       LOG.info("Sleeping 5 seconds ....");
@@ -91,9 +93,7 @@ public class DriverExample implements IDriver {
         ComputeResourceUtils.createComputeResource(10, 0.5, 2048, 2.0);
 
     LOG.info("Broadcasting another example protocol buffer message: " + computeResource);
-    driverController.broadcastToAllWorkers(computeResource);
-
-    LOG.info("Driver has finished execution.");
+    messenger.broadcastToAllWorkers(computeResource);
   }
 
 }

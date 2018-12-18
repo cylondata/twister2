@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-public class JMDriverAgent {
+public final class JMDriverAgent {
   private static final Logger LOG = Logger.getLogger(JMDriverAgent.class.getName());
 
   private static Progress looper;
@@ -41,7 +41,19 @@ public class JMDriverAgent {
   private String masterAddress;
   private int masterPort;
 
+  /**
+   * an upto date value of number of workers in the job
+   * when new workers are added/removed, we update it
+   * we use this value, when we send messages to JobMaster
+   */
+  private int numberOfWorkers;
+
   private RRClient rrClient;
+
+  /**
+   * a singleton object for this class
+   */
+  private static JMDriverAgent driverAgent;
 
   /**
    * the maximum duration this client will try to connect to the Job Master
@@ -60,12 +72,27 @@ public class JMDriverAgent {
    */
   private JobMasterAPI.BroadcastResponse broadcastResponse;
 
-  public JMDriverAgent(Config config,
-                       String masterHost,
-                       int masterPort) {
+  private JMDriverAgent(Config config,
+                        String masterHost,
+                        int masterPort,
+                        int numberOfWorkers) {
     this.config = config;
     this.masterAddress = masterHost;
     this.masterPort = masterPort;
+    this.numberOfWorkers = numberOfWorkers;
+  }
+
+  public static JMDriverAgent createJMDriverAgent(Config config,
+                                                  String masterHost,
+                                                  int masterPort,
+                                                  int numberOfWorkers) {
+
+    if (driverAgent != null) {
+      return driverAgent;
+    }
+
+    driverAgent = new JMDriverAgent(config, masterHost, masterPort, numberOfWorkers);
+    return driverAgent;
   }
 
   /**
@@ -201,11 +228,15 @@ public class JMDriverAgent {
     startLooping();
   }
 
-  public boolean sendScaledMessage(int change, int numberOfWorkers) {
+  public void setNumberOfWorkers(int numberOfWorkers) {
+    this.numberOfWorkers = numberOfWorkers;
+  }
+
+  public boolean sendScaledMessage(int change, int workersCount) {
     JobMasterAPI.WorkersScaled scaledMessage =
         JobMasterAPI.WorkersScaled.newBuilder()
             .setChange(change)
-            .setNumberOfWorkers(numberOfWorkers)
+            .setNumberOfWorkers(workersCount)
             .build();
 
     LOG.info("Sending WorkersScaled message: \n" + scaledMessage);
@@ -223,7 +254,7 @@ public class JMDriverAgent {
     }
   }
 
-  public boolean sendBroadcastMessage(Message message, int numberOfWorkers) {
+  public boolean sendBroadcastMessage(Message message) {
     JobMasterAPI.Broadcast broadcast = JobMasterAPI.Broadcast.newBuilder()
         .setData(Any.pack(message).toByteString())
         .setNumberOfWorkers(numberOfWorkers)

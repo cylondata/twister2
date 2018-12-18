@@ -18,9 +18,9 @@ import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 
-public final class JMSubmittingClientExample {
+public final class JMDriverAgentExample {
 
-  private JMSubmittingClientExample() { }
+  private JMDriverAgentExample() { }
 
   public static void main(String[] args) {
     // we assume that the twister2Home is the current directory
@@ -30,8 +30,10 @@ public final class JMSubmittingClientExample {
 
     String jmHost = "localhost";
     int jmPort = JobMasterContext.jobMasterPort(config);
+    int numberOfWorkers = 2;
 
-    JMDriverAgent agent = new JMDriverAgent(config, jmHost, jmPort);
+    JMDriverAgent agent =
+        JMDriverAgent.createJMDriverAgent(config, jmHost, jmPort, numberOfWorkers);
     agent.startThreaded();
 
     agent.sendScaledMessage(0, 10);
