@@ -32,7 +32,7 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
   }
 
   public KeyedReduceTSet<T, K> keyedReduce(ReduceFunction<T> reduceFn) {
-    KeyedReduceTSet<T, K> reduce = new KeyedReduceTSet<>(config, builder, this,
+    KeyedReduceTSet<T, K> reduce = new KeyedReduceTSet<>(config, builder, parent,
         reduceFn, partitioner, selector);
     children.add(reduce);
     return reduce;
@@ -40,13 +40,13 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
 
   public KeyedPartitionTSet<T, K> keyedPartition() {
     KeyedPartitionTSet<T, K> partition = new KeyedPartitionTSet<>(config, builder,
-        this, partitioner, selector);
+        parent, partitioner, selector);
     children.add(partition);
     return partition;
   }
 
   public KeyedGatherTSet<T, K> keyedGather() {
-    KeyedGatherTSet<T, K> gather = new KeyedGatherTSet<>(config, builder, this,
+    KeyedGatherTSet<T, K> gather = new KeyedGatherTSet<>(config, builder, parent,
         partitioner, selector);
     children.add(gather);
     return gather;
