@@ -26,12 +26,6 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.Constants;
-import edu.iu.dsc.tws.examples.tset.batch.TSetAllGatherExample;
-import edu.iu.dsc.tws.examples.tset.batch.TSetAllReduceExample;
-import edu.iu.dsc.tws.examples.tset.batch.TSetGatherExample;
-import edu.iu.dsc.tws.examples.tset.batch.TSetPartitionExample;
-import edu.iu.dsc.tws.examples.tset.batch.TSetReduceExample;
-import edu.iu.dsc.tws.examples.tset.streaming.STSetReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public final class TSetExampleMain {
@@ -146,7 +140,8 @@ public final class TSetExampleMain {
     } else {
       switch (operation) {
         case "reduce":
-          submitJob(config, workers, jobConfig, STSetReduceExample.class.getName());
+//          submitJob(config, workers, jobConfig, STSetReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, TSetReduceExample.class.getName());
           break;
         default:
           System.out.println("Un-supported");

@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.tset.batch;
+package edu.iu.dsc.tws.examples.tset;
 
 import java.util.logging.Logger;
 
@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class TSetAllReduceExample extends BaseTSetWorker {
   private static final Logger LOG = Logger.getLogger(TSetAllReduceExample.class.getName());
@@ -65,7 +64,6 @@ public class TSetAllReduceExample extends BaseTSetWorker {
       }
     });
 
-    tSetBuilder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph graph = tSetBuilder.build();
     ExecutionPlan executionPlan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, executionPlan);
