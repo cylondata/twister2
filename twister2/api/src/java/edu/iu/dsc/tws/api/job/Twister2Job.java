@@ -65,7 +65,12 @@ public final class Twister2Job {
     jobBuilder.setConfig(configBuilder);
     jobBuilder.setJobName(jobName);
     jobBuilder.setWorkerClassName(workerClass);
-    jobBuilder.setDriverClassName(driverClass);
+
+    // driverClass is optional, set it if specified
+    if (driverClass != null) {
+      jobBuilder.setDriverClassName(driverClass);
+    }
+
     jobBuilder.setNumberOfWorkers(countNumberOfWorkers());
 
     for (JobAPI.ComputeResource computeResource: computeResources) {
