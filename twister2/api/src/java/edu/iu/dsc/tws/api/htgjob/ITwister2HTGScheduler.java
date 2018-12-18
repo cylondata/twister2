@@ -9,13 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.hierarchicaltaskgraph;
+package edu.iu.dsc.tws.api.htgjob;
 
-public class HTGConstants {
+import java.util.List;
 
-  public static final String ARGS_WORKERS = "workers";
-  public static final String ARGS_PARALLELISM_VALUE = "parallelism";
+public interface ITwister2HTGScheduler {
 
-  protected HTGConstants() {
-  }
+  List<String> schedule(Twister2Metagraph twister2Metagraph);
 }

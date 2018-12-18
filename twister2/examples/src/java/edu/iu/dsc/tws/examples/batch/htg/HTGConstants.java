@@ -9,18 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.spi.taskschedule;
+package edu.iu.dsc.tws.examples.batch.htg;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
+public class HTGConstants {
 
-public interface IHierarchicalTaskScheduler {
+  public static final String ARGS_WORKERS = "workers";
+  public static final String ARGS_PARALLELISM_VALUE = "parallelism";
+  public static final String ARGS_DUMMY = "dummy"; // todo: remove this
 
-  void initialize(Config cfg);
-
-  TaskSchedulePlan schedule(HierarchicalTaskGraph hierarchicalTaskGraph, WorkerPlan workerPlan);
-
-  /*List<TaskSchedulePlan> schedule(Config config, HierarchicalTaskGraph hierarchicalTaskGraph,
-   WorkerPlan workerPlan);*/
+  protected HTGConstants() {
+  }
 }
