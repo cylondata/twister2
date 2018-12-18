@@ -13,11 +13,11 @@ package edu.iu.dsc.tws.examples.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.IdentitySelector;
+import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
@@ -33,32 +33,8 @@ public class TSetKeyedGatherExample extends BaseTSetWorker {
     // set the parallelism of source to task stage 0
     TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
-    TSet<int[]> reduce = source.groupBy(new PartitionFunction<int[]>() {
-      @Override
-      public int partition(int sourceIndex, int numPartitions, int[] val) {
-        return 0;
-      }
-
-      @Override
-      public void commit(int source, int partition) {
-
-      }
-
-      @Override
-      public void prepare(TSetContext context) {
-
-      }
-    }, new Selector<int[], int[]>() {
-      @Override
-      public void prepare(TSetContext context) {
-      }
-
-      @Override
-      public int[] select(int[] ints) {
-        return ints;
-      }
-
-    }).keyedGather().setParallelism(10);
+    TSet<int[]> reduce = source.groupBy(new LoadBalancePartitioner<>(), new IdentitySelector<>()).
+        setParallelism(10);
 
     reduce.sink(new Sink<int[]>() {
       @Override

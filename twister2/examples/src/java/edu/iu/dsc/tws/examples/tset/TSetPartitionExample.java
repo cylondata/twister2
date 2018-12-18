@@ -13,10 +13,10 @@ package edu.iu.dsc.tws.examples.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
@@ -32,22 +32,7 @@ public class TSetPartitionExample extends BaseTSetWorker {
     // set the parallelism of source to task stage 0
     TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
-    TSet<int[]> partition = source.partition(new PartitionFunction<int[]>() {
-      @Override
-      public int partition(int sourceIndex, int numPartitions, int[] val) {
-        return 0;
-      }
-
-      @Override
-      public void commit(int source, int partition) {
-
-      }
-
-      @Override
-      public void prepare(TSetContext context) {
-
-      }
-    });
+    TSet<int[]> partition = source.partition(new LoadBalancePartitioner<>());
 
     partition.sink(new Sink<int[]>() {
       @Override
