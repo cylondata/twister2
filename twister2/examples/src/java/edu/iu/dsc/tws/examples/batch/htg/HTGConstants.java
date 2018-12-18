@@ -9,12 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.hierarchicaltaskgraph;
+package edu.iu.dsc.tws.examples.batch.htg;
 
 public class HTGConstants {
 
   public static final String ARGS_WORKERS = "workers";
   public static final String ARGS_PARALLELISM_VALUE = "parallelism";
+  public static final String ARGS_DUMMY = "dummy"; // todo: remove this
 
   protected HTGConstants() {
   }

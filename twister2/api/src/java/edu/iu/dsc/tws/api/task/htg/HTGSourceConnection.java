@@ -9,18 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.spi.taskschedule;
+package edu.iu.dsc.tws.api.task.htg;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
-public interface IHierarchicalTaskScheduler {
+public class HTGSourceConnection {
 
-  void initialize(Config cfg);
+  private String nodeName;
 
-  TaskSchedulePlan schedule(HierarchicalTaskGraph hierarchicalTaskGraph, WorkerPlan workerPlan);
+  public HTGSourceConnection(String name) {
+    this.nodeName = name;
+  }
 
-  /*List<TaskSchedulePlan> schedule(Config config, HierarchicalTaskGraph hierarchicalTaskGraph,
-   WorkerPlan workerPlan);*/
+  void build(DataFlowTaskGraph graph) {
+  }
+
+  void build(HierarchicalTaskGraph graph) {
+  }
 }

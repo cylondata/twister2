@@ -9,18 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.spi.taskschedule;
+package edu.iu.dsc.tws.api.htgjob;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-
-public interface IHierarchicalTaskScheduler {
-
-  void initialize(Config cfg);
-
-  TaskSchedulePlan schedule(HierarchicalTaskGraph hierarchicalTaskGraph, WorkerPlan workerPlan);
-
-  /*List<TaskSchedulePlan> schedule(Config config, HierarchicalTaskGraph hierarchicalTaskGraph,
-   WorkerPlan workerPlan);*/
+public enum ConnectionMode {
+  BROADCAST
 }
