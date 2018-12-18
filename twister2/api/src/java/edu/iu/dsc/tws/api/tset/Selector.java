@@ -11,15 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import edu.iu.dsc.tws.task.api.IFunction;
-
 /**
  * Given a data T, selects a Key K
  *
  * @param <T> data type
  * @param <K> key type
  */
-public interface Selector<T, K> extends IFunction {
+public interface Selector<T, K> extends TFunction {
   /**
    * Select key value from data t
    *

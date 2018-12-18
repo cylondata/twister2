@@ -117,35 +117,30 @@ public final class TSetExampleMain {
     jobConfig.put(Constants.ARGS_STREAM, stream);
 
     // build the job
-    if (!stream) {
-      switch (operation) {
-        case "reduce":
-          submitJob(config, workers, jobConfig, TSetReduceExample.class.getName());
-          break;
-        case "gather":
-          submitJob(config, workers, jobConfig, TSetGatherExample.class.getName());
-          break;
-        case "partition":
-          submitJob(config, workers, jobConfig, TSetPartitionExample.class.getName());
-          break;
-        case "allgather":
-          submitJob(config, workers, jobConfig, TSetAllGatherExample.class.getName());
-          break;
-        case "allreduce":
-          submitJob(config, workers, jobConfig, TSetAllReduceExample.class.getName());
-          break;
-        default:
-          System.out.println("Un-supported");
-      }
-    } else {
-      switch (operation) {
-        case "reduce":
-//          submitJob(config, workers, jobConfig, STSetReduceExample.class.getName());
-          submitJob(config, workers, jobConfig, TSetReduceExample.class.getName());
-          break;
-        default:
-          System.out.println("Un-supported");
-      }
+    switch (operation) {
+      case "reduce":
+        submitJob(config, workers, jobConfig, TSetReduceExample.class.getName());
+        break;
+      case "gather":
+        submitJob(config, workers, jobConfig, TSetGatherExample.class.getName());
+        break;
+      case "partition":
+        submitJob(config, workers, jobConfig, TSetPartitionExample.class.getName());
+        break;
+      case "allgather":
+        submitJob(config, workers, jobConfig, TSetAllGatherExample.class.getName());
+        break;
+      case "allreduce":
+        submitJob(config, workers, jobConfig, TSetAllReduceExample.class.getName());
+        break;
+      case "keyedreduce":
+        submitJob(config, workers, jobConfig, TSetKeyedReduceExample.class.getName());
+        break;
+      case "keyedgather":
+        submitJob(config, workers, jobConfig, TSetKeyedReduceExample.class.getName());
+        break;
+      default:
+        System.out.println("Un-supported");
     }
   }
 
