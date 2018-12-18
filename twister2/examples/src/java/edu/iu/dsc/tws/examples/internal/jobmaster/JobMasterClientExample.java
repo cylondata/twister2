@@ -38,8 +38,8 @@ import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerController;
-import edu.iu.dsc.tws.master.worker.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -50,7 +50,7 @@ public final class JobMasterClientExample {
   private JobMasterClientExample() { }
 
   /**
-   * a test class to run JobMasterClient
+   * a test class to run JMWorkerAgent
    * First, a JobMaster instance should be started on a machine
    * This client should connect to that server
    *
@@ -80,7 +80,7 @@ public final class JobMasterClientExample {
   }
 
   /**
-   * a method to simulate JobMasterClient running in workers
+   * a method to simulate JMWorkerAgent running in workers
    */
   public static void simulateClient(Config config, JobAPI.Job job) {
 
@@ -100,7 +100,7 @@ public final class JobMasterClientExample {
 
     String jobMasterAddress = "localhost";
     int jobMasterPort = JobMasterContext.jobMasterPort(config);
-    JobMasterClient client = JobMasterClient.createJobMasterClient(
+    JMWorkerAgent client = JMWorkerAgent.createJMWorkerAgent(
         config, workerInfo, jobMasterAddress, jobMasterPort, numberOfWorkers);
 
     client.startThreaded();

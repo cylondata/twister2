@@ -30,8 +30,8 @@ import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-public class JMDriverClient {
-  private static final Logger LOG = Logger.getLogger(JMDriverClient.class.getName());
+public class JMDriverAgent {
+  private static final Logger LOG = Logger.getLogger(JMDriverAgent.class.getName());
 
   private static Progress looper;
   private boolean stopLooper = false;
@@ -60,16 +60,16 @@ public class JMDriverClient {
    */
   private JobMasterAPI.BroadcastResponse broadcastResponse;
 
-  public JMDriverClient(Config config,
-                        String masterHost,
-                        int masterPort) {
+  public JMDriverAgent(Config config,
+                       String masterHost,
+                       int masterPort) {
     this.config = config;
     this.masterAddress = masterHost;
     this.masterPort = masterPort;
   }
 
   /**
-   * initialize JMDriverClient
+   * initialize JMDriverAgent
    * wait until it connects to JobMaster
    * return false, if it can not connect to JobMaster
    */
@@ -102,7 +102,7 @@ public class JMDriverClient {
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
 
     if (!rrClient.isConnected()) {
-      throw new RuntimeException("JobMasterClient can not connect to Job Master. Exiting .....");
+      throw new RuntimeException("JMWorkerAgent can not connect to Job Master. Exiting .....");
     }
   }
 
@@ -157,7 +157,7 @@ public class JMDriverClient {
   }
 
   /**
-   * stop the JobMasterClient
+   * stop the JMWorkerAgent
    */
   public void close() {
     stopLooper = true;
@@ -283,7 +283,7 @@ public class JMDriverClient {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       if (status == StatusCode.SUCCESS) {
-        LOG.info("JMDriverClient connected to JobMaster: " + channel);
+        LOG.info("JMDriverAgent connected to JobMaster: " + channel);
       }
 
       if (status == StatusCode.CONNECTION_REFUSED) {

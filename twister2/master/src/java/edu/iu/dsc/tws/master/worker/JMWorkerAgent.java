@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 
 /**
- * JobMasterClient class
+ * JMWorkerAgent class
  * It is started for each Twister2 worker
  * It handles the communication with the Job Master
  * <p>
@@ -56,8 +56,8 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
  * It uses the calling thread and this call does not return unless the close method is called
  */
 
-public final class JobMasterClient {
-  private static final Logger LOG = Logger.getLogger(JobMasterClient.class.getName());
+public final class JMWorkerAgent {
+  private static final Logger LOG = Logger.getLogger(JMWorkerAgent.class.getName());
 
   private static Progress looper;
   private boolean stopLooper = false;
@@ -83,7 +83,7 @@ public final class JobMasterClient {
 
   private DriverListener driverListener;
 
-  private static JobMasterClient jmClient;
+  private static JMWorkerAgent jmClient;
 
   /**
    * the maximum duration this client will try to connect to the Job Master
@@ -92,18 +92,18 @@ public final class JobMasterClient {
   private static final long CONNECTION_TRY_TIME_LIMIT = 100000;
 
   /**
-   * Singleton JobMasterClient
+   * Singleton JMWorkerAgent
    * @param config
    * @param thisWorker
    * @param masterHost
    * @param masterPort
    * @param numberOfWorkers
    */
-  private JobMasterClient(Config config,
-                         WorkerInfo thisWorker,
-                         String masterHost,
-                         int masterPort,
-                         int numberOfWorkers) {
+  private JMWorkerAgent(Config config,
+                        WorkerInfo thisWorker,
+                        String masterHost,
+                        int masterPort,
+                        int numberOfWorkers) {
     this.config = config;
     this.thisWorker = thisWorker;
     this.masterAddress = masterHost;
@@ -112,25 +112,25 @@ public final class JobMasterClient {
   }
 
   /**
-   * create the singleton JobMasterClient
+   * create the singleton JMWorkerAgent
    * if it is already created, return the previous one.
    * @return
    */
-  public static JobMasterClient createJobMasterClient(Config config,
-                                                      WorkerInfo thisWorker,
-                                                      String masterHost,
-                                                      int masterPort,
-                                                      int numberOfWorkers) {
+  public static JMWorkerAgent createJMWorkerAgent(Config config,
+                                                  WorkerInfo thisWorker,
+                                                  String masterHost,
+                                                  int masterPort,
+                                                  int numberOfWorkers) {
     if (jmClient != null) {
       return jmClient;
     }
 
-    jmClient = new JobMasterClient(config, thisWorker, masterHost, masterPort, numberOfWorkers);
+    jmClient = new JMWorkerAgent(config, thisWorker, masterHost, masterPort, numberOfWorkers);
     return jmClient;
   }
 
   /**
-   * initialize JobMasterClient
+   * initialize JMWorkerAgent
    * wait until it connects to JobMaster
    * return false, if it can not connect to JobMaster
    */
@@ -176,7 +176,7 @@ public final class JobMasterClient {
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
 
     if (!rrClient.isConnected()) {
-      throw new RuntimeException("JobMasterClient can not connect to Job Master. Exiting .....");
+      throw new RuntimeException("JMWorkerAgent can not connect to Job Master. Exiting .....");
     }
   }
 
@@ -408,7 +408,7 @@ public final class JobMasterClient {
   }
 
   /**
-   * stop the JobMasterClient
+   * stop the JMWorkerAgent
    */
   public void close() {
     stopLooper = true;
@@ -481,7 +481,7 @@ public final class JobMasterClient {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       if (status == StatusCode.SUCCESS) {
-        LOG.info(thisWorker.getWorkerID() + " JobMasterClient connected to JobMaster: " + channel);
+        LOG.info(thisWorker.getWorkerID() + " JMWorkerAgent connected to JobMaster: " + channel);
       }
 
       if (status == StatusCode.CONNECTION_REFUSED) {

@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.worker.JobMasterClient;
+import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -52,7 +52,7 @@ public final class MPIWorkerStarter {
   private static int workerID = -1; // -1 means, not initialized
   private static int numberOfWorkers = -1; // -1 means, not initialized
   private static JobMasterAPI.WorkerInfo workerInfo;
-  private static JobMasterClient jobMasterClient;
+  private static JMWorkerAgent jobMasterAgent;
   private static String jobName = null;
   private static JobAPI.Job job = null;
   private static JobAPI.ComputeResource computeResource = null;
@@ -162,18 +162,18 @@ public final class MPIWorkerStarter {
         + "HOSTNAME(podname): " + podName
     );
 
-    // construct JobMasterClient
-    jobMasterClient = JobMasterClient.createJobMasterClient(config, workerInfo, jobMasterIP,
+    // construct JMWorkerAgent
+    jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
         JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
 
-    // start JobMasterClient
-    jobMasterClient.startThreaded();
+    // start JMWorkerAgent
+    jobMasterAgent.startThreaded();
 
     // we will be running the Worker, send running message
-    jobMasterClient.sendWorkerRunningMessage();
+    jobMasterAgent.sendWorkerRunningMessage();
 
     // start the worker
-    startWorker(jobMasterClient.getJMWorkerController(), pv, podName);
+    startWorker(jobMasterAgent.getJMWorkerController(), pv, podName);
 
     // finalize MPI
     try {
@@ -215,8 +215,8 @@ public final class MPIWorkerStarter {
 
     // send worker completed message to the Job Master and finish
     // Job master will delete the StatefulSet object
-    jobMasterClient.sendWorkerCompletedMessage();
-    jobMasterClient.close();
+    jobMasterAgent.sendWorkerCompletedMessage();
+    jobMasterAgent.close();
   }
 
 }

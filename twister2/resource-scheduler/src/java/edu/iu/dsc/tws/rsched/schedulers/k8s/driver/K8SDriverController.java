@@ -19,7 +19,7 @@ import com.google.protobuf.Message;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.driver.IDriverController;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.driver.JMDriverClient;
+import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.JobPackageTransferThread;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
@@ -30,7 +30,7 @@ public class K8SDriverController implements IDriverController {
 
   private static final Logger LOG = Logger.getLogger(K8SDriverController.class.getName());
 
-  private JMDriverClient driverClient;
+  private JMDriverAgent driverAgent;
   private JobAPI.Job job;
   private KubernetesController k8sController;
   private Config config;
@@ -66,8 +66,8 @@ public class K8SDriverController implements IDriverController {
     this.numberOfWorkers = job.getNumberOfWorkers();
 
     int jmPort = JobMasterContext.jobMasterPort(config);
-    driverClient = new JMDriverClient(config, jmHost, jmPort);
-    driverClient.startThreaded();
+    driverAgent = new JMDriverAgent(config, jmHost, jmPort);
+    driverAgent.startThreaded();
   }
 
   /**
@@ -115,7 +115,7 @@ public class K8SDriverController implements IDriverController {
       }
     }
 
-    boolean sent = driverClient.sendScaledMessage(instancesToAdd, numberOfWorkers + instancesToAdd);
+    boolean sent = driverAgent.sendScaledMessage(instancesToAdd, numberOfWorkers + instancesToAdd);
     if (!sent) {
       // if the message can not be sent, scale down to the previous value
       k8sController.patchStatefulSet(scalableSSName, replicas);
@@ -162,7 +162,7 @@ public class K8SDriverController implements IDriverController {
     numberOfWorkers -= instancesToRemove;
 
     // send scaled message to job master
-    return driverClient.sendScaledMessage(0 - instancesToRemove, numberOfWorkers);
+    return driverAgent.sendScaledMessage(0 - instancesToRemove, numberOfWorkers);
   }
 
   /**
@@ -172,7 +172,7 @@ public class K8SDriverController implements IDriverController {
   @Override
   public boolean broadcastToAllWorkers(Message message) {
 
-    return driverClient.sendBroadcastMessage(message, numberOfWorkers);
+    return driverAgent.sendBroadcastMessage(message, numberOfWorkers);
   }
 
   /**
@@ -199,7 +199,7 @@ public class K8SDriverController implements IDriverController {
    * close the connection to the
    */
   public void close() {
-    driverClient.close();
+    driverAgent.close();
   }
 
 }

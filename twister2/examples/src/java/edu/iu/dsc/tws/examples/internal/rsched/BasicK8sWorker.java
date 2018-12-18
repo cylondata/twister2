@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.master.worker.JobMasterClient;
+import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
@@ -53,7 +53,7 @@ public class BasicK8sWorker implements IWorker, DriverListener {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    JobMasterClient.addDriverListener(this);
+    JMWorkerAgent.addDriverListener(this);
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
     if (volatileVolume != null) {
