@@ -19,31 +19,24 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
 public class KeyedPartitionTSet<T, K> extends KeyValueTSet<T, K> {
-  private GroupedTSet<T, K> parent;
+  private BaseTSet<T> parent;
 
   private PartitionFunction<K> partitionFunction;
 
   private Selector<T, K> selector;
 
-  public KeyedPartitionTSet(Config cfg, TaskGraphBuilder bldr, GroupedTSet<T, K> prnt,
+  public KeyedPartitionTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
                             PartitionFunction<K> parFn, Selector<T, K> selc) {
     super(cfg, bldr);
     this.parent = prnt;
     this.partitionFunction = parFn;
     this.selector = selc;
+    this.name = "keyed-partition-" + parent.getName();
   }
 
   @Override
   public String getName() {
     return parent.getName();
-  }
-
-  public GroupedTSet<T, K> getParent() {
-    return parent;
-  }
-
-  public void setParent(GroupedTSet<T, K> parent) {
-    this.parent = parent;
   }
 
   @Override

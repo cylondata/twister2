@@ -9,20 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.rsched.schedulers;
 
-/**
- * Given a data T, selects a Key K
- *
- * @param <T> data type
- * @param <K> key type
- */
-public interface Selector<T, K> extends TFunction {
-  /**
-   * Select key value from data t
-   *
-   * @param t data
-   * @return key
-   */
-  K select(T t);
+import edu.iu.dsc.tws.common.driver.IScaler;
+
+public class DefaultScalar implements IScaler {
+  @Override
+  public boolean scaleUpWorkers(int instancesToAdd) {
+    return false;
+  }
+
+  @Override
+  public boolean scaleDownWorkers(int instancesToRemove) {
+    return false;
+  }
 }

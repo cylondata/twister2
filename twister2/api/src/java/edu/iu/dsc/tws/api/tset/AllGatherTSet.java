@@ -27,6 +27,7 @@ public class AllGatherTSet<T> extends BaseTSet<T> {
   public AllGatherTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt) {
     super(cfg, bldr);
     this.parent = prnt;
+    this.name = "all-gather-" + parent.getName();
   }
 
   @Override

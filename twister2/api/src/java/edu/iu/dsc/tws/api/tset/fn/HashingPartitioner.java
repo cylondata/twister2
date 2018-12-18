@@ -9,33 +9,40 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.ops;
+package edu.iu.dsc.tws.api.tset.fn;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
-import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
-public class TaskPartitionFunction<T> implements TaskPartitioner {
-  private PartitionFunction<T> partitionFunction;
-
-  public TaskPartitionFunction(PartitionFunction<T> parFn) {
-    this.partitionFunction = parFn;
-  }
+public class HashingPartitioner<T> implements PartitionFunction<T> {
+  private Map<Integer, List<Integer>> destination = new HashMap<>();
 
   @Override
   public void prepare(Set<Integer> sources, Set<Integer> destinations) {
-    partitionFunction.prepare(sources, destinations);
+    initialize(sources, destinations);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public int partition(int source, Object data) {
-    return partitionFunction.partition(source, (T) data);
+  public int partition(int sourceIndex, T val) {
+    List<Integer> destinations = destination.get(sourceIndex);
+    int next = val.hashCode() % destinations.size();
+    return destinations.get(next);
   }
 
   @Override
   public void commit(int source, int partition) {
-    partitionFunction.commit(source, partition);
+
+  }
+
+  private void initialize(Set<Integer> sources, Set<Integer> destinations) {
+    for (int s : sources) {
+      ArrayList<Integer> destList = new ArrayList<>(destinations);
+      destination.put(s, destList);
+    }
   }
 }

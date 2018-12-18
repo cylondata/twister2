@@ -62,9 +62,14 @@ public interface DataFlowOperation {
   boolean progress();
 
   /**
-   * Clean up the resources
+   * Close the operation
    */
   void close();
+
+  /**
+   * Reset and get the operation to initial state
+   */
+  void clean();
 
   /**
    * Weather the operation doesn't have any pending sends or receives

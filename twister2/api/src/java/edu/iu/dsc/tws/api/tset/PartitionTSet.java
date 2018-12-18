@@ -26,6 +26,7 @@ public class PartitionTSet<T> extends BaseTSet<T> {
     super(cfg, bldr);
     this.parent = prnt;
     this.partitionFunction = parFn;
+    this.name = "partition-" + parent.getName();
   }
 
   @Override

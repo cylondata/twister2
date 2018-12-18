@@ -11,9 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -23,18 +26,44 @@ public class SinkOp<T> implements ISink {
 
   private Sink<T> sink;
 
+  private boolean iterable;
+
+  private boolean keyed;
+
   public SinkOp() {
   }
 
-  public SinkOp(Sink<T> sink) {
+  public SinkOp(Sink<T> sink, boolean itr, boolean kyd) {
     this.sink = sink;
+    this.iterable = itr;
+    this.keyed = kyd;
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public boolean execute(IMessage message) {
-    T data = (T) message.getContent();
-    return sink.add(data);
+    if (!keyed) {
+      if (!iterable) {
+        T data = (T) message.getContent();
+        sink.add(data);
+      } else {
+        Iterator<T> data = (Iterator<T>) message.getContent();
+        while (data.hasNext()) {
+          sink.add(data.next());
+        }
+      }
+    } else {
+      if (!iterable) {
+        KeyedContent data = (KeyedContent) message.getContent();
+        sink.add((T) data.getValue());
+      } else {
+        Iterator<KeyedContent> data = (Iterator<KeyedContent>) message.getContent();
+        while (data.hasNext()) {
+          sink.add((T) data.next().getValue());
+        }
+      }
+    }
+    return true;
   }
 
   @Override

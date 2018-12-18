@@ -129,6 +129,13 @@ public class DataFlowMultiGather implements DataFlowOperation {
   }
 
   @Override
+  public void clean() {
+    for (DataFlowGather gather : gatherMap.values()) {
+      gather.clean();
+    }
+  }
+
+  @Override
   public void finish(int source) {
     for (DataFlowGather gather : gatherMap.values()) {
       gather.finish(source);
