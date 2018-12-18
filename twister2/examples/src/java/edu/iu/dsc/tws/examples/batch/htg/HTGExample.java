@@ -37,7 +37,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.BaseSink;
@@ -107,8 +106,8 @@ public class HTGExample extends TaskWorker {
         graph -> "dataflow task graph list:" + graph.getTaskGraphName()).forEach(LOG::info);
 
     //Select it from the list...!
-    ExecutionPlan plan = taskExecutor.plan(batchGraph);
-    taskExecutor.execute(batchGraph, plan);
+    //ExecutionPlan plan = taskExecutor.plan(batchGraph);
+    //taskExecutor.execute(batchGraph, plan);
   }//End of executeHTG method
 
   public static void sleep(long duration) {

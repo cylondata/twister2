@@ -31,7 +31,7 @@ twister2.logging.format: "[%1$tF %1$tT] [%4$s] %3$s: %5$s %6$s %n"
 # Twister2 Job Master related settings
 ###################################################################
 
-twister2.job.master.used: false
+twister2.job.master.used: true
 
 # if true, the job master runs in the submitting client
 # if false, job master runs as a separate process in the cluster

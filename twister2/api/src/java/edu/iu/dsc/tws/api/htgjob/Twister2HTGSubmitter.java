@@ -60,7 +60,10 @@ public final class Twister2HTGSubmitter {
         + "\nHTG Relationship Values:" + twister2Metagraph.getRelation());
 
     //Call the schedule method to identify the order of graphs to be executed
-    List<String> scheduleGraphs = schedule(twister2Metagraph);
+    //List<String> scheduleGraphs = schedule(twister2Metagraph);
+
+    Twister2HTGScheduler twister2HTGScheduler = new Twister2HTGScheduler();
+    List<String> scheduleGraphs = twister2HTGScheduler.schedule(twister2Metagraph);
     buildHTGJob(scheduleGraphs, twister2Metagraph, workerclassName, jobConfig);
   }
 
@@ -86,6 +89,8 @@ public final class Twister2HTGSubmitter {
 
     subGraph = twister2Metagraph.getMetaGraphMap(subGraphName);
 
+    jobConfig.put("HTGJobObject", htgJob);
+
     //Setting the first graph resource requirements.
     twister2Job = Twister2Job.newBuilder()
         .setJobName(htgJob.getHtgJobname())
@@ -93,7 +98,6 @@ public final class Twister2HTGSubmitter {
         .setDriverClass(Twister2HTGDriver.class.getName()) //send execute msg list and HTGDriver
         .addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
             subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances())
-        .setDriverClass(Twister2HTGSubmitter.class.getName())
         .setConfig(jobConfig)
         .build();
 
@@ -105,7 +109,6 @@ public final class Twister2HTGSubmitter {
           .build();
       executeMessageList.add(executeMessage);
     }
-
 
     Twister2Submitter.submitJob(twister2Job, config);
   }
