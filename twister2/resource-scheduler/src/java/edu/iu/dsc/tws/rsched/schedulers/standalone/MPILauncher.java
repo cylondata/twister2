@@ -26,15 +26,21 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.driver.IDriver;
+import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
+import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.driver.DriverMessenger;
+import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
+import edu.iu.dsc.tws.rsched.schedulers.DefaultScalar;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadTerminator;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
@@ -216,6 +222,11 @@ public class MPILauncher implements ILauncher {
     controller.initialize(newConfig);
     boolean start = controller.start(job);
 
+    // if the driver class is specified in the job, start it
+    if (!job.getDriverClassName().isEmpty()) {
+      startDriver(job);
+    }
+
     // now lets wait on client
     if (jmThread != null && JobMasterContext.isJobMasterUsed(config)
         && JobMasterContext.jobMasterRunsInClient(config)) {
@@ -226,6 +237,36 @@ public class MPILauncher implements ILauncher {
     }
 
     return start;
+  }
+
+  private boolean startDriver(JobAPI.Job job) {
+    // first start JMDriverAgent
+    String jobMasterIP = config.getStringValue("__job_master_ip__");
+    int jmPort = config.getIntegerValue("__job_master_port__", 0);
+    JMDriverAgent driverAgent =
+        JMDriverAgent.createJMDriverAgent(config, jobMasterIP, jmPort, job.getNumberOfWorkers());
+    driverAgent.startThreaded();
+
+    // construct DriverMessenger
+    DriverMessenger driverMessenger = new DriverMessenger(driverAgent);
+
+    IScaler scaler = new DefaultScalar();
+
+    String driverClass = job.getDriverClassName();
+    IDriver driver;
+    try {
+      Object object = ReflectionUtils.newInstance(driverClass);
+      driver = (IDriver) object;
+      LOG.info("loaded driver class: " + driverClass);
+    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+      LOG.severe(String.format("failed to load the driver class %s", driverClass));
+      throw new RuntimeException(e);
+    }
+
+    driver.execute(config, scaler, driverMessenger);
+    driverAgent.close();
+
+    return true;
   }
 
   /**
