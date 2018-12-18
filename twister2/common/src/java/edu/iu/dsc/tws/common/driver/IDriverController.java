@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.driver;
 
+import com.google.protobuf.Message;
+
 public interface IDriverController {
 
   /**
@@ -28,9 +30,9 @@ public interface IDriverController {
   boolean scaleDownWorkers(int instancesToRemove);
 
   /**
-   * send a byte array to all workers in the job
+   * send a protocol buffer message to all workers in the job
    * @return
    */
-  boolean broadcastToAllWorkers(byte[] data);
+  boolean broadcastToAllWorkers(Message message);
 
 }

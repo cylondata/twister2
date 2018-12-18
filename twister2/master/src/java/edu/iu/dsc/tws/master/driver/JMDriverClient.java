@@ -15,7 +15,7 @@ import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.protobuf.ByteString;
+import com.google.protobuf.Any;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -223,13 +223,13 @@ public class JMDriverClient {
     }
   }
 
-  public boolean sendBroadcastMessage(byte[] data, int numberOfWorkers) {
+  public boolean sendBroadcastMessage(Message message, int numberOfWorkers) {
     JobMasterAPI.Broadcast broadcast = JobMasterAPI.Broadcast.newBuilder()
-        .setData(ByteString.copyFrom(data))
+        .setData(Any.pack(message).toByteString())
         .setNumberOfWorkers(numberOfWorkers)
         .build();
 
-    LOG.info("Sending Broadcast message: \n" + broadcast);
+    LOG.fine("Sending Broadcast message: \n" + broadcast);
 
     // wait for the response
     try {

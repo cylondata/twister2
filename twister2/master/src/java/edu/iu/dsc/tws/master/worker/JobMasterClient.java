@@ -16,6 +16,8 @@ import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -450,11 +452,17 @@ public final class JobMasterClient {
         }
 
       } else if (message instanceof JobMasterAPI.Broadcast) {
-        LOG.info("Received Broadcast message from the master. \n" + message);
+        LOG.fine("Received Broadcast message from the master. \n" + message);
 
         if (driverListener != null) {
           JobMasterAPI.Broadcast broadcast = (JobMasterAPI.Broadcast) message;
-          driverListener.broadcastReceived(broadcast.toByteArray());
+          try {
+            Any any = Any.parseFrom(broadcast.getData());
+            driverListener.broadcastReceived(any);
+          } catch (InvalidProtocolBufferException e) {
+            LOG.log(Level.SEVERE, "Can not parse received protocol buffer message to Any", e);
+          }
+
         }
 
       } else {

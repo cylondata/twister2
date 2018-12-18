@@ -23,6 +23,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -38,6 +41,7 @@ import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.worker.JobMasterClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class BasicK8sWorker implements IWorker, DriverListener {
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
@@ -98,9 +102,23 @@ public class BasicK8sWorker implements IWorker, DriverListener {
   }
 
   @Override
-  public void broadcastReceived(byte[] data) {
+  public void broadcastReceived(Any anyMessage) {
 
-    LOG.info("Broadcast data received: ");
+    if (anyMessage.is(JobMasterAPI.NodeInfo.class)) {
+      try {
+        JobMasterAPI.NodeInfo nodeInfo = anyMessage.unpack(JobMasterAPI.NodeInfo.class);
+        LOG.info("Received Broadcast message. NodeInfo: " + nodeInfo);
+      } catch (InvalidProtocolBufferException e) {
+        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
+      }
+    } else if (anyMessage.is(JobAPI.ComputeResource.class)) {
+      try {
+        JobAPI.ComputeResource computeResource = anyMessage.unpack(JobAPI.ComputeResource.class);
+        LOG.info("Received Broadcast message. ComputeResource: " + computeResource);
+      } catch (InvalidProtocolBufferException e) {
+        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
+      }
+    }
 
   }
 
