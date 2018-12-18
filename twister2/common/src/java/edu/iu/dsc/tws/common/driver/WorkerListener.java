@@ -9,16 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.controller;
+package edu.iu.dsc.tws.common.driver;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.Any;
 
-public interface IWorkerListener {
+public interface WorkerListener {
 
-  boolean workersScaledUp(int instancesAdded);
-
-  boolean workersScaledDown(int instancesRemoved);
-
-  boolean dataReceivedFromClient(Message message);
+  /**
+   * received a protocol buffer message from a worker
+   * @param anyMessage received message from the worker
+   */
+  void workerMessageReceived(Any anyMessage, int senderWorkerID);
 
 }

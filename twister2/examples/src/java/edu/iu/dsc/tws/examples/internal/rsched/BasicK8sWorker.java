@@ -23,6 +23,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,12 +35,16 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
+import edu.iu.dsc.tws.common.worker.DriverListener;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
+import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
-public class BasicK8sWorker implements IWorker {
+public class BasicK8sWorker implements IWorker, DriverListener {
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
 
   @Override
@@ -47,6 +54,7 @@ public class BasicK8sWorker implements IWorker {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
+    JMWorkerAgent.addDriverListener(this);
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
     if (volatileVolume != null) {
@@ -82,6 +90,45 @@ public class BasicK8sWorker implements IWorker {
 //    listHdfsDir();
 //    sleepSomeTime(50);
     echoServer(workerController.getWorkerInfo());
+  }
+
+  @Override
+  public void workersScaledUp(int instancesAdded) {
+    LOG.info("Workers scaled up. Instances added: " + instancesAdded);
+  }
+
+  @Override
+  public void workersScaledDown(int instancesRemoved) {
+    LOG.info("Workers scaled down. Instances removed: " + instancesRemoved);
+  }
+
+  @Override
+  public void broadcastReceived(Any anyMessage) {
+
+    if (anyMessage.is(JobMasterAPI.NodeInfo.class)) {
+      try {
+        JobMasterAPI.NodeInfo nodeInfo = anyMessage.unpack(JobMasterAPI.NodeInfo.class);
+        LOG.info("Received Broadcast message. NodeInfo: " + nodeInfo);
+
+        JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
+        workerMessenger.sendToDriver(nodeInfo);
+
+      } catch (InvalidProtocolBufferException e) {
+        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
+      }
+    } else if (anyMessage.is(JobAPI.ComputeResource.class)) {
+      try {
+        JobAPI.ComputeResource computeResource = anyMessage.unpack(JobAPI.ComputeResource.class);
+        LOG.info("Received Broadcast message. ComputeResource: " + computeResource);
+
+        JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
+        workerMessenger.sendToDriver(computeResource);
+
+      } catch (InvalidProtocolBufferException e) {
+        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
+      }
+    }
+
   }
 
   /**

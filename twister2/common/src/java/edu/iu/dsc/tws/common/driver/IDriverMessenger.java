@@ -11,23 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.driver;
 
-import edu.iu.dsc.tws.common.config.Config;
+import com.google.protobuf.Message;
 
 /**
- * An instance of this class will be executed in the submitting client,
- * if it is specified in Twister2Job
+ * A messenger interface to send messages from the driver to the workers in a job
  */
-public interface IDriver {
+public interface IDriverMessenger {
 
   /**
-   * After the job is submitted,
-   * an instance of this method will be executed in the submitting client
-   *
-   * Implementing Driver program can communicate with the workers through Job Master
-   * with the provided IMessenger and
-   * it can scale up/down the number of workers in the job by using IScaler
-   *
-   * @param scaler
+   * send a protocol buffer message to all workers in the job
+   * @return
    */
-  void execute(Config config, IScaler scaler, IDriverMessenger messenger);
+  boolean broadcastToAllWorkers(Message message);
+
 }

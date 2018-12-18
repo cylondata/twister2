@@ -38,7 +38,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.master.worker.JobMasterClient;
+import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
@@ -55,7 +55,7 @@ public final class MesosMPIMasterStarter {
 
   private Config config;
   private String jobName;
-  private JobMasterClient jobMasterClient;
+  private JMWorkerAgent jobMasterAgent;
   private static int startingPort = 30000;
   private static int resourceIndex = 0;
 
@@ -138,7 +138,7 @@ public final class MesosMPIMasterStarter {
     int workerCount = workerController.getNumberOfWorkers();
     LOG.info("Worker Count..: " + workerCount);
 
-    mpiMaster.startJobMasterClient(
+    mpiMaster.startJobMasterAgent(
         workerController.getWorkerInfo(), jobMasterIP, jobMasterPort, numberOfWorkers);
 
     Writer writer = new BufferedWriter(new OutputStreamWriter(
@@ -169,22 +169,22 @@ public final class MesosMPIMasterStarter {
     ProcessUtils.runSyncProcess(false, command, outputBuilder,
         new File("."), true);
 
-    mpiMaster.jobMasterClient.sendWorkerCompletedMessage();
-    mpiMaster.jobMasterClient.close();
+    mpiMaster.jobMasterAgent.sendWorkerCompletedMessage();
+    mpiMaster.jobMasterAgent.close();
     workerController.close();
     LOG.info("Job DONE");
 
 
   }
 
-  public void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP,
-                                   int jobMasterPort, int numberOfWorkers) {
+  public void startJobMasterAgent(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP,
+                                  int jobMasterPort, int numberOfWorkers) {
 
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP());
-    jobMasterClient =
-        new JobMasterClient(config, workerInfo, jobMasterIP, jobMasterPort, numberOfWorkers);
-    jobMasterClient.startThreaded();
+    jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
+        jobMasterPort, numberOfWorkers);
+    jobMasterAgent.startThreaded();
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method
   }

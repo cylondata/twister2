@@ -25,12 +25,14 @@ import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.driver.DriverMessenger;
+import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8SDriverController;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -173,9 +175,17 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
   private boolean startDriver(JobAPI.Job job, String jobPackageFile) {
 
+    // first start JMDriverAgent
     String jobMasterIP = getJobMasterIP(job);
-    K8SDriverController driverController =
-        new K8SDriverController(config, jobMasterIP, job, jobPackageFile, controller);
+    int jmPort = JobMasterContext.jobMasterPort(config);
+    JMDriverAgent driverAgent =
+        JMDriverAgent.createJMDriverAgent(config, jobMasterIP, jmPort, job.getNumberOfWorkers());
+    driverAgent.startThreaded();
+
+    // construct DriverMessenger
+    DriverMessenger driverMessenger = new DriverMessenger(driverAgent);
+
+    K8sScaler scaler = new K8sScaler(config, driverAgent, job, jobPackageFile, controller);
 
     String driverClass = job.getDriverClassName();
     IDriver driver;
@@ -188,8 +198,8 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       throw new RuntimeException(e);
     }
 
-    driver.execute(driverController);
-    driverController.close();
+    driver.execute(config, scaler, driverMessenger);
+    driverAgent.close();
 
     return true;
   }

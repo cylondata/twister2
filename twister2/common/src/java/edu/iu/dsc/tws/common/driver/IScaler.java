@@ -11,23 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.driver;
 
-import edu.iu.dsc.tws.common.config.Config;
-
 /**
- * An instance of this class will be executed in the submitting client,
- * if it is specified in Twister2Job
+ * An interface that scales up/down the number of workers in a Twister2 job
  */
-public interface IDriver {
+
+public interface IScaler {
 
   /**
-   * After the job is submitted,
-   * an instance of this method will be executed in the submitting client
-   *
-   * Implementing Driver program can communicate with the workers through Job Master
-   * with the provided IMessenger and
-   * it can scale up/down the number of workers in the job by using IScaler
-   *
-   * @param scaler
+   * add new instances of workers to the job
+   * @param instancesToAdd
+   * @return true if successful
    */
-  void execute(Config config, IScaler scaler, IDriverMessenger messenger);
+  boolean scaleUpWorkers(int instancesToAdd);
+
+  /**
+   * remove some instances of the workers from the job
+   * @param instancesToRemove
+   * @return true if successful
+   */
+  boolean scaleDownWorkers(int instancesToRemove);
+
 }

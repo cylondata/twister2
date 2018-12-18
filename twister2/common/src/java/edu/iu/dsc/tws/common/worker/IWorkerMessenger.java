@@ -9,30 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.driver;
+package edu.iu.dsc.tws.common.worker;
 
 import com.google.protobuf.Message;
 
-public interface IDriverController {
+/**
+ * A messenger interface to send messages from the driver to the workers in a job
+ */
+public interface IWorkerMessenger {
 
   /**
-   * add new instances of the scalable ComputeResource in the job
-   * @param instancesToAdd
-   * @return true if successful
-   */
-  boolean scaleUpWorkers(int instancesToAdd);
-
-  /**
-   * remove some instances of the scalable ComputeResource in the job
-   * @param instancesToRemove
-   * @return true if successful
-   */
-  boolean scaleDownWorkers(int instancesToRemove);
-
-  /**
-   * the client can send data to all workers in the job
+   * send a protocol buffer message to the driver in the job
    * @return
    */
-  boolean broadcastToAllWorkers(String className, Message message);
-
+  boolean sendToDriver(Message message);
 }

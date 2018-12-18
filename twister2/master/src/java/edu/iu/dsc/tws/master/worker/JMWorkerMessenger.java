@@ -9,17 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.exceptions;
+package edu.iu.dsc.tws.master.worker;
 
-public class TimeoutException extends Exception {
-  private static final long serialVersionUID = -254264900110286748L;
+import com.google.protobuf.Message;
 
-  public TimeoutException(String message) {
-    super(message);
+import edu.iu.dsc.tws.common.worker.IWorkerMessenger;
+
+public class JMWorkerMessenger implements IWorkerMessenger {
+
+  private JMWorkerAgent workerAgent;
+
+  public JMWorkerMessenger(JMWorkerAgent workerAgent) {
+    this.workerAgent = workerAgent;
   }
 
-  public TimeoutException(String message, Throwable cause) {
-    super(message, cause);
+  @Override
+  public boolean sendToDriver(Message message) {
+    return workerAgent.sendWorkerToDriverMessage(message);
   }
-
 }

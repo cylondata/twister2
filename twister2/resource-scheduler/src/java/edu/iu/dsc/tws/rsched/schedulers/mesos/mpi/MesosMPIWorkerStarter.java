@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.worker.JobMasterClient;
+import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosVolatileVolume;
@@ -41,7 +41,7 @@ public final class MesosMPIWorkerStarter {
   public static final Logger LOG = Logger.getLogger(MesosMPIWorkerStarter.class.getName());
   private static Config config;
   private static String jobName;
-  private static JobMasterClient jobMasterClient;
+  private static JMWorkerAgent jobMasterAgent;
   private static int workerID;
   private static int numberOfWorkers;
   private static int resourceIndex = 0;
@@ -103,7 +103,7 @@ public final class MesosMPIWorkerStarter {
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("Worker ID..: " + workerID);
     int jobMasterPort = JobMasterContext.jobMasterPort(config);
-    startJobMasterClient(
+    startJobMasterAgent(
         workerController.getWorkerInfo(), jobMasterIP, jobMasterPort);
 
     LOG.info("\nWorker Controller\nWorker ID..: "
@@ -126,14 +126,14 @@ public final class MesosMPIWorkerStarter {
     //workerController.close();
   }
 
-  public static void startJobMasterClient(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP,
-                                          int jobMasterPort) {
+  public static void startJobMasterAgent(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP,
+                                         int jobMasterPort) {
 
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP().toString());
-    jobMasterClient =
-        new JobMasterClient(config, workerInfo, jobMasterIP, jobMasterPort, numberOfWorkers);
-    jobMasterClient.startThreaded();
+    jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
+        jobMasterPort, numberOfWorkers);
+    jobMasterAgent.startThreaded();
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method
   }
@@ -182,8 +182,8 @@ public final class MesosMPIWorkerStarter {
 
     // send worker completed message to the Job Master and finish
     // Job master will delete the StatefulSet object
-    jobMasterClient.sendWorkerCompletedMessage();
-    jobMasterClient.close();
+    jobMasterAgent.sendWorkerCompletedMessage();
+    jobMasterAgent.close();
   }
 
 }

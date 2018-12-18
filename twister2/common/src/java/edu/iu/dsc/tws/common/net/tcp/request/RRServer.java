@@ -88,7 +88,7 @@ public class RRServer {
   /**
    * The client id
    */
-  public static final int CLIENT_ID = -100;
+  public static final int DRIVER_ID = -100;
 
   /**
    * whether JobMaster assigns workerIDs
@@ -170,9 +170,9 @@ public class RRServer {
   public boolean sendMessage(Message message, int targetID) {
 
     SocketChannel channel;
-    if (targetID == CLIENT_ID) {
+    if (targetID == DRIVER_ID) {
       if (clientChannel == null) {
-        LOG.severe("Trying to send a message to the client, but it has not connected yet.");
+        LOG.severe("Trying to send a message to the driver, but it has not connected yet.");
         return false;
       }
       channel = clientChannel;
@@ -319,7 +319,7 @@ public class RRServer {
     // if it is the submitting client
     // set it, no need to check whether it is already set
     // since it does not harm setting again
-    if (senderID == CLIENT_ID) {
+    if (senderID == DRIVER_ID) {
       clientChannel = channel;
       LOG.info("Message received from submitting client. Channel set.");
       return senderID;
