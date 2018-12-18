@@ -1,0 +1,60 @@
+################################################################################
+# Job configuration parameters for submission of twister2 jobs
+################################################################################
+
+# twister2 job name
+twister2.job.name: "t2-job"
+
+# A Twister2 job can have multiple sets of compute resources
+# Four fields are mandatory: cpu, ram, disk and instances
+# instances shows the number of compute resources to be started with this specification
+# workersPerPod shows the number of workers on each pod in Kubernetes.
+#    May be omitted in other clusters. default value is 1.
+worker.compute.resources:
+- cpu: 0.4  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+  ram: 1024 # ram for each worker as Mega bytes
+  disk: 1.0 # volatile disk for each worker as Giga bytes
+  instances: 2 # number of compute resource instances with this specification
+  scalable: true # only one ComputeResource can be scalable in a job
+    #  workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
+  # number of workers using this compute resource: instances * workersPerPod
+
+- cpu: 0.5  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+  ram: 1024 # ram for each worker as Mega bytes
+  disk: 1.0 # volatile disk for each worker as Giga bytes
+  instances: 2 # number of compute resource instances with this specification
+  scalable: true # only one ComputeResource can be scalable in a job
+  #workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
+
+- cpu: 0.6  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+  ram: 1024 # ram for each worker as Mega bytes
+  disk: 1.0 # volatile disk for each worker as Giga bytes
+  instances: 2 # number of compute resource instances with this specification
+  scalable: true # only one ComputeResource can be scalable in a job
+  #workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
+
+- cpu: 0.7  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+  ram: 1024 # ram for each worker as Mega bytes
+  disk: 1.0 # volatile disk for each worker as Giga bytes
+  instances: 2 # number of compute resource instances with this specification
+  scalable: true # only one ComputeResource can be scalable in a job
+    #  workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
+
+    #- cpu: 0.5  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+    #  ram: 1024 # ram for each worker as mega bytes
+    #  disk: 1.0 # volatile disk for each worker as giga bytes. May be zero.
+    #  instances: 2 # number of compute resource instances with this specification
+    #  workersPerPod: 2 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
+  # number of workers using this compute resource: instances * workersPerPod
+
+# driver class to run
+twister2.job.driver.class: "edu.iu.dsc.tws.api.htgjob.Twister2HTGDriver"
+
+# worker class to run
+#twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BroadcastCommunication"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.batch.sort.SortJob"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.comms.batch.BReduceExample"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.batch.comms.batch.BReduceExample"

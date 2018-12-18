@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.htgjob;
 
-import java.net.InetAddress;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,12 +20,9 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.master.server.JobMaster;
-import edu.iu.dsc.tws.master.worker.JMWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public final class Twister2HTGSubmitter {
 
@@ -35,17 +31,19 @@ public final class Twister2HTGSubmitter {
   private Config config;
   private JobMaster jobMaster;
 
+  private List<HTGJobAPI.ExecuteMessage> executeMessageList = new LinkedList<>();
+
   public Twister2HTGSubmitter(Config cfg) {
     this.config = cfg;
   }
 
   /**
-   * The execute method first call the schedule method to get the schedule list of the HTG. Then,
+   * The executeHTG method first call the schedule method to get the schedule list of the HTG. Then,
    * it invokes the build HTG Job object to build the htg job object for the scheduled graphs.
    */
-  public void execute(Twister2Metagraph twister2Metagraph,
-                      JobConfig jobConfig,
-                      String workerclassName) {
+  public void executeHTG(Twister2Metagraph twister2Metagraph,
+                         JobConfig jobConfig,
+                         String workerclassName) {
 
     LOG.fine("HTG Sub Graph Requirements:" + twister2Metagraph.getSubGraph()
         + "\nHTG Relationship Values:" + twister2Metagraph.getRelation());
@@ -66,8 +64,6 @@ public final class Twister2HTGSubmitter {
     Twister2Metagraph.SubGraph subGraph;
     HTGJobAPI.ExecuteMessage executeMessage;
 
-    List<HTGJobAPI.ExecuteMessage> executeMessageList = new LinkedList<>();
-
     //Construct the HTGJob object to be sent to Job Master
     HTGJobAPI.HTGJob htgJob = HTGJobAPI.HTGJob.newBuilder()
         .setHtgJobname(twister2Metagraph.getHTGName())
@@ -79,12 +75,14 @@ public final class Twister2HTGSubmitter {
 
     subGraph = twister2Metagraph.getMetaGraphMap(subGraphName);
 
+    //Setting the first graph resource requirements.
     twister2Job = Twister2Job.newBuilder()
         .setJobName(htgJob.getHtgJobname())
         .setWorkerClass(workerclassName)
+        .setDriverClass(Twister2HTGDriver.class.getName()) //send execute msg list and HTGDriver
         .addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
             subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances())
-        .setDriverClass(Twister2HTGDriverClient.class.getName())
+        .setDriverClass(Twister2HTGSubmitter.class.getName())
         .setConfig(jobConfig)
         .build();
 
@@ -94,72 +92,11 @@ public final class Twister2HTGSubmitter {
       executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
           .setSubgraphName(subgraphName)
           .build();
-
       executeMessageList.add(executeMessage);
     }
 
-    //Send the htgjob object and execution order of the graph.
-    submitHTGToJobMaster(htgJob, executeMessageList, twister2Job, config);
-  }
 
-  /**
-   * This method initializes the HTGClient and send the generated HTG Job object and the name of
-   * the graph to be executed (executeMessage).
-   */
-  private String submitHTGToJobMaster(HTGJobAPI.HTGJob htgJob,
-                                      List<HTGJobAPI.ExecuteMessage> executeMessage,
-                                      Twister2Job twister2Job, Config cfg) {
-    //TODO:Remove this line after the integration
-    //startJobMaster(twister2Job);
-
-    Twister2Submitter.submitJob(twister2Job, cfg);
-
-    InetAddress htgClientIP = JMWorkerController.convertStringToIP("localhost");
-    int htgClientPort = 10000 + (int) (Math.random() * 10000);
-    int htgClientTempID = 0;
-
-    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(
-        "htg.client.ip", "rack01", null);
-    JobMasterAPI.HTGClientInfo htgClientInfo = HTGClientInfoUtils.createHTGClientInfo(
-        htgClientTempID, htgClientIP.getHostAddress(), htgClientPort, nodeInfo);
-
-    //Now, we are starting only one client
-    Twister2HTGDriverClient driver = new Twister2HTGDriverClient(config, htgClientInfo, htgJob);
-    Thread driverThread = driver.startThreaded();
-
-    if (driverThread == null) {
-      LOG.severe("HTG CClient can not initialize. Exiting ...");
-      return null;
-    }
-
-    for (HTGJobAPI.ExecuteMessage anExecuteMessage : executeMessage) {
-      driver.setExecuteMessage(anExecuteMessage);
-      driver.sendHTGDriverRequestMessage();
-
-      sleep(2000);
-    }
-
-    //TODO:Remove this part after the integration
-    jobMaster.allWorkersCompleted();
-    driver.close();
-    return "HTG finished Completely";
-  }
-
-
-  //TODO:Starting Job Master for validation (It would be removed)
-  private void startJobMaster(Twister2Job twister2Job) {
-    JobAPI.Job job = twister2Job.serialize();
-    jobMaster = new JobMaster(config, "localhost", null, job, null);
-    jobMaster.startJobMasterThreaded();
-  }
-
-  private static void sleep(long duration) {
-    LOG.info("Sleeping " + duration + "ms............");
-    try {
-      Thread.sleep(duration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 
   /**
@@ -176,10 +113,12 @@ public final class Twister2HTGSubmitter {
       scheduledGraph.addAll(Collections.singleton(
           twister2Metagraph.getRelation().iterator().next().getChild()));
     } else {
-      for (int i = 0; i < twister2Metagraph.getRelation().size(); i++) {
+      int i = 0;
+      while (i < twister2Metagraph.getRelation().size()) {
         scheduledGraph.addFirst(twister2Metagraph.getRelation().iterator().next().getParent());
         scheduledGraph.addAll(Collections.singleton(
             twister2Metagraph.getRelation().iterator().next().getChild()));
+        i++;
       }
     }
     LOG.info("%%%% Scheduled Graph list details: %%%%" + scheduledGraph);

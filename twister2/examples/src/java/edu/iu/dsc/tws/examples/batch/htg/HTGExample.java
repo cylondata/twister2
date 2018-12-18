@@ -109,7 +109,7 @@ public class HTGExample extends TaskWorker {
     //Select it from the list...!
     ExecutionPlan plan = taskExecutor.plan(batchGraph);
     taskExecutor.execute(batchGraph, plan);
-  }//End of execute method
+  }//End of executeHTG method
 
   public static void sleep(long duration) {
     LOG.info("Sleeping " + duration + "ms............");
@@ -209,8 +209,18 @@ public class HTGExample extends TaskWorker {
 
     //TODO:Invoke HTG Submitter and send the metagraph
     Twister2HTGSubmitter twister2HTGSubmitter = new Twister2HTGSubmitter(config);
-    twister2HTGSubmitter.execute(twister2MetagraphBuilder.build(),
+    twister2HTGSubmitter.executeHTG(twister2MetagraphBuilder.build(),
         jobConfig, HTGExample.class.getName());
+
+    /*Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("HTG-job");
+    jobBuilder.setWorkerClass(KMeansJob.class.getName());
+    jobBuilder.addComputeResource(2, 512, 1.0, 2);
+    jobBuilder.setDriverClass(Twister2HTGSubmitter.class.getName());
+    jobBuilder.setConfig(jobConfig);
+
+    // now submit the job
+    Twister2Submitter.submitJob(jobBuilder.build(), config);*/
   }
 }
 
