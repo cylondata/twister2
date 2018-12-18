@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.common.driver.IScaler;
@@ -31,7 +32,7 @@ public class DriverExample implements IDriver, WorkerListener {
   private static final Logger LOG = Logger.getLogger(DriverExample.class.getName());
 
   @Override
-  public void execute(IScaler scaler, IDriverMessenger messenger) {
+  public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
     // add listener to receive worker messages
     JMDriverAgent.addWorkerListener(this);

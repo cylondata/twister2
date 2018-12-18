@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.driver;
 
+import edu.iu.dsc.tws.common.config.Config;
+
 /**
  * An instance of this class will be executed in the submitting client,
  * if it is specified in Twister2Job
@@ -27,5 +29,5 @@ public interface IDriver {
    *
    * @param scaler
    */
-  void execute(IScaler scaler, IDriverMessenger messenger);
+  void execute(Config config, IScaler scaler, IDriverMessenger messenger);
 }

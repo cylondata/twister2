@@ -198,7 +198,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       throw new RuntimeException(e);
     }
 
-    driver.execute(scaler, driverMessenger);
+    driver.execute(config, scaler, driverMessenger);
     driverAgent.close();
 
     return true;
