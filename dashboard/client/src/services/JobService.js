@@ -12,7 +12,11 @@
 import axios from "axios";
 import {RestService} from "./RestService";
 
-export class JobService {
+export const JOB_STATE = {
+    STARTING: "STARTING", STARTED: "STARTED", COMPLETED: "COMPLETED", FAILED: "FAILED"
+};
+
+export default class JobService {
     static getAllJobs() {
         return axios.get(
             RestService.buildURL("jobs")
@@ -29,5 +33,19 @@ export class JobService {
         return axios.get(
             RestService.buildURL("jobs/stats/")
         );
+    }
+
+    static searchJobs(states = Object.keys(JOB_STATE), keyword = "", page = 0) {
+        return axios.get(
+            RestService.buildURL(`jobs/search?keyword=${keyword}&page=${page}&states=${states.join(",")}`, false)
+        );
+    }
+
+    static getActiveJobs() {
+        return JobService.searchJobs([JOB_STATE.STARTED, JOB_STATE.STARTING]);
+    }
+
+    static getInActiveJobs() {
+        return JobService.searchJobs([JOB_STATE.COMPLETED, JOB_STATE.FAILED]);
     }
 }

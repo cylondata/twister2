@@ -10,17 +10,20 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.*;
 
 import edu.iu.dsc.tws.dashboard.data_models.Job;
 import edu.iu.dsc.tws.dashboard.data_models.Worker;
 import edu.iu.dsc.tws.dashboard.services.JobService;
 import edu.iu.dsc.tws.dashboard.services.WorkerService;
+
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("jobs")
@@ -45,6 +48,26 @@ public class JobController {
   public Iterable<Job> all() {
     LOG.debug("Request received to list all jobs");
     return this.jobService.getAllJobs();
+  }
+
+  @RequestMapping(value = "/search", method = RequestMethod.GET)
+  public Page<Job> search(@RequestParam(value = "page", defaultValue = "1") int page,
+                          @RequestParam(value = "keyword", defaultValue = "") String keyword,
+                          @RequestParam(value = "states", defaultValue = "") String states) {
+    List<JobState> jobStateList = Arrays.stream(states.split(","))
+            .filter(state -> !StringUtils.isEmpty(state))
+            .map(JobState::valueOf).collect(Collectors.toList());
+
+    if (jobStateList.isEmpty()) {
+      jobStateList = Arrays.asList(JobState.values());
+    }
+
+    LOG.debug("Searching jobs. States :{} , Keyword : {}, Page : {}", jobStateList, keyword, page);
+    return this.jobService.searchJobs(
+            jobStateList,
+            keyword,
+            page
+    );
   }
 
   @RequestMapping(value = "/", method = RequestMethod.POST,

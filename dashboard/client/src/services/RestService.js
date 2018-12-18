@@ -10,13 +10,14 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-// const BASE_URL = "http://localhost:8080/";
-const BASE_URL = "";
+const BASE_URL = "http://localhost:8080/";
+
+//const BASE_URL = "";
 
 export class RestService {
 
-    static buildURL(path) {
-        if (!path.endsWith("/")) {
+    static buildURL(path, addSlash = true) {
+        if (addSlash && !path.endsWith("/")) {
             path += "/";
         }
         return BASE_URL + path;

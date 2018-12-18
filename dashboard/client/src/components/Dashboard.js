@@ -89,10 +89,26 @@ export default class Dashboard extends React.Component {
                         <Navbar.Divider/>
                         <Button className="bp3-minimal" icon="home" text="Home"
                                 onClick={this.onHomeClicked}/>
+                        <Button className="bp3-minimal" icon="new-grid-item" text="Jobs"
+                                onClick={() => {
+                                    this.onMenuClicked({id: MENU_JOBS})
+                                }}/>
+                        <Popover content={
+                            <Menu>
+                                <Menu.Item icon="layout-sorted-clusters" text="Clusters" onClick={() => {
+                                    this.onMenuClicked({id: MENU_CLUSTERS})
+                                }}/>
+                                <Menu.Item icon="desktop" text="Nodes" onClick={() => {
+                                    this.onMenuClicked({id: MENU_NODES})
+                                }}/>
+                            </Menu>
+                        } position={Position.BOTTOM_RIGHT}>
+                            <Button className="bp3-minimal" icon="layout-auto" text="Grid"/>
+                        </Popover>
                     </Navbar.Group>
                     <Navbar.Group align={Alignment.RIGHT}>
-                        <Button className="bp3-minimal" icon="plus" text="Submit"
-                                onClick={this.onCreateNewJobClicked}/>
+                        {/*<Button className="bp3-minimal" icon="plus" text="Submit"*/}
+                        {/*onClick={this.onCreateNewJobClicked}/>*/}
                         <Popover content={
                             <Menu>
                                 <Menu.Item icon="log-out" text="Logout"/>
@@ -104,71 +120,6 @@ export default class Dashboard extends React.Component {
                     </Navbar.Group>
                 </Navbar>
                 <div className="dash-container">
-                    <div className="dash-left-menu">
-                        <Tree
-                            onNodeClick={this.onMenuClicked}
-                            contents={[
-                                {
-                                    id: 0,
-                                    hasCaret: true,
-                                    icon: "layout-auto",
-                                    isExpanded: true,
-                                    label: "Twister Grid",
-                                    childNodes: [
-                                        {
-                                            id: MENU_CLUSTERS,
-                                            icon: "layout-sorted-clusters",
-                                            label: "Clusters"
-                                        },
-                                        {
-                                            id: MENU_NODES,
-                                            icon: "desktop",
-                                            label: "Nodes"
-                                        },
-                                        {
-                                            id: MENU_WORKERS,
-                                            icon: "ninja",
-                                            label: "Workers"
-                                        }
-                                    ]
-                                },
-                                {
-                                    id: 3,
-                                    hasCaret: true,
-                                    icon: "projects",
-                                    isExpanded: true,
-                                    label: "Workloads",
-                                    childNodes: [
-                                        {
-                                            id: MENU_JOBS,
-                                            icon: "new-grid-item",
-                                            label: "Jobs"
-                                        },
-                                        // {
-                                        //     id: 5,
-                                        //     icon: "layers",
-                                        //     label: "Tasks"
-                                        // }
-                                    ]
-                                },
-                                {
-                                    id: 6,
-                                    icon: "cog",
-                                    label: "Settings"
-                                },
-                                {
-                                    id: MENU_DOCS,
-                                    icon: "document",
-                                    label: "Documentation"
-                                },
-                                {
-                                    id: 8,
-                                    icon: "info-sign",
-                                    label: "About"
-                                }
-                            ]} className={Classes.ELEVATION_3}>
-                        </Tree>
-                    </div>
                     <div className="dash-container-content">
                         <Switch>
                             <Route exact path='/' component={DashboardHome}/>

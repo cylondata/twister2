@@ -7,12 +7,15 @@ import "../node_modules/@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "../node_modules/@blueprintjs/core/lib/css/blueprint.css";
 import {Switch, Route, HashRouter} from 'react-router-dom'
 
-ReactDOM.render(
-    <HashRouter>
-        <Switch>
-            <Route path='/' component={Dashboard}/>
-        </Switch>
-    </HashRouter>, document.getElementById('root'));
+
+setTimeout(() => {
+    ReactDOM.render(
+        <HashRouter>
+            <Switch>
+                <Route path='/' component={Dashboard}/>
+            </Switch>
+        </HashRouter>, document.getElementById('root'))
+}, 1000);
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

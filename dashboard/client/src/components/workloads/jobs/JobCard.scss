@@ -1,6 +1,49 @@
+@import "../../common";
+
+.tw-job-row {
+  display: grid;
+  grid-template-rows: auto auto;
+  padding: 10px !important;
+
+  .tw-job-row-summary {
+    display: grid;
+    grid-template-columns: 30px auto auto;
+
+    .tw-job-row-icon {
+      padding-top: 3px;
+    }
+
+    .tw-job-row-name {
+      line-height: 24px;
+    }
+
+    .tw-table-row-right {
+      display: grid;
+      grid-template-columns: auto 60px 100px 24px;
+      grid-column-gap: 10px;
+
+      .tw-job-row-status-tag {
+        text-align: center;
+      }
+    }
+  }
+
+  .tw-job-row-info {
+    //margin-top: 10px;
+    //padding-top: 10px;
+    table {
+      margin-top: 10px;
+    }
+  }
+
+
+}
+
 .tw-node-card {
   display: grid;
-  grid-template-columns: 60px auto;
+  grid-template-columns: 20px auto;
+  border-radius: 0 !important;
+
   .tw-node-icon {
     color: #5c7080;
   }
@@ -27,6 +70,7 @@
       &:not(last-of-type) {
         margin-right: 5px;
       }
+
       width: 100px;
     }
   }

@@ -1,13 +1,11 @@
-.t2-nodes-container {
+.t2-jobs-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  @media (max-width: 1500px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  @media (max-width: 600px) {
-    grid-template-columns: repeat(1, 1fr);
-  }
+  grid-template-columns: repeat(1, 1fr);
+  //grid-row-gap: 5px;
+}
 
-  grid-column-gap: 5px;
-  grid-row-gap: 5px;
+.t2-jobs-search {
+  display: grid !important;
+  grid-template-columns: 100px auto;
+  margin-bottom: 10px;
 }

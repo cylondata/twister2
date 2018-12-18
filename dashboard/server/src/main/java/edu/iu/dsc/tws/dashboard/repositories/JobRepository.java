@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.dashboard.repositories;
 
 import edu.iu.dsc.tws.dashboard.data_models.Job;
 import edu.iu.dsc.tws.dashboard.data_models.JobState;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -32,4 +34,6 @@ public interface JobRepository extends CrudRepository<Job, String> {
 
   @Query("select job.state, count(job.state) from Job job group by job.state")
   List<Object[]> getStateStats();
+
+  Page<Job> findAllByStateInAndJobNameContainingOrderByCreatedTimeDesc(List<JobState> states, String keyword, Pageable pageable);
 }

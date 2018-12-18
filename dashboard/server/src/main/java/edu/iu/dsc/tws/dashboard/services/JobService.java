@@ -17,6 +17,8 @@ import edu.iu.dsc.tws.dashboard.data_models.Node;
 import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
 import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -59,6 +61,15 @@ public class JobService {
     job.setHeartbeatTime(Calendar.getInstance().getTime());
 
     return jobRepository.save(job);
+  }
+
+  public Page<Job> searchJobs(List<JobState> states, String keyword, int page) {
+    PageRequest pageRequest = PageRequest.of(page, 25);
+    return this.jobRepository.findAllByStateInAndJobNameContainingOrderByCreatedTimeDesc(
+            states,
+            keyword,
+            pageRequest
+    );
   }
 
   public Job getJobById(String jobId) {
