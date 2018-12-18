@@ -9,28 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.driver;
+package edu.iu.dsc.tws.common.worker;
 
-import com.google.protobuf.Any;
+import com.google.protobuf.Message;
 
-public interface DriverListener {
-
-  /**
-   * called when new instances of workers are added the job
-   * @param instancesAdded
-   */
-  void workersScaledUp(int instancesAdded);
+/**
+ * A messenger interface to send messages from the driver to the workers in a job
+ */
+public interface IWorkerMessenger {
 
   /**
-   * called when new instances of workers are removed from the job
-   * @param instancesRemoved
+   * send a protocol buffer message to the driver in the job
+   * @return
    */
-  void workersScaledDown(int instancesRemoved);
-
-  /**
-   * received a broadcast message from the driver
-   * @param anyMessage received message from the driver
-   */
-  void broadcastReceived(Any anyMessage);
-
+  boolean sendToDriver(Message message);
 }

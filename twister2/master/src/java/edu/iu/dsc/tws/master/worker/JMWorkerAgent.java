@@ -21,7 +21,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.driver.DriverListener;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
@@ -30,6 +29,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
+import edu.iu.dsc.tws.common.worker.DriverListener;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
@@ -70,7 +70,9 @@ public final class JMWorkerAgent {
 
   private RRClient rrClient;
   private Pinger pinger;
-  private JMWorkerController jmWorkerController;
+
+  private JMWorkerController workerController;
+  private JMWorkerMessenger workerMessenger;
 
   private boolean registrationSucceeded;
 
@@ -81,9 +83,12 @@ public final class JMWorkerAgent {
    */
   private boolean connectionRefused = false;
 
+  /**
+   * workers can register a driverListener to receive messages from the driver
+   */
   private DriverListener driverListener;
 
-  private static JMWorkerAgent jmClient;
+  private static JMWorkerAgent workerAgent;
 
   /**
    * the maximum duration this client will try to connect to the Job Master
@@ -121,12 +126,20 @@ public final class JMWorkerAgent {
                                                   String masterHost,
                                                   int masterPort,
                                                   int numberOfWorkers) {
-    if (jmClient != null) {
-      return jmClient;
+    if (workerAgent != null) {
+      return workerAgent;
     }
 
-    jmClient = new JMWorkerAgent(config, thisWorker, masterHost, masterPort, numberOfWorkers);
-    return jmClient;
+    workerAgent = new JMWorkerAgent(config, thisWorker, masterHost, masterPort, numberOfWorkers);
+    return workerAgent;
+  }
+
+  /**
+   * return the singleton agent object
+   * @return
+   */
+  public static JMWorkerAgent getJMWorkerAgent() {
+    return workerAgent;
   }
 
   /**
@@ -145,6 +158,8 @@ public final class JMWorkerAgent {
     long interval = JobMasterContext.pingInterval(config);
     pinger = new Pinger(thisWorker.getWorkerID(), rrClient, interval);
 
+    workerMessenger = new JMWorkerMessenger(this);
+
     // protocol buffer message registrations
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
     rrClient.registerResponseHandler(pingBuilder, pinger);
@@ -159,6 +174,11 @@ public final class JMWorkerAgent {
     JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
         = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
 
+    JobMasterAPI.WorkerToDriver.Builder toDriverBuilder =
+        JobMasterAPI.WorkerToDriver.newBuilder();
+    JobMasterAPI.WorkerToDriverResponse.Builder toDriverResponseBuilder
+        = JobMasterAPI.WorkerToDriverResponse.newBuilder();
+
     JobMasterAPI.WorkersScaled.Builder scaledMessageBuilder =
         JobMasterAPI.WorkersScaled.newBuilder();
 
@@ -167,8 +187,13 @@ public final class JMWorkerAgent {
     ResponseMessageHandler responseMessageHandler = new ResponseMessageHandler();
     rrClient.registerResponseHandler(registerWorkerBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(registerWorkerResponseBuilder, responseMessageHandler);
+
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
+
+    rrClient.registerResponseHandler(toDriverBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(toDriverResponseBuilder, responseMessageHandler);
+
     rrClient.registerResponseHandler(scaledMessageBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(broadcastBuilder, responseMessageHandler);
 
@@ -186,21 +211,21 @@ public final class JMWorkerAgent {
    */
   private void initJMWorkerController() {
 
-    jmWorkerController = new JMWorkerController(config, thisWorker, rrClient, numberOfWorkers);
+    workerController = new JMWorkerController(config, thisWorker, rrClient, numberOfWorkers);
 
     JobMasterAPI.ListWorkersRequest.Builder listRequestBuilder =
         JobMasterAPI.ListWorkersRequest.newBuilder();
     JobMasterAPI.ListWorkersResponse.Builder listResponseBuilder =
         JobMasterAPI.ListWorkersResponse.newBuilder();
-    rrClient.registerResponseHandler(listRequestBuilder, jmWorkerController);
-    rrClient.registerResponseHandler(listResponseBuilder, jmWorkerController);
+    rrClient.registerResponseHandler(listRequestBuilder, workerController);
+    rrClient.registerResponseHandler(listResponseBuilder, workerController);
 
     JobMasterAPI.BarrierRequest.Builder barrierRequestBuilder =
         JobMasterAPI.BarrierRequest.newBuilder();
     JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
         JobMasterAPI.BarrierResponse.newBuilder();
-    rrClient.registerResponseHandler(barrierRequestBuilder, jmWorkerController);
-    rrClient.registerResponseHandler(barrierResponseBuilder, jmWorkerController);
+    rrClient.registerResponseHandler(barrierRequestBuilder, workerController);
+    rrClient.registerResponseHandler(barrierResponseBuilder, workerController);
   }
 
   /**
@@ -321,7 +346,15 @@ public final class JMWorkerAgent {
    * @return
    */
   public JMWorkerController getJMWorkerController() {
-    return jmWorkerController;
+    return workerController;
+  }
+
+  /**
+   * return JMWorkerMessenger for this worker
+   * @return
+   */
+  public JMWorkerMessenger getJMWorkerMessenger() {
+    return workerMessenger;
   }
 
   /**
@@ -331,11 +364,11 @@ public final class JMWorkerAgent {
    * @return
    */
   public static boolean addDriverListener(DriverListener driverListener) {
-    if (jmClient.driverListener != null) {
+    if (workerAgent.driverListener != null) {
       return false;
     }
 
-    jmClient.driverListener = driverListener;
+    workerAgent.driverListener = driverListener;
     return true;
   }
 
@@ -407,6 +440,25 @@ public final class JMWorkerAgent {
     return true;
   }
 
+  public boolean sendWorkerToDriverMessage(Message message) {
+
+    JobMasterAPI.WorkerToDriver workerToDriver = JobMasterAPI.WorkerToDriver.newBuilder()
+        .setData(Any.pack(message).toByteString())
+        .setWorkerID(thisWorker.getWorkerID())
+        .build();
+
+    RequestID requestID = rrClient.sendRequest(workerToDriver);
+    if (requestID == null) {
+      LOG.severe("Could not send WorkerToDriver message.");
+      return false;
+    }
+
+    LOG.fine("Sent WorkerToDriver message: \n" + workerToDriver);
+    return true;
+  }
+
+
+
   /**
    * stop the JMWorkerAgent
    */
@@ -439,6 +491,10 @@ public final class JMWorkerAgent {
         LOG.fine("Received a WorkerStateChange response from the master. \n" + message);
 
         // nothing to do
+      } else if (message instanceof JobMasterAPI.WorkerToDriverResponse) {
+        LOG.info("Received a WorkerToDriverResponse from the master. \n" + message);
+
+        // nothing to do
       } else if (message instanceof JobMasterAPI.WorkersScaled) {
         LOG.info("Received WorkersScaled message from the master. \n" + message);
 
@@ -447,7 +503,7 @@ public final class JMWorkerAgent {
           if (scaledMessage.getChange() > 0) {
             driverListener.workersScaledUp(scaledMessage.getChange());
           } else if (scaledMessage.getChange() < 0) {
-            driverListener.workersScaledDown(scaledMessage.getChange());
+            driverListener.workersScaledDown(0 - scaledMessage.getChange());
           }
         }
 

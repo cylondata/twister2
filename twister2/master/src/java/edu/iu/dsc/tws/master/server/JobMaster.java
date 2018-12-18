@@ -247,19 +247,33 @@ public class JobMaster {
     JobMasterAPI.BroadcastResponse.Builder broadcastResponseBuilder
         = JobMasterAPI.BroadcastResponse.newBuilder();
 
+    JobMasterAPI.WorkerToDriver.Builder toDriverBuilder =
+        JobMasterAPI.WorkerToDriver.newBuilder();
+    JobMasterAPI.WorkerToDriverResponse.Builder toDriverResponseBuilder
+        = JobMasterAPI.WorkerToDriverResponse.newBuilder();
+
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
+
     rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
     rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerMonitor);
+
     rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
+
     rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
     rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
+
     rrServer.registerRequestHandler(barrierRequestBuilder, barrierMonitor);
     rrServer.registerRequestHandler(barrierResponseBuilder, barrierMonitor);
+
     rrServer.registerRequestHandler(scaledMessageBuilder, workerMonitor);
     rrServer.registerRequestHandler(scaledResponseBuilder, workerMonitor);
+
     rrServer.registerRequestHandler(broadcastBuilder, workerMonitor);
     rrServer.registerRequestHandler(broadcastResponseBuilder, workerMonitor);
+
+    rrServer.registerRequestHandler(toDriverBuilder, workerMonitor);
+    rrServer.registerRequestHandler(toDriverResponseBuilder, workerMonitor);
 
     rrServer.start();
     looper.loop();

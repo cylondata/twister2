@@ -11,21 +11,31 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.rsched;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.common.driver.IScaler;
+import edu.iu.dsc.tws.common.driver.WorkerListener;
 import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
-public class DriverExample implements IDriver {
+public class DriverExample implements IDriver, WorkerListener {
   private static final Logger LOG = Logger.getLogger(DriverExample.class.getName());
 
   @Override
   public void execute(IScaler scaler, IDriverMessenger messenger) {
+
+    // add listener to receive worker messages
+    JMDriverAgent.addWorkerListener(this);
+
     broadcastExample(messenger);
     scalingExample(scaler);
 
@@ -96,4 +106,26 @@ public class DriverExample implements IDriver {
     messenger.broadcastToAllWorkers(computeResource);
   }
 
+  @Override
+  public void workerMessageReceived(Any anyMessage, int senderID) {
+    if (anyMessage.is(JobMasterAPI.NodeInfo.class)) {
+      try {
+        JobMasterAPI.NodeInfo nodeInfo = anyMessage.unpack(JobMasterAPI.NodeInfo.class);
+        LOG.info("Received WorkerToDriver message from worker: " + senderID
+            + ". NodeInfo: " + nodeInfo);
+
+      } catch (InvalidProtocolBufferException e) {
+        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
+      }
+    } else if (anyMessage.is(JobAPI.ComputeResource.class)) {
+      try {
+        JobAPI.ComputeResource computeResource = anyMessage.unpack(JobAPI.ComputeResource.class);
+        LOG.info("Received WorkerToDriver message from worker: " + senderID
+            + ". ComputeResource: " + computeResource);
+
+      } catch (InvalidProtocolBufferException e) {
+        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
+      }
+    }
+  }
 }

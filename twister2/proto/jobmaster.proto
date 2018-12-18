@@ -173,7 +173,6 @@ message ScaledResponse {
 
 // Driver to worker broadcast message
 // Driver can send any byte array to workers including serialized protocol buffer messages
-// Message class name is provided to reconstruct the message at the receiving end
 // It is encoded as a byte array
 message Broadcast {
     bytes data = 1;
@@ -183,6 +182,25 @@ message Broadcast {
 // Broadcast response message
 // if it fails, reason will have a string explaining the problem
 message BroadcastResponse {
+    oneof required {
+        bool succeeded = 1;
+    }
+    string reason = 2;
+}
+
+// Worker to Driver message
+// Worker can send any byte array to the driver including serialized protocol buffer messages
+message WorkerToDriver {
+    bytes data = 1;
+    oneof required {
+        int32 workerID = 2;
+    }
+
+}
+
+// WorkerToDriver response message
+// if it fails, reason will have a string explaining the problem
+message WorkerToDriverResponse {
     oneof required {
         bool succeeded = 1;
     }

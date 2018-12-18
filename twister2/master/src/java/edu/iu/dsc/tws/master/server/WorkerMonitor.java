@@ -106,6 +106,11 @@ public class WorkerMonitor implements MessageHandler {
       JobMasterAPI.Broadcast broadcastMessage = (JobMasterAPI.Broadcast) message;
       broadcastMessageReceived(id, broadcastMessage);
 
+    } else if (message instanceof JobMasterAPI.WorkerToDriver) {
+      LOG.log(Level.INFO, "WorkerToDriver message received: " + message.toString());
+      JobMasterAPI.WorkerToDriver toDriverMessage = (JobMasterAPI.WorkerToDriver) message;
+      toDriverMessageReceived(id, toDriverMessage);
+
     } else {
       LOG.log(Level.SEVERE, "Un-known message received: " + message);
     }
@@ -278,6 +283,7 @@ public class WorkerMonitor implements MessageHandler {
               .setReason("NumberOfWorkers does not match in the broadcast message and JobMaster")
               .build();
       rrServer.sendResponse(id, failResponse);
+      LOG.warning("BroadcastResponse sent to the driver: \n" + failResponse);
       return;
     }
 
@@ -291,6 +297,7 @@ public class WorkerMonitor implements MessageHandler {
               .setReason("Not all workers are in RUNNING state")
               .build();
       rrServer.sendResponse(id, failResponse);
+      LOG.warning("BroadcastResponse sent to the driver: \n" + failResponse);
       return;
     }
 
@@ -309,6 +316,7 @@ public class WorkerMonitor implements MessageHandler {
                 .setReason("Broadcast message can not be sent to workerID: " + workerID)
                 .build();
         rrServer.sendResponse(id, failResponse);
+        LOG.warning("BroadcastResponse sent to the driver: \n" + failResponse);
         return;
       }
     }
@@ -322,6 +330,33 @@ public class WorkerMonitor implements MessageHandler {
 
     rrServer.sendResponse(id, successResponse);
     LOG.fine("BroadcastResponse sent to the driver: \n" + successResponse);
+  }
+
+  private void toDriverMessageReceived(RequestID id, JobMasterAPI.WorkerToDriver toDriverMessage) {
+
+    // first send the received message to the driver
+    boolean queued = rrServer.sendMessage(toDriverMessage, RRServer.DRIVER_ID);
+
+    // if the message can not be queued to send to the driver,
+    // it is because the driver is not connected to the worker
+    if (!queued) {
+      JobMasterAPI.WorkerToDriverResponse failResponse =
+          JobMasterAPI.WorkerToDriverResponse.newBuilder()
+              .setSucceeded(false)
+              .setReason("Driver is not connected to JobMaster")
+              .build();
+      rrServer.sendResponse(id, failResponse);
+      LOG.warning("WorkerToDriverResponse sent to the driver: \n" + failResponse);
+      return;
+    }
+
+    JobMasterAPI.WorkerToDriverResponse successResponse =
+        JobMasterAPI.WorkerToDriverResponse.newBuilder()
+            .setSucceeded(true)
+            .build();
+
+    rrServer.sendResponse(id, successResponse);
+    LOG.fine("WorkerToDriverResponse sent to the driver: \n" + successResponse);
   }
 
   /**
