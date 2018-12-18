@@ -167,9 +167,16 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   public abstract boolean baseBuild();
 
+  static <T> boolean isKeyedInput(BaseTSet<T> parent) {
+    return parent instanceof KeyedGatherTSet || parent instanceof KeyedReduceTSet
+        || parent instanceof KeyedPartitionTSet;
+  }
+
   static <T> boolean isIterableInput(BaseTSet<T> parent) {
-    if (parent instanceof ReduceTSet || parent instanceof KeyedReduceTSet) {
+    if (parent instanceof ReduceTSet) {
       return false;
+    } else if (parent instanceof KeyedReduceTSet) {
+      return true;
     } else if (parent instanceof GatherTSet || parent instanceof KeyedGatherTSet) {
       return true;
     } else if (parent instanceof AllReduceTSet) {

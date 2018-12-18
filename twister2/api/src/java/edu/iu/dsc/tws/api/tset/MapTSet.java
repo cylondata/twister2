@@ -43,11 +43,11 @@ public class MapTSet<T, P> extends BaseTSet<T> {
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
     boolean isIterable = isIterableInput(parent);
-
+    boolean keyed = isKeyedInput(parent);
     int p = calculateParallelism(parent);
 
     ComputeConnection connection = builder.addCompute(generateName("map", parent),
-        new MapOp<P, T>(mapFn, isIterable), p);
+        new MapOp<P, T>(mapFn, isIterable, keyed), p);
 
     parent.buildConnection(connection);
     return true;

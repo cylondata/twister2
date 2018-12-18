@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -30,26 +31,43 @@ public class MapOp<T, R> implements ICompute {
 
   private boolean iterable;
 
+  private boolean keyed;
+
   public MapOp() {
   }
 
-  public MapOp(MapFunction<T, R> mapFn, boolean itr) {
+  public MapOp(MapFunction<T, R> mapFn, boolean itr, boolean kyd) {
     this.mapFn = mapFn;
     this.iterable = itr;
+    this.keyed = kyd;
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public boolean execute(IMessage content) {
-    if (!iterable) {
-      T data = (T) content.getContent();
-      R result = mapFn.map(data);
-      return context.write(Constants.DEFAULT_EDGE, result);
+    if (!keyed) {
+      if (!iterable) {
+        T data = (T) content.getContent();
+        R result = mapFn.map(data);
+        return context.write(Constants.DEFAULT_EDGE, result);
+      } else {
+        Iterator<T> data = (Iterator<T>) content.getContent();
+        while (data.hasNext()) {
+          R result = mapFn.map(data.next());
+          context.write(Constants.DEFAULT_EDGE, result);
+        }
+      }
     } else {
-      Iterator<T> data = (Iterator<T>) content.getContent();
-      while (data.hasNext()) {
-        R result = mapFn.map(data.next());
-        context.write(Constants.DEFAULT_EDGE, result);
+      if (!iterable) {
+        KeyedContent data = (KeyedContent) content.getContent();
+        R result = mapFn.map((T) data.getValue());
+        return context.write(Constants.DEFAULT_EDGE, result);
+      } else {
+        Iterator<KeyedContent> data = (Iterator<KeyedContent>) content.getContent();
+        while (data.hasNext()) {
+          R result = mapFn.map((T) data.next().getValue());
+          context.write(Constants.DEFAULT_EDGE, result);
+        }
       }
     }
     return true;

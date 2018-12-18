@@ -31,10 +31,12 @@ public class SinkTSet<T> extends BaseTSet<T> {
   @Override
   public boolean baseBuild() {
     boolean isIterable = isIterableInput(parent);
+    boolean keyed = isKeyedInput(parent);
     // lets override the parallelism
     int p = calculateParallelism(parent);
 
-    ComputeConnection connection = builder.addSink(getName(), new SinkOp<T>(sink, isIterable), p);
+    ComputeConnection connection = builder.addSink(getName(),
+        new SinkOp<T>(sink, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }

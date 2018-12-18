@@ -41,12 +41,13 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
     boolean isIterable = isIterableInput(parent);
+    boolean keyed = isKeyedInput(parent);
 
     int p = calculateParallelism(parent);
     String newName = generateName("flat-map", parent);
 
     ComputeConnection connection = builder.addCompute(newName,
-        new FlatMapOp<>(mapFn, isIterable), p);
+        new FlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }
