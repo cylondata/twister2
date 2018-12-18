@@ -33,12 +33,15 @@ public class IterableFlatMapOp<T, R> implements ICompute {
 
   private boolean inputIterator;
 
+  private boolean keyed;
+
   public IterableFlatMapOp() {
   }
 
-  public IterableFlatMapOp(IterableFlatMapFunction<T, R> mapFn, boolean inputItr) {
+  public IterableFlatMapOp(IterableFlatMapFunction<T, R> mapFn, boolean inputItr, boolean kyd) {
     this.mapFn = mapFn;
     this.inputIterator = inputItr;
+    this.keyed = kyd;
   }
 
   @SuppressWarnings("unchecked")

@@ -211,6 +211,11 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
+  public void clean() {
+    finalReceiver.clean();
+  }
+
+  @Override
   public void finish(int source) {
   }
 

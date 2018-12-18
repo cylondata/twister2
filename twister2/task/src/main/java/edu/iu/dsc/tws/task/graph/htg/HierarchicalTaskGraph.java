@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.graph;
+package edu.iu.dsc.tws.task.graph.htg;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -17,6 +17,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.Edge;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class HierarchicalTaskGraph extends BaseHierarchicalTaskGraph<DataFlowTaskGraph, Edge> {
 

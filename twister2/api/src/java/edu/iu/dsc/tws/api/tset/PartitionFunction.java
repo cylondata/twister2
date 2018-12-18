@@ -11,12 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import java.io.Serializable;
+import java.util.Set;
+
 /**
  * Given a data, give the partition index
  *
  * @param <T> the type of data
  */
-public interface PartitionFunction<T> extends TFunction {
+public interface PartitionFunction<T> extends Serializable {
+
+  /**
+   * Prepare the function
+   *
+   * @param sources source
+   * @param destinations destinations
+   */
+  void prepare(Set<Integer> sources, Set<Integer> destinations);
 
   /**
    * Computes the partition for the given key.
@@ -24,7 +35,7 @@ public interface PartitionFunction<T> extends TFunction {
    * @param val value.
    * @return The partition index.
    */
-  int partition(int sourceIndex, int numPartitions, T val);
+  int partition(int sourceIndex, T val);
 
   /**
    * Commit the partition

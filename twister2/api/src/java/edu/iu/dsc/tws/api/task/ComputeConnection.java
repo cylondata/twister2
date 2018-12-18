@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
-import edu.iu.dsc.tws.task.graph.HierarchicalTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
 /**
@@ -600,27 +599,6 @@ public class ComputeConnection {
         throw new RuntimeException("Failed to connect non-existing task: " + e.getKey());
       }
       graph.addTaskEdge(v2, v1, e.getValue());
-    }
-  }
-
-
-  void build(HierarchicalTaskGraph graph) {
-    for (Map.Entry<String, Edge> e : inputs.entrySet()) {
-      DataFlowTaskGraph graph1 = graph.dataFlowTaskGraph(nodeName);
-      if (graph1 == null) {
-        throw new RuntimeException("Failed to connect non-existing taskgraph: " + nodeName);
-      }
-
-      DataFlowTaskGraph graph2 = graph.dataFlowTaskGraph(e.getKey());
-      if (graph2 == null) {
-        throw new RuntimeException("Failed to connect non-existing task graph: " + e.getKey());
-      }
-
-      try {
-        graph.addTaskGraphEdge(graph2, graph1, e.getValue());
-      } catch (IllegalArgumentException ee) {
-        ee.printStackTrace();
-      }
     }
   }
 

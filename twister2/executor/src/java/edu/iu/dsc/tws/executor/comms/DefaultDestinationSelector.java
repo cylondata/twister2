@@ -26,21 +26,21 @@ public class DefaultDestinationSelector implements DestinationSelector {
 
   @Override
   public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations) {
-
+    partitioner.prepare(sources, destinations);
   }
 
   @Override
   public int next(int source, Object data) {
-    return 0;
+    return partitioner.partition(source, data);
   }
 
   @Override
   public void commit(int source, int next) {
-
+    partitioner.commit(source, next);
   }
 
   @Override
   public int next(int source, Object key, Object data) {
-    return 0;
+    return partitioner.partition(source, key);
   }
 }

@@ -31,9 +31,13 @@ public class IFlatMapTSet<T, P> extends BaseTSet<T> {
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
     boolean isIterable = isIterableInput(parent);
+    boolean keyed = isKeyedInput(parent);
 
-    ComputeConnection connection = builder.addCompute(getName(),
-        new IterableFlatMapOp<>(mapFn, isIterable), parallel);
+    // lets override the parallelism
+    int p = calculateParallelism(parent);
+
+    ComputeConnection connection = builder.addCompute(generateName("i-flat-map", parent),
+        new IterableFlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }

@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.graph.HierarchicalTaskGraph;
+import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 public interface IHierarchicalTaskScheduler {
