@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class Twister2HTGDriver implements IDriver, WorkerListener {
@@ -44,20 +45,7 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
 
   private void broadcast(IDriverMessenger messenger) {
 
-    LOG.info("Testing broadcasting  ............................. ");
-    try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    // construct an example protocol buffer message and broadcast it to all workers
-    JobMasterAPI.NodeInfo nodeInfo =
-        NodeInfoUtils.createNodeInfo("example.nodeIP", "rack-01", "dc-01");
-
-    LOG.info("Broadcasting an example protocol buffer message: " + nodeInfo);
-    messenger.broadcastToAllWorkers(nodeInfo);
+    LOG.info("Testing HTG Driver  ............................. ");
 
     try {
       LOG.info("Sleeping 5 seconds ....");
@@ -66,32 +54,49 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
       e.printStackTrace();
     }
 
-    JobAPI.ComputeResource computeResource =
-        ComputeResourceUtils.createComputeResource(10, 0.5, 2048, 2.0);
+    HTGJobAPI.ExecuteMessage executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
+        .setSubgraphName("sourcetaskgraph")
+        .build();
 
-    LOG.info("Broadcasting another example protocol buffer message: " + computeResource);
-    messenger.broadcastToAllWorkers(computeResource);
+
+    LOG.info("Broadcasting execute message: " + executeMessage);
+    messenger.broadcastToAllWorkers(executeMessage);
+
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
+        .setSubgraphName("sinktaskgraph")
+        .build();
+
+    LOG.info("Broadcasting execute message: " + executeMessage);
+    messenger.broadcastToAllWorkers(executeMessage);
+
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    HTGJobAPI.HTGJobCompletedMessage jobCompletedMessage = HTGJobAPI.HTGJobCompletedMessage.newBuilder().build();
+    LOG.info("Broadcasting job completed message: " + jobCompletedMessage);
+    messenger.broadcastToAllWorkers(jobCompletedMessage);
   }
 
   @Override
   public void workerMessageReceived(Any anyMessage, int senderID) {
-    if (anyMessage.is(JobMasterAPI.NodeInfo.class)) {
+    if (anyMessage.is(HTGJobAPI.ExecuteCompletedMessage.class)) {
       try {
-        JobMasterAPI.NodeInfo nodeInfo = anyMessage.unpack(JobMasterAPI.NodeInfo.class);
-        LOG.info("Received WorkerToDriver message from worker: " + senderID
-            + ". NodeInfo: " + nodeInfo);
-
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
-      }
-    } else if (anyMessage.is(JobAPI.ComputeResource.class)) {
-      try {
-        JobAPI.ComputeResource computeResource = anyMessage.unpack(JobAPI.ComputeResource.class);
-        LOG.info("Received WorkerToDriver message from worker: " + senderID
-            + ". ComputeResource: " + computeResource);
-
+        HTGJobAPI.ExecuteCompletedMessage msg =
+            anyMessage.unpack(HTGJobAPI.ExecuteCompletedMessage.class);
+        LOG.info("Received Executecompleted message from worker: " + senderID + ". msg: " + msg);
       } catch (InvalidProtocolBufferException e) {
-        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
+        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message", e);
       }
     }
   }
