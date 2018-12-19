@@ -13,15 +13,25 @@ package edu.iu.dsc.tws.api.tset.sink;
 
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.data.api.out.FileOutputWriter;
 
 public class FileSink<T> implements Sink<T> {
+  private FileOutputWriter<T> output;
+
+  private int partition;
+
+  public FileSink(FileOutputWriter<T> out) {
+    this.output = out;
+  }
+
   @Override
   public boolean add(T value) {
-    return false;
+    output.writeRecord(partition, value);
+    return true;
   }
 
   @Override
   public void prepare(TSetContext context) {
-
+    partition = context.getIndex();
   }
 }
