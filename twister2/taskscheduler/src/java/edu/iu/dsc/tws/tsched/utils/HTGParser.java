@@ -11,9 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -26,13 +26,13 @@ public class HTGParser {
   private static final Logger LOG = Logger.getLogger(HTGParser.class.getName());
 
   private HierarchicalTaskGraph hierarchicalTaskGraph;
-  private List<DataFlowTaskGraph> taskgraphList = new LinkedList<>();
+  private Map<String, DataFlowTaskGraph> taskgraphMap = new HashMap<>();
 
   public HTGParser(HierarchicalTaskGraph graph) {
     this.hierarchicalTaskGraph = graph;
   }
 
-  public List<DataFlowTaskGraph> hierarchicalTaskGraphParse() {
+  public Map<String, DataFlowTaskGraph> hierarchicalTaskGraphParse() {
 
     Set<DataFlowTaskGraph> taskGraphSet = hierarchicalTaskGraph.getTaskGraphSet();
 
@@ -52,18 +52,18 @@ public class HTGParser {
 
     for (DataFlowTaskGraph dataFlowTaskGraph : taskGraphSet) {
       if (hierarchicalTaskGraph.inDegreeOfTaskGraph(dataFlowTaskGraph) == 0) {
-        taskgraphList.add(dataFlowTaskGraph);
+        taskgraphMap.put(dataFlowTaskGraph.getTaskGraphName(), dataFlowTaskGraph);
       } else if ((hierarchicalTaskGraph.incomingTaskGraphEdgesOf(dataFlowTaskGraph).size() == 1)
           && (hierarchicalTaskGraph.outgoingTaskGraphEdgesOf(dataFlowTaskGraph).size() == 0)) {
-        taskgraphList.add(dataFlowTaskGraph);
+        taskgraphMap.put(dataFlowTaskGraph.getTaskGraphName(), dataFlowTaskGraph);
       }
     }
 
-    for (DataFlowTaskGraph dataFlowTaskGraph : taskgraphList) {
+    for (DataFlowTaskGraph dataFlowTaskGraph : taskgraphMap.values()) {
       LOG.fine("Dataflow Task Graph and Type:" + dataFlowTaskGraph + "\t"
           + dataFlowTaskGraph.getOperationMode());
     }
 
-    return taskgraphList;
+    return taskgraphMap;
   }
 }
