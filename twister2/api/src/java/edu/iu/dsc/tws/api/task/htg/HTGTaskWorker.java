@@ -16,7 +16,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
@@ -25,6 +24,7 @@ import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
@@ -71,7 +71,7 @@ public abstract class HTGTaskWorker implements IWorker {
   /**
    * The task executor to be used
    */
-  protected TaskExecutor taskExecutor; // todo: change this to HTG executor
+  protected HTGTaskExecutor taskExecutor;
 
   @Override
   public void execute(Config cfg, int workerID,
@@ -100,7 +100,10 @@ public abstract class HTGTaskWorker implements IWorker {
     // create the communicator
     communicator = new Communicator(config, channel, persistent);
     // create the executor
-    taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator);
+    taskExecutor = new HTGTaskExecutor(config, workerId, workerInfoList, communicator);
+    // register driver listener
+    JMWorkerAgent.addDriverListener(taskExecutor);
+
     // call execute
     execute();
     // wait for the sync

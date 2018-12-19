@@ -36,3 +36,11 @@ message HTGJob {
 message ExecuteMessage {
     string subgraph_name = 1;
 }
+
+message ExecuteCompletedMessage {
+    string subgraph_name = 1;
+}
+
+message HTGJobCompletedMessage {
+    string htg_jobname = 1;
+}
