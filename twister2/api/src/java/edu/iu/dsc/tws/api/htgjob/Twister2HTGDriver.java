@@ -22,10 +22,9 @@ import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.common.driver.WorkerListener;
-import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
-import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class Twister2HTGDriver implements IDriver, WorkerListener {
@@ -35,8 +34,7 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
-    LOG.info("%%% config value:" + config.getStringValue("HTGJobObject"));
-
+    LOG.info("%%%%%%%%% HTG JOB OBJECT:%%%%%%%%%" + config.get("TWISTER2_HTG_JOB"));
     JMDriverAgent.addWorkerListener(this);
     broadcast(messenger);
     LOG.info("Twister2 HTG Driver has finished execution.");
@@ -53,12 +51,19 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
     }
 
     // construct an example protocol buffer message and broadcast it to all workers
-    JobMasterAPI.NodeInfo nodeInfo =
+    /*JobMasterAPI.NodeInfo nodeInfo =
         NodeInfoUtils.createNodeInfo("example.nodeIP", "rack-01", "dc-01");
-
-    LOG.info("Broadcasting an example protocol buffer message: " + nodeInfo);
+      LOG.info("Broadcasting an example protocol buffer message: " + nodeInfo);
     messenger.broadcastToAllWorkers(nodeInfo);
+        */
 
+    HTGJobAPI.ExecuteMessage executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
+        .setSubgraphName("sourcetaskgraph1")
+        .build();
+
+    LOG.info("Broadcasting an example protocol buffer message: " + executeMessage);
+
+    messenger.broadcastToAllWorkers(executeMessage);
     try {
       LOG.info("Sleeping 5 seconds ....");
       Thread.sleep(5000);
@@ -66,11 +71,20 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
       e.printStackTrace();
     }
 
-    JobAPI.ComputeResource computeResource =
+    /*JobAPI.ComputeResource computeResource =
         ComputeResourceUtils.createComputeResource(10, 0.5, 2048, 2.0);
 
-    LOG.info("Broadcasting another example protocol buffer message: " + computeResource);
-    messenger.broadcastToAllWorkers(computeResource);
+    LOG.info("Broadcasting another example protocol buffer message: " + computeResource);*/
+
+    HTGJobAPI.ExecuteMessage executeMessage1 = HTGJobAPI.ExecuteMessage.newBuilder()
+        .setSubgraphName("sinktaskgraph1")
+        .build();
+
+    LOG.info("Broadcasting another example protocol buffer message: " + executeMessage1);
+
+    //messenger.broadcastToAllWorkers(computeResource);
+
+    messenger.broadcastToAllWorkers(executeMessage1);
   }
 
   @Override
@@ -97,50 +111,3 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
   }
 }
 
-/*import java.util.List;
-import java.util.logging.Logger;
-
-import edu.iu.dsc.tws.common.driver.IDriver;
-import edu.iu.dsc.tws.common.driver.IDriverController;
-import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
-
-public class Twister2HTGDriver implements IDriver {
-
-  private static final Logger LOG = Logger.getLogger(Twister2HTGSubmitter.class.getName());
-
-  private List<HTGJobAPI.ExecuteMessage> executeMessageList;
-
-  public Twister2HTGDriver(List<HTGJobAPI.ExecuteMessage> executeMsgList) {
-    LOG.info("I am inside htg driver");
-    this.executeMessageList = executeMsgList;
-  }
-
-  @Override
-  public void execute(IDriverController driverController) {
-
-    *//*for (HTGJobAPI.ExecuteMessage anExecuteMessage : executeMessageList) {
-
-      driverController.broadcastToAllWorkers(
-          Twister2HTGSubmitter.class.getName(), anExecuteMessage);
-
-      sleep(2000);
-    }*//*
-
-    JobMasterAPI.NodeInfo nodeInfo =
-        NodeInfoUtils.createNodeInfo("example.nodeIP", "rack-01", "dc-01");
-
-    LOG.info("Broadcasting an example protocol buffer message: " + nodeInfo);
-    driverController.broadcastToAllWorkers(Twister2HTGDriver.class.getName(), nodeInfo);
-  }
-
-  private static void sleep(long duration) {
-    LOG.info("Sleeping " + duration + "ms............");
-    try {
-      Thread.sleep(duration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-  }
-}*/

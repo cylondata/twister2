@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 
@@ -43,6 +44,10 @@ public final class Twister2HTGSubmitter {
   private JobMaster jobMaster;
 
   private List<HTGJobAPI.ExecuteMessage> executeMessageList = new LinkedList<>();
+
+  private Twister2HTGScheduler twister2HTGScheduler;
+
+  private static final KryoSerializer KRYO_SERIALIZER = new KryoSerializer();
 
   public Twister2HTGSubmitter(Config cfg) {
     this.config = cfg;
@@ -62,7 +67,7 @@ public final class Twister2HTGSubmitter {
     //Call the schedule method to identify the order of graphs to be executed
     //List<String> scheduleGraphs = schedule(twister2Metagraph);
 
-    Twister2HTGScheduler twister2HTGScheduler = new Twister2HTGScheduler();
+    twister2HTGScheduler = new Twister2HTGScheduler();
     List<String> scheduleGraphs = twister2HTGScheduler.schedule(twister2Metagraph);
     buildHTGJob(scheduleGraphs, twister2Metagraph, workerclassName, jobConfig);
   }
@@ -86,29 +91,33 @@ public final class Twister2HTGSubmitter {
         .build();
 
     String subGraphName = scheduleGraphs.get(0);
-
     subGraph = twister2Metagraph.getMetaGraphMap(subGraphName);
 
-    jobConfig.put("HTGJobObject", htgJob);
+    //Set the subgraph to be executed from the metagraph
+    for (String subgraphName : scheduleGraphs) {
+      executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
+          .setSubgraphName(subgraphName)
+          .build();
+      executeMessageList.add(executeMessage);
+    }
+
+    /*Twister2HTGInstance twister2HTGInstance = new Twister2HTGInstance(config);
+    twister2HTGInstance.setHtgJob(htgJob);
+    twister2HTGInstance.setTwister2HTGScheduler(twister2HTGScheduler);
+    twister2HTGInstance.setExecuteMessagesList(executeMessageList);*/
+
+    jobConfig.put("TWISTER2_HTG_JOB", KRYO_SERIALIZER.serialize(htgJob));
 
     //Setting the first graph resource requirements.
     twister2Job = Twister2Job.newBuilder()
         .setJobName(htgJob.getHtgJobname())
+        //.setJobName("Test htg")
         .setWorkerClass(workerclassName)
         .setDriverClass(Twister2HTGDriver.class.getName()) //send execute msg list and HTGDriver
         .addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
             subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances())
         .setConfig(jobConfig)
         .build();
-
-    for (String subgraphName : scheduleGraphs) {
-
-      //Set the subgraph to be executed from the metagraph
-      executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
-          .setSubgraphName(subgraphName)
-          .build();
-      executeMessageList.add(executeMessage);
-    }
 
     Twister2Submitter.submitJob(twister2Job, config);
   }
@@ -138,31 +147,4 @@ public final class Twister2HTGSubmitter {
     LOG.info("%%%% Scheduled Graph list details: %%%%" + scheduledGraph);
     return scheduledGraph;
   }
-
-  /*public static class HTGClientInfoUtils {
-    public static JobMasterAPI.HTGClientInfo createHTGClientInfo(int htgClientID,
-                                                                 String hostAddress,
-                                                                 int htgClientPort,
-                                                                 JobMasterAPI.NodeInfo nodeInfo) {
-
-      JobMasterAPI.HTGClientInfo.Builder builder = JobMasterAPI.HTGClientInfo.newBuilder();
-      builder.setClientID(htgClientID);
-      builder.setClientIP(hostAddress);
-      builder.setPort(htgClientPort);
-
-      if (nodeInfo != null) {
-        builder.setNodeInfo(nodeInfo);
-      }
-      return builder.build();
-    }
-
-    public static JobMasterAPI.HTGClientInfo updateHTGClientID(
-        JobMasterAPI.HTGClientInfo htgClientInfo, int clientID) {
-
-      return createHTGClientInfo(clientID,
-          htgClientInfo.getClientIP(),
-          htgClientInfo.getPort(),
-          htgClientInfo.getNodeInfo());
-    }
-  }*/
 }

@@ -47,6 +47,9 @@ public final class Twister2Submitter {
     // update the config object with the values from job
     Config updatedConfig = JobUtils.updateConfigs(job, config);
 
+    LOG.fine("%%%%%%%%% HTG JOB OBJECT:%%%%%%%%%"
+        + twister2Job.getConfig().get("TWISTER2_HTG_JOB"));
+
     // launch the luancher
     ResourceAllocator resourceAllocator = new ResourceAllocator();
     resourceAllocator.submitJob(job, updatedConfig);
