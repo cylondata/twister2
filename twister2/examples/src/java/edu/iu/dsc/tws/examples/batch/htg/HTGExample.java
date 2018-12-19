@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.examples.batch.htg;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,9 +30,9 @@ import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.api.task.htg.HTGBuilder;
 import edu.iu.dsc.tws.api.task.htg.HTGComputeConnection;
+import edu.iu.dsc.tws.api.task.htg.HTGTaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
@@ -48,7 +48,7 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
 import edu.iu.dsc.tws.tsched.utils.HTGParser;
 
-public class HTGExample extends TaskWorker {
+public class HTGExample extends HTGTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(HTGExample.class.getName());
 
@@ -99,15 +99,13 @@ public class HTGExample extends TaskWorker {
 
     //Invoke HTG Parser
     HTGParser hierarchicalTaskGraphParser = new HTGParser(hierarchicalTaskGraph);
-    List<DataFlowTaskGraph> dataFlowTaskGraphList =
+    Map<String, DataFlowTaskGraph> dataFlowTaskGraphMap =
         hierarchicalTaskGraphParser.hierarchicalTaskGraphParse();
 
-    dataFlowTaskGraphList.stream().map(
+    dataFlowTaskGraphMap.values().stream().map(
         graph -> "dataflow task graph list:" + graph.getTaskGraphName()).forEach(LOG::info);
 
-    //Select it from the list...!
-    //ExecutionPlan plan = taskExecutor.plan(batchGraph);
-    //taskExecutor.execute(batchGraph, plan);
+    taskExecutor.execute(dataFlowTaskGraphMap);
   }//End of executeHTG method
 
   public static void sleep(long duration) {
