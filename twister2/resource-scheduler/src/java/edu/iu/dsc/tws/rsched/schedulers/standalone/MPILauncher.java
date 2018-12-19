@@ -188,7 +188,7 @@ public class MPILauncher implements ILauncher {
       }
     }
 
-    Config newConfig = Config.newBuilder().putAll(config).put(
+    config = Config.newBuilder().putAll(config).put(
         SchedulerContext.WORKING_DIRECTORY, jobWorkingDirectory).build();
 
     JobMaster jobMaster = null;
@@ -202,7 +202,7 @@ public class MPILauncher implements ILauncher {
           hostAddress = InetAddress.getLocalHost().getHostAddress();
         }
         // add the port and ip to config
-        newConfig = Config.newBuilder().putAll(newConfig).put("__job_master_port__", port).
+        config = Config.newBuilder().putAll(config).put("__job_master_port__", port).
             put("__job_master_ip__", hostAddress).build();
 
         LOG.log(Level.INFO, String.format("Starting the job master: %s:%d", hostAddress, port));
@@ -219,7 +219,7 @@ public class MPILauncher implements ILauncher {
     }
     // now start the controller, which will get the resources and start
     IController controller = new MPIController(true);
-    controller.initialize(newConfig);
+    controller.initialize(config);
     boolean start = controller.start(job);
 
     // if the driver class is specified in the job, start it
