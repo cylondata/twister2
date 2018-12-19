@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.data.utils.NetUtils;
  * The locatable input split assigner assigns to each host splits that are local, before assigning
  * splits that are not local.
  */
-public class LocatableInputSplitAssigner implements InputSplitAssigner {
+public class LocatableInputSplitAssigner<T> implements InputSplitAssigner<T> {
   private static final Logger LOG = Logger.getLogger(LocatableInputSplitAssigner.class.getName());
 
   // unassigned input splits
@@ -60,7 +60,7 @@ public class LocatableInputSplitAssigner implements InputSplitAssigner {
   }
 
   @Override
-  public LocatableInputSplit getNextInputSplit(String host, int taskId) {
+  public LocatableInputSplit<T> getNextInputSplit(String host, int taskId) {
     // for a null host, we return a remote split
     if (host == null) {
       synchronized (this.remoteSplitChooser) {

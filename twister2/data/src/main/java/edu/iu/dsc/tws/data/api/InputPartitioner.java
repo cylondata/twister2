@@ -79,5 +79,5 @@ public interface InputPartitioner<OT, T extends InputSplit<OT>> {
    * @param inputSplits the input splits to be assigned
    * @return assigner
    */
-  InputSplitAssigner getInputSplitAssigner(T[] inputSplits);
+  InputSplitAssigner<OT> getInputSplitAssigner(T[] inputSplits);
 }

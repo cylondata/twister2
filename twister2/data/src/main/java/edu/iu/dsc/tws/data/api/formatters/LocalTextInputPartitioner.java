@@ -21,7 +21,7 @@ public class LocalTextInputPartitioner extends FileInputPartitioner<String> {
 
   private int nTasks;
 
-  private OrderedInputSplitAssigner assigner;
+  private OrderedInputSplitAssigner<String> assigner;
 
   public LocalTextInputPartitioner(Path filePath, int numTasks) {
     super(filePath);
@@ -35,9 +35,10 @@ public class LocalTextInputPartitioner extends FileInputPartitioner<String> {
   }
 
   @Override
-  public OrderedInputSplitAssigner getInputSplitAssigner(FileInputSplit<String>[] inputSplits) {
+  public OrderedInputSplitAssigner<String> getInputSplitAssigner(
+      FileInputSplit<String>[] inputSplits) {
     if (assigner == null) {
-      assigner = new OrderedInputSplitAssigner(inputSplits, nTasks);
+      assigner = new OrderedInputSplitAssigner<String>(inputSplits, nTasks);
     }
     return assigner;
   }
