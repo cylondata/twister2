@@ -230,7 +230,7 @@ public class WorkerMonitor implements MessageHandler {
       // if so, stop the job master
       // if all workers have completed, no need to send the response message back to the client
       if (haveAllWorkersCompleted()) {
-        jobMaster.allWorkersCompleted();
+        jobMaster.completeJob();
       }
 
       return;

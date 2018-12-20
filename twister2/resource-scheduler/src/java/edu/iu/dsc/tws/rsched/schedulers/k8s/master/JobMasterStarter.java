@@ -78,6 +78,7 @@ public final class JobMasterStarter {
 
     // start JobMaster
     JobMaster jobMaster = new JobMaster(config, podIP, jobTerminator, job, nodeInfo);
+    jobMaster.addShutdownHook(false);
     jobMaster.startJobMasterBlocking();
   }
 
