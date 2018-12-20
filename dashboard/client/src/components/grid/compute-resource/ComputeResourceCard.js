@@ -31,6 +31,10 @@ export class ComputeResourceCard extends React.Component {
                 <div>
                     <Icon icon="calculator"/> {this.props.cr.cpu} Core{this.props.cr.cpu === 1 ? "" : "s"}
                 </div>
+                <div>
+                    <Icon
+                        icon="flow-linear"/> {this.props.cr.scalable ? "Scalable" : "Not Scalable"} [{this.props.cr.instances}]
+                </div>
             </Card>
         );
     }

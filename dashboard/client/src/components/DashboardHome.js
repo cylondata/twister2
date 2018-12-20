@@ -1,8 +1,12 @@
 import React from "react";
 import {Doughnut} from 'react-chartjs-2';
 import "./DashboardHome.css";
-import {JobService} from "../services/JobService";
+import JobService from "../services/JobService";
 import {WorkerService} from "../services/WorkerService";
+import JobCard from "./workloads/jobs/JobCard";
+import {Button, Card, Icon} from "@blueprintjs/core";
+import {StatsService} from "../services/StatsService";
+import {Link} from "react-router-dom";
 
 
 const JOB_STATE_COLOR_MAP = {
@@ -21,6 +25,33 @@ const WORKER_STATE_COLOR_MAP = {
     "FAILED": "#e53935"
 };
 
+const ELEMENT_STAT_PROPERTIES = {
+    jobs: {
+        title: "Jobs",
+        icon: "new-grid-item",
+        url: "/jobs",
+        color: "#FF9800"
+    },
+    workers: {
+        title: "Workers",
+        icon: "ninja",
+        url: "/jobs",
+        color: "#004D40"
+    },
+    nodes: {
+        title: "Nodes",
+        icon: "desktop",
+        url: "/nodes",
+        color: "#2196F3"
+    },
+    clusters: {
+        title: "Clusters",
+        icon: "layout-sorted-clusters",
+        url: "/clusters",
+        color: "#6D4C41"
+    },
+};
+
 export default class DashboardHome extends React.Component {
 
     constructor(props) {
@@ -35,11 +66,35 @@ export default class DashboardHome extends React.Component {
                 labels: [],
                 data: [],
                 colors: []
+            },
+            activeJobs: [],
+            inActiveJobs: [],
+            elementStats: {
+                jobs: 0,
+                workers: 0,
+                nodes: 0,
+                clusters: 0
             }
         };
 
         this.statUpdateInterval = 0;
     }
+
+    updateActiveJobs = () => {
+        JobService.getActiveJobs().then(response => {
+            this.setState({
+                activeJobs: response.data.content
+            });
+        });
+    };
+
+    updateInActiveJobs = () => {
+        JobService.getInActiveJobs().then(response => {
+            this.setState({
+                inActiveJobs: response.data.content
+            });
+        });
+    };
 
     updateJobStats = () => {
         JobService.getJobStats().then(response => {
@@ -77,14 +132,28 @@ export default class DashboardHome extends React.Component {
         });
     };
 
+    updateElementStats = () => {
+        StatsService.getElementStats().then(response => {
+            this.setState({
+                elementStats: response.data
+            })
+        });
+    };
+
     componentDidMount() {
         this.updateJobStats();
         this.updateWorkerStats();
+        this.updateActiveJobs();
+        this.updateInActiveJobs();
+        this.updateElementStats();
 
         this.statUpdateInterval = setInterval(() => {
             this.updateJobStats();
             this.updateWorkerStats();
-        }, 5000);
+            this.updateActiveJobs();
+            this.updateInActiveJobs();
+            this.updateElementStats();
+        }, 10000);
     }
 
     componentWillUnmount() {
@@ -92,17 +161,48 @@ export default class DashboardHome extends React.Component {
     }
 
     render() {
-        let nodeCards = [];
-        for (let i = 0; i < 5; i++) {
-            //nodeCards.push(<JobCard key={i}/>);
-        }
+        let activeJobCards = this.state.activeJobs.map(job => {
+            return <JobCard job={job} key={job.jobID + job.state}/>
+        });
+
+        let inActiveJobCards = this.state.inActiveJobs.map(job => {
+            return <JobCard job={job} key={job.jobID + job.state}/>
+        });
+
+        let statCards = Object.keys(this.state.elementStats).map(stat => {
+            return <Card className="t2-quick-view-info-card"
+                         style={{backgroundColor: ELEMENT_STAT_PROPERTIES[stat].color}}>
+                <div className="t2-quick-view-info-card-header">
+                    <Icon icon={ELEMENT_STAT_PROPERTIES[stat].icon} iconSize={40}/>
+                    <div className="t2-quick-view-info-card-header-count-wrapper">
+                        <div className="t2-quick-view-info-card-header-count">
+                            {this.state.elementStats[stat]}
+                        </div>
+                        <div
+                            className="t2-quick-view-info-card-header-count-label">
+                            {ELEMENT_STAT_PROPERTIES[stat].title}
+                        </div>
+                    </div>
+                </div>
+
+                <Link to={ELEMENT_STAT_PROPERTIES[stat].url}>
+                    <Button minimal={true} icon="eye-open">
+                        View Details
+                    </Button>
+                </Link>
+            </Card>
+        });
+
 
         return (
             <div>
-                <h1 className="t2-page-heading">
-                    Twister Dash
-                </h1>
                 <div className="t2-quick-view-charts">
+                    <div className="t2-quick-view-info-wrapper">
+                        <h4>Summary</h4>
+                        <div className="t2-quick-view-info-cards">
+                            {statCards}
+                        </div>
+                    </div>
                     <div className="t2-quick-view-chart-wrapper">
                         <h4 className="text-center">Workers</h4>
                         {this.state.workerChart.data.length > 0 ?
@@ -129,10 +229,16 @@ export default class DashboardHome extends React.Component {
                     </div>
                 </div>
                 <div>
-                    <h4>Pinned Jobs</h4>
-                    <div className="tw-dash-pinned-items-wrapper">
-                        {nodeCards}
-                        {nodeCards.length === 0 ? "No pinned jobs available!" : ""}
+                    <h4>Active Jobs</h4>
+                    <div className="">
+                        {activeJobCards}
+                        {activeJobCards.length === 0 ? "No active jobs available!" : ""}
+                    </div>
+
+                    <h4>Inactive Jobs</h4>
+                    <div className="">
+                        {inActiveJobCards}
+                        {inActiveJobCards.length === 0 ? "No inactive jobs available!" : ""}
                     </div>
                 </div>
             </div>

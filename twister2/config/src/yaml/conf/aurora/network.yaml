@@ -2,21 +2,27 @@ twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.DataFlowCommunication"
 
 # the buffer size to be used
 network.buffer.size: 1024000
+
 # number of send buffers to be used
 network.sendBuffer.count: 4
+
 # number of receive buffers to be used
 network.receiveBuffer.count: 4
+
 # channel pending messages
 network.channel.pending.size: 2048
+
 # the send pending messages
 network.send.pending.max: 4
 
 # group up to 8 ~ 16 messages
 network.partition.message.group.low_water_mark: 8
 # this is the max number of messages to group
+
 network.partition.message.group.high_water_mark: 16
 
 # the maximum amount of bytes kept in memory for operations that goes to disk
 shuffle.memory.bytes.max: 1024000
+
 # the maximum number of records kept in memory for operations that goes to dist
 shuffle.memory.records.max: 10240

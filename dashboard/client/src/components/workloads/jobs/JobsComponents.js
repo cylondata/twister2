@@ -1,16 +1,21 @@
 import React from "react";
 import JobCard from "./JobCard";
 import "./JobComponent.css";
-import NewJobCard from "./NewJobCard";
-import {JobService} from "../../../services/JobService";
+import JobService from "../../../services/JobService";
+import {Button, ControlGroup, HTMLSelect, InputGroup, Intent} from "@blueprintjs/core";
 
 export default class JobsComponents extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            jobs: []
-        }
+            searchResults: {},
+            searchKeyword: "",
+            searchStates: [],
+            currentResultsPage: 0
+        };
+
+        this.searchTimer = -1;
     }
 
     componentDidMount() {
@@ -18,42 +23,62 @@ export default class JobsComponents extends React.Component {
     }
 
     loadJobs = () => {
-        JobService.getAllJobs().then(jobsResponse => {
+        JobService.searchJobs(
+            this.state.searchStates, this.state.searchKeyword, this.state.currentResultsPage
+        ).then(jobsResponse => {
+            console.log(jobsResponse);
             this.setState({
-                jobs: jobsResponse.data
+                searchResults: jobsResponse.data
             })
         });
     };
 
+    invokeSearch = () => {
+        clearTimeout(this.searchTimer);
+        setTimeout(this.loadJobs, 500);
+    };
+
+    onKeywordChange = (event) => {
+        this.setState({
+            searchKeyword: event.target.value
+        }, this.invokeSearch);
+    };
+
+    onJobStateChange = (event) => {
+        let state = event.target.value;
+        let searchStates = [];
+        if (state !== "Any") {
+            searchStates.push(state.toUpperCase());
+        }
+        this.setState({
+            searchStates: searchStates
+        }, this.loadJobs)
+    };
+
     render() {
 
-        let nodeCards = [];
-        let nodeCards2 = [];
+        let jobCards = [];
 
-        this.state.jobs.forEach(job => {
-            if (job.state !== "COMPLETED") {
-                nodeCards.push(<JobCard key={job.jobID} job={job}/>)
-            } else {
-                nodeCards2.push(<JobCard key={job.jobID} job={job}/>)
-            }
+        (this.state.searchResults.content || []).forEach(job => {
+            jobCards.push(<JobCard key={job.jobID} job={job}/>)
         });
-        // for (let i = 0; i < 3; i++) {
-        //     nodeCards.push(<JobCard key={i}/>);
-        //     nodeCards2.push(<JobCard key={i} finished={true}/>);
-        // }
 
         return (
             <div>
-                <h1 className="t2-page-heading">Jobs</h1>
-                <h4>Running jobs</h4>
-                <div className="t2-nodes-container">
-                    {nodeCards}
-                    <NewJobCard/>
+                <div className="t2-jobs-header">
+                    <h1 className="t2-page-heading">Jobs</h1>
+                    <div>
+                        <Button icon="refresh" text="refresh" intent={Intent.NONE} onClick={this.loadJobs}/>
+                    </div>
                 </div>
-                <h4>Completed jobs</h4>
-                <div className="t2-nodes-container">
-                    {nodeCards2}
-                    {nodeCards2.length === 0 && "Non of the jobs have completed yet!"}
+                <ControlGroup fill={true} className="t2-jobs-search">
+                    <HTMLSelect
+                        onChange={this.onJobStateChange}
+                        options={["Any", "Starting", "Started", "Completed", "Failed", "Killed"]}/>
+                    <InputGroup placeholder="Find jobs..." onChange={this.onKeywordChange}/>
+                </ControlGroup>
+                <div className="t2-jobs-container">
+                    {jobCards}
                 </div>
             </div>
         );

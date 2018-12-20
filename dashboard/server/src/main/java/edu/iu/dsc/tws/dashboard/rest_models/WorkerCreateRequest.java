@@ -1,8 +1,8 @@
 package edu.iu.dsc.tws.dashboard.rest_models;
 
-import edu.iu.dsc.tws.dashboard.data_models.composite_ids.NodeId;
-
 import java.util.HashMap;
+
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.NodeId;
 
 public class WorkerCreateRequest {
 

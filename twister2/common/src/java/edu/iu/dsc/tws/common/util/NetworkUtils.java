@@ -56,7 +56,7 @@ public final class NetworkUtils {
 
       for (String portName : portNames) {
         ServerSocket socket = new ServerSocket(0);
-        socket.setReuseAddress(true);
+        socket.setReuseAddress(false);
         freePorts.put(portName, socket.getLocalPort());
         serverSockets.add(socket);
       }

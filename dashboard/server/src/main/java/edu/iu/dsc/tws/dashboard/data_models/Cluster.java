@@ -22,7 +22,8 @@ public class Cluster {
   @Column
   private String description;
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "cluster", orphanRemoval = true)
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,
+      mappedBy = "cluster", orphanRemoval = true)
   private Set<Node> nodes = new HashSet<>();
 
   public Set<Node> getNodes() {

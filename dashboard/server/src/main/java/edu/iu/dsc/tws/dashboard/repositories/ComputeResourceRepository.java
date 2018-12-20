@@ -1,14 +1,18 @@
 package edu.iu.dsc.tws.dashboard.repositories;
 
-import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
-import edu.iu.dsc.tws.dashboard.data_models.composite_ids.ComputeResourceId;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-public interface ComputeResourceRepository extends CrudRepository<ComputeResource, ComputeResourceId> {
+import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.ComputeResourceId;
+
+public interface ComputeResourceRepository
+    extends CrudRepository<ComputeResource, ComputeResourceId> {
 
   ComputeResource findDistinctByJob_JobIDAndIndex(String jobId, Integer index);
+
+  ComputeResource findDistinctByJob_JobIDAndScalable(String jobId, Boolean scalable);
 
   void deleteByJob_JobIDAndIndex(String jobId, Integer index);
 

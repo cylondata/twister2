@@ -36,9 +36,6 @@ public class ClusterService {
   /**
    * This util method creates a cluster for a given data center name.
    * Assumes data center names are unique. Will be removed when twister2 support clusters
-   *
-   * @param dataCenter
-   * @return
    */
   public Cluster createOrGetCluster(String dataCenter) {
     Optional<Cluster> byId = clusterRepository.findById(dataCenter);
@@ -48,7 +45,8 @@ public class ClusterService {
       Cluster cluster = new Cluster();
       cluster.setId(dataCenter);
       cluster.setName(dataCenter);
-      cluster.setDescription("This cluster was created automatically based on the data center name");
+      cluster.setDescription("This cluster was created automatically "
+          + "based on the data center name");
       return this.createCluster(cluster);
     }
   }

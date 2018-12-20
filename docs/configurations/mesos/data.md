@@ -32,3 +32,6 @@
 **twister2.hdfs.namenode**
 <table><tr><td>default</td><td>"hairy.soic.indiana.edu"</td><tr><td>description</td><td></td></table>
 
+**twister2.hdfs.namenode.port**
+<table><tr><td>default</td><td>"9000"</td><tr><td>description</td><td></td></table>
+
