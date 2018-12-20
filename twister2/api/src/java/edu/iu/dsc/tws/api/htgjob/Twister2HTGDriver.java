@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.common.driver.WorkerListener;
 import edu.iu.dsc.tws.master.driver.JMDriverAgent;
+import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -45,7 +46,8 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
 
   private void broadcast(IDriverMessenger messenger) {
 
-    LOG.info("Testing broadcasting  ............................. ");
+    LOG.info("Testing HTG Driver  ............................. ");
+
     try {
       LOG.info("Sleeping 5 seconds ....");
       Thread.sleep(5000);
@@ -53,6 +55,27 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
       e.printStackTrace();
     }
 
+    HTGJobAPI.ExecuteMessage executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
+        .setSubgraphName("sourcetaskgraph")
+        .build();
+
+
+    LOG.info("Broadcasting execute message: " + executeMessage);
+    messenger.broadcastToAllWorkers(executeMessage);
+
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
+        .setSubgraphName("sinktaskgraph")
+        .build();
+
+    LOG.info("Broadcasting execute message: " + executeMessage);
+    messenger.broadcastToAllWorkers(executeMessage);
     // construct an example protocol buffer message and broadcast it to all workers
     /*JobMasterAPI.NodeInfo nodeInfo =
         NodeInfoUtils.createNodeInfo("example.nodeIP", "rack-01", "dc-01");
@@ -88,27 +111,21 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
     //messenger.broadcastToAllWorkers(computeResource);
 
     messenger.broadcastToAllWorkers(executeMessage1);
+    HTGJobAPI.HTGJobCompletedMessage jobCompletedMessage = HTGJobAPI.HTGJobCompletedMessage
+        .newBuilder().setHtgJobname("htg").build();
+    LOG.info("Broadcasting job completed message: " + jobCompletedMessage);
+    messenger.broadcastToAllWorkers(jobCompletedMessage);
   }
 
   @Override
   public void workerMessageReceived(Any anyMessage, int senderID) {
-    if (anyMessage.is(JobMasterAPI.NodeInfo.class)) {
+    if (anyMessage.is(HTGJobAPI.ExecuteCompletedMessage.class)) {
       try {
-        JobMasterAPI.NodeInfo nodeInfo = anyMessage.unpack(JobMasterAPI.NodeInfo.class);
-        LOG.info("Received WorkerToDriver message from worker: " + senderID
-            + ". NodeInfo: " + nodeInfo);
-
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
-      }
-    } else if (anyMessage.is(JobAPI.ComputeResource.class)) {
-      try {
-        JobAPI.ComputeResource computeResource = anyMessage.unpack(JobAPI.ComputeResource.class);
-        LOG.info("Received WorkerToDriver message from worker: " + senderID
-            + ". ComputeResource: " + computeResource);
-
+        HTGJobAPI.ExecuteCompletedMessage msg =
+            anyMessage.unpack(HTGJobAPI.ExecuteCompletedMessage.class);
+        LOG.info("Received Executecompleted message from worker: " + senderID + ". msg: " + msg);
       } catch (InvalidProtocolBufferException e) {
-        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
+        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message", e);
       }
     }
   }

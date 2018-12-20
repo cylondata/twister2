@@ -199,6 +199,14 @@ public class HTGExample extends HTGTaskWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
+
+    config = Config.newBuilder()
+        .putAll(config)
+        .put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName())
+        .build();
+
+    LOG.info("$$$$$$$$$$$$$ CONFIG" + config);
+
     //TODO:Design the metagraph
     Twister2MetagraphBuilder twister2MetagraphBuilder = Twister2MetagraphBuilder.newBuilder(config);
     twister2MetagraphBuilder.addSource("sourcetaskgraph", config);

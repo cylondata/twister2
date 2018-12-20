@@ -120,7 +120,14 @@ public final class Twister2HTGSubmitter {
         .setConfig(jobConfig)
         .build();
 
-    //LOG.info("%%%%%%%%% HTG Job Instance:" + config.get("TWISTER2_HTG_JOB"));
+    for (String subgraphName : scheduleGraphs) {
+
+      //Set the subgraph to be executed from the metagraph
+      executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
+          .setSubgraphName(subgraphName)
+          .build();
+      executeMessageList.add(executeMessage);
+    }
 
     Twister2Submitter.submitJob(twister2Job, config);
   }
