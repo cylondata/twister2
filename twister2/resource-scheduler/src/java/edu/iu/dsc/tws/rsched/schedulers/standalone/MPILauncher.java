@@ -217,14 +217,29 @@ public class MPILauncher implements ILauncher {
         throw new RuntimeException(e);
       }
     }
+
+    final boolean[] start = {false};
     // now start the controller, which will get the resources and start
-    IController controller = new MPIController(true);
-    controller.initialize(config);
-    boolean start = controller.start(job);
+    Thread controllerThread = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        IController controller = new MPIController(true);
+        controller.initialize(config);
+        start[0] = controller.start(job);
+      }
+    });
+    controllerThread.start();
+
 
     // if the driver class is specified in the job, start it
     if (!job.getDriverClassName().isEmpty()) {
       startDriver(job);
+    }
+
+    // wait until the controller finishes
+    try {
+      controllerThread.join();
+    } catch (InterruptedException ignore) {
     }
 
     // now lets wait on client
@@ -236,10 +251,10 @@ public class MPILauncher implements ILauncher {
       }
     }
 
-    return start;
+    return start[0];
   }
 
-  private boolean startDriver(JobAPI.Job job) {
+  private void startDriver(JobAPI.Job job) {
     // first start JMDriverAgent
     String jobMasterIP = config.getStringValue("__job_master_ip__");
     int jmPort = config.getIntegerValue("__job_master_port__", 0);
@@ -265,8 +280,6 @@ public class MPILauncher implements ILauncher {
 
     driver.execute(config, scaler, driverMessenger);
     driverAgent.close();
-
-    return true;
   }
 
   /**
