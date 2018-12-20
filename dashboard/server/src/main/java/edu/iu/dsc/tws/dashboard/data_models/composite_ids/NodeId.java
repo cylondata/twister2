@@ -5,6 +5,8 @@ import java.util.Objects;
 
 public class NodeId implements Serializable {
 
+  private static final long serialVersionUID = 1L;
+
   private String ip;
   private String dataCenter;
   private String rack;
@@ -35,17 +37,20 @@ public class NodeId implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     NodeId nodeId = (NodeId) o;
-    return Objects.equals(ip, nodeId.ip) &&
-            Objects.equals(dataCenter, nodeId.dataCenter) &&
-            Objects.equals(rack, nodeId.rack);
+    return Objects.equals(ip, nodeId.ip)
+        && Objects.equals(dataCenter, nodeId.dataCenter)
+        && Objects.equals(rack, nodeId.rack);
   }
 
   @Override
   public int hashCode() {
-
     return Objects.hash(ip, dataCenter, rack);
   }
 }

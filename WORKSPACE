@@ -71,3 +71,27 @@ new_http_archive(
 load("//:t2_workspace_defs.bzl", "load_modules")
 
 load_modules()
+
+git_repository(
+    name = "build_bazel_rules_nodejs",
+    remote = "https://github.com/bazelbuild/rules_nodejs.git",
+    tag = "0.16.4",  # check for the latest tag when you install
+)
+
+load("@build_bazel_rules_nodejs//:package.bzl", "rules_nodejs_dependencies")
+
+rules_nodejs_dependencies()
+
+load("@build_bazel_rules_nodejs//:defs.bzl", "node_repositories")
+
+node_repositories(package_json = ["//dashboard/client:package.json"])
+
+load("@build_bazel_rules_nodejs//:defs.bzl", "npm_install")
+
+npm_install(
+    name = "npm",
+    package_json = "//dashboard/client:package.json",
+    package_lock_json = "//dashboard/client:package-lock.json",
+)
+
+load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")

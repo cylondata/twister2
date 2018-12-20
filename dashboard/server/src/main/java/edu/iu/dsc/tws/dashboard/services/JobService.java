@@ -11,11 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.services;
 
-import edu.iu.dsc.tws.dashboard.data_models.Job;
-import edu.iu.dsc.tws.dashboard.data_models.JobState;
-import edu.iu.dsc.tws.dashboard.data_models.Node;
-import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
-import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import javax.persistence.EntityNotFoundException;
+
+import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
+import edu.iu.dsc.tws.dashboard.rest_models.ScaleWorkersRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,11 +27,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import edu.iu.dsc.tws.dashboard.data_models.Job;
+import edu.iu.dsc.tws.dashboard.data_models.JobState;
+import edu.iu.dsc.tws.dashboard.data_models.Node;
+import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
+import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 
 @Service
 public class JobService {
@@ -35,6 +39,9 @@ public class JobService {
   private final JobRepository jobRepository;
 
   private final NodeService nodeService;
+
+  @Autowired
+  private ComputeResourceService computeResourceService;
 
   @Autowired
   public JobService(JobRepository jobRepository, NodeService nodeService) {
@@ -90,6 +97,17 @@ public class JobService {
     if (changeJobState == 0) {
       throw new EntityNotFoundException("No Job found with ID " + jobId);
     }
+  }
+
+  @Transactional
+  public void scale(String jobId, ScaleWorkersRequest scaleWorkersRequest){
+    ComputeResource cr = this.computeResourceService
+            .getScalableComputeResourceForJob(jobId);
+
+    cr.setInstances(cr.getInstances()+scaleWorkersRequest.getChange());
+    this.computeResourceService.save(cr);
+
+    this.jobRepository.changeNumberOfWorkers(jobId,scaleWorkersRequest.getNumberOfWorkers());
   }
 
   @Transactional

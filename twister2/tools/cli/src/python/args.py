@@ -201,3 +201,15 @@ def add_dry_run(parser):
              'Ignored when dry-run mode is not enabled' % ('|'.join(resp_formats), default_format))
 
     return parser
+
+def add_port(parser):
+    '''
+    :param parser:
+    :return:
+    '''
+    parser.add_argument(
+        '--port',
+        metavar='PORT',
+        default=8080,
+        help='Port to start dashboard server')
+    return parser

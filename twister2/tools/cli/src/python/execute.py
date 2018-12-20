@@ -105,4 +105,15 @@ def twister2_tar(class_name, topology_tar, arguments, tmpdir_root, java_defines)
     # Now execute the class
     return twister2_class(class_name, lib_jars, extra_jars, arguments, java_defines)
 
+def twister2_jar(jar_path, args=None):
+    if args is None:
+        args = []
 
+    all_args = [config.get_java_path(), "-jar", jar_path]
+
+    all_args += list(args)
+
+    proc = subprocess.Popen(all_args,  stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, bufsize=1)
+
+    return ProcessResult(proc)

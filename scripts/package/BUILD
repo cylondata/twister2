@@ -31,6 +31,7 @@ load("//tools:rules/twister2_core.bzl", "twister2_core_lib_data_files")
 load("//tools:rules/twister2_core.bzl", "twister2_core_lib_executor_files")
 load("//tools:rules/twister2_core.bzl", "twister2_core_lib_data_lmdb_files")
 load("//tools:rules/twister2_core.bzl", "twister2_harp_integration_files")
+load("//tools:rules/twister2_core.bzl", "twister2_dashboard_files")
 load("//tools:rules/twister2_master.bzl", "twister2_master_lib_files")
 load("//tools:rules/twister2_master.bzl", "twister2_master_jersey_files")
 load(":pack_functions.bzl", "pack_tw2")
@@ -241,6 +242,7 @@ pack_tw2(
         ":twister2-conf-slurm",
         ":twister2-conf-standalone",
         ":twister2-core-lib-executor",
+        ":twister2-dashboard",
         ":twister2-dist",
         ":twister2-examples",
         ":twister2-harp-libs",
@@ -274,6 +276,7 @@ pack_tw2(
         ":twister2-conf-slurm",
         ":twister2-conf-standalone",
         ":twister2-core-lib-executor",
+        ":twister2-dashboard",
         ":twister2-dist",
         ":twister2-examples",
         ":twister2-harp-libs",
@@ -445,6 +448,13 @@ pack_tw2(
 pack_tw2(
     name = "twister2-harp-libs",
     srcs = twister2_harp_integration_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-dashboard",
+    srcs = twister2_dashboard_files(),
     package_dir = "lib",
     version = T2_VERSION,
 )

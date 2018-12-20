@@ -1,29 +1,32 @@
 package edu.iu.dsc.tws.dashboard.controllers;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
-import edu.iu.dsc.tws.dashboard.data_models.JobState;
-import edu.iu.dsc.tws.dashboard.rest_models.ComputeResourceScaleRequest;
-import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
-import edu.iu.dsc.tws.dashboard.services.ComputeResourceService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
 import edu.iu.dsc.tws.dashboard.data_models.Job;
+import edu.iu.dsc.tws.dashboard.data_models.JobState;
 import edu.iu.dsc.tws.dashboard.data_models.Worker;
+import edu.iu.dsc.tws.dashboard.rest_models.ScaleWorkersRequest;
+import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
+import edu.iu.dsc.tws.dashboard.services.ComputeResourceService;
 import edu.iu.dsc.tws.dashboard.services.JobService;
 import edu.iu.dsc.tws.dashboard.services.WorkerService;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("jobs")
@@ -38,7 +41,8 @@ public class JobController {
   private final ComputeResourceService computeResourceService;
 
   @Autowired
-  public JobController(JobService jobService, WorkerService workerService, ComputeResourceService computeResourceService) {
+  public JobController(JobService jobService, WorkerService workerService,
+                       ComputeResourceService computeResourceService) {
     this.jobService = jobService;
     this.workerService = workerService;
     this.computeResourceService = computeResourceService;
@@ -55,8 +59,8 @@ public class JobController {
                           @RequestParam(value = "keyword", defaultValue = "") String keyword,
                           @RequestParam(value = "states", defaultValue = "") String states) {
     List<JobState> jobStateList = Arrays.stream(states.split(","))
-            .filter(state -> !StringUtils.isEmpty(state))
-            .map(JobState::valueOf).collect(Collectors.toList());
+        .filter(state -> !StringUtils.isEmpty(state))
+        .map(JobState::valueOf).collect(Collectors.toList());
 
     if (jobStateList.isEmpty()) {
       jobStateList = Arrays.asList(JobState.values());
@@ -64,14 +68,14 @@ public class JobController {
 
     LOG.debug("Searching jobs. States :{} , Keyword : {}, Page : {}", jobStateList, keyword, page);
     return this.jobService.searchJobs(
-            jobStateList,
-            keyword,
-            page
+        jobStateList,
+        keyword,
+        page
     );
   }
 
   @RequestMapping(value = "/", method = RequestMethod.POST,
-          consumes = MediaType.APPLICATION_JSON_VALUE)
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   public Job createJob(@RequestBody Job jobCreateRequest) {
     LOG.debug("Job persistent request received. {}", jobCreateRequest);
     return this.jobService.createJob(jobCreateRequest);
@@ -96,7 +100,7 @@ public class JobController {
 //  }
 
   @RequestMapping(value = "/{jobId}/state/", method = RequestMethod.POST,
-          consumes = MediaType.APPLICATION_JSON_VALUE)
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   public void changeState(@PathVariable String jobId,
                           @RequestBody StateChangeRequest<JobState> stateChangeRequest) {
     LOG.debug("Changing state of the job {} to {}", jobId, stateChangeRequest.getState());
@@ -104,18 +108,18 @@ public class JobController {
   }
 
   @RequestMapping(value = "/{jobId}/computeResources/", method = RequestMethod.POST,
-          consumes = MediaType.APPLICATION_JSON_VALUE)
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   public ComputeResource createComputeResource(@PathVariable String jobId,
                                                @RequestBody ComputeResource computeResource) {
     return computeResourceService.save(jobId, computeResource);
   }
 
-  @RequestMapping(value = "/{jobId}/computeResources/{index}/scale/", method = RequestMethod.POST,
-          consumes = MediaType.APPLICATION_JSON_VALUE)
-  public void createComputeResource(@PathVariable String jobId,
-                                    @PathVariable Integer index,
-                                    @RequestBody ComputeResourceScaleRequest computeResourceScaleRequest) {
-    computeResourceService.scale(jobId, index, computeResourceScaleRequest);
+  @RequestMapping(value = "/{jobId}/scale/", method = RequestMethod.POST,
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  public void createComputeResource(
+      @PathVariable String jobId,
+      @RequestBody ScaleWorkersRequest scaleWorkersRequest) {
+    jobService.scale(jobId, scaleWorkersRequest);
   }
 
   @RequestMapping(value = "/{jobId}/computeResources/{index}", method = RequestMethod.DELETE)

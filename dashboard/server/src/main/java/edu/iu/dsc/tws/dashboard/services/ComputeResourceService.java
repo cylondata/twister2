@@ -1,16 +1,18 @@
 package edu.iu.dsc.tws.dashboard.services;
 
-import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
-import edu.iu.dsc.tws.dashboard.data_models.Job;
-import edu.iu.dsc.tws.dashboard.data_models.composite_ids.ComputeResourceId;
-import edu.iu.dsc.tws.dashboard.repositories.ComputeResourceRepository;
-import edu.iu.dsc.tws.dashboard.rest_models.ComputeResourceScaleRequest;
+import java.util.Optional;
+
+import javax.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.Optional;
+import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
+import edu.iu.dsc.tws.dashboard.data_models.Job;
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.ComputeResourceId;
+import edu.iu.dsc.tws.dashboard.repositories.ComputeResourceRepository;
+import edu.iu.dsc.tws.dashboard.rest_models.ScaleWorkersRequest;
 
 @Service
 public class ComputeResourceService {
@@ -21,7 +23,7 @@ public class ComputeResourceService {
 
   @Autowired
   public ComputeResourceService(
-          ComputeResourceRepository computeResourceRepository, JobService jobService) {
+      ComputeResourceRepository computeResourceRepository, JobService jobService) {
     this.computeResourceRepository = computeResourceRepository;
     this.jobService = jobService;
   }
@@ -32,30 +34,34 @@ public class ComputeResourceService {
     return computeResourceRepository.save(computeResource);
   }
 
+  public ComputeResource save(ComputeResource computeResource){
+    return computeResourceRepository.save(computeResource);
+  }
+
   public ComputeResource findById(ComputeResourceId computeResourceId) {
     Optional<ComputeResource> byId = computeResourceRepository.findById(
-            computeResourceId
+        computeResourceId
     );
     if (byId.isPresent()) {
       return byId.get();
     }
     this.throwNoSuchComputeResourceException(
-            computeResourceId.getJob(),
-            computeResourceId.getIndex()
+        computeResourceId.getJob(),
+        computeResourceId.getIndex()
     );
     return null;
   }
 
   public ComputeResource findById(String jobId, Integer index) {
     return this.findById(
-            this.createComputerResourceId(jobId, index)
+        this.createComputerResourceId(jobId, index)
     );
   }
 
   @Transactional
   public void delete(String jobId, Integer index) {
     computeResourceRepository.deleteById(
-            this.createComputerResourceId(jobId, index)
+        this.createComputerResourceId(jobId, index)
     );
   }
 
@@ -66,16 +72,24 @@ public class ComputeResourceService {
     return computeResourceId;
   }
 
-  @Transactional
-  public void scale(String jobId, Integer index, ComputeResourceScaleRequest computeResourceScaleRequest) {
-    int scaledAmount = this.computeResourceRepository.scale(jobId, index, computeResourceScaleRequest.getInstances());
-    if (scaledAmount == 0) {
-      this.throwNoSuchComputeResourceException(jobId, index);
-    }
+  public ComputeResource getScalableComputeResourceForJob(String job){
+    return this.computeResourceRepository
+            .findDistinctByJob_JobIDAndScalable(job,true);
   }
+
+//  @Transactional
+//  public void scale(String jobId, Integer index,
+//                    ScaleWorkersRequest scaleWorkersRequest) {
+//    int scaledAmount = this.computeResourceRepository.scale(
+//        jobId, index, scaleWorkersRequest.getInstances()
+//    );
+//    if (scaledAmount == 0) {
+//      this.throwNoSuchComputeResourceException(jobId, index);
+//    }
+//  }
 
   private void throwNoSuchComputeResourceException(String jobId, Integer index) {
     throw new EntityNotFoundException("No such compute resource defined with id"
-            + index + " for job " + jobId);
+        + index + " for job " + jobId);
   }
 }
