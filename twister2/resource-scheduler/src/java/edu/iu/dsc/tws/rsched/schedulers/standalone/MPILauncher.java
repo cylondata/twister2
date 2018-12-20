@@ -210,7 +210,7 @@ public class MPILauncher implements ILauncher {
             "default", "default");
         jobMaster =
             new JobMaster(config, hostAddress, port, new NomadTerminator(), job, jobMasterNodeInfo);
-        jobMaster.addShutdownHook();
+        jobMaster.addShutdownHook(true);
         jmThread = jobMaster.startJobMasterThreaded();
       } catch (UnknownHostException e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
