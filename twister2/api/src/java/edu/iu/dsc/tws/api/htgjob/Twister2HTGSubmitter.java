@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 
@@ -43,6 +44,8 @@ public final class Twister2HTGSubmitter {
   private JobMaster jobMaster;
 
   private List<HTGJobAPI.ExecuteMessage> executeMessageList = new LinkedList<>();
+
+  private static final KryoSerializer KRYO_SERIALIZER = new KryoSerializer();
 
   public Twister2HTGSubmitter(Config cfg) {
     this.config = cfg;
@@ -89,7 +92,7 @@ public final class Twister2HTGSubmitter {
 
     subGraph = twister2Metagraph.getMetaGraphMap(subGraphName);
 
-    jobConfig.put("HTGJobObject", htgJob);
+    jobConfig.put("HTGJobObject", KRYO_SERIALIZER.serialize(htgJob));
 
     //Setting the first graph resource requirements.
     twister2Job = Twister2Job.newBuilder()

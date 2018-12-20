@@ -63,6 +63,10 @@ public class HTGTaskExecutor extends TaskExecutor implements DriverListener {
 
         // get the subgraph from the map
         taskGraph = dataFlowTaskGraphMap.get(subGraph);
+        if (taskGraph == null) {
+          LOG.severe("Unable to find the subgraph " + subGraph);
+          return false;
+        }
         // use the taskexecutor to create the execution plan
         executionPlan = this.plan(taskGraph);
         // reuse the task executor execute
