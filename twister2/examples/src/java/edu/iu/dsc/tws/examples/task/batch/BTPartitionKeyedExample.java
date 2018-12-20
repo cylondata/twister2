@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -41,11 +40,6 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
     //keyed partition not implemented yet
-  }
-
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
   }
 
   protected static class KeyedPartitionSinkTask extends BaseSink {

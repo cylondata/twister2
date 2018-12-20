@@ -19,7 +19,6 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -27,7 +26,6 @@ import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class BasicMesosWorker implements IWorker {
 
@@ -50,11 +48,6 @@ public class BasicMesosWorker implements IWorker {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-
-  }
-
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
 
   }
 

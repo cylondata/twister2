@@ -214,7 +214,6 @@ public final class K8sWorkerStarter {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
 
-    jmWorkerAgent.addIWorker(worker);
     worker.execute(config, workerID, jmWorkerAgent.getJMWorkerController(), pv, volatileVolume);
   }
 

@@ -39,7 +39,6 @@ import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowAllGather;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -107,11 +106,6 @@ public class AllGatherCommunication implements IWorker {
       allAggregate.progress();
       Thread.yield();
     }
-  }
-
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
   }
 
   /**

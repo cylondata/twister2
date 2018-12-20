@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.tset;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskWorker;
@@ -23,7 +22,6 @@ import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 /**
@@ -56,11 +54,6 @@ public class BaseTSetWorker extends TaskWorker implements Serializable {
       experimentData.setOperationMode(OperationMode.BATCH);
       experimentData.setIterations(jobParameters.getIterations());
     }
-  }
-
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
   }
 
   public static class BaseSource implements Source<int[]> {

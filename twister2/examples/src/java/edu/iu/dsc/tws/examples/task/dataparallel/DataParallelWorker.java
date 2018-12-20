@@ -12,14 +12,12 @@
 package edu.iu.dsc.tws.examples.task.dataparallel;
 
 import java.io.IOException;
-import java.util.List;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -56,8 +54,4 @@ public class DataParallelWorker extends TaskWorker {
     taskExecutor.execute(dataFlowTaskGraph, plan);
   }
 
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
-  }
 }

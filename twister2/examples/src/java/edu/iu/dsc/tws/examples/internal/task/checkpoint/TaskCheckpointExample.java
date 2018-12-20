@@ -116,11 +116,6 @@ public class TaskCheckpointExample implements IWorker {
     executor.execute();
   }
 
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
-  }
-
   private static class GeneratorCheckpointTask extends SourceTask {
     private static final long serialVersionUID = -254264903510284848L;
     private TaskContext ctx;

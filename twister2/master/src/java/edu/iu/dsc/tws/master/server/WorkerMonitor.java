@@ -534,6 +534,8 @@ public class WorkerMonitor implements MessageHandler {
    */
   private void sendWorkersJoinedMessage() {
 
+    LOG.info("Sending WorkersJoined messages ...");
+
     // first construct the message
     JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder()
         .setNumberOfWorkers(numberOfWorkers);

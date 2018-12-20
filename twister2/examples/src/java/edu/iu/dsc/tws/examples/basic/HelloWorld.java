@@ -68,11 +68,6 @@ public class HelloWorld implements IWorker {
 
   }
 
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
-  }
-
   public static void main(String[] args) {
     // lets take number of workers as an command line argument
     int numberOfWorkers = 4;

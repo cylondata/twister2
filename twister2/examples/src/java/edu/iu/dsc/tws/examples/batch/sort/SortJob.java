@@ -94,11 +94,6 @@ public class SortJob implements IWorker {
     progress();
   }
 
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
-  }
-
   private void setupTasks() {
     sources = new HashSet<>();
     for (int i = 0; i < NO_OF_TASKS; i++) {

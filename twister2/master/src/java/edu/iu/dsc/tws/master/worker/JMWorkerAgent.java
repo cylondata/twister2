@@ -29,8 +29,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
-import edu.iu.dsc.tws.common.worker.DriverListener;
-import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.common.worker.JobListener;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
@@ -85,14 +84,10 @@ public final class JMWorkerAgent {
   private boolean connectionRefused = false;
 
   /**
-   * workers can register a driverListener to receive messages from the driver
+   * workers can register a jobListener to receive messages from the driver and the job master
    */
-  private DriverListener driverListener;
+  private JobListener jobListener;
 
-  /**
-   * IWorker will get events from the JobMaster
-   */
-  private IWorker worker;
 
   private static JMWorkerAgent workerAgent;
 
@@ -367,31 +362,17 @@ public final class JMWorkerAgent {
   }
 
   /**
-   * only one DriverListener can be added
-   * if the second driver listener tried to be added, false returned
-   * @param driverListener
+   * only one JobListener can be added
+   * if the second JobListener tried to be added, false returned
+   * @param jobListener
    * @return
    */
-  public static boolean addDriverListener(DriverListener driverListener) {
-    if (workerAgent.driverListener != null) {
+  public static boolean addJobListener(JobListener jobListener) {
+    if (workerAgent.jobListener != null) {
       return false;
     }
 
-    workerAgent.driverListener = driverListener;
-    return true;
-  }
-
-  /**
-   * only one IWorker can be added
-   * if the second worker tried to be added, false returned
-   * @return
-   */
-  public boolean addIWorker(IWorker iWorker) {
-    if (worker != null) {
-      return false;
-    }
-
-    this.worker = iWorker;
+    workerAgent.jobListener = jobListener;
     return true;
   }
 
@@ -522,22 +503,22 @@ public final class JMWorkerAgent {
         LOG.info("Received WorkersScaled message from the master. \n" + message);
 
         JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
-        if (driverListener != null) {
+        if (jobListener != null) {
           if (scaledMessage.getChange() > 0) {
-            driverListener.workersScaledUp(scaledMessage.getChange());
+            jobListener.workersScaledUp(scaledMessage.getChange());
           } else if (scaledMessage.getChange() < 0) {
-            driverListener.workersScaledDown(0 - scaledMessage.getChange());
+            jobListener.workersScaledDown(0 - scaledMessage.getChange());
           }
         }
 
       } else if (message instanceof JobMasterAPI.Broadcast) {
         LOG.fine("Received Broadcast message from the master. \n" + message);
 
-        if (driverListener != null) {
+        if (jobListener != null) {
           JobMasterAPI.Broadcast broadcast = (JobMasterAPI.Broadcast) message;
           try {
             Any any = Any.parseFrom(broadcast.getData());
-            driverListener.broadcastReceived(any);
+            jobListener.broadcastReceived(any);
           } catch (InvalidProtocolBufferException e) {
             LOG.log(Level.SEVERE, "Can not parse received protocol buffer message to Any", e);
           }
@@ -547,9 +528,9 @@ public final class JMWorkerAgent {
       } else if (message instanceof JobMasterAPI.WorkersJoined) {
         LOG.fine("Received WorkersJoined message from the master. \n" + message);
 
-        if (worker != null) {
+        if (jobListener != null) {
           JobMasterAPI.WorkersJoined joinedMessage = (JobMasterAPI.WorkersJoined) message;
-          worker.allWorkersJoined(joinedMessage.getWorkerList());
+          jobListener.allWorkersJoined(joinedMessage.getWorkerList());
         }
       } else {
         LOG.warning("Received message unrecognized. \n" + message);

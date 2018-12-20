@@ -36,16 +36,16 @@ import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
-import edu.iu.dsc.tws.common.worker.DriverListener;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
+import edu.iu.dsc.tws.common.worker.JobListener;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
-public class BasicK8sWorker implements IWorker, DriverListener {
+public class BasicK8sWorker implements IWorker, JobListener {
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
 
   @Override
@@ -55,7 +55,7 @@ public class BasicK8sWorker implements IWorker, DriverListener {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    JMWorkerAgent.addDriverListener(this);
+    JMWorkerAgent.addJobListener(this);
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
     if (volatileVolume != null) {
@@ -93,7 +93,6 @@ public class BasicK8sWorker implements IWorker, DriverListener {
     echoServer(workerController.getWorkerInfo());
   }
 
-  @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
     LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
   }

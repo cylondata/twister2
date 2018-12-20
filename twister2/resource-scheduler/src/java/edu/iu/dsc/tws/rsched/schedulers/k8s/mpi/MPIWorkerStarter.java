@@ -204,7 +204,6 @@ public final class MPIWorkerStarter {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
 
-    jmWorkerAgent.addIWorker(worker);
     worker.execute(config, workerID, jmWorkerAgent.getJMWorkerController(), pv, volatileVolume);
   }
 

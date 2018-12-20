@@ -32,7 +32,6 @@ import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -63,11 +62,6 @@ public class WordCountTaskJob extends TaskWorker {
     ExecutionPlan plan = taskExecutor.plan(graph);
     // this is a blocking call
     taskExecutor.execute(graph, plan);
-  }
-
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
   }
 
   private static class WordSource extends BaseSource {

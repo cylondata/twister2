@@ -91,11 +91,6 @@ public class TaskBarrierExample implements IWorker {
 
   }
 
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
-  }
-
   private static class GeneratorBarrierTask extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
     private long id = 5555;

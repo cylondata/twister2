@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
-import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
@@ -21,7 +20,6 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public class TSetReduceExample extends BaseTSetWorker {
@@ -71,8 +69,4 @@ public class TSetReduceExample extends BaseTSetWorker {
     taskExecutor.execute(graph, executionPlan);
   }
 
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
-  }
 }

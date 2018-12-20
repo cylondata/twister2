@@ -34,7 +34,6 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class GatherTestCommunication implements IWorker {
   private static final Logger LOG = Logger.
@@ -100,11 +99,6 @@ public class GatherTestCommunication implements IWorker {
         t.printStackTrace();
       }
     }
-  }
-
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
   }
 
   /**

@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.BaseCompute;
@@ -59,11 +58,6 @@ public class MultiStageGraph extends TaskWorker {
 
     DataFlowTaskGraph graph = builder.build();
     TaskUtils.execute(config, workerId, graph, workerController);
-  }
-
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
   }
 
   private static class GeneratorTask extends BaseSource {

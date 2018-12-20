@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.harp;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -23,7 +22,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.harp.collective.BcastCollective;
 import edu.iu.harp.combiner.ByteArrCombiner;
@@ -94,8 +92,4 @@ public class HelloHarp extends HarpWorker {
     Twister2Submitter.submitJob(twister2Job, config);
   }
 
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
-  }
 }

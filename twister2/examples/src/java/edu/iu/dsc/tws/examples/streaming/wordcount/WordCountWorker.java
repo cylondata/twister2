@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.streaming.wordcount;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,7 +32,6 @@ import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.op.stream.SKeyedReduce;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class WordCountWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
@@ -74,11 +72,6 @@ public class WordCountWorker implements IWorker {
 
     scheduleTasks();
     progress();
-  }
-
-  @Override
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
   }
 
   private void setupTasks(IWorkerController workerController) {
