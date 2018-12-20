@@ -365,7 +365,7 @@ public final class MPIWorker {
       JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
       JobMaster jobMaster =
           new JobMaster(cfg, hostAddress, port, new NomadTerminator(), job, jobMasterNodeInfo);
-      jobMaster.addShutdownHook();
+      jobMaster.addShutdownHook(false);
       Thread jmThread = jobMaster.startJobMasterThreaded();
 
       try {
