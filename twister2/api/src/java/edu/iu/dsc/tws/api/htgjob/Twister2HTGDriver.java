@@ -22,12 +22,8 @@ import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.common.driver.WorkerListener;
-import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
-import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.master.driver.JMDriverAgent;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class Twister2HTGDriver implements IDriver, WorkerListener {
 
@@ -83,7 +79,8 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
       e.printStackTrace();
     }
 
-    HTGJobAPI.HTGJobCompletedMessage jobCompletedMessage = HTGJobAPI.HTGJobCompletedMessage.newBuilder().build();
+    HTGJobAPI.HTGJobCompletedMessage jobCompletedMessage = HTGJobAPI.HTGJobCompletedMessage
+        .newBuilder().setHtgJobname("htg").build();
     LOG.info("Broadcasting job completed message: " + jobCompletedMessage);
     messenger.broadcastToAllWorkers(jobCompletedMessage);
   }

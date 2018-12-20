@@ -23,6 +23,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.htgjob.Twister2HTGDriver;
 import edu.iu.dsc.tws.api.htgjob.Twister2HTGSubmitter;
 import edu.iu.dsc.tws.api.htgjob.Twister2MetagraphBuilder;
 import edu.iu.dsc.tws.api.htgjob.Twister2MetagraphConnection;
@@ -195,6 +196,14 @@ public class HTGExample extends HTGTaskWorker {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
+
+
+    config = Config.newBuilder()
+        .putAll(config)
+        .put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName())
+        .build();
+
+    LOG.info("$$$$$$$$$$$$$ CONFIG" + config);
 
     //TODO:Design the metagraph
     Twister2MetagraphBuilder twister2MetagraphBuilder = Twister2MetagraphBuilder.newBuilder(config);
