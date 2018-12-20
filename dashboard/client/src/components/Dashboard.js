@@ -21,6 +21,7 @@ import DashboardHome from "./DashboardHome";
 import NewJobCreateComponent from "./workloads/jobs/NewJobCreateComponent";
 import WorkerComponents from "./grid/workers/WorkerComponents";
 import WorkerInfoComponent from "./grid/workers/WorkerInfoComponent";
+import JobInfoComponent from "./workloads/jobs/JobInfoComponent";
 
 const MENU_NODES = 1;
 const MENU_CLUSTERS = 2;
@@ -126,9 +127,10 @@ export default class Dashboard extends React.Component {
                             <Route exact path='/nodes' component={NodesComponent}/>
                             <Route exact path='/clusters' component={ClustersComponents}/>
                             <Route exact path='/jobs' component={JobsComponents}/>
+                            <Route exact path='/jobs/:jobId' component={JobInfoComponent}/>
                             <Route exact path='/newjob' component={NewJobCreateComponent}/>
                             <Route exact path='/workers' component={WorkerComponents}/>
-                            <Route exact path='/workers/:workerId' component={WorkerInfoComponent}/>
+                            <Route exact path='/jobs/:jobId/:workerId' component={WorkerInfoComponent}/>
                         </Switch>
                     </div>
                 </div>

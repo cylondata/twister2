@@ -1,12 +1,13 @@
 import React from "react";
-import {Button, Card, Elevation, Icon, Intent, Position, Tag, Tooltip, Collapse} from "@blueprintjs/core";
+import {Button, Card, Collapse, Elevation, Icon, Intent, Position, Tag, Tooltip} from "@blueprintjs/core";
 import "./JobCard.css";
 import JobService from "../../../services/JobService";
 import {DashToaster} from "../../Dashboard";
 import ClusterTag from "../../grid/clusters/ClusterTag";
 import NodeTag from "../../grid/nodes/NodeTag";
-import WorkerTag from "../../grid/workers/WorkerTag";
 import {ComputeResourceCard} from "../../grid/compute-resource/ComputeResourceCard";
+import {Link} from "react-router-dom";
+import {JobUtils} from "./JobUtils";
 
 export default class JobCard extends React.Component {
 
@@ -15,7 +16,7 @@ export default class JobCard extends React.Component {
         this.state = {
             job: this.props.job,
             syncing: false,
-            stateIntent: this.getStateIntent(this.props.job.state),
+            stateIntent: JobUtils.getStateIntent(this.props.job.state),
             infoOpen: false
         };
     }
@@ -29,7 +30,7 @@ export default class JobCard extends React.Component {
             this.setState({
                 job: respone.data,
                 syncing: false,
-                stateIntent: this.getStateIntent(respone.data.state)
+                stateIntent: JobUtils.getStateIntent(respone.data.state)
             });
             DashToaster.show({
                 message: "Successfully synced Job: " + this.state.job.jobID,
@@ -59,7 +60,8 @@ export default class JobCard extends React.Component {
         }
     };
 
-    toggleInfo = () => {
+    toggleInfo = (event) => {
+        event.stopPropagation();
         this.setState({
             infoOpen: !this.state.infoOpen
         })
@@ -77,11 +79,14 @@ export default class JobCard extends React.Component {
                     <div className="tw-job-row-icon">
                         <Icon icon="new-grid-item" iconSize={18} className="tw-row-icon"/>
                     </div>
-                    <div className="tw-table-row-left">
-                        <div className="tw-job-row-name">
-                            {this.state.job.jobName}
+
+                    <Link to={`jobs/${this.state.job.jobID}`}>
+                        <div className="tw-table-row-left">
+                            <div className="tw-job-row-name">
+                                {this.state.job.jobName}
+                            </div>
                         </div>
-                    </div>
+                    </Link>
                     <div className="tw-table-row-right">
                         {/*<NodeTag node={this.state.job.node}/>*/}
                         <Tooltip content="Job ID" position={Position.TOP}>
@@ -96,13 +101,16 @@ export default class JobCard extends React.Component {
 
                         <Tag intent={this.state.stateIntent}
                              className="tw-job-row-status-tag">{this.state.job.state}</Tag>
-                        <Button rightIcon="caret-down" text="" small={true} minimal={true} onClick={this.toggleInfo}/>
+                        <Button rightIcon="refresh" text="" small={true} minimal={true} onClick={this.syncJob}/>
+                        <Button rightIcon="caret-down" text="" small={true} minimal={true}
+                                onClick={this.toggleInfo}/>
 
                     </div>
                 </div>
                 <div className="tw-job-row-info">
                     <Collapse isOpen={this.state.infoOpen} keepChildrenMounted={true}>
-                        <table className=" bp3-html-table bp3-html-table-striped bp3-html-table-condensed" width="100%">
+                        <table className=" bp3-html-table bp3-html-table-striped bp3-html-table-condensed"
+                               width="100%">
                             <tbody>
                             <tr>
                                 <td>
@@ -174,19 +182,6 @@ export default class JobCard extends React.Component {
                         </table>
                     </Collapse>
                 </div>
-                {/*<div className=" tw-node-info-wrapper">*/}
-
-                {/*<div className=" tw-node-actions">*/}
-                {/*/!*{this.props.finished &&*!/*/}
-                {/*/!*<Button icon=" play">Start</Button>}*!/*/}
-                {/*/!*{!this.props.finished &&*!/*/}
-                {/*/!*<Button icon=" stop">Stop</Button>}*!/*/}
-                {/*<Button icon=" refresh" loading={this.state.syncing} onClick={this.syncJob}>*/}
-                {/*Sync*/}
-                {/*</Button>*/}
-                {/*/!*<Button icon=" ninja">Tasks</Button>*!/*/}
-                {/*</div>*/}
-                {/*</div>*/}
             </Card>
         )
     }
