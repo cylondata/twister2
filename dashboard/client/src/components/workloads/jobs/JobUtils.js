@@ -9,6 +9,8 @@ export class JobUtils {
                 return Intent.SUCCESS;
             case "FAILED":
                 return Intent.DANGER;
+            case "KILLED":
+                return Intent.DANGER;
             default:
                 return Intent.NONE;
         }

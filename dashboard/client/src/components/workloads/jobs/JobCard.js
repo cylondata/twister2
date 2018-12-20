@@ -174,7 +174,7 @@ export default class JobCard extends React.Component {
                                 </td>
                                 <td>
                                     {this.state.job.computeResources.map(cr => {
-                                        return <ComputeResourceCard cr={cr} index={cr.index}/>
+                                        return <ComputeResourceCard cr={cr} key={cr.index}/>
                                     })}
                                 </td>
                             </tr>

@@ -35,7 +35,7 @@ export default class JobService {
         );
     }
 
-    static searchJobs(states = Object.keys(JOB_STATE), keyword = "", page = 0) {
+    static searchJobs(states = [], keyword = "", page = 0) {
         return axios.get(
             RestService.buildURL(`jobs/search?keyword=${keyword}&page=${page}&states=${states.join(",")}`, false)
         );

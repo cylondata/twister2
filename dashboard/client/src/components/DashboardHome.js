@@ -36,7 +36,7 @@ const ELEMENT_STAT_PROPERTIES = {
         title: "Workers",
         icon: "ninja",
         url: "/jobs",
-        color: "#00897B"
+        color: "#004D40"
     },
     nodes: {
         title: "Nodes",
@@ -153,7 +153,7 @@ export default class DashboardHome extends React.Component {
             this.updateActiveJobs();
             this.updateInActiveJobs();
             this.updateElementStats();
-        }, 5000);
+        }, 10000);
     }
 
     componentWillUnmount() {

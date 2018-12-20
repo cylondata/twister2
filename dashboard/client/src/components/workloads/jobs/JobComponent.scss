@@ -6,6 +6,16 @@
 
 .t2-jobs-search {
   display: grid !important;
-  grid-template-columns: 100px auto;
+  grid-template-columns: 120px auto;
   margin-bottom: 10px;
+}
+
+.t2-jobs-header {
+  display: grid;
+  grid-template-columns: auto 200px;
+
+  div {
+    text-align: right;
+    line-height: 36px;
+  }
 }

@@ -31,9 +31,13 @@
             border-top-right-radius: 0px;
             color: white;
 
-            .bp3-icon{
-             color: white;
+            .bp3-icon {
+              color: white;
             }
+          }
+
+          &:hover {
+            text-decoration: none;
           }
         }
 
