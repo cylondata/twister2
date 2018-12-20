@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.worker.DriverListener;
+import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
@@ -87,6 +88,11 @@ public final class JMWorkerAgent {
    * workers can register a driverListener to receive messages from the driver
    */
   private DriverListener driverListener;
+
+  /**
+   * IWorker will get events from the JobMaster
+   */
+  private IWorker worker;
 
   private static JMWorkerAgent workerAgent;
 
@@ -184,6 +190,8 @@ public final class JMWorkerAgent {
 
     JobMasterAPI.Broadcast.Builder broadcastBuilder = JobMasterAPI.Broadcast.newBuilder();
 
+    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
+
     ResponseMessageHandler responseMessageHandler = new ResponseMessageHandler();
     rrClient.registerResponseHandler(registerWorkerBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(registerWorkerResponseBuilder, responseMessageHandler);
@@ -196,6 +204,7 @@ public final class JMWorkerAgent {
 
     rrClient.registerResponseHandler(scaledMessageBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(broadcastBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(joinedBuilder, responseMessageHandler);
 
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
@@ -373,6 +382,20 @@ public final class JMWorkerAgent {
   }
 
   /**
+   * only one IWorker can be added
+   * if the second worker tried to be added, false returned
+   * @return
+   */
+  public boolean addIWorker(IWorker iWorker) {
+    if (iWorker != null) {
+      return false;
+    }
+
+    this.worker = iWorker;
+    return true;
+  }
+
+  /**
    * send RegisterWorker message to Job Master
    * put WorkerInfo in this message
    * @return
@@ -521,6 +544,13 @@ public final class JMWorkerAgent {
 
         }
 
+      } else if (message instanceof JobMasterAPI.WorkersJoined) {
+        LOG.fine("Received WorkersJoined message from the master. \n" + message);
+
+        if (worker != null) {
+          JobMasterAPI.WorkersJoined joinedMessage = (JobMasterAPI.WorkersJoined) message;
+          worker.allWorkersJoined(joinedMessage.getWorkerList());
+        }
       } else {
         LOG.warning("Received message unrecognized. \n" + message);
       }

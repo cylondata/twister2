@@ -20,6 +20,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.WorkerListener;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
@@ -58,6 +59,11 @@ public final class JMDriverAgent {
   private WorkerListener workerListener;
 
   /**
+   * the driver can register a workerListener to get messages sent by workers
+   */
+  private IDriver driver;
+
+  /**
    * a singleton object for this class
    */
   private static JMDriverAgent driverAgent;
@@ -79,6 +85,13 @@ public final class JMDriverAgent {
    */
   private JobMasterAPI.BroadcastResponse broadcastResponse;
 
+  /**
+   * The Agent class that talks the driver with the JobMaster
+   * @param config
+   * @param masterHost
+   * @param masterPort
+   * @param numberOfWorkers
+   */
   private JMDriverAgent(Config config,
                         String masterHost,
                         int masterPort,
@@ -128,6 +141,8 @@ public final class JMDriverAgent {
 
     JobMasterAPI.WorkerToDriver.Builder toDriverBuilder = JobMasterAPI.WorkerToDriver.newBuilder();
 
+    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
+
     ResponseMessageHandler responseMessageHandler = new ResponseMessageHandler();
     rrClient.registerResponseHandler(scaledMessageBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(scaledResponseBuilder, responseMessageHandler);
@@ -136,6 +151,8 @@ public final class JMDriverAgent {
     rrClient.registerResponseHandler(broadcastResponseBuilder, responseMessageHandler);
 
     rrClient.registerResponseHandler(toDriverBuilder, responseMessageHandler);
+
+    rrClient.registerResponseHandler(joinedBuilder, responseMessageHandler);
 
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
@@ -259,6 +276,22 @@ public final class JMDriverAgent {
     return true;
   }
 
+  /**
+   * only one IDriver can be added
+   * if the second IDriver tried to be added, false returned
+   * @param iDriver
+   * @return
+   */
+  public boolean addIDriver(IDriver iDriver) {
+
+    if (driver != null) {
+      return false;
+    }
+
+    driver = iDriver;
+    return true;
+  }
+
   public boolean sendScaledMessage(int change, int workersCount) {
     JobMasterAPI.WorkersScaled scaledMessage =
         JobMasterAPI.WorkersScaled.newBuilder()
@@ -335,6 +368,14 @@ public final class JMDriverAgent {
           } catch (InvalidProtocolBufferException e) {
             LOG.log(Level.SEVERE, "Can not parse received protocol buffer message to Any", e);
           }
+        }
+
+      } else if (message instanceof JobMasterAPI.WorkersJoined) {
+        LOG.fine("Received WorkersJoined message from JobMaster. \n" + message);
+
+        if (driver != null) {
+          JobMasterAPI.WorkersJoined joinedMessage = (JobMasterAPI.WorkersJoined) message;
+          driver.allWorkersJoined(joinedMessage.getWorkerList());
         }
 
       } else {

@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +28,7 @@ import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * This class is a example use of the keyed partition function
@@ -94,6 +96,11 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
       partition.progress();
     }
     return true;
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 
   public class PartitionReceiver implements BulkReceiver {

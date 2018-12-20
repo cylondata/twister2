@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.op.stream.SKeyedPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * Streaming keyed partition example
@@ -86,6 +87,11 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
       partition.progress();
     }
     return true;
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 
   public class PartitionReceiver implements MessageReceiver {

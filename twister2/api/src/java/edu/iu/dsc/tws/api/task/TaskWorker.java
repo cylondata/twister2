@@ -112,6 +112,11 @@ public abstract class TaskWorker implements IWorker {
     communicator.close();
   }
 
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
+  }
+
   /**
    * A user needs to implement this method to create the task graph and execute it
    */

@@ -156,6 +156,11 @@ public abstract class HarpWorker implements IWorker {
     LOG.info("Harp server stopped.");
   }
 
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
+  }
+
   private void doMasterBarrier(String contextName, String operationName,
                                DataMap dataMap, Workers workers) throws IOException {
     boolean successful = Communication.barrier(contextName, operationName, dataMap, workers);

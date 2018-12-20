@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.BaseSink;
@@ -110,6 +111,11 @@ public class HTGraphExample extends TaskWorker {
 
     //TODO:Invoke Executor
   }//End of execute method
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
+  }
 
   private class HTGSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;

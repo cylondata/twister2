@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +28,7 @@ import edu.iu.dsc.tws.comms.op.batch.BJoin;
 import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.JoinedKeyedBenchWorker;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class BDJoinExample extends JoinedKeyedBenchWorker {
 
@@ -96,6 +98,11 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
   @Override
   protected boolean sendMessages(int task, Object key, Object data, int flag) {
     throw new UnsupportedOperationException("Join requires massage with tag value");
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 
   public class JoinReceiver implements BulkReceiver {

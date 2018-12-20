@@ -23,8 +23,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.worker;
 
+import java.util.List;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * This is the main point of entry for a Twister2 job. Every job should implement this interface.
@@ -45,4 +48,13 @@ public interface IWorker {
                IWorkerController workerController,
                IPersistentVolume persistentVolume,
                IVolatileVolume volatileVolume);
+
+  /**
+   * this method is invoked when all workers joined the job initially
+   * and also, after each scale up operation,
+   * when all new workers joined the job, it is invoked
+   * @param workerList
+   */
+  void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList);
+
 }

@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.examples.comms.batch;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,6 +29,7 @@ import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.comms.shuffle.KeyValue;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class BDKeyedGatherExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(BDKeyedGatherExample.class.getName());
@@ -111,6 +113,11 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
   @Override
   protected void finishCommunication(int src) {
     keyedGather.finish(src);
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 
   public class FinalReduceReceiver implements BulkReceiver {

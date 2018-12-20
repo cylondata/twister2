@@ -171,6 +171,11 @@ public class SimpleTaskGraphExample implements IWorker {
     }
   }
 
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
+  }
+
   public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
     for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {

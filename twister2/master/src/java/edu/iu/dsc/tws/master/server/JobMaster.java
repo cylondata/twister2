@@ -267,6 +267,8 @@ public class JobMaster {
     JobMasterAPI.WorkerToDriverResponse.Builder toDriverResponseBuilder
         = JobMasterAPI.WorkerToDriverResponse.newBuilder();
 
+    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
+
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
 
     rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
@@ -289,6 +291,8 @@ public class JobMaster {
 
     rrServer.registerRequestHandler(toDriverBuilder, workerMonitor);
     rrServer.registerRequestHandler(toDriverResponseBuilder, workerMonitor);
+
+    rrServer.registerRequestHandler(joinedBuilder, workerMonitor);
 
     rrServer.start();
     looper.loop();

@@ -104,6 +104,11 @@ public class BasicNetworkTest implements IWorker, Runnable {
 
   }
 
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
+  }
+
   /**
    * an echo server.
    */

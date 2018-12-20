@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,6 +26,7 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IFunction;
@@ -118,6 +120,11 @@ public class KMeansJob extends TaskWorker {
     LOG.info("%%% Final Centroid Values Received: %%%" + Arrays.deepToString(centroid));
     //To write the final value into the file or hdfs
     KMeansOutputWriter.writeToOutputFile(centroid, outputFile + workerId, config, fileSystem);
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 
   private static class KMeansSourceTask extends BaseSource implements Receptor {

@@ -32,6 +32,7 @@ public class K8sScaler implements IScaler {
   private Config config;
 
   // replicas and workersPerPod values for scalable compute resource (scalable statefulSet)
+  private boolean jobScalable;
   private String scalableSSName;
   private int replicas;
   private int workersPerPod;
@@ -52,6 +53,15 @@ public class K8sScaler implements IScaler {
     this.k8sController = k8sController;
 
     computeResourceIndex = job.getComputeResourceCount() - 1;
+
+    // if the last ComputeResource is not scalable,
+    // it means, there is no scalable ComputeResource in the job
+    if (job.getComputeResource(computeResourceIndex).getScalable()) {
+      jobScalable = true;
+    } else {
+      jobScalable = false;
+    }
+
     this.replicas = job.getComputeResource(computeResourceIndex).getInstances();
     this.workersPerPod = job.getComputeResource(computeResourceIndex).getWorkersPerPod();
 
@@ -69,6 +79,11 @@ public class K8sScaler implements IScaler {
    */
   @Override
   public boolean scaleUpWorkers(int instancesToAdd) {
+
+    if (!jobScalable) {
+      LOG.severe("There is no scalable ComputeResource in this job");
+      return false;
+    }
 
     if (instancesToAdd <= 0) {
       LOG.severe("instancesToAdd has to be a positive integer");
@@ -129,6 +144,12 @@ public class K8sScaler implements IScaler {
    */
   @Override
   public boolean scaleDownWorkers(int instancesToRemove) {
+
+    if (!jobScalable) {
+      LOG.severe("There is no scalable ComputeResource in this job");
+      return false;
+    }
+
     if (instancesToRemove <= 0) {
       LOG.severe("instancesToRemove has to be a positive integer");
       return false;

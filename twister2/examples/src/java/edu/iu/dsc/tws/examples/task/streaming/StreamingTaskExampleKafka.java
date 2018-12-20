@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.BaseSink;
@@ -74,6 +75,11 @@ public class StreamingTaskExampleKafka implements IWorker {
     DataFlowTaskGraph graph = builder.build();
 
     TaskUtils.execute(config, workerID, graph, workerController);
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 
   private static class RecevingTask extends BaseSink {

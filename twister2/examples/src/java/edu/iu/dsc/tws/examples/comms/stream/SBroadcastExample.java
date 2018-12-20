@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class SBroadcastExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SBroadcastExample.class.getName());
@@ -86,6 +87,11 @@ public class SBroadcastExample extends BenchWorker {
       bcast.progress();
     }
     return true;
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 
   public class BCastReceiver implements MessageReceiver {

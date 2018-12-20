@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.rsched;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +25,7 @@ import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.common.driver.WorkerListener;
 import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -41,6 +43,11 @@ public class DriverExample implements IDriver, WorkerListener {
     scalingExample(scaler);
 
     LOG.info("Driver has finished execution.");
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+    LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
   }
 
   private void scalingExample(IScaler scaler) {

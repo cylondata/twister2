@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -148,7 +147,7 @@ public final class K8sWorkerStarter {
     jobMasterAgent.sendWorkerRunningMessage();
 
     // start the worker
-    startWorker(jobMasterAgent.getJMWorkerController(), pv);
+    startWorker(jobMasterAgent, pv);
 
     // close the worker
     closeWorker();
@@ -196,7 +195,7 @@ public final class K8sWorkerStarter {
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(IWorkerController workerController,
+  public static void startWorker(JMWorkerAgent jmWorkerAgent,
                                  IPersistentVolume pv) {
 
     String workerClass = job.getWorkerClassName();
@@ -215,7 +214,8 @@ public final class K8sWorkerStarter {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
 
-    worker.execute(config, workerID, workerController, pv, volatileVolume);
+    jmWorkerAgent.addIWorker(worker);
+    worker.execute(config, workerID, jmWorkerAgent.getJMWorkerController(), pv, volatileVolume);
   }
 
   /**

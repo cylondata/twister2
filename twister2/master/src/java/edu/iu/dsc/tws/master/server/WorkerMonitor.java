@@ -175,9 +175,11 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     // if all workers registered, inform all workers
-    if (workers.size() == numberOfWorkers) {
+    if (allWorkersRegistered()) {
       LOG.info("All " + workers.size() + " workers joined the job.");
       sendListWorkersResponseToWaitList();
+
+      sendWorkersJoinedMessage();
     }
 
     return;
@@ -261,6 +263,12 @@ public class WorkerMonitor implements MessageHandler {
     // should we make sure that those workers also get this message
     for (int workerID: workers.keySet()) {
       rrServer.sendMessage(scaledMessage, workerID);
+    }
+
+    // if all newly scaled workers are already joined
+    // send WorkersJoined messages
+    if (allWorkersRegistered()) {
+      sendWorkersJoinedMessage();
     }
 
     // send Scale message to the dashboard
@@ -357,6 +365,29 @@ public class WorkerMonitor implements MessageHandler {
 
     rrServer.sendResponse(id, successResponse);
     LOG.fine("WorkerToDriverResponse sent to the driver: \n" + successResponse);
+  }
+
+  /**
+   * make sure that
+   *   all workers registered and their state may be anything
+   * @return
+   */
+  private boolean allWorkersRegistered() {
+
+    // if numberOfWorkers does not match the number of registered workers,
+    // return false
+    if (workers.size() != numberOfWorkers) {
+      return false;
+    }
+
+    // if there is a gap in workerID sequence, return false
+    // since workerIDs are sorted and they start from 0
+    // checking the workerID of the last worker is sufficient
+    if (workers.lastKey() != (numberOfWorkers - 1)) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -496,6 +527,32 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     waitList.clear();
+  }
+
+  /**
+   * send WorkersJoined message to all workers and the driver
+   */
+  private void sendWorkersJoinedMessage() {
+
+    // first construct the message
+    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder()
+        .setNumberOfWorkers(numberOfWorkers);
+
+    for (WorkerWithState worker: workers.values()) {
+      joinedBuilder.addWorker(worker.getWorkerInfo());
+    }
+
+    JobMasterAPI.WorkersJoined joinedMessage = joinedBuilder.build();
+
+    // send the message to the driver, if any
+    // if there is no driver, no problem, this method will return false
+    rrServer.sendMessage(joinedMessage, RRServer.DRIVER_ID);
+
+    // send the message to all workers
+    for (WorkerWithState worker: workers.values()) {
+      rrServer.sendMessage(joinedMessage, worker.getWorkerID());
+    }
+
   }
 
 }

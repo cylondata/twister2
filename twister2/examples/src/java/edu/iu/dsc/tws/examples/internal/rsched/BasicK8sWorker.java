@@ -93,6 +93,11 @@ public class BasicK8sWorker implements IWorker, DriverListener {
   }
 
   @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
+  }
+
+  @Override
   public void workersScaledUp(int instancesAdded) {
     LOG.info("Workers scaled up. Instances added: " + instancesAdded);
   }

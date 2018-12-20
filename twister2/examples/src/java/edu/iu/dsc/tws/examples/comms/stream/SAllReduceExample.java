@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class SAllReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
@@ -95,6 +96,11 @@ public class SAllReduceExample extends BenchWorker {
   @Override
   protected boolean isDone() {
     return reduceDone && sourcesDone && !reduce.hasPending();
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 
   public class FinalSingularReceiver implements SingularReceiver {

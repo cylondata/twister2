@@ -207,3 +207,12 @@ message WorkerToDriverResponse {
     string reason = 2;
 }
 
+// Job master will send this message to all workers and the driver
+// when all workers registered with the job
+//
+// it also sends this message to all workers and the driver
+// when all new workers have joined after the scale up
+message WorkersJoined {
+    int32 numberOfWorkers = 2;
+    repeated WorkerInfo worker = 3;
+}

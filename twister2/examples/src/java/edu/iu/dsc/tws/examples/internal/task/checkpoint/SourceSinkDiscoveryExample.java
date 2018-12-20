@@ -112,6 +112,11 @@ public class SourceSinkDiscoveryExample implements IWorker {
     executor.execute();
   }
 
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
+  }
+
   private static class GeneratorTask extends SourceTask {
     private static final long serialVersionUID = -254264903510214748L;
     private TaskContext ctx;

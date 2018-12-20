@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +28,7 @@ import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class BGatherExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BGatherExample.class.getName());
@@ -102,6 +104,11 @@ public class BGatherExample extends BenchWorker {
   @Override
   protected void finishCommunication(int src) {
     gather.finish(src);
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 
   public class FinalReduceReceiver implements BulkReceiver {

@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +28,7 @@ import edu.iu.dsc.tws.comms.op.batch.BPartition;
 import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class BPartitionExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BPartitionExample.class.getName());
@@ -87,6 +89,11 @@ public class BPartitionExample extends BenchWorker {
       partition.progress();
     }
     return true;
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 
   public class PartitionReceiver implements BulkReceiver {

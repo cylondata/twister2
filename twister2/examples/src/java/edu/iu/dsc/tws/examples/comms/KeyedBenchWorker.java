@@ -113,6 +113,11 @@ public abstract class KeyedBenchWorker implements IWorker {
     communicator.close();
   }
 
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> wList) {
+
+  }
+
   protected abstract void execute();
 
   protected void progress() {

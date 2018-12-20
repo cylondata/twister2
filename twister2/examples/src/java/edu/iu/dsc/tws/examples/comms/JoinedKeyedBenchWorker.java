@@ -23,6 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -30,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 
 /**
@@ -41,6 +43,11 @@ public abstract class JoinedKeyedBenchWorker extends KeyedBenchWorker {
   private Lock lock = new ReentrantLock();
 
   protected abstract boolean sendMessages(int task, Object key, Object data, int flag, int tag);
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
+  }
 
   protected class MapWorker implements Runnable {
     private int task;

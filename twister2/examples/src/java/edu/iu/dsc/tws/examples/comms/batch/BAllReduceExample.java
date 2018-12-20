@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,6 +29,7 @@ import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class BAllReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BAllReduceExample.class.getName());
@@ -97,6 +99,11 @@ public class BAllReduceExample extends BenchWorker {
   @Override
   protected boolean isDone() {
     return reduceDone && sourcesDone && !reduce.hasPending();
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 
   public class FinalSingularReceiver implements SingularReceiver {
