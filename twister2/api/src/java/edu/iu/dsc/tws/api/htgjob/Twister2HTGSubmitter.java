@@ -105,11 +105,6 @@ public final class Twister2HTGSubmitter {
     twister2HTGInstance.setExecuteMessagesList(executeMessageList);
     twister2HTGInstance.setTwister2HTGScheduler(twister2HTGScheduler);
 
-    /*Config htgConfig = Config.newBuilder().
-        putAll(config)
-        .put("TWISTER2_HTG_JOB",twister2HTGInstance)
-        .build();
-*/
     //Setting the first graph resource requirements.
     twister2Job = Twister2Job.newBuilder()
         .setJobName(htgJob.getHtgJobname())
@@ -119,15 +114,6 @@ public final class Twister2HTGSubmitter {
             subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances())
         .setConfig(jobConfig)
         .build();
-
-    for (String subgraphName : scheduleGraphs) {
-
-      //Set the subgraph to be executed from the metagraph
-      executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
-          .setSubgraphName(subgraphName)
-          .build();
-      executeMessageList.add(executeMessage);
-    }
 
     Twister2Submitter.submitJob(twister2Job, config);
   }

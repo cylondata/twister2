@@ -193,19 +193,14 @@ public class HTGExample extends HTGTaskWorker {
     configurations.put(HTGConstants.ARGS_WORKERS, Integer.toString(instances));
     configurations.put(HTGConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
 
-    configurations.put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName());
-
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
-
 
     config = Config.newBuilder()
         .putAll(config)
         .put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName())
         .build();
-
-    LOG.info("$$$$$$$$$$$$$ CONFIG" + config);
 
     //TODO:Design the metagraph
     Twister2MetagraphBuilder twister2MetagraphBuilder = Twister2MetagraphBuilder.newBuilder(config);
@@ -214,14 +209,6 @@ public class HTGExample extends HTGTaskWorker {
         "sinktaskgraph", config);
     twister2MetagraphConnection.broadcast("sourcetaskgraph", "broadcast");
     twister2MetagraphBuilder.setHtgName("htg");
-
-    /*Config nconf = Config.newBuilder().
-        putAll(config).
-        put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName())
-        .put("TWISTER2_JOB", twister2MetagraphBuilder)
-        .build();
-
-    LOG.fine("HTG Config value:" + nconf + "\t$$$$$$$$$$$$" + nconf.get("TWISTER2_JOB"));*/
 
     //TODO:Invoke HTG Submitter and send the metagraph
     Twister2HTGSubmitter twister2HTGSubmitter = new Twister2HTGSubmitter(config);

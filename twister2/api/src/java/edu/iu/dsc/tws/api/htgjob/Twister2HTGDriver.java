@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.htgjob;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,13 +25,12 @@ import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.common.driver.WorkerListener;
 import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class Twister2HTGDriver implements IDriver, WorkerListener {
 
   private static final Logger LOG = Logger.getLogger(Twister2HTGDriver.class.getName());
+
+  private List<HTGJobAPI.ExecuteMessage> executeMessageList;
 
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
@@ -38,6 +38,8 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
     Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
     LOG.info("Execution message list in driver:"
         + twister2HTGInstance.getExecuteMessagesList() + "\t" + twister2HTGInstance.getHtgJob());
+
+    executeMessageList = twister2HTGInstance.getExecuteMessagesList();
 
     JMDriverAgent.addWorkerListener(this);
     broadcast(messenger);
@@ -48,69 +50,20 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
 
     LOG.info("Testing HTG Driver  ............................. ");
 
-    try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+    for (HTGJobAPI.ExecuteMessage executeMessage : executeMessageList) {
+
+      LOG.info("Broadcasting execute message: " + executeMessage);
+
+      messenger.broadcastToAllWorkers(executeMessage);
+
+      try {
+        LOG.info("Sleeping 5 seconds ....");
+        Thread.sleep(5000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
     }
 
-    HTGJobAPI.ExecuteMessage executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
-        .setSubgraphName("sourcetaskgraph")
-        .build();
-
-
-    LOG.info("Broadcasting execute message: " + executeMessage);
-    messenger.broadcastToAllWorkers(executeMessage);
-
-    try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
-        .setSubgraphName("sinktaskgraph")
-        .build();
-
-    LOG.info("Broadcasting execute message: " + executeMessage);
-    messenger.broadcastToAllWorkers(executeMessage);
-    // construct an example protocol buffer message and broadcast it to all workers
-    /*JobMasterAPI.NodeInfo nodeInfo =
-        NodeInfoUtils.createNodeInfo("example.nodeIP", "rack-01", "dc-01");
-      LOG.info("Broadcasting an example protocol buffer message: " + nodeInfo);
-    messenger.broadcastToAllWorkers(nodeInfo);
-        */
-
-    HTGJobAPI.ExecuteMessage executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
-        .setSubgraphName("sourcetaskgraph1")
-        .build();
-
-    LOG.info("Broadcasting an example protocol buffer message: " + executeMessage);
-
-    messenger.broadcastToAllWorkers(executeMessage);
-    try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    /*JobAPI.ComputeResource computeResource =
-        ComputeResourceUtils.createComputeResource(10, 0.5, 2048, 2.0);
-
-    LOG.info("Broadcasting another example protocol buffer message: " + computeResource);*/
-
-    HTGJobAPI.ExecuteMessage executeMessage1 = HTGJobAPI.ExecuteMessage.newBuilder()
-        .setSubgraphName("sinktaskgraph1")
-        .build();
-
-    LOG.info("Broadcasting another example protocol buffer message: " + executeMessage1);
-
-    //messenger.broadcastToAllWorkers(computeResource);
-
-    messenger.broadcastToAllWorkers(executeMessage1);
     HTGJobAPI.HTGJobCompletedMessage jobCompletedMessage = HTGJobAPI.HTGJobCompletedMessage
         .newBuilder().setHtgJobname("htg").build();
     LOG.info("Broadcasting job completed message: " + jobCompletedMessage);
