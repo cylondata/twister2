@@ -7,6 +7,7 @@ import JobCard from "./workloads/jobs/JobCard";
 import {Button, Card, Icon} from "@blueprintjs/core";
 import {StatsService} from "../services/StatsService";
 import {Link} from "react-router-dom";
+import LoadingComponent from "./ui/LoadingComponent";
 
 
 const JOB_STATE_COLOR_MAP = {

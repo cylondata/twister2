@@ -3,6 +3,7 @@ import JobCard from "./JobCard";
 import "./JobComponent.css";
 import JobService from "../../../services/JobService";
 import {Button, ControlGroup, HTMLSelect, InputGroup, Intent} from "@blueprintjs/core";
+import LoadingComponent from "../../ui/LoadingComponent";
 
 export default class JobsComponents extends React.Component {
 
@@ -12,7 +13,8 @@ export default class JobsComponents extends React.Component {
             searchResults: {},
             searchKeyword: "",
             searchStates: [],
-            currentResultsPage: 0
+            currentResultsPage: 0,
+            loading: false
         };
 
         this.searchTimer = -1;
@@ -22,14 +24,22 @@ export default class JobsComponents extends React.Component {
         this.loadJobs();
     }
 
+    setLoading = (loading) => {
+        this.setState({
+            loading: loading
+        });
+    };
+
     loadJobs = () => {
+        this.setLoading(true);
         JobService.searchJobs(
             this.state.searchStates, this.state.searchKeyword, this.state.currentResultsPage
         ).then(jobsResponse => {
             console.log(jobsResponse);
             this.setState({
                 searchResults: jobsResponse.data
-            })
+            });
+            this.setLoading(false);
         });
     };
 
@@ -78,7 +88,8 @@ export default class JobsComponents extends React.Component {
                     <InputGroup placeholder="Find jobs..." onChange={this.onKeywordChange}/>
                 </ControlGroup>
                 <div className="t2-jobs-container">
-                    {jobCards}
+                    {!this.state.loading && jobCards}
+                    {this.state.loading && <LoadingComponent/>}
                 </div>
             </div>
         );

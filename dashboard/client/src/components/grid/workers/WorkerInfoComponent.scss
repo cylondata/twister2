@@ -10,6 +10,12 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
+.tw-worker-ports-tag {
+  &:not(:last-of-type) {
+    margin-right: 10px;
+  }
+}
+
 /* desert scheme ported from vim to google prettify */
 pre.prettyprint {
   display: block;
