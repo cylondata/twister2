@@ -549,8 +549,8 @@ public class WorkerMonitor implements MessageHandler {
     rrServer.sendMessage(joinedMessage, RRServer.DRIVER_ID);
 
     // send the message to all workers
-    for (WorkerWithState worker: workers.values()) {
-      rrServer.sendMessage(joinedMessage, worker.getWorkerID());
+    for (Integer workerID: workers.keySet()) {
+      rrServer.sendMessage(joinedMessage, workerID);
     }
 
   }

@@ -34,6 +34,7 @@ import org.apache.hadoop.fs.Path;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
 import edu.iu.dsc.tws.common.worker.DriverListener;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
@@ -94,7 +95,7 @@ public class BasicK8sWorker implements IWorker, DriverListener {
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
+    LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
   }
 
   @Override

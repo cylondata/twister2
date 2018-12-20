@@ -387,7 +387,7 @@ public final class JMWorkerAgent {
    * @return
    */
   public boolean addIWorker(IWorker iWorker) {
-    if (iWorker != null) {
+    if (worker != null) {
       return false;
     }
 
