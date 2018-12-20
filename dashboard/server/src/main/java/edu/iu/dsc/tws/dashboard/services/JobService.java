@@ -18,8 +18,6 @@ import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
 
-import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
-import edu.iu.dsc.tws.dashboard.rest_models.ScaleWorkersRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,10 +25,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
 import edu.iu.dsc.tws.dashboard.data_models.Job;
 import edu.iu.dsc.tws.dashboard.data_models.JobState;
 import edu.iu.dsc.tws.dashboard.data_models.Node;
 import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
+import edu.iu.dsc.tws.dashboard.rest_models.ScaleWorkersRequest;
 import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 
 @Service
@@ -73,9 +73,9 @@ public class JobService {
   public Page<Job> searchJobs(List<JobState> states, String keyword, int page) {
     PageRequest pageRequest = PageRequest.of(page, 25);
     return this.jobRepository.findAllByStateInAndJobNameContainingOrderByCreatedTimeDesc(
-            states,
-            keyword,
-            pageRequest
+        states,
+        keyword,
+        pageRequest
     );
   }
 
@@ -100,14 +100,14 @@ public class JobService {
   }
 
   @Transactional
-  public void scale(String jobId, ScaleWorkersRequest scaleWorkersRequest){
+  public void scale(String jobId, ScaleWorkersRequest scaleWorkersRequest) {
     ComputeResource cr = this.computeResourceService
-            .getScalableComputeResourceForJob(jobId);
+        .getScalableComputeResourceForJob(jobId);
 
-    cr.setInstances(cr.getInstances()+scaleWorkersRequest.getChange());
+    cr.setInstances(cr.getInstances() + scaleWorkersRequest.getChange());
     this.computeResourceService.save(cr);
 
-    this.jobRepository.changeNumberOfWorkers(jobId,scaleWorkersRequest.getNumberOfWorkers());
+    this.jobRepository.changeNumberOfWorkers(jobId, scaleWorkersRequest.getNumberOfWorkers());
   }
 
   @Transactional

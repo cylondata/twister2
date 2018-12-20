@@ -1,12 +1,13 @@
 package edu.iu.dsc.tws.dashboard.services;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import edu.iu.dsc.tws.dashboard.repositories.ClusterRepository;
 import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
 import edu.iu.dsc.tws.dashboard.repositories.NodeRepository;
 import edu.iu.dsc.tws.dashboard.repositories.WorkerRepository;
 import edu.iu.dsc.tws.dashboard.rest_models.ElementStatsResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 @Service
 public class StatsService {

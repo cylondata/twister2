@@ -12,7 +12,7 @@ public interface ComputeResourceRepository
 
   ComputeResource findDistinctByJob_JobIDAndIndex(String jobId, Integer index);
 
-  ComputeResource findDistinctByJob_JobIDAndScalable(String jobId,Boolean scalable);
+  ComputeResource findDistinctByJob_JobIDAndScalable(String jobId, Boolean scalable);
 
   void deleteByJob_JobIDAndIndex(String jobId, Integer index);
 

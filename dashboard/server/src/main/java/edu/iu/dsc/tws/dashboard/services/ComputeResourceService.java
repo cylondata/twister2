@@ -12,7 +12,6 @@ import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
 import edu.iu.dsc.tws.dashboard.data_models.Job;
 import edu.iu.dsc.tws.dashboard.data_models.composite_ids.ComputeResourceId;
 import edu.iu.dsc.tws.dashboard.repositories.ComputeResourceRepository;
-import edu.iu.dsc.tws.dashboard.rest_models.ScaleWorkersRequest;
 
 @Service
 public class ComputeResourceService {
@@ -34,7 +33,7 @@ public class ComputeResourceService {
     return computeResourceRepository.save(computeResource);
   }
 
-  public ComputeResource save(ComputeResource computeResource){
+  public ComputeResource save(ComputeResource computeResource) {
     return computeResourceRepository.save(computeResource);
   }
 
@@ -72,9 +71,9 @@ public class ComputeResourceService {
     return computeResourceId;
   }
 
-  public ComputeResource getScalableComputeResourceForJob(String job){
+  public ComputeResource getScalableComputeResourceForJob(String job) {
     return this.computeResourceRepository
-            .findDistinctByJob_JobIDAndScalable(job,true);
+        .findDistinctByJob_JobIDAndScalable(job, true);
   }
 
 //  @Transactional
