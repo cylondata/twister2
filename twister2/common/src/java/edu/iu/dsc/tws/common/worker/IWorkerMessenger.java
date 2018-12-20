@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.common.worker;
 import com.google.protobuf.Message;
 
 /**
- * A messenger interface to send messages from the driver to the workers in a job
+ * A messenger interface to send messages from a worker to the driver in a job
  */
 public interface IWorkerMessenger {
 

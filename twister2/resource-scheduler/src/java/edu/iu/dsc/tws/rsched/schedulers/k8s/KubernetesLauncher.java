@@ -246,7 +246,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(hostAdress, null, null);
     JobMaster jobMaster = new JobMaster(config, hostAdress, this, job, nodeInfo);
-    jobMaster.addShutdownHook();
+    jobMaster.addShutdownHook(true);
     jobMaster.startJobMasterThreaded();
 //    jobMaster.startJobMasterBlocking();
 
