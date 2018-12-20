@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public class FileAccessExample extends BaseTSetWorker {
+public class TSetFileAccessExample extends BaseTSetWorker {
   @Override
   public void execute() {
     super.execute();

@@ -139,6 +139,9 @@ public final class TSetExampleMain {
       case "keyedgather":
         submitJob(config, workers, jobConfig, TSetKeyedReduceExample.class.getName());
         break;
+      case "fileaccess":
+        submitJob(config, workers, jobConfig, TSetFileAccessExample.class.getName());
+        break;
       default:
         System.out.println("Un-supported");
     }
