@@ -9,16 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.controller;
+package edu.iu.dsc.tws.api.tset.fn;
 
-import com.google.protobuf.Message;
+import edu.iu.dsc.tws.api.tset.Selector;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 
-public interface IWorkerListener {
+public class IdentitySelector<T> implements Selector<T, T> {
+  @Override
+  public T select(T t) {
+    return t;
+  }
 
-  boolean workersScaledUp(int instancesAdded);
-
-  boolean workersScaledDown(int instancesRemoved);
-
-  boolean dataReceivedFromClient(Message message);
-
+  @Override
+  public void prepare(TSetContext context) {
+  }
 }

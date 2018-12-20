@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.tset.batch;
+package edu.iu.dsc.tws.examples.tset;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -19,13 +19,13 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -58,20 +58,7 @@ public class HelloTSet extends TaskWorker implements Serializable {
       }
     }).setName("Source");
 
-    TSet<int[]> partitioned = source.partition(new PartitionFunction<int[]>() {
-      @Override
-      public int partition(int sourceIndex, int numPartitions, int[] val) {
-        return 0;
-      }
-
-      @Override
-      public void commit(int source, int partition) {
-      }
-
-      @Override
-      public void prepare(TSetContext context) {
-      }
-    });
+    TSet<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
 
     TSet<int[]> reduce = partitioned.reduce(new ReduceFunction<int[]>() {
       private static final long serialVersionUID = -2;

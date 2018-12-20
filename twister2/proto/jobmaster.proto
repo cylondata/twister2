@@ -147,24 +147,63 @@ message BarrierResponse {
     }
 }
 
-// Submitting Client to Job Master communication related messages
-// let the job master know that
-// the number of instances of the scalable compute resource has hanged
-message ScaledComputeResource {
-    oneof indexRequired {
-        int32 index = 1;
+// Driver to Job Master communication related messages
+// let the job master and the workers know that
+// the number of workers in the job has hanged
+// if change is positive, new workers added
+// if change is negative, some worker instances removed
+// numberOfWorkers shows the updated numberOfWorkers in the job
+message WorkersScaled {
+    oneof changeRequired {
+        int32 change = 1;
     }
-    oneof instancesRequired {
-        int32 instances = 2;
+    oneof numberOfWorkersRequired {
+        int32 numberOfWorkers = 2;
     }
 }
 
+// WorkersScaled response message
+// if it fails, reason will have a string explaining the problem
 message ScaledResponse {
-    oneof indexRequired {
-        int32 index = 1;
+    oneof required {
+        bool succeeded = 1;
     }
-    oneof instancesRequired {
-        int32 instances = 2;
+    string reason = 2;
+}
+
+// Driver to worker broadcast message
+// Driver can send any byte array to workers including serialized protocol buffer messages
+// It is encoded as a byte array
+message Broadcast {
+    bytes data = 1;
+    int32 numberOfWorkers = 3;
+}
+
+// Broadcast response message
+// if it fails, reason will have a string explaining the problem
+message BroadcastResponse {
+    oneof required {
+        bool succeeded = 1;
     }
+    string reason = 2;
+}
+
+// Worker to Driver message
+// Worker can send any byte array to the driver including serialized protocol buffer messages
+message WorkerToDriver {
+    bytes data = 1;
+    oneof required {
+        int32 workerID = 2;
+    }
+
+}
+
+// WorkerToDriver response message
+// if it fails, reason will have a string explaining the problem
+message WorkerToDriverResponse {
+    oneof required {
+        bool succeeded = 1;
+    }
+    string reason = 2;
 }
 

@@ -27,6 +27,7 @@ public class ReduceTSet<T> extends BaseTSet<T> {
     super(cfg, bldr);
     this.reduceFn = rFn;
     this.parent = prnt;
+    this.name = "reduce-" + parent.getName();
   }
 
   @Override
@@ -50,5 +51,10 @@ public class ReduceTSet<T> extends BaseTSet<T> {
 
   public ReduceFunction<T> getReduceFn() {
     return reduceFn;
+  }
+
+  @Override
+  protected int overrideParallelism() {
+    return 1;
   }
 }

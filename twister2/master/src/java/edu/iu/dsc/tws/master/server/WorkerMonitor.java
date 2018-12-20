@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.master.server;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,12 +55,11 @@ public class WorkerMonitor implements MessageHandler {
   private boolean jobMasterAssignsWorkerIDs;
   private int numberOfWorkers;
 
-  private HashMap<Integer, WorkerWithState> workers;
+  private TreeMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
 
   // workersPerPod in scalable compute resource and replicas of that resource
-  private int workersPerPod;
-  private int replicas;
+  private JobAPI.ComputeResource scalableComputeResource;
 
   public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, DashboardClient dashClient,
                        JobAPI.Job job, boolean jobMasterAssignsWorkerIDs) {
@@ -70,11 +70,9 @@ public class WorkerMonitor implements MessageHandler {
     this.numberOfWorkers = job.getNumberOfWorkers();
     this.jobMasterAssignsWorkerIDs = jobMasterAssignsWorkerIDs;
 
-    this.replicas = job.getComputeResource(job.getComputeResourceCount() - 1).getInstances();
-    this.workersPerPod =
-        job.getComputeResource(job.getComputeResourceCount() - 1).getWorkersPerPod();
+    this.scalableComputeResource = job.getComputeResource(job.getComputeResourceCount() - 1);
 
-    workers = new HashMap<>();
+    workers = new TreeMap<>();
     waitList = new HashMap<>();
   }
 
@@ -98,11 +96,20 @@ public class WorkerMonitor implements MessageHandler {
       JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
 
-    } else if (message instanceof JobMasterAPI.ScaledComputeResource) {
-      LOG.log(Level.INFO, "ScaleComputeResource received: " + message.toString());
-      JobMasterAPI.ScaledComputeResource scaleMessage =
-          (JobMasterAPI.ScaledComputeResource) message;
-      scaledMessageReceived(id, scaleMessage);
+    } else if (message instanceof JobMasterAPI.WorkersScaled) {
+      LOG.log(Level.INFO, "WorkersScaled message received: " + message.toString());
+      JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
+      scaledMessageReceived(id, scaledMessage);
+
+    } else if (message instanceof JobMasterAPI.Broadcast) {
+      LOG.log(Level.INFO, "Broadcast message received: " + message.toString());
+      JobMasterAPI.Broadcast broadcastMessage = (JobMasterAPI.Broadcast) message;
+      broadcastMessageReceived(id, broadcastMessage);
+
+    } else if (message instanceof JobMasterAPI.WorkerToDriver) {
+      LOG.log(Level.INFO, "WorkerToDriver message received: " + message.toString());
+      JobMasterAPI.WorkerToDriver toDriverMessage = (JobMasterAPI.WorkerToDriver) message;
+      toDriverMessageReceived(id, toDriverMessage);
 
     } else {
       LOG.log(Level.SEVERE, "Un-known message received: " + message);
@@ -223,7 +230,7 @@ public class WorkerMonitor implements MessageHandler {
       // if so, stop the job master
       // if all workers have completed, no need to send the response message back to the client
       if (haveAllWorkersCompleted()) {
-        jobMaster.allWorkersCompleted();
+        jobMaster.completeJob();
       }
 
       return;
@@ -237,33 +244,153 @@ public class WorkerMonitor implements MessageHandler {
   }
 
   private void scaledMessageReceived(RequestID id,
-                                     JobMasterAPI.ScaledComputeResource scaleMessage) {
+                                     JobMasterAPI.WorkersScaled scaledMessage) {
 
-    JobMasterAPI.ScaledResponse scaleResponse = JobMasterAPI.ScaledResponse.newBuilder()
-        .setIndex(scaleMessage.getIndex())
-        .setInstances(scaleMessage.getInstances())
+    JobMasterAPI.ScaledResponse scaledResponse = JobMasterAPI.ScaledResponse.newBuilder()
+        .setSucceeded(true)
         .build();
 
     // modify numberOfWorkers and replicas
-    numberOfWorkers += (scaleMessage.getInstances() - replicas) * workersPerPod;
-    replicas = scaleMessage.getInstances();
+    numberOfWorkers = scaledMessage.getNumberOfWorkers();
 
-    rrServer.sendResponse(id, scaleResponse);
-    LOG.fine("ScaleResponse sent to the client: \n" + scaleResponse);
+    rrServer.sendResponse(id, scaledResponse);
+    LOG.fine("ScaledResponse sent to the driver: \n" + scaledResponse);
 
-    // let all workers know about the scale message
+    // let all workers know about the scaled message
+    // TODO: how about newly added workers,
+    // should we make sure that those workers also get this message
     for (int workerID: workers.keySet()) {
-      rrServer.sendMessage(scaleMessage, workerID);
+      rrServer.sendMessage(scaledMessage, workerID);
     }
 
-    // send Scale message to dashboard
+    // send Scale message to the dashboard
     if (dashClient != null) {
-      dashClient.scaleComputeResource(scaleMessage.getIndex(), scaleMessage.getInstances());
+      int index = scalableComputeResource.getIndex();
+      int replicas = numberOfWorkers / scalableComputeResource.getWorkersPerPod();
+      dashClient.scaleComputeResource(index, replicas);
     }
 
   }
 
-    /**
+  private void broadcastMessageReceived(RequestID id, JobMasterAPI.Broadcast broadcastMessage) {
+
+    // if the number of workers in the WorkerMonitor and the incoming message does not match,
+    // return a failure message
+    if (broadcastMessage.getNumberOfWorkers() != numberOfWorkers) {
+      JobMasterAPI.BroadcastResponse failResponse =
+          JobMasterAPI.BroadcastResponse.newBuilder()
+              .setSucceeded(false)
+              .setReason("NumberOfWorkers does not match in the broadcast message and JobMaster")
+              .build();
+      rrServer.sendResponse(id, failResponse);
+      LOG.warning("BroadcastResponse sent to the driver: \n" + failResponse);
+      return;
+    }
+
+    // if all workers are not currently RUNNING,
+    // send a failure response message to the driver
+    // do not send the broadcast message to any workers
+    if (!allWorkersRunning()) {
+      JobMasterAPI.BroadcastResponse failResponse =
+          JobMasterAPI.BroadcastResponse.newBuilder()
+              .setSucceeded(false)
+              .setReason("Not all workers are in RUNNING state")
+              .build();
+      rrServer.sendResponse(id, failResponse);
+      LOG.warning("BroadcastResponse sent to the driver: \n" + failResponse);
+      return;
+    }
+
+    // deliver the broadcast message to all workers
+    for (int workerID: workers.keySet()) {
+      boolean queued = rrServer.sendMessage(broadcastMessage, workerID);
+
+      // if the message can not be queued, send a failure response
+      // this may deliver the broadcast message to some workers but not to all
+      // workers may be in an inconsistent state
+      // TODO: we may need to find a solution to this
+      if (!queued) {
+        JobMasterAPI.BroadcastResponse failResponse =
+            JobMasterAPI.BroadcastResponse.newBuilder()
+                .setSucceeded(false)
+                .setReason("Broadcast message can not be sent to workerID: " + workerID)
+                .build();
+        rrServer.sendResponse(id, failResponse);
+        LOG.warning("BroadcastResponse sent to the driver: \n" + failResponse);
+        return;
+      }
+    }
+
+    // TODO: before sending a success response,
+    // we need to watch sendComplete events for the broadcast messages to the workers
+    // that will make sure that the broadcast message is delivered to all workers
+    JobMasterAPI.BroadcastResponse successResponse = JobMasterAPI.BroadcastResponse.newBuilder()
+        .setSucceeded(true)
+        .build();
+
+    rrServer.sendResponse(id, successResponse);
+    LOG.fine("BroadcastResponse sent to the driver: \n" + successResponse);
+  }
+
+  private void toDriverMessageReceived(RequestID id, JobMasterAPI.WorkerToDriver toDriverMessage) {
+
+    // first send the received message to the driver
+    boolean queued = rrServer.sendMessage(toDriverMessage, RRServer.DRIVER_ID);
+
+    // if the message can not be queued to send to the driver,
+    // it is because the driver is not connected to the worker
+    if (!queued) {
+      JobMasterAPI.WorkerToDriverResponse failResponse =
+          JobMasterAPI.WorkerToDriverResponse.newBuilder()
+              .setSucceeded(false)
+              .setReason("Driver is not connected to JobMaster")
+              .build();
+      rrServer.sendResponse(id, failResponse);
+      LOG.warning("WorkerToDriverResponse sent to the driver: \n" + failResponse);
+      return;
+    }
+
+    JobMasterAPI.WorkerToDriverResponse successResponse =
+        JobMasterAPI.WorkerToDriverResponse.newBuilder()
+            .setSucceeded(true)
+            .build();
+
+    rrServer.sendResponse(id, successResponse);
+    LOG.fine("WorkerToDriverResponse sent to the driver: \n" + successResponse);
+  }
+
+  /**
+   * make sure that
+   *   all workers registered and their state is RUNNING
+   * so that we can send a message to all
+   * @return
+   */
+  private boolean allWorkersRunning() {
+
+    // if numberOfWorkers does not match the number of registered workers,
+    // return false
+    if (workers.size() != numberOfWorkers) {
+      return false;
+    }
+
+    // if there is a gap in workerID sequence, return false
+    // since workerIDs are sorted and they start from 0
+    // we can check only the workerID of the last worker
+    if (workers.lastKey() != (numberOfWorkers - 1)) {
+      return false;
+    }
+
+    // check the status of all workers, all have to be RUNNING
+    for (WorkerWithState worker: workers.values()) {
+      if (worker.getLastState() != JobMasterAPI.WorkerState.RUNNING) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
      * worker RUNNING message received from all workers
      * if some workers may have already completed, that does not matter
      * the important thing is whether they have became RUNNING in the past

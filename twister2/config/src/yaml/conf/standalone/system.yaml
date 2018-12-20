@@ -37,7 +37,7 @@ twister2.job.master.used: false
 # if false, job master runs as a separate process in the cluster
 # by default, it is true
 # when the job master runs in the submitting client, this client has to be submitting the job from a machine in the cluster
-twister2.job.master.runs.in.client: false
+twister2.job.master.runs.in.client: true
 
 # if true, job master assigns the worker IDs,
 # if false, workers have their IDs when regitering with the job master

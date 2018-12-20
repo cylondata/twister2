@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
@@ -23,6 +25,8 @@ import edu.iu.dsc.tws.common.config.Config;
  * @param <P> the output type
  */
 public class FlatMapTSet<T, P> extends BaseTSet<T> {
+  private static final Logger LOG = Logger.getLogger(FlatMapTSet.class.getName());
+
   private BaseTSet<P> parent;
 
   private FlatMapFunction<P, T> mapFn;
@@ -37,9 +41,13 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
     boolean isIterable = isIterableInput(parent);
+    boolean keyed = isKeyedInput(parent);
 
-    ComputeConnection connection = builder.addCompute(getName(),
-        new FlatMapOp<>(mapFn, isIterable), parallel);
+    int p = calculateParallelism(parent);
+    String newName = generateName("flat-map", parent);
+
+    ComputeConnection connection = builder.addCompute(newName,
+        new FlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }

@@ -16,6 +16,8 @@ import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -27,12 +29,13 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
+import edu.iu.dsc.tws.common.worker.DriverListener;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 
 /**
- * JobMasterClient class
+ * JMWorkerAgent class
  * It is started for each Twister2 worker
  * It handles the communication with the Job Master
  * <p>
@@ -53,8 +56,8 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
  * It uses the calling thread and this call does not return unless the close method is called
  */
 
-public class JobMasterClient {
-  private static final Logger LOG = Logger.getLogger(JobMasterClient.class.getName());
+public final class JMWorkerAgent {
+  private static final Logger LOG = Logger.getLogger(JMWorkerAgent.class.getName());
 
   private static Progress looper;
   private boolean stopLooper = false;
@@ -67,11 +70,25 @@ public class JobMasterClient {
 
   private RRClient rrClient;
   private Pinger pinger;
-  private JMWorkerController jmWorkerController;
+
+  private JMWorkerController workerController;
+  private JMWorkerMessenger workerMessenger;
 
   private boolean registrationSucceeded;
 
   private int numberOfWorkers;
+
+  /**
+   * to control the connection error when we repeatedly try connecting
+   */
+  private boolean connectionRefused = false;
+
+  /**
+   * workers can register a driverListener to receive messages from the driver
+   */
+  private DriverListener driverListener;
+
+  private static JMWorkerAgent workerAgent;
 
   /**
    * the maximum duration this client will try to connect to the Job Master
@@ -80,15 +97,18 @@ public class JobMasterClient {
   private static final long CONNECTION_TRY_TIME_LIMIT = 100000;
 
   /**
-   * to control the connection error when we repeatedly try connecting
+   * Singleton JMWorkerAgent
+   * @param config
+   * @param thisWorker
+   * @param masterHost
+   * @param masterPort
+   * @param numberOfWorkers
    */
-  private boolean connectionRefused = false;
-
-  public JobMasterClient(Config config,
-                         WorkerInfo thisWorker,
-                         String masterHost,
-                         int masterPort,
-                         int numberOfWorkers) {
+  private JMWorkerAgent(Config config,
+                        WorkerInfo thisWorker,
+                        String masterHost,
+                        int masterPort,
+                        int numberOfWorkers) {
     this.config = config;
     this.thisWorker = thisWorker;
     this.masterAddress = masterHost;
@@ -97,15 +117,33 @@ public class JobMasterClient {
   }
 
   /**
-   * return WorkerInfo for this worker
+   * create the singleton JMWorkerAgent
+   * if it is already created, return the previous one.
    * @return
    */
-  public WorkerInfo getWorkerInfo() {
-    return thisWorker;
+  public static JMWorkerAgent createJMWorkerAgent(Config config,
+                                                  WorkerInfo thisWorker,
+                                                  String masterHost,
+                                                  int masterPort,
+                                                  int numberOfWorkers) {
+    if (workerAgent != null) {
+      return workerAgent;
+    }
+
+    workerAgent = new JMWorkerAgent(config, thisWorker, masterHost, masterPort, numberOfWorkers);
+    return workerAgent;
   }
 
   /**
-   * initialize JobMasterClient
+   * return the singleton agent object
+   * @return
+   */
+  public static JMWorkerAgent getJMWorkerAgent() {
+    return workerAgent;
+  }
+
+  /**
+   * initialize JMWorkerAgent
    * wait until it connects to JobMaster
    * return false, if it can not connect to JobMaster
    */
@@ -119,6 +157,8 @@ public class JobMasterClient {
 
     long interval = JobMasterContext.pingInterval(config);
     pinger = new Pinger(thisWorker.getWorkerID(), rrClient, interval);
+
+    workerMessenger = new JMWorkerMessenger(this);
 
     // protocol buffer message registrations
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
@@ -134,21 +174,34 @@ public class JobMasterClient {
     JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
         = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
 
-    JobMasterAPI.ScaledComputeResource.Builder scaleMessageBuilder =
-        JobMasterAPI.ScaledComputeResource.newBuilder();
+    JobMasterAPI.WorkerToDriver.Builder toDriverBuilder =
+        JobMasterAPI.WorkerToDriver.newBuilder();
+    JobMasterAPI.WorkerToDriverResponse.Builder toDriverResponseBuilder
+        = JobMasterAPI.WorkerToDriverResponse.newBuilder();
+
+    JobMasterAPI.WorkersScaled.Builder scaledMessageBuilder =
+        JobMasterAPI.WorkersScaled.newBuilder();
+
+    JobMasterAPI.Broadcast.Builder broadcastBuilder = JobMasterAPI.Broadcast.newBuilder();
 
     ResponseMessageHandler responseMessageHandler = new ResponseMessageHandler();
     rrClient.registerResponseHandler(registerWorkerBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(registerWorkerResponseBuilder, responseMessageHandler);
+
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
-    rrClient.registerResponseHandler(scaleMessageBuilder, responseMessageHandler);
+
+    rrClient.registerResponseHandler(toDriverBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(toDriverResponseBuilder, responseMessageHandler);
+
+    rrClient.registerResponseHandler(scaledMessageBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(broadcastBuilder, responseMessageHandler);
 
     // try to connect to JobMaster
     tryUntilConnected(CONNECTION_TRY_TIME_LIMIT);
 
     if (!rrClient.isConnected()) {
-      throw new RuntimeException("JobMasterClient can not connect to Job Master. Exiting .....");
+      throw new RuntimeException("JMWorkerAgent can not connect to Job Master. Exiting .....");
     }
   }
 
@@ -158,35 +211,26 @@ public class JobMasterClient {
    */
   private void initJMWorkerController() {
 
-    jmWorkerController = new JMWorkerController(config, thisWorker, rrClient, numberOfWorkers);
+    workerController = new JMWorkerController(config, thisWorker, rrClient, numberOfWorkers);
 
     JobMasterAPI.ListWorkersRequest.Builder listRequestBuilder =
         JobMasterAPI.ListWorkersRequest.newBuilder();
     JobMasterAPI.ListWorkersResponse.Builder listResponseBuilder =
         JobMasterAPI.ListWorkersResponse.newBuilder();
-    rrClient.registerResponseHandler(listRequestBuilder, jmWorkerController);
-    rrClient.registerResponseHandler(listResponseBuilder, jmWorkerController);
+    rrClient.registerResponseHandler(listRequestBuilder, workerController);
+    rrClient.registerResponseHandler(listResponseBuilder, workerController);
 
     JobMasterAPI.BarrierRequest.Builder barrierRequestBuilder =
         JobMasterAPI.BarrierRequest.newBuilder();
     JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
         JobMasterAPI.BarrierResponse.newBuilder();
-    rrClient.registerResponseHandler(barrierRequestBuilder, jmWorkerController);
-    rrClient.registerResponseHandler(barrierResponseBuilder, jmWorkerController);
-  }
-
-  public JMWorkerController getJMWorkerController() {
-    return jmWorkerController;
+    rrClient.registerResponseHandler(barrierRequestBuilder, workerController);
+    rrClient.registerResponseHandler(barrierResponseBuilder, workerController);
   }
 
   /**
-   * stop the JobMasterClient
+   * start the client to listen for messages
    */
-  public void close() {
-    stopLooper = true;
-    looper.wakeup();
-  }
-
   private void startLooping() {
 
     while (!stopLooper) {
@@ -290,6 +334,45 @@ public class JobMasterClient {
   }
 
   /**
+   * return WorkerInfo for this worker
+   * @return
+   */
+  public WorkerInfo getWorkerInfo() {
+    return thisWorker;
+  }
+
+  /**
+   * return JMWorkerController for this worker
+   * @return
+   */
+  public JMWorkerController getJMWorkerController() {
+    return workerController;
+  }
+
+  /**
+   * return JMWorkerMessenger for this worker
+   * @return
+   */
+  public JMWorkerMessenger getJMWorkerMessenger() {
+    return workerMessenger;
+  }
+
+  /**
+   * only one DriverListener can be added
+   * if the second driver listener tried to be added, false returned
+   * @param driverListener
+   * @return
+   */
+  public static boolean addDriverListener(DriverListener driverListener) {
+    if (workerAgent.driverListener != null) {
+      return false;
+    }
+
+    workerAgent.driverListener = driverListener;
+    return true;
+  }
+
+  /**
    * send RegisterWorker message to Job Master
    * put WorkerInfo in this message
    * @return
@@ -357,6 +440,33 @@ public class JobMasterClient {
     return true;
   }
 
+  public boolean sendWorkerToDriverMessage(Message message) {
+
+    JobMasterAPI.WorkerToDriver workerToDriver = JobMasterAPI.WorkerToDriver.newBuilder()
+        .setData(Any.pack(message).toByteString())
+        .setWorkerID(thisWorker.getWorkerID())
+        .build();
+
+    RequestID requestID = rrClient.sendRequest(workerToDriver);
+    if (requestID == null) {
+      LOG.severe("Could not send WorkerToDriver message.");
+      return false;
+    }
+
+    LOG.fine("Sent WorkerToDriver message: \n" + workerToDriver);
+    return true;
+  }
+
+
+
+  /**
+   * stop the JMWorkerAgent
+   */
+  public void close() {
+    stopLooper = true;
+    looper.wakeup();
+  }
+
   class ResponseMessageHandler implements MessageHandler {
 
     @Override
@@ -381,10 +491,35 @@ public class JobMasterClient {
         LOG.fine("Received a WorkerStateChange response from the master. \n" + message);
 
         // nothing to do
-      } else if (message instanceof JobMasterAPI.ScaledComputeResource) {
-        LOG.info("Received ScaleComputeResource message from the master. \n" + message);
+      } else if (message instanceof JobMasterAPI.WorkerToDriverResponse) {
+        LOG.info("Received a WorkerToDriverResponse from the master. \n" + message);
 
         // nothing to do
+      } else if (message instanceof JobMasterAPI.WorkersScaled) {
+        LOG.info("Received WorkersScaled message from the master. \n" + message);
+
+        JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
+        if (driverListener != null) {
+          if (scaledMessage.getChange() > 0) {
+            driverListener.workersScaledUp(scaledMessage.getChange());
+          } else if (scaledMessage.getChange() < 0) {
+            driverListener.workersScaledDown(0 - scaledMessage.getChange());
+          }
+        }
+
+      } else if (message instanceof JobMasterAPI.Broadcast) {
+        LOG.fine("Received Broadcast message from the master. \n" + message);
+
+        if (driverListener != null) {
+          JobMasterAPI.Broadcast broadcast = (JobMasterAPI.Broadcast) message;
+          try {
+            Any any = Any.parseFrom(broadcast.getData());
+            driverListener.broadcastReceived(any);
+          } catch (InvalidProtocolBufferException e) {
+            LOG.log(Level.SEVERE, "Can not parse received protocol buffer message to Any", e);
+          }
+
+        }
 
       } else {
         LOG.warning("Received message unrecognized. \n" + message);
@@ -402,7 +537,7 @@ public class JobMasterClient {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       if (status == StatusCode.SUCCESS) {
-        LOG.info(thisWorker.getWorkerID() + " JobMasterClient connected to JobMaster: " + channel);
+        LOG.info(thisWorker.getWorkerID() + " JMWorkerAgent connected to JobMaster: " + channel);
       }
 
       if (status == StatusCode.CONNECTION_REFUSED) {

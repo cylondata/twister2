@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -32,24 +33,39 @@ public class FlatMapOp<T, R> implements ICompute {
 
   private boolean iterable;
 
+  private boolean keyed;
+
   public FlatMapOp() {
   }
 
-  public FlatMapOp(FlatMapFunction<T, R> mapFn, boolean itr) {
+  public FlatMapOp(FlatMapFunction<T, R> mapFn, boolean itr, boolean kyd) {
     this.mapFn = mapFn;
     this.iterable = itr;
+    this.keyed = kyd;
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public boolean execute(IMessage content) {
-    if (!iterable) {
-      T data = (T) content.getContent();
-      mapFn.flatMap(data, collector);
+    if (!keyed) {
+      if (!iterable) {
+        T data = (T) content.getContent();
+        mapFn.flatMap(data, collector);
+      } else {
+        Iterator<T> data = (Iterator<T>) content.getContent();
+        while (data.hasNext()) {
+          mapFn.flatMap(data.next(), collector);
+        }
+      }
     } else {
-      Iterator<T> data = (Iterator<T>) content.getContent();
-      while (data.hasNext()) {
-        mapFn.flatMap(data.next(), collector);
+      if (!iterable) {
+        KeyedContent data = (KeyedContent) content.getContent();
+        mapFn.flatMap((T) data.getValue(), collector);
+      } else {
+        Iterator<KeyedContent> data = (Iterator<KeyedContent>) content.getContent();
+        while (data.hasNext()) {
+          mapFn.flatMap((T) data.next().getValue(), collector);
+        }
       }
     }
 

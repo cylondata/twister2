@@ -14,24 +14,20 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.driver;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import com.google.protobuf.Message;
-
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.driver.IDriverController;
-import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.driver.JMDriverClient;
+import edu.iu.dsc.tws.common.driver.IScaler;
+import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.JobPackageTransferThread;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 
-public class K8SDriverController implements IDriverController {
+public class K8sScaler implements IScaler {
 
-  private static final Logger LOG = Logger.getLogger(K8SDriverController.class.getName());
+  private static final Logger LOG = Logger.getLogger(K8sScaler.class.getName());
 
-  private JMDriverClient driverClient;
-  private JobAPI.Job job;
+  private JMDriverAgent driverAgent;
   private KubernetesController k8sController;
   private Config config;
 
@@ -44,10 +40,14 @@ public class K8SDriverController implements IDriverController {
   // job package file to be transferred to newly created pods
   private String jobPackageFile;
 
-  public K8SDriverController(Config config, String jmHost, JobAPI.Job job, String jobPackageFile,
-                             KubernetesController k8sController) {
+  // number of workers in the job
+  // when the number of workers changes, this value is updated accordingly
+  // it shows the up-to-date value
+  private int numberOfWorkers;
+
+  public K8sScaler(Config config, JMDriverAgent driverAgent, JobAPI.Job job,
+                   String jobPackageFile, KubernetesController k8sController) {
     this.config = config;
-    this.job = job;
     this.jobPackageFile = jobPackageFile;
     this.k8sController = k8sController;
 
@@ -58,9 +58,9 @@ public class K8SDriverController implements IDriverController {
     scalableSSName = KubernetesUtils.createWorkersStatefulSetName(
         job.getJobName(), job.getComputeResourceCount() - 1);
 
-    int jmPort = JobMasterContext.jobMasterPort(config);
-    driverClient = new JMDriverClient(config, jmHost, jmPort);
-    driverClient.startThreaded();
+    this.numberOfWorkers = job.getNumberOfWorkers();
+
+    this.driverAgent = driverAgent;
   }
 
   /**
@@ -82,7 +82,7 @@ public class K8SDriverController implements IDriverController {
 
     int podsToAdd = instancesToAdd / workersPerPod;
 
-    // if the client is uploading the job package, start upload threads
+    // if the submitting client is uploading the job package, start the upload threads
     if (KubernetesContext.clientToPodsUploading(config)) {
       ArrayList<String> podNames = generatePodNames(podsToAdd);
       String namespace = KubernetesContext.namespace(config);
@@ -108,9 +108,17 @@ public class K8SDriverController implements IDriverController {
       }
     }
 
-    replicas = replicas + podsToAdd;
+    boolean sent = driverAgent.sendScaledMessage(instancesToAdd, numberOfWorkers + instancesToAdd);
+    if (!sent) {
+      // if the message can not be sent, scale down to the previous value
+      k8sController.patchStatefulSet(scalableSSName, replicas);
+      return false;
+    }
 
-    driverClient.sendScaledMessage(computeResourceIndex, replicas);
+    replicas = replicas + podsToAdd;
+    numberOfWorkers += instancesToAdd;
+    driverAgent.setNumberOfWorkers(numberOfWorkers);
+
     return true;
   }
 
@@ -146,20 +154,11 @@ public class K8SDriverController implements IDriverController {
 
     // update replicas
     replicas = replicas - podsToRemove;
+    numberOfWorkers -= instancesToRemove;
+    driverAgent.setNumberOfWorkers(numberOfWorkers);
 
     // send scaled message to job master
-    return driverClient.sendScaledMessage(computeResourceIndex, replicas);
-  }
-
-  /**
-   * send this message to all workers in the job
-   * @param className
-   * @param message
-   * @return
-   */
-  @Override
-  public boolean broadcastToAllWorkers(String className, Message message) {
-    return false;
+    return driverAgent.sendScaledMessage(0 - instancesToRemove, numberOfWorkers);
   }
 
   /**
@@ -180,13 +179,6 @@ public class K8SDriverController implements IDriverController {
     }
 
     return podNames;
-  }
-
-  /**
-   * close the connection to the
-   */
-  public void close() {
-    driverClient.close();
   }
 
 }

@@ -114,7 +114,7 @@ public class JobMaster {
    * a flag to show that whether the job is done
    * when it is converted to true, the job master exits
    */
-  private boolean workersCompleted = false;
+  private boolean jobCompleted = false;
 
   /**
    * Job Terminator object.
@@ -156,6 +156,21 @@ public class JobMaster {
    */
   private BarrierMonitor barrierMonitor;
 
+  /**
+   * a variable that shows whether JobMaster will run jobTerminate
+   * when it is killed with a shutdown hook
+   */
+  private boolean clearResourcesWhenKilled;
+
+  /**
+   * JobMaster constructor
+   * @param config
+   * @param masterAddress
+   * @param port
+   * @param jobTerminator
+   * @param job
+   * @param nodeInfo
+   */
   public JobMaster(Config config,
                    String masterAddress,
                    int port,
@@ -238,22 +253,42 @@ public class JobMaster {
     JobMasterAPI.BarrierResponse.Builder barrierResponseBuilder =
         JobMasterAPI.BarrierResponse.newBuilder();
 
-    JobMasterAPI.ScaledComputeResource.Builder scaleMessageBuilder =
-        JobMasterAPI.ScaledComputeResource.newBuilder();
-    JobMasterAPI.ScaledResponse.Builder scaleResponseBuilder
+    JobMasterAPI.WorkersScaled.Builder scaledMessageBuilder =
+        JobMasterAPI.WorkersScaled.newBuilder();
+    JobMasterAPI.ScaledResponse.Builder scaledResponseBuilder
         = JobMasterAPI.ScaledResponse.newBuilder();
 
+    JobMasterAPI.Broadcast.Builder broadcastBuilder = JobMasterAPI.Broadcast.newBuilder();
+    JobMasterAPI.BroadcastResponse.Builder broadcastResponseBuilder
+        = JobMasterAPI.BroadcastResponse.newBuilder();
+
+    JobMasterAPI.WorkerToDriver.Builder toDriverBuilder =
+        JobMasterAPI.WorkerToDriver.newBuilder();
+    JobMasterAPI.WorkerToDriverResponse.Builder toDriverResponseBuilder
+        = JobMasterAPI.WorkerToDriverResponse.newBuilder();
+
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
+
     rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
     rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerMonitor);
+
     rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
+
     rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
     rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
+
     rrServer.registerRequestHandler(barrierRequestBuilder, barrierMonitor);
     rrServer.registerRequestHandler(barrierResponseBuilder, barrierMonitor);
-    rrServer.registerRequestHandler(scaleMessageBuilder, workerMonitor);
-    rrServer.registerRequestHandler(scaleResponseBuilder, workerMonitor);
+
+    rrServer.registerRequestHandler(scaledMessageBuilder, workerMonitor);
+    rrServer.registerRequestHandler(scaledResponseBuilder, workerMonitor);
+
+    rrServer.registerRequestHandler(broadcastBuilder, workerMonitor);
+    rrServer.registerRequestHandler(broadcastResponseBuilder, workerMonitor);
+
+    rrServer.registerRequestHandler(toDriverBuilder, workerMonitor);
+    rrServer.registerRequestHandler(toDriverResponseBuilder, workerMonitor);
 
     rrServer.start();
     looper.loop();
@@ -295,7 +330,7 @@ public class JobMaster {
     LOG.info("JobMaster [" + masterAddress + "] started and waiting worker messages on port: "
         + masterPort);
 
-    while (!workersCompleted) {
+    while (!jobCompleted) {
       looper.loopBlocking();
     }
 
@@ -315,17 +350,19 @@ public class JobMaster {
   }
 
   /**
-   * this method is executed when the worker completed message received from all workers
+   * this method finishes the job
+   * It is executed when the worker completed message received from all workers or
+   * When JobMaster is killed with shutdown hook
    */
-  public void allWorkersCompleted() {
+  public void completeJob() {
 
-    // if Dashboard is used, tell it that the job has completed
+    // if Dashboard is used, tell it that the job has completed or killed
     if (dashClient != null) {
       dashClient.jobStateChange(JobState.COMPLETED);
     }
 
     LOG.info("All " + numberOfWorkers + " workers have completed. JobMaster is stopping.");
-    workersCompleted = true;
+    jobCompleted = true;
     looper.wakeup();
 
     if (jobTerminator != null) {
@@ -333,10 +370,37 @@ public class JobMaster {
     }
   }
 
-  public void addShutdownHook() {
+  /**
+   * when JobMaster is killed, it can either terminate the job and clear all job resources
+   * or just lets the Dashboard know that it is killed
+   *
+   * when it runs in the client, it should be set as true
+   * when it runs in the cluster, it should usually be set as false
+   * because, probably a job terminator is called and it cleared the resources
+   * @param clearJobResourcesWhenKilled
+   */
+  public void addShutdownHook(boolean clearJobResourcesWhenKilled) {
+    this.clearResourcesWhenKilled = clearJobResourcesWhenKilled;
+
     Thread hookThread = new Thread() {
       public void run() {
-        allWorkersCompleted();
+
+        // if Dashboard is used, tell it that the job is killed
+        if (dashClient != null) {
+          // TODO: this will be changed with KILLED
+//          dashClient.jobStateChange(JobState.KILLED);
+          dashClient.jobStateChange(JobState.COMPLETED);
+        }
+
+        if (JobMaster.this.clearResourcesWhenKilled) {
+          jobCompleted = true;
+          looper.wakeup();
+
+          if (jobTerminator != null) {
+            jobTerminator.terminateJob(job.getJobName());
+          }
+        }
+
       }
     };
 

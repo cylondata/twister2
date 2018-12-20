@@ -27,6 +27,7 @@ public class GatherTSet<T> extends BaseTSet<T> {
   public GatherTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt) {
     super(cfg, bldr);
     this.parent = prnt;
+    this.name = "gather-" + parent.getName();
   }
 
   @Override
@@ -39,5 +40,10 @@ public class GatherTSet<T> extends BaseTSet<T> {
     DataType dataType = getDataType(getType());
 
     connection.gather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+  }
+
+  @Override
+  protected int overrideParallelism() {
+    return 1;
   }
 }

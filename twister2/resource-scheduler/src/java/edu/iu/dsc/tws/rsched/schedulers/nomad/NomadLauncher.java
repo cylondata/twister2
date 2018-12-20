@@ -101,7 +101,7 @@ public class NomadLauncher implements ILauncher {
         JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
         jobMaster =
             new JobMaster(config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo);
-        jobMaster.addShutdownHook();
+        jobMaster.addShutdownHook(true);
         jmThread = jobMaster.startJobMasterThreaded();
       } catch (UnknownHostException e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);

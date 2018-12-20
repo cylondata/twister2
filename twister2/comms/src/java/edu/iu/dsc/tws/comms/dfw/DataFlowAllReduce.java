@@ -158,6 +158,22 @@ public class DataFlowAllReduce implements DataFlowOperation {
   }
 
   @Override
+  public void clean() {
+    if (partialReceiver != null) {
+      partialReceiver.clean();
+    }
+
+    if (reduce != null) {
+      reduce.clean();
+    }
+
+    if (broadcast != null) {
+      broadcast.clean();
+    }
+  }
+
+
+  @Override
   public void finish(int source) {
     reduce.finish(source);
   }

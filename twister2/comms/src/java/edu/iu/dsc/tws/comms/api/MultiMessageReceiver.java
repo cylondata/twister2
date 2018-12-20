@@ -35,5 +35,16 @@ public interface MultiMessageReceiver {
    */
   boolean onMessage(int source, int path, int target, int flags, Object object);
 
+  /**
+   * This method will be called by the communicationProgress
+   *
+   * @return true if needs further communicationProgress
+   */
   boolean progress();
+
+  /**
+   * Close the receiver
+   */
+  default void close() {
+  }
 }

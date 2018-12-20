@@ -14,26 +14,24 @@ package edu.iu.dsc.tws.api.tset.ops;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
 public class TaskPartitionFunction<T> implements TaskPartitioner {
   private PartitionFunction<T> partitionFunction;
-  private int numDestinations;
 
   public TaskPartitionFunction(PartitionFunction<T> parFn) {
     this.partitionFunction = parFn;
   }
 
   @Override
-  public void prepare(TaskContext context, Set<Integer> sources, Set<Integer> destinations) {
-    this.numDestinations = destinations.size();
+  public void prepare(Set<Integer> sources, Set<Integer> destinations) {
+    partitionFunction.prepare(sources, destinations);
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public int partition(int source, Object data) {
-    return partitionFunction.partition(source, numDestinations, (T) data);
+    return partitionFunction.partition(source, (T) data);
   }
 
   @Override

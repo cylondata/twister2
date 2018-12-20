@@ -11,28 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.driver;
 
-import com.google.protobuf.Message;
+import com.google.protobuf.Any;
 
-public interface IDriverController {
-
-  /**
-   * add new instances of the scalable ComputeResource in the job
-   * @param instancesToAdd
-   * @return true if successful
-   */
-  boolean scaleUpWorkers(int instancesToAdd);
+public interface WorkerListener {
 
   /**
-   * remove some instances of the scalable ComputeResource in the job
-   * @param instancesToRemove
-   * @return true if successful
+   * received a protocol buffer message from a worker
+   * @param anyMessage received message from the worker
    */
-  boolean scaleDownWorkers(int instancesToRemove);
-
-  /**
-   * the client can send data to all workers in the job
-   * @return
-   */
-  boolean broadcastToAllWorkers(String className, Message message);
+  void workerMessageReceived(Any anyMessage, int senderWorkerID);
 
 }
