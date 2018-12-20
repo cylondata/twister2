@@ -34,7 +34,10 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
-    LOG.info("%%%%%%%%% HTG JOB OBJECT:%%%%%%%%%" + config.get("TWISTER2_HTG_JOB"));
+    Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
+    LOG.info("Execution message list in driver:"
+        + twister2HTGInstance.getExecuteMessagesList() + "\t" + twister2HTGInstance.getHtgJob());
+
     JMDriverAgent.addWorkerListener(this);
     broadcast(messenger);
     LOG.info("Twister2 HTG Driver has finished execution.");

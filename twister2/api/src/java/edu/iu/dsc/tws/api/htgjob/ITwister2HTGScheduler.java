@@ -13,6 +13,11 @@ package edu.iu.dsc.tws.api.htgjob;
 
 import java.util.List;
 
+/**
+ * This schedule is the base method for making decisions to run the part of the task graph which
+ * will be improved further with the complex logic. Now, based on the relations(parent -> child)
+ * it will initiate the execution.
+ */
 public interface ITwister2HTGScheduler {
 
   List<String> schedule(Twister2Metagraph twister2Metagraph);

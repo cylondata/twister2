@@ -23,7 +23,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.htgjob;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -54,8 +53,8 @@ public final class Twister2HTGSubmitter {
   }
 
   /**
-   * The executeHTG method first call the schedule method to get the schedule list of the HTG. Then,
-   * it invokes the build HTG Job object to build the htg job object for the scheduled graphs.
+   * The executeHTG method first call the schedule method to get the schedule list of the HTG.
+   * Then, it invokes the build HTG Job object to build the htg job object for the scheduled graphs.
    */
   public void executeHTG(Twister2Metagraph twister2Metagraph,
                          JobConfig jobConfig,
@@ -101,17 +100,19 @@ public final class Twister2HTGSubmitter {
       executeMessageList.add(executeMessage);
     }
 
-    /*Twister2HTGInstance twister2HTGInstance = new Twister2HTGInstance(config);
+    Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
     twister2HTGInstance.setHtgJob(htgJob);
+    twister2HTGInstance.setExecuteMessagesList(executeMessageList);
     twister2HTGInstance.setTwister2HTGScheduler(twister2HTGScheduler);
-    twister2HTGInstance.setExecuteMessagesList(executeMessageList);*/
 
-    jobConfig.put("TWISTER2_HTG_JOB", KRYO_SERIALIZER.serialize(htgJob));
-
+    /*Config htgConfig = Config.newBuilder().
+        putAll(config)
+        .put("TWISTER2_HTG_JOB",twister2HTGInstance)
+        .build();
+*/
     //Setting the first graph resource requirements.
     twister2Job = Twister2Job.newBuilder()
         .setJobName(htgJob.getHtgJobname())
-        //.setJobName("Test htg")
         .setWorkerClass(workerclassName)
         .setDriverClass(Twister2HTGDriver.class.getName()) //send execute msg list and HTGDriver
         .addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
@@ -119,32 +120,8 @@ public final class Twister2HTGSubmitter {
         .setConfig(jobConfig)
         .build();
 
+    //LOG.info("%%%%%%%%% HTG Job Instance:" + config.get("TWISTER2_HTG_JOB"));
+
     Twister2Submitter.submitJob(twister2Job, config);
-  }
-
-  /**
-   * This schedule is the base method for making decisions to run the part of the task graph which
-   * will be improved further with the complex logic. Now, based on the relations(parent -> child)
-   * it will initiate the execution.
-   */
-  private List<String> schedule(Twister2Metagraph twister2Metagraph) {
-
-    LinkedList<String> scheduledGraph = new LinkedList<>();
-
-    if (twister2Metagraph.getRelation().size() == 1) {
-      scheduledGraph.addFirst(twister2Metagraph.getRelation().iterator().next().getParent());
-      scheduledGraph.addAll(Collections.singleton(
-          twister2Metagraph.getRelation().iterator().next().getChild()));
-    } else {
-      int i = 0;
-      while (i < twister2Metagraph.getRelation().size()) {
-        scheduledGraph.addFirst(twister2Metagraph.getRelation().iterator().next().getParent());
-        scheduledGraph.addAll(Collections.singleton(
-            twister2Metagraph.getRelation().iterator().next().getChild()));
-        i++;
-      }
-    }
-    LOG.info("%%%% Scheduled Graph list details: %%%%" + scheduledGraph);
-    return scheduledGraph;
   }
 }
