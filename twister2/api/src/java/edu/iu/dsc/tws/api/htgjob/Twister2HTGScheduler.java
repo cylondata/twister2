@@ -17,7 +17,9 @@ import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * H
+ * This schedule is the base method for making decisions to run the part of the task graph which
+ * will be improved further with the complex logic. Now, based on the relations(parent -> child)
+ * it will initiate the execution.
  */
 
 public class Twister2HTGScheduler implements ITwister2HTGScheduler {

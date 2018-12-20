@@ -23,7 +23,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.htgjob;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -45,6 +44,8 @@ public final class Twister2HTGSubmitter {
 
   private List<HTGJobAPI.ExecuteMessage> executeMessageList = new LinkedList<>();
 
+  private Twister2HTGScheduler twister2HTGScheduler;
+
   private static final KryoSerializer KRYO_SERIALIZER = new KryoSerializer();
 
   public Twister2HTGSubmitter(Config cfg) {
@@ -52,8 +53,8 @@ public final class Twister2HTGSubmitter {
   }
 
   /**
-   * The executeHTG method first call the schedule method to get the schedule list of the HTG. Then,
-   * it invokes the build HTG Job object to build the htg job object for the scheduled graphs.
+   * The executeHTG method first call the schedule method to get the schedule list of the HTG.
+   * Then, it invokes the build HTG Job object to build the htg job object for the scheduled graphs.
    */
   public void executeHTG(Twister2Metagraph twister2Metagraph,
                          JobConfig jobConfig,
@@ -65,7 +66,7 @@ public final class Twister2HTGSubmitter {
     //Call the schedule method to identify the order of graphs to be executed
     //List<String> scheduleGraphs = schedule(twister2Metagraph);
 
-    Twister2HTGScheduler twister2HTGScheduler = new Twister2HTGScheduler();
+    twister2HTGScheduler = new Twister2HTGScheduler();
     List<String> scheduleGraphs = twister2HTGScheduler.schedule(twister2Metagraph);
     buildHTGJob(scheduleGraphs, twister2Metagraph, workerclassName, jobConfig);
   }
@@ -89,10 +90,20 @@ public final class Twister2HTGSubmitter {
         .build();
 
     String subGraphName = scheduleGraphs.get(0);
-
     subGraph = twister2Metagraph.getMetaGraphMap(subGraphName);
 
-    jobConfig.put("HTGJobObject", KRYO_SERIALIZER.serialize(htgJob));
+    //Set the subgraph to be executed from the metagraph
+    for (String subgraphName : scheduleGraphs) {
+      executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
+          .setSubgraphName(subgraphName)
+          .build();
+      executeMessageList.add(executeMessage);
+    }
+
+    Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
+    twister2HTGInstance.setHtgJob(htgJob);
+    twister2HTGInstance.setExecuteMessagesList(executeMessageList);
+    twister2HTGInstance.setTwister2HTGScheduler(twister2HTGScheduler);
 
     //Setting the first graph resource requirements.
     twister2Job = Twister2Job.newBuilder()
@@ -104,68 +115,6 @@ public final class Twister2HTGSubmitter {
         .setConfig(jobConfig)
         .build();
 
-    for (String subgraphName : scheduleGraphs) {
-
-      //Set the subgraph to be executed from the metagraph
-      executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
-          .setSubgraphName(subgraphName)
-          .build();
-      executeMessageList.add(executeMessage);
-    }
-
     Twister2Submitter.submitJob(twister2Job, config);
   }
-
-  /**
-   * This schedule is the base method for making decisions to run the part of the task graph which
-   * will be improved further with the complex logic. Now, based on the relations(parent -> child)
-   * it will initiate the execution.
-   */
-  private List<String> schedule(Twister2Metagraph twister2Metagraph) {
-
-    LinkedList<String> scheduledGraph = new LinkedList<>();
-
-    if (twister2Metagraph.getRelation().size() == 1) {
-      scheduledGraph.addFirst(twister2Metagraph.getRelation().iterator().next().getParent());
-      scheduledGraph.addAll(Collections.singleton(
-          twister2Metagraph.getRelation().iterator().next().getChild()));
-    } else {
-      int i = 0;
-      while (i < twister2Metagraph.getRelation().size()) {
-        scheduledGraph.addFirst(twister2Metagraph.getRelation().iterator().next().getParent());
-        scheduledGraph.addAll(Collections.singleton(
-            twister2Metagraph.getRelation().iterator().next().getChild()));
-        i++;
-      }
-    }
-    LOG.info("%%%% Scheduled Graph list details: %%%%" + scheduledGraph);
-    return scheduledGraph;
-  }
-
-  /*public static class HTGClientInfoUtils {
-    public static JobMasterAPI.HTGClientInfo createHTGClientInfo(int htgClientID,
-                                                                 String hostAddress,
-                                                                 int htgClientPort,
-                                                                 JobMasterAPI.NodeInfo nodeInfo) {
-
-      JobMasterAPI.HTGClientInfo.Builder builder = JobMasterAPI.HTGClientInfo.newBuilder();
-      builder.setClientID(htgClientID);
-      builder.setClientIP(hostAddress);
-      builder.setPort(htgClientPort);
-
-      if (nodeInfo != null) {
-        builder.setNodeInfo(nodeInfo);
-      }
-      return builder.build();
-    }
-
-    public static JobMasterAPI.HTGClientInfo updateHTGClientID(
-        JobMasterAPI.HTGClientInfo htgClientInfo, int clientID) {
-
-      return createHTGClientInfo(clientID,
-          htgClientInfo.getClientIP(),
-          htgClientInfo.getPort(),
-          htgClientInfo.getNodeInfo());
-    }
-  }*/
 }

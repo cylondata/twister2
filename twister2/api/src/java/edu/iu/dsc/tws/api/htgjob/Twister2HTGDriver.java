@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.htgjob;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,10 +30,16 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
 
   private static final Logger LOG = Logger.getLogger(Twister2HTGDriver.class.getName());
 
+  private List<HTGJobAPI.ExecuteMessage> executeMessageList;
+
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
-    LOG.info("%%% config value:" + config.getStringValue("HTGJobObject"));
+    Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
+    LOG.info("Execution message list in driver:"
+        + twister2HTGInstance.getExecuteMessagesList() + "\t" + twister2HTGInstance.getHtgJob());
+
+    executeMessageList = twister2HTGInstance.getExecuteMessagesList();
 
     JMDriverAgent.addWorkerListener(this);
     broadcast(messenger);
@@ -43,40 +50,18 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
 
     LOG.info("Testing HTG Driver  ............................. ");
 
-    try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+    for (HTGJobAPI.ExecuteMessage executeMessage : executeMessageList) {
 
-    HTGJobAPI.ExecuteMessage executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
-        .setSubgraphName("sourcetaskgraph")
-        .build();
+      LOG.info("Broadcasting execute message: " + executeMessage);
 
+      messenger.broadcastToAllWorkers(executeMessage);
 
-    LOG.info("Broadcasting execute message: " + executeMessage);
-    messenger.broadcastToAllWorkers(executeMessage);
-
-    try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    executeMessage = HTGJobAPI.ExecuteMessage.newBuilder()
-        .setSubgraphName("sinktaskgraph")
-        .build();
-
-    LOG.info("Broadcasting execute message: " + executeMessage);
-    messenger.broadcastToAllWorkers(executeMessage);
-
-    try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      try {
+        LOG.info("Sleeping 5 seconds ....");
+        Thread.sleep(5000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
     }
 
     HTGJobAPI.HTGJobCompletedMessage jobCompletedMessage = HTGJobAPI.HTGJobCompletedMessage
@@ -99,50 +84,3 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
   }
 }
 
-/*import java.util.List;
-import java.util.logging.Logger;
-
-import edu.iu.dsc.tws.common.driver.IDriver;
-import edu.iu.dsc.tws.common.driver.IDriverController;
-import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
-
-public class Twister2HTGDriver implements IDriver {
-
-  private static final Logger LOG = Logger.getLogger(Twister2HTGSubmitter.class.getName());
-
-  private List<HTGJobAPI.ExecuteMessage> executeMessageList;
-
-  public Twister2HTGDriver(List<HTGJobAPI.ExecuteMessage> executeMsgList) {
-    LOG.info("I am inside htg driver");
-    this.executeMessageList = executeMsgList;
-  }
-
-  @Override
-  public void execute(IDriverController driverController) {
-
-    *//*for (HTGJobAPI.ExecuteMessage anExecuteMessage : executeMessageList) {
-
-      driverController.broadcastToAllWorkers(
-          Twister2HTGSubmitter.class.getName(), anExecuteMessage);
-
-      sleep(2000);
-    }*//*
-
-    JobMasterAPI.NodeInfo nodeInfo =
-        NodeInfoUtils.createNodeInfo("example.nodeIP", "rack-01", "dc-01");
-
-    LOG.info("Broadcasting an example protocol buffer message: " + nodeInfo);
-    driverController.broadcastToAllWorkers(Twister2HTGDriver.class.getName(), nodeInfo);
-  }
-
-  private static void sleep(long duration) {
-    LOG.info("Sleeping " + duration + "ms............");
-    try {
-      Thread.sleep(duration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-  }
-}*/
