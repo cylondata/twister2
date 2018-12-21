@@ -31,8 +31,6 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
-import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 
 public final class Twister2HTGSubmitter {
@@ -40,13 +38,7 @@ public final class Twister2HTGSubmitter {
   private static final Logger LOG = Logger.getLogger(Twister2HTGSubmitter.class.getName());
 
   private Config config;
-  private JobMaster jobMaster;
-
   private List<HTGJobAPI.ExecuteMessage> executeMessageList = new LinkedList<>();
-
-  private Twister2HTGScheduler twister2HTGScheduler;
-
-  private static final KryoSerializer KRYO_SERIALIZER = new KryoSerializer();
 
   public Twister2HTGSubmitter(Config cfg) {
     this.config = cfg;
@@ -63,11 +55,7 @@ public final class Twister2HTGSubmitter {
     LOG.fine("HTG Sub Graph Requirements:" + twister2Metagraph.getSubGraph()
         + "\nHTG Relationship Values:" + twister2Metagraph.getRelation());
 
-    //Call the schedule method to identify the order of graphs to be executed
-    //List<String> scheduleGraphs = schedule(twister2Metagraph);
-
-    twister2HTGScheduler = new Twister2HTGScheduler();
-    List<String> scheduleGraphs = twister2HTGScheduler.schedule(twister2Metagraph);
+    List<String> scheduleGraphs = new Twister2HTGScheduler().schedule(twister2Metagraph);
     buildHTGJob(scheduleGraphs, twister2Metagraph, workerclassName, jobConfig);
   }
 
@@ -82,7 +70,7 @@ public final class Twister2HTGSubmitter {
     Twister2Metagraph.SubGraph subGraph;
     HTGJobAPI.ExecuteMessage executeMessage;
 
-    //Construct the HTGJob object to be sent to Job Master
+    //Construct the HTGJob object to be sent to the HTG Driver
     HTGJobAPI.HTGJob htgJob = HTGJobAPI.HTGJob.newBuilder()
         .setHtgJobname(twister2Metagraph.getHTGName())
         .addAllGraphs(twister2Metagraph.getSubGraph())
@@ -100,16 +88,17 @@ public final class Twister2HTGSubmitter {
       executeMessageList.add(executeMessage);
     }
 
+    //send the singleton object to the HTG Driver
     Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
     twister2HTGInstance.setHtgJob(htgJob);
     twister2HTGInstance.setExecuteMessagesList(executeMessageList);
-    twister2HTGInstance.setTwister2HTGScheduler(twister2HTGScheduler);
+    twister2HTGInstance.setHtgSchedulerClassName(Twister2HTGScheduler.class.getName());
 
-    //Setting the first graph resource requirements.
+    //Setting the first graph resource requirements for the initial resource allocation
     twister2Job = Twister2Job.newBuilder()
         .setJobName(htgJob.getHtgJobname())
         .setWorkerClass(workerclassName)
-        .setDriverClass(Twister2HTGDriver.class.getName()) //send execute msg list and HTGDriver
+        .setDriverClass(Twister2HTGDriver.class.getName())
         .addComputeResource(subGraph.getCpu(), subGraph.getRamMegaBytes(),
             subGraph.getDiskGigaBytes(), subGraph.getNumberOfInstances())
         .setConfig(jobConfig)

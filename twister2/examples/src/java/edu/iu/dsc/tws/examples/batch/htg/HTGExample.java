@@ -169,7 +169,7 @@ public class HTGExample extends HTGTaskWorker {
 
   public static void main(String[] args) throws ParseException {
 
-    LOG.log(Level.INFO, "HTG Graph Job");
+    LOG.log(Level.INFO, "HTG Job");
 
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -197,20 +197,18 @@ public class HTGExample extends HTGTaskWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    config = Config.newBuilder()
-        .putAll(config)
-        .put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName())
-        .build();
+    config = Config.newBuilder().putAll(config)
+        .put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName()).build();
 
-    //TODO:Design the metagraph
+    //Design the metagraph with source task graph and sink task graph
     Twister2MetagraphBuilder twister2MetagraphBuilder = Twister2MetagraphBuilder.newBuilder(config);
     twister2MetagraphBuilder.addSource("sourcetaskgraph", config);
-    Twister2MetagraphConnection twister2MetagraphConnection = twister2MetagraphBuilder.addSink(
-        "sinktaskgraph", config);
+    Twister2MetagraphConnection twister2MetagraphConnection
+        = twister2MetagraphBuilder.addSink("sinktaskgraph", config);
     twister2MetagraphConnection.broadcast("sourcetaskgraph", "broadcast");
-    twister2MetagraphBuilder.setHtgName("htg");
+    twister2MetagraphBuilder.setHtgName("HTGJob");
 
-    //TODO:Invoke HTG Submitter and send the metagraph
+    //Invoke HTG Submitter and send the metagraph
     Twister2HTGSubmitter twister2HTGSubmitter = new Twister2HTGSubmitter(config);
     twister2HTGSubmitter.executeHTG(twister2MetagraphBuilder.build(),
         jobConfig, HTGExample.class.getName());
