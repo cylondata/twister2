@@ -87,10 +87,6 @@ public final class JMDriverAgent {
 
   /**
    * The Agent class that talks the driver with the JobMaster
-   * @param config
-   * @param masterHost
-   * @param masterPort
-   * @param numberOfWorkers
    */
   private JMDriverAgent(Config config,
                         String masterHost,
@@ -130,6 +126,11 @@ public final class JMDriverAgent {
         RRServer.DRIVER_ID, connectHandler);
 
     // protocol buffer message registrations
+    JobMasterAPI.RegisterDriver.Builder registerBuilder =
+        JobMasterAPI.RegisterDriver.newBuilder();
+    JobMasterAPI.RegisterDriverResponse.Builder registerResponseBuilder
+        = JobMasterAPI.RegisterDriverResponse.newBuilder();
+
     JobMasterAPI.WorkersScaled.Builder scaledMessageBuilder =
         JobMasterAPI.WorkersScaled.newBuilder();
     JobMasterAPI.ScaledResponse.Builder scaledResponseBuilder
@@ -144,6 +145,9 @@ public final class JMDriverAgent {
     JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
 
     ResponseMessageHandler responseMessageHandler = new ResponseMessageHandler();
+    rrClient.registerResponseHandler(registerBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(registerResponseBuilder, responseMessageHandler);
+
     rrClient.registerResponseHandler(scaledMessageBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(scaledResponseBuilder, responseMessageHandler);
 
@@ -244,6 +248,9 @@ public final class JMDriverAgent {
 
     jmThread.start();
 
+    // register the driver
+    registerDriver();
+
     return jmThread;
   }
 
@@ -255,6 +262,9 @@ public final class JMDriverAgent {
     init();
 
     startLooping();
+
+    // register the driver
+    registerDriver();
   }
 
   public void setNumberOfWorkers(int numberOfWorkers) {
@@ -264,8 +274,6 @@ public final class JMDriverAgent {
   /**
    * only one WorkerListener can be added
    * if the second WorkerListener tried to be added, false returned
-   * @param workerListener
-   * @return
    */
   public static boolean addWorkerListener(WorkerListener workerListener) {
     if (driverAgent.workerListener != null) {
@@ -279,8 +287,6 @@ public final class JMDriverAgent {
   /**
    * only one IDriver can be added
    * if the second IDriver tried to be added, false returned
-   * @param iDriver
-   * @return
    */
   public boolean addIDriver(IDriver iDriver) {
 
@@ -292,11 +298,26 @@ public final class JMDriverAgent {
     return true;
   }
 
-  public boolean sendScaledMessage(int change, int workersCount) {
+  /**
+   * send RegisterDriver message to Job Master
+   */
+  private void registerDriver() {
+
+    JobMasterAPI.RegisterDriver registerDriver = JobMasterAPI.RegisterDriver.newBuilder().build();
+
+    LOG.fine("Sending RegisterDriver message: \n" + registerDriver);
+    rrClient.sendRequest(registerDriver);
+  }
+
+  /**
+   * send scaled message
+   */
+  public boolean sendScaledMessage(int change, int numOfWorkers) {
+
     JobMasterAPI.WorkersScaled scaledMessage =
         JobMasterAPI.WorkersScaled.newBuilder()
             .setChange(change)
-            .setNumberOfWorkers(workersCount)
+            .setNumberOfWorkers(numOfWorkers)
             .build();
 
     LOG.info("Sending WorkersScaled message: \n" + scaledMessage);
@@ -314,6 +335,9 @@ public final class JMDriverAgent {
     }
   }
 
+  /**
+   * broadcast a message to all workers in the job
+   */
   public boolean sendBroadcastMessage(Message message) {
     JobMasterAPI.Broadcast broadcast = JobMasterAPI.Broadcast.newBuilder()
         .setData(Any.pack(message).toByteString())
@@ -344,17 +368,36 @@ public final class JMDriverAgent {
     @Override
     public void onMessage(RequestID id, int workerId, Message message) {
 
-      if (message instanceof JobMasterAPI.ScaledResponse) {
+      if (message instanceof JobMasterAPI.RegisterDriverResponse) {
 
-        LOG.info("Received ScaledResponse message from JobMaster.");
+        JobMasterAPI.RegisterDriverResponse regResponse =
+            (JobMasterAPI.RegisterDriverResponse) message;
+
+        if (regResponse.getSucceeded()) {
+          LOG.fine("Registering the driver successful. ");
+        } else {
+          LOG.severe("Registering the driver unsuccessful. Reason: " + regResponse.getReason());
+        }
+
+      } else if (message instanceof JobMasterAPI.ScaledResponse) {
+
+        JobMasterAPI.ScaledResponse scaledResponse = (JobMasterAPI.ScaledResponse) message;
+
+        if (scaledResponse.getSucceeded()) {
+          LOG.fine("JobMaster processed WorkersScaled message successfully.");
+        } else {
+          LOG.severe("JobMaster could not process WorkersScaled message successfully. Reason: "
+              + scaledResponse.getReason());
+        }
 
       } else if (message instanceof JobMasterAPI.BroadcastResponse) {
 
         broadcastResponse = (JobMasterAPI.BroadcastResponse) message;
-        if (!broadcastResponse.getSucceeded()) {
-          LOG.severe("Broadcasting the message is unsuccessful. Response: \n" + broadcastResponse);
-        } else {
+        if (broadcastResponse.getSucceeded()) {
           LOG.info("Broadcasting the message is successful.");
+        } else {
+          LOG.severe("Broadcasting the message is unsuccessful. Reason: "
+              + broadcastResponse.getReason());
         }
 
       } else if (message instanceof JobMasterAPI.WorkerToDriver) {

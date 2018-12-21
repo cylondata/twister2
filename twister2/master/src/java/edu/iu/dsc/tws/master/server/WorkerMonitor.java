@@ -54,6 +54,7 @@ public class WorkerMonitor implements MessageHandler {
 
   private boolean jobMasterAssignsWorkerIDs;
   private int numberOfWorkers;
+  private boolean driverRegistered = false;
 
   private TreeMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
@@ -95,6 +96,11 @@ public class WorkerMonitor implements MessageHandler {
       LOG.log(Level.FINE, "ListWorkersRequest received: " + message.toString());
       JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
+
+    } else if (message instanceof JobMasterAPI.RegisterDriver) {
+      LOG.log(Level.INFO, "RegisterDriver message received: ");
+      JobMasterAPI.RegisterDriver registerMessage = (JobMasterAPI.RegisterDriver) message;
+      registerDriverMessageReceived(id, registerMessage);
 
     } else if (message instanceof JobMasterAPI.WorkersScaled) {
       LOG.log(Level.INFO, "WorkersScaled message received: " + message.toString());
@@ -181,9 +187,37 @@ public class WorkerMonitor implements MessageHandler {
 
       sendWorkersJoinedMessage();
     }
-
-    return;
   }
+
+  private void registerDriverMessageReceived(RequestID id, JobMasterAPI.RegisterDriver message) {
+
+    if (driverRegistered) {
+      JobMasterAPI.RegisterDriverResponse failResponse =
+          JobMasterAPI.RegisterDriverResponse.newBuilder()
+              .setSucceeded(false)
+              .setReason("A driver already registered with JobMaster. Can be at most one driver.")
+              .build();
+      rrServer.sendResponse(id, failResponse);
+      LOG.warning("RegisterDriverResponse sent to the driver: \n" + failResponse);
+      return;
+    }
+
+    driverRegistered = true;
+
+    JobMasterAPI.RegisterDriverResponse successResponse =
+        JobMasterAPI.RegisterDriverResponse.newBuilder()
+            .setSucceeded(true)
+            .build();
+    rrServer.sendResponse(id, successResponse);
+    LOG.fine("RegisterDriverResponse sent to the driver: \n" + successResponse);
+
+    // if all workers have already registered,
+    // send the driver allWorkersJoined message
+    if (allWorkersRegistered()) {
+      sendWorkersJoinedMessage();
+    }
+  }
+
 
   private void stateChangeMessageReceived(RequestID id, JobMasterAPI.WorkerStateChange message) {
 

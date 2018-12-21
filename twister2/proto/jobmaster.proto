@@ -147,6 +147,20 @@ message BarrierResponse {
     }
 }
 
+// this message registers the driver with the JobMaster
+// its status in job master becomes: STARTING when this message is received
+message RegisterDriver {
+    // nothing int it
+    // message name is sufficient
+}
+
+message RegisterDriverResponse {
+    oneof required {
+        bool succeeded = 1;
+    }
+    string reason = 2;
+}
+
 // Driver to Job Master communication related messages
 // let the job master and the workers know that
 // the number of workers in the job has hanged

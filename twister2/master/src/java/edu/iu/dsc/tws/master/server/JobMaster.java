@@ -241,6 +241,11 @@ public class JobMaster {
     JobMasterAPI.RegisterWorkerResponse.Builder registerWorkerResponseBuilder
         = JobMasterAPI.RegisterWorkerResponse.newBuilder();
 
+    JobMasterAPI.RegisterDriver.Builder registerDriverBuilder =
+        JobMasterAPI.RegisterDriver.newBuilder();
+    JobMasterAPI.RegisterDriverResponse.Builder registerDriverResponseBuilder
+        = JobMasterAPI.RegisterDriverResponse.newBuilder();
+
     JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
         JobMasterAPI.WorkerStateChange.newBuilder();
     JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
@@ -273,6 +278,9 @@ public class JobMaster {
 
     rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
     rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerMonitor);
+
+    rrServer.registerRequestHandler(registerDriverBuilder, workerMonitor);
+    rrServer.registerRequestHandler(registerDriverResponseBuilder, workerMonitor);
 
     rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
