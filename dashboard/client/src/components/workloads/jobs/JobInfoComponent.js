@@ -15,20 +15,32 @@ export default class JobInfoComponent extends React.Component {
         this.state = {
             jobId: this.props.match.params.jobId,
             job: undefined,
-            stateIntent: undefined
+            stateIntent: undefined,
+            loading: false
         }
     }
+
+    setLoading = (loading) => {
+        this.setState({
+            loading: loading
+        })
+    };
 
     componentDidMount() {
         this.syncJob();
     }
 
     syncJob = () => {
+        this.setLoading(true);
         JobService.getJobById(this.state.jobId).then(response => {
             this.setState({
                 job: response.data,
                 stateIntent: JobUtils.getStateIntent(response.data.state)
             });
+            this.setLoading(false)
+        }).catch(err => {
+
+            this.setLoading(false)
         });
     };
 
