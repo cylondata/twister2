@@ -44,7 +44,7 @@ export default class JobsComponents extends React.Component {
 
     invokeSearch = () => {
         clearTimeout(this.searchTimer);
-        setTimeout(this.loadJobs, 500);
+        this.searchTimer = setTimeout(this.loadJobs, 500);
     };
 
     onKeywordChange = (event) => {
