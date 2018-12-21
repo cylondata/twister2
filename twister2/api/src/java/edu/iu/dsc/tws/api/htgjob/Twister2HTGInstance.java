@@ -33,6 +33,16 @@ public final class Twister2HTGInstance {
   private Twister2HTGScheduler twister2HTGScheduler;
   private List<HTGJobAPI.ExecuteMessage> executeMessagesList;
 
+  public String getHtgSchedulerClassName() {
+    return htgSchedulerClassName;
+  }
+
+  public void setHtgSchedulerClassName(String htgSchedulerClassName) {
+    this.htgSchedulerClassName = htgSchedulerClassName;
+  }
+
+  private String htgSchedulerClassName;
+
   private static Twister2HTGInstance singletonHTGInstance = new Twister2HTGInstance();
 
   public HTGJobAPI.HTGJob getHtgJob() {
