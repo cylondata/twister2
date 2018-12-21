@@ -71,7 +71,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
     // if some workers removed, remove them from the workerList
     if (change < 0) {
-      for (int i = 1; i <= change; i++) {
+      for (int i = 1; i <= (0 - change); i++) {
         int idToDelete = numOfWorkers - i;
         removeWorkerInfo(idToDelete);
       }
