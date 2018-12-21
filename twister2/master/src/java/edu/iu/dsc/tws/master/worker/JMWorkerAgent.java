@@ -551,6 +551,11 @@ public final class JMWorkerAgent {
           deliverMessageToJobListener(message);
         }
 
+        if (message instanceof JobMasterAPI.WorkersScaled) {
+          JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
+          workerController.scaled(scaledMessage.getChange(), scaledMessage.getNumberOfWorkers());
+        }
+
       } else {
         LOG.warning("Received message unrecognized. \n" + message);
       }

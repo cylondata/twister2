@@ -62,6 +62,34 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
     return thisWorker;
   }
 
+  /**
+   * when the job is scaled, we update the number of workers
+   * @param numOfWorkers
+   */
+  public void scaled(int change, int numOfWorkers) {
+    this.numberOfWorkers = numOfWorkers;
+
+    // if some workers removed, remove them from the workerList
+    if (change < 0) {
+      for (int i = 1; i <= change; i++) {
+        int idToDelete = numOfWorkers - i;
+        removeWorkerInfo(idToDelete);
+      }
+    }
+  }
+
+  /**
+   * remove a worker from the workerList
+   * @param workerID
+   */
+  private void removeWorkerInfo(int workerID) {
+    for (JobMasterAPI.WorkerInfo workerInfo: workerList) {
+      if (workerInfo.getWorkerID() == workerID) {
+        workerList.remove(workerInfo);
+      }
+    }
+  }
+
   @Override
   public JobMasterAPI.WorkerInfo getWorkerInfoForID(int id) {
     for (JobMasterAPI.WorkerInfo info : workerList) {
