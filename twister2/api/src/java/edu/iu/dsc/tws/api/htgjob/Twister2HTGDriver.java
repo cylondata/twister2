@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.api.htgjob;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,13 +40,20 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
   private BlockingQueue<HTGJobAPI.ExecuteCompletedMessage> executeMessageQueue;
   private boolean executionCompleted = false;
 
+  private boolean workerjoined = false;
   private List<JobMasterAPI.WorkerInfo> workerInfoList;
+  private BlockingQueue<List<JobMasterAPI.WorkerInfo>> workerInfoMessageQueue;
+
+  public Twister2HTGDriver() {
+    executeMessageQueue = new LinkedBlockingQueue<>();
+    workerInfoMessageQueue = new LinkedBlockingQueue<>();
+  }
 
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
     Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
-    LOG.log(Level.INFO, "Execution message list in driver:"
+    LOG.log(Level.FINE, "Execution message list in driver:"
         + twister2HTGInstance.getExecuteMessagesList() + "\t" + twister2HTGInstance.getHtgJob());
 
     htgJob = twister2HTGInstance.getHtgJob();
@@ -71,10 +79,14 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
 
     for (HTGJobAPI.ExecuteMessage executeMessage : executeMessageList) {
 
+      //sleep(2000);
+
       LOG.info("Broadcasting execute message: " + executeMessage);
+
       messenger.broadcastToAllWorkers(executeMessage);
-/*
-      while (true) {
+
+      //Use the execute message to send the next graph
+      /*while (true) {
         try {
           msg = executeMessageQueue.take();
           break;
@@ -82,15 +94,12 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
           LOG.info("Unable to take the message from the queue");
         }
       }*/
+
+      sleep(2000);
     }
 
-    try {
-      LOG.log(Level.INFO, "Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
+    //testing for sending the complete message
+    sleep(2000);
     HTGJobAPI.HTGJobCompletedMessage jobCompletedMessage = HTGJobAPI.HTGJobCompletedMessage
         .newBuilder().setHtgJobname("htg").build();
     LOG.log(Level.INFO, "Broadcasting job completed message: " + jobCompletedMessage);
@@ -99,9 +108,19 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
 
   private void waitForWorkersToJoin() {
     // todo change this to check for the worker list
+
+    while (true) {
+      LOG.info("i m in while");
+      if (this.workerInfoList != null) {
+        return;
+      }
+    }
+  }
+
+  public static void sleep(long duration) {
+    LOG.info("Sleeping " + duration + "ms............");
     try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
+      Thread.sleep(duration);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -114,17 +133,17 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
       try {
         HTGJobAPI.ExecuteCompletedMessage executeMessage = anyMessage.unpack(
             HTGJobAPI.ExecuteCompletedMessage.class);
-        this.executeMessageQueue.put(executeMessage);
-        this.executionCompleted = true;
+        //this.executeMessageQueue.put(executeMessage);
+        //this.executionCompleted = true;
         HTGJobAPI.ExecuteCompletedMessage msg =
             anyMessage.unpack(HTGJobAPI.ExecuteCompletedMessage.class);
         LOG.log(Level.INFO, "Received Executecompleted message from worker: " + senderID
             + ". msg: " + msg);
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
-      } catch (InterruptedException e) {
+      } /*catch (InterruptedException e) {
         LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
-      }
+      }*/
     }
   }
 
@@ -132,6 +151,13 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
     LOG.log(Level.INFO, "All workers joined message received");
     this.workerInfoList = workerList;
+    LOG.info("Worker Info Joined List:" + workerList.size());
+    /*try {
+      this.workerInfoMessageQueue.put(workerList);
+      this.workerjoined = true;
+    } catch (InterruptedException e) {
+      LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
+    }*/
   }
 }
 
