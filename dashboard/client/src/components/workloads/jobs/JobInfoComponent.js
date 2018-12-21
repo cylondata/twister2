@@ -6,6 +6,7 @@ import NodeTag from "../../grid/nodes/NodeTag";
 import {JobUtils} from "./JobUtils";
 import ClusterTag from "../../grid/clusters/ClusterTag";
 import WorkerCard from "../../grid/workers/WorkerCard";
+import LoadingComponent from "../../ui/LoadingComponent";
 
 export default class JobInfoComponent extends React.Component {
 
@@ -46,7 +47,7 @@ export default class JobInfoComponent extends React.Component {
 
     render() {
         if (!this.state.job) {
-            return null;
+            return <LoadingComponent/>;
         }
 
         return (

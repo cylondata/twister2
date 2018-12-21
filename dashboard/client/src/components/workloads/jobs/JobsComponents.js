@@ -2,7 +2,7 @@ import React from "react";
 import JobCard from "./JobCard";
 import "./JobComponent.css";
 import JobService from "../../../services/JobService";
-import {Button, ControlGroup, HTMLSelect, InputGroup, Intent} from "@blueprintjs/core";
+import {Button, ButtonGroup, ControlGroup, HTMLSelect, InputGroup, Intent} from "@blueprintjs/core";
 import LoadingComponent from "../../ui/LoadingComponent";
 
 export default class JobsComponents extends React.Component {
@@ -13,7 +13,6 @@ export default class JobsComponents extends React.Component {
             searchResults: {},
             searchKeyword: "",
             searchStates: [],
-            currentResultsPage: 0,
             loading: false
         };
 
@@ -30,10 +29,10 @@ export default class JobsComponents extends React.Component {
         });
     };
 
-    loadJobs = () => {
+    loadJobs = (page = 0) => {
         this.setLoading(true);
         JobService.searchJobs(
-            this.state.searchStates, this.state.searchKeyword, this.state.currentResultsPage
+            this.state.searchStates, this.state.searchKeyword, page
         ).then(jobsResponse => {
             console.log(jobsResponse);
             this.setState({
@@ -65,6 +64,14 @@ export default class JobsComponents extends React.Component {
         }, this.loadJobs)
     };
 
+    onNextClicked = () => {
+        this.loadJobs(this.state.searchResults.number + 1);
+    };
+
+    onBackClicked = () => {
+        this.loadJobs(this.state.searchResults.number - 1);
+    };
+
     render() {
 
         let jobCards = [];
@@ -73,12 +80,16 @@ export default class JobsComponents extends React.Component {
             jobCards.push(<JobCard key={job.jobID} job={job}/>)
         });
 
+        console.log(this.state.searchResults)
+
         return (
             <div>
                 <div className="t2-jobs-header">
                     <h1 className="t2-page-heading">Jobs</h1>
                     <div>
-                        <Button icon="refresh" text="refresh" intent={Intent.NONE} onClick={this.loadJobs}/>
+                        <Button icon="refresh" text="refresh" intent={Intent.NONE} onClick={() => {
+                            this.loadJobs(this.state.searchResults.number || 0);
+                        }}/>
                     </div>
                 </div>
                 <ControlGroup fill={true} className="t2-jobs-search">
@@ -91,6 +102,21 @@ export default class JobsComponents extends React.Component {
                     {!this.state.loading && jobCards}
                     {this.state.loading && <LoadingComponent/>}
                 </div>
+                {
+                    !this.state.loading &&
+                    <div className="t2-jobs-pagination">
+                        <ButtonGroup>
+                            {
+                                !this.state.searchResults.first &&
+                                <Button text="Back" icon="chevron-left" onClick={this.onBackClicked}/>
+                            }
+                            {
+                                !this.state.searchResults.last &&
+                                <Button text="Next" rightIcon="chevron-right" onClick={this.onNextClicked}/>
+                            }
+                        </ButtonGroup>
+                    </div>
+                }
             </div>
         );
     }
