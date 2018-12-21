@@ -241,6 +241,11 @@ public class JobMaster {
     JobMasterAPI.RegisterWorkerResponse.Builder registerWorkerResponseBuilder
         = JobMasterAPI.RegisterWorkerResponse.newBuilder();
 
+    JobMasterAPI.RegisterDriver.Builder registerDriverBuilder =
+        JobMasterAPI.RegisterDriver.newBuilder();
+    JobMasterAPI.RegisterDriverResponse.Builder registerDriverResponseBuilder
+        = JobMasterAPI.RegisterDriverResponse.newBuilder();
+
     JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
         JobMasterAPI.WorkerStateChange.newBuilder();
     JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
@@ -267,10 +272,15 @@ public class JobMaster {
     JobMasterAPI.WorkerToDriverResponse.Builder toDriverResponseBuilder
         = JobMasterAPI.WorkerToDriverResponse.newBuilder();
 
+    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
+
     rrServer.registerRequestHandler(pingBuilder, workerMonitor);
 
     rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
     rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerMonitor);
+
+    rrServer.registerRequestHandler(registerDriverBuilder, workerMonitor);
+    rrServer.registerRequestHandler(registerDriverResponseBuilder, workerMonitor);
 
     rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
@@ -289,6 +299,8 @@ public class JobMaster {
 
     rrServer.registerRequestHandler(toDriverBuilder, workerMonitor);
     rrServer.registerRequestHandler(toDriverResponseBuilder, workerMonitor);
+
+    rrServer.registerRequestHandler(joinedBuilder, workerMonitor);
 
     rrServer.start();
     looper.loop();
@@ -387,9 +399,7 @@ public class JobMaster {
 
         // if Dashboard is used, tell it that the job is killed
         if (dashClient != null) {
-          // TODO: this will be changed with KILLED
-//          dashClient.jobStateChange(JobState.KILLED);
-          dashClient.jobStateChange(JobState.COMPLETED);
+          dashClient.jobStateChange(JobState.KILLED);
         }
 
         if (JobMaster.this.clearResourcesWhenKilled) {

@@ -175,18 +175,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
   private boolean startDriver(JobAPI.Job job, String jobPackageFile) {
 
-    // first start JMDriverAgent
-    String jobMasterIP = getJobMasterIP(job);
-    int jmPort = JobMasterContext.jobMasterPort(config);
-    JMDriverAgent driverAgent =
-        JMDriverAgent.createJMDriverAgent(config, jobMasterIP, jmPort, job.getNumberOfWorkers());
-    driverAgent.startThreaded();
-
-    // construct DriverMessenger
-    DriverMessenger driverMessenger = new DriverMessenger(driverAgent);
-
-    K8sScaler scaler = new K8sScaler(config, driverAgent, job, jobPackageFile, controller);
-
+    // first construct the driver
     String driverClass = job.getDriverClassName();
     IDriver driver;
     try {
@@ -198,7 +187,25 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       throw new RuntimeException(e);
     }
 
+    // second initialize JMDriverAgent
+    String jobMasterIP = getJobMasterIP(job);
+    int jmPort = JobMasterContext.jobMasterPort(config);
+    JMDriverAgent driverAgent =
+        JMDriverAgent.createJMDriverAgent(config, jobMasterIP, jmPort, job.getNumberOfWorkers());
+
+    // start the agent
+    driverAgent.startThreaded();
+
+    // construct DriverMessenger
+    DriverMessenger driverMessenger = new DriverMessenger(driverAgent);
+
+    // construct scaler
+    K8sScaler scaler = new K8sScaler(config, driverAgent, job, jobPackageFile, controller);
+
+    // execute the driver
     driver.execute(config, scaler, driverMessenger);
+
+    // close the driver, since computation is done
     driverAgent.close();
 
     return true;
