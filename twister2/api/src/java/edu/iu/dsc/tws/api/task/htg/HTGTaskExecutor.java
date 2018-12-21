@@ -23,7 +23,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.worker.DriverListener;
+import edu.iu.dsc.tws.common.worker.JobListener;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public class HTGTaskExecutor extends TaskExecutor implements DriverListener {
+public class HTGTaskExecutor extends TaskExecutor implements JobListener {
   private static final Logger LOG = Logger.getLogger(HTGTaskExecutor.class.getName());
 
   private BlockingQueue<HTGJobAPI.ExecuteMessage> executeMessageQueue;
@@ -126,5 +126,10 @@ public class HTGTaskExecutor extends TaskExecutor implements DriverListener {
     } else {
       LOG.warning("Unknown message for htg task execution");
     }
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 }

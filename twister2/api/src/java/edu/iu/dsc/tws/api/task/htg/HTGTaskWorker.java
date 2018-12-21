@@ -102,7 +102,7 @@ public abstract class HTGTaskWorker implements IWorker {
     // create the executor
     taskExecutor = new HTGTaskExecutor(config, workerId, workerInfoList, communicator);
     // register driver listener
-    JMWorkerAgent.addDriverListener(taskExecutor);
+    JMWorkerAgent.addJobListener(taskExecutor);
 
     // call execute
     execute();

@@ -19,14 +19,15 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.driver.DriverJobListener;
 import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.common.driver.IScaler;
-import edu.iu.dsc.tws.common.driver.WorkerListener;
 import edu.iu.dsc.tws.master.driver.JMDriverAgent;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 
-public class Twister2HTGDriver implements IDriver, WorkerListener {
+public class Twister2HTGDriver implements IDriver, DriverJobListener {
 
   private static final Logger LOG = Logger.getLogger(Twister2HTGDriver.class.getName());
 
@@ -41,7 +42,7 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
 
     executeMessageList = twister2HTGInstance.getExecuteMessagesList();
 
-    JMDriverAgent.addWorkerListener(this);
+    JMDriverAgent.addDriverJobListener(this);
     broadcast(messenger);
     LOG.log(Level.INFO, "Twister2 HTG Driver has finished execution.");
   }
@@ -89,6 +90,11 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
         LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message", e);
       }
     }
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 }
 
