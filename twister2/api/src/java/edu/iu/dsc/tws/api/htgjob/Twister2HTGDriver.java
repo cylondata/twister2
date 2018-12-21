@@ -39,7 +39,7 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
   private BlockingQueue<HTGJobAPI.ExecuteCompletedMessage> executeMessageQueue;
   private boolean executionCompleted = false;
 
-  private List<JobMasterAPI.WorkerInfo> workerList = null;
+  private List<JobMasterAPI.WorkerInfo> workerInfoList;
 
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
@@ -67,7 +67,7 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
 
     LOG.log(Level.INFO, "Waiting for workers to join");
     waitForWorkersToJoin();
-    LOG.log(Level.INFO, "All workers joined " + this.workerList);
+    LOG.log(Level.INFO, "All workers joined " + this.workerInfoList);
 
     for (HTGJobAPI.ExecuteMessage executeMessage : executeMessageList) {
 
@@ -131,7 +131,7 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
     LOG.log(Level.INFO, "All workers joined message received");
-    this.workerList = workerList;
+    this.workerInfoList = workerList;
   }
 }
 
