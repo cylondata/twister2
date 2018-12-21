@@ -307,9 +307,7 @@ public class WorkerMonitor implements MessageHandler {
 
     // send Scale message to the dashboard
     if (dashClient != null) {
-      int index = scalableComputeResource.getIndex();
-      int replicas = numberOfWorkers / scalableComputeResource.getWorkersPerPod();
-      dashClient.scaleComputeResource(index, replicas);
+      dashClient.scaledWorkers(scaledMessage.getChange(), scaledMessage.getNumberOfWorkers());
     }
 
   }

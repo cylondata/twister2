@@ -399,9 +399,7 @@ public class JobMaster {
 
         // if Dashboard is used, tell it that the job is killed
         if (dashClient != null) {
-          // TODO: this will be changed with KILLED
-//          dashClient.jobStateChange(JobState.KILLED);
-          dashClient.jobStateChange(JobState.COMPLETED);
+          dashClient.jobStateChange(JobState.KILLED);
         }
 
         if (JobMaster.this.clearResourcesWhenKilled) {

@@ -11,21 +11,31 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.dashclient.messages;
 
-public class ScaleComputeResource {
-  private int instances;
+public class ScaledWorkers {
+  private int change;
+  private int numberOfWorkers;
 
-  public ScaleComputeResource() {
+  public ScaledWorkers() {
   }
 
-  public ScaleComputeResource(int instances) {
-    this.instances = instances;
+  public ScaledWorkers(int change, int numberOfWorkers) {
+    this.change = change;
+    this.numberOfWorkers = numberOfWorkers;
   }
 
-  public void setInstances(int instances) {
-    this.instances = instances;
+  public void setChange(int change) {
+    this.change = change;
   }
 
-  public int getInstances() {
-    return instances;
+  public int getChange() {
+    return change;
+  }
+
+  public int getNumberOfWorkers() {
+    return numberOfWorkers;
+  }
+
+  public void setNumberOfWorkers(int numberOfWorkers) {
+    this.numberOfWorkers = numberOfWorkers;
   }
 }
