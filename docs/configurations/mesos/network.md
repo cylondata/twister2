@@ -29,3 +29,6 @@
 **shuffle.memory.bytes.max**
 <table><tr><td>default</td><td>1024000</td><tr><td>description</td><td>the maximum amount of bytes kept in memory for operations that goes to disk</td></table>
 
+**shuffle.memory.records.max**
+<table><tr><td>default</td><td>10240</td><tr><td>description</td><td>the maximum number of records kept in memory for operations that goes to dist</td></table>
+

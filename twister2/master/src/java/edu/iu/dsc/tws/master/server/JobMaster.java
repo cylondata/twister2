@@ -164,12 +164,12 @@ public class JobMaster {
 
   /**
    * JobMaster constructor
-   * @param config
-   * @param masterAddress
-   * @param port
-   * @param jobTerminator
-   * @param job
-   * @param nodeInfo
+   * @param config configuration
+   * @param masterAddress master host
+   * @param port the port number
+   * @param jobTerminator terminator
+   * @param job the job in proto format
+   * @param nodeInfo node info of master
    */
   public JobMaster(Config config,
                    String masterAddress,
@@ -184,20 +184,6 @@ public class JobMaster {
     this.nodeInfo = nodeInfo;
     this.masterPort = port;
     this.numberOfWorkers = job.getNumberOfWorkers();
-  }
-
-  public JobMaster(Config config,
-                   String masterAddress,
-                   IJobTerminator jobTerminator,
-                   JobAPI.Job job,
-                   JobMasterAPI.NodeInfo nodeInfo) {
-    this.config = config;
-    this.masterAddress = masterAddress;
-    this.jobTerminator = jobTerminator;
-    this.job = job;
-    this.nodeInfo = nodeInfo;
-    this.masterPort = JobMasterContext.jobMasterPort(config);
-    this.numberOfWorkers = job.getNumberOfWorkers();
 
     this.jobID = UUID.randomUUID().toString();
     this.dashboardHost = JobMasterContext.dashboardHost(config);
@@ -208,6 +194,25 @@ public class JobMaster {
       this.dashClient = new DashboardClient(dashboardHost, jobID);
     }
   }
+
+  /**
+   * JobMaster constructor to create a job master, the port of job master is read from config
+   * file
+   * @param config configuration
+   * @param masterAddress master host
+   * @param jobTerminator terminator
+   * @param job the job in proto format
+   * @param nodeInfo node info of master
+   */
+  public JobMaster(Config config,
+                   String masterAddress,
+                   IJobTerminator jobTerminator,
+                   JobAPI.Job job,
+                   JobMasterAPI.NodeInfo nodeInfo) {
+    this(config, masterAddress, JobMasterContext.jobMasterPort(config),
+        jobTerminator, job, nodeInfo);
+  }
+
 
   /**
    * initialize the Job Master

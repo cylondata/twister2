@@ -29,3 +29,6 @@
 **twister2.task.parallelism**
 <table><tr><td>default</td><td>2</td><tr><td>description</td><td></td></table>
 
+**twister2.task.type**
+<table><tr><td>default</td><td>"streaming"</td><tr><td>description</td><td></td></table>
+

@@ -11,16 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.data_models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import edu.iu.dsc.tws.dashboard.data_models.composite_ids.NodeId;
-import io.swagger.annotations.ApiModelProperty;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
-import javax.persistence.*;
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.NodeId;
+
+import io.swagger.annotations.ApiModelProperty;
 
 @Entity
 @IdClass(NodeId.class)
-public class Node implements Serializable {
+public class Node {
 
   @Id
   @Column(nullable = false)

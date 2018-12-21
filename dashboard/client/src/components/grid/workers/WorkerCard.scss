@@ -1,6 +1,53 @@
+.tw-worker-row {
+  display: grid;
+  grid-template-rows: auto auto;
+  padding: 10px !important;
+
+  .tw-worker-row-summary {
+    display: grid;
+    grid-template-columns: 30px auto auto;
+
+    .tw-worker-row-icon {
+      padding-top: 3px;
+    }
+
+    .tw-worker-row-name {
+      line-height: 24px;
+    }
+
+    .tw-table-row-right {
+      display: grid;
+      grid-template-columns: auto 200px 100px 24px 24px;
+      grid-column-gap: 10px;
+
+      .tw-worker-row-status-tag {
+        text-align: center;
+      }
+    }
+  }
+
+  .tw-worker-row-info {
+    //margin-top: 10px;
+    //padding-top: 10px;
+    table {
+      margin-top: 10px;
+    }
+
+    .tw-worker-ports-tag {
+
+      &:not(:last-of-type) {
+        margin-right: 10px;
+      }
+    }
+  }
+
+
+}
+
 .tw-node-card {
   display: grid;
   grid-template-columns: 60px auto;
+
   .tw-node-icon {
     color: #5c7080;
   }
@@ -27,6 +74,7 @@
       &:not(last-of-type) {
         margin-right: 5px;
       }
+
       width: 100px;
     }
   }

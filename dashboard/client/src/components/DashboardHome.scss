@@ -1,9 +1,64 @@
 .t2-quick-view-charts {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
+
 
   .t2-quick-view-chart-wrapper {
     position: relative;
+  }
+
+  .t2-quick-view-info-wrapper {
+    display: grid;
+    grid-template-rows: 50px auto;
+
+    .t2-quick-view-info-cards {
+      display: grid;
+      grid-template-columns: repeat(2, auto);
+      grid-template-rows: repeat(2, auto);
+      grid-row-gap: 10px;
+      grid-column-gap: 10px;
+
+      .t2-quick-view-info-card {
+        padding: 0px;
+        display: grid;
+        grid-template-rows: auto 30px;
+        color: white;
+
+        a {
+          button {
+            width: 100%;
+            border-top-left-radius: 0px;
+            border-top-right-radius: 0px;
+            color: white;
+
+            .bp3-icon {
+              color: white;
+            }
+          }
+
+          &:hover {
+            text-decoration: none;
+          }
+        }
+
+        .t2-quick-view-info-card-header {
+          padding: 10px;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+
+          .t2-quick-view-info-card-header-count-wrapper {
+            .t2-quick-view-info-card-header-count {
+              font-size: 30px;
+              text-align: right;
+            }
+
+            .t2-quick-view-info-card-header-count-label {
+              text-align: right;
+            }
+          }
+        }
+      }
+    }
   }
 }
 

@@ -1,13 +1,18 @@
 package edu.iu.dsc.tws.dashboard.controllers;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
 import edu.iu.dsc.tws.dashboard.data_models.Worker;
 import edu.iu.dsc.tws.dashboard.data_models.WorkerState;
 import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import edu.iu.dsc.tws.dashboard.rest_models.WorkerCreateRequest;
 import edu.iu.dsc.tws.dashboard.services.WorkerService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("workers")
@@ -32,21 +37,22 @@ public class WorkerController {
   }
 
   @RequestMapping(value = "/{jobId}/{workerId}/", method = RequestMethod.GET)
-  public Worker getAllWorkers(@PathVariable String jobId,
-                              @PathVariable Long workerId) {
+  public Worker getAllWorkers(@PathVariable("jobId") String jobId,
+                              @PathVariable("workerId") Long workerId) {
     return workerService.getWorkerById(jobId, workerId);
   }
 
   @RequestMapping(value = "/{jobId}/{workerId}/state/", method = RequestMethod.POST,
           consumes = MediaType.APPLICATION_JSON_VALUE)
-  public void changeState(@PathVariable String jobId,
-                          @PathVariable Long workerId,
+  public void changeState(@PathVariable("jobId") String jobId,
+                          @PathVariable("workerId") Long workerId,
                           @RequestBody StateChangeRequest<WorkerState> stateChangeRequest) {
     this.workerService.changeState(jobId, workerId, stateChangeRequest);
   }
 
   @RequestMapping(value = "/{jobId}/{workerId}/beat/", method = RequestMethod.POST)
-  public void heartbeat(@PathVariable String jobId, @PathVariable Long workerId) {
+  public void heartbeat(@PathVariable("jobId") String jobId,
+                        @PathVariable("workerId") Long workerId) {
     this.workerService.heartbeat(jobId, workerId);
   }
 

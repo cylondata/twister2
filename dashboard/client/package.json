@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@blueprintjs/core": "^3.7.0",
+    "animate.css": "^3.7.0",
     "axios": "^0.18.0",
     "chart.js": "^2.7.3",
     "file-saver": "^2.0.0-rc.4",
@@ -16,7 +17,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && mkdir ../server/src/main/webapp -p && rm ../server/src/main/webapp/* -r -f && mv build/* ../server/src/main/webapp/",
+    "build": "react-scripts build && mkdir ../server/src/main/resources/static -p && rm ../server/src/main/resources/static/* -r -f && mv build/* ../server/src/main/resources/static/",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build-css": "cd src && sass --update . && cd .."
