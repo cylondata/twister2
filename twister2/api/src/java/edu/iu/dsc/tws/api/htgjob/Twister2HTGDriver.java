@@ -36,28 +36,35 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
     Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
-    LOG.info("Execution message list in driver:"
+    LOG.log(Level.INFO, "Execution message list in driver:"
         + twister2HTGInstance.getExecuteMessagesList() + "\t" + twister2HTGInstance.getHtgJob());
 
     executeMessageList = twister2HTGInstance.getExecuteMessagesList();
 
     JMDriverAgent.addWorkerListener(this);
     broadcast(messenger);
-    LOG.info("Twister2 HTG Driver has finished execution.");
+    LOG.log(Level.INFO, "Twister2 HTG Driver has finished execution.");
   }
 
   private void broadcast(IDriverMessenger messenger) {
 
-    LOG.info("Testing HTG Driver  ............................. ");
+    LOG.log(Level.INFO, "Testing HTG Driver  ............................. ");
 
     for (HTGJobAPI.ExecuteMessage executeMessage : executeMessageList) {
 
-      LOG.info("Broadcasting execute message: " + executeMessage);
+      try {
+        LOG.log(Level.INFO, "Sleeping 5 seconds ....");
+        Thread.sleep(5000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+
+      LOG.log(Level.INFO, "Broadcasting execute message: " + executeMessage);
 
       messenger.broadcastToAllWorkers(executeMessage);
 
       try {
-        LOG.info("Sleeping 5 seconds ....");
+        LOG.log(Level.INFO, "Sleeping 5 seconds ....");
         Thread.sleep(5000);
       } catch (InterruptedException e) {
         e.printStackTrace();
@@ -66,7 +73,7 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
 
     HTGJobAPI.HTGJobCompletedMessage jobCompletedMessage = HTGJobAPI.HTGJobCompletedMessage
         .newBuilder().setHtgJobname("htg").build();
-    LOG.info("Broadcasting job completed message: " + jobCompletedMessage);
+    LOG.log(Level.INFO, "Broadcasting job completed message: " + jobCompletedMessage);
     messenger.broadcastToAllWorkers(jobCompletedMessage);
   }
 
@@ -76,7 +83,8 @@ public class Twister2HTGDriver implements IDriver, WorkerListener {
       try {
         HTGJobAPI.ExecuteCompletedMessage msg =
             anyMessage.unpack(HTGJobAPI.ExecuteCompletedMessage.class);
-        LOG.info("Received Executecompleted message from worker: " + senderID + ". msg: " + msg);
+        LOG.log(Level.INFO, "Received Executecompleted message from worker: " + senderID
+            + ". msg: " + msg);
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message", e);
       }
