@@ -72,7 +72,7 @@ public class HTGExample extends HTGTaskWorker {
         parallelismValue);
     computeConnection1.allreduce("source1", "all-reduce", new Aggregator(),
         DataType.OBJECT);
-    graphBuilderX.setMode(OperationMode.STREAMING);
+    graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
     TaskGraphBuilder graphBuilderY = TaskGraphBuilder.newBuilder(config);

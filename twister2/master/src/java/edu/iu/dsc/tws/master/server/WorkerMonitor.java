@@ -330,7 +330,7 @@ public class WorkerMonitor implements MessageHandler {
     // if all workers are not currently RUNNING,
     // send a failure response message to the driver
     // do not send the broadcast message to any workers
-    if (!allWorkersRunning()) {
+    if (!allWorkersRegistered()) {
       JobMasterAPI.BroadcastResponse failResponse =
           JobMasterAPI.BroadcastResponse.newBuilder()
               .setSucceeded(false)

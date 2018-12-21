@@ -35,101 +35,106 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 public class HTGTaskExecutor extends TaskExecutor implements JobListener {
   private static final Logger LOG = Logger.getLogger(HTGTaskExecutor.class.getName());
 
-  private BlockingQueue<HTGJobAPI.ExecuteMessage> executeMessageQueue;
+  private BlockingQueue<Any> executeMessageQueue;
 
-  private boolean executionCompleted;
+  private int workerId;
 
   public HTGTaskExecutor(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
                          Communicator net) {
     super(cfg, wId, workerInfoList, net);
     this.executeMessageQueue = new LinkedBlockingQueue<>();
-    this.executionCompleted = false;
+    this.workerId = wId;
   }
 
+/**
+ * execute*/
   public boolean execute(Map<String, DataFlowTaskGraph> dataFlowTaskGraphMap) {
-    HTGJobAPI.ExecuteMessage msg;
+    Any msg;
+    HTGJobAPI.ExecuteMessage executeMessage;
     DataFlowTaskGraph taskGraph;
     ExecutionPlan executionPlan;
-    HTGJobAPI.ExecuteCompletedMessage subGraphCompletedMsg;
+    HTGJobAPI.ExecuteCompletedMessage completedMessage;
+    String subgraph;
 
     JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
 
-
-    while (!this.executionCompleted) {
+    while (true) {
       try {
         msg = executeMessageQueue.take();
 
-        String subGraph = msg.getSubgraphName();
-        LOG.log(Level.INFO, "Executing the subgraph : " + subGraph);
+        if (msg.is(HTGJobAPI.ExecuteMessage.class)) {
+          try {
+            executeMessage = msg.unpack(HTGJobAPI.ExecuteMessage.class);
+            LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
+            subgraph = executeMessage.getSubgraphName();
+            LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
 
-        // get the subgraph from the map
-        taskGraph = dataFlowTaskGraphMap.get(subGraph);
-        if (taskGraph == null) {
-          LOG.severe("Unable to find the subgraph " + subGraph);
-          return false;
-        }
-        // use the taskexecutor to create the execution plan
-        executionPlan = this.plan(taskGraph);
-        // reuse the task executor execute
-        this.execute(taskGraph, executionPlan);
+            // get the subgraph from the map
+            taskGraph = dataFlowTaskGraphMap.get(executeMessage.getSubgraphName());
+            if (taskGraph == null) {
+              LOG.severe(workerId + " Unable to find the subgraph " + subgraph);
+              return false;
+            }
+            // use the taskexecutor to create the execution plan
+            executionPlan = this.plan(taskGraph);
+            LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
+            LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
 
-        subGraphCompletedMsg =
-            HTGJobAPI.ExecuteCompletedMessage.newBuilder().setSubgraphName(subGraph).build();
-        if (!workerMessenger.sendToDriver(subGraphCompletedMsg)) {
-          LOG.severe("Unable to send the subgraph completed message :" + subGraphCompletedMsg);
+            // reuse the task executor execute
+            this.execute(taskGraph, executionPlan);
+
+            LOG.log(Level.INFO, workerId + " Completed subgraph : " + subgraph);
+
+            LOG.log(Level.INFO, workerId + " Sending subgraph completed message to driver");
+            completedMessage = HTGJobAPI.ExecuteCompletedMessage.newBuilder()
+                .setSubgraphName(subgraph).build();
+
+            if (!workerMessenger.sendToDriver(completedMessage)) {
+              LOG.severe("Unable to send the subgraph completed message :" + completedMessage);
+            }
+          } catch (InvalidProtocolBufferException e) {
+            LOG.log(Level.SEVERE, "Unable to unpack received message ", e);
+          }
+        } else if (msg.is(HTGJobAPI.HTGJobCompletedMessage.class)) {
+          LOG.log(Level.INFO, workerId + "Received HTG job completed message. Leaving execution "
+              + "loop");
+          break;
+        } else {
+          LOG.log(Level.WARNING, workerId + "Unknown message for htg task execution");
         }
       } catch (InterruptedException e) {
-        LOG.log(Level.INFO, "Unable to take the message from the queue");
+        LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
       }
     }
 
+    LOG.log(Level.INFO, workerId + " Execution Completed");
     return true;
   }
 
   @Override
   public void workersScaledUp(int instancesAdded) {
-    LOG.log(Level.INFO, "Workers scaled up msg received. Instances added: " + instancesAdded);
+    LOG.log(Level.INFO, workerId + "Workers scaled up msg received. Instances added: "
+        + instancesAdded);
   }
 
   @Override
   public void workersScaledDown(int instancesRemoved) {
-    LOG.log(Level.INFO, "Workers scaled down msg received. Instances removed: " + instancesRemoved);
+    LOG.log(Level.INFO, workerId + "Workers scaled down msg received. Instances removed: "
+        + instancesRemoved);
   }
 
   @Override
   public void broadcastReceived(Any anyMessage) {
-    LOG.log(Level.INFO, "Broadcast received from the Driver" + anyMessage);
-    if (anyMessage.is(HTGJobAPI.ExecuteMessage.class)) {
-      try {
-        HTGJobAPI.ExecuteMessage executeMessage = anyMessage.unpack(HTGJobAPI.ExecuteMessage.class);
-        LOG.log(Level.INFO, "Received Execute message. Execute message: " + executeMessage);
-
-        this.executeMessageQueue.put(executeMessage);
-
-      } catch (InvalidProtocolBufferException e) {
-        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
-      } catch (InterruptedException e) {
-        LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
-      }
-    } else if (anyMessage.is(HTGJobAPI.HTGJobCompletedMessage.class)) {
-//      HTGJobAPI.HTGJobCompletedMessage htgJobCompletedMessage = null;
-//      try {
-//        htgJobCompletedMessage = anyMessage.unpack(HTGJobAPI.HTGJobCompletedMessage.class);
-//        this.executionCompleted = true;
-//      } catch (InvalidProtocolBufferException e) {
-//        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast",
-//        e);
-//      }
-//     LOG.log(Level.INFO, , "Received HTG job completed: " + htgJobCompletedMessage);
-      this.executionCompleted = true;
-      LOG.log(Level.INFO, "Received HTG job completed message");
-    } else {
-      LOG.warning("Unknown message for htg task execution");
+    // put every message on the queue.
+    try {
+      this.executeMessageQueue.put(anyMessage);
+    } catch (InterruptedException e) {
+      LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
     }
   }
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-
+    LOG.log(Level.INFO, workerId + "All workers joined msg received");
   }
 }
