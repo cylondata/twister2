@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response;
 import edu.iu.dsc.tws.master.dashclient.messages.JobStateChange;
 import edu.iu.dsc.tws.master.dashclient.messages.RegisterJob;
 import edu.iu.dsc.tws.master.dashclient.messages.RegisterWorker;
-import edu.iu.dsc.tws.master.dashclient.messages.ScaleComputeResource;
+import edu.iu.dsc.tws.master.dashclient.messages.ScaledWorkers;
 import edu.iu.dsc.tws.master.dashclient.messages.WorkerStateChange;
 import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -116,25 +116,25 @@ public class DashboardClient {
    * if it is higher, it means some instances of that resource added
    * @return
    */
-  public boolean scaleComputeResource(int computeResourceIndex, int instances) {
+  public boolean scaledWorkers(int change, int numberOfWorkers) {
 
-    ScaleComputeResource scaleComputeResource = new ScaleComputeResource(instances);
+    ScaledWorkers scaledWorkers = new ScaledWorkers(change, numberOfWorkers);
 
-    String path = "jobs/" + jobID + "/computeResources/" + computeResourceIndex + "/scale/";
+    String path = "jobs/" + jobID + "/scale/";
 
     Response response = ClientBuilder.newClient()
         .target(dashHost)
         .path(path)
         .request(MediaType.APPLICATION_JSON)
-        .post(Entity.json(scaleComputeResource));
+        .post(Entity.json(scaledWorkers));
 
     if (response.getStatus() == 200) {
-      LOG.info("ScaleComputeResource message sent to Dashboard successfully."
-          + " computeResourceIndex: " + computeResourceIndex
-          + " instances new value: " + instances);
+      LOG.info("ScaledWorkers message sent to Dashboard successfully."
+          + " change: " + change
+          + " numberOfWorkers: " + numberOfWorkers);
       return true;
     } else {
-      LOG.severe("ScaleComputeResource message could not be sent to Dashboard. Response: "
+      LOG.severe("ScaledWorkers message could not be sent to Dashboard. Response: "
           + response.toString());
       return false;
     }
