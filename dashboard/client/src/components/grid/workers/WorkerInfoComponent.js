@@ -18,6 +18,7 @@ import {ComputeResourceCard} from "../compute-resource/ComputeResourceCard";
 import NodeTag from "../nodes/NodeTag";
 import ClusterTag from "../clusters/ClusterTag";
 import {Link} from "react-router-dom";
+import LoadingComponent from "../../ui/LoadingComponent";
 
 export default class WorkerInfoComponent extends React.Component {
 
@@ -142,7 +143,7 @@ Starting edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter ....
 
     render() {
         if (!this.state.worker) {
-            return null;
+            return <LoadingComponent/>;
         }
 
         return (
