@@ -17,7 +17,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && mkdir ../server/src/main/webapp -p && rm ../server/src/main/webapp/* -r -f && mv build/* ../server/src/main/webapp/",
+    "build": "react-scripts build && mkdir ../server/src/main/resources/static -p && rm ../server/src/main/resources/static/* -r -f && mv build/* ../server/src/main/resources/static/",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build-css": "cd src && sass --update . && cd .."
