@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.master.worker;
 
 import java.nio.channels.SocketChannel;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -88,6 +89,11 @@ public final class JMWorkerAgent {
    */
   private JobListener jobListener;
 
+  /**
+   * if messages arrive before JobListener added,
+   * buffer those messages in this list and deliver them when a JobListener added
+   */
+  private LinkedList<Message> messageBuffer = new LinkedList<>();
 
   private static JMWorkerAgent workerAgent;
 
@@ -99,11 +105,6 @@ public final class JMWorkerAgent {
 
   /**
    * Singleton JMWorkerAgent
-   * @param config
-   * @param thisWorker
-   * @param masterHost
-   * @param masterPort
-   * @param numberOfWorkers
    */
   private JMWorkerAgent(Config config,
                         WorkerInfo thisWorker,
@@ -120,7 +121,6 @@ public final class JMWorkerAgent {
   /**
    * create the singleton JMWorkerAgent
    * if it is already created, return the previous one.
-   * @return
    */
   public static JMWorkerAgent createJMWorkerAgent(Config config,
                                                   WorkerInfo thisWorker,
@@ -137,7 +137,6 @@ public final class JMWorkerAgent {
 
   /**
    * return the singleton agent object
-   * @return
    */
   public static JMWorkerAgent getJMWorkerAgent() {
     return workerAgent;
@@ -339,7 +338,6 @@ public final class JMWorkerAgent {
 
   /**
    * return WorkerInfo for this worker
-   * @return
    */
   public WorkerInfo getWorkerInfo() {
     return thisWorker;
@@ -347,7 +345,6 @@ public final class JMWorkerAgent {
 
   /**
    * return JMWorkerController for this worker
-   * @return
    */
   public JMWorkerController getJMWorkerController() {
     return workerController;
@@ -355,7 +352,6 @@ public final class JMWorkerAgent {
 
   /**
    * return JMWorkerMessenger for this worker
-   * @return
    */
   public JMWorkerMessenger getJMWorkerMessenger() {
     return workerMessenger;
@@ -364,8 +360,6 @@ public final class JMWorkerAgent {
   /**
    * only one JobListener can be added
    * if the second JobListener tried to be added, false returned
-   * @param jobListener
-   * @return
    */
   public static boolean addJobListener(JobListener jobListener) {
     if (workerAgent.jobListener != null) {
@@ -373,13 +367,16 @@ public final class JMWorkerAgent {
     }
 
     workerAgent.jobListener = jobListener;
+
+    // deliver buffered messages if any
+    workerAgent.deliverBufferedMessages();
+
     return true;
   }
 
   /**
    * send RegisterWorker message to Job Master
    * put WorkerInfo in this message
-   * @return
    */
   private boolean registerWorker() {
 
@@ -462,13 +459,56 @@ public final class JMWorkerAgent {
   }
 
 
-
   /**
    * stop the JMWorkerAgent
    */
   public void close() {
     stopLooper = true;
     looper.wakeup();
+  }
+
+  /**
+   * deliver all buffered messages to the JobListener
+   * in the order they are received
+   */
+  private void deliverBufferedMessages() {
+
+    while (!messageBuffer.isEmpty()) {
+      deliverMessageToJobListener(messageBuffer.poll());
+    }
+
+  }
+
+  /**
+   * deliver the received message to JobListener
+   */
+  private void deliverMessageToJobListener(Message message) {
+
+    if (message instanceof JobMasterAPI.WorkersScaled) {
+
+      JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
+      if (scaledMessage.getChange() > 0) {
+        jobListener.workersScaledUp(scaledMessage.getChange());
+      } else if (scaledMessage.getChange() < 0) {
+        jobListener.workersScaledDown(0 - scaledMessage.getChange());
+      }
+
+    } else if (message instanceof JobMasterAPI.Broadcast) {
+
+      JobMasterAPI.Broadcast broadcast = (JobMasterAPI.Broadcast) message;
+      try {
+        Any any = Any.parseFrom(broadcast.getData());
+        jobListener.broadcastReceived(any);
+      } catch (InvalidProtocolBufferException e) {
+        LOG.log(Level.SEVERE, "Can not parse received protocol buffer message to Any", e);
+      }
+
+    } else if (message instanceof JobMasterAPI.WorkersJoined) {
+
+      JobMasterAPI.WorkersJoined joinedMessage = (JobMasterAPI.WorkersJoined) message;
+      jobListener.allWorkersJoined(joinedMessage.getWorkerList());
+
+    }
   }
 
   class ResponseMessageHandler implements MessageHandler {
@@ -498,40 +538,19 @@ public final class JMWorkerAgent {
       } else if (message instanceof JobMasterAPI.WorkerToDriverResponse) {
         LOG.info("Received a WorkerToDriverResponse from the master. \n" + message);
 
-        // nothing to do
-      } else if (message instanceof JobMasterAPI.WorkersScaled) {
-        LOG.info("Received WorkersScaled message from the master. \n" + message);
+      } else if (message instanceof JobMasterAPI.Broadcast
+          || message instanceof JobMasterAPI.WorkersJoined
+          || message instanceof JobMasterAPI.WorkersScaled) {
 
-        JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
-        if (jobListener != null) {
-          if (scaledMessage.getChange() > 0) {
-            jobListener.workersScaledUp(scaledMessage.getChange());
-          } else if (scaledMessage.getChange() < 0) {
-            jobListener.workersScaledDown(0 - scaledMessage.getChange());
-          }
+        LOG.fine("Received " + message.getClass().getSimpleName()
+            + " message from the master. \n" + message);
+
+        if (jobListener == null) {
+          messageBuffer.add(message);
+        } else {
+          deliverMessageToJobListener(message);
         }
 
-      } else if (message instanceof JobMasterAPI.Broadcast) {
-        LOG.fine("Received Broadcast message from the master. \n" + message);
-
-        if (jobListener != null) {
-          JobMasterAPI.Broadcast broadcast = (JobMasterAPI.Broadcast) message;
-          try {
-            Any any = Any.parseFrom(broadcast.getData());
-            jobListener.broadcastReceived(any);
-          } catch (InvalidProtocolBufferException e) {
-            LOG.log(Level.SEVERE, "Can not parse received protocol buffer message to Any", e);
-          }
-
-        }
-
-      } else if (message instanceof JobMasterAPI.WorkersJoined) {
-        LOG.fine("Received WorkersJoined message from the master. \n" + message);
-
-        if (jobListener != null) {
-          JobMasterAPI.WorkersJoined joinedMessage = (JobMasterAPI.WorkersJoined) message;
-          jobListener.allWorkersJoined(joinedMessage.getWorkerList());
-        }
       } else {
         LOG.warning("Received message unrecognized. \n" + message);
       }

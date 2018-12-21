@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.master.driver;
 
 import java.nio.channels.SocketChannel;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,8 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.driver.IDriver;
-import edu.iu.dsc.tws.common.driver.WorkerListener;
+import edu.iu.dsc.tws.common.driver.DriverJobListener;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
@@ -54,14 +54,15 @@ public final class JMDriverAgent {
   private RRClient rrClient;
 
   /**
-   * the driver can register a workerListener to get messages sent by workers
+   * a DriverJobListener can register to get messages sent by workers
    */
-  private WorkerListener workerListener;
+  private DriverJobListener driverJobListener;
 
   /**
-   * the driver can register a workerListener to get messages sent by workers
+   * if messages arrive before WorkerListener added,
+   * buffer those messages in this list and deliver them when a WorkerListener added
    */
-  private IDriver driver;
+  private LinkedList<Message> messageBuffer = new LinkedList<>();
 
   /**
    * a singleton object for this class
@@ -272,29 +273,19 @@ public final class JMDriverAgent {
   }
 
   /**
-   * only one WorkerListener can be added
-   * if the second WorkerListener tried to be added, false returned
+   * only one DriverJobListener can be added
+   * if the second DriverJobListener tried to be added, false returned
    */
-  public static boolean addWorkerListener(WorkerListener workerListener) {
-    if (driverAgent.workerListener != null) {
+  public static boolean addDriverJobListener(DriverJobListener driverJobListener) {
+    if (driverAgent.driverJobListener != null) {
       return false;
     }
 
-    driverAgent.workerListener = workerListener;
-    return true;
-  }
+    driverAgent.driverJobListener = driverJobListener;
 
-  /**
-   * only one IDriver can be added
-   * if the second IDriver tried to be added, false returned
-   */
-  public boolean addIDriver(IDriver iDriver) {
+    // deliver buffered messages if any
+    driverAgent.deliverBufferedMessages();
 
-    if (driver != null) {
-      return false;
-    }
-
-    driver = iDriver;
     return true;
   }
 
@@ -363,6 +354,40 @@ public final class JMDriverAgent {
     }
   }
 
+  /**
+   * deliver all buffered messages to the DriverJobListener
+   * in the order they are received
+   */
+  private void deliverBufferedMessages() {
+
+    while (!messageBuffer.isEmpty()) {
+      deliverToDriverJobListener(messageBuffer.poll());
+    }
+
+  }
+
+  /**
+   * deliver the received message to DriverJobListener
+   */
+  private void deliverToDriverJobListener(Message message) {
+
+    if (message instanceof JobMasterAPI.WorkerToDriver) {
+      JobMasterAPI.WorkerToDriver toDriver = (JobMasterAPI.WorkerToDriver) message;
+      try {
+        Any any = Any.parseFrom(toDriver.getData());
+        driverJobListener.workerMessageReceived(any, toDriver.getWorkerID());
+      } catch (InvalidProtocolBufferException e) {
+        LOG.log(Level.SEVERE, "Can not parse received protocol buffer message to Any", e);
+      }
+
+    } else if (message instanceof JobMasterAPI.WorkersJoined) {
+      JobMasterAPI.WorkersJoined joinedMessage = (JobMasterAPI.WorkersJoined) message;
+      driverJobListener.allWorkersJoined(joinedMessage.getWorkerList());
+    }
+
+  }
+
+
   private class ResponseMessageHandler implements MessageHandler {
 
     @Override
@@ -400,25 +425,15 @@ public final class JMDriverAgent {
               + broadcastResponse.getReason());
         }
 
-      } else if (message instanceof JobMasterAPI.WorkerToDriver) {
-        LOG.fine("Received WorkerToDriver message from a worker. \n" + message);
+      } else if (message instanceof JobMasterAPI.WorkerToDriver
+          || message instanceof JobMasterAPI.WorkersJoined) {
 
-        if (workerListener != null) {
-          JobMasterAPI.WorkerToDriver toDriver = (JobMasterAPI.WorkerToDriver) message;
-          try {
-            Any any = Any.parseFrom(toDriver.getData());
-            workerListener.workerMessageReceived(any, toDriver.getWorkerID());
-          } catch (InvalidProtocolBufferException e) {
-            LOG.log(Level.SEVERE, "Can not parse received protocol buffer message to Any", e);
-          }
-        }
+        LOG.fine("Received " + message.getClass().getSimpleName() + " message: \n" + message);
 
-      } else if (message instanceof JobMasterAPI.WorkersJoined) {
-        LOG.fine("Received WorkersJoined message from JobMaster. \n" + message);
-
-        if (driver != null) {
-          JobMasterAPI.WorkersJoined joinedMessage = (JobMasterAPI.WorkersJoined) message;
-          driver.allWorkersJoined(joinedMessage.getWorkerList());
+        if (driverJobListener == null) {
+          messageBuffer.add(message);
+        } else {
+          deliverToDriverJobListener(message);
         }
 
       } else {

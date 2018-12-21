@@ -19,10 +19,10 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.driver.DriverJobListener;
 import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.common.driver.IScaler;
-import edu.iu.dsc.tws.common.driver.WorkerListener;
 import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
@@ -30,14 +30,14 @@ import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
-public class DriverExample implements IDriver, WorkerListener {
+public class DriverExample implements IDriver, DriverJobListener {
   private static final Logger LOG = Logger.getLogger(DriverExample.class.getName());
 
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
     // add listener to receive worker messages
-    JMDriverAgent.addWorkerListener(this);
+    JMDriverAgent.addDriverJobListener(this);
 
     broadcastExample(messenger);
     scalingExample(scaler);

@@ -11,14 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.driver;
 
+import java.util.List;
+
 import com.google.protobuf.Any;
 
-public interface WorkerListener {
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+
+public interface DriverJobListener {
 
   /**
    * received a protocol buffer message from a worker
    * @param anyMessage received message from the worker
    */
   void workerMessageReceived(Any anyMessage, int senderWorkerID);
+
+  /**
+   * this method is invoked when all workers joined the job initially
+   * and also, after each scale up operation,
+   * when all new workers joined the job, it is invoked
+   * @param workerList
+   */
+  void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList);
 
 }

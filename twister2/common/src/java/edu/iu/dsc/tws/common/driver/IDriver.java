@@ -11,10 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.driver;
 
-import java.util.List;
-
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * An instance of this class will be executed in the submitting client,
@@ -33,12 +30,4 @@ public interface IDriver {
    * @param scaler
    */
   void execute(Config config, IScaler scaler, IDriverMessenger messenger);
-
-  /**
-   * this method is invoked when all workers joined the job initially
-   * and also, after each scale up operation,
-   * when all new workers joined the job, it is invoked
-   * @param workerList
-   */
-  void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList);
 }
