@@ -101,7 +101,7 @@ public class JobController {
 
   @RequestMapping(value = "/{jobId}/state/", method = RequestMethod.POST,
       consumes = MediaType.APPLICATION_JSON_VALUE)
-  public void changeState(@PathVariable String jobId,
+  public void changeState(@PathVariable("jobId") String jobId,
                           @RequestBody StateChangeRequest<JobState> stateChangeRequest) {
     LOG.debug("Changing state of the job {} to {}", jobId, stateChangeRequest.getState());
     this.jobService.changeState(jobId, stateChangeRequest);
@@ -109,7 +109,7 @@ public class JobController {
 
   @RequestMapping(value = "/{jobId}/computeResources/", method = RequestMethod.POST,
       consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ComputeResource createComputeResource(@PathVariable String jobId,
+  public ComputeResource createComputeResource(@PathVariable("jobId") String jobId,
                                                @RequestBody ComputeResource computeResource) {
     return computeResourceService.save(jobId, computeResource);
   }
@@ -123,8 +123,8 @@ public class JobController {
   }
 
   @RequestMapping(value = "/{jobId}/computeResources/{index}", method = RequestMethod.DELETE)
-  public void deleteComputeResource(@PathVariable String jobId,
-                                    @PathVariable Integer index) {
+  public void deleteComputeResource(@PathVariable("jobId") String jobId,
+                                    @PathVariable("index") Integer index) {
     computeResourceService.delete(jobId, index);
   }
 
