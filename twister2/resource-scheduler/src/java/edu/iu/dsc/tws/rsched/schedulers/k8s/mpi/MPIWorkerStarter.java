@@ -18,7 +18,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
@@ -173,7 +172,7 @@ public final class MPIWorkerStarter {
     jobMasterAgent.sendWorkerRunningMessage();
 
     // start the worker
-    startWorker(jobMasterAgent.getJMWorkerController(), pv, podName);
+    startWorker(jobMasterAgent, pv, podName);
 
     // finalize MPI
     try {
@@ -187,7 +186,7 @@ public final class MPIWorkerStarter {
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(IWorkerController workerController,
+  public static void startWorker(JMWorkerAgent jmWorkerAgent,
                                  IPersistentVolume pv, String podName) {
     String workerClass = SchedulerContext.workerClass(config);
     IWorker worker;
@@ -205,7 +204,7 @@ public final class MPIWorkerStarter {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
 
-    worker.execute(config, workerID, workerController, pv, volatileVolume);
+    worker.execute(config, workerID, jmWorkerAgent.getJMWorkerController(), pv, volatileVolume);
   }
 
   /**

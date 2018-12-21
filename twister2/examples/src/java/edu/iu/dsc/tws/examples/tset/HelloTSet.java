@@ -116,4 +116,5 @@ public class HelloTSet extends TaskWorker implements Serializable {
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
   }
+
 }

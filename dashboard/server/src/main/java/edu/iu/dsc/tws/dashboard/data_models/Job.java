@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.data_models;
 
-import io.swagger.annotations.ApiModelProperty;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,6 +25,9 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+
+import io.swagger.annotations.ApiModelProperty;
 
 @Entity
 public class Job {
@@ -46,7 +47,8 @@ public class Job {
           orphanRemoval = true)
   private Set<Worker> workers = new HashSet<>();
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "job", orphanRemoval = true)
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,
+      mappedBy = "job", orphanRemoval = true)
   private Set<ComputeResource> computeResources = new HashSet<>();
 
   @ManyToOne(optional = false)
@@ -61,6 +63,17 @@ public class Job {
 
   @Column
   private String workerClass;
+
+  @Column
+  private Date createdTime;
+
+  public Date getCreatedTime() {
+    return createdTime;
+  }
+
+  public void setCreatedTime(Date createdTime) {
+    this.createdTime = createdTime;
+  }
 
   public String getWorkerClass() {
     return workerClass;
@@ -132,6 +145,11 @@ public class Job {
 
   public void setWorkers(Set<Worker> workers) {
     this.workers = workers;
+  }
+
+  @PrePersist
+  public void prePersist() {
+    this.createdTime = new Date();
   }
 
   @Override

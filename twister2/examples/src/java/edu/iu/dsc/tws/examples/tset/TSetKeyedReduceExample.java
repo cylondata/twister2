@@ -71,4 +71,5 @@ public class TSetKeyedReduceExample extends BaseTSetWorker {
     ExecutionPlan executionPlan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, executionPlan);
   }
+
 }

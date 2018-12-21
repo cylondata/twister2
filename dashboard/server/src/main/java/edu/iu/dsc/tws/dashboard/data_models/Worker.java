@@ -11,14 +11,27 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dashboard.data_models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
-import io.swagger.annotations.ApiModelProperty;
-
-import javax.persistence.*;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
+
+import io.swagger.annotations.ApiModelProperty;
 
 @Entity
 @IdClass(WorkerId.class)
@@ -38,7 +51,7 @@ public class Worker {
   @ManyToOne(optional = false)
   @JoinColumn
   @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state",
-          "computeResources", "node", "numberOfWorkers", "workerClass"})
+      "computeResources", "node", "numberOfWorkers", "workerClass"})
   private Job job;
 
   @Column
@@ -55,7 +68,8 @@ public class Worker {
   @Column
   private Date heartbeatTime;
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "worker", orphanRemoval = true)
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER,
+      mappedBy = "worker", orphanRemoval = true)
   private Set<WorkerPort> workerPorts = new HashSet<>();
 
   public Set<WorkerPort> getWorkerPorts() {
@@ -133,10 +147,10 @@ public class Worker {
   @Override
   public String toString() {
     return "Worker{"
-            + "workerID=" + workerID
-            + ", workerIP='" + workerIP + '\''
-            + ", workerPort=" + workerPort
-            + ", job=" + job
-            + '}';
+        + "workerID=" + workerID
+        + ", workerIP='" + workerIP + '\''
+        + ", workerPort=" + workerPort
+        + ", job=" + job
+        + '}';
   }
 }

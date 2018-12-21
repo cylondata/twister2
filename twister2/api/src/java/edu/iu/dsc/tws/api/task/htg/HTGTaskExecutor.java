@@ -23,7 +23,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.worker.DriverListener;
+import edu.iu.dsc.tws.common.worker.JobListener;
 import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public class HTGTaskExecutor extends TaskExecutor implements DriverListener {
+public class HTGTaskExecutor extends TaskExecutor implements JobListener {
   private static final Logger LOG = Logger.getLogger(HTGTaskExecutor.class.getName());
 
   private BlockingQueue<HTGJobAPI.ExecuteMessage> executeMessageQueue;
@@ -54,12 +54,13 @@ public class HTGTaskExecutor extends TaskExecutor implements DriverListener {
 
     JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
 
+
     while (!this.executionCompleted) {
       try {
         msg = executeMessageQueue.take();
 
         String subGraph = msg.getSubgraphName();
-        LOG.info("Executing the subgraph : " + subGraph);
+        LOG.log(Level.INFO, "Executing the subgraph : " + subGraph);
 
         // get the subgraph from the map
         taskGraph = dataFlowTaskGraphMap.get(subGraph);
@@ -78,7 +79,7 @@ public class HTGTaskExecutor extends TaskExecutor implements DriverListener {
           LOG.severe("Unable to send the subgraph completed message :" + subGraphCompletedMsg);
         }
       } catch (InterruptedException e) {
-        LOG.info("Unable to take the message from the queue");
+        LOG.log(Level.INFO, "Unable to take the message from the queue");
       }
     }
 
@@ -87,21 +88,21 @@ public class HTGTaskExecutor extends TaskExecutor implements DriverListener {
 
   @Override
   public void workersScaledUp(int instancesAdded) {
-    LOG.info("Workers scaled up msg received. Instances added: " + instancesAdded);
+    LOG.log(Level.INFO, "Workers scaled up msg received. Instances added: " + instancesAdded);
   }
 
   @Override
   public void workersScaledDown(int instancesRemoved) {
-    LOG.info("Workers scaled down msg received. Instances removed: " + instancesRemoved);
+    LOG.log(Level.INFO, "Workers scaled down msg received. Instances removed: " + instancesRemoved);
   }
 
   @Override
   public void broadcastReceived(Any anyMessage) {
-    LOG.info("Broadcast received from the Driver" + anyMessage);
+    LOG.log(Level.INFO, "Broadcast received from the Driver" + anyMessage);
     if (anyMessage.is(HTGJobAPI.ExecuteMessage.class)) {
       try {
         HTGJobAPI.ExecuteMessage executeMessage = anyMessage.unpack(HTGJobAPI.ExecuteMessage.class);
-        LOG.info("Received Execute message. Execute message: " + executeMessage);
+        LOG.log(Level.INFO, "Received Execute message. Execute message: " + executeMessage);
 
         this.executeMessageQueue.put(executeMessage);
 
@@ -119,11 +120,16 @@ public class HTGTaskExecutor extends TaskExecutor implements DriverListener {
 //        LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast",
 //        e);
 //      }
-//     LOG.info(, "Received HTG job completed: " + htgJobCompletedMessage);
+//     LOG.log(Level.INFO, , "Received HTG job completed: " + htgJobCompletedMessage);
       this.executionCompleted = true;
-      LOG.info("Received HTG job completed message");
+      LOG.log(Level.INFO, "Received HTG job completed message");
     } else {
       LOG.warning("Unknown message for htg task execution");
     }
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 }

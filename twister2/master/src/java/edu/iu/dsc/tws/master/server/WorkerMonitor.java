@@ -54,6 +54,7 @@ public class WorkerMonitor implements MessageHandler {
 
   private boolean jobMasterAssignsWorkerIDs;
   private int numberOfWorkers;
+  private boolean driverRegistered = false;
 
   private TreeMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
@@ -95,6 +96,11 @@ public class WorkerMonitor implements MessageHandler {
       LOG.log(Level.FINE, "ListWorkersRequest received: " + message.toString());
       JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
+
+    } else if (message instanceof JobMasterAPI.RegisterDriver) {
+      LOG.log(Level.INFO, "RegisterDriver message received: ");
+      JobMasterAPI.RegisterDriver registerMessage = (JobMasterAPI.RegisterDriver) message;
+      registerDriverMessageReceived(id, registerMessage);
 
     } else if (message instanceof JobMasterAPI.WorkersScaled) {
       LOG.log(Level.INFO, "WorkersScaled message received: " + message.toString());
@@ -175,13 +181,43 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     // if all workers registered, inform all workers
-    if (workers.size() == numberOfWorkers) {
+    if (allWorkersRegistered()) {
       LOG.info("All " + workers.size() + " workers joined the job.");
       sendListWorkersResponseToWaitList();
+
+      sendWorkersJoinedMessage();
+    }
+  }
+
+  private void registerDriverMessageReceived(RequestID id, JobMasterAPI.RegisterDriver message) {
+
+    if (driverRegistered) {
+      JobMasterAPI.RegisterDriverResponse failResponse =
+          JobMasterAPI.RegisterDriverResponse.newBuilder()
+              .setSucceeded(false)
+              .setReason("A driver already registered with JobMaster. Can be at most one driver.")
+              .build();
+      rrServer.sendResponse(id, failResponse);
+      LOG.warning("RegisterDriverResponse sent to the driver: \n" + failResponse);
+      return;
     }
 
-    return;
+    driverRegistered = true;
+
+    JobMasterAPI.RegisterDriverResponse successResponse =
+        JobMasterAPI.RegisterDriverResponse.newBuilder()
+            .setSucceeded(true)
+            .build();
+    rrServer.sendResponse(id, successResponse);
+    LOG.fine("RegisterDriverResponse sent to the driver: \n" + successResponse);
+
+    // if all workers have already registered,
+    // send the driver allWorkersJoined message
+    if (allWorkersRegistered()) {
+      sendWorkersJoinedMessage();
+    }
   }
+
 
   private void stateChangeMessageReceived(RequestID id, JobMasterAPI.WorkerStateChange message) {
 
@@ -263,11 +299,15 @@ public class WorkerMonitor implements MessageHandler {
       rrServer.sendMessage(scaledMessage, workerID);
     }
 
+    // if all newly scaled workers are already joined
+    // send WorkersJoined messages
+    if (allWorkersRegistered()) {
+      sendWorkersJoinedMessage();
+    }
+
     // send Scale message to the dashboard
     if (dashClient != null) {
-      int index = scalableComputeResource.getIndex();
-      int replicas = numberOfWorkers / scalableComputeResource.getWorkersPerPod();
-      dashClient.scaleComputeResource(index, replicas);
+      dashClient.scaledWorkers(scaledMessage.getChange(), scaledMessage.getNumberOfWorkers());
     }
 
   }
@@ -357,6 +397,29 @@ public class WorkerMonitor implements MessageHandler {
 
     rrServer.sendResponse(id, successResponse);
     LOG.fine("WorkerToDriverResponse sent to the driver: \n" + successResponse);
+  }
+
+  /**
+   * make sure that
+   *   all workers registered and their state may be anything
+   * @return
+   */
+  private boolean allWorkersRegistered() {
+
+    // if numberOfWorkers does not match the number of registered workers,
+    // return false
+    if (workers.size() != numberOfWorkers) {
+      return false;
+    }
+
+    // if there is a gap in workerID sequence, return false
+    // since workerIDs are sorted and they start from 0
+    // checking the workerID of the last worker is sufficient
+    if (workers.lastKey() != (numberOfWorkers - 1)) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -496,6 +559,34 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     waitList.clear();
+  }
+
+  /**
+   * send WorkersJoined message to all workers and the driver
+   */
+  private void sendWorkersJoinedMessage() {
+
+    LOG.info("Sending WorkersJoined messages ...");
+
+    // first construct the message
+    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder()
+        .setNumberOfWorkers(numberOfWorkers);
+
+    for (WorkerWithState worker: workers.values()) {
+      joinedBuilder.addWorker(worker.getWorkerInfo());
+    }
+
+    JobMasterAPI.WorkersJoined joinedMessage = joinedBuilder.build();
+
+    // send the message to the driver, if any
+    // if there is no driver, no problem, this method will return false
+    rrServer.sendMessage(joinedMessage, RRServer.DRIVER_ID);
+
+    // send the message to all workers
+    for (Integer workerID: workers.keySet()) {
+      rrServer.sendMessage(joinedMessage, workerID);
+    }
+
   }
 
 }

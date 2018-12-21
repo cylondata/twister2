@@ -1,19 +1,25 @@
 package edu.iu.dsc.tws.dashboard.services;
 
-import edu.iu.dsc.tws.dashboard.data_models.*;
-import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Optional;
+
+import javax.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
+import edu.iu.dsc.tws.dashboard.data_models.Job;
+import edu.iu.dsc.tws.dashboard.data_models.Node;
+import edu.iu.dsc.tws.dashboard.data_models.Worker;
+import edu.iu.dsc.tws.dashboard.data_models.WorkerPort;
+import edu.iu.dsc.tws.dashboard.data_models.WorkerState;
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.WorkerId;
 import edu.iu.dsc.tws.dashboard.repositories.WorkerRepository;
 import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 import edu.iu.dsc.tws.dashboard.rest_models.WorkerCreateRequest;
-
-import javax.persistence.EntityNotFoundException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Optional;
 
 @Service
 public class WorkerService {
@@ -27,7 +33,8 @@ public class WorkerService {
   private final ComputeResourceService computeResourceService;
 
   @Autowired
-  public WorkerService(WorkerRepository workerRepository, JobService jobService, NodeService nodeService, ComputeResourceService computeResourceService) {
+  public WorkerService(WorkerRepository workerRepository, JobService jobService,
+                       NodeService nodeService, ComputeResourceService computeResourceService) {
     this.workerRepository = workerRepository;
     this.jobService = jobService;
     this.nodeService = nodeService;
@@ -59,8 +66,8 @@ public class WorkerService {
 
     //compute resource
     ComputeResource computeResource = computeResourceService.findById(
-            workerCreateRequest.getJobID(),
-            workerCreateRequest.getComputeResourceIndex()
+        workerCreateRequest.getJobID(),
+        workerCreateRequest.getComputeResourceIndex()
     );
     worker.setComputeResource(computeResource);
 
@@ -77,8 +84,11 @@ public class WorkerService {
   }
 
   @Transactional
-  public void changeState(String jobId, Long workerId, StateChangeRequest<WorkerState> stateChangeRequest) {
-    int amountChanged = this.workerRepository.changeWorkerState(jobId, workerId, stateChangeRequest.getState());
+  public void changeState(String jobId, Long workerId,
+                          StateChangeRequest<WorkerState> stateChangeRequest) {
+    int amountChanged = this.workerRepository.changeWorkerState(
+        jobId, workerId, stateChangeRequest.getState()
+    );
     if (amountChanged == 0) {
       this.throwNoSuchWorker(jobId, workerId);
     }
@@ -94,7 +104,7 @@ public class WorkerService {
 
   private void throwNoSuchWorker(String jobId, Long workerId) {
     throw new EntityNotFoundException("No such worker " + workerId
-            + " found in job " + jobId);
+        + " found in job " + jobId);
   }
 
   public Worker getWorkerById(String jobId, Long workerId) {

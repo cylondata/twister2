@@ -1,15 +1,21 @@
 package edu.iu.dsc.tws.dashboard.data_models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import edu.iu.dsc.tws.dashboard.data_models.composite_ids.ComputeResourceId;
-import io.swagger.annotations.ApiModelProperty;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
-import javax.persistence.*;
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import edu.iu.dsc.tws.dashboard.data_models.composite_ids.ComputeResourceId;
+
+import io.swagger.annotations.ApiModelProperty;
 
 @Entity
 @IdClass(ComputeResourceId.class)
-public class ComputeResource implements Serializable {
+public class ComputeResource {
 
   @Column
   private Double cpu = 0d;
@@ -23,6 +29,9 @@ public class ComputeResource implements Serializable {
   @Column
   private Integer instances = 0;
 
+  @Column
+  private Boolean scalable = Boolean.FALSE;
+
   @Id
   @Column
   private Integer index = 0;
@@ -32,8 +41,16 @@ public class ComputeResource implements Serializable {
   @ManyToOne(optional = false)
   @JoinColumn
   @JsonIgnoreProperties({"workers", "description", "heartbeatTime", "state", "computeResources",
-          "node", "numberOfWorkers", "workerClass"})
+      "node", "numberOfWorkers", "workerClass"})
   private Job job;
+
+  public Boolean isScalable() {
+    return scalable;
+  }
+
+  public void setScalable(Boolean scalable) {
+    this.scalable = scalable;
+  }
 
   public Job getJob() {
     return job;

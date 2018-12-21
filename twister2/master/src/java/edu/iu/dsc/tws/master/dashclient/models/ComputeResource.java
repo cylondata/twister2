@@ -35,6 +35,7 @@ public class ComputeResource {
   private double disk;
   private int index;
   private int instances;
+  private boolean scalable;
 
   public ComputeResource() { }
 
@@ -44,6 +45,7 @@ public class ComputeResource {
     disk = computeResource.getDiskGigaBytes();
     index = computeResource.getIndex();
     instances = computeResource.getInstances();
+    scalable = computeResource.getScalable();
   }
 
   public double getCpu() {
@@ -66,6 +68,10 @@ public class ComputeResource {
     return instances;
   }
 
+  public boolean getScalable() {
+    return scalable;
+  }
+
   public void setCpu(double cpu) {
     this.cpu = cpu;
   }
@@ -84,5 +90,9 @@ public class ComputeResource {
 
   public void setInstances(int instances) {
     this.instances = instances;
+  }
+
+  public void setScalable(boolean scalable) {
+    this.scalable = scalable;
   }
 }

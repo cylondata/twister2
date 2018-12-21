@@ -1,3 +1,7 @@
+html {
+  overflow-y: scroll;
+}
+
 .logo-container {
   display: grid;
   grid-template-columns: 30px auto;
@@ -15,9 +19,7 @@
 }
 
 .dash-container {
-  display: grid;
-  grid-template-columns: 200px auto;
-  min-height: calc(100vh - 50px);
+  //min-height: calc(100vh - 50px);
 
   .bp3-tree {
     height: 100%;

@@ -5,6 +5,8 @@ import java.util.Objects;
 
 public class WorkerId implements Serializable {
 
+  private static final long serialVersionUID = 1L;
+
   private Long workerID;
 
   private String job;
@@ -27,11 +29,15 @@ public class WorkerId implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     WorkerId workerId = (WorkerId) o;
-    return Objects.equals(workerID, workerId.workerID) &&
-            Objects.equals(job, workerId.job);
+    return Objects.equals(workerID, workerId.workerID)
+        && Objects.equals(job, workerId.job);
   }
 
   @Override

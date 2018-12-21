@@ -1,5 +1,5 @@
 import React from "react";
-import {Button, Card, Elevation, Icon, Tag, Intent} from "@blueprintjs/core";
+import {Button, Card, Elevation, Icon, Tag, Intent, Collapse, Position, Tooltip} from "@blueprintjs/core";
 import "./WorkerCard.css";
 import {Link} from "react-router-dom";
 import JobTag from "../../workloads/jobs/JobTag";
@@ -16,7 +16,8 @@ export default class WorkerCard extends React.Component {
         this.state = {
             worker: this.props.worker,
             workerSyncing: false,
-            workerStateIntent: this.getStateIntent(this.props.worker.state)
+            workerStateIntent: this.getStateIntent(this.props.worker.state),
+            infoOpen: false
         }
     }
 
@@ -67,114 +68,122 @@ export default class WorkerCard extends React.Component {
         });
     };
 
+    toggleInfo = () => {
+        this.setState({
+            infoOpen: !this.state.infoOpen
+        })
+    };
+
     render() {
         return (
-            <Card interactive={true} elevation={Elevation.ZERO} className="tw-node-card">
-                <div>
-                    <Icon icon="ninja" iconSize={40} className="tw-node-icon"/>
+            <Card interactive={true} elevation={Elevation.ZERO} className="tw-table-row tw-worker-row">
+                <div className="tw-worker-row-summary">
+                    <div className="tw-worker-row-icon">
+                        <Icon icon="ninja" iconSize={18}/>
+                    </div>
+
+                    <Link to={`/jobs/${this.state.worker.job.jobID}/${this.state.worker.workerID}`}>
+                        <div className="tw-table-row-left">
+                            <div className="tw-job-row-name">
+                                {this.state.worker.job.jobName}/{this.state.worker.workerID}
+                            </div>
+                        </div>
+                    </Link>
+                    <div className="tw-table-row-right">
+                        <Tooltip content="Worker ID" position={Position.TOP}>
+                            <Tag intent={Intent.NONE} icon="tag" minimal={true} style={{height: 25}}
+                                 className="tw-worker-row-status-tag">{this.state.worker.workerID}</Tag>
+                        </Tooltip>
+                        <Tooltip content="Heartbeat" position={Position.TOP}>
+                            <Tag icon="pulse" style={{height: 25}} intent={Intent.NONE} minimal={true}>
+                                {new Date(this.state.worker.heartbeatTime).toUTCString()}
+                            </Tag>
+                        </Tooltip>
+                        <Tag intent={this.state.workerStateIntent}
+                             className="tw-worker-row-status-tag">{this.state.worker.state}</Tag>
+                        <Tooltip content="Sync" position={Position.TOP}>
+                            <Button icon="refresh" onClick={this.syncWorker} small={true} minimal={true}/>
+                        </Tooltip>
+                        <Button rightIcon="caret-down" text="" small={true} minimal={true}
+                                onClick={this.toggleInfo}/>
+                    </div>
                 </div>
-                <div className="tw-node-info-wrapper">
-                    <h4>
-                        {this.state.worker.job.jobName.toUpperCase()}/{this.state.worker.workerID}
-                    </h4>
-                    <table className="bp3-html-table bp3-html-table-striped">
-                        <tbody>
-                        <tr>
-                            <td>
-                                Job
-                            </td>
-                            <td>
-                                <JobTag job={this.state.worker.job}/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Worker ID
-                            </td>
-                            <td>
-                                {this.state.worker.workerID}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Worker IP/Port
-                            </td>
-                            <td>
-                                {this.state.worker.workerIP}:{this.state.worker.workerPort}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Cluster
-                            </td>
-                            <td>
-                                <ClusterTag cluster={this.state.worker.node.cluster}/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Node
-                            </td>
-                            <td>
-                                <NodeTag node={this.state.worker.node}/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                State
-                            </td>
-                            <td>
-                                <Tag minimal={true}
-                                     intent={this.state.workerStateIntent}>{this.state.worker.state}</Tag>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Heartbeat
-                            </td>
-                            <td>
-                                {this.state.worker.heartbeatTime}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Compute Resource</td>
-                            <td>
-                                <ComputeResourceCard cr={this.state.worker.computeResource}/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Ports
-                            </td>
-                            <td>
-                                <table className="bp3-html-table">
-                                    <thead>
-                                    <tr>
-                                        <td>Label</td>
-                                        <td>Port</td>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
+                <div className="tw-worker-row-info">
+                    <Collapse isOpen={this.state.infoOpen} keepChildrenMounted={true}>
+                        <table className="bp3-html-table bp3-html-table-striped" width="100%">
+                            <tbody>
+                            <tr>
+                                <td>
+                                    Worker ID
+                                </td>
+                                <td>
+                                    {this.state.worker.workerID}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Worker IP/Port
+                                </td>
+                                <td>
+                                    {this.state.worker.workerIP}:{this.state.worker.workerPort}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Cluster
+                                </td>
+                                <td>
+                                    <ClusterTag cluster={this.state.worker.node.cluster}/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Node
+                                </td>
+                                <td>
+                                    <NodeTag node={this.state.worker.node}/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    State
+                                </td>
+                                <td>
+                                    <Tag minimal={true}
+                                         intent={this.state.workerStateIntent}>{this.state.worker.state}</Tag>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Heartbeat
+                                </td>
+                                <td>
+                                    {this.state.worker.heartbeatTime}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Compute Resource</td>
+                                <td>
+                                    <ComputeResourceCard cr={this.state.worker.computeResource}/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Ports
+                                </td>
+                                <td>
                                     {this.state.worker.workerPorts.map(wp => {
                                         return (
-                                            <tr>
-                                                <td>{wp.label}</td>
-                                                <td>{wp.port}</td>
-                                            </tr>
+                                            <Tag large={true}
+                                                 minimal={true}
+                                                 className="tw-worker-ports-tag">{wp.label} : {wp.port}</Tag>
                                         );
                                     })}
-                                    </tbody>
-                                </table>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <div className="tw-node-actions">
-                        <Link to="/workers/worker1">
-                            <Button icon="info-sign">Logs</Button>
-                        </Link>
-                        <Button icon="refresh" onClick={this.syncWorker}>Sync</Button>
-                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </Collapse>
                 </div>
             </Card>
         )

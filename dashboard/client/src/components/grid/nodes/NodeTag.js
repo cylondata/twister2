@@ -10,19 +10,21 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 import React from "react";
-import {Button} from "@blueprintjs/core";
+import {Button, Tooltip, Position} from "@blueprintjs/core";
 
 export default class NodeTag extends React.Component {
 
     render() {
         return (
-            <Button
-                text={this.props.node.cluster.name + "/" +
-                this.props.node.dataCenter + "/"
-                + this.props.node.rack + "/"
-                + this.props.node.ip}
-                minimal={true}
-                icon={"desktop"} small={true}/>
+            <Tooltip content="Node" position={Position.TOP}>
+                <Button
+                    text={this.props.node.cluster.name + "/" +
+                    this.props.node.dataCenter + "/"
+                    + this.props.node.rack + "/"
+                    + this.props.node.ip}
+                    minimal={true}
+                    icon={"desktop"} small={true}/>
+            </Tooltip>
         );
     }
 }
