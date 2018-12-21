@@ -44,7 +44,7 @@ public class ClusterController {
   }
 
   @RequestMapping(value = "/{id}/nodes/", method = RequestMethod.GET)
-  public Iterable<Node> getNodes(@PathVariable Long id) {
+  public Iterable<Node> getNodes(@PathVariable("id") Long id) {
     return this.nodeService.getNodesOfCluster(id);
   }
 }

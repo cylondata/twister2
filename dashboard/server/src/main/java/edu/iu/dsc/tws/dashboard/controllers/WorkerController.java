@@ -37,21 +37,22 @@ public class WorkerController {
   }
 
   @RequestMapping(value = "/{jobId}/{workerId}/", method = RequestMethod.GET)
-  public Worker getAllWorkers(@PathVariable String jobId,
-                              @PathVariable Long workerId) {
+  public Worker getAllWorkers(@PathVariable("jobId") String jobId,
+                              @PathVariable("workerId") Long workerId) {
     return workerService.getWorkerById(jobId, workerId);
   }
 
   @RequestMapping(value = "/{jobId}/{workerId}/state/", method = RequestMethod.POST,
           consumes = MediaType.APPLICATION_JSON_VALUE)
-  public void changeState(@PathVariable String jobId,
-                          @PathVariable Long workerId,
+  public void changeState(@PathVariable("jobId") String jobId,
+                          @PathVariable("workerId") Long workerId,
                           @RequestBody StateChangeRequest<WorkerState> stateChangeRequest) {
     this.workerService.changeState(jobId, workerId, stateChangeRequest);
   }
 
   @RequestMapping(value = "/{jobId}/{workerId}/beat/", method = RequestMethod.POST)
-  public void heartbeat(@PathVariable String jobId, @PathVariable Long workerId) {
+  public void heartbeat(@PathVariable("jobId") String jobId,
+                        @PathVariable("workerId") Long workerId) {
     this.workerService.heartbeat(jobId, workerId);
   }
 
