@@ -20,7 +20,7 @@ before_install:
 
 
 install:
-  - wget https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz
+  - wget https://github.com/open-mpi/ompi/archive/v3.0.0.tar.gz
   - tar -xzvf openmpi-3.0.0.tar.gz
   - mkdir build
   - ls
