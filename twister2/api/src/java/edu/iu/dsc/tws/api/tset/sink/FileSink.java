@@ -26,12 +26,17 @@ public class FileSink<T> implements Sink<T> {
 
   @Override
   public boolean add(T value) {
-    output.writeRecord(partition, value);
+    output.write(partition, value);
     return true;
   }
 
   @Override
   public void prepare(TSetContext context) {
     partition = context.getIndex();
+  }
+
+  @Override
+  public void close() {
+    output.close();
   }
 }

@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.Vertex;
@@ -131,21 +132,17 @@ public class TaskAttributes {
   public Map<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet) {
 
     //Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
-    Map<String, Integer> parallelTaskMap = new HashMap<>();
-    try {
-      for (Vertex task : iTaskSet) {
-        Config config = task.getConfig();
-        String taskName = task.getName();
-        Integer parallelTaskCount;
-        if (task.getParallelism() >= 1) {
-          parallelTaskCount = task.getParallelism();
-        } else { //if (task.getParallelism() < 1) {
-          parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
-        }
-        parallelTaskMap.put(taskName, parallelTaskCount);
+    Map<String, Integer> parallelTaskMap = new TreeMap<>();
+    for (Vertex task : iTaskSet) {
+      Config config = task.getConfig();
+      String taskName = task.getName();
+      Integer parallelTaskCount;
+      if (task.getParallelism() >= 1) {
+        parallelTaskCount = task.getParallelism();
+      } else { //if (task.getParallelism() < 1) {
+        parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
       }
-    } catch (Exception ee) {
-      ee.printStackTrace();
+      parallelTaskMap.put(taskName, parallelTaskCount);
     }
     return parallelTaskMap;
   }
@@ -162,19 +159,15 @@ public class TaskAttributes {
   public Map<String, Integer> getParallelTaskMap(Vertex taskVertex) {
 
     Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
-    try {
-      Config config = taskVertex.getConfig();
-      String taskName = taskVertex.getName();
-      Integer parallelTaskCount;
-      if (taskVertex.getParallelism() >= 1) {
-        parallelTaskCount = taskVertex.getParallelism();
-      } else {
-        parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
-      }
-      parallelTaskMap.put(taskName, parallelTaskCount);
-    } catch (Exception ee) {
-      ee.printStackTrace();
+    Config config = taskVertex.getConfig();
+    String taskName = taskVertex.getName();
+    Integer parallelTaskCount;
+    if (taskVertex.getParallelism() >= 1) {
+      parallelTaskCount = taskVertex.getParallelism();
+    } else {
+      parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
     }
+    parallelTaskMap.put(taskName, parallelTaskCount);
     return parallelTaskMap;
   }
 
