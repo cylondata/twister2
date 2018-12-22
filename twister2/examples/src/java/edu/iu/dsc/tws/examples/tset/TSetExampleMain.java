@@ -75,7 +75,7 @@ public final class TSetExampleMain {
       gap = cmd.getOptionValue(Constants.ARGS_GAP);
     }
 
-    String fName = "";
+    String fName = null;
     if (cmd.hasOption(Constants.ARGS_FNAME)) {
       fName = cmd.getOptionValue(Constants.ARGS_FNAME);
     }

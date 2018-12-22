@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.io.File;
 import java.io.IOException;
 
 import edu.iu.dsc.tws.api.tset.TSet;
@@ -31,29 +32,33 @@ public class TSetFileAccessExample extends BaseTSetWorker {
   public void execute() {
     super.execute();
 
-    String inputDirectory = config.getStringValue(Constants.ARGS_INPUT_DIRECTORY,
-        "/home/supun/data/twister2");
-    boolean shared = config.getBooleanValue(Constants.ARGS_SHARED_FILE_SYSTEM, true);
-    int numFiles = config.getIntegerValue(Constants.ARGS_NUMBER_OF_FILES, 4);
+    String inputDirectory = config.getStringValue(Constants.ARGS_FNAME,
+        "/tmp/twister2");
+    int numFiles = config.getIntegerValue(Constants.ARGS_WORKERS, 4);
     int size = config.getIntegerValue(Constants.ARGS_SIZE, 1000);
 
-    if (shared && workerId == 0) {
+    String input = inputDirectory + "/input";
+    String output = inputDirectory + "/output";
+    if (workerId == 0) {
       try {
-        DataGenerator.generateData("txt", new Path(inputDirectory + "/input"),
+        new File(input).mkdirs();
+        new File(output).mkdirs();
+
+        DataGenerator.generateData("txt", new Path(input),
             numFiles, size, 10);
       } catch (IOException e) {
-        throw new RuntimeException("Failed to create data: " + inputDirectory);
+        throw new RuntimeException("Failed to create data: " + input);
       }
     }
 
     TSet<String> textSource = tSetBuilder.createSource(new FileSource<>(
-        new SharedTextInputPartitioner(new Path(inputDirectory + "/input")))).setParallelism(
+        new SharedTextInputPartitioner(new Path(input)))).setParallelism(
             jobParameters.getTaskStages().get(0));
 
     textSource.partition(new OneToOnePartitioner<>()).sink(
         new FileSink<String>(new TextOutputWriter(
             FileSystem.WriteMode.OVERWRITE,
-            new Path(inputDirectory + "/output")))).setParallelism(
+            new Path(output)))).setParallelism(
                 jobParameters.getTaskStages().get(0));
 
     DataFlowTaskGraph graph = tSetBuilder.build();
