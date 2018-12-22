@@ -12,8 +12,9 @@
 package edu.iu.dsc.tws.data.fs.local;
 
 import java.io.IOException;
+import java.io.Serializable;
 
-public interface FileLocation {
+public interface FileLocation extends Serializable {
 
   /**
    * Get the set of datanodes/hosts hosting the input file.

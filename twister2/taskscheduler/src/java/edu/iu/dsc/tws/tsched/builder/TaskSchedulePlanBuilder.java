@@ -33,8 +33,6 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskScheduleUtils;
 
-//import com.google.common.base.Optional;
-
 /**
  * This class is mainly responsible for building the task schedule plan.
  */
@@ -54,10 +52,6 @@ public class TaskSchedulePlanBuilder {
   private int requestedContainerPadding;
   private int numberOfContainers;
   private int id;
-
-  public TaskSchedulePlanBuilder(int id) {
-    this(id, null);
-  }
 
   public TaskSchedulePlanBuilder(int scheduleId, TaskSchedulePlan previousTaskSchedulePlan) {
     this.id = scheduleId;

@@ -19,6 +19,7 @@ import java.util.concurrent.BlockingQueue;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -141,6 +142,13 @@ public class SinkBatchInstance implements INodeInstance {
   @Override
   public INode getNode() {
     return batchTask;
+  }
+
+  @Override
+  public void close() {
+    if (batchTask instanceof Closable) {
+      ((Closable) batchTask).close();
+    }
   }
 
   /**

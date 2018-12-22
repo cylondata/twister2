@@ -25,7 +25,6 @@ import com.google.common.collect.Table;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.IExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
@@ -83,8 +82,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
   private TaskIdGenerator taskIdGenerator;
 
-  private KryoMemorySerializer kryoMemorySerializer;
-
   private EdgeGenerator edgeGenerator;
 
   private List<JobMasterAPI.WorkerInfo> workerInfoList;
@@ -93,7 +90,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
                               Communicator net) {
     this.workerId = workerID;
     this.taskIdGenerator = new TaskIdGenerator();
-    this.kryoMemorySerializer = new KryoMemorySerializer();
     this.workerInfoList = workerInfoList;
     this.edgeGenerator = new EdgeGenerator();
     this.network = net;
