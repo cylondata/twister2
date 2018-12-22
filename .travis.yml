@@ -20,19 +20,19 @@ before_install:
 
 
 install:
-  - wget https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz
-  - tar -xzvf openmpi-3.0.0.tar.gz
+  - wget https://github.com/open-mpi/ompi/archive/v3.1.2.tar.gz
+  - tar -xzvf v3.1.2.tar.gz
   - mkdir build
   - ls
   - echo " START INSTALL"
   - echo "INSTALL OPENMPI VIBHATH"
   - export BUILD=$PWD/build
-  - export OMPI_300=$PWD/openmpi-3.0.0
+  - export OMPI_312=$PWD/openmpi-3.1.2
   - export PATH=$BUILD/bin:$PATH
   - export LD_LIBRARY_PATH=$BUILD/lib:$LD_LIBRARY_PATH
   - echo "CHECK LS OMP:vb"
   - ls
-  - cd $OMPI_300
+  - cd $OMPI_312
   - ./configure --prefix=$BUILD --enable-mpi-java
   - make -j 8
   - make install
@@ -41,11 +41,11 @@ install:
 script:
   - echo "*****************************************"
   - echo "PATH CHECK:vb"
-  - echo $OMPI_300
+  - echo $OMPI_312
   - ls $PWD/build
   - mpirun -version
   - echo "*****************************************"
-  - mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_300/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.0.0
+  - mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_312/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.1.2
   - echo "END OF INSTALL"
   - bazel version
   - echo " BAZEL BUILD START"

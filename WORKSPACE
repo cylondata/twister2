@@ -64,8 +64,8 @@ new_http_archive(
 new_http_archive(
     name = "ompi3",
     build_file = "third_party/ompi3/ompi.BUILD",
-    strip_prefix = "openmpi-3.1.2",
-    urls = ["https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.2.tar.gz"],
+    strip_prefix = "ompi-3.1.2",
+    urls = ["https://github.com/open-mpi/ompi/archive/v3.1.2.tar.gz"],
 )
 
 load("//:t2_workspace_defs.bzl", "load_modules")
