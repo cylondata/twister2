@@ -12,7 +12,7 @@
 
 //const BASE_URL = "http://localhost:8080/";
 
-const BASE_URL = "http://149.165.150.81:8080/";
+const BASE_URL = "";
 
 export class RestService {
 
