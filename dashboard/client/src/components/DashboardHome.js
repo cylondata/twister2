@@ -14,7 +14,8 @@ const JOB_STATE_COLOR_MAP = {
     "COMPLETED": "#2E7D32",
     "STARTING": "#26A69A",
     "STARTED": "#0288D1",
-    "FAILED": "#e53935"
+    "FAILED": "#e53935",
+    "KILLED": "#424242",
 };
 
 const WORKER_STATE_COLOR_MAP = {
