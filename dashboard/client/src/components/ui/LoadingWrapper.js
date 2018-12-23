@@ -10,16 +10,17 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//const BASE_URL = "http://localhost:8080/";
+import React from "react";
+import LoadingComponent from "./LoadingComponent";
 
-const BASE_URL = "http://149.165.150.81:8080/";
+export default class LoadingWrapper extends React.Component {
 
-export class RestService {
-
-    static buildURL(path, addSlash = true) {
-        if (addSlash && !path.endsWith("/")) {
-            path += "/";
-        }
-        return BASE_URL + path;
+    render() {
+        return (
+            <div>
+                {this.props.loading && <LoadingComponent/>}
+                {!this.props.loading && this.props.children}
+            </div>
+        );
     }
 }

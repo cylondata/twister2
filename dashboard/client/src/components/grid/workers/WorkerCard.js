@@ -26,7 +26,7 @@ export default class WorkerCard extends React.Component {
             case "COMPLETED":
                 return Intent.SUCCESS;
             case "KILLED":
-                return Intent.DANGER;
+                return Intent.WARNING;
             case "NOT_PINGING":
                 return Intent.WARNING;
             case "FAILED":

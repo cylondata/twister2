@@ -7,7 +7,7 @@ import JobCard from "./workloads/jobs/JobCard";
 import {Button, Card, Icon} from "@blueprintjs/core";
 import {StatsService} from "../services/StatsService";
 import {Link} from "react-router-dom";
-import LoadingComponent from "./ui/LoadingComponent";
+import LoadingWrapper from "./ui/LoadingWrapper";
 
 
 const JOB_STATE_COLOR_MAP = {
@@ -15,7 +15,7 @@ const JOB_STATE_COLOR_MAP = {
     "STARTING": "#26A69A",
     "STARTED": "#0288D1",
     "FAILED": "#e53935",
-    "KILLED": "#424242",
+    "KILLED": "#d9822b",
 };
 
 const WORKER_STATE_COLOR_MAP = {
@@ -23,7 +23,7 @@ const WORKER_STATE_COLOR_MAP = {
     "STARTING": "#26A69A",
     "NOT_PINGING": "#F57C00",
     "RUNNING": "#2E7D32",
-    "KILLED": "#424242",
+    "KILLED": "#d9822b",
     "FAILED": "#e53935"
 };
 
@@ -76,29 +76,68 @@ export default class DashboardHome extends React.Component {
                 workers: 0,
                 nodes: 0,
                 clusters: 0
-            }
+            },
+
+            loadingJobStatsCharts: false,
+            loadingWorkerStatsCharts: false,
+
+            loadingActiveJobs: false,
+            loadingInActiveJobs: false,
         };
 
         this.statUpdateInterval = 0;
     }
 
+    setLoadingJobStatCharts = (loading) => {
+        this.setState({
+            loadingJobStatsCharts: loading
+        });
+    };
+
+    setLoadingWorkerStatCharts = (loading) => {
+        this.setState({
+            loadingWorkerStatsCharts: loading
+        });
+    };
+
+    setLoadingActiveJobs = (loading) => {
+        this.setState({
+            loadingActiveJobs: loading
+        })
+    };
+
+    setLoadingInActiveJobs = (loading) => {
+        this.setState({
+            loadingInActiveJobs: loading
+        })
+    };
+
     updateActiveJobs = () => {
+        this.setLoadingActiveJobs(true);
         JobService.getActiveJobs().then(response => {
             this.setState({
                 activeJobs: response.data.content
             });
+            this.setLoadingActiveJobs(false);
+        }).catch(e => {
+            this.setLoadingActiveJobs(false)
         });
     };
 
     updateInActiveJobs = () => {
+        this.setLoadingInActiveJobs(true);
         JobService.getInActiveJobs().then(response => {
             this.setState({
                 inActiveJobs: response.data.content
             });
+            this.setLoadingInActiveJobs(false);
+        }).catch(e => {
+            this.setLoadingInActiveJobs(false);
         });
     };
 
     updateJobStats = () => {
+        this.setLoadingJobStatCharts(true);
         JobService.getJobStats().then(response => {
             let labels = [];
             let data = [];
@@ -112,11 +151,15 @@ export default class DashboardHome extends React.Component {
                 jobChart: {
                     labels, data, colors
                 }
-            })
+            });
+            this.setLoadingJobStatCharts(false);
+        }).catch(e => {
+            this.setLoadingJobStatCharts(false);
         });
     };
 
     updateWorkerStats = () => {
+        this.setLoadingWorkerStatCharts(true);
         WorkerService.getWorkerStats().then(response => {
             let labels = [];
             let data = [];
@@ -130,7 +173,10 @@ export default class DashboardHome extends React.Component {
                 workerChart: {
                     labels, data, colors
                 }
-            })
+            });
+            this.setLoadingWorkerStatCharts(false);
+        }).catch(e => {
+            this.setLoadingWorkerStatCharts(false)
         });
     };
 
@@ -207,40 +253,48 @@ export default class DashboardHome extends React.Component {
                     </div>
                     <div className="t2-quick-view-chart-wrapper">
                         <h4 className="text-center">Workers</h4>
-                        {this.state.workerChart.data.length > 0 ?
-                            <Doughnut data={{
-                                datasets: [{
-                                    data: this.state.workerChart.data,
-                                    backgroundColor: this.state.workerChart.colors
-                                }],
-                                labels: this.state.workerChart.labels
-                            }}/> : <p className="text-center">
-                                Couldn't find enough worker data to generate stats</p>}
+                        <LoadingWrapper loading={this.state.loadingJobStatsCharts}>
+                            {this.state.workerChart.data.length > 0 ?
+                                <Doughnut data={{
+                                    datasets: [{
+                                        data: this.state.workerChart.data,
+                                        backgroundColor: this.state.workerChart.colors
+                                    }],
+                                    labels: this.state.workerChart.labels
+                                }}/> : <p className="text-center">
+                                    Couldn't find enough worker data to generate stats</p>}
+                        </LoadingWrapper>
                     </div>
                     <div className="t2-quick-view-chart-wrapper">
                         <h4 className="text-center">Jobs</h4>
-                        {this.state.jobChart.data.length > 0 ?
-                            <Doughnut data={{
-                                datasets: [{
-                                    data: this.state.jobChart.data,
-                                    backgroundColor: this.state.jobChart.colors
-                                }],
-                                labels: this.state.jobChart.labels
-                            }}/> : <p className="text-center">
-                                Couldn't find enough job data to generate stats</p>}
+                        <LoadingWrapper loading={this.state.loadingWorkerStatsCharts}>
+                            {this.state.jobChart.data.length > 0 ?
+                                <Doughnut data={{
+                                    datasets: [{
+                                        data: this.state.jobChart.data,
+                                        backgroundColor: this.state.jobChart.colors
+                                    }],
+                                    labels: this.state.jobChart.labels
+                                }}/> : <p className="text-center">
+                                    Couldn't find enough job data to generate stats</p>}
+                        </LoadingWrapper>
                     </div>
                 </div>
                 <div>
                     <h4>Active Jobs</h4>
                     <div className="">
-                        {activeJobCards}
-                        {activeJobCards.length === 0 ? "No active jobs available!" : ""}
+                        <LoadingWrapper loading={this.state.loadingActiveJobs}>
+                            {activeJobCards}
+                            {activeJobCards.length === 0 ? "No active jobs available!" : ""}
+                        </LoadingWrapper>
                     </div>
 
                     <h4>Inactive Jobs</h4>
                     <div className="">
-                        {inActiveJobCards}
-                        {inActiveJobCards.length === 0 ? "No inactive jobs available!" : ""}
+                        <LoadingWrapper loading={this.state.loadingInActiveJobs}>
+                            {inActiveJobCards}
+                            {inActiveJobCards.length === 0 ? "No inactive jobs available!" : ""}
+                        </LoadingWrapper>
                     </div>
                 </div>
             </div>
