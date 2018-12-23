@@ -27,7 +27,7 @@ install:
   - echo " START INSTALL"
   - echo "INSTALL OPENMPI VIBHATH"
   - export BUILD=$PWD/build
-  - export OMPI_312=$PWD/openmpi-3.1.2
+  - export OMPI_312=$PWD/ompi-3.1.2
   - export PATH=$BUILD/bin:$PATH
   - export LD_LIBRARY_PATH=$BUILD/lib:$LD_LIBRARY_PATH
   - echo "CHECK LS OMP:vb"
