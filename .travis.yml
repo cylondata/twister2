@@ -20,14 +20,14 @@ before_install:
 
 
 install:
-  - wget https://github.com/open-mpi/ompi/archive/v3.1.2.tar.gz
-  - tar -xzvf v3.1.2.tar.gz
+  - wget https://github.com/DSC-SPIDAL/twister2-thridparty-bin/raw/master/mpi/openmpi-3.1.2.tar.gz
+  - tar -xzvf openmpi-3.1.2.tar.gz
   - mkdir build
   - ls
   - echo " START INSTALL"
   - echo "INSTALL OPENMPI VIBHATH"
   - export BUILD=$PWD/build
-  - export OMPI_312=$PWD/ompi-3.1.2
+  - export OMPI_312=$PWD/openmpi-3.1.2
   - export PATH=$BUILD/bin:$PATH
   - export LD_LIBRARY_PATH=$BUILD/lib:$LD_LIBRARY_PATH
   - echo "CHECK LS OMP:vb"
