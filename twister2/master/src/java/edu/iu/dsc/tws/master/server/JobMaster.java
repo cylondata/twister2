@@ -402,6 +402,11 @@ public class JobMaster {
     Thread hookThread = new Thread() {
       public void run() {
 
+        // if Job completed successfully, do nothing
+        if (jobCompleted) {
+          return;
+        }
+
         // if Dashboard is used, tell it that the job is killed
         if (dashClient != null) {
           dashClient.jobStateChange(JobState.KILLED);
