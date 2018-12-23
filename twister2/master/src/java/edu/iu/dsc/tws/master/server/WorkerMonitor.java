@@ -23,8 +23,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.server;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -292,10 +295,18 @@ public class WorkerMonitor implements MessageHandler {
     rrServer.sendResponse(id, scaledResponse);
     LOG.fine("ScaledResponse sent to the driver: \n" + scaledResponse);
 
+    List<Integer> killedWorkers = new ArrayList<>();
+    if (scaledMessage.getChange() < 0) {
+      NavigableSet<Integer> descKeySet = workers.descendingKeySet();
+      for (int i = scaledMessage.getChange(); i < 0; i++) {
+        killedWorkers.add(descKeySet.pollFirst());
+      }
+    }
+
     // let all workers know about the scaled message
     // TODO: how about newly added workers,
     // should we make sure that those workers also get this message
-    for (int workerID: workers.keySet()) {
+    for (int workerID : workers.keySet()) {
       rrServer.sendMessage(scaledMessage, workerID);
     }
 
@@ -307,7 +318,8 @@ public class WorkerMonitor implements MessageHandler {
 
     // send Scale message to the dashboard
     if (dashClient != null) {
-      dashClient.scaledWorkers(scaledMessage.getChange(), scaledMessage.getNumberOfWorkers());
+      dashClient.scaledWorkers(scaledMessage.getChange(),
+          scaledMessage.getNumberOfWorkers(), killedWorkers);
     }
 
   }
@@ -342,7 +354,7 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     // deliver the broadcast message to all workers
-    for (int workerID: workers.keySet()) {
+    for (int workerID : workers.keySet()) {
       boolean queued = rrServer.sendMessage(broadcastMessage, workerID);
 
       // if the message can not be queued, send a failure response
@@ -401,8 +413,7 @@ public class WorkerMonitor implements MessageHandler {
 
   /**
    * make sure that
-   *   all workers registered and their state may be anything
-   * @return
+   * all workers registered and their state may be anything
    */
   private boolean allWorkersRegistered() {
 
@@ -424,9 +435,8 @@ public class WorkerMonitor implements MessageHandler {
 
   /**
    * make sure that
-   *   all workers registered and their state is RUNNING
+   * all workers registered and their state is RUNNING
    * so that we can send a message to all
-   * @return
    */
   private boolean allWorkersRunning() {
 
@@ -444,7 +454,7 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     // check the status of all workers, all have to be RUNNING
-    for (WorkerWithState worker: workers.values()) {
+    for (WorkerWithState worker : workers.values()) {
       if (worker.getLastState() != JobMasterAPI.WorkerState.RUNNING) {
         return false;
       }
@@ -454,16 +464,16 @@ public class WorkerMonitor implements MessageHandler {
   }
 
   /**
-     * worker RUNNING message received from all workers
-     * if some workers may have already completed, that does not matter
-     * the important thing is whether they have became RUNNING in the past
-     */
+   * worker RUNNING message received from all workers
+   * if some workers may have already completed, that does not matter
+   * the important thing is whether they have became RUNNING in the past
+   */
   private boolean haveAllWorkersBecomeRunning() {
     if (numberOfWorkers != workers.size()) {
       return false;
     }
 
-    for (WorkerWithState worker: workers.values()) {
+    for (WorkerWithState worker : workers.values()) {
       if (!worker.hasWorkerBecomeRunning()) {
         return false;
       }
@@ -480,7 +490,7 @@ public class WorkerMonitor implements MessageHandler {
       return false;
     }
 
-    for (WorkerWithState worker: workers.values()) {
+    for (WorkerWithState worker : workers.values()) {
       if (!worker.hasWorkerCompleted()) {
         return false;
       }
@@ -529,7 +539,7 @@ public class WorkerMonitor implements MessageHandler {
       if (workers.size() == numberOfWorkers) {
         sendListWorkersResponse(listMessage.getWorkerID(), id);
 
-      // if some workers have not joined yet, put this worker into the wait list
+        // if some workers have not joined yet, put this worker into the wait list
       } else {
         waitList.put(listMessage.getWorkerID(), id);
       }
@@ -544,7 +554,7 @@ public class WorkerMonitor implements MessageHandler {
     JobMasterAPI.ListWorkersResponse.Builder responseBuilder = ListWorkersResponse.newBuilder()
         .setWorkerID(workerID);
 
-    for (WorkerWithState worker: workers.values()) {
+    for (WorkerWithState worker : workers.values()) {
       responseBuilder.addWorker(worker.getWorkerInfo());
     }
 
@@ -554,7 +564,7 @@ public class WorkerMonitor implements MessageHandler {
   }
 
   private void sendListWorkersResponseToWaitList() {
-    for (Map.Entry<Integer, RequestID> entry: waitList.entrySet()) {
+    for (Map.Entry<Integer, RequestID> entry : waitList.entrySet()) {
       sendListWorkersResponse(entry.getKey(), entry.getValue());
     }
 
@@ -572,7 +582,7 @@ public class WorkerMonitor implements MessageHandler {
     JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder()
         .setNumberOfWorkers(numberOfWorkers);
 
-    for (WorkerWithState worker: workers.values()) {
+    for (WorkerWithState worker : workers.values()) {
       joinedBuilder.addWorker(worker.getWorkerInfo());
     }
 
@@ -583,7 +593,7 @@ public class WorkerMonitor implements MessageHandler {
     rrServer.sendMessage(joinedMessage, RRServer.DRIVER_ID);
 
     // send the message to all workers
-    for (Integer workerID: workers.keySet()) {
+    for (Integer workerID : workers.keySet()) {
       rrServer.sendMessage(joinedMessage, workerID);
     }
 

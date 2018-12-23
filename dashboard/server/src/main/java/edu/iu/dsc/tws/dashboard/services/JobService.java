@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.dashboard.data_models.ComputeResource;
 import edu.iu.dsc.tws.dashboard.data_models.Job;
 import edu.iu.dsc.tws.dashboard.data_models.JobState;
 import edu.iu.dsc.tws.dashboard.data_models.Node;
+import edu.iu.dsc.tws.dashboard.data_models.WorkerState;
 import edu.iu.dsc.tws.dashboard.repositories.JobRepository;
 import edu.iu.dsc.tws.dashboard.rest_models.ScaleWorkersRequest;
 import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
@@ -42,6 +43,9 @@ public class JobService {
 
   @Autowired
   private ComputeResourceService computeResourceService;
+
+  @Autowired
+  private WorkerService workerService;
 
   @Autowired
   public JobService(JobRepository jobRepository, NodeService nodeService) {
@@ -73,9 +77,9 @@ public class JobService {
   public Page<Job> searchJobs(List<JobState> states, String keyword, int page) {
     PageRequest pageRequest = PageRequest.of(page, 25);
     return this.jobRepository.findAllByStateInAndJobNameContainingOrderByCreatedTimeDesc(
-        states,
-        keyword,
-        pageRequest
+            states,
+            keyword,
+            pageRequest
     );
   }
 
@@ -94,6 +98,12 @@ public class JobService {
   @Transactional
   public void changeState(String jobId, StateChangeRequest<JobState> stateChangeRequest) {
     int changeJobState = this.jobRepository.changeJobState(jobId, stateChangeRequest.getState());
+
+    //if job state is killed, kill the workers too
+    if (stateChangeRequest.getState().equals(JobState.KILLED)) {
+      this.workerService.changeStateOfAllWorkers(jobId, WorkerState.KILLED);
+    }
+
     if (changeJobState == 0) {
       throw new EntityNotFoundException("No Job found with ID " + jobId);
     }
@@ -102,10 +112,20 @@ public class JobService {
   @Transactional
   public void scale(String jobId, ScaleWorkersRequest scaleWorkersRequest) {
     ComputeResource cr = this.computeResourceService
-        .getScalableComputeResourceForJob(jobId);
+            .getScalableComputeResourceForJob(jobId);
 
     cr.setInstances(cr.getInstances() + scaleWorkersRequest.getChange());
     this.computeResourceService.save(cr);
+
+    StateChangeRequest<WorkerState> wState = new StateChangeRequest<>();
+    wState.setState(WorkerState.KILLED_BY_SCALE_DOWN);
+    for (Long killedWorker : scaleWorkersRequest.getKilledWorkers()) {
+      this.workerService.changeState(
+              jobId,
+              killedWorker,
+              wState
+      );
+    }
 
     this.jobRepository.changeNumberOfWorkers(jobId, scaleWorkersRequest.getNumberOfWorkers());
   }

@@ -66,8 +66,8 @@ public class WorkerService {
 
     //compute resource
     ComputeResource computeResource = computeResourceService.findById(
-        workerCreateRequest.getJobID(),
-        workerCreateRequest.getComputeResourceIndex()
+            workerCreateRequest.getJobID(),
+            workerCreateRequest.getComputeResourceIndex()
     );
     worker.setComputeResource(computeResource);
 
@@ -87,11 +87,16 @@ public class WorkerService {
   public void changeState(String jobId, Long workerId,
                           StateChangeRequest<WorkerState> stateChangeRequest) {
     int amountChanged = this.workerRepository.changeWorkerState(
-        jobId, workerId, stateChangeRequest.getState()
+            jobId, workerId, stateChangeRequest.getState()
     );
     if (amountChanged == 0) {
       this.throwNoSuchWorker(jobId, workerId);
     }
+  }
+
+  @Transactional
+  public int changeStateOfAllWorkers(String jobId, WorkerState state) {
+    return this.workerRepository.changeStateOfAllWorkers(jobId, state);
   }
 
   @Transactional
@@ -104,7 +109,7 @@ public class WorkerService {
 
   private void throwNoSuchWorker(String jobId, Long workerId) {
     throw new EntityNotFoundException("No such worker " + workerId
-        + " found in job " + jobId);
+            + " found in job " + jobId);
   }
 
   public Worker getWorkerById(String jobId, Long workerId) {
