@@ -17,11 +17,12 @@ import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class SinkOp<T> implements ISink {
+public class SinkOp<T> implements ISink, Closable {
   private static final long serialVersionUID = -9398832570L;
 
   private Sink<T> sink;
@@ -72,5 +73,10 @@ public class SinkOp<T> implements ISink {
         ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
 
     sink.prepare(tSetContext);
+  }
+
+  @Override
+  public void close() {
+    sink.close();
   }
 }

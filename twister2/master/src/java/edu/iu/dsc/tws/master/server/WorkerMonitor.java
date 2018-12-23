@@ -339,10 +339,10 @@ public class WorkerMonitor implements MessageHandler {
       return;
     }
 
-    // if all workers are not currently RUNNING,
+    // if all workers are not registered,
     // send a failure response message to the driver
     // do not send the broadcast message to any workers
-    if (!allWorkersRunning()) {
+    if (!allWorkersRegistered()) {
       JobMasterAPI.BroadcastResponse failResponse =
           JobMasterAPI.BroadcastResponse.newBuilder()
               .setSucceeded(false)
@@ -440,16 +440,7 @@ public class WorkerMonitor implements MessageHandler {
    */
   private boolean allWorkersRunning() {
 
-    // if numberOfWorkers does not match the number of registered workers,
-    // return false
-    if (workers.size() != numberOfWorkers) {
-      return false;
-    }
-
-    // if there is a gap in workerID sequence, return false
-    // since workerIDs are sorted and they start from 0
-    // we can check only the workerID of the last worker
-    if (workers.lastKey() != (numberOfWorkers - 1)) {
+    if (!allWorkersRegistered()) {
       return false;
     }
 

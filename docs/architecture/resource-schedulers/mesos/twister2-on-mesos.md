@@ -1,7 +1,7 @@
 **Twister2 On Mesos**
 
 This document explains the design, features and implementations for
-running Twister2 jobs on Kubernetes clusters. We designed and developed
+running Twister2 jobs on Mesos clusters. We designed and developed
 components to run Twister2 workers and the Job Master in Mesos clusters.
 
 **Mesos Overview**

@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.data.fs.Path;
 public class SharedTextInputPartitioner extends FileInputPartitioner<String> {
   private static final long serialVersionUID = 1L;
 
-  private LocatableInputSplitAssigner assigner;
+  private LocatableInputSplitAssigner<String> assigner;
 
   public SharedTextInputPartitioner(Path filePath) {
     super(filePath);
@@ -32,9 +32,10 @@ public class SharedTextInputPartitioner extends FileInputPartitioner<String> {
   }
 
   @Override
-  public LocatableInputSplitAssigner getInputSplitAssigner(FileInputSplit<String>[] inputSplits) {
+  public LocatableInputSplitAssigner<String> getInputSplitAssigner(
+      FileInputSplit<String>[] inputSplits) {
     if (assigner == null) {
-      assigner = new LocatableInputSplitAssigner(inputSplits);
+      assigner = new LocatableInputSplitAssigner<String>(inputSplits);
     }
     return assigner;
   }

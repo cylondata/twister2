@@ -17,20 +17,20 @@ import java.util.Map;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
-public class OrderedInputSplitAssigner implements InputSplitAssigner {
-  private InputSplit[] splits;
+public class OrderedInputSplitAssigner<T> implements InputSplitAssigner<T> {
+  private InputSplit<T>[] splits;
 
   private int numTasks;
 
   private Map<Integer, Integer> next = new HashMap<>();
 
-  public OrderedInputSplitAssigner(InputSplit[] partitions, int nTasks) {
+  public OrderedInputSplitAssigner(InputSplit<T>[] partitions, int nTasks) {
     this.numTasks = nTasks;
     splits = partitions;
   }
 
   @Override
-  public InputSplit getNextInputSplit(String host, int taskId) {
+  public InputSplit<T> getNextInputSplit(String host, int taskId) {
     if (taskId < 0 || taskId > numTasks - 1) {
       throw new RuntimeException(String.format("We don't have a split for %d we only support "
           + "task ids in the range %d - %d", taskId, 0, numTasks));
