@@ -50,6 +50,13 @@ export default class JobInfoComponent extends React.Component {
             return <LoadingComponent/>;
         }
 
+        //sorting workers by id
+        if (this.state.job.workers) {
+            this.state.job.workers.sort((w1, w2) => {
+                return w1.workerID - w2.workerID;
+            });
+        }
+
         return (
             <div>
                 <h1>{this.state.job.jobName}</h1>
@@ -118,7 +125,7 @@ export default class JobInfoComponent extends React.Component {
                         </td>
                         <td>
                             {this.state.job.computeResources.map(cr => {
-                                return <ComputeResourceCard cr={cr} index={cr.index}/>
+                                return <ComputeResourceCard cr={cr} index={cr.index} key={cr.index}/>
                             })}
                         </td>
                     </tr>
@@ -126,8 +133,7 @@ export default class JobInfoComponent extends React.Component {
                 </table>
                 <h4>Workers</h4>
                 {this.state.job.workers.map(worker => {
-                    console.log(worker);
-                    return <WorkerCard worker={worker}/>
+                    return <WorkerCard worker={worker} key={worker.workerID}/>
                 })}
             </div>
         );

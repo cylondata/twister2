@@ -172,10 +172,11 @@ export default class WorkerCard extends React.Component {
                                     Ports
                                 </td>
                                 <td>
-                                    {this.state.worker.workerPorts.map(wp => {
+                                    {this.state.worker.workerPorts.map((wp, index) => {
                                         return (
                                             <Tag large={true}
                                                  minimal={true}
+                                                 key={index}
                                                  className="tw-worker-ports-tag">{wp.label} : {wp.port}</Tag>
                                         );
                                     })}
