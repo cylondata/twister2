@@ -24,22 +24,17 @@ import edu.iu.dsc.tws.dashboard.rest_models.WorkerCreateRequest;
 @Service
 public class WorkerService {
 
-  private final WorkerRepository workerRepository;
-
-  private final JobService jobService;
-
-  private final NodeService nodeService;
-
-  private final ComputeResourceService computeResourceService;
+  @Autowired
+  private WorkerRepository workerRepository;
 
   @Autowired
-  public WorkerService(WorkerRepository workerRepository, JobService jobService,
-                       NodeService nodeService, ComputeResourceService computeResourceService) {
-    this.workerRepository = workerRepository;
-    this.jobService = jobService;
-    this.nodeService = nodeService;
-    this.computeResourceService = computeResourceService;
-  }
+  private NodeService nodeService;
+
+  @Autowired
+  private ComputeResourceService computeResourceService;
+
+  @Autowired
+  private JobService jobService;
 
   public Iterable<Worker> getAllForJob(String jobId) {
     return workerRepository.findAllByJob_JobID(jobId);

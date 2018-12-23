@@ -16,16 +16,11 @@ import edu.iu.dsc.tws.dashboard.repositories.ComputeResourceRepository;
 @Service
 public class ComputeResourceService {
 
-  private final ComputeResourceRepository computeResourceRepository;
-
-  private final JobService jobService;
+  @Autowired
+  private ComputeResourceRepository computeResourceRepository;
 
   @Autowired
-  public ComputeResourceService(
-      ComputeResourceRepository computeResourceRepository, JobService jobService) {
-    this.computeResourceRepository = computeResourceRepository;
-    this.jobService = jobService;
-  }
+  private JobService jobService;
 
   public ComputeResource save(String jobId, ComputeResource computeResource) {
     Job jobById = jobService.getJobById(jobId);

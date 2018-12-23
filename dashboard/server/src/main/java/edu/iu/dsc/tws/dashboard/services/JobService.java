@@ -37,21 +37,17 @@ import edu.iu.dsc.tws.dashboard.rest_models.StateChangeRequest;
 @Service
 public class JobService {
 
-  private final JobRepository jobRepository;
+  @Autowired
+  private JobRepository jobRepository;
 
-  private final NodeService nodeService;
+  @Autowired
+  private NodeService nodeService;
 
   @Autowired
   private ComputeResourceService computeResourceService;
 
   @Autowired
   private WorkerService workerService;
-
-  @Autowired
-  public JobService(JobRepository jobRepository, NodeService nodeService) {
-    this.jobRepository = jobRepository;
-    this.nodeService = nodeService;
-  }
 
   public Job createJob(Job job) {
     job.getWorkers().forEach(worker -> worker.setJob(job));
