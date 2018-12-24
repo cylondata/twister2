@@ -84,7 +84,7 @@ export default class WorkerCard extends React.Component {
 
                     <Link to={`/jobs/${this.state.worker.job.jobID}/${this.state.worker.workerID}`}>
                         <div className="tw-table-row-left">
-                            <div className="tw-job-row-name">
+                            <div className="tw-worker-row-name">
                                 {this.state.worker.job.jobName}/{this.state.worker.workerID}
                             </div>
                         </div>
