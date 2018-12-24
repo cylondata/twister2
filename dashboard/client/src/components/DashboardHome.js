@@ -113,8 +113,8 @@ export default class DashboardHome extends React.Component {
         })
     };
 
-    updateActiveJobs = () => {
-        this.setLoadingActiveJobs(true);
+    updateActiveJobs = (showLoader = true) => {
+        this.setLoadingActiveJobs(showLoader);
         JobService.getActiveJobs().then(response => {
             this.setState({
                 activeJobs: response.data.content
@@ -125,8 +125,8 @@ export default class DashboardHome extends React.Component {
         });
     };
 
-    updateInActiveJobs = () => {
-        this.setLoadingInActiveJobs(true);
+    updateInActiveJobs = (showLoader = true) => {
+        this.setLoadingInActiveJobs(showLoader);
         JobService.getInActiveJobs().then(response => {
             this.setState({
                 inActiveJobs: response.data.content
@@ -137,8 +137,8 @@ export default class DashboardHome extends React.Component {
         });
     };
 
-    updateJobStats = () => {
-        this.setLoadingJobStatCharts(true);
+    updateJobStats = (showLoader = true) => {
+        this.setLoadingJobStatCharts(showLoader);
         JobService.getJobStats().then(response => {
             let labels = [];
             let data = [];
@@ -159,8 +159,8 @@ export default class DashboardHome extends React.Component {
         });
     };
 
-    updateWorkerStats = () => {
-        this.setLoadingWorkerStatCharts(true);
+    updateWorkerStats = (showLoader = true) => {
+        this.setLoadingWorkerStatCharts(showLoader);
         WorkerService.getWorkerStats().then(response => {
             let labels = [];
             let data = [];
@@ -197,10 +197,10 @@ export default class DashboardHome extends React.Component {
         this.updateElementStats();
 
         this.statUpdateInterval = setInterval(() => {
-            this.updateJobStats();
-            this.updateWorkerStats();
-            this.updateActiveJobs();
-            this.updateInActiveJobs();
+            this.updateJobStats(false);
+            this.updateWorkerStats(false);
+            this.updateActiveJobs(false);
+            this.updateInActiveJobs(false);
             this.updateElementStats();
         }, 10000);
     }
