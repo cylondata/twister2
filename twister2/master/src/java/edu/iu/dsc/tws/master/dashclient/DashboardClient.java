@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.dashclient;
 
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -117,9 +116,9 @@ public class DashboardClient {
    * if it is higher, it means some instances of that resource added
    * @return
    */
-  public boolean scaledWorkers(int change, int numberOfWorkers, List<Integer> killedWorkers) {
+  public boolean scaledWorkers(int change, int numberOfWorkers) {
 
-    ScaledWorkers scaledWorkers = new ScaledWorkers(change, numberOfWorkers, killedWorkers);
+    ScaledWorkers scaledWorkers = new ScaledWorkers(change, numberOfWorkers);
 
     String path = "jobs/" + jobID + "/scale/";
 

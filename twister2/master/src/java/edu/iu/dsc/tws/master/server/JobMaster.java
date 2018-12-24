@@ -388,12 +388,23 @@ public class JobMaster {
   }
 
   /**
-   * when JobMaster is killed, it can either terminate the job and clear all job resources
-   * or just lets the Dashboard know that it is killed
+   * A job can be terminated in two ways:
+   *   a) successful completion: all workers complete their work and send a COMPLETED message
+   *      to the Job Master. Job master clears all job resources from the cluster and
+   *      informs Dashboard. This is handled in the method: completeJob()
+   *   b) forced killing: user chooses to terminate the job explicitly by executing job kill command
+   *      not all workers successfully complete in this case.
+   *      JobMaster does not get COMPLETED message from all workers.
+   *      So completeJob() method is not called.
+   *      Instead, the JobMaster pod or the JobMaster process in the submitting is deleted.
+   *      ShutDown Hook gets executed.
    *
-   * when it runs in the client, it should be set as true
-   * when it runs in the cluster, it should usually be set as false
-   * because, probably a job terminator is called and it cleared the resources
+   *      In this case, it can either clear job resources or just send a message to Dashboard
+   *      based on the parameter that is provided when the shut down hook is registered.
+   *      If the job master runs in the client, it should clear resources.
+   *      when the job master runs in the cluster, it should not clear resources.
+   *      The resources should be cleared by the job killing process.
+   *
    * @param clearJobResourcesWhenKilled
    */
   public void addShutdownHook(boolean clearJobResourcesWhenKilled) {

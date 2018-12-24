@@ -23,11 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.server;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.NavigableSet;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -295,14 +292,6 @@ public class WorkerMonitor implements MessageHandler {
     rrServer.sendResponse(id, scaledResponse);
     LOG.fine("ScaledResponse sent to the driver: \n" + scaledResponse);
 
-    List<Integer> killedWorkers = new ArrayList<>();
-    if (scaledMessage.getChange() < 0) {
-      NavigableSet<Integer> descKeySet = workers.descendingKeySet();
-      for (int i = scaledMessage.getChange(); i < 0; i++) {
-        killedWorkers.add(descKeySet.pollFirst());
-      }
-    }
-
     // let all workers know about the scaled message
     // TODO: how about newly added workers,
     // should we make sure that those workers also get this message
@@ -318,8 +307,7 @@ public class WorkerMonitor implements MessageHandler {
 
     // send Scale message to the dashboard
     if (dashClient != null) {
-      dashClient.scaledWorkers(scaledMessage.getChange(),
-          scaledMessage.getNumberOfWorkers(), killedWorkers);
+      dashClient.scaledWorkers(scaledMessage.getChange(), scaledMessage.getNumberOfWorkers());
     }
 
   }
