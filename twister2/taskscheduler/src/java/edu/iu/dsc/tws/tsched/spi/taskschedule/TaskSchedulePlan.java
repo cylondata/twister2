@@ -12,14 +12,13 @@
 package edu.iu.dsc.tws.tsched.spi.taskschedule;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-
-//import java.util.HashSet;
 
 /**
  * This class is responsible for generating the task schedule plan which consists of container plan,
@@ -35,7 +34,7 @@ public class TaskSchedulePlan {
   public TaskSchedulePlan(int id, Set<ContainerPlan> containers) {
     this.jobId = id;
     this.containers = ImmutableSet.copyOf(containers);
-    containersMap = new HashMap<>();
+    containersMap = new TreeMap<>();
     for (ContainerPlan containerPlan : containers) {
       containersMap.put(containerPlan.getContainerId(), containerPlan);
     }
@@ -49,7 +48,7 @@ public class TaskSchedulePlan {
 
     for (ContainerPlan containerPlan : getContainers()) {
       Resource containerResource =
-          containerPlan.getScheduledResource().or(containerPlan.getRequiredResource());
+          containerPlan.getScheduledResource().orElse(containerPlan.getRequiredResource());
       maxCpu = Math.max(maxCpu, containerResource.getCpu());
       maxRam = Math.max(maxRam, containerResource.getRam());
       maxDisk = Math.max(maxDisk, containerResource.getDisk());
@@ -67,10 +66,6 @@ public class TaskSchedulePlan {
 
   public Set<ContainerPlan> getContainers() {
     return containers;
-  }
-
-  public Optional<ContainerPlan> getContainer(int containerId) {
-    return Optional.fromNullable(this.containersMap.get(containerId));
   }
 
   public Map<String, Integer> getTaskCounts() {
@@ -113,8 +108,7 @@ public class TaskSchedulePlan {
    * This static class is responsible for assigning the task name, task id, task index, and resource
    * requirements of the task instances.
    */
-  public static class TaskInstancePlan {
-
+  public static class TaskInstancePlan implements Comparable<TaskInstancePlan> {
     private final String taskName;
     private final int taskId;
     private final int taskIndex;
@@ -175,14 +169,21 @@ public class TaskSchedulePlan {
       result = 31 * result + getResource().hashCode();
       return result;
     }
+
+    @Override
+    public int compareTo(TaskInstancePlan o) {
+      if (this.taskId == o.getTaskId()) {
+        return Integer.compare(this.taskIndex, o.taskIndex);
+      }
+      return Integer.compare(this.taskId, o.taskId);
+    }
   }
 
   /**
    * This static class is responsible for assigning the container id, task instances, required
    * resource, and scheduled resource for the task instances.
    */
-  public static class ContainerPlan {
-
+  public static class ContainerPlan implements Comparable<ContainerPlan> {
     private final int containerId;
     private final Set<TaskInstancePlan> taskInstances;
     private final Resource requiredResource;
@@ -198,9 +199,9 @@ public class TaskSchedulePlan {
                          Resource scheduledResource) {
       this.containerId = id;
       //this.taskInstances = ImmutableSet.copyOf(taskInstances);
-      this.taskInstances = new HashSet<>(taskInstances);
+      this.taskInstances = new TreeSet<>(taskInstances);
       this.requiredResource = requiredResource;
-      this.scheduledResource = Optional.fromNullable(scheduledResource);
+      this.scheduledResource = Optional.ofNullable(scheduledResource);
     }
 
     public int getContainerId() {
@@ -245,6 +246,11 @@ public class TaskSchedulePlan {
         result = 31 * result + getScheduledResource().get().hashCode();
       }
       return result;
+    }
+
+    @Override
+    public int compareTo(ContainerPlan o) {
+      return Integer.compare(this.containerId, o.containerId);
     }
   }
 }

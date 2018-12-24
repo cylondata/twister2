@@ -24,22 +24,17 @@ import edu.iu.dsc.tws.dashboard.rest_models.WorkerCreateRequest;
 @Service
 public class WorkerService {
 
-  private final WorkerRepository workerRepository;
-
-  private final JobService jobService;
-
-  private final NodeService nodeService;
-
-  private final ComputeResourceService computeResourceService;
+  @Autowired
+  private WorkerRepository workerRepository;
 
   @Autowired
-  public WorkerService(WorkerRepository workerRepository, JobService jobService,
-                       NodeService nodeService, ComputeResourceService computeResourceService) {
-    this.workerRepository = workerRepository;
-    this.jobService = jobService;
-    this.nodeService = nodeService;
-    this.computeResourceService = computeResourceService;
-  }
+  private NodeService nodeService;
+
+  @Autowired
+  private ComputeResourceService computeResourceService;
+
+  @Autowired
+  private JobService jobService;
 
   public Iterable<Worker> getAllForJob(String jobId) {
     return workerRepository.findAllByJob_JobID(jobId);
@@ -66,8 +61,8 @@ public class WorkerService {
 
     //compute resource
     ComputeResource computeResource = computeResourceService.findById(
-        workerCreateRequest.getJobID(),
-        workerCreateRequest.getComputeResourceIndex()
+            workerCreateRequest.getJobID(),
+            workerCreateRequest.getComputeResourceIndex()
     );
     worker.setComputeResource(computeResource);
 
@@ -87,11 +82,16 @@ public class WorkerService {
   public void changeState(String jobId, Long workerId,
                           StateChangeRequest<WorkerState> stateChangeRequest) {
     int amountChanged = this.workerRepository.changeWorkerState(
-        jobId, workerId, stateChangeRequest.getState()
+            jobId, workerId, stateChangeRequest.getState()
     );
     if (amountChanged == 0) {
       this.throwNoSuchWorker(jobId, workerId);
     }
+  }
+
+  @Transactional
+  public int changeStateOfAllWorkers(String jobId, WorkerState state) {
+    return this.workerRepository.changeStateOfAllWorkers(jobId, state);
   }
 
   @Transactional
@@ -104,7 +104,7 @@ public class WorkerService {
 
   private void throwNoSuchWorker(String jobId, Long workerId) {
     throw new EntityNotFoundException("No such worker " + workerId
-        + " found in job " + jobId);
+            + " found in job " + jobId);
   }
 
   public Worker getWorkerById(String jobId, Long workerId) {

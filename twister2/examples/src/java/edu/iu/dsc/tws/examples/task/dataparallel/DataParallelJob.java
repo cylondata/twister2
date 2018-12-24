@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.Constants;
+import edu.iu.dsc.tws.examples.utils.DataGenerator;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public final class DataParallelJob {

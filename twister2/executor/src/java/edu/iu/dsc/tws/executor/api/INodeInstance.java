@@ -59,4 +59,9 @@ public interface INodeInstance {
    * @return the graph node
    */
   INode getNode();
+
+  /**
+   * Calls at the end to clean up
+   */
+  void close();
 }

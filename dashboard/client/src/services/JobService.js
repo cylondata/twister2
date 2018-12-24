@@ -13,7 +13,7 @@ import axios from "axios";
 import {RestService} from "./RestService";
 
 export const JOB_STATE = {
-    STARTING: "STARTING", STARTED: "STARTED", COMPLETED: "COMPLETED", FAILED: "FAILED"
+    STARTING: "STARTING", STARTED: "STARTED", COMPLETED: "COMPLETED", FAILED: "FAILED", KILLED: "KILLED"
 };
 
 export default class JobService {
@@ -46,6 +46,6 @@ export default class JobService {
     }
 
     static getInActiveJobs() {
-        return JobService.searchJobs([JOB_STATE.COMPLETED, JOB_STATE.FAILED]);
+        return JobService.searchJobs([JOB_STATE.COMPLETED, JOB_STATE.FAILED, JOB_STATE.KILLED]);
     }
 }

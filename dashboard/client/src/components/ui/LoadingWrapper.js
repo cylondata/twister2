@@ -9,26 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
 
-import java.io.Serializable;
+import React from "react";
+import LoadingComponent from "./LoadingComponent";
 
-/**
- * Add a value at the end of the graph
- *
- * @param <T> type of sink
- */
-public interface Sink<T> extends TFunction, Serializable {
-  /**
-   * Add a value
-   * @param value the value to add
-   * @return true if success
-   */
-  boolean add(T value);
+export default class LoadingWrapper extends React.Component {
 
-  /**
-   * Call this at the end
-   */
-  default void close() {
-  }
+    render() {
+        return (
+            <div>
+                {this.props.loading && <LoadingComponent/>}
+                {!this.props.loading && this.props.children}
+            </div>
+        );
+    }
 }

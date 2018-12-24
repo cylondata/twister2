@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.tsched.streaming.roundrobin;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -19,6 +20,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -181,7 +183,10 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
     }
 
     try {
-      Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+      TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
+      orderedTaskSet.addAll(taskVertexSet);
+
+      Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(orderedTaskSet);
       int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
       if (numberOfContainers <= totalTaskInstances) {
         int globalTaskIndex = 0;
@@ -213,6 +218,13 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       ne.printStackTrace();
     }
     return roundrobinAllocation;
+  }
+
+  private static class VertexComparator implements Comparator<Vertex> {
+    @Override
+    public int compare(Vertex o1, Vertex o2) {
+      return o1.getName().compareTo(o2.getName());
+    }
   }
 }
 

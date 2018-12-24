@@ -73,7 +73,7 @@ apt-get clean && apt-get purge && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* 
 rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 ```
 
-**Password-free SSH Among Pods**
+**Password-free SSH Among containers**
 
 In order to run OpenMPI jobs on Docker containers, password-free SSH
 communication should be enabled.

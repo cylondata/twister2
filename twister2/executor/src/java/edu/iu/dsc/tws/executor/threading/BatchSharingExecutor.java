@@ -73,6 +73,11 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       }
     }
 
+    // clean up the instances
+    for (INodeInstance node : nodes.values()) {
+      node.close();
+    }
+
     // lets close the operations
     List<IParallelOperation> ops = executionPlan.getParallelOperations();
     for (IParallelOperation op : ops) {

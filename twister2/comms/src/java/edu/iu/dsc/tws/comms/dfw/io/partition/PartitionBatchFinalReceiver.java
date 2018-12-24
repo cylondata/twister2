@@ -91,6 +91,8 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       targetMessages.put(d, new ArrayList<>());
       onFinishedSources.put(d, new HashSet<>());
     }
+
+    LOG.log(Level.INFO, String.format("%d Expected ids %s", executor, expectedIds));
   }
 
   /**
@@ -123,7 +125,8 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
       List<Object> targetMsgList = targetMessages.get(target);
       if (targetMsgList == null) {
-        throw new RuntimeException(String.format("%d target not exisits %d", executor, target));
+        throw new RuntimeException(String.format("%d target not exisits %d %s", executor, target,
+            operation.getTaskPlan()));
       }
       if (object instanceof List) {
         targetMsgList.addAll((Collection<?>) object);
