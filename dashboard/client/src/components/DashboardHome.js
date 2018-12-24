@@ -24,7 +24,8 @@ const WORKER_STATE_COLOR_MAP = {
     "NOT_PINGING": "#F57C00",
     "RUNNING": "#2E7D32",
     "KILLED": "#d9822b",
-    "FAILED": "#e53935"
+    "FAILED": "#e53935",
+    "KILLED_BY_SCALE_DOWN": "#D81B60"
 };
 
 const ELEMENT_STAT_PROPERTIES = {

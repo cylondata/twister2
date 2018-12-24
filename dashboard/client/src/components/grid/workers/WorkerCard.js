@@ -1,13 +1,13 @@
 import React from "react";
-import {Button, Card, Elevation, Icon, Tag, Intent, Collapse, Position, Tooltip} from "@blueprintjs/core";
+import {Button, Card, Collapse, Elevation, Icon, Intent, Position, Tag, Tooltip} from "@blueprintjs/core";
 import "./WorkerCard.css";
 import {Link} from "react-router-dom";
-import JobTag from "../../workloads/jobs/JobTag";
 import ClusterTag from "../clusters/ClusterTag";
 import NodeTag from "../nodes/NodeTag";
 import {ComputeResourceCard} from "../compute-resource/ComputeResourceCard";
 import {WorkerService} from "../../../services/WorkerService";
 import {DashToaster} from "../../Dashboard";
+import WorkerStateTag from "./WorkerStateTag";
 
 export default class WorkerCard extends React.Component {
 
@@ -96,11 +96,10 @@ export default class WorkerCard extends React.Component {
                         </Tooltip>
                         <Tooltip content="Heartbeat" position={Position.TOP}>
                             <Tag icon="pulse" style={{height: 25}} intent={Intent.NONE} minimal={true}>
-                                {new Date(this.state.worker.heartbeatTime).toUTCString()}
+                                {new Date(this.state.worker.heartbeatTime).toLocaleString()}
                             </Tag>
                         </Tooltip>
-                        <Tag intent={this.state.workerStateIntent}
-                             className="tw-worker-row-status-tag">{this.state.worker.state}</Tag>
+                        <WorkerStateTag state={this.state.worker.state}/>
                         <Tooltip content="Sync" position={Position.TOP}>
                             <Button icon="refresh" onClick={this.syncWorker} small={true} minimal={true}/>
                         </Tooltip>
@@ -149,8 +148,17 @@ export default class WorkerCard extends React.Component {
                                     State
                                 </td>
                                 <td>
-                                    <Tag minimal={true}
-                                         intent={this.state.workerStateIntent}>{this.state.worker.state}</Tag>
+                                    {
+                                        this.state.worker.state !== "KILLED_BY_SCALE_DOWN" &&
+                                        <Tag minimal={true}
+                                             intent={this.state.workerStateIntent}>{this.state.worker.state}</Tag>
+                                    }
+                                    {
+                                        this.state.worker.state === "KILLED_BY_SCALE_DOWN" &&
+                                        <Tag minimal={true}
+                                             className="tw-worker-state-tag-killed-bsd"
+                                             intent={this.state.workerStateIntent}>{this.state.worker.state}</Tag>
+                                    }
                                 </td>
                             </tr>
                             <tr>
