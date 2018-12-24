@@ -12,12 +12,12 @@
     }
 
     .tw-worker-row-name {
-      line-height: 24px;
+      line-height: 25px;
     }
 
     .tw-table-row-right {
       display: grid;
-      grid-template-columns: auto 200px 100px 24px 24px;
+      grid-template-columns: auto 170px 100px 24px 24px;
       grid-column-gap: 10px;
 
       .tw-worker-row-status-tag {
@@ -78,4 +78,9 @@
       width: 100px;
     }
   }
+}
+
+.tw-worker-state-tag-killed-bsd {
+  background-color: #D81B60 !important;
+  color: white !important;
 }

@@ -91,7 +91,8 @@ public class WorkerService {
 
   @Transactional
   public int changeStateOfAllWorkers(String jobId, WorkerState state) {
-    return this.workerRepository.changeStateOfAllWorkers(jobId, state);
+    return this.workerRepository.changeStateOfAllWorkers(jobId, state,
+            WorkerState.KILLED_BY_SCALE_DOWN);
   }
 
   @Transactional
