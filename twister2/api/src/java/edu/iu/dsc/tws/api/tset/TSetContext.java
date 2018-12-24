@@ -78,7 +78,7 @@ public class TSetContext {
    *
    * @return index
    */
-  public int tSetIndex() {
+  public int getIndex() {
     return tSetIndex;
   }
 
@@ -87,14 +87,14 @@ public class TSetContext {
    *
    * @return the tSet id
    */
-  public int tSetId() {
+  public int getId() {
     return tSetId;
   }
 
   /**
    * Name of the tSet
    */
-  public String tSetName() {
+  public String getName() {
     return tSetName;
   }
 

@@ -9,26 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
-
-import java.io.Serializable;
+package edu.iu.dsc.tws.task.api;
 
 /**
- * Add a value at the end of the graph
- *
- * @param <T> type of sink
+ * A task which needs to clean up resources at the end should implement this method
  */
-public interface Sink<T> extends TFunction, Serializable {
+public interface Closable {
   /**
-   * Add a value
-   * @param value the value to add
-   * @return true if success
+   * Close method for cleaning up the resources
    */
-  boolean add(T value);
-
-  /**
-   * Call this at the end
-   */
-  default void close() {
-  }
+  void close();
 }

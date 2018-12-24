@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
@@ -150,6 +151,13 @@ public class SourceStreamingInstance implements INodeInstance {
   @Override
   public INode getNode() {
     return streamingTask;
+  }
+
+  @Override
+  public void close() {
+    if (streamingTask instanceof Closable) {
+      ((Closable) streamingTask).close();
+    }
   }
 
   public BlockingQueue<IMessage> getOutStreamingQueue() {

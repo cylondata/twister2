@@ -26,7 +26,7 @@ export default class WorkerCard extends React.Component {
             case "COMPLETED":
                 return Intent.SUCCESS;
             case "KILLED":
-                return Intent.DANGER;
+                return Intent.WARNING;
             case "NOT_PINGING":
                 return Intent.WARNING;
             case "FAILED":
@@ -172,10 +172,11 @@ export default class WorkerCard extends React.Component {
                                     Ports
                                 </td>
                                 <td>
-                                    {this.state.worker.workerPorts.map(wp => {
+                                    {this.state.worker.workerPorts.map((wp, index) => {
                                         return (
                                             <Tag large={true}
                                                  minimal={true}
+                                                 key={index}
                                                  className="tw-worker-ports-tag">{wp.label} : {wp.port}</Tag>
                                         );
                                     })}

@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.data.fs;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -30,7 +31,7 @@ import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
  * the basic set of operations
  * that need to be supported by the concrete implementation
  */
-public abstract class FileSystem {
+public abstract class FileSystem implements Serializable {
   private static final Logger LOG = Logger.getLogger(FileSystem.class.getName());
 
   public enum WriteMode {
