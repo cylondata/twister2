@@ -12,8 +12,11 @@
 package edu.iu.dsc.tws.master.dashclient.messages;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 public class ScaledWorkers {
+  private static final Logger LOG = Logger.getLogger(ScaledWorkers.class.getName());
+
   private int change;
   private int numberOfWorkers;
   private List<Integer> killedWorkers;
@@ -35,11 +38,19 @@ public class ScaledWorkers {
     return change;
   }
 
+  public List<Integer> getKilledWorkers() {
+    return killedWorkers;
+  }
+
   public int getNumberOfWorkers() {
     return numberOfWorkers;
   }
 
   public void setNumberOfWorkers(int numberOfWorkers) {
     this.numberOfWorkers = numberOfWorkers;
+  }
+
+  public void setKilledWorkers(List<Integer> killedWorkers) {
+    this.killedWorkers = killedWorkers;
   }
 }
