@@ -10,7 +10,7 @@ export class JobUtils {
             case "FAILED":
                 return Intent.DANGER;
             case "KILLED":
-                return Intent.DANGER;
+                return Intent.WARNING;
             default:
                 return Intent.NONE;
         }
