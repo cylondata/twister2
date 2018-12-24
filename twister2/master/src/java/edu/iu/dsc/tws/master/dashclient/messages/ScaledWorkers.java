@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.dashclient.messages;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -25,17 +24,10 @@ public class ScaledWorkers {
   public ScaledWorkers() {
   }
 
-  public ScaledWorkers(int change, int numberOfWorkers) {
+  public ScaledWorkers(int change, int numberOfWorkers, List<Integer> killedWorkers) {
     this.change = change;
     this.numberOfWorkers = numberOfWorkers;
-
-    killedWorkers = new LinkedList<>();
-    if (change < 0) {
-      for (int i = 0; i < (0 - change); i++) {
-        killedWorkers.add(numberOfWorkers + i);
-      }
-      LOG.info("killedWorkers: " + killedWorkers);
-    }
+    this.killedWorkers = killedWorkers;
   }
 
   public void setChange(int change) {
