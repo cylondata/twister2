@@ -99,7 +99,7 @@ public final class HTGExample {
 
   public static void main(String[] args) throws ParseException {
 
-    LOG.log(Level.INFO, "HTG Job");
+    LOG.log(Level.INFO, "**************************************** Job");
 
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -136,8 +136,8 @@ public final class HTGExample {
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", htgSourceTask, parallelismValue);
     ComputeConnection reduceConn = graphBuilderX.addSink("sink1", htgReduceTask,
-        parallelismValue);
-    reduceConn.allreduce("source1", "all-reduce", new Aggregator(),
+        1);
+    reduceConn.reduce("source1", "all-reduce", new Aggregator(),
         DataType.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
@@ -146,6 +146,7 @@ public final class HTGExample {
     //Invoke HTG Submitter and send the metagraph
     Twister2HTGSubmitter twister2HTGSubmitter = new Twister2HTGSubmitter(config);
     SubGraphJob job = SubGraphJob.newSubGraphJob(batchGraph).setWorkers(4);
+    LOG.log(Level.INFO, "**************************************** Job 2");
     twister2HTGSubmitter.execute(job);
   }
 }

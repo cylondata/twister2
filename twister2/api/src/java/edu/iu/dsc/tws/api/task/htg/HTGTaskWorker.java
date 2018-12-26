@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 /**
  * This is an implementation of IWorker to support easy deployment of task graphs.
  */
-public abstract class HTGTaskWorker implements IWorker {
+public class HTGTaskWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(HTGTaskWorker.class.getName());
 
   /**
@@ -119,5 +119,7 @@ public abstract class HTGTaskWorker implements IWorker {
   /**
    * A user needs to implement this method to create the task graph and execute it
    */
-  public abstract void execute();
+  public void execute() {
+    taskExecutor.execute();
+  }
 }

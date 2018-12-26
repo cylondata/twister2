@@ -37,6 +37,7 @@ import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.ResourceRuntime;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
@@ -212,6 +213,7 @@ public class MPILauncher implements ILauncher {
             new JobMaster(config, hostAddress, port, new NomadTerminator(), job, jobMasterNodeInfo);
         jobMaster.addShutdownHook(true);
         jmThread = jobMaster.startJobMasterThreaded();
+        ResourceRuntime.getInstance().setJobMasterHostPort(hostAddress, port);
       } catch (UnknownHostException e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
         throw new RuntimeException(e);
@@ -232,9 +234,9 @@ public class MPILauncher implements ILauncher {
 
 
     // if the driver class is specified in the job, start it
-//    if (!job.getDriverClassName().isEmpty()) {
-//      startDriver(job);
-//    }
+    //    if (!job.getDriverClassName().isEmpty()) {
+    //      startDriver(job);
+    //    }
 
     // wait until the controller finishes
     try {

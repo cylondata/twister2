@@ -27,11 +27,11 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   private OperationMode operationMode = OperationMode.STREAMING;
 
   public DataFlowTaskGraph() {
-    super(Comparator.comparing(Vertex::getName), Comparator.comparing(Edge::getName));
+    super(new VertexComparator(), new EdgeComparator());
   }
 
   public DataFlowTaskGraph(OperationMode mode) {
-    super(Comparator.comparing(Vertex::getName), Comparator.comparing(Edge::getName));
+    super(new VertexComparator(), new EdgeComparator());
     this.operationMode = mode;
   }
 
@@ -191,12 +191,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   }
 
   public static class StringComparator implements Comparator<String> {
-
-    public Comparator<String> comp(String obj1, String obj2) {
-      Comparator<String> stringComparator = Comparator.comparing(String::toString);
-      return stringComparator;
-    }
-
     public int compare(String obj1, String obj2) {
       if (obj1 == null) {
         return -1;

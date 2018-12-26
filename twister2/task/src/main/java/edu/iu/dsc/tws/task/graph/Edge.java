@@ -68,6 +68,9 @@ public class Edge {
    */
   private Map<String, Object> properties = new HashMap<>();
 
+  public Edge() {
+  }
+
   public Edge(String te) {
     this.name = te;
   }
@@ -210,5 +213,45 @@ public class Edge {
    */
   public TaskPartitioner getPartitioner() {
     return partitioner;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public void setFunction(IFunction function) {
+    this.function = function;
+  }
+
+  public void setSelector(TaskKeySelector selector) {
+    this.selector = selector;
+  }
+
+  public void setPartitioner(TaskPartitioner partitioner) {
+    this.partitioner = partitioner;
+  }
+
+  public void setOperation(String operation) {
+    this.operation = operation;
+  }
+
+  public void setDataType(DataType dataType) {
+    this.dataType = dataType;
+  }
+
+  public void setKeyType(DataType keyType) {
+    this.keyType = keyType;
+  }
+
+  public void setKeyed(boolean keyed) {
+    this.keyed = keyed;
+  }
+
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
+
+  public void setProperties(Map<String, Object> properties) {
+    this.properties = properties;
   }
 }

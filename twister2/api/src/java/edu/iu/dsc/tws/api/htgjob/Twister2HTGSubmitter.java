@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.api.htgjob;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Any;
@@ -32,6 +33,7 @@ import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.ResourceRuntime;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public final class Twister2HTGSubmitter implements DriverJobListener {
@@ -85,7 +87,7 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
    * Then, it invokes the build HTG Job object to build the htg job object for the scheduled graphs.
    */
   public void execute(SubGraphJob graph) {
-    LOG.fine("Starting task graph Requirements:" + graph.getGraph().getTaskGraphName());
+    LOG.info("Starting task graph Requirements:" + graph.getGraph().getTaskGraphName());
 
     if (!(driverState == DriverState.JOB_FINISHED || driverState == DriverState.INITIALIZE)) {
       // now we need to send messages
@@ -98,6 +100,12 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
     if (driverState == DriverState.INITIALIZE) {
       submitterThread = new Thread(new SubmitterRunnable(job));
       submitterThread.start();
+      try {
+        Thread.sleep(2000);
+      } catch (InterruptedException ignore) {
+      }
+      // set the workers as number of instances
+      startDriver(job.getInstances());
 
       driverState = DriverState.WAIT_FOR_WORKERS_TO_START;
       // lets wait until the worker start message received
@@ -141,6 +149,7 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
    * @param job subgraph
    */
   private void submitJob(HTGJobAPI.SubGraph job) {
+    LOG.log(Level.INFO, "Sending graph to workers for execution: " + job.getName());
     HTGJobAPI.ExecuteMessage.Builder builder = HTGJobAPI.ExecuteMessage.newBuilder();
     builder.setSubgraphName(job.getName());
     builder.setGraph(job);
@@ -193,8 +202,6 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
     @Override
     public void run() {
       startWorkers(htgJob);
-      // set the workers as number of instances
-      startDriver(htgJob.getInstances());
     }
   }
 
@@ -235,9 +242,16 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
   }
 
   private void startDriver(int numberOfWorkers) {
+    long start = System.currentTimeMillis();
+    while (ResourceRuntime.getInstance().getJobMasterHost() == null) {
+      if ((System.currentTimeMillis() - start) > 1000) {
+        return;
+      }
+    }
     // first start JMDriverAgent
-    String jobMasterIP = config.getStringValue("__job_master_ip__");
-    int jmPort = config.getIntegerValue("__job_master_port__", 0);
+    String jobMasterIP = ResourceRuntime.getInstance().getJobMasterHost();
+    int jmPort = ResourceRuntime.getInstance().getJobMasterPort();
+
     JMDriverAgent driverAgent =
         JMDriverAgent.createJMDriverAgent(config, jobMasterIP, jmPort, numberOfWorkers);
     driverAgent.startThreaded();
