@@ -11,10 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.htgjob;
 
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.Logger;
 
+import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -22,13 +24,17 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.htg.HTGTaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.driver.DriverJobListener;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
+import edu.iu.dsc.tws.master.driver.DriverMessenger;
+import edu.iu.dsc.tws.master.driver.JMDriverAgent;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public final class Twister2HTGSubmitter {
+public final class Twister2HTGSubmitter implements DriverJobListener {
   private static final Logger LOG = Logger.getLogger(Twister2HTGSubmitter.class.getName());
 
   /**
@@ -40,11 +46,6 @@ public final class Twister2HTGSubmitter {
    * The serializer
    */
   private KryoMemorySerializer kryoMemorySerializer;
-
-  /**
-   * The driver for listening and sending messages to workers
-   */
-  private Twister2HTGDriver driver;
 
   /**
    * The queue to coordinate between driver and submitter
@@ -60,6 +61,11 @@ public final class Twister2HTGSubmitter {
    * The driver messenger
    */
   private IDriverMessenger messenger;
+
+  /**
+   * The submitter thread
+   */
+  private Thread submitterThread;
 
   public Twister2HTGSubmitter(Config cfg) {
     this.config = cfg;
@@ -84,7 +90,9 @@ public final class Twister2HTGSubmitter {
     HTGJobAPI.SubGraph job = buildHTGJob(graph);
     // this is the first time
     if (driverState == DriverState.INITIALIZE) {
-      startWorkers(job);
+      submitterThread = new Thread(new SubmitterRunnable(job));
+      submitterThread.start();
+
       driverState = DriverState.WAIT_FOR_WORKERS_TO_START;
       // lets wait until the worker start message received
       try {
@@ -113,12 +121,20 @@ public final class Twister2HTGSubmitter {
     }
   }
 
+  public void close() {
+    // lets wait for the submitter thread to finish
+    try {
+      submitterThread.join();
+    } catch (InterruptedException ignore) {
+    }
+  }
+
   /**
    * Send the job as a serialized protobuf to all the workers
    *
    * @param job subgraph
    */
-  public void submitJob(HTGJobAPI.SubGraph job) {
+  private void submitJob(HTGJobAPI.SubGraph job) {
     HTGJobAPI.ExecuteMessage.Builder builder = HTGJobAPI.ExecuteMessage.newBuilder();
     builder.setSubgraphName(job.getName());
     builder.setGraph(job);
@@ -150,6 +166,37 @@ public final class Twister2HTGSubmitter {
         .build();
   }
 
+  @Override
+  public void workerMessageReceived(Any anyMessage, int senderWorkerID) {
+
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+    inDriverEvents.offer(new DriverEvent(DriveEventType.INITIALIZE, null));
+  }
+
+  private class SubmitterRunnable implements Runnable {
+    private HTGJobAPI.SubGraph htgJob;
+
+    SubmitterRunnable(HTGJobAPI.SubGraph job) {
+      this.htgJob = job;
+    }
+
+    @Override
+    public void run() {
+      startWorkers(htgJob);
+      // set the workers as number of instances
+      startDriver(htgJob.getInstances());
+    }
+  }
+
+  /**
+   * Start the workers by submitting the first job to the workers. This will start the workers,
+   * but task graph will not run until the job is submmitted
+   *
+   * @param htgJob subgraph
+   */
   private void startWorkers(HTGJobAPI.SubGraph htgJob) {
     //send the singleton object to the HTG Driver
     Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
@@ -178,5 +225,19 @@ public final class Twister2HTGSubmitter {
     } catch (InterruptedException e) {
       throw new RuntimeException("Failed to take event", e);
     }
+  }
+
+  private void startDriver(int numberOfWorkers) {
+    // first start JMDriverAgent
+    String jobMasterIP = config.getStringValue("__job_master_ip__");
+    int jmPort = config.getIntegerValue("__job_master_port__", 0);
+    JMDriverAgent driverAgent =
+        JMDriverAgent.createJMDriverAgent(config, jobMasterIP, jmPort, numberOfWorkers);
+    driverAgent.startThreaded();
+    // construct DriverMessenger
+    messenger = new DriverMessenger(driverAgent);
+
+    // add listener to receive worker messages
+    JMDriverAgent.addDriverJobListener(this);
   }
 }
