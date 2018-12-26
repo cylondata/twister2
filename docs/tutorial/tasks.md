@@ -1,5 +1,7 @@
 
-![Geoffrey C. FOX](fox.png)
+<div class="image" style="justify-content:left;">
+<img src="fox.png"/>
+</div>
 
 ### Geoffrey C. FOX
 
