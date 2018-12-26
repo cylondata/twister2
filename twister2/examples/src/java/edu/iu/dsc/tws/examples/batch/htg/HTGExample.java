@@ -106,7 +106,7 @@ public class HTGExample extends HTGTaskWorker {
     dataFlowTaskGraphMap.values().stream().map(
         graph -> "dataflow task graph list:" + graph.getTaskGraphName()).forEach(LOG::info);
 
-    taskExecutor.execute(dataFlowTaskGraphMap);
+    taskExecutor.execute();
   }//End of executeHTG method
 
   public static void sleep(long duration) {
