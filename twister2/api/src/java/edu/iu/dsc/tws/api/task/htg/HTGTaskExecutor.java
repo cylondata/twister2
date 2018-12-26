@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.task.htg;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -25,6 +24,7 @@ import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.worker.JobListener;
 import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
@@ -39,19 +39,22 @@ public class HTGTaskExecutor extends TaskExecutor implements JobListener {
 
   private int workerId;
 
+  private KryoMemorySerializer serializer;
+
   public HTGTaskExecutor(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
                          Communicator net) {
     super(cfg, wId, workerInfoList, net);
     this.executeMessageQueue = new LinkedBlockingQueue<>();
     this.workerId = wId;
+    this.serializer = new KryoMemorySerializer();
   }
 
-/**
- * execute*/
-  public boolean execute(Map<String, DataFlowTaskGraph> dataFlowTaskGraphMap) {
+  /**
+   * execute
+   */
+  public boolean execute() {
     Any msg;
     HTGJobAPI.ExecuteMessage executeMessage;
-    DataFlowTaskGraph taskGraph;
     ExecutionPlan executionPlan;
     HTGJobAPI.ExecuteCompletedMessage completedMessage;
     String subgraph;
@@ -70,7 +73,9 @@ public class HTGTaskExecutor extends TaskExecutor implements JobListener {
             LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
 
             // get the subgraph from the map
-            taskGraph = dataFlowTaskGraphMap.get(executeMessage.getSubgraphName());
+            HTGJobAPI.SubGraph subGraph = executeMessage.getGraph();
+            DataFlowTaskGraph taskGraph = (DataFlowTaskGraph) serializer.deserialize(
+                subGraph.getGraphSerialized().toByteArray());
             if (taskGraph == null) {
               LOG.severe(workerId + " Unable to find the subgraph " + subgraph);
               return false;
