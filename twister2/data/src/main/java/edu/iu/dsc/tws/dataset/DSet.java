@@ -9,17 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.htgjob;
-
-import java.util.List;
-
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+package edu.iu.dsc.tws.dataset;
 
 /**
- * This schedule is the base method for making decisions to run the part of the task graph which
- * will be improved further with the complex logic. Now, based on the relations(parent -> child)
- * it will initiate the execution.
+ * Distributed data set
+ *
+ * @param <T> the distributed set interface
  */
-public interface ITwister2HTGScheduler {
-  List<String> schedule(DataFlowTaskGraph twister2Metagraph);
+public interface DSet<T> {
+  /**
+   * Get the list of partitions for a process
+   *
+   * @param procId process id
+   * @return the partitions
+   */
+  PSet<T>[] getPartitions(int procId);
 }

@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -93,6 +94,10 @@ public class HelloTSet extends TaskWorker implements Serializable {
 
     builder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph graph = builder.build();
+
+    KryoMemorySerializer memorySerializer = new KryoMemorySerializer();
+    byte[] ret = memorySerializer.serialize(graph);
+
     ExecutionPlan executionPlan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, executionPlan);
   }

@@ -232,9 +232,9 @@ public class MPILauncher implements ILauncher {
 
 
     // if the driver class is specified in the job, start it
-    if (!job.getDriverClassName().isEmpty()) {
-      startDriver(job);
-    }
+//    if (!job.getDriverClassName().isEmpty()) {
+//      startDriver(job);
+//    }
 
     // wait until the controller finishes
     try {

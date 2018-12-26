@@ -33,32 +33,6 @@ public final class HTGBuilder {
     return new HTGBuilder();
   }
 
-  public HTGBuilder addSourceTaskGraph(String name, DataFlowTaskGraph source) {
-    graph.addTaskGraph(name, new DataFlowTaskGraph(name, source));
-    return this;
-  }
-
-  public HTGBuilder addSink(String name, DataFlowTaskGraph sink) {
-    graph.addTaskGraph(name, new DataFlowTaskGraph(name, sink));
-    return this;
-  }
-
-  public HTGBuilder addTask(String name, DataFlowTaskGraph taskgraph) {
-    graph.addTaskGraph(name, new DataFlowTaskGraph(name, taskgraph));
-    return this;
-  }
-
-
-  public HTGBuilder addConfiguration(String graphName, String property,
-                                     Object value) {
-    DataFlowTaskGraph v = graph.dataFlowTaskGraph(graphName);
-    if (v == null) {
-      throw new RuntimeException("Failed to add configuration to non-existing graph: " + graphName);
-    }
-    v.addConfiguration(property, value);
-    return this;
-  }
-
   public HTGBuilder connect(String t1, String t2, String name) {
     DataFlowTaskGraph v1 = graph.dataFlowTaskGraph(name);
     if (v1 == null) {

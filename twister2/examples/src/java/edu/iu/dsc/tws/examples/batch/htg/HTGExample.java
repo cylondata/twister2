@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.batch.htg;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,17 +22,13 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.htgjob.SubGraphJob;
 import edu.iu.dsc.tws.api.htgjob.Twister2HTGDriver;
 import edu.iu.dsc.tws.api.htgjob.Twister2HTGSubmitter;
-import edu.iu.dsc.tws.api.htgjob.Twister2MetagraphBuilder;
-import edu.iu.dsc.tws.api.htgjob.Twister2MetagraphConnection;
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.htg.HTGBuilder;
-import edu.iu.dsc.tws.api.task.htg.HTGComputeConnection;
-import edu.iu.dsc.tws.api.task.htg.HTGTaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataSet;
@@ -46,76 +41,11 @@ import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.graph.htg.HierarchicalTaskGraph;
-import edu.iu.dsc.tws.tsched.utils.HTGParser;
 
-public class HTGExample extends HTGTaskWorker {
-
+public final class HTGExample {
   private static final Logger LOG = Logger.getLogger(HTGExample.class.getName());
 
-  private HTGJobParameters jobParameters;
-
-  private static final long serialVersionUID = -5190777711234234L;
-
-  @Override
-  public void execute() {
-
-    HTGSourceTask htgSourceTask = new HTGSourceTask();
-    HTGReduceTask htgReduceTask = new HTGReduceTask();
-
-    this.jobParameters = HTGJobParameters.build(config);
-    int parallelismValue = jobParameters.getParallelismValue();
-
-    TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
-    graphBuilderX.addSource("source1", htgSourceTask, parallelismValue);
-    ComputeConnection computeConnection1 = graphBuilderX.addSink("sink1", htgReduceTask,
-        parallelismValue);
-    computeConnection1.allreduce("source1", "all-reduce", new Aggregator(),
-        DataType.OBJECT);
-    graphBuilderX.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph batchGraph = graphBuilderX.build();
-
-    TaskGraphBuilder graphBuilderY = TaskGraphBuilder.newBuilder(config);
-    graphBuilderY.addSource("source2", htgSourceTask, parallelismValue);
-    ComputeConnection computeConnection2 = graphBuilderY.addSink("sink2", htgReduceTask,
-        parallelismValue);
-    computeConnection2.allreduce("source2", "all-reduce", new Aggregator(),
-        DataType.OBJECT);
-    graphBuilderY.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph streamingGraph = graphBuilderY.build();
-
-    HTGBuilder htgBuilder = HTGBuilder.newBuilder(config);
-    htgBuilder.addSourceTaskGraph("sourcetaskgraph", batchGraph);
-    HTGComputeConnection htgComputeConnection = htgBuilder.addSinkTaskGraph(
-        "sinktaskgraph", streamingGraph, "source2");
-    htgComputeConnection.partition("sourcetaskgraph", "sink1");
-    htgBuilder.setMode(OperationMode.BATCH);
-
-    HierarchicalTaskGraph hierarchicalTaskGraph = htgBuilder.buildHierarchicalTaskGraph();
-
-    LOG.info("Batch Task Graph:" + batchGraph.getTaskVertexSet() + "\t"
-        + batchGraph.getTaskVertexSet().size() + "\t"
-        + "Streaming Task Graph:" + streamingGraph.getTaskVertexSet() + "\t"
-        + streamingGraph.getTaskVertexSet().size());
-
-    //Invoke HTG Parser
-    HTGParser hierarchicalTaskGraphParser = new HTGParser(hierarchicalTaskGraph);
-    Map<String, DataFlowTaskGraph> dataFlowTaskGraphMap =
-        hierarchicalTaskGraphParser.hierarchicalTaskGraphParse();
-
-    dataFlowTaskGraphMap.values().stream().map(
-        graph -> "dataflow task graph list:" + graph.getTaskGraphName()).forEach(LOG::info);
-
-    taskExecutor.execute();
-  }//End of executeHTG method
-
-  public static void sleep(long duration) {
-    LOG.info("Sleeping " + duration + "ms............");
-    try {
-      Thread.sleep(duration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+  private HTGExample() {
   }
 
   private static class HTGSourceTask extends BaseSource implements Receptor {
@@ -200,28 +130,23 @@ public class HTGExample extends HTGTaskWorker {
     config = Config.newBuilder().putAll(config)
         .put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName()).build();
 
-    //Design the metagraph with source task graph and sink task graph
-    Twister2MetagraphBuilder twister2MetagraphBuilder = Twister2MetagraphBuilder.newBuilder(config);
-    twister2MetagraphBuilder.addSource("sourcetaskgraph", config);
-    Twister2MetagraphConnection twister2MetagraphConnection
-        = twister2MetagraphBuilder.addSink("sinktaskgraph", config);
-    twister2MetagraphConnection.broadcast("sourcetaskgraph", "broadcast");
-    twister2MetagraphBuilder.setHtgName("HTGJob");
+
+    HTGSourceTask htgSourceTask = new HTGSourceTask();
+    HTGReduceTask htgReduceTask = new HTGReduceTask();
+    TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
+    graphBuilderX.addSource("source1", htgSourceTask, parallelismValue);
+    ComputeConnection reduceConn = graphBuilderX.addSink("sink1", htgReduceTask,
+        parallelismValue);
+    reduceConn.allreduce("source1", "all-reduce", new Aggregator(),
+        DataType.OBJECT);
+
+    graphBuilderX.setMode(OperationMode.BATCH);
+    DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
     //Invoke HTG Submitter and send the metagraph
     Twister2HTGSubmitter twister2HTGSubmitter = new Twister2HTGSubmitter(config);
-//    twister2HTGSubmitter.executeHTG(twister2MetagraphBuilder.build(),
-//        jobConfig, HTGExample.class.getName());
-
-    /*Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("HTG-job");
-    jobBuilder.setWorkerClass(KMeansJob.class.getName());
-    jobBuilder.addComputeResource(2, 512, 1.0, 2);
-    jobBuilder.setDriverClass(Twister2HTGSubmitter.class.getName());
-    jobBuilder.setConfig(jobConfig);
-
-    // now submit the job
-    Twister2Submitter.submitJob(jobBuilder.build(), config);*/
+    SubGraphJob job = SubGraphJob.newSubGraphJob(batchGraph).setWorkers(4);
+    twister2HTGSubmitter.execute(job);
   }
 }
 

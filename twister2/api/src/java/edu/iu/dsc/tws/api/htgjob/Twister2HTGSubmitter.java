@@ -67,6 +67,11 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
    */
   private Thread submitterThread;
 
+  /**
+   * Keep track of how many jobs submitted through
+   */
+  private int jobCount = 0;
+
   public Twister2HTGSubmitter(Config cfg) {
     this.config = cfg;
     this.kryoMemorySerializer = new KryoMemorySerializer();
@@ -86,6 +91,7 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
       // now we need to send messages
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
+    jobCount++;
 
     HTGJobAPI.SubGraph job = buildHTGJob(graph);
     // this is the first time
@@ -160,15 +166,16 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
 
     //Construct the HTGJob object to be sent to the HTG Driver
     return HTGJobAPI.SubGraph.newBuilder()
-        .setName(graph.getTaskGraphName())
+        .setName(getJobName(graph.getTaskGraphName()))
         .setConfig(configBuilder)
         .setGraphSerialized(ByteString.copyFrom(graphBytes))
+        .setInstances(job.getWorkers())
         .build();
   }
 
   @Override
   public void workerMessageReceived(Any anyMessage, int senderWorkerID) {
-
+    inDriverEvents.offer(new DriverEvent(DriveEventType.FINISHED_JOB, anyMessage));
   }
 
   @Override
@@ -239,5 +246,12 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
 
     // add listener to receive worker messages
     JMDriverAgent.addDriverJobListener(this);
+  }
+
+  private String getJobName(String name) {
+    if (name == null) {
+      return "graph_" + jobCount;
+    }
+    return name;
   }
 }

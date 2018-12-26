@@ -23,6 +23,8 @@ public final class SubGraphJob {
 
   private double diskGigaBytes;
 
+  private int workers;
+
   private JobConfig jobConfig = new JobConfig();
 
   private SubGraphJob(DataFlowTaskGraph g) {
@@ -71,5 +73,14 @@ public final class SubGraphJob {
 
   public JobConfig getJobConfig() {
     return jobConfig;
+  }
+
+  public int getWorkers() {
+    return workers;
+  }
+
+  public SubGraphJob setWorkers(int w) {
+    this.workers = w;
+    return this;
   }
 }
