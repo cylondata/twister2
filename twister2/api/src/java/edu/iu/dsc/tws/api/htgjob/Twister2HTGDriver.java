@@ -53,14 +53,7 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
     Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
-    LOG.log(Level.FINE, "Execution message list in driver:"
-        + twister2HTGInstance.getExecuteMessagesList() + "\t" + twister2HTGInstance.getHtgJob());
-
-    htgJob = twister2HTGInstance.getHtgJob();
     executeMessageList = twister2HTGInstance.getExecuteMessagesList();
-
-    LOG.fine("HTG Job and Execution Order of the HTG Graph:"
-        + twister2HTGInstance.getHtgJob() + "\t" + twister2HTGInstance.getExecuteMessagesList());
 
     JMDriverAgent.addDriverJobListener(this);
     broadcast(messenger);
@@ -78,23 +71,8 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
     LOG.log(Level.INFO, "All workers joined " + this.workerInfoList);
 
     for (HTGJobAPI.ExecuteMessage executeMessage : executeMessageList) {
-
-      //sleep(2000);
-
       LOG.info("Broadcasting execute message: " + executeMessage);
-
       messenger.broadcastToAllWorkers(executeMessage);
-
-      //Use the execute message to send the next graph
-      /*while (true) {
-        try {
-          msg = executeMessageQueue.take();
-          break;
-        } catch (InterruptedException e) {
-          LOG.info("Unable to take the message from the queue");
-        }
-      }*/
-
       sleep(2000);
     }
 
