@@ -1,4 +1,4 @@
-<p align="left">
+<p style="text-align:left;">
     <img width="125" height="125" src="fox.png">
 </p>
 
