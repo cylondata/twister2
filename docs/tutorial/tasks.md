@@ -1,7 +1,6 @@
-<p align="left">
-    <img width="125" height="125" src="fox.png">
-</p>
 
+
+<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
 
 ### Geoffrey C. FOX
 
@@ -40,5 +39,4 @@ and resources based on the architectural characteristics. The selection of the b
 The task scheduling algorithms are broadly classified into two types, namely static task scheduling algorithms and dynamic task scheduling
 algorithms. Twister2 aims to support both types of task scheduling algorithms.
 
-<span style="color: green"> More content will be added soon.... </span>
-
+[Task Scheduling Presentation](Task-Scheduling.pdf)

@@ -116,6 +116,7 @@
     * [data representation](tutorial/data-representation.md)
   * [Developing big data solutions](tutorial/developing.md)
     * [installation](tutorial/installation.md)
+    * [HelloWorld example](tutorial/helloworld.md)
     * [batch](tutorial/batch.md)
     * [streaming](tutorial/streaming.md)
     * [machine learning](tutorial/machine-learning.md)

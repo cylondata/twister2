@@ -1,6 +1,6 @@
 import React from "react";
 import JobService from "../../../services/JobService";
-import {Tag} from "@blueprintjs/core";
+import {Button, Intent, Tag} from "@blueprintjs/core";
 import {ComputeResourceCard} from "../../grid/compute-resource/ComputeResourceCard";
 import NodeTag from "../../grid/nodes/NodeTag";
 import {JobUtils} from "./JobUtils";
@@ -40,7 +40,6 @@ export default class JobInfoComponent extends React.Component {
             });
             this.setLoading(false)
         }).catch(err => {
-
             this.setLoading(false)
         });
     };
@@ -57,9 +56,21 @@ export default class JobInfoComponent extends React.Component {
             });
         }
 
+        //sort compute resource
+        if (this.state.job.computeResources) {
+            this.state.job.computeResources.sort((cr1, cr2) => {
+                return cr1.index - cr2.index;
+            });
+        }
+
         return (
             <div>
-                <h1>{this.state.job.jobName}</h1>
+                <div className="t2-jobs-header">
+                    <h1 className="t2-page-heading">{this.state.job.jobName}</h1>
+                    <div>
+                        <Button icon="refresh" text="refresh" intent={Intent.NONE} onClick={this.syncJob}/>
+                    </div>
+                </div>
                 <table className=" bp3-html-table bp3-html-table-striped bp3-html-table-condensed"
                        width="100%">
                     <tbody>
