@@ -166,7 +166,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     }
 
     // if the driver class is specified in the job, start it
-    if (!job.getDriverClassName().isEmpty()) {
+    if (job.getDriverClassName() != null && !job.getDriverClassName().isEmpty()) {
       startDriver(job, jobPackageFile);
     }
 
@@ -237,9 +237,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
    * start the JobMaster locally on submitting client
    * this is a blocking call
    * it finishes after the job has completed
-   *
-   * @param job
-   * @return
    */
   private boolean startJobMasterOnClient(JobAPI.Job job) {
 
@@ -265,10 +262,9 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
    * check the existence of all entities that will be created for this job
    * if any one of them exist, return false,
    * otherwise return true
-   *
+   * <p>
    * for OpenMPI enabled jobs, check whether the Secret object exist on Kubernetes master
    * if it does not exist, return false
-   * @return
    */
   private boolean checkEntitiesOnKubernetesMaster(JobAPI.Job job) {
 
@@ -396,8 +392,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
   /**
    * initialize a PersistentVolumeClaim on Kubernetes master
-   * @param job
-   * @return
    */
   private boolean initPersistentVolumeClaim(JobAPI.Job job) {
 
@@ -419,8 +413,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
   /**
    * initialize a ConfigMap for the job master on Kubernetes master
-   * @param job
-   * @return
    */
   private boolean initConfigMap(JobAPI.Job job) {
 
@@ -509,7 +501,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
   /**
    * check whether configuration parameters are accurate
-   * @return
    */
   private boolean configParametersOK(JobAPI.Job job) {
 
@@ -529,7 +520,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // if statically binding requested, number for CPUs per worker has to be an integer
     if (KubernetesContext.bindWorkerToCPU(config)) {
-      for (JobAPI.ComputeResource computeResource: job.getComputeResourceList()) {
+      for (JobAPI.ComputeResource computeResource : job.getComputeResourceList()) {
         double cpus = computeResource.getCpu();
         if (cpus % 1 != 0) {
           LOG.log(Level.SEVERE, String.format("When %s is true, the value of cpu has to be an int"
@@ -560,7 +551,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // When nodePort service requested, WORKERS_PER_POD value must be 1
     if (KubernetesContext.nodePortServiceRequested(config)) {
-      for (JobAPI.ComputeResource computeResource: job.getComputeResourceList()) {
+      for (JobAPI.ComputeResource computeResource : job.getComputeResourceList()) {
         if (computeResource.getWorkersPerPod() != 1) {
           LOG.log(Level.SEVERE, "workersPerPod value must be 1, when starting NodePort service. "
               + "Please change the config value and resubmit the job"
@@ -606,7 +597,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // delete created StatefulSet objects
     ArrayList<String> ssNameLists = jobSubmissionStatus.getCreatedStatefulSetNames();
-    for (String ssName: ssNameLists) {
+    for (String ssName : ssNameLists) {
       controller.deleteStatefulSet(ssName);
     }
 
@@ -635,7 +626,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // delete workers the StatefulSets
     ArrayList<String> ssNameLists = controller.getStatefulSetsForJobWorkers(jobName);
-    for (String ssName: ssNameLists) {
+    for (String ssName : ssNameLists) {
       controller.deleteStatefulSet(ssName);
     }
 
