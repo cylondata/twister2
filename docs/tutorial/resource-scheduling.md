@@ -15,7 +15,7 @@ Kubernetes and Mesos. In the following presentation you will find general inform
 also the features provided with the integration.
 
 * Kubernetes overview
-* [Mesos overview](mesos.pdf)
+* [Mesos overview](https://github.com/DSC-SPIDAL/twister2/raw/29dff0ee2190a7a99632b6cfea296b2aa8aaabc5/docs/tutorial/mesos.pdf)
 
 
 
