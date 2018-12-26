@@ -16,8 +16,8 @@ message SubGraph {
         int32 index = 6;
     }
     string name = 7;
+    //TODO: Do we need this?
     tws.proto.job.Config config = 8;
-    bytes graph_serialized = 9;
 }
 
 message Relation {
@@ -33,10 +33,8 @@ message HTGJob {
     repeated ExecuteMessage execute_message = 4;
 }
 
-// The messages used between driver and workers
 message ExecuteMessage {
     string subgraph_name = 1;
-    SubGraph graph = 2;
 }
 
 message ExecuteCompletedMessage {

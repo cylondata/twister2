@@ -210,8 +210,8 @@ public class HTGExample extends HTGTaskWorker {
 
     //Invoke HTG Submitter and send the metagraph
     Twister2HTGSubmitter twister2HTGSubmitter = new Twister2HTGSubmitter(config);
-//    twister2HTGSubmitter.executeHTG(twister2MetagraphBuilder.build(),
-//        jobConfig, HTGExample.class.getName());
+    twister2HTGSubmitter.executeHTG(twister2MetagraphBuilder.build(),
+        jobConfig, HTGExample.class.getName());
 
     /*Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("HTG-job");
