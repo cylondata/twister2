@@ -1,5 +1,5 @@
 
-<div class="image" style="justify-content:left;">
+<div class="image" style="justify-content:left !important;">
 <img src="fox.png"/>
 </div>
 
