@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.api.htgjob;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,16 +34,19 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
 
   private static final Logger LOG = Logger.getLogger(Twister2HTGDriver.class.getName());
 
-  private List<HTGJobAPI.ExecuteMessage> executeMessageList;
+  //Newly Added for waiting for the response;
+  private int workerId;
+
   private HTGJobAPI.HTGJob htgJob;
 
-  //Newly Added for waiting for the response;
-  private BlockingQueue<HTGJobAPI.ExecuteCompletedMessage> executeMessageQueue;
   private boolean executionCompleted = false;
+  private AtomicBoolean workerjoined = new AtomicBoolean(false);
 
-  private boolean workerjoined = false;
+  private List<HTGJobAPI.ExecuteMessage> executeMessageList;
   private List<JobMasterAPI.WorkerInfo> workerInfoList;
+
   private BlockingQueue<List<JobMasterAPI.WorkerInfo>> workerInfoMessageQueue;
+  private BlockingQueue<HTGJobAPI.ExecuteCompletedMessage> executeMessageQueue;
 
   public Twister2HTGDriver() {
     executeMessageQueue = new LinkedBlockingQueue<>();
@@ -63,6 +67,7 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
         + twister2HTGInstance.getHtgJob() + "\t" + twister2HTGInstance.getExecuteMessagesList());
 
     JMDriverAgent.addDriverJobListener(this);
+
     broadcast(messenger);
 
     LOG.log(Level.INFO, "Twister2 HTG Driver has finished execution.");
@@ -74,26 +79,14 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
     HTGJobAPI.ExecuteCompletedMessage msg;
 
     LOG.log(Level.INFO, "Waiting for workers to join");
+
     waitForWorkersToJoin();
-    LOG.log(Level.INFO, "All workers joined " + this.workerInfoList);
 
     for (HTGJobAPI.ExecuteMessage executeMessage : executeMessageList) {
-
-      //sleep(2000);
 
       LOG.info("Broadcasting execute message: " + executeMessage);
 
       messenger.broadcastToAllWorkers(executeMessage);
-
-      //Use the execute message to send the next graph
-      /*while (true) {
-        try {
-          msg = executeMessageQueue.take();
-          break;
-        } catch (InterruptedException e) {
-          LOG.info("Unable to take the message from the queue");
-        }
-      }*/
 
       sleep(2000);
     }
@@ -107,14 +100,14 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
   }
 
   private void waitForWorkersToJoin() {
-    // todo change this to check for the worker list
-
     while (true) {
-      LOG.info("i m in while");
-      if (this.workerInfoList != null) {
-        return;
+      //sleep(2000);
+      //LOG.info("Worker Joined Value:::::::" + workerjoined);
+      if (workerjoined.get()) {
+        break;
       }
     }
+    LOG.info("All Workers have joined.........");
   }
 
   public static void sleep(long duration) {
@@ -133,31 +126,26 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
       try {
         HTGJobAPI.ExecuteCompletedMessage executeMessage = anyMessage.unpack(
             HTGJobAPI.ExecuteCompletedMessage.class);
-        //this.executeMessageQueue.put(executeMessage);
-        //this.executionCompleted = true;
+        this.executeMessageQueue.put(executeMessage);
+        this.executionCompleted = true;
         HTGJobAPI.ExecuteCompletedMessage msg =
             anyMessage.unpack(HTGJobAPI.ExecuteCompletedMessage.class);
         LOG.log(Level.INFO, "Received Executecompleted message from worker: " + senderID
             + ". msg: " + msg);
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
-      } /*catch (InterruptedException e) {
+      } catch (InterruptedException e) {
         LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
-      }*/
+      }
     }
   }
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    LOG.log(Level.INFO, "All workers joined message received");
-    this.workerInfoList = workerList;
-    LOG.info("Worker Info Joined List:" + workerList.size());
-    /*try {
-      this.workerInfoMessageQueue.put(workerList);
-      this.workerjoined = true;
-    } catch (InterruptedException e) {
-      LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
-    }*/
+    LOG.log(Level.INFO, "All workers joined message received:");
+    if (workerList != null) {
+      this.workerInfoList = workerList;
+      workerjoined.set(true);
+    }
   }
 }
-

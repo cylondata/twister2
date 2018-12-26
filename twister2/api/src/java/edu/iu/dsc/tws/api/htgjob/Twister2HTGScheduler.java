@@ -45,6 +45,7 @@ public class Twister2HTGScheduler implements ITwister2HTGScheduler {
     }
     LOG.info("%%%% Scheduled Graph list details: %%%%" + scheduledGraph);
     return scheduledGraph;
+
   }
 }
 
