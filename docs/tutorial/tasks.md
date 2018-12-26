@@ -1,6 +1,6 @@
-<p style="text-align:left;">
+<div class="image" style="text-align:left;">
     <img width="125" height="125" src="fox.png">
-</p>
+</div>
 
 
 ### Geoffrey C. FOX
