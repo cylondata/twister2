@@ -74,6 +74,8 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
    */
   private int jobCount = 0;
 
+  private JMDriverAgent driverAgent;
+
   public Twister2HTGSubmitter(Config cfg) {
     this.config = cfg;
     this.kryoMemorySerializer = new KryoMemorySerializer();
@@ -140,7 +142,10 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
     sendCloseMessage();
     // lets wait for the submitter thread to finish
     try {
+      driverAgent.close();
+      LOG.log(Level.INFO, "Waiting for submitter thread");
       submitterThread.join();
+      LOG.log(Level.INFO, "Submitter thread finished, we are closed");
     } catch (InterruptedException ignore) {
     }
   }
@@ -262,7 +267,7 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
     String jobMasterIP = ResourceRuntime.getInstance().getJobMasterHost();
     int jmPort = ResourceRuntime.getInstance().getJobMasterPort();
 
-    JMDriverAgent driverAgent =
+    driverAgent =
         JMDriverAgent.createJMDriverAgent(config, jobMasterIP, jmPort, numberOfWorkers);
     driverAgent.startThreaded();
     // construct DriverMessenger
