@@ -148,6 +148,7 @@ public final class HTGExample {
     SubGraphJob job = SubGraphJob.newSubGraphJob(batchGraph).setWorkers(4);
     LOG.log(Level.INFO, "**************************************** Job 2");
     twister2HTGSubmitter.execute(job);
+    twister2HTGSubmitter.close();
   }
 }
 

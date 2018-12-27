@@ -136,11 +136,19 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
   }
 
   public void close() {
+    // send the close message
+    sendCloseMessage();
     // lets wait for the submitter thread to finish
     try {
       submitterThread.join();
     } catch (InterruptedException ignore) {
     }
+  }
+
+  private void sendCloseMessage() {
+    HTGJobAPI.HTGJobCompletedMessage.Builder builder = HTGJobAPI.HTGJobCompletedMessage.
+        newBuilder().setHtgJobname("");
+    messenger.broadcastToAllWorkers(builder.build());
   }
 
   /**
@@ -184,6 +192,8 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
 
   @Override
   public void workerMessageReceived(Any anyMessage, int senderWorkerID) {
+    LOG.log(Level.INFO, String.format("Received worker message %d: %s", senderWorkerID,
+        anyMessage.getClass().getName()));
     inDriverEvents.offer(new DriverEvent(DriveEventType.FINISHED_JOB, anyMessage));
   }
 
