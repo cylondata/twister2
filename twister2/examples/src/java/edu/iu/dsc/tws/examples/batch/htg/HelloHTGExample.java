@@ -42,10 +42,10 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public final class HTGExample {
-  private static final Logger LOG = Logger.getLogger(HTGExample.class.getName());
+public final class HelloHTGExample {
+  private static final Logger LOG = Logger.getLogger(HelloHTGExample.class.getName());
 
-  private HTGExample() {
+  private HelloHTGExample() {
   }
 
   private static class HTGSourceTask extends BaseSource implements Receptor {
@@ -68,8 +68,8 @@ public final class HTGExample {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
-          + ":" + context.taskId());
+      LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
+          + ":" + context.taskId() + message.getContent());
       return true;
     }
 
@@ -93,20 +93,17 @@ public final class HTGExample {
      */
     @Override
     public Object onMessage(Object object1, Object object2) throws ArrayIndexOutOfBoundsException {
-      return null;
+      return object1.toString() + object2.toString();
     }
   }
 
   public static void main(String[] args) throws ParseException {
-
-    LOG.log(Level.INFO, "**************************************** Job");
-
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
-    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 1);
 
     Options options = new Options();
     options.addOption(HTGConstants.ARGS_PARALLELISM_VALUE, true, "2");
@@ -145,8 +142,7 @@ public final class HTGExample {
 
     //Invoke HTG Submitter and send the metagraph
     Twister2HTGSubmitter twister2HTGSubmitter = new Twister2HTGSubmitter(config);
-    SubGraphJob job = SubGraphJob.newSubGraphJob(batchGraph).setWorkers(4);
-    LOG.log(Level.INFO, "**************************************** Job 2");
+    SubGraphJob job = SubGraphJob.newSubGraphJob(batchGraph).setWorkers(4).addJobConfig(jobConfig);
     twister2HTGSubmitter.execute(job);
     twister2HTGSubmitter.close();
   }

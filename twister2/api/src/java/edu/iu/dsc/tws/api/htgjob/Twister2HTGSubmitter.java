@@ -74,6 +74,9 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
    */
   private int jobCount = 0;
 
+  /**
+   * Driver agent
+   */
   private JMDriverAgent driverAgent;
 
   public Twister2HTGSubmitter(Config cfg) {
