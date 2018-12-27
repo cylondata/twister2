@@ -26,7 +26,7 @@ import twister2.tools.cli.src.python.jars as jars
 import twister2.tools.cli.src.python.config as config
 
 ################################################################################
-def twister2_class(class_name, lib_jars, extra_jars=None, args=None, java_defines=None):
+def twister2_class(class_name, lib_jars, extra_jars=None, args=None, java_defines=None, client_props=None):
     '''
     Execute a twister2 class given the args and the jars needed for class path
     :param class_name:
@@ -47,6 +47,10 @@ def twister2_class(class_name, lib_jars, extra_jars=None, args=None, java_define
     # Format all java -D options that need to be passed while running
     # the class locally.
     java_opts = ['-D' + opt for opt in java_defines]
+
+    if client_props:
+        if 'twister2.client.debug' in client_props:
+            java_opts.append(client_props['twister2.client.debug'])
 
     # Construct the command line for the sub process to run
     # Because of the way Python execute works,

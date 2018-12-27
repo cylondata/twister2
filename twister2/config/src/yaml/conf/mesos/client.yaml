@@ -81,3 +81,7 @@ datacenters.list:
 racks.list:
 - blue-rack: ['10.0.0.40', '10.0.0.41', '10.0.0.42', '10.0.0.43', '10.0.0.44', ]
 - green-rack: ['node11.ip', 'node12.ip', 'node13.ip']
+
+# If we need to start the client in remote debugger mode enable this configuration.
+# You can change the address port to different one if needed.
+# twister2.client.debug: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006'

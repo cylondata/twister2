@@ -1,0 +1,3 @@
+# If we need to start the client in remote debugger mode enable this configuration.
+# You can change the address port to different one if needed.
+# twister2.client.debug: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006'
