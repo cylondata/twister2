@@ -55,3 +55,12 @@ Once all the configurations are set. Start the Twister2 application. After a lit
 will hang waiting for you to start the debugger. Then you can start the debugger in your IDE and it will
 attach to the Twister2 application. 
 
+## Debugging the driver program
+
+In order to debug the driver program the following configuration in the ```client.yaml``` file can be un-commented.
+
+```bash
+# twister2.client.debug: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006'
+```
+
+This will start a remote debugging sesion and you can connect your IDE to 5006 port.
