@@ -1,6 +1,6 @@
 # Twister2 Docker image for Kubernetes
-twister2.docker.image.for.kubernetes: "twister2/twister2-k8s:0.1.1"
-# twister2.docker.image.for.kubernetes: "twister2/twister2-k8s:0.1.1-au"
+# twister2.docker.image.for.kubernetes: "twister2/twister2-k8s:0.1.1"
+twister2.docker.image.for.kubernetes: "twister2/twister2-k8s:0.1.1-au"
 
 # the package uri
 twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.1.0.tar.gz"

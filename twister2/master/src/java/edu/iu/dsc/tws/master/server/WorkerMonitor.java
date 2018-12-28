@@ -54,6 +54,9 @@ public class WorkerMonitor implements MessageHandler {
   private RRServer rrServer;
   private DashboardClient dashClient;
 
+  // this is used to assign next ID to newly registering worker
+  private int nextWorkerID = 0;
+
   private boolean jobMasterAssignsWorkerIDs;
   private int numberOfWorkers;
   private boolean driverRegistered = false;
@@ -77,6 +80,31 @@ public class WorkerMonitor implements MessageHandler {
 
     workers = new TreeMap<>();
     waitList = new HashMap<>();
+  }
+
+  public int assignWorkerID() {
+
+    int id = nextWorkerID;
+    nextWorkerID++;
+
+    return id;
+  }
+
+  /**
+   * if this worker already registered with IP and port
+   * get the workerID from worker list
+   * @param workerIP
+   * @param port
+   * @return
+   */
+  private int getRegisteredWorkerID(String workerIP, int port) {
+    for (WorkerWithState workerWithState: workers.values()) {
+      if (workerIP.equals(workerWithState.getIp()) && port == workerWithState.getPort()) {
+        return workerWithState.getWorkerID();
+      }
+    }
+
+    return -1;
   }
 
   @Override
@@ -155,27 +183,53 @@ public class WorkerMonitor implements MessageHandler {
     LOG.fine("RegisterWorker message received: \n" + message);
     JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
 
-    if (jobMasterAssignsWorkerIDs) {
-      int workerID = workers.size();
-      workerInfo = WorkerInfoUtils.updateWorkerID(workerInfo, workerID);
+    // if it is coming from failure
+    // update the worker status and return
+    if (getRegisteredWorkerID(workerInfo.getWorkerIP(), workerInfo.getPort()) >= 0) {
+      // update the worker status in the worker list
+      workers.get(workerId).addWorkerState(JobMasterAPI.WorkerState.STARTING);
+
+      // send the response message
+      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true);
+
+      // send worker registration message to dashboard
+      if (dashClient != null) {
+        dashClient.registerWorker(workerInfo);
+      }
+
+      return;
     }
 
+    // if job master assigns workerIDs, get new id and update it in WorkerInfo
+    // also set in RRServer
+    if (jobMasterAssignsWorkerIDs) {
+      int newWorkerID = assignWorkerID();
+      workerInfo = WorkerInfoUtils.updateWorkerID(workerInfo, newWorkerID);
+      rrServer.setWorkerChannel(newWorkerID);
+    }
+
+    // if it is not coming from failure but workerID already registered
+    // something wrong
+    if (workers.containsKey(workerInfo.getWorkerID())) {
+      LOG.severe("Second RegisterWorker message received for workerID: " + workerInfo.getWorkerID()
+          + "\nIgnoring this RegisterWorker message. "
+          + "\nReceived Message: " + message
+          + "\nPrevious Worker with that workerID: " + workers.get(workerInfo.getWorkerID()));
+
+      // send the response message
+      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), false);
+
+      return;
+    }
+
+    // add the worker to worker list
     WorkerWithState worker = new WorkerWithState(workerInfo);
     worker.addWorkerState(JobMasterAPI.WorkerState.STARTING);
 
-    boolean result = true;
-    if (workers.containsKey(worker.getWorkerID())) {
-      LOG.severe("Second RegisterWorker message received for workerID: " + worker.getWorkerID()
-          + "\nIgnoring this RegisterWorker message. "
-          + "\nReceived Message: " + message
-          + "\nPrevious Worker with that workerID: " + workers.get(worker.getWorkerID()));
-      result = false;
-    } else {
-      workers.put(worker.getWorkerID(), worker);
-    }
+    workers.put(worker.getWorkerID(), worker);
 
-    // send the response message
-    sendRegisterWorkerResponse(id, worker.getWorkerID(), result);
+    // send success response message
+    sendRegisterWorkerResponse(id, worker.getWorkerID(), true);
 
     // send worker registration message to dashboard
     if (dashClient != null) {
@@ -309,8 +363,14 @@ public class WorkerMonitor implements MessageHandler {
 
     // if this is a scale down message,
     // construct killedWorkers list and remove those workers from workers list
+    // update nextWorkerID
     List<Integer> killedWorkers = new LinkedList<>();
     if (scaledMessage.getChange() < 0) {
+
+      // since we do not want gaps in workerID sequence,
+      // we reuse the deleted IDs
+      nextWorkerID = nextWorkerID + scaledMessage.getChange();
+
       for (int i = 0; i < (0 - scaledMessage.getChange()); i++) {
         int killedID = numberOfWorkers + i;
         killedWorkers.add(killedID);

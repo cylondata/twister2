@@ -152,8 +152,15 @@ public final class JMWorkerAgent {
     looper = new Progress();
 
     ClientConnectHandler connectHandler = new ClientConnectHandler();
-    rrClient = new RRClient(masterAddress, masterPort, null, looper,
-        thisWorker.getWorkerID(), connectHandler);
+
+    // if job master assigns worker IDs, first assign workerID as WORKER_UNASSIGNED_ID
+    if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
+      rrClient = new RRClient(masterAddress, masterPort, null, looper,
+          RRClient.WORKER_UNASSIGNED_ID, connectHandler);
+    } else {
+      rrClient = new RRClient(masterAddress, masterPort, null, looper,
+          thisWorker.getWorkerID(), connectHandler);
+    }
 
     long interval = JobMasterContext.pingInterval(config);
     pinger = new Pinger(thisWorker.getWorkerID(), rrClient, interval);
