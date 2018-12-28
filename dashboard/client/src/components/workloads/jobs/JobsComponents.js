@@ -80,8 +80,6 @@ export default class JobsComponents extends React.Component {
             jobCards.push(<JobCard key={job.jobID} job={job}/>)
         });
 
-        console.log(this.state.searchResults)
-
         return (
             <div>
                 <div className="t2-jobs-header">
