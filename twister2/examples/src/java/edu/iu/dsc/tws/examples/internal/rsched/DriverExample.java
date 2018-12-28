@@ -70,7 +70,7 @@ public class DriverExample implements IDriver, DriverJobListener {
     }
 
     LOG.info("Will scale down workers by 4");
-    scaler.scaleDownWorkers(4);
+    scaler.scaleDownWorkers(6);
 
     try {
       LOG.info("Sleeping 5 seconds ....");
@@ -80,7 +80,7 @@ public class DriverExample implements IDriver, DriverJobListener {
     }
 
     LOG.info("Will scale up workers by 2");
-    scaler.scaleUpWorkers(2);
+    scaler.scaleUpWorkers(5);
 
   }
 

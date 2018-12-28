@@ -73,19 +73,8 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
     if (change < 0) {
       for (int i = 1; i <= (0 - change); i++) {
         int idToDelete = numOfWorkers - i;
-        removeWorkerInfo(idToDelete);
-      }
-    }
-  }
-
-  /**
-   * remove a worker from the workerList
-   * @param workerID
-   */
-  private void removeWorkerInfo(int workerID) {
-    for (JobMasterAPI.WorkerInfo workerInfo: workerList) {
-      if (workerInfo.getWorkerID() == workerID) {
-        workerList.remove(workerInfo);
+        JobMasterAPI.WorkerInfo workerInfoToDelete = getWorkerInfoForID(idToDelete);
+        workerList.remove(workerInfoToDelete);
       }
     }
   }
