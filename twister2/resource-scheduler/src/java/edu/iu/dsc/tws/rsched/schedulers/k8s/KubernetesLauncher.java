@@ -166,7 +166,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     }
 
     // if the driver class is specified in the job, start it
-    if (job.getDriverClassName() != null && !job.getDriverClassName().isEmpty()) {
+    if (!job.getDriverClassName().isEmpty()) {
       startDriver(job, jobPackageFile);
     }
 
