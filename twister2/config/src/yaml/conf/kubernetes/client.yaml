@@ -130,3 +130,7 @@ kubernetes.persistent.storage.class: "twister2-nfs-storage"
 # other alternatives: "ReadWriteOnce", "ReadOnlyMany"
 # https://kubernetes.io/docs/concepts/storage/persistent-volumes
 kubernetes.storage.access.mode: "ReadWriteMany"
+
+# If we need to start the client in remote debugger mode enable this configuration.
+# You can change the address port to different one if needed.
+# twister2.client.debug: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006'
