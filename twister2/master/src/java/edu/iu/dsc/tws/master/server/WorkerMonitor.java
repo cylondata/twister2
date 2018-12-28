@@ -185,9 +185,11 @@ public class WorkerMonitor implements MessageHandler {
 
     // if it is coming from failure
     // update the worker status and return
-    if (getRegisteredWorkerID(workerInfo.getWorkerIP(), workerInfo.getPort()) >= 0) {
+    int registeredWorkerID = getRegisteredWorkerID(workerInfo.getWorkerIP(), workerInfo.getPort());
+    if (registeredWorkerID >= 0) {
       // update the worker status in the worker list
-      workers.get(workerId).addWorkerState(JobMasterAPI.WorkerState.STARTING);
+      workers.get(registeredWorkerID).addWorkerState(JobMasterAPI.WorkerState.STARTING);
+      LOG.info("WorkerID: " + registeredWorkerID + " joined from failure.");
 
       // send the response message
       sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true);
@@ -376,6 +378,8 @@ public class WorkerMonitor implements MessageHandler {
         killedWorkers.add(killedID);
         workers.remove(killedID);
       }
+
+      LOG.info("number of workers in worker list after scaling down: " + workers.size());
     }
 
     // send Scale message to the dashboard
