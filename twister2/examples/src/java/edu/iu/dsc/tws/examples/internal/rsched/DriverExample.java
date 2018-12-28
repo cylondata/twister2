@@ -69,8 +69,8 @@ public class DriverExample implements IDriver, DriverJobListener {
       e.printStackTrace();
     }
 
-    LOG.info("Will scale up workers by 2");
-    scaler.scaleUpWorkers(2);
+    LOG.info("Will scale down workers by 4");
+    scaler.scaleDownWorkers(4);
 
     try {
       LOG.info("Sleeping 5 seconds ....");
@@ -79,8 +79,9 @@ public class DriverExample implements IDriver, DriverJobListener {
       e.printStackTrace();
     }
 
-    LOG.info("Will scale down workers by 4");
-    scaler.scaleDownWorkers(4);
+    LOG.info("Will scale up workers by 2");
+    scaler.scaleUpWorkers(2);
+
   }
 
   private void broadcastExample(IDriverMessenger messenger) {
