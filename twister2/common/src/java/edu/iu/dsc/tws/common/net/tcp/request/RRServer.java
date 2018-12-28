@@ -318,6 +318,14 @@ public class RRServer {
   }
 
   /**
+   * remove the channel when the worker is removed
+   * @param workerID
+   */
+  public void removeWorkerChannel(int workerID) {
+    workerChannels.inverse().remove(workerID);
+  }
+
+  /**
    * save if it is a new channel
    * if it is a driver channel, save it in that variable
    * if it is a new worker channel that will get its id from the job master

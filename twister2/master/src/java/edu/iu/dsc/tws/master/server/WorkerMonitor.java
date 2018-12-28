@@ -138,12 +138,12 @@ public class WorkerMonitor implements MessageHandler {
       scaledMessageReceived(id, scaledMessage);
 
     } else if (message instanceof JobMasterAPI.Broadcast) {
-      LOG.log(Level.INFO, "Broadcast message received: " + message.toString());
+      LOG.log(Level.INFO, "Broadcast message received: ");
       JobMasterAPI.Broadcast broadcastMessage = (JobMasterAPI.Broadcast) message;
       broadcastMessageReceived(id, broadcastMessage);
 
     } else if (message instanceof JobMasterAPI.WorkerToDriver) {
-      LOG.log(Level.INFO, "WorkerToDriver message received: " + message.toString());
+      LOG.log(Level.FINE, "WorkerToDriver message received: " + message.toString());
       JobMasterAPI.WorkerToDriver toDriverMessage = (JobMasterAPI.WorkerToDriver) message;
       toDriverMessageReceived(id, toDriverMessage);
 
@@ -377,6 +377,7 @@ public class WorkerMonitor implements MessageHandler {
         int killedID = numberOfWorkers + i;
         killedWorkers.add(killedID);
         workers.remove(killedID);
+        rrServer.removeWorkerChannel(killedID);
       }
 
       LOG.info("number of workers in worker list after scaling down: " + workers.size());
