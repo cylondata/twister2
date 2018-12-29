@@ -39,7 +39,7 @@ public class DriverExample implements IDriver, DriverJobListener {
     // add listener to receive worker messages
     JMDriverAgent.addDriverJobListener(this);
 
-    broadcastExample(messenger);
+//    broadcastExample(messenger);
     scalingExample(scaler);
 
     LOG.info("Driver has finished execution.");
@@ -51,37 +51,30 @@ public class DriverExample implements IDriver, DriverJobListener {
   }
 
   private void scalingExample(IScaler scaler) {
+    java.util.Scanner scanner = new java.util.Scanner(System.in);
     LOG.info("Testing scaling up and down ............................. ");
-    try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+
+    while (true) {
+      LOG.info("Enter a char (u for scaling up, d for scaling down, q for quitting): ");
+      String command = scanner.nextLine();
+
+      if ("q".equals(command)) {
+        break;
+
+      } else if ("u".equals(command)) {
+        LOG.info("Enter an integer to scale up workers: ");
+        String input = scanner.nextLine();
+        scaler.scaleUpWorkers(Integer.parseInt(input));
+
+      } else if ("d".equals(command)) {
+        LOG.info("Enter an integer to scale down workers: ");
+        String input = scanner.nextLine();
+        scaler.scaleDownWorkers(Integer.parseInt(input));
+
+      } else {
+        LOG.info("Please enter either of: u, d, or q. Press enter after.");
+      }
     }
-
-    LOG.info("Will scale up workers by 4");
-    scaler.scaleUpWorkers(4);
-
-    try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    LOG.info("Will scale down workers by 4");
-    scaler.scaleDownWorkers(6);
-
-    try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    LOG.info("Will scale up workers by 2");
-    scaler.scaleUpWorkers(5);
-
   }
 
   private void broadcastExample(IDriverMessenger messenger) {

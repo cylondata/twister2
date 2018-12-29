@@ -403,16 +403,16 @@ public class WorkerMonitor implements MessageHandler {
     rrServer.sendResponse(id, scaledResponse);
     LOG.fine("ScaledResponse sent to the driver: \n" + scaledResponse);
 
-    // if all newly scaled up workers are already joined
-    // send WorkersJoined messages
-    if (allWorkersRegistered()) {
-      sendWorkersJoinedMessage();
-    }
-
     // let all previous workers know about the scaled message
     // no need for informing newly added workers
     for (int wID = 0; wID < numberOfWorkersBeforeScaling; wID++) {
       rrServer.sendMessage(scaledMessage, wID);
+    }
+
+    // if all newly scaled up workers are already joined
+    // send WorkersJoined messages
+    if (allWorkersRegistered()) {
+      sendWorkersJoinedMessage();
     }
 
     // send Scaled message to the dashboard

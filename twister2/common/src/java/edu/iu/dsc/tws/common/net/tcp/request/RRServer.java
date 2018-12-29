@@ -316,7 +316,7 @@ public class RRServer {
 
     // if there is another channel for this worker already, replace it with this one
     if (workerChannels.inverse().containsKey(workerID)) {
-      LOG.warning(String.format("While there is a channel for workerID[%d], "
+      LOG.warning(String.format("While the channel for workerID[%d] connected, "
           + "another channel connected from the same worker. Replacing older one. ", workerID));
     }
 
@@ -329,7 +329,13 @@ public class RRServer {
    * @param workerID
    */
   public void removeWorkerChannel(int workerID) {
-    workerChannels.inverse().remove(workerID);
+    SocketChannel removedChannel = workerChannels.inverse().remove(workerID);
+
+    try {
+      removedChannel.close();
+    } catch (IOException e) {
+      LOG.log(Level.WARNING, "Exception when closing the channel: ", e);
+    }
   }
 
   /**
