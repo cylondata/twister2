@@ -61,7 +61,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
     }
     this.selector = selec;
 
-    DestinationSelector destSelector = null;
+    DestinationSelector destSelector;
     if (selec != null) {
       destSelector = new DefaultDestinationSelector(partitioner);
     } else {
@@ -79,7 +79,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
   @Override
   public boolean send(int source, IMessage message, int flags) {
     TaskMessage taskMessage = (TaskMessage) message;
-    Object key = selector.select(taskMessage.getContent());
+    Object key = extractKey(taskMessage, selector);
     return op.reduce(source, key, taskMessage.getContent(), flags);
   }
 
