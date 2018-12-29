@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
@@ -104,11 +103,7 @@ public final class K8sWorkerStarter {
     LOG.info("NodeInfo for this worker: " + nodeInfo);
 
     // set workerID
-    if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
-      workerID = RRClient.WORKER_UNASSIGNED_ID;
-    } else {
-      workerID = K8sWorkerUtils.calculateWorkerID(job, podName, containerName);
-    }
+    workerID = K8sWorkerUtils.calculateWorkerID(job, podName, containerName);
 
     // get computeResource for this worker
     computeResource = K8sWorkerUtils.getComputeResource(job, podName);

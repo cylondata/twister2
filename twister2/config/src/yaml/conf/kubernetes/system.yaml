@@ -37,7 +37,9 @@ twister2.logging.maximum.files: 5
 twister2.job.master.runs.in.client: false
 
 # if true, job master assigns the worker IDs,
-# if false, workers have their IDs when regitering with the job master
+# if false, workers have their IDs when registering with the job master
+# it is always false in Kubernetes
+# setting it to true does not make any difference
 twister2.job.master.assigns.worker.ids: false
 
 # ping message intervals from workers to the job master in milliseconds

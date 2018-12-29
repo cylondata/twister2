@@ -370,12 +370,16 @@ public class WorkerMonitor implements MessageHandler {
     // construct killedWorkers list and remove those workers from workers list
     List<Integer> killedWorkers = new LinkedList<>();
 
+    String strToLog = "Deleted worker IDs by scale down: ";
     for (int i = 0; i < (0 - scaledMessage.getChange()); i++) {
       int killedID = numberOfWorkers + i;
       killedWorkers.add(killedID);
       workers.remove(killedID);
       rrServer.removeWorkerChannel(killedID);
+      strToLog += killedID + ", ";
     }
+
+    LOG.info(strToLog);
 
     // let all remaining workers know about the scaled message
     for (int workerID : workers.keySet()) {
