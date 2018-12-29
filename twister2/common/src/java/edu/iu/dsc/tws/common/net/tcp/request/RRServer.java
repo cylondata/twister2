@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.Server;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * RRServer class is used by Job Master
@@ -61,9 +62,9 @@ public class RRServer {
   private HashBiMap<SocketChannel, Integer> workerChannels = HashBiMap.create();
 
   /**
-   * the job submitting client channel,
+   * the driver channel,
    */
-  private SocketChannel clientChannel;
+  private SocketChannel driverChannel;
 
   /**
    * Keep track of the request handler using protocol buffer message types
@@ -86,28 +87,29 @@ public class RRServer {
   private int serverID;
 
   /**
-   * The client id
+   * The driver id
    */
   public static final int DRIVER_ID = -100;
-
-  /**
-   * whether JobMaster assigns workerIDs
-   */
-  private boolean jobMasterAssignsWorkerID;
 
   /**
    * Connection handler
    */
   private ConnectHandler connectHandler;
 
+  /**
+   * when register message is received from a worker that will get its workerID from Job Master
+   * we keep its channel on this variable
+   * then WorkerMonitor calls setWorkerChannel method and set the id of that channel
+   */
+  private SocketChannel workerChannelToRegister;
+
   private Progress loop;
 
   public RRServer(Config cfg, String host, int port, Progress looper, int serverID,
-                  ConnectHandler cHandler, boolean jobMasterAssignsWorkerID) {
+                  ConnectHandler cHandler) {
     this.connectHandler = cHandler;
     this.loop = looper;
     this.serverID = serverID;
-    this.jobMasterAssignsWorkerID = jobMasterAssignsWorkerID;
     server = new Server(cfg, host, port, loop, new Handler(), false);
   }
 
@@ -147,7 +149,7 @@ public class RRServer {
       LOG.log(Level.SEVERE, "Channel is NULL for response");
     }
 
-    if (!workerChannels.containsKey(channel) && !channel.equals(clientChannel)) {
+    if (!workerChannels.containsKey(channel) && !channel.equals(driverChannel)) {
       LOG.log(Level.WARNING, "Failed to send response on disconnected socket");
       return false;
     }
@@ -171,11 +173,11 @@ public class RRServer {
 
     SocketChannel channel;
     if (targetID == DRIVER_ID) {
-      if (clientChannel == null) {
+      if (driverChannel == null) {
         LOG.severe("Trying to send a message to the driver, but it has not connected yet.");
         return false;
       }
-      channel = clientChannel;
+      channel = driverChannel;
     } else if (workerChannels.containsValue(targetID)) {
       channel = workerChannels.inverse().get(targetID);
     } else {
@@ -244,13 +246,17 @@ public class RRServer {
       workerChannels.remove(channel);
       connectHandler.onClose(channel);
 
-      if (channel.equals(clientChannel)) {
-        clientChannel = null;
+      if (channel.equals(driverChannel)) {
+        driverChannel = null;
       }
     }
 
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPMessage readRequest) {
+      if (channel == null) {
+        LOG.log(Level.SEVERE, "Chanel on receive is NULL");
+      }
+
       // read headers amd the message
       ByteBuffer data = readRequest.getByteBuffer();
 
@@ -262,11 +268,8 @@ public class RRServer {
       // unpack the string
       String messageType = ByteUtils.unPackString(data);
 
-      // now get the worker id
+      // now get sender worker id
       int senderID = data.getInt();
-
-      // it can be a worker that will get its id from the job master
-      senderID = addToChannelListAssignIdIfRequired(channel, senderID);
 
       Message.Builder builder = messageBuilders.get(messageType);
       if (builder == null) {
@@ -284,16 +287,16 @@ public class RRServer {
         byte[] d = new byte[dataLength];
         data.get(d);
         builder.mergeFrom(d);
-        Message m = builder.build();
+        Message message = builder.build();
 
-        if (channel == null) {
-          LOG.log(Level.SEVERE, "Chanel on receive is NULL");
-        }
+        // save this channel
+        saveChannel(channel, senderID, message);
+
         LOG.log(Level.FINEST, String.format("Adding channel %s", new String(requestIDBytes)));
         requestChannels.put(requestID, channel);
 
         MessageHandler handler = requestHandlers.get(messageType);
-        handler.onMessage(requestID, senderID, m);
+        handler.onMessage(requestID, senderID, message);
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Failed to build a message", e);
       }
@@ -306,34 +309,74 @@ public class RRServer {
   }
 
   /**
-   * add to channel list if this is the first message from this worker
-   * assign a worker ID if the job master assigns IDs
+   * add the channel that newly got its register message and its workerID assigned
+   * @param workerID
    */
-  private int addToChannelListAssignIdIfRequired(SocketChannel channel, int senderID) {
-    // if the channel already exist, do nothing
-    // it means that the channel for this worker already added
-    if (workerChannels.containsKey(channel)) {
-      return senderID;
+  public void setWorkerChannel(int workerID) {
+
+    // if there is another channel for this worker already, replace it with this one
+    if (workerChannels.inverse().containsKey(workerID)) {
+      LOG.warning(String.format("While the channel for workerID[%d] connected, "
+          + "another channel connected from the same worker. Replacing older one. ", workerID));
     }
 
-    // if it is the submitting client
+    workerChannels.forcePut(workerChannelToRegister, workerID);
+    workerChannelToRegister = null;
+  }
+
+  /**
+   * remove the channel when the worker is removed
+   * @param workerID
+   */
+  public void removeWorkerChannel(int workerID) {
+    SocketChannel removedChannel = workerChannels.inverse().remove(workerID);
+
+    try {
+      removedChannel.close();
+    } catch (IOException e) {
+      LOG.log(Level.WARNING, "Exception when closing the channel: ", e);
+    }
+  }
+
+  /**
+   * save if it is a new channel
+   * if it is a driver channel, save it in that variable
+   * if it is a new worker channel that will get its id from the job master
+   * save it in the temporary variable
+   * otherwise add it to channel list
+   */
+  private void saveChannel(SocketChannel channel, int senderID, Message message) {
+
+    // if the channel already exist, do nothing
+    if (workerChannels.containsKey(channel)) {
+      return;
+    }
+
+    // if it is the driver
     // set it, no need to check whether it is already set
     // since it does not harm setting again
     if (senderID == DRIVER_ID) {
-      clientChannel = channel;
+      driverChannel = channel;
       LOG.info("Message received from submitting client. Channel set.");
-      return senderID;
+      return;
     }
 
-    // assign a new worker ID to this new worker
-    if (jobMasterAssignsWorkerID) {
-      int newWorkerID = workerChannels.size();
-      workerChannels.put(channel, newWorkerID);
-      return newWorkerID;
-    } else {
-      workerChannels.put(channel, senderID);
-      return senderID;
+    // if this is RegisterWorker message and JobMaster assigns workerIDs
+    // keep the channel in the variable
+    if (senderID == RRClient.WORKER_UNASSIGNED_ID
+        && message instanceof JobMasterAPI.RegisterWorker) {
+
+      this.workerChannelToRegister = channel;
+      return;
     }
 
+    // if there is already a channel for this worker,
+    // replace it with this one
+    if (workerChannels.inverse().containsKey(senderID)) {
+      LOG.warning(String.format("While there is a channel for workerID[%d], "
+          + "another channel connected from the same worker. Replacing older one. ", senderID));
+    }
+
+    workerChannels.forcePut(channel, senderID);
   }
 }
