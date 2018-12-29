@@ -313,7 +313,14 @@ public class RRServer {
    * @param workerID
    */
   public void setWorkerChannel(int workerID) {
-    workerChannels.put(workerChannelToRegister, workerID);
+
+    // if there is another channel for this worker already, replace it with this one
+    if (workerChannels.inverse().containsKey(workerID)) {
+      LOG.warning(String.format("While there is a channel for workerID[%d], "
+          + "another channel connected from the same worker. Replacing older one. ", workerID));
+    }
+
+    workerChannels.forcePut(workerChannelToRegister, workerID);
     workerChannelToRegister = null;
   }
 
@@ -357,7 +364,13 @@ public class RRServer {
       return;
     }
 
+    // if there is already a channel for this worker,
+    // replace it with this one
+    if (workerChannels.inverse().containsKey(senderID)) {
+      LOG.warning(String.format("While there is a channel for workerID[%d], "
+          + "another channel connected from the same worker. Replacing older one. ", senderID));
+    }
 
-    workerChannels.put(channel, senderID);
+    workerChannels.forcePut(channel, senderID);
   }
 }

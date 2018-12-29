@@ -54,7 +54,8 @@ public class WorkerMonitor implements MessageHandler {
   private RRServer rrServer;
   private DashboardClient dashClient;
 
-  // this is used to assign next ID to newly registering worker
+  // this is used to assign next ID to newly registering worker,
+  // when job master assigns workerIDs
   private int nextWorkerID = 0;
 
   private boolean jobMasterAssignsWorkerIDs;
@@ -63,9 +64,6 @@ public class WorkerMonitor implements MessageHandler {
 
   private TreeMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
-
-  // workersPerPod in scalable compute resource and replicas of that resource
-  private JobAPI.ComputeResource scalableComputeResource;
 
   public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, DashboardClient dashClient,
                        JobAPI.Job job, boolean jobMasterAssignsWorkerIDs) {
@@ -76,13 +74,15 @@ public class WorkerMonitor implements MessageHandler {
     this.numberOfWorkers = job.getNumberOfWorkers();
     this.jobMasterAssignsWorkerIDs = jobMasterAssignsWorkerIDs;
 
-    this.scalableComputeResource = job.getComputeResource(job.getComputeResourceCount() - 1);
-
     workers = new TreeMap<>();
     waitList = new HashMap<>();
   }
 
-  public int assignWorkerID() {
+  /**
+   * assign next workerID
+   * @return
+   */
+  private int assignWorkerID() {
 
     int id = nextWorkerID;
     nextWorkerID++;
@@ -92,7 +92,11 @@ public class WorkerMonitor implements MessageHandler {
 
   /**
    * if this worker already registered with IP and port
-   * get the workerID from worker list
+   * return the id, otherwise, return -1
+   * if a worker is already registered and trying to register again,
+   * it means that it is coming from failure
+   *
+   * we assume that IP:port pair does not change after failure
    * @param workerIP
    * @param port
    * @return
@@ -135,10 +139,18 @@ public class WorkerMonitor implements MessageHandler {
     } else if (message instanceof JobMasterAPI.WorkersScaled) {
       LOG.log(Level.INFO, "WorkersScaled message received: " + message.toString());
       JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
-      scaledMessageReceived(id, scaledMessage);
+
+      if (scaledMessage.getChange() > 0) {
+        scaledUpMessageReceived(id, scaledMessage);
+      } else if (scaledMessage.getChange() < 0) {
+        scaledDownMessageReceived(id, scaledMessage);
+      } else {
+        LOG.warning("Scaled message received with change 0. Doing nothing.");
+        return;
+      }
 
     } else if (message instanceof JobMasterAPI.Broadcast) {
-      LOG.log(Level.INFO, "Broadcast message received: ");
+      LOG.log(Level.INFO, "Broadcast message received from the driver.");
       JobMasterAPI.Broadcast broadcastMessage = (JobMasterAPI.Broadcast) message;
       broadcastMessageReceived(id, broadcastMessage);
 
@@ -227,7 +239,6 @@ public class WorkerMonitor implements MessageHandler {
     // add the worker to worker list
     WorkerWithState worker = new WorkerWithState(workerInfo);
     worker.addWorkerState(JobMasterAPI.WorkerState.STARTING);
-
     workers.put(worker.getWorkerID(), worker);
 
     // send success response message
@@ -272,7 +283,8 @@ public class WorkerMonitor implements MessageHandler {
     // if all workers have already registered,
     // send the driver allWorkersJoined message
     if (allWorkersRegistered()) {
-      sendWorkersJoinedMessage();
+      JobMasterAPI.WorkersJoined joinedMessage = constructWorkersJoinedMessage();
+      rrServer.sendMessage(joinedMessage, RRServer.DRIVER_ID);
     }
   }
 
@@ -337,56 +349,76 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
-  private void scaledMessageReceived(RequestID id,
-                                     JobMasterAPI.WorkersScaled scaledMessage) {
+  private void scaledDownMessageReceived(RequestID id,
+                                         JobMasterAPI.WorkersScaled scaledMessage) {
 
     JobMasterAPI.ScaledResponse scaledResponse = JobMasterAPI.ScaledResponse.newBuilder()
         .setSucceeded(true)
         .build();
 
-    // modify numberOfWorkers and replicas
+    // modify numberOfWorkers
     numberOfWorkers = scaledMessage.getNumberOfWorkers();
 
     rrServer.sendResponse(id, scaledResponse);
     LOG.fine("ScaledResponse sent to the driver: \n" + scaledResponse);
 
-    // let all workers know about the scaled message
-    // TODO: how about newly added workers,
-    // should we make sure that those workers also get this message
+    // update nextWorkerID
+    // since we do not want gaps in workerID sequence,
+    // we reuse the deleted IDs
+    nextWorkerID = nextWorkerID + scaledMessage.getChange();
+
+    // construct killedWorkers list and remove those workers from workers list
+    List<Integer> killedWorkers = new LinkedList<>();
+
+    for (int i = 0; i < (0 - scaledMessage.getChange()); i++) {
+      int killedID = numberOfWorkers + i;
+      killedWorkers.add(killedID);
+      workers.remove(killedID);
+      rrServer.removeWorkerChannel(killedID);
+    }
+
+    // let all remaining workers know about the scaled message
     for (int workerID : workers.keySet()) {
       rrServer.sendMessage(scaledMessage, workerID);
-    }
-
-    // if all newly scaled workers are already joined
-    // send WorkersJoined messages
-    if (scaledMessage.getChange() > 0 && allWorkersRegistered()) {
-      sendWorkersJoinedMessage();
-    }
-
-    // if this is a scale down message,
-    // construct killedWorkers list and remove those workers from workers list
-    // update nextWorkerID
-    List<Integer> killedWorkers = new LinkedList<>();
-    if (scaledMessage.getChange() < 0) {
-
-      // since we do not want gaps in workerID sequence,
-      // we reuse the deleted IDs
-      nextWorkerID = nextWorkerID + scaledMessage.getChange();
-
-      for (int i = 0; i < (0 - scaledMessage.getChange()); i++) {
-        int killedID = numberOfWorkers + i;
-        killedWorkers.add(killedID);
-        workers.remove(killedID);
-        rrServer.removeWorkerChannel(killedID);
-      }
-
-      LOG.info("number of workers in worker list after scaling down: " + workers.size());
     }
 
     // send Scale message to the dashboard
     if (dashClient != null) {
       dashClient.scaledWorkers(
           scaledMessage.getChange(), scaledMessage.getNumberOfWorkers(), killedWorkers);
+    }
+  }
+
+  private void scaledUpMessageReceived(RequestID id,
+                                      JobMasterAPI.WorkersScaled scaledMessage) {
+
+    JobMasterAPI.ScaledResponse scaledResponse = JobMasterAPI.ScaledResponse.newBuilder()
+        .setSucceeded(true)
+        .build();
+
+    // keep previous numberOfWorkers and update numberOfWorkers with new value
+    int numberOfWorkersBeforeScaling = numberOfWorkers;
+    numberOfWorkers = scaledMessage.getNumberOfWorkers();
+
+    rrServer.sendResponse(id, scaledResponse);
+    LOG.fine("ScaledResponse sent to the driver: \n" + scaledResponse);
+
+    // if all newly scaled up workers are already joined
+    // send WorkersJoined messages
+    if (allWorkersRegistered()) {
+      sendWorkersJoinedMessage();
+    }
+
+    // let all previous workers know about the scaled message
+    // no need for informing newly added workers
+    for (int wID = 0; wID < numberOfWorkersBeforeScaling; wID++) {
+      rrServer.sendMessage(scaledMessage, wID);
+    }
+
+    // send Scaled message to the dashboard
+    if (dashClient != null) {
+      dashClient.scaledWorkers(
+          scaledMessage.getChange(), scaledMessage.getNumberOfWorkers(), new LinkedList<Integer>());
     }
 
   }
@@ -636,15 +668,7 @@ public class WorkerMonitor implements MessageHandler {
 
     LOG.info("Sending WorkersJoined messages ...");
 
-    // first construct the message
-    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder()
-        .setNumberOfWorkers(numberOfWorkers);
-
-    for (WorkerWithState worker : workers.values()) {
-      joinedBuilder.addWorker(worker.getWorkerInfo());
-    }
-
-    JobMasterAPI.WorkersJoined joinedMessage = joinedBuilder.build();
+    JobMasterAPI.WorkersJoined joinedMessage = constructWorkersJoinedMessage();
 
     // send the message to the driver, if any
     // if there is no driver, no problem, this method will return false
@@ -655,6 +679,21 @@ public class WorkerMonitor implements MessageHandler {
       rrServer.sendMessage(joinedMessage, workerID);
     }
 
+  }
+
+  /**
+   * construct WorkersJoined message
+   */
+  private JobMasterAPI.WorkersJoined constructWorkersJoinedMessage() {
+
+    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder()
+        .setNumberOfWorkers(numberOfWorkers);
+
+    for (WorkerWithState worker : workers.values()) {
+      joinedBuilder.addWorker(worker.getWorkerInfo());
+    }
+
+    return joinedBuilder.build();
   }
 
 }
