@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.JobPackageTransferThread;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
@@ -32,7 +33,7 @@ public class K8sScaler implements IScaler {
   private Config config;
 
   // replicas and workersPerPod values for scalable compute resource (scalable statefulSet)
-  private boolean jobScalable;
+  private boolean computeResourceScalable;
   private String scalableSSName;
   private int replicas;
   private int workersPerPod;
@@ -54,13 +55,9 @@ public class K8sScaler implements IScaler {
 
     computeResourceIndex = job.getComputeResourceCount() - 1;
 
-    // if the last ComputeResource is not scalable,
-    // it means, there is no scalable ComputeResource in the job
-    if (job.getComputeResource(computeResourceIndex).getScalable()) {
-      jobScalable = true;
-    } else {
-      jobScalable = false;
-    }
+    // if the last ComputeResource is scalable,
+    // it means, ComputeResource is scalable
+    computeResourceScalable = job.getComputeResource(computeResourceIndex).getScalable();
 
     this.replicas = job.getComputeResource(computeResourceIndex).getInstances();
     this.workersPerPod = job.getComputeResource(computeResourceIndex).getWorkersPerPod();
@@ -73,6 +70,19 @@ public class K8sScaler implements IScaler {
     this.driverAgent = driverAgent;
   }
 
+  @Override
+  public boolean isScalable() {
+
+    if (!computeResourceScalable) {
+      return false;
+    }
+
+    if (SchedulerContext.useOpenMPI(config)) {
+      return false;
+    }
+    return true;
+  }
+
   /**
    * add new workers to the scalable compute resource
    * @return
@@ -80,8 +90,9 @@ public class K8sScaler implements IScaler {
   @Override
   public boolean scaleUpWorkers(int instancesToAdd) {
 
-    if (!jobScalable) {
-      LOG.severe("There is no scalable ComputeResource in this job");
+    if (!isScalable()) {
+      LOG.severe("Job is not scalable. Either ComputeResource is not scalable or "
+          + "this is an OpenMPI job.");
       return false;
     }
 
@@ -145,8 +156,9 @@ public class K8sScaler implements IScaler {
   @Override
   public boolean scaleDownWorkers(int instancesToRemove) {
 
-    if (!jobScalable) {
-      LOG.severe("There is no scalable ComputeResource in this job");
+    if (!isScalable()) {
+      LOG.severe("Job is not scalable. Either ComputeResource is not scalable or "
+          + "this is an OpenMPI job.");
       return false;
     }
 
