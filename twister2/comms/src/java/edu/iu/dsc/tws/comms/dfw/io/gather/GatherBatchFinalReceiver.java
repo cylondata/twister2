@@ -24,6 +24,7 @@ public class GatherBatchFinalReceiver extends BaseGatherBatchFinalReceiver {
 
   @Override
   protected void init() {
+    super.init();
     bulkReceiver.init(config, expIds.keySet());
   }
 
