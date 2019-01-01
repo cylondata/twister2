@@ -22,10 +22,6 @@ public class AllGatherBatchFinalReceiver extends BaseGatherBatchFinalReceiver {
   }
 
   @Override
-  protected void init() {
-  }
-
-  @Override
   protected void handleFinish(int t) {
     if (gatherReceiver.send(t, finalMessages.get(t), 0)) {
       batchDone.put(t, true);
