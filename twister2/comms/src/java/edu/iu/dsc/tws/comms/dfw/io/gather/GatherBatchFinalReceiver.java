@@ -14,10 +14,15 @@ package edu.iu.dsc.tws.comms.dfw.io.gather;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 
 public class GatherBatchFinalReceiver extends BaseGatherBatchFinalReceiver {
-  // lets keep track of the messages
-  // for each task we need to keep track of incoming messages
+  /**
+   * Final receiver accepts a bulk receiver
+   */
   private BulkReceiver bulkReceiver;
 
+  /**
+   * Constructs the gather batch final receiver
+   * @param bulkReceiver the receiver
+   */
   public GatherBatchFinalReceiver(BulkReceiver bulkReceiver) {
     this.bulkReceiver = bulkReceiver;
   }

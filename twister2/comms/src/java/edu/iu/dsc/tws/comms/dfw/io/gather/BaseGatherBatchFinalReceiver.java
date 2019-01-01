@@ -84,7 +84,6 @@ public abstract class BaseGatherBatchFinalReceiver extends BaseGatherBatchReceiv
         allFinished = false;
       }
 
-
       if (allFinished) {
         handleFinish(t);
       }
