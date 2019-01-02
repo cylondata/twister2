@@ -44,7 +44,7 @@ By taking this tutorial you will;
 1. [Introduction to big data problems and systems](introduction.md)
 2. [Decoupling big data solutions big data stack](big-data-stack.md)
 3. [Twister2 overview](twister2-overview.md)
-    1. [Resource Scheduling, Kubernetes, Mesos](resource-scheduling.md)
+    1. [Job Submission, Kubernetes, Mesos](resource-scheduling.md)
     2. [Communication on Twister2](communication.md)
     3. [Task System on Twister2](tasks.md)
     4. [Data Representation on Twister2](data-representation.md)
