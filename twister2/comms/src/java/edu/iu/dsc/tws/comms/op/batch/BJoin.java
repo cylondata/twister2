@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchPartialReceiver;
@@ -100,7 +100,7 @@ public class BJoin {
     int dest = destinationSelector.next(source, key, data);
 
     boolean send;
-    KeyedContent message = new KeyedContent(key, data, partitionLeft.getKeyType(),
+    Tuple message = new Tuple(key, data, partitionLeft.getKeyType(),
         partitionLeft.getDataType());
     if (tag == 0) {
       send = partitionLeft.send(source, message, flags, dest);

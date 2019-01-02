@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.PartitionBasedReducePartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -47,7 +47,7 @@ public class BPartitionBasedKeyedReduce {
   public boolean partition(int source, Object key, Object message, int flags) {
     int destinations = destinationSelector.next(source, key, message);
 
-    return partition.send(source, new KeyedContent(key, message, partition.getKeyType(),
+    return partition.send(source, new Tuple(key, message, partition.getKeyType(),
         partition.getDataType()), flags, destinations);
   }
 

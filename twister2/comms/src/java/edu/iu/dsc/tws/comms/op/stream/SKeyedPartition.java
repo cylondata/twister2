@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
 
@@ -71,7 +71,7 @@ public class SKeyedPartition {
   public boolean partition(int src, Object key, Object message, int flags) {
     int dest = destinationSelector.next(src, key, message);
 
-    boolean send = partition.send(src, new KeyedContent(key, message, partition.getKeyType(),
+    boolean send = partition.send(src, new Tuple(key, message, partition.getKeyType(),
         partition.getDataType()), flags, dest);
     if (send) {
       destinationSelector.commit(src, dest);

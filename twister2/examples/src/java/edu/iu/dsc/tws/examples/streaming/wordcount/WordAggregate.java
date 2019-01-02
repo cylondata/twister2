@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 public class WordAggregate implements SingularReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregate.class.getName());
@@ -37,8 +37,8 @@ public class WordAggregate implements SingularReceiver {
 
   @Override
   public boolean receive(int target, Object message) {
-    if (message instanceof KeyedContent) {
-      KeyedContent kc = (KeyedContent) message;
+    if (message instanceof Tuple) {
+      Tuple kc = (Tuple) message;
       LOG.log(Level.INFO, String.format("%d Word %s count %s",
           target, kc.getKey(), ((int[]) kc.getValue())[0]));
     }

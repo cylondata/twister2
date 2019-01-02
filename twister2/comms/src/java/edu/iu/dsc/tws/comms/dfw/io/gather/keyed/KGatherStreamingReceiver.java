@@ -20,8 +20,8 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 /**
  * Abstract class that is extended by keyed reduce batch receivers
@@ -105,22 +105,22 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
       List dataList = (List) object;
       Map<Object, List<Object>> tempList = new HashMap<>();
       for (Object dataEntry : dataList) {
-        KeyedContent keyedContent = (KeyedContent) dataEntry;
+        Tuple tuple = (Tuple) dataEntry;
         //If any of the keys are full the method returns false because partial objects cannot be
         //added to the messages data structure
-        Object key = keyedContent.getKey();
+        Object key = tuple.getKey();
         if (!isFinalBatchReceiver && messagesPerTarget.containsKey(key)
             && messagesPerTarget.get(key).size() >= limitPerKey) {
-          moveMessageToSendQueue(target, messagesPerTarget, keyedContent.getKey());
+          moveMessageToSendQueue(target, messagesPerTarget, tuple.getKey());
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
               + "needs flush ", executor));
           return false;
         }
         if (tempList.containsKey(key)) {
-          tempList.get(key).add(keyedContent.getValue());
+          tempList.get(key).add(tuple.getValue());
         } else {
           tempList.put(key, new ArrayList<>());
-          tempList.get(key).add(keyedContent.getValue());
+          tempList.get(key).add(tuple.getValue());
 
         }
 
@@ -151,22 +151,22 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
       }
 
     } else {
-      KeyedContent keyedContent = (KeyedContent) object;
-      if (messagesPerTarget.containsKey(keyedContent.getKey())) {
-        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey
+      Tuple tuple = (Tuple) object;
+      if (messagesPerTarget.containsKey(tuple.getKey())) {
+        if (messagesPerTarget.get(tuple.getKey()).size() < limitPerKey
             || isFinalBatchReceiver) {
           localWindowCount++;
-          return messagesPerTarget.get(keyedContent.getKey()).offer(keyedContent.getValue());
+          return messagesPerTarget.get(tuple.getKey()).offer(tuple.getValue());
         } else {
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
               + "needs flush ", executor));
-          moveMessageToSendQueue(target, messagesPerTarget, keyedContent.getKey());
+          moveMessageToSendQueue(target, messagesPerTarget, tuple.getKey());
           return false;
         }
       } else {
         ArrayDeque<Object> messagesPerKey = new ArrayDeque<>();
-        messagesPerKey.add(keyedContent.getValue());
-        messagesPerTarget.put(keyedContent.getKey(), messagesPerKey);
+        messagesPerKey.add(tuple.getValue());
+        messagesPerTarget.put(tuple.getKey(), messagesPerKey);
         localWindowCount++;
       }
     }

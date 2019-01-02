@@ -112,7 +112,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
     ChannelMessage message = (ChannelMessage) partialObject;
     MessageType type = message.getType();
     //Used when handling multi messages
-    List<KeyedContent> results;
+    List<Tuple> results;
     if (!keyed) {
       return DataDeserializer.getAsByteArray(message.getBuffers(),
           message.getHeader().getLength(), type);
@@ -132,7 +132,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         List<byte[]> keyList = (List<byte[]>) keyPair.getValue();
         List<byte[]> dataList = (List<byte[]>) data;
         for (int i = 0; i < keyList.size(); i++) {
-          results.add(new KeyedContent(keyList.get(i), dataList.get(i),
+          results.add(new Tuple(keyList.get(i), dataList.get(i),
               message.getKeyType(), type));
         }
         return results;
@@ -143,7 +143,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         data = DataDeserializer.getAsByteArray(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey(), type);
       }
-      return new KeyedContent(keyPair.getValue(), data,
+      return new Tuple(keyPair.getValue(), data,
           message.getKeyType(), type);
     }
   }
@@ -166,7 +166,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
           message.getBuffers(), deserializer);
       MessageType keyType = message.getKeyType();
       Object data;
-      List<KeyedContent> results;
+      List<Tuple> results;
 
       if (keyType.isMultiMessageType()) {
         List<byte[]> keyList = (List<byte[]>) keyPair.getValue();
@@ -177,7 +177,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         List<byte[]> dataList = (List<byte[]>) data;
         results = new ArrayList<>();
         for (int i = 0; i < keyList.size(); i++) {
-          results.add(new KeyedContent(keyList.get(i), dataList.get(i),
+          results.add(new Tuple(keyList.get(i), dataList.get(i),
               message.getKeyType(), type));
         }
         return results;
@@ -185,11 +185,11 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
         Object d = DataDeserializer.deserializeData(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey() - KEY_LENGTH_FEILD_SIZE,
             deserializer, type);
-        return new KeyedContent(keyPair.getValue(), d, message.getKeyType(), type);
+        return new Tuple(keyPair.getValue(), d, message.getKeyType(), type);
       } else {
         Object d = DataDeserializer.deserializeData(message.getBuffers(),
             message.getHeader().getLength() - keyPair.getKey(), deserializer, type);
-        return new KeyedContent(keyPair.getValue(), d, message.getKeyType(), type);
+        return new Tuple(keyPair.getValue(), d, message.getKeyType(), type);
       }
     }
   }

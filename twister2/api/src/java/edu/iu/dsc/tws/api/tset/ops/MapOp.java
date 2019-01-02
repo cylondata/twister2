@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -59,11 +59,11 @@ public class MapOp<T, R> implements ICompute {
       }
     } else {
       if (!iterable) {
-        KeyedContent data = (KeyedContent) content.getContent();
+        Tuple data = (Tuple) content.getContent();
         R result = mapFn.map((T) data.getValue());
         return context.write(Constants.DEFAULT_EDGE, result);
       } else {
-        Iterator<KeyedContent> data = (Iterator<KeyedContent>) content.getContent();
+        Iterator<Tuple> data = (Iterator<Tuple>) content.getContent();
         while (data.hasNext()) {
           R result = mapFn.map((T) data.next().getValue());
           context.write(Constants.DEFAULT_EDGE, result);

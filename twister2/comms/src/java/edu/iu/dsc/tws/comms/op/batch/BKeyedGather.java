@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -75,7 +75,7 @@ public class BKeyedGather {
 
   public boolean gather(int source, Object key, Object data, int flags) {
     int dest = destinationSelector.next(source, key, data);
-    return keyedGather.send(source, new KeyedContent(key, data, keyType,
+    return keyedGather.send(source, new Tuple(key, data, keyType,
         dataType), flags, dest);
   }
 

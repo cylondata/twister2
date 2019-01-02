@@ -121,7 +121,7 @@ public class GatherTestCommunication implements IWorker {
         for (int i = 0; i < 1; i++) {
           int[] data = {task, task * 100};
           // lets generate a message
-//          KeyedContent mesage = new KeyedContent(task, data,
+//          Tuple mesage = new Tuple(task, data,
 //              MessageType.INTEGER, MessageType.OBJECT);
 //
           while (!aggregate.send(task, data, 0)) {

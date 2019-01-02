@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowMultiReduce;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceMultiBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceMultiBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.op.Communicator;
@@ -59,7 +59,7 @@ public class BKeyedReduce {
 
   public boolean reduce(int src, Object key, Object data, int flags) {
     int dest = destinationSelector.next(src, key, data);
-    return keyedReduce.send(src, new KeyedContent(key, data, keyType,
+    return keyedReduce.send(src, new Tuple(key, data, keyType,
         dataType), flags, dest);
   }
 

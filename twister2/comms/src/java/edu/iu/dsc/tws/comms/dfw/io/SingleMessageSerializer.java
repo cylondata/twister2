@@ -199,9 +199,9 @@ public class SingleMessageSerializer implements MessageSerializer {
         if (!keyed) {
           return serializeData(payload, sendMessage.getSerializationState(), targetBuffer, type);
         } else {
-          KeyedContent keyedContent = (KeyedContent) payload;
-          return serializeKeyedData(keyedContent.getValue(), keyedContent.getKey(),
-              sendMessage.getSerializationState(), targetBuffer, type, keyedContent.getKeyType());
+          Tuple tuple = (Tuple) payload;
+          return serializeKeyedData(tuple.getValue(), tuple.getKey(),
+              sendMessage.getSerializationState(), targetBuffer, type, tuple.getKeyType());
         }
       } else if (type == MessageType.BUFFER) {
         return serializeBuffer(payload, sendMessage, targetBuffer);

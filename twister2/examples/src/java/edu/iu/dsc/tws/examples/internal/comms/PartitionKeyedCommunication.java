@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -164,7 +164,7 @@ public class PartitionKeyedCommunication implements IWorker {
           if (i == task) {
             continue;
           }
-          KeyedContent mesage = new KeyedContent(task * 111, data2,
+          Tuple mesage = new Tuple(task * 111, data2,
               MessageType.INTEGER, MessageType.INTEGER);
           int flags = MessageFlags.LAST;
           while (!partition.send(task, mesage, flags, i)) {

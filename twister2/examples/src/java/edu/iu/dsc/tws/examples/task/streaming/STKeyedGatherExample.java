@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
@@ -59,8 +59,8 @@ public class STKeyedGatherExample extends BenchTaskWorker {
         while (it.hasNext()) {
           Object value = it.next();
           LOG.info("Value : " + value.getClass().getName());
-          if (value instanceof KeyedContent) {
-            KeyedContent l = (KeyedContent) value;
+          if (value instanceof Tuple) {
+            Tuple l = (Tuple) value;
             Object key = l.getKey();
             Object val = l.getValue();
             LOG.info("Value : " + val.getClass().getName());

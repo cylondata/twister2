@@ -42,7 +42,7 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.core.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 /**
@@ -205,7 +205,7 @@ public class PartitionBasedReducePartialReceiver implements MessageReceiver {
 //          operation.sendPartial(representSource, new ArrayList<>(reduceValueMap), 0, target);
 //        }
       } else {
-        reduceAndInsert(reduceValueMap, (KeyedContent) object);
+        reduceAndInsert(reduceValueMap, (Tuple) object);
         if (reduceValueMap.size() > lowWaterMark) {
           swapToReady(target, reduceValueMap);
         }
@@ -313,7 +313,7 @@ public class PartitionBasedReducePartialReceiver implements MessageReceiver {
   private List<Object> createSendList(Map<Object, Object> keyValueMap) {
     List<Object> results = new ArrayList<>();
     for (Map.Entry<Object, Object> entry : keyValueMap.entrySet()) {
-      results.add(new KeyedContent(entry.getKey(), entry.getValue(), operation.getKeyType(),
+      results.add(new Tuple(entry.getKey(), entry.getValue(), operation.getKeyType(),
           operation.getDataType()));
     }
     return results;
@@ -344,22 +344,22 @@ public class PartitionBasedReducePartialReceiver implements MessageReceiver {
   }
 
   /**
-   * reduces the given KeyedContent value with the existing value in the messages for the same key.
+   * reduces the given Tuple value with the existing value in the messages for the same key.
    * If the key is not present it will insert the key with the given value.
    *
    * @param messagesPerTarget messages for the current target
-   * @param keyedContent value to be reduced and inserted
+   * @param tuple value to be reduced and inserted
    */
   private boolean reduceAndInsert(Map<Object, Object> messagesPerTarget,
-                                  KeyedContent keyedContent) {
+                                  Tuple tuple) {
     Object currentEntry;
-    Object key = keyedContent.getKey();
+    Object key = tuple.getKey();
     if (!messagesPerTarget.containsKey(key)) {
-      messagesPerTarget.put(key, keyedContent.getValue());
+      messagesPerTarget.put(key, tuple.getValue());
       return true;
     } else {
-      currentEntry = messagesPerTarget.get(keyedContent.getKey());
-      currentEntry = reduceFunction.reduce(currentEntry, keyedContent.getValue());
+      currentEntry = messagesPerTarget.get(tuple.getKey());
+      currentEntry = reduceFunction.reduce(currentEntry, tuple.getValue());
       messagesPerTarget.put(key, currentEntry);
       return true;
     }

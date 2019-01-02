@@ -30,8 +30,8 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 /**
  * Abstract class that is extended by keyed reduce streaming receivers
@@ -83,15 +83,15 @@ public abstract class KReduceStreamingReceiver extends KeyedReceiver {
     if (object instanceof List) {
       List dataList = (List) object;
       for (Object dataEntry : dataList) {
-        KeyedContent keyedContent = (KeyedContent) dataEntry;
-        if (!reduceAndInsert(messagesPerTarget, keyedContent)) {
+        Tuple tuple = (Tuple) dataEntry;
+        if (!reduceAndInsert(messagesPerTarget, tuple)) {
           throw new RuntimeException("Reduce operation should not fail to insert key");
         }
         this.localWindowCount++;
       }
     } else {
-      KeyedContent keyedContent = (KeyedContent) object;
-      if (!reduceAndInsert(messagesPerTarget, keyedContent)) {
+      Tuple tuple = (Tuple) object;
+      if (!reduceAndInsert(messagesPerTarget, tuple)) {
         throw new RuntimeException("Reduce operation should not fail to insert key");
       }
       this.localWindowCount++;
@@ -107,23 +107,23 @@ public abstract class KReduceStreamingReceiver extends KeyedReceiver {
   }
 
   /**
-   * reduces the given KeyedContent value with the existing value in the messages for the same key.
+   * reduces the given Tuple value with the existing value in the messages for the same key.
    * If the key is not present it will insert the key with the given value.
    *
    * @param messagesPerTarget messages for the current target
-   * @param keyedContent value to be reduced and inserted
+   * @param tuple value to be reduced and inserted
    */
   private boolean reduceAndInsert(Map<Object, Queue<Object>> messagesPerTarget,
-                                  KeyedContent keyedContent) {
+                                  Tuple tuple) {
     Object currentEntry;
-    Object key = keyedContent.getKey();
+    Object key = tuple.getKey();
     if (!messagesPerTarget.containsKey(key)) {
       messagesPerTarget.put(key, new ArrayDeque<>());
-      return messagesPerTarget.get(keyedContent.getKey()).offer(keyedContent.getValue());
+      return messagesPerTarget.get(tuple.getKey()).offer(tuple.getValue());
     } else {
-      currentEntry = messagesPerTarget.get(keyedContent.getKey()).poll();
-      currentEntry = reduceFunction.reduce(currentEntry, keyedContent.getValue());
-      return messagesPerTarget.get(keyedContent.getKey()).offer(currentEntry);
+      currentEntry = messagesPerTarget.get(tuple.getKey()).poll();
+      currentEntry = reduceFunction.reduce(currentEntry, tuple.getValue());
+      return messagesPerTarget.get(tuple.getKey()).offer(currentEntry);
     }
   }
 
@@ -141,7 +141,7 @@ public abstract class KReduceStreamingReceiver extends KeyedReceiver {
                                             Map<Object, Queue<Object>> messagesPerTarget) {
     Queue<Object> targetSendQueue = sendQueue.get(target);
     messagesPerTarget.entrySet().removeIf(entry -> {
-      KeyedContent send = new KeyedContent(entry.getKey(), entry.getValue().peek(),
+      Tuple send = new Tuple(entry.getKey(), entry.getValue().peek(),
           dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
       return targetSendQueue.offer(send);
     });
