@@ -16,13 +16,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.logging.Logger;
 
 public abstract class BaseGatherBatchFinalReceiver extends BaseGatherBatchReceiver {
-  private static final Logger LOG = Logger.getLogger(BaseGatherBatchFinalReceiver.class.getName());
-  // lets keep track of the messages
-  // for each task we need to keep track of incoming messages
+  /**
+   * Final messages gathered
+   */
   protected Map<Integer, List<Object>> finalMessages = new HashMap<>();
+  /**
+   * Weather we have sent the outputs for this target
+   */
   protected Map<Integer, Boolean> batchDone = new HashMap<>();
 
   @Override
