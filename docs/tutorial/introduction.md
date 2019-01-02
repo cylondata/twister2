@@ -2,9 +2,6 @@
 
 
 
-### Geoffrey C. FOX
-
-
 # Introduction to Big Data Problems and Systems
 
 

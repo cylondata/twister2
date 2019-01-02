@@ -114,13 +114,13 @@
     * [communication on twister2](tutorial/communication.md)
     * [task system on twister2](tutorial/tasks.md)
     * [data representation on twister2](tutorial/data-representation.md)
-  * [Developing big data solutions](tutorial/developing.md)
+  * [developing big data solutions](tutorial/developing.md)
     * [installation](tutorial/installation.md)
     * [hello world example](tutorial/helloworld.md)
     * [batch processing example](tutorial/batch.md)
     * [streaming processing example](tutorial/streaming.md)
     * [machine learning example](tutorial/machine-learning.md)
-  * [conclusion](tutorial/conclusion.md)
+  * [summary and future work](tutorial/conclusion.md)
 
 
 

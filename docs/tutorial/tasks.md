@@ -3,10 +3,8 @@
 <span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
 
 
-# Task Scheduling and Execution (Fault Tolerance)
 
-
-## Task System
+## Task System on Twister2
 
 The task layer provides a higher-level abstraction on top of the communication layer to hide the details of execution
 and communication from the user, while still delegating data management to the user. At this layer, computations are modeled as task graphs which
