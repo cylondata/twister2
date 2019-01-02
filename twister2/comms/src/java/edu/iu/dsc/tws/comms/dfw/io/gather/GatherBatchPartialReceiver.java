@@ -16,16 +16,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 
 public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
-  private static final Logger LOG = Logger.getLogger(GatherBatchPartialReceiver.class.getName());
-
-  // lets keep track of the messages
-  // for each task we need to keep track of incoming messages
-  protected Map<Integer, Boolean> isEmptySent = new HashMap<>();
+  private Map<Integer, Boolean> isEmptySent = new HashMap<>();
   private int destination;
   private Map<Integer, Boolean> batchDone = new HashMap<>();
 

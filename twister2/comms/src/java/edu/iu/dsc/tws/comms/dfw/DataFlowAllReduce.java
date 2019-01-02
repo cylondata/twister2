@@ -104,7 +104,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
     MessageReceiver receiver;
     if (streaming) {
       this.partialReceiver = new ReduceStreamingPartialReceiver(middleTask, reduceFunction);
-      receiver = new AllReduceStreamingFinalReceiver(reduceFunction, broadcast, middleTask);
+      receiver = new AllReduceStreamingFinalReceiver(reduceFunction, broadcast);
     } else {
       this.partialReceiver = new ReduceBatchPartialReceiver(middleTask, reduceFunction);
       receiver = new AllReduceBatchFinalReceiver(reduceFunction, broadcast);
