@@ -38,4 +38,4 @@ and resources based on the architectural characteristics. The selection of the b
 The task scheduling algorithms are broadly classified into two types, namely static task scheduling algorithms and dynamic task scheduling
 algorithms. Twister2 aims to support both types of task scheduling algorithms.
 
-[Task Scheduling Presentation](Task-Scheduling.pdf)
+[Task System on Twister2](https://docs.google.com/presentation/d/1CpeBgKcM5NnIB0EdR0L5oWtfZdSG7kNlcEzyZPW8nuI/edit#slide=id.g4bf3440bc1_0_26)
