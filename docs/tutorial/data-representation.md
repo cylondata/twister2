@@ -1,6 +1,3 @@
-<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
-
-
 # Data Representation
 
 ### Twister2 and HDFS Configuration File

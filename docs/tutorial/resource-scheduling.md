@@ -1,7 +1,3 @@
-<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
-
-
-
 # Job Submission on Twister2: Resource Scheduling (Kubernetes, Mesos)
 
 Twister2  has integrated number of resource schedulers; including Kubernetes,

@@ -1,6 +1,3 @@
-<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
-
-
 # Hello World Example
 
 In this part we will explain how the HelloWorld example runs.

@@ -1,5 +1,3 @@
-<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
-
 # Developing Big Data Solutions in Twister2
 
 ## Developer Environment

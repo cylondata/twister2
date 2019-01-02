@@ -1,6 +1,3 @@
-<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
-
-
 # Installation Instructions
 
 This section explains how to install the required software to run

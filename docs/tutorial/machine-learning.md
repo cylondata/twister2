@@ -1,7 +1,3 @@
-<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
-
-
-
 # Machine Learning Example
 
 

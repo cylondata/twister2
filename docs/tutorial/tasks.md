@@ -1,9 +1,3 @@
-
-
-<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
-
-
-
 ## Task System on Twister2
 
 The task layer provides a higher-level abstraction on top of the communication layer to hide the details of execution

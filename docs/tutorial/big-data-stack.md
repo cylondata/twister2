@@ -1,6 +1,3 @@
-<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
-
-
 
 # Decoupling Big Data Solutions (Big Data Stack)
 

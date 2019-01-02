@@ -1,5 +1,3 @@
-<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
-
 # Summary and Future Work
 
 In this tutorial, we have reviewed big data problems and systems,

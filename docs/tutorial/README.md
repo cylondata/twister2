@@ -1,6 +1,3 @@
-<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
-
-
 # Tutorial on Twister2 for 5th International Winter School on Big Data
 
 
