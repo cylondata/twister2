@@ -2,7 +2,6 @@
 
 <span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
 
-### Geoffrey C. FOX
 
 # Task Scheduling and Execution (Fault Tolerance)
 

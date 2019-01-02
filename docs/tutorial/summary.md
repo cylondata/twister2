@@ -1,10 +1,5 @@
-<p align="left">
-    <img width="125" height="125" src="fox.png">
-</p>
+<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
 
-
-
-### Geoffrey C. FOX
 
 
 # Tutorial on Twister 2 for 5th International Winter School on Big Data
@@ -19,8 +14,8 @@ In this tutorial, we review big data problems and systems, explain Twister2 arch
 2. [Decoupling big data solutions (big data stack)](big-data-stack.md)
 3. [Twister2 overview](twister2-overview.md)
     1. [Resource scheduling (Kubernetes, Mesos)](resource-scheduling.md)
-    2. [Communication (MPI on Twister2)](communication.md)
-    3. [Task scheduling and execution (Fault Tolerance)](tasks.md)
+    2. [Communication](communication.md)
+    3. [Task System](tasks.md)
     4. [Data representation](data-representation)
 4. [Developing Big Data Solutions in Twister2](developing.md)
     1. [Batch Processing example](batch.md)

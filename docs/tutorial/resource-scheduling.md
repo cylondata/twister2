@@ -1,10 +1,5 @@
-<p align="left">
-    <img width="125" height="125" src="fox.png">
-</p>
+<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
 
-
-
-### Geoffrey C. FOX
 
 
 # Resource Scheduling (Kubernetes, Mesos)

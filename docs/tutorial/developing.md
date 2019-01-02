@@ -1,9 +1,4 @@
-<p align="left">
-    <img width="125" height="125" src="fox.png">
-</p>
-
-
-### Geoffrey C. FOX
+<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
 
 # Developing Big Data Solutions in Twister2
 

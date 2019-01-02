@@ -1,14 +1,13 @@
-<p align="left">
-    <img width="125" height="125" src="fox.png">
-</p>
+<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
 
 
-### Geoffrey C. FOX
+# Hello World Example
 
-# HelloWorld  and KMeans Example
+In this part we will explain how the HelloWorld example runs.
+You will get an idea how to write a simple twister2 job,
+submit it and then check the output.
 
-In this part we will explain how the HelloWorld example runs. You will get an idea how to write a simple twister2 job, submit it and then check the output.
 
-[HelloWord and KMeans examples](examples.pdf)
+[Hello Word example](https://docs.google.com/presentation/d/1ZMeO5aofZZNKwoR66N6b4hzSJqlGlbWgZLOq8Ie6vl0/edit#slide=id.p)
 
 
