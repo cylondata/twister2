@@ -21,21 +21,22 @@ big data systems and evolve separately.
 
 Twister2 is an ongoing open source project at Indiana University. It started in the
 4th quarter of 2017.
+
 * Github - https://github.com/DSC-SPIDAL/twister2
 * Documentation - https://twister2.gitbook.io/twister2
 * User List -  twister2@googlegroups.com
 
 
-## What will you  get from this tutorial
+## What you will learn from this tutorial
 
 By taking this tutorial you will;
 
- * get an introductory information on big data systems and apache big data stack
- * learn what twister2 is in general
- * learn how job submission is done in twister2 and related resource schedulers
- * learn how the communication is done in twister2
- * learn the task system of twister2
- * learn how to develop big data solutions
+ * Get an introductory information on big data systems and Apache big data solutions
+ * Learn Twister2 concepts
+ * Learn how job submission is done in Twister2 and related resource schedulers
+ * Learn how the parallel communication happens Twister2
+ * Learn the task system of Twister2
+ * Learn how to develop big data solutions
 
 
 ## Syllabus
