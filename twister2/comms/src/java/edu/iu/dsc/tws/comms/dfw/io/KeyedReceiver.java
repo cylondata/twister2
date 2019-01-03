@@ -141,9 +141,9 @@ public abstract class KeyedReceiver implements MessageReceiver {
       return true;
     }
 
-    if (!(object instanceof KeyedContent) && !(object instanceof List)) {
+    if (!(object instanceof Tuple) && !(object instanceof List)) {
       throw new RuntimeException(String.format("Executor %d, Partial receive error. Received"
-          + " object which is not of type KeyedContent or List for target %d", executor, target));
+          + " object which is not of type Tuple or List for target %d", executor, target));
     }
 
     added = offerMessage(target, object);
@@ -185,22 +185,22 @@ public abstract class KeyedReceiver implements MessageReceiver {
       List dataList = (List) object;
       Map<Object, List<Object>> tempList = new HashMap<>();
       for (Object dataEntry : dataList) {
-        KeyedContent keyedContent = (KeyedContent) dataEntry;
+        Tuple tuple = (Tuple) dataEntry;
         //If any of the keys are full the method returns false because partial objects cannot be
         //added to the messages data structure
-        Object key = keyedContent.getKey();
+        Object key = tuple.getKey();
         if (!isFinalBatchReceiver && messagesPerTarget.containsKey(key)
             && messagesPerTarget.get(key).size() >= limitPerKey) {
-          moveMessageToSendQueue(target, messagesPerTarget, keyedContent.getKey());
+          moveMessageToSendQueue(target, messagesPerTarget, tuple.getKey());
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
               + "needs flush ", executor));
           return false;
         }
         if (tempList.containsKey(key)) {
-          tempList.get(key).add(keyedContent.getValue());
+          tempList.get(key).add(tuple.getValue());
         } else {
           tempList.put(key, new ArrayList<>());
-          tempList.get(key).add(keyedContent.getValue());
+          tempList.get(key).add(tuple.getValue());
 
         }
 
@@ -229,21 +229,21 @@ public abstract class KeyedReceiver implements MessageReceiver {
       }
 
     } else {
-      KeyedContent keyedContent = (KeyedContent) object;
-      if (messagesPerTarget.containsKey(keyedContent.getKey())) {
-        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey
+      Tuple tuple = (Tuple) object;
+      if (messagesPerTarget.containsKey(tuple.getKey())) {
+        if (messagesPerTarget.get(tuple.getKey()).size() < limitPerKey
             || isFinalBatchReceiver) {
-          return messagesPerTarget.get(keyedContent.getKey()).offer(keyedContent.getValue());
+          return messagesPerTarget.get(tuple.getKey()).offer(tuple.getValue());
         } else {
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
               + "needs flush ", executor));
-          moveMessageToSendQueue(target, messagesPerTarget, keyedContent.getKey());
+          moveMessageToSendQueue(target, messagesPerTarget, tuple.getKey());
           return false;
         }
       } else {
         ArrayDeque<Object> messagesPerKey = new ArrayDeque<>();
-        messagesPerKey.add(keyedContent.getValue());
-        messagesPerTarget.put(keyedContent.getKey(), messagesPerKey);
+        messagesPerKey.add(tuple.getValue());
+        messagesPerTarget.put(tuple.getKey(), messagesPerKey);
       }
     }
     return true;
@@ -280,7 +280,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
       Object current;
 
       while ((current = entryQueue.peek()) != null) {
-        KeyedContent send = new KeyedContent(entry.getKey(), current,
+        Tuple send = new Tuple(entry.getKey(), current,
             dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
 
         if (targetSendQueue.offer(send)) {
@@ -312,7 +312,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
     Object current;
 
     while ((current = entryQueue.peek()) != null) {
-      KeyedContent send = new KeyedContent(key, current,
+      Tuple send = new Tuple(key, current,
           dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
 
       if (targetSendQueue.offer(send)) {

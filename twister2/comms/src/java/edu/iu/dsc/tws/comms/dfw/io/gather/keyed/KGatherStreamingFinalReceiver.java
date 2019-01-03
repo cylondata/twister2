@@ -75,15 +75,12 @@ public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
           results.add(current);
         }
         bulkReceiver.receive(target, results.iterator());
-
       }
 
       if (sourcesFinished && dataFlowOperation.isDelegeteComplete()
           && targetSendQueue.isEmpty()) {
         batchDone.put(target, true);
       }
-
-
     }
 
     return needsFurtherProgress;

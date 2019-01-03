@@ -24,7 +24,7 @@ import org.apache.commons.cli.Option;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public final class Utils {

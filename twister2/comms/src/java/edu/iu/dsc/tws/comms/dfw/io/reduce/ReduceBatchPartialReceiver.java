@@ -13,20 +13,16 @@ package edu.iu.dsc.tws.comms.dfw.io.reduce;
 
 import java.util.Map;
 import java.util.Queue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 
 public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
-  private static final Logger LOG = Logger.getLogger(ReduceBatchPartialReceiver.class.getName());
-  private int partialSendCount;
 
   public ReduceBatchPartialReceiver(int dst, ReduceFunction reduce) {
     super(dst, reduce);
     this.destination = dst;
     this.reduceFunction = reduce;
-    this.partialSendCount = 0;
   }
 
   @Override
@@ -114,7 +110,6 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
 
           if (currentVal != null
               && dataFlowOperation.sendPartial(t, currentVal, flags, destination)) {
-            partialSendCount++;
             // lets remove the value
             bufferCounts.put(t, 0);
             tempBufferCount = 0;

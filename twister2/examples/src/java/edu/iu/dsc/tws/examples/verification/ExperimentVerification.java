@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -144,8 +144,8 @@ public class ExperimentVerification implements IVerification {
       if (OperationNames.KEYED_REDUCE.equals(this.operationNames)) {
         Object keyedOutput = null;
         Object response = experimentData.getOutput();
-        if (response instanceof KeyedContent) {
-          keyedOutput = (KeyedContent) response;
+        if (response instanceof Tuple) {
+          keyedOutput = (Tuple) response;
         } else {
           keyedOutput = response;
         }
@@ -232,9 +232,9 @@ public class ExperimentVerification implements IVerification {
       if (OperationNames.KEYED_PARTITION.equals(this.operationNames)) {
         Object response = experimentData.getOutput();
         Object outputMessage = null;
-        if (response instanceof KeyedContent) {
-          KeyedContent keyedContent = (KeyedContent) response;
-          outputMessage = keyedContent.getValue();
+        if (response instanceof Tuple) {
+          Tuple tuple = (Tuple) response;
+          outputMessage = tuple.getValue();
         } else {
           outputMessage = response;
         }
@@ -400,8 +400,8 @@ public class ExperimentVerification implements IVerification {
       if (OperationNames.KEYED_REDUCE.equals(this.operationNames)) {
         Object outputExp = experimentData.getOutput();
         Object keyedOutput = null;
-        if (outputExp instanceof KeyedContent) {
-          keyedOutput = ((KeyedContent) experimentData.getOutput()).getValue();
+        if (outputExp instanceof Tuple) {
+          keyedOutput = ((Tuple) experimentData.getOutput()).getValue();
         } else {
           keyedOutput = outputExp;
         }
@@ -490,9 +490,9 @@ public class ExperimentVerification implements IVerification {
       if (OperationNames.KEYED_PARTITION.equals(this.operationNames)) {
         Object response = experimentData.getOutput();
         Object outputMessage = null;
-        if (response instanceof KeyedContent) {
-          KeyedContent keyedContent = (KeyedContent) response;
-          outputMessage = keyedContent.getValue();
+        if (response instanceof Tuple) {
+          Tuple tuple = (Tuple) response;
+          outputMessage = tuple.getValue();
         } else {
           outputMessage = response;
         }

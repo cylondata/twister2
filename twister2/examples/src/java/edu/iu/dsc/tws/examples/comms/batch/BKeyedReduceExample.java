@@ -18,25 +18,21 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
-import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
-import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.api.batch.BKeyedReduce;
+import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
-/**
- * Created by pulasthi on 8/24/18.
- */
 public class BKeyedReduceExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(BKeyedReduceExample.class.getName());
 
@@ -129,7 +125,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
         return true;
       }
       while (it.hasNext()) {
-        ImmutablePair<Object, Object> currentPair = (ImmutablePair) it.next();
+        Tuple currentPair = (Tuple) it.next();
         Object key = currentPair.getKey();
         int[] data = (int[]) currentPair.getValue();
         LOG.log(Level.INFO, String.format("%d Results : key: %s value: %s", workerId, key,
