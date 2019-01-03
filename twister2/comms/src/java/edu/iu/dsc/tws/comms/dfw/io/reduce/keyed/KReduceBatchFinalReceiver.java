@@ -17,11 +17,9 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 /**
  * Created by pulasthi on 9/20/18.
@@ -71,7 +69,7 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private class ReduceIterator<T extends Pair> implements Iterator<Pair> {
+  private class ReduceIterator implements Iterator<Object> {
 
     private Map<Object, Queue<Object>> messageMap;
     private Queue<Object> keyList = new LinkedList<>();
@@ -87,10 +85,11 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
     }
 
     @Override
-    public ImmutablePair next() {
+    public Tuple next() {
       Object key = keyList.poll();
       Queue<Object> value = messageMap.remove(key);
-      return new ImmutablePair(key, value.poll());
+      return new Tuple(key, value.poll(), dataFlowOperation.getKeyType(),
+          dataFlowOperation.getDataType());
     }
   }
 }
