@@ -1,25 +1,13 @@
-<p align="left">
-    <img width="125" height="125" src="fox.png">
-</p>
-
-
-
-### Geoffrey C. FOX
-
-
-# Resource Scheduling (Kubernetes, Mesos)
+# Job Submission on Twister2: Resource Scheduling (Kubernetes, Mesos)
 
 Twister2  has integrated number of resource schedulers; including Kubernetes,
-Mesos, Slurm and Standalone. In this part we will give an overview of integrated resource schedulers;
-Kubernetes and Mesos. In the following presentation you will find general information about these resource schedulers and
-also the features provided with the integration.
+Mesos, Slurm and Standalone.
+In this part we will give an overview of resource scheduling on Twister2 and
+integrated resource schedulers;
+Kubernetes and Mesos.
 
-* Kubernetes overview
-* [Mesos overview](https://github.com/DSC-SPIDAL/twister2/raw/29dff0ee2190a7a99632b6cfea296b2aa8aaabc5/docs/tutorial/mesos.pdf)
-
-
+[Resource Scheduling on Twister2](https://docs.google.com/presentation/d/1Qs-eV9hTgyNRrDSvC5iCc2EmeUKQFtiVlTrTUZpsoAM/edit#slide=id.p1)
 
 
 
-<span style="color: green"> More content will be added soon.... </span>
 

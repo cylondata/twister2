@@ -74,6 +74,13 @@ export default class WorkerCard extends React.Component {
         })
     };
 
+    componentWillReceiveProps(nextProps, nextContext) {
+        this.setState({
+            worker: nextProps.worker,
+            workerStateIntent: this.getStateIntent(nextProps.worker.state),
+        })
+    }
+
     render() {
         return (
             <Card interactive={true} elevation={Elevation.ZERO} className="tw-table-row tw-worker-row">

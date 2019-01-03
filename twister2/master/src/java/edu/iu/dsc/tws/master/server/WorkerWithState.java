@@ -84,15 +84,15 @@ public class WorkerWithState {
   }
 
   public boolean hasNodeIP() {
-    return workerInfo.getNodeInfo().getNodeIP() == null ? false : true;
+    return workerInfo.getNodeInfo().getNodeIP().isEmpty() ? false : true;
   }
 
   public boolean hasRackName() {
-    return workerInfo.getNodeInfo().getRackName() == null ? false : true;
+    return workerInfo.getNodeInfo().getRackName().isEmpty() ? false : true;
   }
 
   public boolean hasDataCenterName() {
-    return workerInfo.getNodeInfo().getDataCenterName() == null ? false : true;
+    return workerInfo.getNodeInfo().getDataCenterName().isEmpty() ? false : true;
   }
 
   public void setPingTimestamp(long pingTimestamp) {

@@ -33,9 +33,6 @@ public class SchedulerContext extends Context {
   // Internal configuration for job package url
   public static final String JOB_PACKAGE_URI = "twister2.job.package.uri";
 
-  // Temp directory where the files are placed before packing them for upload
-  public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
-
   public static final String WORKER_COMPUTE_RESOURCES = "worker.compute.resources";
 
   /**
@@ -113,10 +110,6 @@ public class SchedulerContext extends Context {
 
   public static String jobPackageFileName(Config cfg) {
     return cfg.getStringValue(JOB_PACKAGE_FILENAME, JOB_PACKAGE_FILENAME_DEFAULT);
-  }
-
-  public static String jobClientTempDirectory(Config cfg) {
-    return cfg.getStringValue(JOB_TEMP_DIR, "/tmp");
   }
 
   public static String userJobJarFile(Config cfg) {

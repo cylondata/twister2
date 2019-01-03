@@ -231,8 +231,8 @@ public class JobMaster {
     }
 
     ServerConnectHandler connectHandler = new ServerConnectHandler();
-    rrServer = new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID,
-        connectHandler, JobMasterContext.jobMasterAssignsWorkerIDs(config));
+    rrServer =
+        new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
     workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job,
         JobMasterContext.jobMasterAssignsWorkerIDs(config));

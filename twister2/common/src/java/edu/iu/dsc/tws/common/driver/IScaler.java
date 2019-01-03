@@ -18,6 +18,12 @@ package edu.iu.dsc.tws.common.driver;
 public interface IScaler {
 
   /**
+   * whether this job is scalable
+   * @return true if scalable
+   */
+  boolean isScalable();
+
+  /**
    * add new instances of workers to the job
    * @param instancesToAdd
    * @return true if successful

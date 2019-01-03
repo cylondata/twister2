@@ -21,6 +21,13 @@ export default class JobCard extends React.Component {
         };
     }
 
+    componentWillReceiveProps(nextProps, nextContext) {
+        this.setState({
+            job: nextProps.job,
+            stateIntent: JobUtils.getStateIntent(nextProps.job.state)
+        });
+    }
+
     syncJob = () => {
         this.setState({
             syncing: true

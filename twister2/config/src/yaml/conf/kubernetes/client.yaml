@@ -26,27 +26,6 @@ worker.compute.resources:
   scalable: true # only one ComputeResource can be scalable in a job
   workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
 
-- cpu: 0.6  # number of cores for each worker, may be fractional such as 0.5 or 2.4
-  ram: 1024 # ram for each worker as Mega bytes
-  disk: 1.0 # volatile disk for each worker as Giga bytes
-  instances: 2 # number of compute resource instances with this specification
-  scalable: false # only one ComputeResource can be scalable in a job
-  workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
-
-- cpu: 0.7  # number of cores for each worker, may be fractional such as 0.5 or 2.4
-  ram: 1024 # ram for each worker as Mega bytes
-  disk: 1.0 # volatile disk for each worker as Giga bytes
-  instances: 2 # number of compute resource instances with this specification
-  scalable: false # only one ComputeResource can be scalable in a job
-  workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
-
-#- cpu: 0.5  # number of cores for each worker, may be fractional such as 0.5 or 2.4
-#  ram: 1024 # ram for each worker as mega bytes
-#  disk: 1.0 # volatile disk for each worker as giga bytes. May be zero.
-#  instances: 2 # number of compute resource instances with this specification
-#  workersPerPod: 2 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
-                   # number of workers using this compute resource: instances * workersPerPod
-
 # driver class to run
 twister2.job.driver.class: "edu.iu.dsc.tws.examples.internal.rsched.DriverExample"
 
@@ -130,3 +109,7 @@ kubernetes.persistent.storage.class: "twister2-nfs-storage"
 # other alternatives: "ReadWriteOnce", "ReadOnlyMany"
 # https://kubernetes.io/docs/concepts/storage/persistent-volumes
 kubernetes.storage.access.mode: "ReadWriteMany"
+
+# If we need to start the client in remote debugger mode enable this configuration.
+# You can change the address port to different one if needed.
+# twister2.client.debug: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006'

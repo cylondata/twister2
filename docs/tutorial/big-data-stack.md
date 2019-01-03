@@ -1,9 +1,3 @@
-<p align="left">
-    <img width="125" height="125" src="fox.png">
-</p>
-
-### Geoffrey C. FOX
-
 
 # Decoupling Big Data Solutions (Big Data Stack)
 

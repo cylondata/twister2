@@ -1,9 +1,5 @@
-<p align="left">
-    <img width="125" height="125" src="fox.png">
-</p>
+<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
 
-
-### Geoffrey C. FOX
 
 
 # Introduction to Big Data Problems and Systems
@@ -18,7 +14,9 @@ We identify four key tasks in big data systems: 1) Acquiring computing resources
 Twister2 [1-3] is a loosely-coupled component-based approach to big data. Each of the four essential abstractions have different implementations to support various applications. Therefore, it has a pluggable architecture. It can be used to solve all three types of big data problems mentioned above.
 
 
-<span style="color: green"> More content will be added soon.... </span>
+Please check the following presentation for more information.
+
+[Introduction to Big Data Problems and Systems]()
 
 ### References
 
