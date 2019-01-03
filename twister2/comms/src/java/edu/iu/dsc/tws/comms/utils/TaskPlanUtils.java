@@ -26,7 +26,7 @@ package edu.iu.dsc.tws.comms.utils;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 
 public final class TaskPlanUtils {
   private TaskPlanUtils() {
