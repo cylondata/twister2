@@ -14,6 +14,12 @@ package edu.iu.dsc.tws.rsched.schedulers;
 import edu.iu.dsc.tws.common.driver.IScaler;
 
 public class DefaultScalar implements IScaler {
+
+  @Override
+  public boolean isScalable() {
+    return false;
+  }
+
   @Override
   public boolean scaleUpWorkers(int instancesToAdd) {
     return false;
