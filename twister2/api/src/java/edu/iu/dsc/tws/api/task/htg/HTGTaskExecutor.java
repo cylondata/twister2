@@ -23,7 +23,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.worker.JobListener;
-import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
