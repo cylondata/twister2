@@ -40,39 +40,44 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
+/**
+ * A simple wordcount program where fixed number of words are generated and the global counts
+ * of words are calculated
+ */
 public class WordCountTaskJob extends TaskWorker {
   private static final Logger LOG = Logger.getLogger(WordCountTaskJob.class.getName());
 
   private static final int NUMBER_MESSAGES = 1000;
 
-  private static final String EDGE = "word-reduce";
+  private static final String EDGE = "reduce-edge";
+
+  private static final int MAX_CHARS = 5;
+
+  private static final int NO_OF_SAMPLE_WORDS = 100;
 
   @Override
   public void execute() {
+    // source and aggregator
     WordSource source = new WordSource();
     WordAggregator counter = new WordAggregator();
 
+    // build the task graph
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
     builder.addSource("word-source", source, 4);
     builder.addSink("word-aggregator", counter, 4).keyedReduce("word-source", EDGE,
         new ReduceFn(Op.SUM, DataType.INTEGER), DataType.OBJECT, DataType.INTEGER);
     builder.setMode(OperationMode.BATCH);
 
+    // execute the graph
     DataFlowTaskGraph graph = builder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
-    // this is a blocking call
     taskExecutor.execute(graph, plan);
   }
 
   private static class WordSource extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
 
-    private static final int MAX_CHARS = 5;
-    private static final int NO_OF_SAMPLE_WORDS = 100;
-
     private int count = 0;
-
-    private RandomString randomString;
 
     private List<String> sampleWords = new ArrayList<>();
 
@@ -82,7 +87,7 @@ public class WordCountTaskJob extends TaskWorker {
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
       this.random = new Random();
-      this.randomString = new RandomString(MAX_CHARS, new Random(), RandomString.ALPHANUM);
+      RandomString randomString = new RandomString(MAX_CHARS, random, RandomString.ALPHANUM);
       for (int i = 0; i < NO_OF_SAMPLE_WORDS; i++) {
         sampleWords.add(randomString.nextRandomSizeString());
       }
@@ -91,7 +96,7 @@ public class WordCountTaskJob extends TaskWorker {
     @Override
     public void execute() {
       String word = sampleWords.get(random.nextInt(sampleWords.size()));
-
+      // indicate the end
       if (count == NUMBER_MESSAGES - 1) {
         if (context.writeEnd(EDGE, word, new int[]{1})) {
           count++;
@@ -110,6 +115,7 @@ public class WordCountTaskJob extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
+      // we get everything at once
       Iterator<Object> it;
       if (message.getContent() instanceof Iterator) {
         it = (Iterator<Object>) message.getContent();

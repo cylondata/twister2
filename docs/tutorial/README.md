@@ -1,30 +1,58 @@
-<p align="left">
-    <img width="125" height="125" src="fox.png">
-</p>
+# Tutorial on Twister2 for 5th International Winter School on Big Data
 
 
-### Geoffrey C. FOX
+In this tutorial, we review big data problems and systems,
+explain Twister2 architecture and features,
+provide examples for developing and running applications
+on Twister2 system. By learning Twister2,
+big data developers will have an experience with a
+flexible big data solution that can be used to
+solve all three types of big data problems.
+
+Twister2 provides a data analytics hosting environment where it supports different data analytics
+including streaming, data pipelines and iterative computations.
+
+Unlike many other big data systems that are designed around user APIs, Twister2 is built from bottom
+up to support different APIs and workloads. Our vision for Twister2 is a complete computing
+ environment for data analytics.
+
+One major goal of Twister2 is to provide independent components, that can be used by other
+big data systems and evolve separately.
+
+Twister2 is an ongoing open source project at Indiana University. It started in the
+4th quarter of 2017.
+
+* Github - https://github.com/DSC-SPIDAL/twister2
+* Documentation - https://twister2.gitbook.io/twister2
+* User List -  twister2@googlegroups.com
 
 
-# Tutorial on Twister 2 for 5th International Winter School on Big Data
+## What you will learn from this tutorial
 
-## Summary
+By taking this tutorial you will;
 
-In this tutorial, we review big data problems and systems, explain Twister2 architecture and features, provide examples for developing and running applications on Twister2 system. By learning Twister2, big data developers will have an experience with a flexible big data solution that can be used to solve all three types of big data problems.
+ * Get an introductory information on big data systems and Apache big data solutions
+ * Learn Twister2 concepts
+ * Learn how job submission is done in Twister2 and related resource schedulers
+ * Learn how the parallel communication happens Twister2
+ * Learn the task system of Twister2
+ * Learn how to develop big data solutions
+
 
 ## Syllabus
 
 1. [Introduction to big data problems and systems](introduction.md)
 2. [Decoupling big data solutions big data stack](big-data-stack.md)
 3. [Twister2 overview](twister2-overview.md)
-    1. [Resource scheduling Kubernetes, Mesos](resource-scheduling.md)
-    2. [Communication MPI on Twister2](communication.md)
-    3. [Task scheduling and execution Fault Tolerance](tasks.md)
-    4. [Data representation](data-representation.md)
-4. [Developing Big Data Solutions in Twister2](developing.md)
-    1. [Batch Processing example](batch.md)
-    2. [Streaming example](streaming.md)
-    3. [Machine learning example](machine-learning.md)
-5. [Conclusion](conclusion.md)
+    1. [Job Submission, Kubernetes, Mesos](resource-scheduling.md)
+    2. [Communication on Twister2](communication.md)
+    3. [Task System on Twister2](tasks.md)
+    4. [Data Representation on Twister2](data-representation.md)
+4. [Developing big data solutions on twister2](developing.md)
+    1. [Hello World Example](helloworld.md)
+    2. [Batch Processing example](batch.md)
+    3. [Streaming Processing Example](streaming.md)
+    4. [Machine Learning Example](machine-learning.md)
+5. [Summary and future work](conclusion.md)
 
 

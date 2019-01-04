@@ -15,6 +15,8 @@ import logging
 import os
 import tempfile
 import sys
+import yaml
+import io
 
 from twister2.tools.cli.src.python.log import Log
 from twister2.tools.cli.src.python.result import SimpleResult, Status
@@ -64,7 +66,19 @@ def setup_java_system_properties(cl_args):
     java_system_props.append("cluster_type=" + cl_args["cluster"])
     # set the job file
     java_system_props.append("job_file=" + cl_args['job-file-name'])
+    # set the logger file
+    conf_dir = config.get_twister2_cluster_conf_dir(cl_args["cluster"], config.get_twister2_conf_dir())
+    if os.path.isfile(conf_dir + "/logger.properties"):
+        java_system_props.append("java.util.logging.config.file=" + conf_dir + "/logger.properties")
     return java_system_props
+
+def read_client_properties(cl_args):
+    conf_dir = config.get_twister2_cluster_conf_dir(cl_args["cluster"], config.get_twister2_conf_dir())
+
+    if os.path.isfile(conf_dir + "/client.yaml"):
+        with open(conf_dir + "/client.yaml", 'r') as stream:
+            data_loaded = yaml.load(stream)
+            return data_loaded
 
 ################################################################################
 def submit_fatjar(cl_args, unknown_args):
@@ -86,6 +100,8 @@ def submit_fatjar(cl_args, unknown_args):
     # set up the system properties
     java_system_props = setup_java_system_properties(cl_args)
 
+    props = read_client_properties(cl_args)
+
     # execute main of the job to create the job definition
     job_file = cl_args['job-file-name']
 
@@ -96,7 +112,8 @@ def submit_fatjar(cl_args, unknown_args):
         lib_jars=config.get_twister2_libs(jars.job_jars()),
         extra_jars=[job_file],
         args=tuple(unknown_args),
-        java_defines=java_system_props)
+        java_defines=java_system_props,
+        client_props=props)
 
     result.render(res)
 

@@ -44,6 +44,7 @@ public final class JobMasterStarter {
 
     String configDir = KubernetesConstants.CONFIG_MAP_VOLUME_MOUNT;
     Config config = K8sWorkerUtils.loadConfig(configDir);
+    config = K8sWorkerUtils.unsetWorkerIDAssigment(config);
 
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);

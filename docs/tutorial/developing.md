@@ -1,10 +1,3 @@
-<p align="left">
-    <img width="125" height="125" src="fox.png">
-</p>
-
-
-### Geoffrey C. FOX
-
 # Developing Big Data Solutions in Twister2
 
 ## Developer Environment

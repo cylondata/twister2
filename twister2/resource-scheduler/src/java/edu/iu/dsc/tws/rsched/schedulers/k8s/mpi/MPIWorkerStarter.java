@@ -116,6 +116,7 @@ public final class MPIWorkerStarter {
     // job file configurations will override
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
+    config = K8sWorkerUtils.unsetWorkerIDAssigment(config);
 
     InetAddress localHost = null;
     String podName = null;

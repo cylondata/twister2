@@ -1,13 +1,4 @@
-
-
-<span style="display:block;text-align:left">![Geoffrey C. FOX](fox.png)</span>
-
-### Geoffrey C. FOX
-
-# Task Scheduling and Execution (Fault Tolerance)
-
-
-## Task System
+## Task System on Twister2
 
 The task layer provides a higher-level abstraction on top of the communication layer to hide the details of execution
 and communication from the user, while still delegating data management to the user. At this layer, computations are modeled as task graphs which
@@ -39,4 +30,4 @@ and resources based on the architectural characteristics. The selection of the b
 The task scheduling algorithms are broadly classified into two types, namely static task scheduling algorithms and dynamic task scheduling
 algorithms. Twister2 aims to support both types of task scheduling algorithms.
 
-[Task Scheduling Presentation](Task-Scheduling.pdf)
+[Task System on Twister2](https://docs.google.com/presentation/d/1CpeBgKcM5NnIB0EdR0L5oWtfZdSG7kNlcEzyZPW8nuI/edit#slide=id.g4bf3440bc1_0_26)

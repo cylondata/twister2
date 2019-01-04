@@ -68,6 +68,44 @@ public final class K8sWorkerUtils {
   }
 
   /**
+   * In Kubernetes, worker id assignment by Job Master is not supported
+   * We assign worker ids based on statefulset indexes, pod indexes and container indexes
+   * In OpenMPI jobs, we assign workerIDs based on their MPI rank
+   * However, in OpenMPI jobs, scaling up/down of jobs is not supported.
+   *
+   * Assigning workerIDs by Kubernetes Twister2 utilities is a must
+   * when scaling down workers in a Twister2 job
+   *
+   * We always want to delete the last workers in a job with highest workerIDs,
+   * when scaling down jobs.
+   * Deleting pods in a statefulset is performed by scaling down the statefulset.
+   * When statefulsets are scaled down, the last pods with highest indexes are killed.
+   *
+   * if the worker in the last pod of a statefulset does not have the highest workerID,
+   * then when scaling down the statefulset, we may not kill the last worker in the job.
+   * This happens when JobMaster assigns workerIDs.
+   * Workers do not get ids based on their pod indexes,
+   * but rather based on their registration order with the JobMaster.
+   * Therefore, we can not support workerID assignment by JobMaster in Kubernetes.
+   * @param config
+   * @return
+   */
+  public static Config unsetWorkerIDAssigment(Config config) {
+    if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
+
+      LOG.warning("In Kubernetes clusters, workerID assignment by JobMaster is not supported. "
+          + "Twister2 Kubernetes utilities assign workerIDs.");
+
+      return Config.newBuilder().
+          putAll(config).
+          put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, false).
+          build();
+    }
+
+    return config;
+  }
+
+  /**
    * itinialize the logger
    */
   public static void initWorkerLogger(int workerID, K8sPersistentVolume pv, Config cnfg) {

@@ -86,6 +86,7 @@ public final class K8sWorkerStarter {
     // job file configurations will override
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
+    config = K8sWorkerUtils.unsetWorkerIDAssigment(config);
 
     // get podIP from localhost
     InetAddress localHost = null;
