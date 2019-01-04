@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
@@ -54,8 +54,8 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     public boolean execute(IMessage message) {
       if (count % jobParameters.getPrintInterval() == 0) {
         Object object = message.getContent();
-        if (object instanceof KeyedContent) {
-          KeyedContent content = (KeyedContent) object;
+        if (object instanceof Tuple) {
+          Tuple content = (Tuple) object;
           Object key = content.getKey();
           Object value = content.getValue();
           experimentData.setOutput(value);

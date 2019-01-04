@@ -302,7 +302,7 @@ public class MultiMessageSerializer implements MessageSerializer {
       return serializeData(payload,
           sendMessage.getSerializationState(), targetBuffer, type, countInBuffer);
     } else {
-      KeyedContent kc = (KeyedContent) payload;
+      Tuple kc = (Tuple) payload;
       return serializeKeyedData(kc.getValue(), kc.getKey(), sendMessage.getSerializationState(),
           targetBuffer, kc.getContentType(), kc.getKeyType(), countInBuffer);
     }

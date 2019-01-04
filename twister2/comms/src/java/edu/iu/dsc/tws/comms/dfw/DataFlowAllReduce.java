@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchPartialReceiver;
@@ -104,7 +104,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
     MessageReceiver receiver;
     if (streaming) {
       this.partialReceiver = new ReduceStreamingPartialReceiver(middleTask, reduceFunction);
-      receiver = new AllReduceStreamingFinalReceiver(reduceFunction, broadcast, middleTask);
+      receiver = new AllReduceStreamingFinalReceiver(reduceFunction, broadcast);
     } else {
       this.partialReceiver = new ReduceBatchPartialReceiver(middleTask, reduceFunction);
       receiver = new AllReduceBatchFinalReceiver(reduceFunction, broadcast);

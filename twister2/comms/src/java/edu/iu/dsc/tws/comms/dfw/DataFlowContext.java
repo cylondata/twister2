@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.CommunicationContext;
+import edu.iu.dsc.tws.comms.api.CommunicationContext;
 
 /**
  * Read the configuration options

@@ -16,7 +16,7 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -55,10 +55,10 @@ public class SinkOp<T> implements ISink, Closable {
       }
     } else {
       if (!iterable) {
-        KeyedContent data = (KeyedContent) message.getContent();
+        Tuple data = (Tuple) message.getContent();
         sink.add((T) data.getValue());
       } else {
-        Iterator<KeyedContent> data = (Iterator<KeyedContent>) message.getContent();
+        Iterator<Tuple> data = (Iterator<Tuple>) message.getContent();
         while (data.hasNext()) {
           sink.add((T) data.next().getValue());
         }

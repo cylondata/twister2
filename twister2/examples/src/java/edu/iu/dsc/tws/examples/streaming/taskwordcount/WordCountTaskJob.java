@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.api.task.function.ReduceFn;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -105,8 +105,8 @@ public class WordCountTaskJob extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      if (message.getContent() instanceof KeyedContent) {
-        KeyedContent kc = (KeyedContent) message.getContent();
+      if (message.getContent() instanceof Tuple) {
+        Tuple kc = (Tuple) message.getContent();
         LOG.log(Level.INFO, String.format("%d Word %s count %s", context.taskId(),
             kc.getKey(), ((int[]) kc.getValue())[0]));
       }

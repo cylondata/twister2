@@ -1,5 +1,19 @@
 # Tutorial on Twister2 for 5th International Winter School on Big Data
 
+Big data problems can be classified into three main categories: batch processing (Hadoop), stream processing (Apache Flink and Apache Heron) and iterative machine learning and graph problems (Apache Spark). Each of these problems have different processing, communication and storage requirements. Therefore, each system provides separate solutions to these needs.
+
+All these systems use dataflow programming model to perform distributed computations. With this model, big data frameworks represent a computation as a generic graph where nodes doing computations and the edges representing the communication. The nodes of the graph can be executed on different machines in the cluster depending on the requirements of the application.
+
+We identify four key tasks in big data systems:
+1) Acquiring computing resources,
+2) Spawning and managing executor processes/threads,
+3) Handling communication between processes,
+4) Managing the data including both static and intermediate.
+
+An independent component can be developed for each of these tasks. However, current systems provide tightly coupled solutions to these tasks excluding the resource scheduling.
+
+Twister2 [1-3] is a loosely-coupled component-based approach to big data. Each of the four essential abstractions have different implementations to support various applications. Therefore, it has a pluggable architecture. It can be used to solve all three types of big data problems mentioned above.
+
 
 In this tutorial, we review big data problems and systems,
 explain Twister2 architecture and features,
@@ -41,18 +55,16 @@ By taking this tutorial you will;
 
 ## Syllabus
 
-1. [Introduction to big data problems and systems](introduction.md)
-2. [Decoupling big data solutions big data stack](big-data-stack.md)
-3. [Twister2 overview](twister2-overview.md)
-    1. [Job Submission, Kubernetes, Mesos](resource-scheduling.md)
-    2. [Communication on Twister2](communication.md)
-    3. [Task System on Twister2](tasks.md)
-    4. [Data Representation on Twister2](data-representation.md)
-4. [Developing big data solutions on twister2](developing.md)
-    1. [Hello World Example](helloworld.md)
-    2. [Batch Processing example](batch.md)
-    3. [Streaming Processing Example](streaming.md)
-    4. [Machine Learning Example](machine-learning.md)
-5. [Summary and future work](conclusion.md)
+1. [Decoupling big data solutions big data stack](big-data-stack.md)
+2. [Twister2 overview](twister2-overview.md)
+3. [Developing big data solutions on twister2](developing.md)
+4. [Summary and future work](conclusion.md)
 
 
+## References
+
+1. Supun Kamburugamuve, Kannan Govindarajan, Pulasthi Wickramasinghe, Vibhatha Abeykoon, Geoffrey Fox, "Twister2: Design of a Big Data Toolkit" in  EXAMPI 2017 workshop November 12 2017 at SC17  conference, Denver CO 2017.
+
+2. Supun Kamburugamuve, Pulasthi Wickramasinghe, Kannan Govindarajan, Ahmet Uyar, Gurhan Gunduz, Vibhatha Abeykoon, Geoffrey Fox, "Twister:Net - Communication Library for Big Data Processing in HPC and Cloud Environments", Proceedings of Cloud 2018 Conference July 2-7 2018, San Francisco.
+
+3. Kannan Govindarajan, Supun Kamburugamuve, Pulasthi Wickramasinghe, Vibhatha Abeykoon, Geoffrey Fox, "Task Scheduling in Big Data - Review, Research: Challenges, and Prospects", Proceedings of 9th International Conference on Advanced Computing (ICoAC), December 14-16, 2017, India.

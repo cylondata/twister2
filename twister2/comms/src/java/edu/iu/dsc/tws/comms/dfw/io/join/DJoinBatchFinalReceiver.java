@@ -49,7 +49,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
@@ -218,8 +218,8 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
     }
 
     // add the object to the map
-    List<KeyedContent> keyedContents = (List<KeyedContent>) object;
-    for (KeyedContent kc : keyedContents) {
+    List<Tuple> tuples = (List<Tuple>) object;
+    for (Tuple kc : tuples) {
       Object data = kc.getValue();
       byte[] d = DataSerializer.serialize(data, kryoSerializer);
 

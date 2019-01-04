@@ -9,19 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
-
-import java.util.logging.Logger;
-
 
 /**
  * Abstract class that is extended by keyed reduce batch receivers
  */
 public class KGatherStreamingPartialReceiver extends KGatherStreamingReceiver {
-  private static final Logger LOG = Logger.getLogger(
-      KGatherStreamingPartialReceiver.class.getName());
-
   public KGatherStreamingPartialReceiver(int dest, int limitPerKey, int windowSize) {
     this.destination = dest;
     this.limitPerKey = limitPerKey;

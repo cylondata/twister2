@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
 import edu.iu.dsc.tws.examples.Utils;
 
@@ -121,7 +121,7 @@ public class GatherTestCommunication implements IWorker {
         for (int i = 0; i < 1; i++) {
           int[] data = {task, task * 100};
           // lets generate a message
-//          KeyedContent mesage = new KeyedContent(task, data,
+//          Tuple mesage = new Tuple(task, data,
 //              MessageType.INTEGER, MessageType.OBJECT);
 //
           while (!aggregate.send(task, data, 0)) {
