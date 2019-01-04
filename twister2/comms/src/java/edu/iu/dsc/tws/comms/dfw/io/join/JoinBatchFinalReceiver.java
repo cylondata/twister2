@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 public class JoinBatchFinalReceiver implements MessageReceiver {
 
@@ -218,22 +218,22 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
   private Map<Object, List<Object>> innerJoin(List<Object> left, List<Object> right) {
     Map<Object, List<Object>> joined = new HashMap<>();
     for (Object entry : left) {
-      Object key = ((KeyedContent) entry).getKey();
+      Object key = ((Tuple) entry).getKey();
       if (joined.containsKey(key)) {
-        joined.get(key).add(((KeyedContent) entry).getValue());
+        joined.get(key).add(((Tuple) entry).getValue());
       } else {
         joined.put(key, new ArrayList<Object>());
-        joined.get(key).add(((KeyedContent) entry).getValue());
+        joined.get(key).add(((Tuple) entry).getValue());
       }
     }
 
     for (Object entry : right) {
-      Object key = ((KeyedContent) entry).getKey();
+      Object key = ((Tuple) entry).getKey();
       if (joined.containsKey(key)) {
-        joined.get(key).add(((KeyedContent) entry).getValue());
+        joined.get(key).add(((Tuple) entry).getValue());
       } else {
         joined.put(key, new ArrayList<Object>());
-        joined.get(key).add(((KeyedContent) entry).getValue());
+        joined.get(key).add(((Tuple) entry).getValue());
       }
     }
     return joined;

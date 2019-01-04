@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.api.task.function;
 
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;

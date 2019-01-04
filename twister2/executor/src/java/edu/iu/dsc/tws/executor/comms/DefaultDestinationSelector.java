@@ -13,8 +13,8 @@ package edu.iu.dsc.tws.executor.comms;
 
 import java.util.Set;
 
+import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
 public class DefaultDestinationSelector implements DestinationSelector {

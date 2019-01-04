@@ -35,9 +35,9 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.RandomString;
@@ -142,7 +142,7 @@ public class GatherCommunication implements IWorker {
         for (int i = 0; i < 1000; i++) {
           String data = generateStringData();
           // lets generate a message
-          KeyedContent mesage = new KeyedContent(task, data,
+          Tuple mesage = new Tuple(task, data,
               MessageType.INTEGER, MessageType.OBJECT);
 //
           while (!aggregate.send(task, mesage, 0)) {

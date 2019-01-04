@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-
 /**
  * The communication operation interface.
  */

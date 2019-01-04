@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.op.Communicator;
+import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;

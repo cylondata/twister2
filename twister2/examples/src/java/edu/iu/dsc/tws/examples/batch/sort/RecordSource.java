@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.examples.batch.sort;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
+import edu.iu.dsc.tws.comms.api.batch.BKeyedPartition;
 
 public class RecordSource implements Runnable {
   private static final Logger LOG = Logger.getLogger(RecordSource.class.getName());

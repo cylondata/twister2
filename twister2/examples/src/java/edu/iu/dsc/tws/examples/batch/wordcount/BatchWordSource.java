@@ -17,7 +17,7 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
+import edu.iu.dsc.tws.comms.api.batch.BKeyedReduce;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 
 public class BatchWordSource implements Runnable {

@@ -21,11 +21,11 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
-import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.comms.op.stream.SKeyedReduce;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.comms.api.stream.SKeyedReduce;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
@@ -117,8 +117,8 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
       LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
       reduceDone = true;
 
-      KeyedContent keyedContent = (KeyedContent) object;
-      int[] data = (int[]) keyedContent.getValue();
+      Tuple tuple = (Tuple) object;
+      int[] data = (int[]) tuple.getValue();
       LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
           Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));

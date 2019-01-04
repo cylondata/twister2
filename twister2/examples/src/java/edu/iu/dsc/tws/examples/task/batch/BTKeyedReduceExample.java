@@ -20,7 +20,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
@@ -83,11 +83,11 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
           }
         }
       }
-      if (object instanceof KeyedContent) {
-        KeyedContent keyedContent = (KeyedContent) object;
-        if (keyedContent.getValue() instanceof int[]) {
-          int[] a = (int[]) keyedContent.getValue();
-          LOG.info("Message Keyed-Reduced : " + keyedContent.getKey() + ", "
+      if (object instanceof Tuple) {
+        Tuple tuple = (Tuple) object;
+        if (tuple.getValue() instanceof int[]) {
+          int[] a = (int[]) tuple.getValue();
+          LOG.info("Message Keyed-Reduced : " + tuple.getKey() + ", "
               + Arrays.toString(a));
         }
       }
