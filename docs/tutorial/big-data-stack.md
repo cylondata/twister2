@@ -8,5 +8,5 @@ either in streaming or batch settings for knowledge discovery with both database
 need to run as services in cloud environments as well as traditional high performance clusters. With the proliferation of cloud-based systems and
 Internet of Things, fog computing  is adding another dimension to these applications where part of the processing has to occur near the devices
 
-<span style="display:block;text-align:left">![Geoffrey C. FOX](pics/kaleidoscope.png)</span>
+<span style="display:block;text-align:left">![Apache Big Data Stack](pics/kaleidoscope.png)</span>
 
