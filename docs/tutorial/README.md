@@ -4,11 +4,12 @@ Big data problems can be classified into three main categories: batch processing
 
 All these systems use dataflow programming model to perform distributed computations. With this model, big data frameworks represent a computation as a generic graph where nodes doing computations and the edges representing the communication. The nodes of the graph can be executed on different machines in the cluster depending on the requirements of the application.
 
-We identify four key tasks in big data systems:
-1) Acquiring computing resources,
-2) Spawning and managing executor processes/threads,
-3) Handling communication between processes,
-4) Managing the data including both static and intermediate.
+We identify four key tasks in big data systems
+
+1. Job Submission (Acquiring compute resources and managing a job),
+2. Parallel communication between processes,
+2. Executing user logic with threads and processes
+4. Managing the data including both static and intermediate.
 
 An independent component can be developed for each of these tasks. However, current systems provide tightly coupled solutions to these tasks excluding the resource scheduling.
 
