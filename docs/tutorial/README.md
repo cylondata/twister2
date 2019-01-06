@@ -61,18 +61,18 @@ Here are the introductory slides we will go through in this Tutorial.
 | Content | Description | Tutorial Section |
 | ------------- | ------------- | ----------- |
 | [Twister2 Presentation](https://docs.google.com/presentation/d/1FcoMfEd5g4cwR9K47PwIwvuioPPxdI9xgjVro2ipSTQ/edit?usp=sharing) | Introducing Twister2 | [Twister2 Overview](twister2-overview.md) |
-| [Job Submission Presentation](https://docs.google.com/presentation/d/1Qs-eV9hTgyNRrDSvC5iCc2EmeUKQFtiVlTrTUZpsoAM/edit?usp=sharing)  | Explains Twister2 Job Submission and Resource abstractions  | [Twister2 Overview](twister2-overview.md##ob Submission) |
-| [Communication Presentation](https://docs.google.com/presentation/d/1-rSL3SIFp03YgU8hTJcGMNdSJev8gQwhyTgS3FbYaqk/edit?usp=sharing) | Explains the parallel communicarion model  | [Twister2 Overview](twister2-overview.md#Communication) |
-| [Task System Presentation](https://docs.google.com/presentation/d/1CpeBgKcM5NnIB0EdR0L5oWtfZdSG7kNlcEzyZPW8nuI/edit?usp=sharing) | Expalains the task layer and API of Twister2 | [Twister2 Overview](twister2-overview.md#Task System) |
+| [Job Submission Presentation](https://docs.google.com/presentation/d/1Qs-eV9hTgyNRrDSvC5iCc2EmeUKQFtiVlTrTUZpsoAM/edit?usp=sharing)  | Explains Twister2 Job Submission and Resource abstractions  | [Twister2 Overview](twister2-overview.md#job-submission) |
+| [Communication Presentation](https://docs.google.com/presentation/d/1-rSL3SIFp03YgU8hTJcGMNdSJev8gQwhyTgS3FbYaqk/edit?usp=sharing) | Explains the parallel communicarion model  | [Twister2 Overview](twister2-overview.md#communication) |
+| [Task System Presentation](https://docs.google.com/presentation/d/1CpeBgKcM5NnIB0EdR0L5oWtfZdSG7kNlcEzyZPW8nuI/edit?usp=sharing) | Expalains the task layer and API of Twister2 | [Twister2 Overview](twister2-overview.md#task-system) |
 
 Here are the slides for Hands on section.
 
 | Content | Section |
 | ------------- | ------------- |
-| [Hello World](https://docs.google.com/presentation/d/1ZMeO5aofZZNKwoR66N6b4hzSJqlGlbWgZLOq8Ie6vl0/edit?usp=sharing) | [Hello World](developing.md#Hello World Example) |
-| [Streaming](https://docs.google.com/presentation/d/17uDBBlQxqzLx3m_inOM9svYvANCEwF2nN1KUYDoqInM/edit?usp=sharing)  | [Streaming Word](developing.md#Streaming WordCount Example) |
-| [Batch](https://docs.google.com/presentation/d/1hpBcy_-m5AuVJJxPdhX_5hnIVB4vUkiB6My0STp-dLA/edit?usp=sharing) | [Batch Word Count](developing.md#Batch WordCount Example)  |
-| [Machine Learning](https://docs.google.com/presentation/d/1-AZXo3KjPEk7E-k7_Z5lSKdPk_9R4D8w9PgNrijQeUU/edit?usp=sharing) | [K-Means](developing.md#Machine Learning Example KMeans) |
+| [Hello World](https://docs.google.com/presentation/d/1ZMeO5aofZZNKwoR66N6b4hzSJqlGlbWgZLOq8Ie6vl0/edit?usp=sharing) | [Hello World](developing.md#hello-world-example) |
+| [Streaming](https://docs.google.com/presentation/d/17uDBBlQxqzLx3m_inOM9svYvANCEwF2nN1KUYDoqInM/edit?usp=sharing)  | [Streaming Word](developing.md#streaming-wordcount-example) |
+| [Batch](https://docs.google.com/presentation/d/1hpBcy_-m5AuVJJxPdhX_5hnIVB4vUkiB6My0STp-dLA/edit?usp=sharing) | [Batch Word Count](developing.md#batch-wordcount-example)  |
+| [Machine Learning](https://docs.google.com/presentation/d/1-AZXo3KjPEk7E-k7_Z5lSKdPk_9R4D8w9PgNrijQeUU/edit?usp=sharing) | [K-Means](developing.md#machine-learning-example-kmeans) |
 | [Communication API]()| Available Soon|
 
 
