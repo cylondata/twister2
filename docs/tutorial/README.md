@@ -49,21 +49,21 @@ By taking this tutorial you will;
 This Tutorial consists of several presentations and hands-on examples. We have prepared a docker image for you to easily 
 run the examples in your laptop as well as a cluster deployment of Twister2.  
 
-Here are the introductory slides we will go through in this Tutorial.
-
-| Content | Description |
-| ------------- | ------------- |
-| [Twister2 Presentation](https://docs.google.com/presentation/d/1FcoMfEd5g4cwR9K47PwIwvuioPPxdI9xgjVro2ipSTQ/edit?usp=sharing) | Introducing Twister2 |
-| [Job Submission Presentation](https://docs.google.com/presentation/d/1Qs-eV9hTgyNRrDSvC5iCc2EmeUKQFtiVlTrTUZpsoAM/edit?usp=sharing)  | Explains Twister2 Job Submission and Resource abstractions  |
-| [Communication Presentation](https://docs.google.com/presentation/d/1-rSL3SIFp03YgU8hTJcGMNdSJev8gQwhyTgS3FbYaqk/edit?usp=sharing) | Explains the parallel communicarion model  |
-| [Task System Presentation](https://docs.google.com/presentation/d/1CpeBgKcM5NnIB0EdR0L5oWtfZdSG7kNlcEzyZPW8nuI/edit?usp=sharing) | Expalains the task layer and API of Twister2 |
-
 This tuorial website consists of the following sections.
 
 1. [Apache data stack](big-data-stack.md)
 2. [Twister2 overview](twister2-overview.md)
 3. [Hands-on with Twister2](developing.md)
 4. [Summary and future work](conclusion.md)
+
+Here are the introductory slides we will go through in this Tutorial.
+
+| Content | Description | Tutorial Section |
+| ------------- | ------------- | ----------- |
+| [Twister2 Presentation](https://docs.google.com/presentation/d/1FcoMfEd5g4cwR9K47PwIwvuioPPxdI9xgjVro2ipSTQ/edit?usp=sharing) | Introducing Twister2 | [Twister2 Overview](twister2-overview.md) |
+| [Job Submission Presentation](https://docs.google.com/presentation/d/1Qs-eV9hTgyNRrDSvC5iCc2EmeUKQFtiVlTrTUZpsoAM/edit?usp=sharing)  | Explains Twister2 Job Submission and Resource abstractions  | [Twister2 Overview](twister2-overview.md##Job Submission) |
+| [Communication Presentation](https://docs.google.com/presentation/d/1-rSL3SIFp03YgU8hTJcGMNdSJev8gQwhyTgS3FbYaqk/edit?usp=sharing) | Explains the parallel communicarion model  |
+| [Task System Presentation](https://docs.google.com/presentation/d/1CpeBgKcM5NnIB0EdR0L5oWtfZdSG7kNlcEzyZPW8nuI/edit?usp=sharing) | Expalains the task layer and API of Twister2 |
 
 Here are the slides for Hands on section.
 
