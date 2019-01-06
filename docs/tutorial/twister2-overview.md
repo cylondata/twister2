@@ -9,14 +9,28 @@ The higher APIs are easier to program while not being not flexible and not as pe
 
 ## Job Submission
 
+In order to run a job on a distributed set of resources, the job submission layer does the following.
 
-Twister2  has integrated number of resource schedulers; including Kubernetes,
-Mesos, Slurm and Standalone.
-In this part we will give an overview of resource scheduling on Twister2 and
-integrated resource schedulers;
-Kubernetes and Mesos.
+1. Acquire resources from a cluster resource manager
+2. Distribute the job related material to the acquired resource
+3. Spawn the set of processes to run the user code as well as manage the lifecycle of the job
+4. Provide functions to discover the resources of the spawned processes (port numbers, ip addresses)
+5. Provide additional functions for recovery, loggging, storage etc
+6. Handle faults and recoveries
 
-[Resource Scheduling on Twister2](https://docs.google.com/presentation/d/1Qs-eV9hTgyNRrDSvC5iCc2EmeUKQFtiVlTrTUZpsoAM/edit#slide=id.p1)
+The Job Submission layer of Twister2 provides abstractions so that thse functions are available to higher layers as well as easily integrating resource managers.
+
+It supports the following cluster resource managers.
+
+1. Standalone
+2. Kubernetes
+3. Mesos
+4. Nomad
+5. Slurm
+
+A more detailed description can be found in the presentations
+
+[Twister2 Job Submission](https://docs.google.com/presentation/d/1Qs-eV9hTgyNRrDSvC5iCc2EmeUKQFtiVlTrTUZpsoAM/edit#slide=id.p1)
 
 ## Communication
 
