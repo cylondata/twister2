@@ -25,14 +25,17 @@ Please follow the instructions below to run jobs on Echo cluster.
 
 Use SSH to login to following Echo machine by using the username and password given to you.
 
-username@149.165.150.84
+```bash
+ssh username@149.165.150.84
+```
 
 Twister2 is installed under twister2 directory.
 
 Go to the directory:
 
-*twister2/bazel-bin/scripts/package/twister2-0.1.0/*
-
+```bash
+twister2/bazel-bin/scripts/package/twister2-0.1.0/*
+```
 
 ## Examples
 
@@ -52,21 +55,30 @@ submit it and then check the output.
 
 In order to run these examples, you should have a running Kubernetes or a Mesos cluster, configured as stated on Twister2 website.
 You can submit jobs to chosen resource scheduler by using Twister2 executable;
-* ./bin/twister2
+
+```bash
+./bin/twister2
+```
 
 When submitting jobs to Kubernetes clusters, you need to specify the cluster name as "kubernetes".  Likewise this parameter should be “mesos” if submitting to a Mesos cluster.
 
 You can submit HelloWorld job in examples package with 8 workers as;
-* ./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
+
+```bash
+./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
+```
 
 If you are using our testbed cluster “Echo”,
-* login to your account
-* change you directory to  twister2/twister2/bazel-bin/scripts/package/twister2-0.1.0/
-* then run the command above.
+* Login to your account
+* Change you directory to  twister2/twister2/bazel-bin/scripts/package/twister2-0.1.0/
+* Run the command above.
 
 You can check the status of the submitted job through the dashboard provided by the resource scheduler.  For our Echo Cluster the addresses are;
-* Kubernetes ---> http://149.165.150.81:8080/#/jobs
-* Mesos---> http://149.165.150.81:5050
+
+```bash
+Kubernetes ---> http://149.165.150.81:8080/#/jobs
+Mesos---> http://149.165.150.81:5050
+```
 
 HelloWorld job runs for 1 minute. After 1 minute, the job becomes COMPLETED if everything is fine.
 
@@ -74,31 +86,41 @@ Lets check the code; In the main method;
 * First set the number of workers by using the arguments passed by the command line. If there is no arguments then the default value is 4
 * Then we load the configurations from command line and config files(yaml files) and put it in a JobConfig object.
 
+```java
  ` Config config = ResourceAllocator.loadConfig(new HashMap<>());
   JobConfig jobConfig = new JobConfig();
   jobConfig.put("hello-key", "Twister2-Hello");`
+```
 
 We then create the Twister2 job object by the following code.
 
+```java
    		Twister2Job twister2Job = Twister2Job.newBuilder()
    		.setJobName("hello-world-job")
    		.setWorkerClass(HelloWorld.class)
    		.addComputeResource(2, 1024, numberOfWorkers)
    		.setConfig(jobConfig)
    		.build();
+```
 
 Last thing we do is submitting the job
 
-   * `Twister2Submitter.submitJob(twister2Job, config);`
+```java
+   Twister2Submitter.submitJob(twister2Job, config);`
+```   
 
 After the submission execute method of this HelloWorld class will be called on each worker. So that means the code in the execute method will be run on every worker
+
+```java
     `   public void execute(Config config, int workerID,
         IWorkerController workerController,
         IPersistentVolume persistentVolume,
          IVolatileVolume volatileVolume)`
+```         
 
 In our case the rest of the code writes hello message from each worker including their IDs, total number of workers and the message and then sleeps for one minute
 
+```java
     // lets retrieve the configuration set in the job config
     String helloKeyValue = config.getStringValue("hello-key");
 
@@ -124,12 +146,11 @@ In our case the rest of the code writes hello message from each worker including
     } catch (InterruptedException e) {
       LOG.severe("Thread sleep interrupted.");
     }
-
+```
 
 You can access to the presentation using the link below
 
 [Hello Word example](https://docs.google.com/presentation/d/1ZMeO5aofZZNKwoR66N6b4hzSJqlGlbWgZLOq8Ie6vl0/edit#slide=id.p)
-
 
 
 ## Batch WordCount Example
@@ -143,13 +164,19 @@ Fixed number of words are generated and the global counts of words are calculate
 It uses communication layer and resource scheduling layer
 
 The example code can be found in
-* twister2/examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount/
+```bash
+twister2/examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount/
+```
 
 In order to run the example go to the following directory
-* cd bazel-bin/scripts/package/twister2-dist/
+```bash
+cd bazel-bin/scripts/package/twister2-dist/
+```
 
 And run the command below  using standalone resource scheduler
-* ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.WordCountJob
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.WordCountJob
+```
 
 It will run 4 executors with 8 tasks
 * Each executor will have two tasks
@@ -174,13 +201,21 @@ Fixed number of words are generated and the global counts of words are calculate
 It uses communication layer and resource scheduling layer
 
 The example code can be found in
-* twister2/examples/src/java/edu/iu/dsc/tws/examples/streaming/wordcount/
+
+```bash
+twister2/examples/src/java/edu/iu/dsc/tws/examples/streaming/wordcount/
+```
 
 In order to run the example go to the following directory
-* cd bazel-bin/scripts/package/twister2-dist/
+
+```bash
+cd bazel-bin/scripts/package/twister2-dist/
+```
 
 And run the command below  using standalone resource scheduler
-* ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.WordCountJob
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.WordCountJob
+```
 
 
 It will run 4 executors with 8 tasks
@@ -190,8 +225,11 @@ It will run 4 executors with 8 tasks
 * The tasks in the last two executors will keep word count.
 
 After running the example, you will see the following output
-* edu.iu.dsc.tws.examples.streaming.wordcount.WordAggregate addValue
+
+```bash
+edu.iu.dsc.tws.examples.streaming.wordcount.WordAggregate addValue
 INFO: 2 Received words: 2000 map: {=267, oO=52, 8LV=46, gK=47, uZ=52, F=56, H=55, 6y0=48, N=36, whB=53, DIu=52, FX=49, R=50, Ja=45, lC=45, b=49, c=46, d=43, sGJ3=63, h=44, uF=56, oB=41, t=54, 7m4M=40, w=141, 7=48, msSX=52, yR=48, 7UvX=50, 3hHU=49, RN=58, 1N=57, nSA=53, ZR6=55}
+```
 
 At this point you should manually stop the process (CTRL+C)
 
@@ -201,7 +239,6 @@ You can access to the presentation using the link below
 
 
 ## Machine Learning Example KMeans
-
 
 K-Means clustering algorithm is one of the simplest and popular machine learning algorithms. We have implemented it on Twister2.
 
