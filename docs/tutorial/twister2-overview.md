@@ -34,11 +34,17 @@ A more detailed description can be found in the presentations
 
 ## Communication
 
-Twister2 communication is responsible of performing optimized communications between workers.
-It supports both batch and streaming communications. It also supports multiple communication
-models like dataflow communication and bulk synchronuos parallel.
+Communication is one of the fundamental requirements of distributed computing. In order for set of machines to solve a 
+problem they need to share data among them, while doing the computations. Many models of communication are possible and
+they are suitable fo different types of applications. 
 
-[Communication on Twister2](https://docs.google.com/presentation/d/1-rSL3SIFp03YgU8hTJcGMNdSJev8gQwhyTgS3FbYaqk/edit#slide=id.g4be91814d2_0_0)
+Twister2 communication component is responsible for performing optimized data transfers between workers.
+It supports both batch and streaming modes. Twister2 also supports multiple communication
+models like dataflow communication and bulk synchronuos parallel model.
+
+A detailed description of the communication model can be found in the following presentation.
+
+[Twister2 Communication](https://docs.google.com/presentation/d/1-rSL3SIFp03YgU8hTJcGMNdSJev8gQwhyTgS3FbYaqk/edit#slide=id.g4be91814d2_0_0)
 
 ## Task System
 
