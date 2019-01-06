@@ -51,9 +51,13 @@ A detailed description of the communication model can be found in the following 
 The task layer provides a higher-level abstraction on top of the communication layer to hide the details of execution
 and communication from the user, while still delegating data management to the user. At this layer, computations are modeled as task graphs which
 can be created either statically as a complete graph or dynamically as the application progresses. The task system comprises
-of task graph, execution graph, and task scheduling process.
+of 
 
-#### Task Graph
+1. Task Graph API
+2. Task Scheduler
+3. Executor
+
+#### Task Graph API
 
 A node in the task graph represents a task while an edge represents a communication link between nodes. Each node in the graph holds information
 about the inputs and its outputs (edges). Also, a node contains an executable user code. The user code in a task is executed when events arrive at the
@@ -62,12 +66,18 @@ layer. A task can be long-running or short-running depending on the type of appl
 while a dataflow graph without loops will have short running tasks. When loops are present, long-running tasks can be appropriate to reduce task
 creation overheads.
 
-#### Execution Graph
-
-Execution graph is a transformation of the user-defined task graph, created by the framework for deploying on the cluster. This execution graph will
-be scheduled onto the available resource by the task scheduler. For example, some user functions may run on a larger number of nodes depending on
-the parallelism specified. Also, when creating the execution graph, the framework can perform optimizations on the user graph to increase efficiency
-by reducing data movement and overlapping I/O and computations.
+```java
+// task graph builder
+TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
+// add a source task with parallelism of 4
+graphBuilder.addSource("source", sourceTask, 4);
+// add a sink task with parallelism of 4
+ComputeConnection computeConnection = graphBuilder.addSink("sink", sinkTask, 4);
+// use the compute connection, to connect to the source using a partition operation
+computeConnection.partition("source", "partition", DataType.OBJECT);
+// we are doing a batch computation
+graphBuilder.setMode(OperationMode.BATCH);
+```
 
 #### Task Scheduling
 
@@ -78,10 +88,27 @@ and resources based on the architectural characteristics. The selection of the b
 The task scheduling algorithms are broadly classified into two types, namely static task scheduling algorithms and dynamic task scheduling
 algorithms. Twister2 aims to support both types of task scheduling algorithms.
 
-[Task System on Twister2](https://docs.google.com/presentation/d/1CpeBgKcM5NnIB0EdR0L5oWtfZdSG7kNlcEzyZPW8nuI/edit#slide=id.g4bf3440bc1_0_26)
 
+#### Execution
 
+Execution graph is a transformation of the user-defined task graph, created by the framework for deploying on the cluster. This execution graph will
+be scheduled onto the available resource by the task scheduler. For example, some user functions may run on a larger number of nodes depending on
+the parallelism specified. Also, when creating the execution graph, the framework can perform optimizations on the user graph to increase efficiency
+by reducing data movement and overlapping I/O and computations.
 
+```java
+TaskExecutor taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator);
+ExecutionPlan plan = taskExecutor.plan(graph);
+taskExecutor.execute(graph, plan);
+```
+
+The following presentation provides details about the task system.
+
+[Twister2 Task System](https://docs.google.com/presentation/d/1CpeBgKcM5NnIB0EdR0L5oWtfZdSG7kNlcEzyZPW8nuI/edit#slide=id.g4bf3440bc1_0_26)
+
+## Data API
+
+This layer provides a easy to program API for data analytics, which is similar to Flink, Spark and Heron Streamlet. 
 
 ## Important Links
 
