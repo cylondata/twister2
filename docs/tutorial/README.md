@@ -62,8 +62,8 @@ Here are the introductory slides we will go through in this Tutorial.
 | ------------- | ------------- | ----------- |
 | [Twister2 Presentation](https://docs.google.com/presentation/d/1FcoMfEd5g4cwR9K47PwIwvuioPPxdI9xgjVro2ipSTQ/edit?usp=sharing) | Introducing Twister2 | [Twister2 Overview](twister2-overview.md) |
 | [Job Submission Presentation](https://docs.google.com/presentation/d/1Qs-eV9hTgyNRrDSvC5iCc2EmeUKQFtiVlTrTUZpsoAM/edit?usp=sharing)  | Explains Twister2 Job Submission and Resource abstractions  | [Twister2 Overview](twister2-overview.md##Job Submission) |
-| [Communication Presentation](https://docs.google.com/presentation/d/1-rSL3SIFp03YgU8hTJcGMNdSJev8gQwhyTgS3FbYaqk/edit?usp=sharing) | Explains the parallel communicarion model  |
-| [Task System Presentation](https://docs.google.com/presentation/d/1CpeBgKcM5NnIB0EdR0L5oWtfZdSG7kNlcEzyZPW8nuI/edit?usp=sharing) | Expalains the task layer and API of Twister2 |
+| [Communication Presentation](https://docs.google.com/presentation/d/1-rSL3SIFp03YgU8hTJcGMNdSJev8gQwhyTgS3FbYaqk/edit?usp=sharing) | Explains the parallel communicarion model  | [Twister2 Overview](twister2-overview.md##Communication) |
+| [Task System Presentation](https://docs.google.com/presentation/d/1CpeBgKcM5NnIB0EdR0L5oWtfZdSG7kNlcEzyZPW8nuI/edit?usp=sharing) | Expalains the task layer and API of Twister2 | [Twister2 Overview](twister2-overview.md##Task System) |
 
 Here are the slides for Hands on section.
 
