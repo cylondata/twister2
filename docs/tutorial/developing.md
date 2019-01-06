@@ -75,7 +75,7 @@ If you are using our testbed cluster “Echo”,
 
 You can check the status of the submitted job through the dashboard provided by the resource scheduler.  For our Echo Cluster the addresses are;
 
-```bash
+```text
 Kubernetes ---> http://149.165.150.81:8080/#/jobs
 Mesos---> http://149.165.150.81:5050
 ```
@@ -87,15 +87,15 @@ Lets check the code; In the main method;
 * Then we load the configurations from command line and config files(yaml files) and put it in a JobConfig object.
 
 ```java
- ` Config config = ResourceAllocator.loadConfig(new HashMap<>());
-  JobConfig jobConfig = new JobConfig();
-  jobConfig.put("hello-key", "Twister2-Hello");`
+ Config config = ResourceAllocator.loadConfig(new HashMap<>());
+    JobConfig jobConfig = new JobConfig();
+    jobConfig.put("hello-key", "Twister2-Hello");
 ```
 
 We then create the Twister2 job object by the following code.
 
 ```java
-   		Twister2Job twister2Job = Twister2Job.newBuilder()
+  Twister2Job twister2Job = Twister2Job.newBuilder()
    		.setJobName("hello-world-job")
    		.setWorkerClass(HelloWorld.class)
    		.addComputeResource(2, 1024, numberOfWorkers)
@@ -106,46 +106,46 @@ We then create the Twister2 job object by the following code.
 Last thing we do is submitting the job
 
 ```java
-   Twister2Submitter.submitJob(twister2Job, config);`
+   Twister2Submitter.submitJob(twister2Job, config);
 ```   
 
 After the submission execute method of this HelloWorld class will be called on each worker. So that means the code in the execute method will be run on every worker
 
 ```java
-    `   public void execute(Config config, int workerID,
-        IWorkerController workerController,
-        IPersistentVolume persistentVolume,
-         IVolatileVolume volatileVolume)`
+   public void execute(Config config, int workerID,
+      IWorkerController workerController,
+      IPersistentVolume persistentVolume,
+      IVolatileVolume volatileVolume);
 ```         
 
 In our case the rest of the code writes hello message from each worker including their IDs, total number of workers and the message and then sleeps for one minute
 
 ```java
-    // lets retrieve the configuration set in the job config
-    String helloKeyValue = config.getStringValue("hello-key");
-
-    // lets do a log to indicate we are running
-    LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
-            + "and I got a message: %s", workerID,
-        workerController.getNumberOfWorkers(), helloKeyValue));
-
-    List<JobMasterAPI.WorkerInfo> workerList = null;
-    try {
-      workerList = workerController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
-    String workersStr = WorkerInfoUtils.workerListAsString(workerList);
-    LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
-
-    try {
-      LOG.info("I am sleeping for 1 minute and then exiting.");
-      Thread.sleep(60 * 1000);
-      LOG.info("I am done sleeping. Exiting.");
-    } catch (InterruptedException e) {
-      LOG.severe("Thread sleep interrupted.");
-    }
+  // lets retrieve the configuration set in the job config
+  String helloKeyValue = config.getStringValue("hello-key");
+  
+  // lets do a log to indicate we are running
+  LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
+          + "and I got a message: %s", workerID,
+      workerController.getNumberOfWorkers(), helloKeyValue));
+  
+  List<JobMasterAPI.WorkerInfo> workerList = null;
+  try {
+    workerList = workerController.getAllWorkers();
+  } catch (TimeoutException timeoutException) {
+    LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+    return;
+  }
+  String workersStr = WorkerInfoUtils.workerListAsString(workerList);
+  LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
+  
+  try {
+    LOG.info("I am sleeping for 1 minute and then exiting.");
+    Thread.sleep(60 * 1000);
+    LOG.info("I am done sleeping. Exiting.");
+  } catch (InterruptedException e) {
+    LOG.severe("Thread sleep interrupted.");
+  }
 ```
 
 You can access to the presentation using the link below
