@@ -1,26 +1,14 @@
 # Twister2 Overview
 
+Twister2 provides set of layered components and APIs to build distributed data processing applications.
 
-Twister2 provides a data analytics hosting environment where it supports different data analytics
-including streaming, data pipelines and iterative computations.
+![Twister2 Concepts](../images/api_levels.png)
 
-Unlike many other big data systems that are designed around user APIs, Twister2 is built from bottom
-up to support different APIs and workloads. Our vision for Twister2 is a complete computing
- environment for data analytics.
-
-One major goal of Twister2 is to provide independent components, that can be used by other
-big data systems and evolve separately.
-
-
-Twister2 can be deployed both in HPC and cloud environments. When deployed in a HPC environment, it
-can use OpenMPI for its communications. It can be programmed at different levels depending on the
-application types giving the user the flexibility to use underlying features.
-
-Please refer to following presentation for more information
-
-[Twister2 general overview](https://docs.google.com/presentation/d/1FcoMfEd5g4cwR9K47PwIwvuioPPxdI9xgjVro2ipSTQ/edit#slide=id.p)
+The lower APIs are harder to program and provides the best flexibility along with the highest performance.
+The higher APIs are easier to program while not being not flexible and not as performant as lower APIs.
 
 ## Job Submission
+
 
 Twister2  has integrated number of resource schedulers; including Kubernetes,
 Mesos, Slurm and Standalone.
