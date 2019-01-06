@@ -64,7 +64,7 @@ This tuorial website consists of the following sections.
 3. [Hands-on with Twister2](developing.md)
 4. [Summary and future work](conclusion.md)
 
-Here are the slides for 
+Here are the slides for Hands on section.
 
 | Content | Description |
 | ------------- | ------------- |
@@ -72,7 +72,7 @@ Here are the slides for
 | [Streaming](https://docs.google.com/presentation/d/17uDBBlQxqzLx3m_inOM9svYvANCEwF2nN1KUYDoqInM/edit?usp=sharing)  | Streaming Word Count  |
 | [Batch](https://docs.google.com/presentation/d/1hpBcy_-m5AuVJJxPdhX_5hnIVB4vUkiB6My0STp-dLA/edit?usp=sharing) | Batch Word Count  |
 | [Machine Learning](https://docs.google.com/presentation/d/1-AZXo3KjPEk7E-k7_Z5lSKdPk_9R4D8w9PgNrijQeUU/edit?usp=sharing) | K-Means |
-|[Communication API]()| Available Soon|
+| [Communication API]()| Available Soon|
 
 
 ## References
