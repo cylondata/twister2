@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task.htg;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -25,6 +27,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.worker.JobListener;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
+import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
@@ -41,6 +44,8 @@ public class HTGTaskExecutor extends TaskExecutor implements JobListener {
 
   private KryoMemorySerializer serializer;
 
+  private Map<String, Map<String, DataSet<Object>>> outPuts = new HashMap<>();
+
   public HTGTaskExecutor(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
                          Communicator net) {
     super(cfg, wId, workerInfoList, net);
@@ -54,51 +59,13 @@ public class HTGTaskExecutor extends TaskExecutor implements JobListener {
    */
   public boolean execute() {
     Any msg;
-    HTGJobAPI.ExecuteMessage executeMessage;
-    ExecutionPlan executionPlan;
-    HTGJobAPI.ExecuteCompletedMessage completedMessage;
-    String subgraph;
-
-    JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
-
     while (true) {
       try {
         msg = executeMessageQueue.take();
 
         if (msg.is(HTGJobAPI.ExecuteMessage.class)) {
-          try {
-            executeMessage = msg.unpack(HTGJobAPI.ExecuteMessage.class);
-            LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
-            subgraph = executeMessage.getSubgraphName();
-            LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
-
-            // get the subgraph from the map
-            HTGJobAPI.SubGraph subGraph = executeMessage.getGraph();
-            DataFlowTaskGraph taskGraph = (DataFlowTaskGraph) serializer.deserialize(
-                subGraph.getGraphSerialized().toByteArray());
-            if (taskGraph == null) {
-              LOG.severe(workerId + " Unable to find the subgraph " + subgraph);
-              return false;
-            }
-            // use the taskexecutor to create the execution plan
-            executionPlan = this.plan(taskGraph);
-            LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
-            LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
-
-            // reuse the task executor execute
-            this.execute(taskGraph, executionPlan);
-
-            LOG.log(Level.INFO, workerId + " Completed subgraph : " + subgraph);
-
-            LOG.log(Level.INFO, workerId + " Sending subgraph completed message to driver");
-            completedMessage = HTGJobAPI.ExecuteCompletedMessage.newBuilder()
-                .setSubgraphName(subgraph).build();
-
-            if (!workerMessenger.sendToDriver(completedMessage)) {
-              LOG.severe("Unable to send the subgraph completed message :" + completedMessage);
-            }
-          } catch (InvalidProtocolBufferException e) {
-            LOG.log(Level.SEVERE, "Unable to unpack received message ", e);
+          if (handleExecuteMessage(msg)) {
+            return false;
           }
         } else if (msg.is(HTGJobAPI.HTGJobCompletedMessage.class)) {
           LOG.log(Level.INFO, workerId + "Received HTG job completed message. Leaving execution "
@@ -114,6 +81,58 @@ public class HTGTaskExecutor extends TaskExecutor implements JobListener {
 
     LOG.log(Level.INFO, workerId + " Execution Completed");
     return true;
+  }
+
+  private boolean handleExecuteMessage(Any msg) {
+    JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
+    HTGJobAPI.ExecuteMessage executeMessage;
+    String subgraph;
+    ExecutionPlan executionPlan;
+    HTGJobAPI.ExecuteCompletedMessage completedMessage;
+    try {
+      executeMessage = msg.unpack(HTGJobAPI.ExecuteMessage.class);
+      LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
+      subgraph = executeMessage.getSubgraphName();
+      LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
+
+      // get the subgraph from the map
+      HTGJobAPI.SubGraph subGraph = executeMessage.getGraph();
+      DataFlowTaskGraph taskGraph = (DataFlowTaskGraph) serializer.deserialize(
+          subGraph.getGraphSerialized().toByteArray());
+      if (taskGraph == null) {
+        LOG.severe(workerId + " Unable to find the subgraph " + subgraph);
+        return true;
+      }
+      // use the taskexecutor to create the execution plan
+      executionPlan = this.plan(taskGraph);
+      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
+      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
+
+      // reuse the task executor execute
+      this.execute(taskGraph, executionPlan);
+
+      LOG.log(Level.INFO, workerId + " Completed subgraph : " + subgraph);
+
+      LOG.log(Level.INFO, workerId + " Sending subgraph completed message to driver");
+      completedMessage = HTGJobAPI.ExecuteCompletedMessage.newBuilder()
+          .setSubgraphName(subgraph).build();
+
+      List<String> outPutNames = subGraph.getOutputsList();
+      Map<String, DataSet<Object>> outs = new HashMap<>();
+      for (String out : outPutNames) {
+        // get the outputs
+        DataSet<Object> outPut = getOutput(taskGraph, executionPlan, "", out);
+        outs.put(out, outPut);
+      }
+      outPuts.put("out", outs);
+
+      if (!workerMessenger.sendToDriver(completedMessage)) {
+        LOG.severe("Unable to send the subgraph completed message :" + completedMessage);
+      }
+    } catch (InvalidProtocolBufferException e) {
+      LOG.log(Level.SEVERE, "Unable to unpack received message ", e);
+    }
+    return false;
   }
 
   @Override

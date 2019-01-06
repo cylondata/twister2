@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.htgjob;
+package edu.iu.dsc.tws.api.cdfw;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -17,7 +17,7 @@ import java.util.concurrent.BlockingQueue;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 
 public final class Twister2HTGInstance {
-  private Twister2HTGScheduler twister2HTGScheduler;
+  private DefaultScheduler defaultScheduler;
 
   private List<HTGJobAPI.ExecuteMessage> executeMessagesList;
 
@@ -38,12 +38,12 @@ public final class Twister2HTGInstance {
     this.htgSchedulerClassName = htgSchedulerClassName;
   }
 
-  public Twister2HTGScheduler getTwister2HTGScheduler() {
-    return twister2HTGScheduler;
+  public DefaultScheduler getDefaultScheduler() {
+    return defaultScheduler;
   }
 
-  public void setTwister2HTGScheduler(Twister2HTGScheduler twister2HTGScheduler) {
-    this.twister2HTGScheduler = twister2HTGScheduler;
+  public void setDefaultScheduler(DefaultScheduler defaultScheduler) {
+    this.defaultScheduler = defaultScheduler;
   }
 
   public List<HTGJobAPI.ExecuteMessage> getExecuteMessagesList() {

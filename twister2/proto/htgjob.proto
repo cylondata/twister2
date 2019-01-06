@@ -18,6 +18,13 @@ message SubGraph {
     string name = 7;
     tws.proto.job.Config config = 8;
     bytes graph_serialized = 9;
+    repeated Input inputs = 10;
+    repeated string outputs = 11;
+}
+
+message Input {
+    string parentGraph = 1;
+    string name = 2;
 }
 
 message Relation {

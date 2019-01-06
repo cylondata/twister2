@@ -168,7 +168,7 @@ public class TaskExecutor {
       INodeInstance node = e.getValue();
       INode task = node.getNode();
       if (task instanceof Collector) {
-        Partition partition = ((Collector) task).get();
+        Partition partition = (Partition) ((Collector) task).get();
         dataSet.addPartition(partition);
       } else {
         throw new RuntimeException("Cannot collect from node because it is not a collector: "
@@ -200,7 +200,7 @@ public class TaskExecutor {
       INodeInstance node = e.getValue();
       INode task = node.getNode();
       if (task instanceof Collector) {
-        Partition partition = ((Collector) task).get(dataName);
+        Partition partition = (Partition) ((Collector) task).get(dataName);
         if (partition != null) {
           dataSet.addPartition(partition);
         } else {

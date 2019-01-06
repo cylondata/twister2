@@ -9,17 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.htgjob;
+package edu.iu.dsc.tws.api.cdfw;
 
-import java.util.List;
-
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import java.util.Set;
 
 /**
  * This schedule is the base method for making decisions to run the part of the task graph which
  * will be improved further with the complex logic. Now, based on the relations(parent -> child)
  * it will initiate the execution.
  */
-public interface ITwister2HTGScheduler {
-  List<String> schedule(DataFlowTaskGraph twister2Metagraph);
+public interface ICDFWScheduler {
+  Set<Integer> schedule(DataFlowGraph graphJob);
 }

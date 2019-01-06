@@ -9,12 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.htgjob;
+package edu.iu.dsc.tws.examples.batch.cdfw;
 
-public enum DriverState {
-  INITIALIZE,
-  WAIT_FOR_WORKERS_TO_START,
-  DRIVER_LISTENER_INITIALIZED,
-  JOB_SUBMITTED,
-  JOB_FINISHED
+public class HTGConstants {
+
+  public static final String ARGS_WORKERS = "workers";
+  public static final String ARGS_PARALLELISM_VALUE = "parallelism";
+  public static final String ARGS_DUMMY = "dummy"; // todo: remove this
+
+  protected HTGConstants() {
+  }
 }

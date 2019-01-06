@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.htgjob;
+package edu.iu.dsc.tws.api.cdfw;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -36,8 +36,8 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceRuntime;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public final class Twister2HTGSubmitter implements DriverJobListener {
-  private static final Logger LOG = Logger.getLogger(Twister2HTGSubmitter.class.getName());
+public final class CDFWExecutor implements DriverJobListener {
+  private static final Logger LOG = Logger.getLogger(CDFWExecutor.class.getName());
 
   /**
    * Configuration
@@ -79,7 +79,7 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
    */
   private JMDriverAgent driverAgent;
 
-  public Twister2HTGSubmitter(Config cfg) {
+  public CDFWExecutor(Config cfg) {
     this.config = cfg;
     this.kryoMemorySerializer = new KryoMemorySerializer();
     // set the driver events queue, this will make sure that we only create one instance of
@@ -91,7 +91,7 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
    * The executeHTG method first call the schedule method to get the schedule list of the HTG.
    * Then, it invokes the build HTG Job object to build the htg job object for the scheduled graphs.
    */
-  public void execute(SubGraphJob graph) {
+  public void execute(DataFlowGraph graph) {
     LOG.info("Starting task graph Requirements:" + graph.getGraph().getTaskGraphName());
 
     if (!(driverState == DriverState.JOB_FINISHED || driverState == DriverState.INITIALIZE)) {
@@ -176,7 +176,7 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
    * This method is responsible for building the htg job object which is based on the outcome of
    * the scheduled graphs list.
    */
-  private HTGJobAPI.SubGraph buildHTGJob(SubGraphJob job) {
+  private HTGJobAPI.SubGraph buildHTGJob(DataFlowGraph job) {
     JobAPI.Config.Builder configBuilder = JobAPI.Config.newBuilder();
 
     JobConfig jobConfig = job.getJobConfig();
@@ -195,6 +195,8 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
         .setConfig(configBuilder)
         .setGraphSerialized(ByteString.copyFrom(graphBytes))
         .setInstances(job.getWorkers())
+        .addAllOutputs(job.getOutputs())
+        .addAllInputs(job.getInputs())
         .build();
   }
 
@@ -232,7 +234,7 @@ public final class Twister2HTGSubmitter implements DriverJobListener {
   private void startWorkers(HTGJobAPI.SubGraph htgJob) {
     //send the singleton object to the HTG Driver
     Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
-    twister2HTGInstance.setHtgSchedulerClassName(Twister2HTGScheduler.class.getName());
+    twister2HTGInstance.setHtgSchedulerClassName(DefaultScheduler.class.getName());
 
     //Setting the first graph resource requirements for the initial resource allocation
     Twister2Job twister2Job = Twister2Job.newBuilder()
