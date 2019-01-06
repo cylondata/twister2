@@ -265,7 +265,7 @@ This command generate and write the datapoints and centroids in the HDFS and run
 
 #### KMeansConstants
 
-```text
+```java
 public static final String ARGS_WORKERS = "workers";
 
 public static final String ARGS_ITR = "iter";
@@ -309,7 +309,7 @@ It is the main class for the K-Means clustering which has the following classes 
 
 Next, the datapoints are stored in DataSet \(0th object\) and centroids are stored in DataSet \(1st object\) and call the executor as given below:
 
-```text
+```java
 taskExecutor.addInput(graph, plan, "source", "points", datapoints);
 
 taskExecutor.addInput(graph, plan, "source", "centroids", centroids);
@@ -319,7 +319,7 @@ taskExecutor.execute(graph, plan);
 
 This process repeats for ‘N’ number of iterations as specified in the KMeansConstants . For every iteration, the new centroid value is calculated and the calculated value is distributed across all the task instances.
 
-```text
+```java
 DataSet<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
 
 Set<Object> values = dataSet.getData();
@@ -332,7 +332,7 @@ for (Object value : values) {
 
 At the end of every iteration, the centroid value is updated and the iteration continues with the new centroid value.
 
-```text
+```java
 datapoints.addPartition(0, dataPoint);
 
 centroids.addPartition(1, centroid);
@@ -342,7 +342,7 @@ centroids.addPartition(1, centroid);
 
 The KMeansSourceTask retrieve the input data file and centroid file name, it first calculate the start index and end index which is based on the total data points and the parallelism value as given below:
 
-```text
+```java
 int startIndex = context.taskIndex() * datapoints.length / context.getParallelism();
 
 int endIndex = startIndex + datapoints.length / context.getParallelism();
@@ -350,7 +350,7 @@ int endIndex = startIndex + datapoints.length / context.getParallelism();
 
 Then, it calls the KMeansCalculator class to calculate and get the centroid value for the task instance.
 
-```text
+```java
 kMeansCalculator = new KMeansCalculator(datapoints, centroid,
         context.taskIndex(), 2, startIndex, endIndex);
 
@@ -359,7 +359,7 @@ KMeansCenters kMeansCenters = kMeansCalculator.calculate();
 
 Finally, each task instance write their calculated centroids value as given below:
 
-```text
+```java
 context.writeEnd("all-reduce", kMeansCenters);
 ```
 
@@ -367,7 +367,7 @@ context.writeEnd("all-reduce", kMeansCenters);
 
 The KMeansAllReduceTask retrieve the calculated centroid value in the execute method
 
-```text
+```java
   public boolean execute(IMessage message) {
    centroids = ((KMeansCenters) message.getContent()).getCenters();
   }
@@ -375,7 +375,7 @@ The KMeansAllReduceTask retrieve the calculated centroid value in the execute me
 
 and write the calculated centroid value without the number of datapoints fall into the particular cluster as given below:
 
-```text
+```java
   @Override
   public Partition<Object> get() {
    return new Partition<>(context.taskIndex(), new KMeansCenters().setCenters(newCentroids));
@@ -386,13 +386,13 @@ and write the calculated centroid value without the number of datapoints fall in
 
 The CentroidAggregator implements the IFunction and the function OnMessage which accepts two objects as an argument.
 
-```text
+```java
 public Object onMessage(Object object1, Object object2)
 ```
 
 It sums the corresponding centroid values and return the same.
 
-```text
+```java
 ret.setCenters(newCentroids);
 ```
 

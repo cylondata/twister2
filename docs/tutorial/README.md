@@ -67,12 +67,12 @@ Here are the introductory slides we will go through in this Tutorial.
 
 Here are the slides for Hands on section.
 
-| Content | Description |
+| Content | Section |
 | ------------- | ------------- |
-| [Hello World](https://docs.google.com/presentation/d/1ZMeO5aofZZNKwoR66N6b4hzSJqlGlbWgZLOq8Ie6vl0/edit?usp=sharing) | Hello World |
-| [Streaming](https://docs.google.com/presentation/d/17uDBBlQxqzLx3m_inOM9svYvANCEwF2nN1KUYDoqInM/edit?usp=sharing)  | Streaming Word Count  |
-| [Batch](https://docs.google.com/presentation/d/1hpBcy_-m5AuVJJxPdhX_5hnIVB4vUkiB6My0STp-dLA/edit?usp=sharing) | Batch Word Count  |
-| [Machine Learning](https://docs.google.com/presentation/d/1-AZXo3KjPEk7E-k7_Z5lSKdPk_9R4D8w9PgNrijQeUU/edit?usp=sharing) | K-Means |
+| [Hello World](https://docs.google.com/presentation/d/1ZMeO5aofZZNKwoR66N6b4hzSJqlGlbWgZLOq8Ie6vl0/edit?usp=sharing) | [Hello World](developing.md#Hello World Example) |
+| [Streaming](https://docs.google.com/presentation/d/17uDBBlQxqzLx3m_inOM9svYvANCEwF2nN1KUYDoqInM/edit?usp=sharing)  | [Streaming Word](developing.md#Streaming WordCount Example) |
+| [Batch](https://docs.google.com/presentation/d/1hpBcy_-m5AuVJJxPdhX_5hnIVB4vUkiB6My0STp-dLA/edit?usp=sharing) | [Batch Word Count](developing.md#Batch WordCount Example)  |
+| [Machine Learning](https://docs.google.com/presentation/d/1-AZXo3KjPEk7E-k7_Z5lSKdPk_9R4D8w9PgNrijQeUU/edit?usp=sharing) | [K-Means](developing.md#Machine Learning Example KMeans) |
 | [Communication API]()| Available Soon|
 
 
