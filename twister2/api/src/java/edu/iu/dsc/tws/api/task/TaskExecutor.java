@@ -26,6 +26,8 @@ import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.api.INode;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -149,6 +151,32 @@ public class TaskExecutor {
   }
 
   /**
+   * Add input to the the task instances
+   * @param graph task graph
+   * @param plan execution plan
+   * @param inputKey inputkey
+   * @param input input
+   */
+  public void addSourceInput(DataFlowTaskGraph graph, ExecutionPlan plan,
+                       String inputKey, DataSet<Object> input) {
+    Map<Integer, INodeInstance> nodes = plan.getNodes();
+    if (nodes == null) {
+      throw new RuntimeException(String.format("%d Failed to set input for non-existing "
+          + "existing sources: %s", workerID, plan.getNodeNames()));
+    }
+
+    for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
+      INodeInstance node = e.getValue();
+      INode task = node.getNode();
+      if (task instanceof Receptor && task instanceof ISource) {
+        ((Receptor) task).add(inputKey, input);
+      } else {
+        throw new RuntimeException("Cannot add input to non input instance: " + node);
+      }
+    }
+  }
+
+  /**
    * Extract output from a task graph
    *
    * @param graph the graph
@@ -173,6 +201,39 @@ public class TaskExecutor {
       } else {
         throw new RuntimeException("Cannot collect from node because it is not a collector: "
             + node);
+      }
+    }
+    return dataSet;
+  }
+
+  /**
+   * Extract output from a task graph
+   *
+   * @param graph the graph
+   * @param plan plan created from the graph
+   * @param dataName name of the data set
+   * @return a DataSet with set of partitions from each task in this executor
+   */
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public DataSet<Object> getSinkOutput(DataFlowTaskGraph graph, ExecutionPlan plan,
+                                       String dataName) {
+    Map<Integer, INodeInstance> nodes = plan.getNodes();
+
+    DataSet<Object> dataSet = new DataSet<>(0);
+    for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
+      INodeInstance node = e.getValue();
+      INode task = node.getNode();
+      if (task instanceof Collector && task instanceof ISink) {
+        Partition partition = (Partition) ((Collector) task).get(dataName);
+        if (partition != null) {
+          dataSet.addPartition(partition);
+        } else {
+          LOG.warning(String.format("Task id %d returned null for data %s",
+              node.getId(), dataName));
+        }
+      } else {
+        throw new RuntimeException("Cannot collect from node because it is "
+            + "not a collector: " + node);
       }
     }
     return dataSet;

@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public class HTGTaskExecutor extends TaskExecutor implements JobListener {
+public class HTGTaskExecutor implements JobListener {
   private static final Logger LOG = Logger.getLogger(HTGTaskExecutor.class.getName());
 
   private BlockingQueue<Any> executeMessageQueue;
@@ -46,9 +46,11 @@ public class HTGTaskExecutor extends TaskExecutor implements JobListener {
 
   private Map<String, Map<String, DataSet<Object>>> outPuts = new HashMap<>();
 
+  private TaskExecutor taskExecutor;
+
   public HTGTaskExecutor(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
                          Communicator net) {
-    super(cfg, wId, workerInfoList, net);
+    taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, net);
     this.executeMessageQueue = new LinkedBlockingQueue<>();
     this.workerId = wId;
     this.serializer = new KryoMemorySerializer();
@@ -104,12 +106,19 @@ public class HTGTaskExecutor extends TaskExecutor implements JobListener {
         return true;
       }
       // use the taskexecutor to create the execution plan
-      executionPlan = this.plan(taskGraph);
+      executionPlan = taskExecutor.plan(taskGraph);
       LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
       LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
 
+      List<HTGJobAPI.Input> inputs = subGraph.getInputsList();
+      // now lets get those inputs
+      for (HTGJobAPI.Input in : inputs) {
+        DataSet<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
+        taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
+      }
+
       // reuse the task executor execute
-      this.execute(taskGraph, executionPlan);
+      taskExecutor.execute(taskGraph, executionPlan);
 
       LOG.log(Level.INFO, workerId + " Completed subgraph : " + subgraph);
 
@@ -121,7 +130,7 @@ public class HTGTaskExecutor extends TaskExecutor implements JobListener {
       Map<String, DataSet<Object>> outs = new HashMap<>();
       for (String out : outPutNames) {
         // get the outputs
-        DataSet<Object> outPut = getOutput(taskGraph, executionPlan, "", out);
+        DataSet<Object> outPut = taskExecutor.getSinkOutput(taskGraph, executionPlan, out);
         outs.put(out, outPut);
       }
       outPuts.put("out", outs);
