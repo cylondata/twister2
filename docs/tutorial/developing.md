@@ -14,19 +14,18 @@ We will start with a simple Hello World example and then continue with more comp
 
 ## Docker Image 
 
-Download Docker Image and launch Container Instance
+We have created a Docker container for you to easily run jobs on twister2.
+This container has all the necessary software installed in order to run
+twister2 jobs using standalone resource scheduler.
 
-Execute the two commands to load docker image and launch a container instance.
+Execute the two commands to pull the docker image and launch a container instance.
 
 ```bash
-
 sudo docker pull twister2tutorial/twister2:standalone
-
 
 sudo docker run -it twister2tutorial/twister2:standalone bash
 
 ls
-
 ```
 
 Docker image has Twister2 installed and you can run examples.
@@ -54,7 +53,7 @@ and log into the docker
 sudo docker exec -it <container_id> bash
 ```
 
-You should go into twister2 diretory first.
+You should go into twister2 directory first.
 
 Then, to run an example you can use the ```twister2 submit``` command with ```standlone``` as the cluster.
 
@@ -95,6 +94,8 @@ Go to the directory:
 cd twister2/bazel-bin/scripts/package/twister2-0.1.0/
 ```
 
+Then, to run an example you can use the ```twister2 submit``` command.
+
 ## Examples
 
 We have four examples
@@ -127,15 +128,15 @@ You can submit HelloWorld job in examples package with 8 workers as;
 ```
 
 If you are using our testbed cluster “Echo”,
+
 1. Login to your account in Echo
 2. Change you directory to  ```twister2/twister2/bazel-bin/scripts/package/twister2-0.1.0/```
-4. Run the command above.
+3. Run the command above.
 
-You can check the status of the submitted job through the dashboard provided by the resource scheduler.  For our Echo Cluster the addresses are;
+You can check the status of the submitted job through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;
 
 ```text
 Kubernetes ---> http://149.165.150.81:8080/#/jobs
-Mesos---> http://149.165.150.81:5050
 ```
 
 HelloWorld job runs for 1 minute. After 1 minute, the job becomes COMPLETED if everything is fine.
