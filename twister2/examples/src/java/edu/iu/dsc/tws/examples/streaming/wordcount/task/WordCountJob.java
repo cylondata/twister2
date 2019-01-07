@@ -43,8 +43,8 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
  * A simple wordcount program where fixed number of words are generated and the global counts
  * of words are calculated
  */
-public class WordCountTJob extends TaskWorker {
-  private static final Logger LOG = Logger.getLogger(WordCountTJob.class.getName());
+public class WordCountJob extends TaskWorker {
+  private static final Logger LOG = Logger.getLogger(WordCountJob.class.getName());
 
   private static final String EDGE = "reduce-edge";
 
@@ -122,7 +122,7 @@ public class WordCountTJob extends TaskWorker {
     JobConfig jobConfig = new JobConfig();
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("wordcount-streaming-task");
-    jobBuilder.setWorkerClass(WordCountTJob.class);
+    jobBuilder.setWorkerClass(WordCountJob.class);
     jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
