@@ -216,8 +216,16 @@ cd bazel-bin/scripts/package/twister2-dist/
 
 And run the command below  using standalone resource scheduler
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.WordCountJob
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob
 ```
+
+And run the command below  using kubernetes resource scheduler
+
+```bash
+./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob
+```
+
+
 
 It will run 4 executors with 8 tasks
 * Each executor will have two tasks
@@ -254,9 +262,17 @@ cd bazel-bin/scripts/package/twister2-dist/
 ```
 
 And run the command below  using standalone resource scheduler
+
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.WordCountJob
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
 ```
+
+And run the command below  using kubernetes resource scheduler
+
+```bash
+./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
+```
+
 
 
 It will run 4 executors with 8 tasks
@@ -291,6 +307,14 @@ The need to process large amounts of continuously arriving information has led t
 
 This command generate and write the datapoints and centroids in the local filesystem and run the K-Means algorithm.
 
+#### Standalone
+
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys local -pseedvalue 100 -cseedvalue 500 -input generate -parallelism 4
+
+```
+#### Kubernetes
+
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys local -pseedvalue 100 -cseedvalue 500 -input generate -parallelism 4
 
@@ -298,8 +322,16 @@ This command generate and write the datapoints and centroids in the local filesy
 
 This command generate and write the datapoints and centroids in the HDFS and run the K-Means algorithm.
 
+#### Standalone
+
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys hdfs -pseedvalue 100 -cseedvalue 200 -input generate -parallelism 4
+```
+
+#### Kubernetes
+
+```bash
+./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys hdfs -pseedvalue 100 -cseedvalue 200 -input generate -parallelism 4
 ```
 
 ### Implementation Details
