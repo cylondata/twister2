@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.dataset.DSet;
 import edu.iu.dsc.tws.dataset.DataSet;
 import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -90,9 +91,9 @@ public class IterativeJob extends TaskWorker {
     }
 
     @Override
-    public void add(String name, DataSet<Object> data) {
+    public void add(String name, DSet<Object> data) {
       LOG.log(Level.INFO, "Received input: " + name);
-      input = data;
+      input = (DataSet<Object>) data;
     }
   }
 

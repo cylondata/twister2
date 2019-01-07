@@ -24,4 +24,12 @@ public interface DSet<T> {
    * @return the partitions
    */
   PSet<T>[] getPartitions(int procId);
+
+  /**
+   * Get the partition with the specific partition id
+   * @param procId
+   * @param partitionId
+   * @return PSet
+   */
+  PSet<T> getPartitions(int procId, int partitionId);
 }

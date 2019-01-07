@@ -22,13 +22,13 @@ public interface PSet<T> {
    *
    * @return the process id
    */
-  int getProcId();
+  int getWorkerId();
 
   /**
    * Get the id of the partition
    * @return the id of the partition
    */
-  int partitionId();
+  int getPartitionId();
 
   /**
    * Weather there is a next record

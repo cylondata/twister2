@@ -9,49 +9,50 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dataset;
+package edu.iu.dsc.tws.dataset.impl;
 
-public class Partition<T> implements PSet<T> {
-  private T data;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
-  private int id;
+import edu.iu.dsc.tws.dataset.PSet;
+
+public class CollectionPSet<T> implements PSet<T> {
+  private List<T> dataList = new ArrayList<>();
 
   private int workerId;
 
-  public Partition(int id) {
+  private int id;
+
+  private Iterator<T> iterator;
+
+  public CollectionPSet(int workerId, int id) {
+    this.workerId = workerId;
     this.id = id;
-  }
-
-  public Partition(int pId, T d) {
-    this.data = d;
-    this.id = pId;
-  }
-
-  public T getData() {
-    return data;
-  }
-
-  public int getId() {
-    return id;
+    iterator = dataList.iterator();
   }
 
   @Override
   public int getWorkerId() {
-    return id;
+    return workerId;
   }
 
   @Override
   public int getPartitionId() {
-    return 0;
+    return id;
   }
 
   @Override
   public boolean hasNext() {
-    return false;
+    return iterator.hasNext();
   }
 
   @Override
   public T next() {
-    return null;
+    return iterator.next();
+  }
+
+  public void add(T val) {
+    dataList.add(val);
   }
 }
