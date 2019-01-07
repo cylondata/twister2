@@ -11,17 +11,53 @@ We will start with a simple Hello World example and then continue with more comp
 * [Docker image based installation](installation.md#docker-image-based-installation)
 * [Using Echo cluster](installation.md#using-echo-cluster)
 
-## Prerequisite
 
-In order to go through the tutorial, we would recommed a Linux machine. 
+## Docker Image 
+
+Download Docker Image and launch Container Instance
+
+Execute the two commands to load docker image and launch a container instance.
+
+```bash
+
+sudo docker pull twister2tutorial/twister2:standalone
 
 
-## Docker Image Based Installation
+sudo docker run -it twister2tutorial/twister2:standalone bash
 
-will be ready soon ....
+ls
+
+```
+
+Docker image has Twister2 installed and you can run examples.
+
+Here are some useful docker commands
+
+```bash
+# Remove useless docker images
+sudo docker image rm <useless-docker-image>
+# Remove exited containers
+sudo docker rm $(sudo docker ps -a -f status=exited -q)
+# Clean up all dangling cache
+sudo docker system prune
+```
+
+Find the docker container ID
+
+```bash
+sudo docker ps
+```
+
+and log into the docker
+
+```bash
+sudo docker exec -it <container_id> bash
+```
+
+To run an example you can use the ```twister2 submit``` command with ```standlone``` as the cluster.
 
 
-## Using Echo Cluster
+## Echo Cluster
 
 This option will utilize the already running Twister2 systems including the resource schedulers; Kubernetes and Mesos.
 Echo cluster consists of four nodes. Each node in this cluster consists of 24 CPU cores, 384 GB of memory and 2.3 TB of disk.
@@ -74,9 +110,9 @@ You can submit HelloWorld job in examples package with 8 workers as;
 ```
 
 If you are using our testbed cluster “Echo”,
-* Login to your account
-* Change you directory to  twister2/twister2/bazel-bin/scripts/package/twister2-0.1.0/
-* Run the command above.
+1. Login to your account in Echo
+2. Change you directory to  ```twister2/twister2/bazel-bin/scripts/package/twister2-0.1.0/```
+4. Run the command above.
 
 You can check the status of the submitted job through the dashboard provided by the resource scheduler.  For our Echo Cluster the addresses are;
 
