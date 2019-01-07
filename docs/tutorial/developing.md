@@ -8,8 +8,8 @@ for using the Docker image prepared for standalone twister2 environment.
 The second option is using a twister2-ready cluster on one of our systems, called Echo. We will explain how to use Echo systems to run your jobs.
 We will start with a simple Hello World example and then continue with more complex example.
 
-* [Docker image based installation](installation.md#docker-image-based-installation)
-* [Using Echo cluster](installation.md#using-echo-cluster)
+* [Docker image](developing.md#docker-image)
+* [Using Echo cluster](developing.md#echo-cluster)
 
 
 ## Docker Image 
@@ -54,8 +54,25 @@ and log into the docker
 sudo docker exec -it <container_id> bash
 ```
 
-To run an example you can use the ```twister2 submit``` command with ```standlone``` as the cluster.
+You should go into twister2 diretory first.
 
+Then, to run an example you can use the ```twister2 submit``` command with ```standlone``` as the cluster.
+
+For example;
+
+To run hello world example;
+
+```bash
+  ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld
+```
+To run batch word count example
+```bash
+  ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.WordCountJob
+```
+To run streaming word count example
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.WordCountJob
+```
 
 ## Echo Cluster
 
