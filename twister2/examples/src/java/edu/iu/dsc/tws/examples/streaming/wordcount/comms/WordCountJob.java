@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.wordcount;
+package edu.iu.dsc.tws.examples.streaming.wordcount.comms;
 
 import java.util.HashMap;
 
@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public final class WordCountJob {
-
   private WordCountJob() {
   }
 
@@ -28,10 +27,9 @@ public final class WordCountJob {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
-    // build JobConfig
     JobConfig jobConfig = new JobConfig();
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("batch-wordcount");
+    jobBuilder.setJobName("streaming-wordcount");
     jobBuilder.setWorkerClass(WordCountWorker.class.getName());
     jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);

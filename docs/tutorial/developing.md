@@ -11,6 +11,11 @@ We will start with a simple Hello World example and then continue with more comp
 * [Docker image based installation](installation.md#docker-image-based-installation)
 * [Using Echo cluster](installation.md#using-echo-cluster)
 
+## Prerequisite
+
+In order to go through the tutorial, we would recommed a Linux machine. 
+
+
 ## Docker Image Based Installation
 
 will be ready soon ....
