@@ -75,7 +75,7 @@ Twister2 is installed under twister2 directory.
 Go to the directory:
 
 ```bash
-twister2/bazel-bin/scripts/package/twister2-0.1.0/*
+cd twister2/bazel-bin/scripts/package/twister2-0.1.0/
 ```
 
 ## Examples
