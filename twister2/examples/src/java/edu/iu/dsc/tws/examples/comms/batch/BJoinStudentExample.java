@@ -35,7 +35,8 @@ import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 
 /**
  * This example join performs a join between two tables, 1 : | Student ID | Name | and 2 :
- * | Student ID | Course ID |
+ * | Student ID | Course ID |. The result will produce a joined (inner join) result of
+ * | Student ID | Name | Course ID |
  */
 public class BJoinStudentExample extends KeyedBenchWorker {
 
@@ -49,6 +50,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
   @Override
   protected void execute() {
+    //Setting up the task plan for the join operation
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
         jobParameters.getTaskStages(), workerList);
 
@@ -63,14 +65,14 @@ public class BJoinStudentExample extends KeyedBenchWorker {
       targets.add(noOfSourceTasks + i);
     }
 
-    // create the communication
+    // create the join communication
     join = new BJoin(communicator, taskPlan, sources, targets, MessageType.INTEGER,
         MessageType.OBJECT, new JoinReceiver(), new SimpleKeyBasedSelector(), false);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
-    // now initialize the workers
 
+    // now initialize the workers
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
         workerId, sources, 1, tasksOfExecutor));
     for (int t : tasksOfExecutor) {
@@ -80,6 +82,15 @@ public class BJoinStudentExample extends KeyedBenchWorker {
     }
   }
 
+  /**
+   * Messages that are sent to the join operation are sent to the communication layer
+   * @param task task id
+   * @param key the key of the message
+   * @param data the data for this message
+   * @param flag flag that holds indicators such as END
+   * @param tag Specifies which partition of the join this message belongs to
+   * @return true, this method will wait till the message is accepted by the communication layer
+   */
   protected boolean sendMessages(int task, Object key, Object data, int flag, int tag) {
     while (!join.partition(task, key, data, flag, tag)) {
       // lets wait a litte and try again
@@ -108,8 +119,11 @@ public class BJoinStudentExample extends KeyedBenchWorker {
     throw new UnsupportedOperationException("Join requires massage with tag value");
   }
 
+  /**
+   * The final result receiver class, it will get an iterator object which contains the
+   * key and value pairs of each result from the join operation
+   */
   public class JoinReceiver implements BulkReceiver {
-    private int count = 0;
     private int expected;
 
     @Override
@@ -123,15 +137,16 @@ public class BJoinStudentExample extends KeyedBenchWorker {
         ImmutablePair item = (ImmutablePair) it.next();
         LOG.info("Key " + item.getKey() + " : Value " + item.getValue());
       }
-//      LOG.log(Level.INFO, String.format("%d Received message %d count %d",
-//          workerId, target, Iterators.size(it)));
-
       joinDone = true;
 
       return true;
     }
   }
 
+  /**
+   * This class is responsible of generating and sending the message to the join operation,
+   * This is essentially the source task for this join example.
+   */
   protected class MapWorker implements Runnable {
     private int task;
 
@@ -142,15 +157,24 @@ public class BJoinStudentExample extends KeyedBenchWorker {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
+
+      //Data for the join
+      //Student Id's
       int[] keysStudent = {1, 2, 3, 4, 5, 6, 7, 8};
+
+      //Student (For course list) Id's
       int[] keysCourse = {1, 2, 3, 4, 5, 6, 7, 8, 1, 3, 5, 1};
+      //Student Names, which map to the student id's
       String[] names = {"John", "Peter", "Tedd", "Jake", "Matt", "Adam", "Max", "Roger"};
+
+      //Course Names which map to the keysCourse array
       String[] courses = {"E342", "E542", "E242", "E342", "E347", "E347", "E101", "E241", "E247",
           "E101", "E541", "E333"};
       int[] dataLeft = DataGenerator.generateIntData(jobParameters.getSize());
 
-      Integer key;
-      // lets generate a message
+      // Each task will only send out data for students who have a student id of (task id + 1)
+      // This is done for demonstration purposes to make sure no two tasks send the same data points
+      // Which would result in duplicate entries in the join results
       int flag = MessageFlags.LAST;
       for (int i = 0; i < keysStudent.length; i++) {
         if (keysStudent[i] == task + 1) {
@@ -176,7 +200,6 @@ public class BJoinStudentExample extends KeyedBenchWorker {
       finishCommunication(task);
       sourcesDone = allDone;
       lock.unlock();
-//      LOG.info(String.format("%d Sources done %s, %b", id, finishedSources, sourcesDone));
     }
   }
 
