@@ -1,9 +1,10 @@
 #! /bin/bash
 ####################################################################
-# This script starts a Twister2 worker in jobs that do not use openmpi
+# This script starts a Twister2 worker or Job Master in jobs
 # It:
 #   gets the job package and unpacks it, if it is the first worker in a pod
-#   if it is not the first worker, it waits for the first worker to get the job package and unpacks it
+#   if it is not the first worker,
+#   it waits for the first worker to get the job package and unpack it
 #   sets the classpath
 #   starts the worker class
 ####################################################################

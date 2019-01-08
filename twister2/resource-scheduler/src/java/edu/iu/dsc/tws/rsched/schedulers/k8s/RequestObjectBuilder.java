@@ -68,12 +68,14 @@ public final class RequestObjectBuilder {
 
   private static Config config;
   private static String jobName;
+  private static long jobPackageFileSize;
 
   private RequestObjectBuilder() { }
 
-  public static void init(Config cnfg, String jName) {
+  public static void init(Config cnfg, String jName, long jpFileSize) {
     config = cnfg;
     jobName = jName;
+    jobPackageFileSize = jpFileSize;
   }
 
   /**
@@ -81,7 +83,6 @@ public final class RequestObjectBuilder {
    * @return
    */
   public static V1beta2StatefulSet createStatefulSetForWorkers(ComputeResource computeResource,
-                                                               long jobFileSize,
                                                                String encodedNodeInfoList) {
 
     if (config == null) {
@@ -119,7 +120,7 @@ public final class RequestObjectBuilder {
 
     // construct the pod template
     V1PodTemplateSpec template = constructPodTemplate(
-        computeResource, serviceLabel, jobFileSize, encodedNodeInfoList);
+        computeResource, serviceLabel, encodedNodeInfoList);
 
     setSpec.setTemplate(template);
 
@@ -131,12 +132,10 @@ public final class RequestObjectBuilder {
   /**
    * construct pod template
    * @param serviceLabel
-   * @param jobFileSize
    * @return
    */
   public static V1PodTemplateSpec constructPodTemplate(ComputeResource computeResource,
                                                        String serviceLabel,
-                                                       long jobFileSize,
                                                        String encodedNodeInfoList) {
 
     V1PodTemplateSpec template = new V1PodTemplateSpec();
@@ -196,7 +195,7 @@ public final class RequestObjectBuilder {
 
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
-      containers.add(constructContainer(computeResource, i, jobFileSize, encodedNodeInfoList));
+      containers.add(constructContainer(computeResource, i, encodedNodeInfoList));
     }
     podSpec.setContainers(containers);
 
@@ -266,7 +265,6 @@ public final class RequestObjectBuilder {
    */
   public static V1Container constructContainer(ComputeResource computeResource,
                                                int containerIndex,
-                                               long jobFileSize,
                                                String encodedNodeInfoList) {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
@@ -278,14 +276,9 @@ public final class RequestObjectBuilder {
       throw new RuntimeException("Container Image name is null. Config parameter: "
           + "twister2.docker.image.for.kubernetes can not be null");
     }
+
     container.setImage(containerImage);
-
-    // by default: IfNotPresent
-    // can be set to Always from client.yaml
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
-
-//        container.setArgs(Arrays.asList("1000000")); parameter to the main method
-
     String startScript = null;
     double cpuPerContainer = computeResource.getCpu();
     int ramPerContainer = computeResource.getRamMegaBytes();
@@ -295,7 +288,7 @@ public final class RequestObjectBuilder {
       cpuPerContainer = cpuPerContainer * computeResource.getWorkersPerPod();
       ramPerContainer = ramPerContainer * computeResource.getWorkersPerPod();
     } else {
-      startScript = "./init_nonmpi.sh";
+      startScript = "./init.sh";
     }
     container.setCommand(Arrays.asList(startScript));
 
@@ -350,7 +343,7 @@ public final class RequestObjectBuilder {
 
     container.setEnv(
         constructEnvironmentVariables(
-            containerName, jobFileSize, containerPort, encodedNodeInfoList));
+            containerName, containerPort, encodedNodeInfoList));
 
     return container;
   }
@@ -358,10 +351,8 @@ public final class RequestObjectBuilder {
   /**
    * set environment variables for containers
    * @param containerName
-   * @param jobFileSize
    */
   public static List<V1EnvVar> constructEnvironmentVariables(String containerName,
-                                                             long jobFileSize,
                                                              int workerPort,
                                                              String encodedNodeInfoList) {
 
@@ -373,7 +364,7 @@ public final class RequestObjectBuilder {
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.JOB_PACKAGE_FILE_SIZE + "")
-        .value(jobFileSize + ""));
+        .value(jobPackageFileSize + ""));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.CONTAINER_NAME + "")

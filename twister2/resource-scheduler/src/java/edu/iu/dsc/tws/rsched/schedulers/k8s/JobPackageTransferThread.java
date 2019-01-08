@@ -238,6 +238,9 @@ public class JobPackageTransferThread extends Thread {
     watchBeforeUploading = watchBefore;
 
     ArrayList<String> podNames = KubernetesUtils.generatePodNames(job);
+    // add job master pod name
+    podNames.add(KubernetesUtils.createJobMasterPodName(job.getJobName()));
+
     transferThreads = new JobPackageTransferThread[podNames.size()];
 
     for (int i = 0; i < podNames.size(); i++) {
