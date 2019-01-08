@@ -11,12 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
-public class HTGConstants {
+public class CDFConstants {
 
   public static final String ARGS_WORKERS = "workers";
   public static final String ARGS_PARALLELISM_VALUE = "parallelism";
   public static final String ARGS_DUMMY = "dummy"; // todo: remove this
 
-  protected HTGConstants() {
+  protected CDFConstants() {
   }
 }

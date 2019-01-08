@@ -105,19 +105,19 @@ public final class HelloExample {
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 1);
 
     Options options = new Options();
-    options.addOption(HTGConstants.ARGS_PARALLELISM_VALUE, true, "2");
-    options.addOption(HTGConstants.ARGS_WORKERS, true, "2");
+    options.addOption(CDFConstants.ARGS_PARALLELISM_VALUE, true, "2");
+    options.addOption(CDFConstants.ARGS_WORKERS, true, "2");
 
     @SuppressWarnings("deprecation")
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine commandLine = commandLineParser.parse(options, args);
 
-    int instances = Integer.parseInt(commandLine.getOptionValue(HTGConstants.ARGS_WORKERS));
+    int instances = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_WORKERS));
     int parallelismValue =
-        Integer.parseInt(commandLine.getOptionValue(HTGConstants.ARGS_PARALLELISM_VALUE));
+        Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_PARALLELISM_VALUE));
 
-    configurations.put(HTGConstants.ARGS_WORKERS, Integer.toString(instances));
-    configurations.put(HTGConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
+    configurations.put(CDFConstants.ARGS_WORKERS, Integer.toString(instances));
+    configurations.put(CDFConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
