@@ -119,6 +119,24 @@ You can check the status of the submitted job through the dashboard provided by 
 Kubernetes ---> http://149.165.150.81:8080/#/jobs
 ```
 
+If you want to see the logs on Kubernetes, you need to get the list of the pods first;
+
+```bash
+kubectl get pods
+```
+Then check the logs with the following command
+
+```bash
+kubectl logs -f <pod-name>
+```
+
+You can also check the logs under the NFS directory. In order to do that you should go to the following directory. You will see the logs for job master and each worker there. 
+
+```bash
+cd /nfs/shared/"archived job directory"/logs
+archived job directory = "archived-default-twister2-storage-" + "job name" + "-pvc-" + "random code"  
+```
+
 
 
 ## Examples
@@ -174,6 +192,13 @@ Then check the logs with the following command
 
 ```bash
 kubectl logs -f <pod-name>
+```
+
+You can also check the logs under the NFS directory. In order to do that you should go to the following directory. You will see the logs for job master and each worker there. 
+
+```bash
+cd /nfs/shared/"archived job directory"/logs
+archived job directory = "archived-default-twister2-storage-" + "job name" + "-pvc-" + "random code"  
 ```
 
 HelloWorld job runs for 1 minute. After 1 minute, the job becomes COMPLETED if everything is fine.
@@ -300,6 +325,13 @@ Then check the logs with the following command
 kubectl logs -f <pod-name>
 ```
 
+You can also check the logs under the NFS directory. In order to do that you should go to the following directory. You will see the logs for job master and each worker there. 
+
+```bash
+cd /nfs/shared/"archived job directory"/logs
+archived job directory = "archived-default-twister2-storage-" + "job name" + "-pvc-" + "random code"  
+```
+
 
 You can access to the presentation using the link below
 
@@ -373,6 +405,13 @@ Then check the logs with the following command
 kubectl logs -f <pod-name>
 ```
 
+You can also check the logs under the NFS directory. In order to do that you should go to the following directory. You will see the logs for job master and each worker there. 
+
+```bash
+cd /nfs/shared/"archived job directory"/logs
+archived job directory = "archived-default-twister2-storage-" + "job name" + "-pvc-" + "random code"  
+```
+
 
 You can access to the presentation using the link below
 
@@ -423,6 +462,13 @@ Then check the logs with the following command
 
 ```bash
 kubectl logs -f <pod-name>
+```
+
+You can also check the logs under the NFS directory. In order to do that you should go to the following directory. You will see the logs for job master and each worker there. 
+
+```bash
+cd /nfs/shared/"archived job directory"/logs
+archived job directory = "archived-default-twister2-storage-" + "job name" + "-pvc-" + "random code"  
 ```
 
 ### Implementation Details
@@ -633,8 +679,32 @@ Key 6 : Value [Adam, E347]
 Key 7 : Value [Max, E101]  
 Key 8 : Value [Roger, E241]  
 ```
+You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;
+
+```text
+Kubernetes ---> http://149.165.150.81:8080/#/jobs
+```
+
+If you want to see the logs on Kubernetes, you need to get the list of the pods first;
+
+```bash
+kubectl get pods
+```
+Then check the logs with the following command
+
+```bash
+kubectl logs -f <pod-name>
+```
+
+You can also check the logs under the NFS directory. In order to do that you should go to the following directory. You will see the logs for job master and each worker there. 
+
+```bash
+cd /nfs/shared/"archived job directory"/logs
+archived job directory = "archived-default-twister2-storage-" + "job name" + "-pvc-" + "random code"  
+```
 
 ## How it works underneath.
 
 The join is implemented using two keyed partition operations, The framework shuffles the data to sink tasks based on the key values such that data entries with the same key values are collected at a single sink task. Then the appropriate join operation is executed based on the keys and values in both data sets and the combined results are sent back to the user.
+
 
