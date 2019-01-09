@@ -8,7 +8,7 @@ After checking this example, you will have an idea on how to write a streaming e
 This example is a streaming word count job. 
 It is a continuously running job,  processing an unbounded stream of data
 
-Fixed number of words are generated and the global counts of words are calculated
+Continuous number of words are generated and the global counts of words are calculated
 
 It uses communication layer and resource scheduling layer
 

@@ -8,25 +8,24 @@ for using the Docker image prepared for standalone twister2 environment.
 The second option is using a twister2-ready cluster on one of our systems, called Echo. We will explain how to use Echo systems to run your jobs.
 We will start with a simple Hello World example and then continue with more complex example.
 
-* [Docker image based installation](installation.md#docker-image-based-installation)
-* [Using Echo cluster](installation.md#using-echo-cluster)
+* [Docker image](developing.md#docker-image)
+* [Using Echo cluster](developing.md#echo-cluster)
 
 
 ## Docker Image 
 
-Download Docker Image and launch Container Instance
+We have created a Docker container for you to easily run jobs on twister2.
+This container has all the necessary software installed in order to run
+twister2 jobs using standalone resource scheduler.
 
-Execute the two commands to load docker image and launch a container instance.
+Execute the two commands to pull the docker image and launch a container instance.
 
 ```bash
-
 sudo docker pull twister2tutorial/twister2:standalone
-
 
 sudo docker run -it twister2tutorial/twister2:standalone bash
 
 ls
-
 ```
 
 Docker image has Twister2 installed and you can run examples.
@@ -54,8 +53,25 @@ and log into the docker
 sudo docker exec -it <container_id> bash
 ```
 
-To run an example you can use the ```twister2 submit``` command with ```standlone``` as the cluster.
+You should go into twister2 directory first.
 
+Then, to run an example you can use the ```twister2 submit``` command with ```standlone``` as the cluster.
+
+For example;
+
+To run hello world example;
+
+```bash
+  ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld
+```
+To run batch word count example
+```bash
+  ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob
+```
+To run streaming word count example
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
+```
 
 ## Echo Cluster
 
@@ -75,8 +91,10 @@ Twister2 is installed under twister2 directory.
 Go to the directory:
 
 ```bash
-cd twister2/bazel-bin/scripts/package/twister2-0.1.0/
+cd twister2-0.1.0
 ```
+
+Then, to run an example you can use the ```twister2 submit``` command.
 
 ## Examples
 
@@ -110,15 +128,15 @@ You can submit HelloWorld job in examples package with 8 workers as;
 ```
 
 If you are using our testbed cluster “Echo”,
+
 1. Login to your account in Echo
 2. Change you directory to  ```twister2/twister2/bazel-bin/scripts/package/twister2-0.1.0/```
-4. Run the command above.
+3. Run the command above.
 
-You can check the status of the submitted job through the dashboard provided by the resource scheduler.  For our Echo Cluster the addresses are;
+You can check the status of the submitted job through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;
 
 ```text
 Kubernetes ---> http://149.165.150.81:8080/#/jobs
-Mesos---> http://149.165.150.81:5050
 ```
 
 HelloWorld job runs for 1 minute. After 1 minute, the job becomes COMPLETED if everything is fine.
@@ -206,7 +224,7 @@ It uses communication layer and resource scheduling layer
 
 The example code can be found in
 ```bash
-twister2/examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount/
+twister2/examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount/task/
 ```
 
 In order to run the example go to the following directory
@@ -216,8 +234,16 @@ cd bazel-bin/scripts/package/twister2-dist/
 
 And run the command below  using standalone resource scheduler
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.WordCountJob
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob
 ```
+
+And run the command below  using kubernetes resource scheduler
+
+```bash
+./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob
+```
+
+
 
 It will run 4 executors with 8 tasks
 * Each executor will have two tasks
@@ -244,7 +270,7 @@ It uses communication layer and resource scheduling layer
 The example code can be found in
 
 ```bash
-twister2/examples/src/java/edu/iu/dsc/tws/examples/streaming/wordcount/
+twister2/examples/src/java/edu/iu/dsc/tws/examples/streaming.wordcount/task/
 ```
 
 In order to run the example go to the following directory
@@ -254,9 +280,17 @@ cd bazel-bin/scripts/package/twister2-dist/
 ```
 
 And run the command below  using standalone resource scheduler
+
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.WordCountJob
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
 ```
+
+And run the command below  using kubernetes resource scheduler
+
+```bash
+./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
+```
+
 
 
 It will run 4 executors with 8 tasks
@@ -291,6 +325,14 @@ The need to process large amounts of continuously arriving information has led t
 
 This command generate and write the datapoints and centroids in the local filesystem and run the K-Means algorithm.
 
+#### Standalone
+
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys local -pseedvalue 100 -cseedvalue 500 -input generate -parallelism 4
+
+```
+#### Kubernetes
+
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys local -pseedvalue 100 -cseedvalue 500 -input generate -parallelism 4
 
@@ -298,8 +340,16 @@ This command generate and write the datapoints and centroids in the local filesy
 
 This command generate and write the datapoints and centroids in the HDFS and run the K-Means algorithm.
 
+#### Standalone
+
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys hdfs -pseedvalue 100 -cseedvalue 200 -input generate -parallelism 4
+```
+
+#### Kubernetes
+
+```bash
+./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys hdfs -pseedvalue 100 -cseedvalue 200 -input generate -parallelism 4
 ```
 
 ### Implementation Details

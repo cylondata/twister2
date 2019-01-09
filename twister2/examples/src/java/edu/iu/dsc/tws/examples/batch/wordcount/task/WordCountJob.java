@@ -19,8 +19,6 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
@@ -29,6 +27,7 @@ import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.api.task.function.ReduceFn;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Op;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -122,8 +121,8 @@ public class WordCountJob extends TaskWorker {
 
         while (it.hasNext()) {
           Object next = it.next();
-          if (next instanceof ImmutablePair) {
-            ImmutablePair kc = (ImmutablePair) next;
+          if (next instanceof Tuple) {
+            Tuple kc = (Tuple) next;
             LOG.log(Level.INFO, String.format("%d Word %s count %s",
                 context.taskId(), kc.getKey(), ((int[]) kc.getValue())[0]));
           }
