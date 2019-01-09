@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.examples.comms.batch.*;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -39,176 +40,182 @@ import edu.iu.dsc.tws.examples.comms.stream.SReduceExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class ExampleMain {
-    private static final Logger LOG = Logger.getLogger(ExampleMain.class.getName());
+  private static final Logger LOG = Logger.getLogger(ExampleMain.class.getName());
 
-    public static void main(String[] args) throws ParseException {
-        // first load the configurations from command line and config files
-        Config config = ResourceAllocator.loadConfig(new HashMap<>());
+  public static void main(String[] args) throws ParseException {
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
-        Options options = new Options();
-        options.addOption(Constants.ARGS_WORKERS, true, "Workers");
-        options.addOption(Constants.ARGS_SIZE, true, "Size");
-        options.addOption(Constants.ARGS_ITR, true, "Iteration");
-        options.addOption(Utils.createOption(Constants.ARGS_OPERATION, true, "Operation", true));
-        options.addOption(Constants.ARGS_STREAM, false, "Stream");
-        options.addOption(Utils.createOption(Constants.ARGS_TASK_STAGES, true, "Throughput mode", true));
-        options.addOption(Utils.createOption(Constants.ARGS_GAP, true, "Gap", false));
-        options.addOption(Utils.createOption(Constants.ARGS_FNAME, true, "File name", false));
-        options.addOption(Utils.createOption(Constants.ARGS_OUTSTANDING, true, "Throughput no of messages", false));
-        options.addOption(Utils.createOption(Constants.ARGS_THREADS, true, "Threads", false));
-        options.addOption(Utils.createOption(Constants.ARGS_PRINT_INTERVAL, true, "Threads", false));
-        options.addOption(Utils.createOption(Constants.ARGS_DATA_TYPE, true, "Data", false));
-        options.addOption(Utils.createOption(Constants.ARGS_INIT_ITERATIONS, true, "Data", false));
-        options.addOption(Constants.ARGS_VERIFY, false, "verify");
+    Options options = new Options();
+    options.addOption(Constants.ARGS_WORKERS, true, "Workers");
+    options.addOption(Constants.ARGS_SIZE, true, "Size");
+    options.addOption(Constants.ARGS_ITR, true, "Iteration");
+    options.addOption(Utils.createOption(Constants.ARGS_OPERATION, true, "Operation", true));
+    options.addOption(Constants.ARGS_STREAM, false, "Stream");
+    options.addOption(Utils.createOption(Constants.ARGS_TASK_STAGES, true, "Throughput mode", true));
+    options.addOption(Utils.createOption(Constants.ARGS_GAP, true, "Gap", false));
+    options.addOption(Utils.createOption(Constants.ARGS_FNAME, true, "File name", false));
+    options.addOption(Utils.createOption(Constants.ARGS_OUTSTANDING, true, "Throughput no of messages", false));
+    options.addOption(Utils.createOption(Constants.ARGS_THREADS, true, "Threads", false));
+    options.addOption(Utils.createOption(Constants.ARGS_PRINT_INTERVAL, true, "Threads", false));
+    options.addOption(Utils.createOption(Constants.ARGS_DATA_TYPE, true, "Data", false));
+    options.addOption(Utils.createOption(Constants.ARGS_INIT_ITERATIONS, true, "Data", false));
+    options.addOption(Constants.ARGS_VERIFY, false, "verify");
 
-        CommandLineParser commandLineParser = new DefaultParser();
-        CommandLine cmd = commandLineParser.parse(options, args);
-        int workers = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_WORKERS));
-        int size = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_SIZE));
-        int itr = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_ITR));
-        String operation = cmd.getOptionValue(Constants.ARGS_OPERATION);
-        boolean stream = cmd.hasOption(Constants.ARGS_STREAM);
-        boolean verify = cmd.hasOption(Constants.ARGS_VERIFY);
+    CommandLineParser commandLineParser = new DefaultParser();
+    CommandLine cmd = commandLineParser.parse(options, args);
+    int workers = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_WORKERS));
 
-        String threads = "true";
-        if (cmd.hasOption(Constants.ARGS_THREADS)) {
-            threads = cmd.getOptionValue(Constants.ARGS_THREADS);
-        }
-
-        String taskStages = cmd.getOptionValue(Constants.ARGS_TASK_STAGES);
-        String gap = "0";
-        if (cmd.hasOption(Constants.ARGS_GAP)) {
-            gap = cmd.getOptionValue(Constants.ARGS_GAP);
-        }
-
-        String fName = "";
-        if (cmd.hasOption(Constants.ARGS_FNAME)) {
-            fName = cmd.getOptionValue(Constants.ARGS_FNAME);
-        }
-
-        String outstanding = "0";
-        if (cmd.hasOption(Constants.ARGS_OUTSTANDING)) {
-            outstanding = cmd.getOptionValue(Constants.ARGS_OUTSTANDING);
-        }
-
-        String printInt = "1";
-        if (cmd.hasOption(Constants.ARGS_PRINT_INTERVAL)) {
-            printInt = cmd.getOptionValue(Constants.ARGS_PRINT_INTERVAL);
-        }
-
-        String dataType = "default";
-        if (cmd.hasOption(Constants.ARGS_DATA_TYPE)) {
-            dataType = cmd.getOptionValue(Constants.ARGS_DATA_TYPE);
-        }
-        String intItr = "0";
-        if (cmd.hasOption(Constants.ARGS_INIT_ITERATIONS)) {
-            intItr = cmd.getOptionValue(Constants.ARGS_INIT_ITERATIONS);
-        }
-
-        // build JobConfig
-        JobConfig jobConfig = new JobConfig();
-        jobConfig.put(Constants.ARGS_ITR, Integer.toString(itr));
-        jobConfig.put(Constants.ARGS_OPERATION, operation);
-        jobConfig.put(Constants.ARGS_SIZE, Integer.toString(size));
-        jobConfig.put(Constants.ARGS_WORKERS, Integer.toString(workers));
-        jobConfig.put(Constants.ARGS_TASK_STAGES, taskStages);
-        jobConfig.put(Constants.ARGS_GAP, gap);
-        jobConfig.put(Constants.ARGS_FNAME, fName);
-        jobConfig.put(Constants.ARGS_OUTSTANDING, outstanding);
-        jobConfig.put(Constants.ARGS_THREADS, threads);
-        jobConfig.put(Constants.ARGS_PRINT_INTERVAL, printInt);
-        jobConfig.put(Constants.ARGS_DATA_TYPE, dataType);
-        jobConfig.put(Constants.ARGS_INIT_ITERATIONS, intItr);
-        jobConfig.put(Constants.ARGS_VERIFY, verify);
-        jobConfig.put(Constants.ARGS_STREAM, stream);
-
-        // build the job
-        if (!stream) {
-            switch (operation) {
-                case "reduce":
-                    submitJob(config, workers, jobConfig, BReduceExample.class.getName());
-                    break;
-                case "allreduce":
-                    submitJob(config, workers, jobConfig, BAllReduceExample.class.getName());
-                    break;
-                case "keyedreduce":
-                    submitJob(config, workers, jobConfig, BKeyedReduceExample.class.getName());
-                    break;
-                case "pkeyedreduce":
-                    submitJob(config, workers, jobConfig, BKeyedPartitionBasedReduceExample.class.getName());
-                    break;
-                case "partition":
-                    submitJob(config, workers, jobConfig, BPartitionExample.class.getName());
-                    break;
-                case "keyedpartition":
-                    submitJob(config, workers, jobConfig, BKeyedPartitionExample.class.getName());
-                    break;
-                case "gather":
-                    submitJob(config, workers, jobConfig, BGatherExample.class.getName());
-                    break;
-                case "allgather":
-                    submitJob(config, workers, jobConfig, BAllGatherExample.class.getName());
-                    break;
-                case "keyedgather":
-                    submitJob(config, workers, jobConfig, BKeyedGatherExample.class.getName());
-                    break;
-                case "dkeyedgather":
-                    submitJob(config, workers, jobConfig, BDKeyedGatherExample.class.getName());
-                    break;
-                case "join":
-                    submitJob(config, workers, jobConfig, BJoinExample.class.getName());
-                    break;
-                case "joinstudent":
-                    submitJob(config, workers, jobConfig, BJoinStudentExample.class.getName());
-                    break;
-                case "djoin":
-                    submitJob(config, workers, jobConfig, BDJoinExample.class.getName());
-                    break;
-            }
-        } else {
-            switch (operation) {
-                case "reduce":
-                    submitJob(config, workers, jobConfig, SReduceExample.class.getName());
-                    break;
-                case "keyedreduce":
-                    submitJob(config, workers, jobConfig, SKeyedReduceExample.class.getName());
-                    break;
-                case "bcast":
-                    submitJob(config, workers, jobConfig, SBroadcastExample.class.getName());
-                    break;
-                case "partition":
-                    submitJob(config, workers, jobConfig, SPartitionExample.class.getName());
-                    break;
-                case "keyedpartition":
-                    submitJob(config, workers, jobConfig, SKeyedPartitionExample.class.getName());
-                    break;
-                case "gather":
-                    submitJob(config, workers, jobConfig, SGatherExample.class.getName());
-                    break;
-                case "keyedgather":
-                    submitJob(config, workers, jobConfig, SKeyedGatherExample.class.getName());
-                    break;
-                case "allreduce":
-                    submitJob(config, workers, jobConfig, SAllReduceExample.class.getName());
-                    break;
-                case "allgather":
-                    submitJob(config, workers, jobConfig, SAllGatherExample.class.getName());
-                    break;
-                default:
-                    LOG.log(Level.SEVERE, "Un-supported operation: " + operation);
-            }
-        }
+    String operation = cmd.getOptionValue(Constants.ARGS_OPERATION);
+    boolean stream = cmd.hasOption(Constants.ARGS_STREAM);
+    boolean verify = cmd.hasOption(Constants.ARGS_VERIFY);
+    int size = 1;
+    int itr = 1;
+    if (cmd.hasOption(Constants.ARGS_SIZE)) {
+      size = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_SIZE));
+    }
+    if (cmd.hasOption(Constants.ARGS_THREADS)) {
+      itr = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_ITR));
+    }
+    String threads = "true";
+    if (cmd.hasOption(Constants.ARGS_THREADS)) {
+      threads = cmd.getOptionValue(Constants.ARGS_THREADS);
     }
 
-    private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
-        Twister2Job twister2Job;
-        twister2Job = Twister2Job.newBuilder()
-                .setJobName(clazz)
-                .setWorkerClass(clazz)
-                .addComputeResource(1, 512, containers)
-                .setConfig(jobConfig)
-                .build();
-        // now submit the job
-        Twister2Submitter.submitJob(twister2Job, config);
+    String taskStages = cmd.getOptionValue(Constants.ARGS_TASK_STAGES);
+    String gap = "0";
+    if (cmd.hasOption(Constants.ARGS_GAP)) {
+      gap = cmd.getOptionValue(Constants.ARGS_GAP);
     }
+
+    String fName = "";
+    if (cmd.hasOption(Constants.ARGS_FNAME)) {
+      fName = cmd.getOptionValue(Constants.ARGS_FNAME);
+    }
+
+    String outstanding = "0";
+    if (cmd.hasOption(Constants.ARGS_OUTSTANDING)) {
+      outstanding = cmd.getOptionValue(Constants.ARGS_OUTSTANDING);
+    }
+
+    String printInt = "1";
+    if (cmd.hasOption(Constants.ARGS_PRINT_INTERVAL)) {
+      printInt = cmd.getOptionValue(Constants.ARGS_PRINT_INTERVAL);
+    }
+
+    String dataType = "default";
+    if (cmd.hasOption(Constants.ARGS_DATA_TYPE)) {
+      dataType = cmd.getOptionValue(Constants.ARGS_DATA_TYPE);
+    }
+    String intItr = "0";
+    if (cmd.hasOption(Constants.ARGS_INIT_ITERATIONS)) {
+      intItr = cmd.getOptionValue(Constants.ARGS_INIT_ITERATIONS);
+    }
+
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+    jobConfig.put(Constants.ARGS_ITR, Integer.toString(itr));
+    jobConfig.put(Constants.ARGS_OPERATION, operation);
+    jobConfig.put(Constants.ARGS_SIZE, Integer.toString(size));
+    jobConfig.put(Constants.ARGS_WORKERS, Integer.toString(workers));
+    jobConfig.put(Constants.ARGS_TASK_STAGES, taskStages);
+    jobConfig.put(Constants.ARGS_GAP, gap);
+    jobConfig.put(Constants.ARGS_FNAME, fName);
+    jobConfig.put(Constants.ARGS_OUTSTANDING, outstanding);
+    jobConfig.put(Constants.ARGS_THREADS, threads);
+    jobConfig.put(Constants.ARGS_PRINT_INTERVAL, printInt);
+    jobConfig.put(Constants.ARGS_DATA_TYPE, dataType);
+    jobConfig.put(Constants.ARGS_INIT_ITERATIONS, intItr);
+    jobConfig.put(Constants.ARGS_VERIFY, verify);
+    jobConfig.put(Constants.ARGS_STREAM, stream);
+
+    // build the job
+    if (!stream) {
+      switch (operation) {
+        case "reduce":
+          submitJob(config, workers, jobConfig, BReduceExample.class.getName());
+          break;
+        case "allreduce":
+          submitJob(config, workers, jobConfig, BAllReduceExample.class.getName());
+          break;
+        case "keyedreduce":
+          submitJob(config, workers, jobConfig, BKeyedReduceExample.class.getName());
+          break;
+        case "pkeyedreduce":
+          submitJob(config, workers, jobConfig, BKeyedPartitionBasedReduceExample.class.getName());
+          break;
+        case "partition":
+          submitJob(config, workers, jobConfig, BPartitionExample.class.getName());
+          break;
+        case "keyedpartition":
+          submitJob(config, workers, jobConfig, BKeyedPartitionExample.class.getName());
+          break;
+        case "gather":
+          submitJob(config, workers, jobConfig, BGatherExample.class.getName());
+          break;
+        case "allgather":
+          submitJob(config, workers, jobConfig, BAllGatherExample.class.getName());
+          break;
+        case "keyedgather":
+          submitJob(config, workers, jobConfig, BKeyedGatherExample.class.getName());
+          break;
+        case "dkeyedgather":
+          submitJob(config, workers, jobConfig, BDKeyedGatherExample.class.getName());
+          break;
+        case "join":
+          submitJob(config, workers, jobConfig, BJoinExample.class.getName());
+          break;
+        case "joinstudent":
+          submitJob(config, workers, jobConfig, BJoinStudentExample.class.getName());
+          break;
+        case "djoin":
+          submitJob(config, workers, jobConfig, BDJoinExample.class.getName());
+          break;
+      }
+    } else {
+      switch (operation) {
+        case "reduce":
+          submitJob(config, workers, jobConfig, SReduceExample.class.getName());
+          break;
+        case "keyedreduce":
+          submitJob(config, workers, jobConfig, SKeyedReduceExample.class.getName());
+          break;
+        case "bcast":
+          submitJob(config, workers, jobConfig, SBroadcastExample.class.getName());
+          break;
+        case "partition":
+          submitJob(config, workers, jobConfig, SPartitionExample.class.getName());
+          break;
+        case "keyedpartition":
+          submitJob(config, workers, jobConfig, SKeyedPartitionExample.class.getName());
+          break;
+        case "gather":
+          submitJob(config, workers, jobConfig, SGatherExample.class.getName());
+          break;
+        case "keyedgather":
+          submitJob(config, workers, jobConfig, SKeyedGatherExample.class.getName());
+          break;
+        case "allreduce":
+          submitJob(config, workers, jobConfig, SAllReduceExample.class.getName());
+          break;
+        case "allgather":
+          submitJob(config, workers, jobConfig, SAllGatherExample.class.getName());
+          break;
+        default:
+          LOG.log(Level.SEVERE, "Un-supported operation: " + operation);
+      }
+    }
+  }
+
+  private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
+    Twister2Job twister2Job;
+    twister2Job = Twister2Job.newBuilder()
+        .setJobName(clazz)
+        .setWorkerClass(clazz)
+        .addComputeResource(1, 512, containers)
+        .setConfig(jobConfig)
+        .build();
+    // now submit the job
+    Twister2Submitter.submitJob(twister2Job, config);
+  }
 }
