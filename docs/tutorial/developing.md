@@ -24,39 +24,21 @@ Execute the two commands to pull the docker image and launch a container instanc
 sudo docker pull twister2tutorial/twister2:standalone
 
 sudo docker run -it twister2tutorial/twister2:standalone bash
+```
+
+![Content of Docker](pics/docker_image.png)
+
+Docker image has Twister2 installed and you can run examples.
+
+You should go into twister2-0.1.0 directory first.
+
+```bash
+cd twister2-0.1.0/
 
 ls
 ```
 
-Docker image has Twister2 installed and you can run examples.
-
-Here are some useful docker commands
-
-```bash
-# Remove useless docker images
-sudo docker image rm <useless-docker-image>
-# Remove exited containers
-sudo docker rm $(sudo docker ps -a -f status=exited -q)
-# Clean up all dangling cache
-sudo docker system prune
-```
-
-Find the docker container ID
-
-```bash
-sudo docker ps
-```
-
-and log into the docker
-
-```bash
-sudo docker exec -it <container_id> bash
-```
-You should go into twister2-0.1.0 directory first.
-
-```bash
-cd twister2-0.1.0
-```
+![Twister2 Directory](pics/twister2_ls.png)
 
 Then, to run an example you can use the ```twister2 submit``` command with ```standlone``` as the cluster.
 
@@ -80,6 +62,28 @@ To run K-means example
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys local -pseedvalue 100 -cseedvalue 500 -input generate -parallelism 4
 ```
 
+Here are some useful docker commands
+
+```bash
+# Remove useless docker images
+sudo docker image rm <useless-docker-image>
+# Remove exited containers
+sudo docker rm $(sudo docker ps -a -f status=exited -q)
+# Clean up all dangling cache
+sudo docker system prune
+```
+
+Find the docker container ID
+
+```bash
+sudo docker ps
+```
+
+and log into the docker
+
+```bash
+sudo docker exec -it <container_id> bash
+```
 
 ## Echo Cluster
 
