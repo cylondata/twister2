@@ -24,11 +24,21 @@ Execute the two commands to pull the docker image and launch a container instanc
 sudo docker pull twister2tutorial/twister2:standalone
 
 sudo docker run -it twister2tutorial/twister2:standalone bash
+```
+
+![Content of Docker](pics/docker_image.png)
+
+Docker image has Twister2 installed and you can run examples.
+
+You should go into twister2 directory first.
+
+```bash
+cd twister2-0.1.0/
 
 ls
 ```
 
-Docker image has Twister2 installed and you can run examples.
+![Twister2 Directory](pics/twister2_ls.png)
 
 Here are some useful docker commands
 
@@ -52,8 +62,6 @@ and log into the docker
 ```bash
 sudo docker exec -it <container_id> bash
 ```
-
-You should go into twister2 directory first.
 
 Then, to run an example you can use the ```twister2 submit``` command with ```standlone``` as the cluster.
 
