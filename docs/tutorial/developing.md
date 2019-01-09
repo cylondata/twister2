@@ -261,7 +261,7 @@ twister2/examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount/task/
 
 In order to run the example go to the following directory
 ```bash
-cd bazel-bin/scripts/package/twister2-dist/
+cd twister2-0.1.0
 ```
 
 And run the command below  using standalone resource scheduler
@@ -325,7 +325,7 @@ twister2/examples/src/java/edu/iu/dsc/tws/examples/streaming.wordcount/task/
 In order to run the example go to the following directory
 
 ```bash
-cd bazel-bin/scripts/package/twister2-dist/
+cd twister2-0.1.0
 ```
 
 And run the command below  using standalone resource scheduler
