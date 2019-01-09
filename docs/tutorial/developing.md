@@ -101,6 +101,14 @@ cd twister2-0.1.0
 
 Then, to run an example you can use the ```twister2 submit``` command.
 
+You can check the status of the submitted job through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;
+
+```text
+Kubernetes ---> http://149.165.150.81:8080/#/jobs
+```
+
+
+
 ## Examples
 
 We have four examples
@@ -135,13 +143,24 @@ You can submit HelloWorld job in examples package with 8 workers as;
 If you are using our testbed cluster “Echo”,
 
 1. Login to your account in Echo
-2. Change you directory to  ```twister2/twister2/bazel-bin/scripts/package/twister2-0.1.0/```
+2. Change you directory to  ```twister2-0.1.0```
 3. Run the command above.
 
-You can check the status of the submitted job through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;
+You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;
 
 ```text
 Kubernetes ---> http://149.165.150.81:8080/#/jobs
+```
+
+If you want to see the logs on Kubernetes, you need to get the list of the pods first;
+
+```bash
+kubectl get pods
+```
+Then check the logs with the following command
+
+```bash
+kubectl logs -f <pod-name>
 ```
 
 HelloWorld job runs for 1 minute. After 1 minute, the job becomes COMPLETED if everything is fine.
@@ -255,6 +274,23 @@ It will run 4 executors with 8 tasks
 * At the first phase tasks 0-3 running on each executor will generate words
 * After the words are generated, task 5-8 will consume those words and count.
 
+You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;
+
+```text
+Kubernetes ---> http://149.165.150.81:8080/#/jobs
+```
+
+If you want to see the logs on Kubernetes, you need to get the list of the pods first;
+
+```bash
+kubectl get pods
+```
+Then check the logs with the following command
+
+```bash
+kubectl logs -f <pod-name>
+```
+
 
 You can access to the presentation using the link below
 
@@ -304,7 +340,7 @@ It will run 4 executors with 8 tasks
 * The tasks in the first two executors will generate words
 * The tasks in the last two executors will keep word count.
 
-After running the example, you will see the following output
+After running the example, you will see an output like the following;
 
 ```bash
 [2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 2 Word wA count 1
@@ -314,6 +350,25 @@ After running the example, you will see the following output
 ```
 
 At this point you should manually stop the process (CTRL+C)
+
+
+You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;
+
+```text
+Kubernetes ---> http://149.165.150.81:8080/#/jobs
+```
+
+If you want to see the logs on Kubernetes, you need to get the list of the pods first;
+
+```bash
+kubectl get pods
+```
+Then check the logs with the following command
+
+```bash
+kubectl logs -f <pod-name>
+```
+
 
 You can access to the presentation using the link below
 
@@ -357,6 +412,24 @@ This command generate and write the datapoints and centroids in the HDFS and run
 
 ```bash
 ./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys hdfs -pseedvalue 100 -cseedvalue 200 -input generate -parallelism 4
+```
+
+
+You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;
+
+```text
+Kubernetes ---> http://149.165.150.81:8080/#/jobs
+```
+
+If you want to see the logs on Kubernetes, you need to get the list of the pods first;
+
+```bash
+kubectl get pods
+```
+Then check the logs with the following command
+
+```bash
+kubectl logs -f <pod-name>
 ```
 
 ### Implementation Details
