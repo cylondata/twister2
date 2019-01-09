@@ -47,7 +47,7 @@ Full Code example - [Student Join Example](https://github.com/DSC-SPIDAL/twister
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -workers 8 -op "joinstudent" -stages 8,1 2>&1 | tee out.txt
 ```
 
-As a result at the end of the run the following will be printed which show the joined results
+As a result at the end of the run the following will be printed which show the joined results. Please note that the results generated are based on the values in the example, which are different from the simple example provided above.
 
 ```bash
 Key 1 : Value [John, E342, E247, E333]  
