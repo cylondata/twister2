@@ -39,8 +39,7 @@ import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
  * | Student ID | Name | Course ID |
  */
 public class BJoinStudentExample extends KeyedBenchWorker {
-
-  private static final Logger LOG = Logger.getLogger(BKeyedPartitionExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(BJoinStudentExample.class.getName());
 
   private BJoin join;
 
@@ -63,6 +62,11 @@ public class BJoinStudentExample extends KeyedBenchWorker {
     Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
     for (int i = 0; i < noOfTargetTasks; i++) {
       targets.add(noOfSourceTasks + i);
+    }
+    int target = noOfSourceTasks;
+
+    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+      joinDone = true;
     }
 
     // create the join communication
