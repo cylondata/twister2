@@ -114,12 +114,13 @@ Kubernetes ---> http://149.165.150.81:8080/#/jobs
 
 ## Examples
 
-We have four examples
+We have five examples for you to try.
 
 * [Hello world example](developing.md#hello-world-example)
 * [Batch wordcount example](developing.md#batch-wordcount-example)
 * [Streaming wordcount example](developing.md#streaming-wordcount-example)
 * [Machine learning example K-Means](developing.md#machine-learning-example-kmeans)
+* [Joins example](developing.md#joins-example)
 
 
 ## Hello World Example
@@ -634,7 +635,7 @@ Full Code example - [Student Join Example](https://github.com/DSC-SPIDAL/twister
 ### Kubernetes
 
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -workers 8 -op "joinstudent" -stages 8,1 2>&1 | tee out.txt
+./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -workers 8 -op "joinstudent" -stages 8,1 2>&1 | tee out.txt
 ```
 
 As a result at the end of the run the following will be printed which show the joined results. Please note that the results generated are based on the values in the example, which are different from the simple example provided above.
