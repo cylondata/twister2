@@ -73,7 +73,7 @@ Here are the slides for Hands on section.
 | [Streaming](https://docs.google.com/presentation/d/17uDBBlQxqzLx3m_inOM9svYvANCEwF2nN1KUYDoqInM/edit?usp=sharing)  | [Streaming Word Count](developing.md#streaming-wordcount-example) |
 | [Batch](https://docs.google.com/presentation/d/1hpBcy_-m5AuVJJxPdhX_5hnIVB4vUkiB6My0STp-dLA/edit?usp=sharing) | [Batch Word Count](developing.md#batch-wordcount-example)  |
 | [Machine Learning](https://docs.google.com/presentation/d/1-AZXo3KjPEk7E-k7_Z5lSKdPk_9R4D8w9PgNrijQeUU/edit?usp=sharing) | [K-Means](developing.md#machine-learning-example-kmeans) |
-| [ommunication API| [Joins](developing.md#joins-example) |
+| Communication API | [Joins](developing.md#joins-example) |
 
 
 ## References
