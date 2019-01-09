@@ -52,8 +52,11 @@ and log into the docker
 ```bash
 sudo docker exec -it <container_id> bash
 ```
+You should go into twister2-0.1.0 directory first.
 
-You should go into twister2 directory first.
+```bash
+cd twister2-0.1.0
+```
 
 Then, to run an example you can use the ```twister2 submit``` command with ```standlone``` as the cluster.
 
