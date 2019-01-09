@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.uploader.UploaderForScaler;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.models.V1PersistentVolumeClaim;
@@ -165,6 +166,13 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   }
 
   private boolean startDriver(JobAPI.Job job, String jobPackageFile) {
+
+    // Start uploader for scaler
+    String scalableSSName = KubernetesUtils.createWorkersStatefulSetName(
+        job.getJobName(), job.getComputeResourceCount() - 1);
+    UploaderForScaler uploaderForScaler =
+        new UploaderForScaler(namespace, job.getJobName(), scalableSSName);
+    uploaderForScaler.start();
 
     // first construct the driver
     String driverClass = job.getDriverClassName();
