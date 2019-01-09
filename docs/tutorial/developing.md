@@ -61,6 +61,11 @@ To run K-means example
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys local -pseedvalue 100 -cseedvalue 500 -input generate -parallelism 4
 ```
+To run joins example
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -workers 8 -op "joinstudent" -stages 8,1 2>&1 | tee out.txt
+```
+
 
 Here are some useful docker commands
 
@@ -264,10 +269,6 @@ In order to run the example go to the following directory
 cd twister2-0.1.0
 ```
 
-And run the command below  using standalone resource scheduler
-```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob
-```
 
 And run the command below  using kubernetes resource scheduler
 
@@ -328,11 +329,6 @@ In order to run the example go to the following directory
 cd twister2-0.1.0
 ```
 
-And run the command below  using standalone resource scheduler
-
-```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
-```
 
 And run the command below  using kubernetes resource scheduler
 
@@ -395,12 +391,6 @@ The need to process large amounts of continuously arriving information has led t
 
 This command generate and write the datapoints and centroids in the local filesystem and run the K-Means algorithm.
 
-#### Standalone
-
-```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys local -pseedvalue 100 -cseedvalue 500 -input generate -parallelism 4
-
-```
 #### Kubernetes
 
 ```bash
@@ -410,11 +400,6 @@ This command generate and write the datapoints and centroids in the local filesy
 
 This command generate and write the datapoints and centroids in the HDFS and run the K-Means algorithm.
 
-#### Standalone
-
-```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys hdfs -pseedvalue 100 -cseedvalue 200 -input generate -parallelism 4
-```
 
 #### Kubernetes
 
@@ -629,12 +614,6 @@ The data set used for this example is pretty simple and straightforward. The exa
 The join example is added in the Twister2 code as a communication example. The code has comments explaining each step of the example to explain what each section of the code does. You can use the following command to execute the join example. 
 
 Full Code example - [Student Join Example](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/comms/batch/BJoinStudentExample.java)
-
-### Standalone
-
-```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -workers 8 -op "joinstudent" -stages 8,1 2>&1 | tee out.txt
-```
 
 ### Kubernetes
 
