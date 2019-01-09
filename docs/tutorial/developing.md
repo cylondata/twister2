@@ -118,7 +118,7 @@ Kubernetes ---> http://149.165.150.81:8080/#/jobs
 
 ## Examples
 
-We have five examples for you to try.
+We have five examples for you.
 
 * [Hello world example](developing.md#hello-world-example)
 * [Batch wordcount example](developing.md#batch-wordcount-example)
