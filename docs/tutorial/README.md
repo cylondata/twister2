@@ -67,7 +67,7 @@ Here are the introductory slides we will go through in this Tutorial.
 | [Backdrop on Big Data Systems for Twister2 Tutorial](https://docs.google.com/presentation/d/1UEvLL_fE5pokn4pVqirwwxobxRFEO1pgB5v3LfWEHAg/edit?usp=sharing) | Explains the background | [Big data stack](big-data-stack.md) |
 | [Even more background](http://dsc.soic.indiana.edu/presentations/BigDataTutorialJan2019.pptx) | Explains the background | [Big data stack](big-data-stack.md) |
 
-Here are the slides for Hands on section.
+Here are the slides for Hands on section but online  description https://twister2.gitbook.io/twister2/tutorial/developing
 
 | Content | Section |
 | ------------- | ------------- |
