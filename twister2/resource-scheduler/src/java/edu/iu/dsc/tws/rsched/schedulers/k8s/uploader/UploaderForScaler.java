@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s.uploader;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,9 +25,25 @@ import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Configuration;
 import io.kubernetes.client.apis.CoreV1Api;
 import io.kubernetes.client.models.V1Pod;
-import io.kubernetes.client.models.V1PodCondition;
 import io.kubernetes.client.util.Watch;
 
+/**
+ * watch scalable StatefulSet in a job
+ * when a pod is added by scaling up,
+ * transfer the job package to that worker
+ * This class runs in the submitting client
+ * It needs to run continually in the client to upload the job package in case of scaling up
+ *
+ * Note:
+ * There is a problem with pod Running state
+ * When a pod deleted by scaling down, two Running state messages are generated
+ * This is unfortunate. It may be a bug.
+ * Currently I try to upload the job package with each Running message
+ * If the pod is being deleted, it does not succeed.
+ * So in failure case, I do not print log message.
+ * I only print log message in success case.
+ * Not accurate but a temporary solution.
+ */
 public class UploaderForScaler extends Thread {
   private static final Logger LOG = Logger.getLogger(UploaderForScaler.class.getName());
 
@@ -38,11 +53,22 @@ public class UploaderForScaler extends Thread {
   private String namespace;
   private String jobName;
   private String ssName;
+  private String jobPackageFile;
 
-  public UploaderForScaler(String namespace, String jobName, String ssName) {
+  // this shows the initial number of pods in statefulset
+  // ignore this many Running messages initially
+  private int initialPods;
+
+  public UploaderForScaler(String namespace,
+                           String jobName,
+                           String ssName,
+                           String jobPackageFile,
+                           int initialPods) {
     this.namespace = namespace;
     this.jobName = jobName;
     this.ssName = ssName;
+    this.jobPackageFile = jobPackageFile;
+    this.initialPods = initialPods;
   }
 
   @Override
@@ -74,6 +100,7 @@ public class UploaderForScaler extends Thread {
 
     Integer timeoutSeconds = Integer.MAX_VALUE;
     Watch<V1Pod> watch = null;
+    String podPhase = "Running";
 
     try {
       watch = Watch.createWatch(
@@ -91,27 +118,24 @@ public class UploaderForScaler extends Thread {
       throw new RuntimeException(e);
     }
 
-    int eventCount = 0;
+    int runningCounter = 0;
     for (Watch.Response<V1Pod> item : watch) {
 
       if (item.object != null
           && item.object.getMetadata().getName().startsWith(ssName)
-      //    && phase.equals(item.object.getStatus().getPhase())
+          && podPhase.equals(item.object.getStatus().getPhase())
       ) {
         String podName = item.object.getMetadata().getName();
-        String podPhase = item.object.getStatus().getPhase();
-        List<V1PodCondition> conditions = item.object.getStatus().getConditions();
-        String condCount = "conditions: " + conditions.size();
-        String type = "";
-        if (conditions.size() != 0) {
-          type = "cond type: ";
-          for (V1PodCondition condition: conditions) {
-            type += condition.getType() + ", ";
-          }
-        }
 
-        LOG.info(eventCount++ + " -------------- Pod event: " + podName + ", " + podPhase + ", "
-            + condCount + ", " + type);
+//        LOG.info(runningCounter++ + " -------------- Pod event: " + podName + ", " + podPhase);
+
+        // if DeletionTimestamp is not null,
+        // it means that the pod is in the process of being deleted
+        if (runningCounter >= initialPods
+            && item.object.getMetadata().getDeletionTimestamp() == null) {
+          UploaderToWorker uploader = new UploaderToWorker(namespace, podName, jobPackageFile);
+          uploader.start();
+        }
       }
     }
 

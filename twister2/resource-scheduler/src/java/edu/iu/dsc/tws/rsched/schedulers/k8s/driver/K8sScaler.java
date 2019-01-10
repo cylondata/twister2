@@ -19,8 +19,6 @@ import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.JobPackageTransferThread;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 
@@ -109,30 +107,29 @@ public class K8sScaler implements IScaler {
     int podsToAdd = instancesToAdd / workersPerPod;
 
     // if the submitting client is uploading the job package, start the upload threads
-    if (KubernetesContext.clientToPodsUploading(config)) {
-      ArrayList<String> podNames = generatePodNames(podsToAdd);
-      String namespace = KubernetesContext.namespace(config);
-      JobPackageTransferThread.startTransferThreadsForScaledUpPods(
-          namespace, podNames, jobPackageFile);
-    }
+//    if (KubernetesContext.clientToPodsUploading(config)) {
+//      ArrayList<String> podNames = generatePodNames(podsToAdd);
+//      String namespace = KubernetesContext.namespace(config);
+//      JobPackageTransferThread.startTransferThreadsForScaledUpPods(
+//          namespace, podNames, jobPackageFile);
+//    }
 
-    boolean scaledUp =
-        k8sController.patchStatefulSet(scalableSSName, replicas + podsToAdd);
+    boolean scaledUp = k8sController.patchStatefulSet(scalableSSName, replicas + podsToAdd);
     if (!scaledUp) {
       return false;
     }
 
     // complete the uploading
-    if (KubernetesContext.clientToPodsUploading(config)) {
-      boolean uploaded = JobPackageTransferThread.completeFileTransfers();
-
-      // if scaling up pods is successful but uploading is unsuccessful,
-      // scale down again
-      if (!uploaded) {
-        k8sController.patchStatefulSet(scalableSSName, replicas);
-        return false;
-      }
-    }
+//    if (KubernetesContext.clientToPodsUploading(config)) {
+//      boolean uploaded = JobPackageTransferThread.completeFileTransfers();
+//
+//      // if scaling up pods is successful but uploading is unsuccessful,
+//      // scale down again
+//      if (!uploaded) {
+//        k8sController.patchStatefulSet(scalableSSName, replicas);
+//        return false;
+//      }
+//    }
 
     boolean sent = driverAgent.sendScaledMessage(instancesToAdd, numberOfWorkers + instancesToAdd);
     if (!sent) {

@@ -159,20 +159,30 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // if the driver class is specified in the job, start it
     if (!job.getDriverClassName().isEmpty()) {
+      startUploaderForScaler(job, jobPackageFile);
       startDriver(job, jobPackageFile);
     }
 
     return true;
   }
 
-  private boolean startDriver(JobAPI.Job job, String jobPackageFile) {
+  private void startUploaderForScaler(JobAPI.Job job, String jobPackageFile) {
 
-    // Start uploader for scaler
-    String scalableSSName = KubernetesUtils.createWorkersStatefulSetName(
-        job.getJobName(), job.getComputeResourceCount() - 1);
-    UploaderForScaler uploaderForScaler =
-        new UploaderForScaler(namespace, job.getJobName(), scalableSSName);
-    uploaderForScaler.start();
+    if (KubernetesContext.clientToPodsUploading(config)) {
+      // Start uploader for scaler
+      int scalableCRIndex = job.getComputeResourceCount() - 1;
+      String scalableSSName =
+          KubernetesUtils.createWorkersStatefulSetName(job.getJobName(), scalableCRIndex);
+
+      int podsInScalableSS = job.getComputeResource(scalableCRIndex).getInstances();
+
+      UploaderForScaler uploaderForScaler = new UploaderForScaler(
+          namespace, job.getJobName(), scalableSSName, jobPackageFile, podsInScalableSS);
+      uploaderForScaler.start();
+    }
+  }
+
+  private boolean startDriver(JobAPI.Job job, String jobPackageFile) {
 
     // first construct the driver
     String driverClass = job.getDriverClassName();

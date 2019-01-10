@@ -260,7 +260,6 @@ public final class RequestObjectBuilder {
   /**
    * construct a container
    * @param containerIndex
-   * @param jobFileSize
    * @return
    */
   public static V1Container constructContainer(ComputeResource computeResource,

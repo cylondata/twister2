@@ -140,7 +140,7 @@ public final class JobMasterRequestObject {
     template.setMetadata(templateMetaData);
 
     V1PodSpec podSpec = new V1PodSpec();
-    podSpec.setTerminationGracePeriodSeconds(0L);
+    podSpec.setTerminationGracePeriodSeconds(1L);
 
     ArrayList<V1Volume> volumes = new ArrayList<>();
     V1Volume memoryVolume = new V1Volume();
