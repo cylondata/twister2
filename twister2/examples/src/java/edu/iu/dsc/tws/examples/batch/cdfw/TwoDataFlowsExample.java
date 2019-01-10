@@ -129,9 +129,11 @@ public final class TwoDataFlowsExample {
         .put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName()).build();
 
     CDFWExecutor cdfwExecutor = new CDFWExecutor(config);
+    LOG.log(Level.INFO, "Executing the first graph");
     // run the first job
     runFirstJob(config, cdfwExecutor, parallelismValue, jobConfig);
     // run the second job
+    LOG.log(Level.INFO, "Executing the second graph");
     runSecondJob(config, cdfwExecutor, parallelismValue, jobConfig);
     cdfwExecutor.close();
   }
@@ -152,7 +154,7 @@ public final class TwoDataFlowsExample {
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob(batchGraph).
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("second", batchGraph).
         setWorkers(4).addJobConfig(jobConfig);
     cdfwExecutor.execute(job);
     return cdfwExecutor;
@@ -174,7 +176,7 @@ public final class TwoDataFlowsExample {
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob(batchGraph).
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("first", batchGraph).
         setWorkers(4).addJobConfig(jobConfig);
     cdfwExecutor.execute(job);
     return cdfwExecutor;

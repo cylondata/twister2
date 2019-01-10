@@ -18,23 +18,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Any;
-import com.google.protobuf.ByteString;
 
-import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.htg.HTGTaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.driver.DriverJobListener;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.master.driver.DriverMessenger;
 import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceRuntime;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public final class CDFWExecutor implements DriverJobListener {
   private static final Logger LOG = Logger.getLogger(CDFWExecutor.class.getName());
@@ -43,11 +38,6 @@ public final class CDFWExecutor implements DriverJobListener {
    * Configuration
    */
   private Config config;
-
-  /**
-   * The serializer
-   */
-  private KryoMemorySerializer kryoMemorySerializer;
 
   /**
    * The queue to coordinate between driver and submitter
@@ -81,7 +71,6 @@ public final class CDFWExecutor implements DriverJobListener {
 
   public CDFWExecutor(Config cfg) {
     this.config = cfg;
-    this.kryoMemorySerializer = new KryoMemorySerializer();
     // set the driver events queue, this will make sure that we only create one instance of
     // submitter
     Twister2HTGInstance.getTwister2HTGInstance().setDriverEvents(inDriverEvents);
@@ -92,7 +81,7 @@ public final class CDFWExecutor implements DriverJobListener {
    * Then, it invokes the build HTG Job object to build the htg job object for the scheduled graphs.
    */
   public void execute(DataFlowGraph graph) {
-    LOG.info("Starting task graph Requirements:" + graph.getGraph().getTaskGraphName());
+    LOG.info("Starting task graph Requirements:" + graph.getGraphName());
 
     if (!(driverState == DriverState.JOB_FINISHED || driverState == DriverState.INITIALIZE)) {
       // now we need to send messages
@@ -177,27 +166,7 @@ public final class CDFWExecutor implements DriverJobListener {
    * the scheduled graphs list.
    */
   private HTGJobAPI.SubGraph buildHTGJob(DataFlowGraph job) {
-    JobAPI.Config.Builder configBuilder = JobAPI.Config.newBuilder();
-
-    JobConfig jobConfig = job.getJobConfig();
-    DataFlowTaskGraph graph = job.getGraph();
-
-    jobConfig.forEach((key, value) -> {
-      byte[] objectByte = kryoMemorySerializer.serialize(value);
-      configBuilder.putConfigByteMap(key, ByteString.copyFrom(objectByte));
-    });
-
-    byte[] graphBytes = kryoMemorySerializer.serialize(graph);
-
-    //Construct the HTGJob object to be sent to the HTG Driver
-    return HTGJobAPI.SubGraph.newBuilder()
-        .setName(getJobName(graph.getTaskGraphName()))
-        .setConfig(configBuilder)
-        .setGraphSerialized(ByteString.copyFrom(graphBytes))
-        .setInstances(job.getWorkers())
-        .addAllOutputs(job.getOutputs())
-        .addAllInputs(job.getInputs())
-        .build();
+    return job.build();
   }
 
   @Override
