@@ -21,7 +21,7 @@ import com.google.protobuf.Any;
 
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.htg.HTGTaskWorker;
+import edu.iu.dsc.tws.api.task.htg.CDFWWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.driver.DriverJobListener;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
@@ -208,7 +208,7 @@ public final class CDFWExecutor implements DriverJobListener {
     //Setting the first graph resource requirements for the initial resource allocation
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName(htgJob.getName())
-        .setWorkerClass(HTGTaskWorker.class.getName())
+        .setWorkerClass(CDFWWorker.class.getName())
         .setDriverClass(Twister2HTGDriver.class.getName())
         .addComputeResource(htgJob.getCpu(), htgJob.getRamMegaBytes(),
             htgJob.getDiskGigaBytes(), htgJob.getInstances())
