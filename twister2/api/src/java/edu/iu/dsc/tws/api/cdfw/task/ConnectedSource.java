@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.cdfw.task;
 
 import edu.iu.dsc.tws.api.task.Receptor;
+import edu.iu.dsc.tws.api.task.TaskConfigurations;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DSet;
 import edu.iu.dsc.tws.dataset.PSet;
@@ -26,7 +27,7 @@ public class ConnectedSource extends BaseSource implements Receptor {
 
   private TaskContext context;
 
-  private String edge;
+  private String edge = TaskConfigurations.DEFAULT_EDGE;
 
   private boolean finished = false;
 

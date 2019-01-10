@@ -170,8 +170,6 @@ public class TaskExecutor {
       INode task = node.getNode();
       if (task instanceof Receptor && task instanceof ISource) {
         ((Receptor) task).add(inputKey, input);
-      } else {
-        throw new RuntimeException("Cannot add input to non input instance: " + node);
       }
     }
   }
@@ -231,9 +229,6 @@ public class TaskExecutor {
           LOG.warning(String.format("Task id %d returned null for data %s",
               node.getId(), dataName));
         }
-      } else {
-        throw new RuntimeException("Cannot collect from node because it is "
-            + "not a collector: " + node);
       }
     }
     return dataSet;

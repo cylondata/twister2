@@ -140,14 +140,10 @@ public final class DataFlowGraph {
       throw new RuntimeException("A name should be specified");
     }
 
-    JobConfig jobConfig = getJobConfig();
-    DataFlowTaskGraph graph = getGraph();
-
     jobConfig.forEach((key, value) -> {
       byte[] objectByte = kryoMemorySerializer.serialize(value);
       configBuilder.putConfigByteMap(key, ByteString.copyFrom(objectByte));
     });
-
     byte[] graphBytes = kryoMemorySerializer.serialize(graph);
 
     //Construct the HTGJob object to be sent to the HTG Driver
