@@ -64,6 +64,7 @@ Here are the introductory slides we will go through in this Tutorial.
 | [Job Submission Presentation](https://docs.google.com/presentation/d/1Qs-eV9hTgyNRrDSvC5iCc2EmeUKQFtiVlTrTUZpsoAM/edit?usp=sharing)  | Explains Twister2 Job Submission and Resource abstractions  | [Twister2 Overview](twister2-overview.md#job-submission) |
 | [Communication Presentation](https://docs.google.com/presentation/d/1-rSL3SIFp03YgU8hTJcGMNdSJev8gQwhyTgS3FbYaqk/edit?usp=sharing) | Explains the parallel communication model  | [Twister2 Overview](twister2-overview.md#communication) |
 | [Task System Presentation](https://docs.google.com/presentation/d/1CpeBgKcM5NnIB0EdR0L5oWtfZdSG7kNlcEzyZPW8nuI/edit?usp=sharing) | Explains the task layer and API of Twister2 | [Twister2 Overview](twister2-overview.md#task-system) |
+| [Backdrop on Big Data Systems for Twister2 Tutorial](https://docs.google.com/presentation/d/1UEvLL_fE5pokn4pVqirwwxobxRFEO1pgB5v3LfWEHAg/edit?usp=sharing) | Explains the background | [Big data stack](big-data-stack.md) |
 
 Here are the slides for Hands on section.
 
