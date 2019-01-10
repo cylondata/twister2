@@ -12,5 +12,7 @@ More information can be found in the presentation
 
 [Backdrop on Big Data Systems for Twister2 Tutorial](https://docs.google.com/presentation/d/1UEvLL_fE5pokn4pVqirwwxobxRFEO1pgB5v3LfWEHAg/edit?usp=sharing)
 
+[Even more background](http://dsc.soic.indiana.edu/presentations/BigDataTutorialJan2019.pptx)
+
 <span style="display:block;text-align:left">![Apache Big Data Stack](pics/kaleidoscope.png)</span>
 
