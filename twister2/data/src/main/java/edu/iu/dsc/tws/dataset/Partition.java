@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset;
 
+import java.util.Iterator;
+
 public class Partition<T> implements PSet<T> {
   private T data;
 
@@ -46,12 +48,7 @@ public class Partition<T> implements PSet<T> {
   }
 
   @Override
-  public boolean hasNext() {
-    return false;
-  }
-
-  @Override
-  public T next() {
+  public Iterator<T> iterator() {
     return null;
   }
 }

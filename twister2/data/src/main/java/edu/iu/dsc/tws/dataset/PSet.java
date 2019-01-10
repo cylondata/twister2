@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset;
 
+import java.util.Iterator;
+
 /**
  * Partition of a distributed set
  *
@@ -35,12 +37,5 @@ public interface PSet<T> {
    *
    * @return true if there is a next record
    */
-  boolean hasNext();
-
-  /**
-   * Get the next record
-   *
-   * @return the next
-   */
-  T next();
+  Iterator<T> iterator();
 }

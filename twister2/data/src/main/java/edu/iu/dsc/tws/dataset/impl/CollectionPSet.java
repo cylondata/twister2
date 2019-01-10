@@ -16,20 +16,19 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.iu.dsc.tws.dataset.PSet;
+import edu.iu.dsc.tws.dataset.Partition;
 
-public class CollectionPSet<T> implements PSet<T> {
+public class CollectionPSet<T> extends Partition<T> implements PSet<T> {
   private List<T> dataList = new ArrayList<>();
 
   private int workerId;
 
   private int id;
 
-  private Iterator<T> iterator;
-
   public CollectionPSet(int workerId, int id) {
+    super(id);
     this.workerId = workerId;
     this.id = id;
-    iterator = dataList.iterator();
   }
 
   @Override
@@ -43,13 +42,8 @@ public class CollectionPSet<T> implements PSet<T> {
   }
 
   @Override
-  public boolean hasNext() {
-    return iterator.hasNext();
-  }
-
-  @Override
-  public T next() {
-    return iterator.next();
+  public Iterator<T> iterator() {
+    return dataList.iterator();
   }
 
   public void add(T val) {

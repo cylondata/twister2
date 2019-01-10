@@ -160,7 +160,7 @@ public final class TwoDataFlowsExample {
 
   private static void runSecondJob(Config config, CDFWExecutor cdfwExecutor,
                                           int parallelismValue, JobConfig jobConfig) {
-    ConnectedSource htgSourceTask = new ConnectedSource();
+    ConnectedSource htgSourceTask = new ConnectedSource("reduce");
     ConnectedSink htgReduceTask = new ConnectedSink();
 
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);

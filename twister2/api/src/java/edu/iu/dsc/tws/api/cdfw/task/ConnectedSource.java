@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.cdfw.task;
 
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskConfigurations;
 import edu.iu.dsc.tws.common.config.Config;
@@ -23,13 +25,15 @@ import edu.iu.dsc.tws.task.api.TaskContext;
  * Connected source
  */
 public class ConnectedSource extends BaseSource implements Receptor {
-  private PSet<Object> pSet;
-
-  private TaskContext context;
+  private DSet<Object> dSet;
 
   private String edge = TaskConfigurations.DEFAULT_EDGE;
 
   private boolean finished = false;
+
+  private PSet<Object> data;
+
+  private Iterator<Object> iterator;
 
   public ConnectedSource() {
   }
@@ -39,8 +43,8 @@ public class ConnectedSource extends BaseSource implements Receptor {
   }
 
   @Override
-  public void add(String name, DSet<Object> data) {
-    pSet = data.getPartitions(context.getWorkerId(), context.taskIndex());
+  public void add(String name, DSet<Object> d) {
+    dSet = d;
   }
 
   @Override
@@ -49,8 +53,13 @@ public class ConnectedSource extends BaseSource implements Receptor {
       return;
     }
 
-    if (pSet.hasNext()) {
-      context.write(edge, pSet.next());
+    if (data == null) {
+      data = dSet.getPartitions(context.getWorkerId(), context.taskIndex());
+      iterator = data.iterator();
+    }
+
+    if (iterator.hasNext()) {
+      context.write(edge, iterator.next());
     } else {
       context.end(edge);
       finished = true;
@@ -59,7 +68,7 @@ public class ConnectedSource extends BaseSource implements Receptor {
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
-    this.context = ctx;
+    super.prepare(cfg, ctx);
   }
 
   public String getEdge() {

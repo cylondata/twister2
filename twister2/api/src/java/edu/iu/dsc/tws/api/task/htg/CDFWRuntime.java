@@ -143,7 +143,7 @@ public class CDFWRuntime implements JobListener {
 
           Map<String, DataSet<Object>> outsPerGraph = outPuts.get(inputGraph);
 
-          if (outsPerGraph.containsKey(inputName)) {
+          if (!outsPerGraph.containsKey(inputName)) {
             throw new RuntimeException("We cannot find the input: " + inputName);
           }
 
