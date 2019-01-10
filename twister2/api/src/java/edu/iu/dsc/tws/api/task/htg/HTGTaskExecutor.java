@@ -93,9 +93,9 @@ public class HTGTaskExecutor implements JobListener {
     HTGJobAPI.ExecuteCompletedMessage completedMessage;
     try {
       executeMessage = msg.unpack(HTGJobAPI.ExecuteMessage.class);
-      LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
+//      LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
       subgraph = executeMessage.getSubgraphName();
-      LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
+//      LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
 
       // get the subgraph from the map
       HTGJobAPI.SubGraph subGraph = executeMessage.getGraph();
@@ -107,8 +107,8 @@ public class HTGTaskExecutor implements JobListener {
       }
       // use the taskexecutor to create the execution plan
       executionPlan = taskExecutor.plan(taskGraph);
-      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
-      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
+//      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
+//      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
 
       List<HTGJobAPI.Input> inputs = subGraph.getInputsList();
       // now lets get those inputs
@@ -122,7 +122,7 @@ public class HTGTaskExecutor implements JobListener {
 
       LOG.log(Level.INFO, workerId + " Completed subgraph : " + subgraph);
 
-      LOG.log(Level.INFO, workerId + " Sending subgraph completed message to driver");
+//      LOG.log(Level.INFO, workerId + " Sending subgraph completed message to driver");
       completedMessage = HTGJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subgraph).build();
 

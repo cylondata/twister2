@@ -35,17 +35,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     this.operationMode = mode;
   }
 
-  //Newly added for Hierarchical Task Graph
-  private String taskGraphName;
-
-  public void setTaskGraphName(String taskGraphName) {
-    this.taskGraphName = taskGraphName;
-  }
-
-  public String getTaskGraphName() {
-    return taskGraphName;
-  }
-
   /**
    * This method is responsible for storing the directed edges between the source and target task
    * vertex in a map.

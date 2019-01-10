@@ -141,7 +141,7 @@ public final class HelloExample {
 
     //Invoke HTG Submitter and send the metagraph
     CDFWExecutor cdfwExecutor = new CDFWExecutor(config);
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob(batchGraph).
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
         setWorkers(4).addJobConfig(jobConfig);
     cdfwExecutor.execute(job);
     cdfwExecutor.close();
