@@ -188,6 +188,26 @@ public final class JobUtils {
     return jobStr;
   }
 
+  public static boolean isJobScalable(JobAPI.Job job, Config config) {
 
+    // if Driver is not set, it means there is nothing to scale the job
+    if (job.getDriverClassName().isEmpty()) {
+      return false;
+    }
+
+    // if there is no scalable compute resource in the job, can not be scalable
+    boolean computeResourceScalable =
+        job.getComputeResource(job.getComputeResourceCount() - 1).getScalable();
+    if (!computeResourceScalable) {
+      return false;
+    }
+
+    // if it is an OpenMPI job, it is not scalable
+    if (SchedulerContext.useOpenMPI(config)) {
+      return false;
+    }
+
+    return true;
+  }
 
 }

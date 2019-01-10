@@ -23,8 +23,8 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
  * so MAX_FILE_TRANSFER_TRY_COUNT is set to only a few
  */
 
-public class UploaderToWorker extends Thread {
-  private static final Logger LOG = Logger.getLogger(UploaderToWorker.class.getName());
+public class UploaderToPod extends Thread {
+  private static final Logger LOG = Logger.getLogger(UploaderToPod.class.getName());
 
   public static final long MAX_FILE_TRANSFER_TRY_COUNT = 3;
   public static final long SLEEP_INTERVAL_BETWEEN_TRANSFER_ATTEMPTS = 200;
@@ -36,7 +36,7 @@ public class UploaderToWorker extends Thread {
   private boolean transferred = false;
   private boolean cancelFileTransfer = false;
 
-  public UploaderToWorker(String namespace, String podName, String jobPackageFile) {
+  public UploaderToPod(String namespace, String podName, String jobPackageFile) {
     this.namespace = namespace;
     this.podName = podName;
     this.jobPackageFile = jobPackageFile;

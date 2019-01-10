@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterRequestObject;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.uploader.UploaderForScaler;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.uploader.UploaderForJob;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.models.V1PersistentVolumeClaim;
@@ -49,6 +49,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   private KubernetesController controller;
   private String namespace;
   private JobSubmissionStatus jobSubmissionStatus;
+  private UploaderForJob uploader;
 
   public KubernetesLauncher() {
     controller = new KubernetesController();
@@ -94,8 +95,10 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // start job package transfer threads to watch pods to starting
     if (KubernetesContext.clientToPodsUploading(config)) {
-      JobPackageTransferThread.startTransferThreads(
-          namespace, job, jobPackageFile, KubernetesContext.watchBeforeUploadAttempts(config));
+      uploader = new UploaderForJob(config, job, jobPackageFile);
+      uploader.start();
+//      JobPackageTransferThread.startTransferThreads(
+//          namespace, job, jobPackageFile, KubernetesContext.watchBeforeUploadAttempts(config));
     }
 
     // check all relevant entities on Kubernetes master
@@ -130,7 +133,8 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     if (KubernetesContext.clientToPodsUploading(config)) {
       // transfer the job package to pods, measure the transfer time
       long start = System.currentTimeMillis();
-      boolean transferred = JobPackageTransferThread.completeFileTransfers();
+      boolean transferred = uploader.completeFileTransfers();
+//      boolean transferred = JobPackageTransferThread.completeFileTransfers();
 
       if (transferred) {
         long duration = System.currentTimeMillis() - start;
@@ -159,27 +163,10 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // if the driver class is specified in the job, start it
     if (!job.getDriverClassName().isEmpty()) {
-      startUploaderForScaler(job, jobPackageFile);
       startDriver(job, jobPackageFile);
     }
 
     return true;
-  }
-
-  private void startUploaderForScaler(JobAPI.Job job, String jobPackageFile) {
-
-    if (KubernetesContext.clientToPodsUploading(config)) {
-      // Start uploader for scaler
-      int scalableCRIndex = job.getComputeResourceCount() - 1;
-      String scalableSSName =
-          KubernetesUtils.createWorkersStatefulSetName(job.getJobName(), scalableCRIndex);
-
-      int podsInScalableSS = job.getComputeResource(scalableCRIndex).getInstances();
-
-      UploaderForScaler uploaderForScaler = new UploaderForScaler(
-          namespace, job.getJobName(), scalableSSName, jobPackageFile, podsInScalableSS);
-      uploaderForScaler.start();
-    }
   }
 
   private boolean startDriver(JobAPI.Job job, String jobPackageFile) {
@@ -559,7 +546,9 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     LOG.info("Will clear up any resources created during the job submission process.");
 
-    JobPackageTransferThread.cancelTransfers();
+    if (KubernetesContext.clientToPodsUploading(config)) {
+      uploader.stopUploader();
+    }
 
     // first delete the service objects
     // delete the job service

@@ -12,13 +12,20 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s.uploader;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.gson.reflect.TypeToken;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
@@ -44,31 +51,40 @@ import io.kubernetes.client.util.Watch;
  * I only print log message in success case.
  * Not accurate but a temporary solution.
  */
-public class UploaderForScaler extends Thread {
-  private static final Logger LOG = Logger.getLogger(UploaderForScaler.class.getName());
+public class UploaderForJob extends Thread {
+  private static final Logger LOG = Logger.getLogger(UploaderForJob.class.getName());
+
+  public static final long MAX_WAIT_TIME_FOR_POD_START = 100 * 1000L; // in seconds
 
   private CoreV1Api coreApi;
   private ApiClient apiClient;
 
+  private Config config;
   private String namespace;
+  private JobAPI.Job job;
   private String jobName;
-  private String ssName;
   private String jobPackageFile;
 
-  // this shows the initial number of pods in statefulset
-  // ignore this many Running messages initially
-  private int initialPods;
+  private ArrayList<String> podNames;
+  private HashMap<String, UploaderToPod> initialPodUploaders = new HashMap();
+  private ArrayList<UploaderToPod> uploaders = new ArrayList<>();
 
-  public UploaderForScaler(String namespace,
-                           String jobName,
-                           String ssName,
-                           String jobPackageFile,
-                           int initialPods) {
-    this.namespace = namespace;
-    this.jobName = jobName;
-    this.ssName = ssName;
+  private boolean stopUploader = false;
+  private long watcherStartTime = System.currentTimeMillis();
+
+  public UploaderForJob(Config config,
+                        JobAPI.Job job,
+                        String jobPackageFile) {
+
+    this.config = config;
+    this.namespace = KubernetesContext.namespace(config);
+    this.job = job;
+    this.jobName = job.getJobName();
     this.jobPackageFile = jobPackageFile;
-    this.initialPods = initialPods;
+
+    podNames = KubernetesUtils.generatePodNames(job);
+    // add job master pod name
+    podNames.add(KubernetesUtils.createJobMasterPodName(job.getJobName()));
   }
 
   @Override
@@ -96,7 +112,7 @@ public class UploaderForScaler extends Thread {
     /** Pod Phases: Pending, Running, Succeeded, Failed, Unknown
      * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase */
 
-    String workerRoleLabel = KubernetesUtils.createWorkerRoleLabelWithKey(jobName);
+    String workerRoleLabel = KubernetesUtils.createJobPodsLabelWithKey(jobName);
 
     Integer timeoutSeconds = Integer.MAX_VALUE;
     Watch<V1Pod> watch = null;
@@ -121,8 +137,12 @@ public class UploaderForScaler extends Thread {
     int runningCounter = 0;
     for (Watch.Response<V1Pod> item : watch) {
 
+      if (stopUploader) {
+        break;
+      }
+
       if (item.object != null
-          && item.object.getMetadata().getName().startsWith(ssName)
+          && item.object.getMetadata().getName().startsWith(jobName)
           && podPhase.equals(item.object.getStatus().getPhase())
       ) {
         String podName = item.object.getMetadata().getName();
@@ -131,10 +151,16 @@ public class UploaderForScaler extends Thread {
 
         // if DeletionTimestamp is not null,
         // it means that the pod is in the process of being deleted
-        if (runningCounter >= initialPods
-            && item.object.getMetadata().getDeletionTimestamp() == null) {
-          UploaderToWorker uploader = new UploaderToWorker(namespace, podName, jobPackageFile);
+        if (item.object.getMetadata().getDeletionTimestamp() == null) {
+          UploaderToPod uploader = new UploaderToPod(namespace, podName, jobPackageFile);
           uploader.start();
+
+          if (podNames.contains(podName)) {
+            podNames.remove(podName);
+            initialPodUploaders.put(podName, uploader);
+          } else {
+            uploaders.add(uploader);
+          }
         }
       }
     }
@@ -145,6 +171,67 @@ public class UploaderForScaler extends Thread {
       LOG.log(Level.SEVERE, "Exception closing watcher.", e);
     }
 
+  }
+
+  /**
+   * wait for all transfer threads to finish
+   * if any one of them fails, stop all active ones
+   * @return
+   */
+  public boolean completeFileTransfers() {
+
+    // wait until all transfer threads to be started
+    while (!podNames.isEmpty()) {
+
+      long duration = System.currentTimeMillis() - watcherStartTime;
+      if (duration > MAX_WAIT_TIME_FOR_POD_START) {
+        LOG.log(Level.SEVERE, "Max wait time limit has been reached and not all pods started.");
+        return false;
+      }
+
+      try {
+        Thread.sleep(300);
+      } catch (InterruptedException e) {
+        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
+      }
+    }
+
+    // wait all transfer threads to finish up
+    boolean allTransferred = true;
+    for (Map.Entry<String, UploaderToPod> entry: initialPodUploaders.entrySet()) {
+
+      try {
+        entry.getValue().join();
+        if (!entry.getValue().packageTransferred()) {
+          LOG.log(Level.SEVERE, "Job Package is not transferred to the pod: " + entry.getKey());
+          allTransferred = false;
+          break;
+        }
+      } catch (InterruptedException e) {
+        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
+      }
+    }
+
+    // if one transfer fails, tell all transfer threads to stop and return false
+    if (!allTransferred) {
+      for (Map.Entry<String, UploaderToPod> entry: initialPodUploaders.entrySet()) {
+        entry.getValue().cancelTransfer();
+      }
+    }
+
+    if (!JobUtils.isJobScalable(job, config) || !allTransferred) {
+      stopUploader();
+    }
+
+    return allTransferred;
+  }
+
+  public void stopUploader() {
+    stopUploader = true;
+
+    for (UploaderToPod uploader: uploaders) {
+      uploader.cancelTransfer();
+    }
   }
 
 }
