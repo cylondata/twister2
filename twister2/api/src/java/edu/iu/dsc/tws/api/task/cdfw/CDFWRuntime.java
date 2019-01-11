@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task.htg;
+package edu.iu.dsc.tws.api.task.cdfw;
 
 import java.util.HashMap;
 import java.util.List;
@@ -98,7 +98,7 @@ public class CDFWRuntime implements JobListener {
               + "loop");
           break;
         } else {
-          LOG.log(Level.WARNING, workerId + "Unknown message for htg task execution");
+          LOG.log(Level.WARNING, workerId + "Unknown message for cdfw task execution");
         }
       } catch (InterruptedException e) {
         LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
