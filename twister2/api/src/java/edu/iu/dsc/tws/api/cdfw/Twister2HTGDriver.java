@@ -79,7 +79,7 @@ public class Twister2HTGDriver implements IDriver, DriverJobListener {
     //testing for sending the complete message
     sleep(2000);
     HTGJobAPI.HTGJobCompletedMessage jobCompletedMessage = HTGJobAPI.HTGJobCompletedMessage
-        .newBuilder().setHtgJobname("htg").build();
+        .newBuilder().setHtgJobname("cdfw").build();
     LOG.log(Level.INFO, "Broadcasting job completed message: " + jobCompletedMessage);
     messenger.broadcastToAllWorkers(jobCompletedMessage);
   }

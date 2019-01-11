@@ -21,7 +21,7 @@ import com.google.protobuf.Any;
 
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.htg.CDFWWorker;
+import edu.iu.dsc.tws.api.task.cdfw.CDFWWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.driver.DriverJobListener;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
@@ -78,7 +78,7 @@ public final class CDFWExecutor implements DriverJobListener {
 
   /**
    * The executeHTG method first call the schedule method to get the schedule list of the HTG.
-   * Then, it invokes the build HTG Job object to build the htg job object for the scheduled graphs.
+   * Then, it invokes the build HTG Job object to build the cdfw job object for the scheduled graphs.
    */
   public void execute(DataFlowGraph graph) {
     LOG.info("Starting task graph Requirements:" + graph.getGraphName());
@@ -162,7 +162,7 @@ public final class CDFWExecutor implements DriverJobListener {
   }
 
   /**
-   * This method is responsible for building the htg job object which is based on the outcome of
+   * This method is responsible for building the cdfw job object which is based on the outcome of
    * the scheduled graphs list.
    */
   private HTGJobAPI.SubGraph buildHTGJob(DataFlowGraph job) {

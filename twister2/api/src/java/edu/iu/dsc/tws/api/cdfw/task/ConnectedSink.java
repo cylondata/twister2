@@ -70,6 +70,10 @@ public class ConnectedSink extends BaseSink implements Collector<Object> {
     partition = new CollectionPSet<>(ctx.getWorkerId(), ctx.taskIndex());
   }
 
+  /**
+   * Getter fo serializing the object
+   * @return
+   */
   public String getOutName() {
     return outName;
   }
