@@ -376,17 +376,6 @@ public final class CDFWExecutor implements DriverJobListener {
     JMDriverAgent.addDriverJobListener(this);
   }
 
-  private void waitForWorkersToJoin() {
-
-    // todo change this to check for the worker list
-    while (true) {
-      LOG.info("i m in while");
-      if (this.workerInfoList != null) {
-        return;
-      }
-    }
-  }
-
   private String getJobName(String name) {
     if (name == null) {
       return "graph_" + jobCount;
