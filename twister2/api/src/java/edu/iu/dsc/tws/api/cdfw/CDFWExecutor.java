@@ -158,10 +158,6 @@ public final class CDFWExecutor implements DriverJobListener {
 
     //LOG.info("Starting task graph Requirements:" + graph.getGraph().getTaskGraphName());
 
-    for (DataFlowGraph graph1 : graph) {
-      LOG.info("DataflowGraph Values Are:" + graph1.getGraph().getTaskGraphName());
-    }
-
     if (!(driverState == DriverState.JOB_FINISHED || driverState == DriverState.INITIALIZE)) {
       // now we need to send messages
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
