@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.schedulers.k8s;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.rsched.schedulers.k8s.uploader;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,11 +32,17 @@ import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
+
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.models.V1Event;
 import io.kubernetes.client.util.Watch;
 
 /**
+ * Currently this class is not used.
+ *
  * A class to transfer the job package to pods
  * static methods are used to start, cancel, signal and complete all transfer threads in the job
  * One thread is used to transfer the job package to one pod

@@ -93,18 +93,18 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     RequestObjectBuilder.init(config, job.getJobName(), jobFileSize);
     JobMasterRequestObject.init(config, job.getJobName(), jobFileSize);
 
+    // check all relevant entities on Kubernetes master
+    boolean allEntitiesOK = checkEntitiesOnKubernetesMaster(job);
+    if (!allEntitiesOK) {
+      return false;
+    }
+
     // start job package transfer threads to watch pods to starting
     if (KubernetesContext.clientToPodsUploading(config)) {
       uploader = new UploaderForJob(config, job, jobPackageFile);
       uploader.start();
 //      JobPackageTransferThread.startTransferThreads(
 //          namespace, job, jobPackageFile, KubernetesContext.watchBeforeUploadAttempts(config));
-    }
-
-    // check all relevant entities on Kubernetes master
-    boolean allEntitiesOK = checkEntitiesOnKubernetesMaster(job);
-    if (!allEntitiesOK) {
-      return false;
     }
 
     // initialize the service in Kubernetes master
@@ -432,7 +432,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     }
 
     // let the transfer threads know that we are about to submit the StatefulSets
-    JobPackageTransferThread.setSubmittingStatefulSets();
+    // JobPackageTransferThread.setSubmittingStatefulSets();
 
     // create StatefulSets for workers
     for (int i = 0; i < job.getComputeResourceList().size(); i++) {
@@ -546,7 +546,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     LOG.info("Will clear up any resources created during the job submission process.");
 
-    if (KubernetesContext.clientToPodsUploading(config)) {
+    if (KubernetesContext.clientToPodsUploading(config) && uploader != null) {
       uploader.stopUploader();
     }
 

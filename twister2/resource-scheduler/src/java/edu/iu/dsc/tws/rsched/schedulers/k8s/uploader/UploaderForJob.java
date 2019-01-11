@@ -66,9 +66,10 @@ public class UploaderForJob extends Thread {
   private String jobPackageFile;
 
   private ArrayList<String> podNames;
-  private HashMap<String, UploaderToPod> initialPodUploaders = new HashMap();
+  private HashMap<String, UploaderToPod> initialPodUploaders = new HashMap<>();
   private ArrayList<UploaderToPod> uploaders = new ArrayList<>();
 
+  private Watch<V1Pod> watcher;
   private boolean stopUploader = false;
   private long watcherStartTime = System.currentTimeMillis();
 
@@ -107,21 +108,21 @@ public class UploaderForJob extends Thread {
     coreApi = new CoreV1Api(apiClient);
   }
 
+
   private void watchScaledUpPods() {
 
     /** Pod Phases: Pending, Running, Succeeded, Failed, Unknown
      * ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase */
 
-    String workerRoleLabel = KubernetesUtils.createJobPodsLabelWithKey(jobName);
+    String jobPodsLabel = KubernetesUtils.createJobPodsLabelWithKey(jobName);
 
     Integer timeoutSeconds = Integer.MAX_VALUE;
-    Watch<V1Pod> watch = null;
     String podPhase = "Running";
 
     try {
-      watch = Watch.createWatch(
+      watcher = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, null, workerRoleLabel,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, null, jobPodsLabel,
               null, null, timeoutSeconds, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
@@ -134,43 +135,51 @@ public class UploaderForJob extends Thread {
       throw new RuntimeException(e);
     }
 
-    int runningCounter = 0;
-    for (Watch.Response<V1Pod> item : watch) {
+    // when we close the watcher to stop uploader,
+    // it throws RuntimeException
+    // we catch this exception and ignore it.
+    try {
 
-      if (stopUploader) {
-        break;
-      }
+      for (Watch.Response<V1Pod> item : watcher) {
 
-      if (item.object != null
-          && item.object.getMetadata().getName().startsWith(jobName)
-          && podPhase.equals(item.object.getStatus().getPhase())
-      ) {
-        String podName = item.object.getMetadata().getName();
+        if (stopUploader) {
+          break;
+        }
+
+        if (item.object != null
+            && item.object.getMetadata().getName().startsWith(jobName)
+            && podPhase.equals(item.object.getStatus().getPhase())
+        ) {
+          String podName = item.object.getMetadata().getName();
 
 //        LOG.info(runningCounter++ + " -------------- Pod event: " + podName + ", " + podPhase);
 
-        // if DeletionTimestamp is not null,
-        // it means that the pod is in the process of being deleted
-        if (item.object.getMetadata().getDeletionTimestamp() == null) {
-          UploaderToPod uploader = new UploaderToPod(namespace, podName, jobPackageFile);
-          uploader.start();
+          // if DeletionTimestamp is not null,
+          // it means that the pod is in the process of being deleted
+          if (item.object.getMetadata().getDeletionTimestamp() == null) {
+            UploaderToPod uploader = new UploaderToPod(namespace, podName, jobPackageFile);
+            uploader.start();
 
-          if (podNames.contains(podName)) {
-            podNames.remove(podName);
-            initialPodUploaders.put(podName, uploader);
-          } else {
-            uploaders.add(uploader);
+            if (podNames.contains(podName)) {
+              podNames.remove(podName);
+              initialPodUploaders.put(podName, uploader);
+            } else {
+              uploaders.add(uploader);
+            }
           }
         }
       }
+
+    } catch (RuntimeException e) {
+      if (stopUploader) {
+        LOG.fine("Uploader is stopped.");
+        return;
+      } else {
+        throw e;
+      }
     }
 
-    try {
-      watch.close();
-    } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Exception closing watcher.", e);
-    }
-
+    closeWatcher();
   }
 
   /**
@@ -226,8 +235,28 @@ public class UploaderForJob extends Thread {
     return allTransferred;
   }
 
+  private void closeWatcher() {
+
+    if (watcher == null) {
+      return;
+    }
+
+    try {
+      watcher.close();
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception closing watcher.", e);
+    }
+
+    watcher = null;
+  }
+
   public void stopUploader() {
     stopUploader = true;
+    closeWatcher();
+
+    for (Map.Entry<String, UploaderToPod> entry: initialPodUploaders.entrySet()) {
+      entry.getValue().cancelTransfer();
+    }
 
     for (UploaderToPod uploader: uploaders) {
       uploader.cancelTransfer();
