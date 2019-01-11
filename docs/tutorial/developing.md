@@ -620,7 +620,7 @@ You can access to the presentation using the link below
 
 ## Joins Example
 
-Joins are a important operation that is windley used in big data applications. Since joins can be
+Joins are an important operation that is widely used in big data applications. Since joins can be
 very expensive operation it is important to have a efficient join operation. Twister2 supports join operations through its optimized communication layer. 
 
 The following join example showcases how a join operation can be performed using the Twister2 communication API. Since this example is presented at the communication level the complexity of the code is a little high. Since the code needs to handle other aspects such as task management and execution within the example code. Using joins at the task layer and data layer will gradually reduce this complexity because each layer hides complexities from the end user. However it is usefull to understand operations at the communication layer since it gives you the 
