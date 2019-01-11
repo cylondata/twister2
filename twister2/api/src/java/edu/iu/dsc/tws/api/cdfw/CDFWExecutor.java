@@ -84,7 +84,7 @@ public final class CDFWExecutor implements DriverJobListener {
 
   private List<JobMasterAPI.WorkerInfo> workerInfoList;
 
-  private AtomicBoolean workerjoined = new AtomicBoolean(false);
+  private AtomicBoolean workerjoined;
 
   public CDFWExecutor(Config cfg) {
     this.config = cfg;
@@ -92,6 +92,7 @@ public final class CDFWExecutor implements DriverJobListener {
     // set the driver events queue, this will make sure that we only create one instance of
     // submitter
     Twister2HTGInstance.getTwister2HTGInstance().setDriverEvents(inDriverEvents);
+    workerjoined = new AtomicBoolean(false);
   }
 
   /**
@@ -191,13 +192,10 @@ public final class CDFWExecutor implements DriverJobListener {
         DefaultScheduler defaultScheduler = new DefaultScheduler(this.workerInfoList);
         Map<DataFlowGraph, Set<Integer>> scheduleGraphMap = defaultScheduler.schedule(graph);
 
-        LOG.info("scheduling details:" + scheduleGraphMap);
+        LOG.info("Scheduled Dataflow Graph Details:" + scheduleGraphMap);
 
         for (Map.Entry<DataFlowGraph, Set<Integer>> dataFlowGraphEntry
             : scheduleGraphMap.entrySet()) {
-
-          LOG.info("# Scheduled Dataflow Graph Details:#"
-              + dataFlowGraphEntry.getKey().getGraph().getTaskGraphName());
 
           DataFlowGraph dataFlowGraph = dataFlowGraphEntry.getKey();
           Set<Integer> workerIDs = dataFlowGraphEntry.getValue();

@@ -33,7 +33,7 @@ public class DefaultScheduler implements ICDFWScheduler {
   private List<JobMasterAPI.WorkerInfo> workerInfoList;
 
   //To store the scheduled dataflow task graph and their corresponding worker list
-  public static Map<DataFlowGraph, Set<Integer>> scheduledGraphMap = new LinkedHashMap<>();
+  private static Map<DataFlowGraph, Set<Integer>> scheduledGraphMap = new LinkedHashMap<>();
 
   protected DefaultScheduler(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     this.workerInfoList = workerInfoList;
