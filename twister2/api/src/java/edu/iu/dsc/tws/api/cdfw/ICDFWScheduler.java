@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.cdfw;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -19,5 +20,8 @@ import java.util.Set;
  * it will initiate the execution.
  */
 public interface ICDFWScheduler {
+
   Set<Integer> schedule(DataFlowGraph graphJob);
+
+  Map<DataFlowGraph, Set<Integer>> schedule(DataFlowGraph... graphJob);
 }

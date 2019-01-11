@@ -12,8 +12,11 @@
 package edu.iu.dsc.tws.api.cdfw;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,11 +72,16 @@ public final class CDFWExecutor implements DriverJobListener {
    */
   private JMDriverAgent driverAgent;
 
+  private List<JobMasterAPI.WorkerInfo> workerInfoList;
+
+  private AtomicBoolean workerjoined;
+
   public CDFWExecutor(Config cfg) {
     this.config = cfg;
     // set the driver events queue, this will make sure that we only create one instance of
     // submitter
     Twister2HTGInstance.getTwister2HTGInstance().setDriverEvents(inDriverEvents);
+    workerjoined = new AtomicBoolean(false);
   }
 
   /**
@@ -129,6 +137,82 @@ public final class CDFWExecutor implements DriverJobListener {
     }
   }
 
+  /**
+   * The executeHTG method first call the schedule method to get the schedule list of the HTG.
+   * Then, it invokes the build HTG Job object to build the htg job object for the scheduled graphs.
+   */
+
+  //Added to test and schedule multiple graphs at a time.
+  public void executeCDFW(DataFlowGraph... graph) {
+
+    //LOG.info("Starting task graph Requirements:" + graph.getGraph().getTaskGraphName());
+
+    if (!(driverState == DriverState.JOB_FINISHED || driverState == DriverState.INITIALIZE)) {
+      // now we need to send messages
+      throw new RuntimeException("Invalid state to execute a job: " + driverState);
+    }
+    jobCount++;
+
+    HTGJobAPI.SubGraph job = buildHTGJob(graph[0]);
+
+    // this is the first time
+    if (driverState == DriverState.INITIALIZE) {
+      submitterThread = new Thread(new SubmitterRunnable(job));
+      submitterThread.start();
+      try {
+        Thread.sleep(2000);
+      } catch (InterruptedException ignore) {
+      }
+      // set the workers as number of instances
+      startDriver(job.getInstances());
+
+      driverState = DriverState.WAIT_FOR_WORKERS_TO_START;
+      // lets wait until the worker start message received
+      try {
+        waitForEvent(DriveEventType.INITIALIZE);
+        driverState = DriverState.DRIVER_LISTENER_INITIALIZED;
+
+        //We can be able to retrieve the workers info list after the submit job.
+
+        DefaultScheduler defaultScheduler = new DefaultScheduler(this.workerInfoList);
+        Map<DataFlowGraph, Set<Integer>> scheduleGraphMap = defaultScheduler.schedule(graph);
+
+        LOG.info("Scheduled Dataflow Graph Details:" + scheduleGraphMap);
+
+        for (Map.Entry<DataFlowGraph, Set<Integer>> dataFlowGraphEntry
+            : scheduleGraphMap.entrySet()) {
+
+          DataFlowGraph dataFlowGraph = dataFlowGraphEntry.getKey();
+          Set<Integer> workerIDs = dataFlowGraphEntry.getValue();
+
+          /* TODO: We have to set the worker ids from the scheduled list to the dataflow graph **/
+        }
+
+        //now submit the job
+        submitJob(job);
+
+        driverState = DriverState.JOB_SUBMITTED;
+        // lets wait for another event
+        waitForEvent(DriveEventType.FINISHED_JOB);
+        driverState = DriverState.JOB_FINISHED;
+      } catch (Exception e) {
+        throw new RuntimeException("Driver is not initialized", e);
+      }
+      // now lets submit the
+    } else if (driverState == DriverState.JOB_FINISHED) {
+      submitJob(job);
+      driverState = DriverState.JOB_SUBMITTED;
+      // lets wait for another event
+      try {
+        waitForEvent(DriveEventType.FINISHED_JOB);
+        driverState = DriverState.JOB_FINISHED;
+      } catch (Exception e) {
+        throw new RuntimeException("Driver is not initialized", e);
+      }
+    }
+
+  }
+
   public void close() {
     // send the close message
     sendCloseMessage();
@@ -154,6 +238,7 @@ public final class CDFWExecutor implements DriverJobListener {
    * @param job subgraph
    */
   private void submitJob(HTGJobAPI.SubGraph job) {
+
     LOG.log(Level.INFO, "Sending graph to workers for execution: " + job.getName());
     HTGJobAPI.ExecuteMessage.Builder builder = HTGJobAPI.ExecuteMessage.newBuilder();
     builder.setSubgraphName(job.getName());
@@ -179,7 +264,13 @@ public final class CDFWExecutor implements DriverJobListener {
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
     inDriverEvents.offer(new DriverEvent(DriveEventType.INITIALIZE, null));
+
+    //Added to get the worker info list for testing
+    if (workerList != null) {
+      this.workerInfoList = workerList;
+    }
   }
+
 
   private class SubmitterRunnable implements Runnable {
     private HTGJobAPI.SubGraph htgJob;
@@ -204,6 +295,9 @@ public final class CDFWExecutor implements DriverJobListener {
     //send the singleton object to the HTG Driver
     Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
     twister2HTGInstance.setHtgSchedulerClassName(DefaultScheduler.class.getName());
+
+    LOG.info("HTG Job Requirements:" + htgJob.getCpu() + "\t" + htgJob.getDiskGigaBytes()
+        + "\t" + htgJob.getRamMegaBytes());
 
     //Setting the first graph resource requirements for the initial resource allocation
     Twister2Job twister2Job = Twister2Job.newBuilder()
