@@ -107,7 +107,7 @@ public class DefaultScheduler implements ICDFWScheduler {
           break;
         }
       }
-    } else if (workerInfoList.size() < graph.getWorkers()) {
+    } else {
       throw new RuntimeException("Insufficient resources to run the dataflow graph");
     }
     return workerList;
