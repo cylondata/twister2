@@ -55,7 +55,7 @@ public final class TwoDataFlowsExample {
 
     @Override
     public void execute() {
-      context.writeEnd("all-reduce", "Hello");
+      context.writeEnd("partition", "Hello");
     }
 
     @Override
@@ -129,18 +129,19 @@ public final class TwoDataFlowsExample {
         .put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName()).build();
 
     CDFWExecutor cdfwExecutor = new CDFWExecutor(config);
+    LOG.log(Level.INFO, "Executing the first graph");
     // run the first job
     runFirstJob(config, cdfwExecutor, parallelismValue, jobConfig);
     // run the second job
+    LOG.log(Level.INFO, "Executing the second graph");
     runSecondJob(config, cdfwExecutor, parallelismValue, jobConfig);
     cdfwExecutor.close();
   }
 
-  private static CDFWExecutor runFirstJob(Config config, CDFWExecutor cdfwExecutor,
+  private static void runFirstJob(Config config, CDFWExecutor cdfwExecutor,
                                           int parallelismValue, JobConfig jobConfig) {
-
     HTGSourceTask htgSourceTask = new HTGSourceTask();
-    ConnectedSink htgReduceTask = new ConnectedSink();
+    ConnectedSink htgReduceTask = new ConnectedSink("first_out");
 
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", htgSourceTask, parallelismValue);
@@ -152,16 +153,14 @@ public final class TwoDataFlowsExample {
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob(batchGraph).
-        setWorkers(4).addJobConfig(jobConfig);
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph).
+        setWorkers(4).addJobConfig(jobConfig).addOutput("first_out");
     cdfwExecutor.execute(job);
-    return cdfwExecutor;
   }
 
-  private static CDFWExecutor runSecondJob(Config config, CDFWExecutor cdfwExecutor,
+  private static void runSecondJob(Config config, CDFWExecutor cdfwExecutor,
                                           int parallelismValue, JobConfig jobConfig) {
-
-    ConnectedSource htgSourceTask = new ConnectedSource();
+    ConnectedSource htgSourceTask = new ConnectedSource("reduce");
     ConnectedSink htgReduceTask = new ConnectedSink();
 
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
@@ -174,9 +173,8 @@ public final class TwoDataFlowsExample {
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob(batchGraph).
-        setWorkers(4).addJobConfig(jobConfig);
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph).
+        setWorkers(4).addJobConfig(jobConfig).addInput("first_graph", "first_out");
     cdfwExecutor.execute(job);
-    return cdfwExecutor;
   }
 }

@@ -14,8 +14,12 @@ package edu.iu.dsc.tws.api.cdfw;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.protobuf.ByteString;
+
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public final class DataFlowGraph {
@@ -43,12 +47,19 @@ public final class DataFlowGraph {
   // output names to this dataflow
   private List<String> outputs = new ArrayList<>();
 
-  private DataFlowGraph(DataFlowTaskGraph g) {
+  private KryoMemorySerializer kryoMemorySerializer;
+
+  // name to be used
+  private String graphName;
+
+  private DataFlowGraph(String name, DataFlowTaskGraph g) {
     this.graph = g;
+    this.kryoMemorySerializer = new KryoMemorySerializer();
+    this.graphName = name;
   }
 
-  public static DataFlowGraph newSubGraphJob(DataFlowTaskGraph g) {
-    return new DataFlowGraph(g);
+  public static DataFlowGraph newSubGraphJob(String name, DataFlowTaskGraph g) {
+    return new DataFlowGraph(name, g);
   }
 
   public DataFlowGraph setCpu(int c) {
@@ -114,7 +125,35 @@ public final class DataFlowGraph {
     return inputs;
   }
 
+  public String getGraphName() {
+    return graphName;
+  }
+
   public List<String> getOutputs() {
     return outputs;
+  }
+
+  public HTGJobAPI.SubGraph build() {
+    JobAPI.Config.Builder configBuilder = JobAPI.Config.newBuilder();
+
+    if (graphName == null) {
+      throw new RuntimeException("A name should be specified");
+    }
+
+    jobConfig.forEach((key, value) -> {
+      byte[] objectByte = kryoMemorySerializer.serialize(value);
+      configBuilder.putConfigByteMap(key, ByteString.copyFrom(objectByte));
+    });
+    byte[] graphBytes = kryoMemorySerializer.serialize(graph);
+
+    //Construct the HTGJob object to be sent to the HTG Driver
+    return HTGJobAPI.SubGraph.newBuilder()
+        .setName(graphName)
+        .setConfig(configBuilder)
+        .setGraphSerialized(ByteString.copyFrom(graphBytes))
+        .setInstances(workers)
+        .addAllOutputs(outputs)
+        .addAllInputs(inputs)
+        .build();
   }
 }

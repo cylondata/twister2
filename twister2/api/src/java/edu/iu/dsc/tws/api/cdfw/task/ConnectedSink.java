@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.cdfw.task;
 
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.PSet;
@@ -53,7 +55,12 @@ public class ConnectedSink extends BaseSink implements Collector<Object> {
 
   @Override
   public boolean execute(IMessage message) {
-    partition.add(message.getContent());
+    if (message.getContent() instanceof Iterator) {
+      Iterator<Object> itr = (Iterator<Object>) message.getContent();
+      while (itr.hasNext()) {
+        partition.add(itr.next());
+      }
+    }
     return true;
   }
 
@@ -63,6 +70,10 @@ public class ConnectedSink extends BaseSink implements Collector<Object> {
     partition = new CollectionPSet<>(ctx.getWorkerId(), ctx.taskIndex());
   }
 
+  /**
+   * Getter fo serializing the object
+   * @return
+   */
   public String getOutName() {
     return outName;
   }

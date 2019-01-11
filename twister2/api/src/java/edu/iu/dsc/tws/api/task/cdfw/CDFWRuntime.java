@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task.htg;
+package edu.iu.dsc.tws.api.task.cdfw;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,21 +35,45 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public class HTGTaskExecutor implements JobListener {
-  private static final Logger LOG = Logger.getLogger(HTGTaskExecutor.class.getName());
+public class CDFWRuntime implements JobListener {
+  private static final Logger LOG = Logger.getLogger(CDFWRuntime.class.getName());
 
+  /**
+   * Messages from the driver
+   */
   private BlockingQueue<Any> executeMessageQueue;
 
+  /**
+   * Worker id
+   */
   private int workerId;
 
+  /**
+   * Kryo serializer
+   */
   private KryoMemorySerializer serializer;
 
+  /**
+   * The outputs from previous graphs
+   * [graph, [output name, data set]]
+   */
   private Map<String, Map<String, DataSet<Object>>> outPuts = new HashMap<>();
 
+  /**
+   * Task executor
+   */
   private TaskExecutor taskExecutor;
 
-  public HTGTaskExecutor(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
-                         Communicator net) {
+  /**
+   * Connected dataflow runtime
+   *
+   * @param cfg configuration
+   * @param wId worker id
+   * @param workerInfoList worker information list
+   * @param net network
+   */
+  public CDFWRuntime(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
+                     Communicator net) {
     taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, net);
     this.executeMessageQueue = new LinkedBlockingQueue<>();
     this.workerId = wId;
@@ -74,7 +98,7 @@ public class HTGTaskExecutor implements JobListener {
               + "loop");
           break;
         } else {
-          LOG.log(Level.WARNING, workerId + "Unknown message for htg task execution");
+          LOG.log(Level.WARNING, workerId + "Unknown message for cdfw task execution");
         }
       } catch (InterruptedException e) {
         LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
@@ -88,27 +112,45 @@ public class HTGTaskExecutor implements JobListener {
   private boolean handleExecuteMessage(Any msg) {
     JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
     HTGJobAPI.ExecuteMessage executeMessage;
-    String subgraph;
     ExecutionPlan executionPlan;
     HTGJobAPI.ExecuteCompletedMessage completedMessage;
     try {
       executeMessage = msg.unpack(HTGJobAPI.ExecuteMessage.class);
-      LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
-      subgraph = executeMessage.getSubgraphName();
-      LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
+//      LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
+//      LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
 
       // get the subgraph from the map
       HTGJobAPI.SubGraph subGraph = executeMessage.getGraph();
       DataFlowTaskGraph taskGraph = (DataFlowTaskGraph) serializer.deserialize(
           subGraph.getGraphSerialized().toByteArray());
       if (taskGraph == null) {
-        LOG.severe(workerId + " Unable to find the subgraph " + subgraph);
+        LOG.severe(workerId + " Unable to find the subgraph " + subGraph.getName());
         return true;
       }
       // use the taskexecutor to create the execution plan
       executionPlan = taskExecutor.plan(taskGraph);
-      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
-      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
+//      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
+//      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
+
+      if (subGraph.getInputsList().size() != 0) {
+        for (HTGJobAPI.Input input : subGraph.getInputsList()) {
+          String inputName = input.getName();
+          String inputGraph = input.getParentGraph();
+
+          if (!outPuts.containsKey(inputGraph)) {
+            throw new RuntimeException("We cannot find the input graph: " + inputGraph);
+          }
+
+          Map<String, DataSet<Object>> outsPerGraph = outPuts.get(inputGraph);
+
+          if (!outsPerGraph.containsKey(inputName)) {
+            throw new RuntimeException("We cannot find the input: " + inputName);
+          }
+
+          DataSet<Object> outPutObject = outsPerGraph.get(inputName);
+          taskExecutor.addSourceInput(taskGraph, executionPlan, inputName, outPutObject);
+        }
+      }
 
       List<HTGJobAPI.Input> inputs = subGraph.getInputsList();
       // now lets get those inputs
@@ -120,11 +162,11 @@ public class HTGTaskExecutor implements JobListener {
       // reuse the task executor execute
       taskExecutor.execute(taskGraph, executionPlan);
 
-      LOG.log(Level.INFO, workerId + " Completed subgraph : " + subgraph);
+      LOG.log(Level.INFO, workerId + " Completed subgraph : " + subGraph.getName());
 
-      LOG.log(Level.INFO, workerId + " Sending subgraph completed message to driver");
+//      LOG.log(Level.INFO, workerId + " Sending subgraph completed message to driver");
       completedMessage = HTGJobAPI.ExecuteCompletedMessage.newBuilder()
-          .setSubgraphName(subgraph).build();
+          .setSubgraphName(subGraph.getName()).build();
 
       List<String> outPutNames = subGraph.getOutputsList();
       Map<String, DataSet<Object>> outs = new HashMap<>();
@@ -133,7 +175,7 @@ public class HTGTaskExecutor implements JobListener {
         DataSet<Object> outPut = taskExecutor.getSinkOutput(taskGraph, executionPlan, out);
         outs.put(out, outPut);
       }
-      outPuts.put("out", outs);
+      outPuts.put(subGraph.getName(), outs);
 
       if (!workerMessenger.sendToDriver(completedMessage)) {
         LOG.severe("Unable to send the subgraph completed message :" + completedMessage);

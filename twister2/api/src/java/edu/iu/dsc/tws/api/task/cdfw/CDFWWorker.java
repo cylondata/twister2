@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task.htg;
+package edu.iu.dsc.tws.api.task.cdfw;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -30,8 +30,8 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 /**
  * This is an implementation of IWorker to support easy deployment of task graphs.
  */
-public class HTGTaskWorker implements IWorker {
-  private static final Logger LOG = Logger.getLogger(HTGTaskWorker.class.getName());
+public class CDFWWorker implements IWorker {
+  private static final Logger LOG = Logger.getLogger(CDFWWorker.class.getName());
 
   /**
    * The channel
@@ -71,7 +71,7 @@ public class HTGTaskWorker implements IWorker {
   /**
    * The task executor to be used
    */
-  protected HTGTaskExecutor taskExecutor;
+  protected CDFWRuntime taskExecutor;
 
   @Override
   public void execute(Config cfg, int workerID,
@@ -100,7 +100,7 @@ public class HTGTaskWorker implements IWorker {
     // create the communicator
     communicator = new Communicator(config, channel, persistent);
     // create the executor
-    taskExecutor = new HTGTaskExecutor(config, workerId, workerInfoList, communicator);
+    taskExecutor = new CDFWRuntime(config, workerId, workerInfoList, communicator);
     // register driver listener
     JMWorkerAgent.addJobListener(taskExecutor);
 
