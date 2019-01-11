@@ -166,9 +166,8 @@ public final class ParallelDataFlowsExample {
 
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
-    batchGraph.setTaskGraphName("Graph1");
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob(batchGraph).
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("Graph1", batchGraph).
         setWorkers(4).addJobConfig(jobConfig);
 
     return job;
@@ -189,9 +188,8 @@ public final class ParallelDataFlowsExample {
 
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
-    batchGraph.setTaskGraphName("Graph2");
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob(batchGraph).
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("Graph2", batchGraph).
         setWorkers(2).addJobConfig(jobConfig);
 
     return job;
