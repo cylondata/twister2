@@ -628,7 +628,7 @@ most freedom to optimize according to your needs.
 
 ## Data
 
-The data set used for this example is pretty simple and straightforward. The example joins two data sets, the first one has a set of student id's and the corresponding first names for each student id. And the second data set has student id's and the corresponding courses that students have taken. 
+The data set used for this example is pretty simple and straightforward. This example joins two data sets, the first one has a set of student id's and the corresponding first names for each student id. And the second data set has student id's and the corresponding courses that students have taken.
 
 #### Data Set 1
 | Student Id | First Name |
