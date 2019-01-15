@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io.partition;
+package edu.iu.dsc.tws.comms.dfw.io.direct;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,13 +30,13 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 
-public class PartitionBatchFinalReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
+public class DirectBatchFinalReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(DirectBatchFinalReceiver.class.getName());
 
   /**
    * The receiver to be used to deliver the message
    */
-  private BulkReceiver receiver;
+  protected BulkReceiver receiver;
 
   /**
    * The executor
@@ -46,35 +46,34 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * Keep the destination messages
    */
-  private Map<Integer, List<Object>> targetMessages = new HashMap<>();
+  protected Map<Integer, List<Object>> targetMessages = new HashMap<>();
 
   /**
    * The dataflow operation
    */
-  private DataFlowOperation operation;
+  protected DataFlowOperation operation;
 
   /**
    * The lock for excluding onMessage and communicationProgress
    */
-  private Lock lock = new ReentrantLock();
+  protected Lock lock = new ReentrantLock();
 
   /**
    * These sources called onFinished
    */
-  private Map<Integer, Set<Integer>> onFinishedSources = new HashMap<>();
+  protected Set<Integer> finishedTargets = new HashSet<>();
 
   /**
    * The worker id
    */
   private int thisWorker;
 
-
   /**
    * sources for this operation
    */
   private Set<Integer> sources;
 
-  public PartitionBatchFinalReceiver(BulkReceiver receiver) {
+  public DirectBatchFinalReceiver(BulkReceiver receiver) {
     this.receiver = receiver;
   }
 
@@ -88,7 +87,6 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     // lists to keep track of messages for destinations
     for (int d : expectedIds.keySet()) {
       targetMessages.put(d, new ArrayList<>());
-      onFinishedSources.put(d, new HashSet<>());
     }
 
     LOG.log(Level.INFO, String.format("%d Expected ids %s", executor, expectedIds));
@@ -111,13 +109,13 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   public boolean onMessage(int src, int path, int target, int flags, Object object) {
     lock.lock();
     try {
-      Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(target);
       if ((flags & MessageFlags.END) == MessageFlags.END) {
-        if (onFinishedSrcsTarget.contains(src)) {
+        if (finishedTargets.contains(target)) {
           LOG.log(Level.WARNING,
-              String.format("%d Duplicate finish from source id %d", this.thisWorker, src));
+              String.format("%d Duplicate finish to target id %d from source %d",
+                  this.thisWorker, target, src));
         } else {
-          onFinishedSrcsTarget.add(src);
+          finishedTargets.add(target);
         }
         return true;
       }
@@ -143,18 +141,17 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     boolean needsFurtherProgress = false;
     lock.lock();
     try {
-      for (Map.Entry<Integer, Set<Integer>> entry : onFinishedSources.entrySet()) {
-        Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(entry.getKey());
-
-        if (operation.isDelegeteComplete()
-            && onFinishedSrcsTarget.equals(sources)) {
+      for (int target : finishedTargets) {
+        if (operation.isDelegeteComplete()) {
           Iterator<Map.Entry<Integer, List<Object>>> it = targetMessages.entrySet().iterator();
           while (it.hasNext()) {
             Map.Entry<Integer, List<Object>> e = it.next();
-            if (receiver.receive(e.getKey(), e.getValue().iterator())) {
-              it.remove();
-            } else {
-              needsFurtherProgress = true;
+            if (e.getKey() == target) {
+              if (receiver.receive(e.getKey(), e.getValue().iterator())) {
+                it.remove();
+              } else {
+                needsFurtherProgress = true;
+              }
             }
           }
         } else {
