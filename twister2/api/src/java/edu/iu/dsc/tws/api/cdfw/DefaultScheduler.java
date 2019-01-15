@@ -55,11 +55,9 @@ public class DefaultScheduler implements ICDFWScheduler {
     return scheduledGraph;
   }
 
-
   /**
-   * This method is able to schedule multiple dataflow
-   * graphs. It will return the map which corresponds to the dataflow graph and
-   * their worker ids.
+   * This method is able to schedule multiple dataflow graphs. It will return the map which
+   * corresponds to the dataflow graph and their worker ids.
    */
   @Override
   public Map<DataFlowGraph, Set<Integer>> schedule(DataFlowGraph... graphJob) {
@@ -75,13 +73,13 @@ public class DefaultScheduler implements ICDFWScheduler {
       scheduledGraphMap.put(graphJob[0], workerList);
 
     } else if (graphJob.length > 1) {
-      LOG.info("Graph Resource Requirements:" + graphJob[0].getWorkers()
-          + "\t" + graphJob[1].getWorkers() + "\t" + workerInfoList.size()
-          + "%%%% Scheduled Graph Map details: %%%%" + scheduledGraphMap);
       for (DataFlowGraph graph : graphJob) {
         workerList = scheduleGraphs(graph);
         scheduledGraphMap.put(graph, workerList);
       }
+      LOG.info("Graph Resource Requirements:" + graphJob[0].getWorkers()
+          + "\t" + graphJob[1].getWorkers() + "\t" + workerInfoList.size()
+          + "%%%% Scheduled Graph Map details: %%%%" + scheduledGraphMap);
     }
     return scheduledGraphMap;
   }
@@ -113,4 +111,3 @@ public class DefaultScheduler implements ICDFWScheduler {
     return workerList;
   }
 }
-
