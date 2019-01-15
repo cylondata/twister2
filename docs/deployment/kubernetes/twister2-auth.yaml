@@ -30,7 +30,7 @@ rules:
 
 - apiGroups: ["apps"]
   resources: ["statefulsets"]
-  verbs: ["get", "list", "watch", "delete"]
+  verbs: ["get", "list", "watch", "delete", "patch"]
 
 ---
 

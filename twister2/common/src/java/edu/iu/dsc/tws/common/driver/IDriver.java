@@ -11,7 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.driver;
 
+import java.util.List;
+
+import com.google.protobuf.Any;
+
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * An instance of this class will be executed in the submitting client,
@@ -21,13 +26,26 @@ public interface IDriver {
 
   /**
    * After the job is submitted,
-   * an instance of this method will be executed in the submitting client
+   * an instance of this method will be executed in the Job Master
    *
-   * Implementing Driver program can communicate with the workers through Job Master
-   * with the provided IMessenger and
-   * it can scale up/down the number of workers in the job by using IScaler
+   * Implementing Driver program can communicate with the workers through provided IDriverMessenger
+   * and it can scale up/down the number of workers in the job by using IScaler
    *
    * @param scaler
    */
   void execute(Config config, IScaler scaler, IDriverMessenger messenger);
+
+  /**
+   * received a protocol buffer message from a worker
+   * @param anyMessage received message from the worker
+   */
+  void workerMessageReceived(Any anyMessage, int senderWorkerID);
+
+  /**
+   * this method is invoked when all workers joined the job initially
+   * and also, after each scale up operation,
+   * @param workerList
+   */
+  void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList);
+
 }

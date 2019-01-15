@@ -147,22 +147,8 @@ message BarrierResponse {
     }
 }
 
-// this message registers the driver with the JobMaster
-// its status in job master becomes: STARTING when this message is received
-message RegisterDriver {
-    // nothing int it
-    // message name is sufficient
-}
-
-message RegisterDriverResponse {
-    oneof required {
-        bool succeeded = 1;
-    }
-    string reason = 2;
-}
-
-// Driver to Job Master communication related messages
-// let the job master and the workers know that
+// Driver to workers communication related messages
+// let the the workers know that
 // the number of workers in the job has hanged
 // if change is positive, new workers added
 // if change is negative, some worker instances removed
@@ -176,35 +162,26 @@ message WorkersScaled {
     }
 }
 
-// WorkersScaled response message
-// if it fails, reason will have a string explaining the problem
-message ScaledResponse {
-    oneof required {
-        bool succeeded = 1;
-    }
-    string reason = 2;
+// Job master will send this message to all workers
+// when all workers registered with the job
+//
+// it also sends this message to all workers
+// when all new workers have joined after the scale up
+message WorkersJoined {
+    int32 numberOfWorkers = 2;
+    repeated WorkerInfo worker = 3;
 }
 
-// Driver to worker broadcast message
+// Driver to worker message
 // Driver can send any byte array to workers including serialized protocol buffer messages
 // It is encoded as a byte array
-message Broadcast {
+message DriverMessage {
     bytes data = 1;
-    int32 numberOfWorkers = 3;
-}
-
-// Broadcast response message
-// if it fails, reason will have a string explaining the problem
-message BroadcastResponse {
-    oneof required {
-        bool succeeded = 1;
-    }
-    string reason = 2;
 }
 
 // Worker to Driver message
 // Worker can send any byte array to the driver including serialized protocol buffer messages
-message WorkerToDriver {
+message WorkerMessage {
     bytes data = 1;
     oneof required {
         int32 workerID = 2;
@@ -214,19 +191,10 @@ message WorkerToDriver {
 
 // WorkerToDriver response message
 // if it fails, reason will have a string explaining the problem
-message WorkerToDriverResponse {
+message WorkerMessageResponse {
     oneof required {
         bool succeeded = 1;
     }
     string reason = 2;
 }
 
-// Job master will send this message to all workers and the driver
-// when all workers registered with the job
-//
-// it also sends this message to all workers and the driver
-// when all new workers have joined after the scale up
-message WorkersJoined {
-    int32 numberOfWorkers = 2;
-    repeated WorkerInfo worker = 3;
-}

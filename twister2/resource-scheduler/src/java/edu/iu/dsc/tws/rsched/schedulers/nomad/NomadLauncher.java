@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -99,8 +100,9 @@ public class NomadLauncher implements ILauncher {
         LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
         //TODO: a valid NodeInfo object need to be provided to JobMaster constructor
         JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
-        jobMaster =
-            new JobMaster(config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo);
+        IScalerPerCluster clusterScaler = null;
+        jobMaster = new JobMaster(
+            config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo, clusterScaler);
         jobMaster.addShutdownHook(true);
         jmThread = jobMaster.startJobMasterThreaded();
       } catch (UnknownHostException e) {

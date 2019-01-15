@@ -11,16 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.driver;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
+import edu.iu.dsc.tws.master.server.WorkerMonitor;
 
 public class DriverMessenger implements IDriverMessenger {
 
-  private JMDriverAgent driverAgent;
+  private WorkerMonitor workerMonitor;
 
-  public DriverMessenger(JMDriverAgent driverAgent) {
-    this.driverAgent = driverAgent;
+  public DriverMessenger(WorkerMonitor workerMonitor) {
+    this.workerMonitor = workerMonitor;
   }
 
   /**
@@ -29,6 +33,19 @@ public class DriverMessenger implements IDriverMessenger {
    */
   @Override
   public boolean broadcastToAllWorkers(Message message) {
-    return driverAgent.sendBroadcastMessage(message);
+    return workerMonitor.broadcastMessage(message);
+  }
+
+  @Override
+  public boolean sendToWorkerList(Message message, List<Integer> workerList) {
+
+    return workerMonitor.sendMessageToWorkerList(message, workerList);
+  }
+
+  @Override
+  public boolean sendToWorker(Message message, Integer workerID) {
+    LinkedList<Integer> workerList = new LinkedList<>();
+    workerList.add(workerID);
+    return workerMonitor.sendMessageToWorkerList(message, workerList);
   }
 }
