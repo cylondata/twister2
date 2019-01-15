@@ -23,6 +23,8 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
@@ -88,8 +90,12 @@ public final class JobMasterStarter {
     String namespace = KubernetesContext.namespace(config);
     JobTerminator jobTerminator = new JobTerminator(namespace);
 
+    KubernetesController controller = new KubernetesController();
+    controller.init(KubernetesContext.namespace(config));
+    K8sScaler k8sScaler = new K8sScaler(config, job, controller);
+
     // start JobMaster
-    JobMaster jobMaster = new JobMaster(config, podIP, jobTerminator, job, nodeInfo);
+    JobMaster jobMaster = new JobMaster(config, podIP, jobTerminator, job, nodeInfo, k8sScaler);
     jobMaster.addShutdownHook(false);
     jobMaster.startJobMasterBlocking();
   }

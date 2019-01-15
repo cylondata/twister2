@@ -22,10 +22,11 @@ import java.util.logging.Logger;
 import com.google.gson.reflect.TypeToken;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
-import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
@@ -85,7 +86,9 @@ public class UploaderForJob extends Thread {
 
     podNames = KubernetesUtils.generatePodNames(job);
     // add job master pod name
-    podNames.add(KubernetesUtils.createJobMasterPodName(job.getJobName()));
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      podNames.add(KubernetesUtils.createJobMasterPodName(job.getJobName()));
+    }
   }
 
   @Override
@@ -228,7 +231,7 @@ public class UploaderForJob extends Thread {
       }
     }
 
-    if (!JobUtils.isJobScalable(job, config) || !allTransferred) {
+    if (!isJobScalable() || !allTransferred) {
       stopUploader();
     }
 
@@ -262,5 +265,36 @@ public class UploaderForJob extends Thread {
       uploader.cancelTransfer();
     }
   }
+
+  /**
+   * For the job to be scalable:
+   *   Driver class shall be specified
+   *   a scalable compute resource shall be given
+   *   itshould not be an openMPI job
+   *
+   * @return
+   */
+  public boolean isJobScalable() {
+
+    // if Driver is not set, it means there is nothing to scale the job
+    if (job.getDriverClassName().isEmpty()) {
+      return false;
+    }
+
+    // if there is no scalable compute resource in the job, can not be scalable
+    boolean computeResourceScalable =
+        job.getComputeResource(job.getComputeResourceCount() - 1).getScalable();
+    if (!computeResourceScalable) {
+      return false;
+    }
+
+    // if it is an OpenMPI job, it is not scalable
+    if (SchedulerContext.useOpenMPI(config)) {
+      return false;
+    }
+
+    return true;
+  }
+
 
 }

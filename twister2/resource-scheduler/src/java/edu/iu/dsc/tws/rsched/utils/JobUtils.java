@@ -9,6 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.rsched.utils;
 
 import java.io.File;
@@ -186,28 +198,6 @@ public final class JobUtils {
     }
 
     return jobStr;
-  }
-
-  public static boolean isJobScalable(JobAPI.Job job, Config config) {
-
-    // if Driver is not set, it means there is nothing to scale the job
-    if (job.getDriverClassName().isEmpty()) {
-      return false;
-    }
-
-    // if there is no scalable compute resource in the job, can not be scalable
-    boolean computeResourceScalable =
-        job.getComputeResource(job.getComputeResourceCount() - 1).getScalable();
-    if (!computeResourceScalable) {
-      return false;
-    }
-
-    // if it is an OpenMPI job, it is not scalable
-    if (SchedulerContext.useOpenMPI(config)) {
-      return false;
-    }
-
-    return true;
   }
 
 }

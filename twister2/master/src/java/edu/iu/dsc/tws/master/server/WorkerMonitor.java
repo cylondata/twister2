@@ -31,8 +31,11 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.protobuf.Any;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
@@ -53,6 +56,7 @@ public class WorkerMonitor implements MessageHandler {
   private JobMaster jobMaster;
   private RRServer rrServer;
   private DashboardClient dashClient;
+  private IDriver driver;
 
   // this is used to assign next ID to newly registering worker,
   // when job master assigns workerIDs
@@ -60,16 +64,16 @@ public class WorkerMonitor implements MessageHandler {
 
   private boolean jobMasterAssignsWorkerIDs;
   private int numberOfWorkers;
-  private boolean driverRegistered = false;
 
   private TreeMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
 
   public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, DashboardClient dashClient,
-                       JobAPI.Job job, boolean jobMasterAssignsWorkerIDs) {
+                       JobAPI.Job job, IDriver driver, boolean jobMasterAssignsWorkerIDs) {
     this.jobMaster = jobMaster;
     this.rrServer = rrServer;
     this.dashClient = dashClient;
+    this.driver = driver;
 
     this.numberOfWorkers = job.getNumberOfWorkers();
     this.jobMasterAssignsWorkerIDs = jobMasterAssignsWorkerIDs;
@@ -80,7 +84,6 @@ public class WorkerMonitor implements MessageHandler {
 
   /**
    * assign next workerID
-   * @return
    */
   private int assignWorkerID() {
 
@@ -95,14 +98,11 @@ public class WorkerMonitor implements MessageHandler {
    * return the id, otherwise, return -1
    * if a worker is already registered and trying to register again,
    * it means that it is coming from failure
-   *
+   * <p>
    * we assume that IP:port pair does not change after failure
-   * @param workerIP
-   * @param port
-   * @return
    */
   private int getRegisteredWorkerID(String workerIP, int port) {
-    for (WorkerWithState workerWithState: workers.values()) {
+    for (WorkerWithState workerWithState : workers.values()) {
       if (workerIP.equals(workerWithState.getIp()) && port == workerWithState.getPort()) {
         return workerWithState.getWorkerID();
       }
@@ -131,33 +131,10 @@ public class WorkerMonitor implements MessageHandler {
       JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
       listWorkersMessageReceived(id, listMessage);
 
-    } else if (message instanceof JobMasterAPI.RegisterDriver) {
-      LOG.log(Level.INFO, "RegisterDriver message received: ");
-      JobMasterAPI.RegisterDriver registerMessage = (JobMasterAPI.RegisterDriver) message;
-      registerDriverMessageReceived(id, registerMessage);
-
-    } else if (message instanceof JobMasterAPI.WorkersScaled) {
-      LOG.log(Level.INFO, "WorkersScaled message received: " + message.toString());
-      JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
-
-      if (scaledMessage.getChange() > 0) {
-        scaledUpMessageReceived(id, scaledMessage);
-      } else if (scaledMessage.getChange() < 0) {
-        scaledDownMessageReceived(id, scaledMessage);
-      } else {
-        LOG.warning("Scaled message received with change 0. Doing nothing.");
-        return;
-      }
-
-    } else if (message instanceof JobMasterAPI.Broadcast) {
-      LOG.log(Level.INFO, "Broadcast message received from the driver.");
-      JobMasterAPI.Broadcast broadcastMessage = (JobMasterAPI.Broadcast) message;
-      broadcastMessageReceived(id, broadcastMessage);
-
-    } else if (message instanceof JobMasterAPI.WorkerToDriver) {
-      LOG.log(Level.FINE, "WorkerToDriver message received: " + message.toString());
-      JobMasterAPI.WorkerToDriver toDriverMessage = (JobMasterAPI.WorkerToDriver) message;
-      toDriverMessageReceived(id, toDriverMessage);
+    } else if (message instanceof JobMasterAPI.WorkerMessage) {
+      LOG.log(Level.FINE, "WorkerMessage received: " + message.toString());
+      JobMasterAPI.WorkerMessage workerMessage = (JobMasterAPI.WorkerMessage) message;
+      workerMessageReceived(id, workerMessage);
 
     } else {
       LOG.log(Level.SEVERE, "Un-known message received: " + message);
@@ -258,37 +235,6 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
-  private void registerDriverMessageReceived(RequestID id, JobMasterAPI.RegisterDriver message) {
-
-    if (driverRegistered) {
-      JobMasterAPI.RegisterDriverResponse failResponse =
-          JobMasterAPI.RegisterDriverResponse.newBuilder()
-              .setSucceeded(false)
-              .setReason("A driver already registered with JobMaster. Can be at most one driver.")
-              .build();
-      rrServer.sendResponse(id, failResponse);
-      LOG.warning("RegisterDriverResponse sent to the driver: \n" + failResponse);
-      return;
-    }
-
-    driverRegistered = true;
-
-    JobMasterAPI.RegisterDriverResponse successResponse =
-        JobMasterAPI.RegisterDriverResponse.newBuilder()
-            .setSucceeded(true)
-            .build();
-    rrServer.sendResponse(id, successResponse);
-    LOG.fine("RegisterDriverResponse sent to the driver: \n" + successResponse);
-
-    // if all workers have already registered,
-    // send the driver allWorkersJoined message
-    if (allWorkersRegistered()) {
-      JobMasterAPI.WorkersJoined joinedMessage = constructWorkersJoinedMessage();
-      rrServer.sendMessage(joinedMessage, RRServer.DRIVER_ID);
-    }
-  }
-
-
   private void stateChangeMessageReceived(RequestID id, JobMasterAPI.WorkerStateChange message) {
 
     // if this worker has not registered
@@ -349,29 +295,27 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
-  private void scaledDownMessageReceived(RequestID id,
-                                         JobMasterAPI.WorkersScaled scaledMessage) {
-
-    JobMasterAPI.ScaledResponse scaledResponse = JobMasterAPI.ScaledResponse.newBuilder()
-        .setSucceeded(true)
-        .build();
+  public void workersScaledDown(int instancesRemoved) {
 
     // modify numberOfWorkers
-    numberOfWorkers = scaledMessage.getNumberOfWorkers();
+    numberOfWorkers -= instancesRemoved;
 
-    rrServer.sendResponse(id, scaledResponse);
-    LOG.fine("ScaledResponse sent to the driver: \n" + scaledResponse);
+    // construct scaled message to send to workers
+    JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
+        .setChange(0 - instancesRemoved)
+        .setNumberOfWorkers(numberOfWorkers)
+        .build();
 
     // update nextWorkerID
     // since we do not want gaps in workerID sequence,
     // we reuse the deleted IDs
-    nextWorkerID = nextWorkerID + scaledMessage.getChange();
+    nextWorkerID = nextWorkerID - instancesRemoved;
 
     // construct killedWorkers list and remove those workers from workers list
     List<Integer> killedWorkers = new LinkedList<>();
 
-    String strToLog = "Deleted worker IDs by scale down: ";
-    for (int i = 0; i < (0 - scaledMessage.getChange()); i++) {
+    String strToLog = "Deleted worker IDs by scaling down: ";
+    for (int i = 0; i < instancesRemoved; i++) {
       int killedID = numberOfWorkers + i;
       killedWorkers.add(killedID);
       workers.remove(killedID);
@@ -393,19 +337,16 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
-  private void scaledUpMessageReceived(RequestID id,
-                                      JobMasterAPI.WorkersScaled scaledMessage) {
-
-    JobMasterAPI.ScaledResponse scaledResponse = JobMasterAPI.ScaledResponse.newBuilder()
-        .setSucceeded(true)
-        .build();
+  public void workersScaledUp(int instancesAdded) {
 
     // keep previous numberOfWorkers and update numberOfWorkers with new value
     int numberOfWorkersBeforeScaling = numberOfWorkers;
-    numberOfWorkers = scaledMessage.getNumberOfWorkers();
+    numberOfWorkers += instancesAdded;
 
-    rrServer.sendResponse(id, scaledResponse);
-    LOG.fine("ScaledResponse sent to the driver: \n" + scaledResponse);
+    JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
+        .setChange(instancesAdded)
+        .setNumberOfWorkers(numberOfWorkers)
+        .build();
 
     // let all previous workers know about the scaled message
     // no need for informing newly added workers
@@ -427,91 +368,119 @@ public class WorkerMonitor implements MessageHandler {
 
   }
 
-  private void broadcastMessageReceived(RequestID id, JobMasterAPI.Broadcast broadcastMessage) {
+  public boolean broadcastMessage(Message message) {
 
-    // if the number of workers in the WorkerMonitor and the incoming message does not match,
-    // return a failure message
-    if (broadcastMessage.getNumberOfWorkers() != numberOfWorkers) {
-      JobMasterAPI.BroadcastResponse failResponse =
-          JobMasterAPI.BroadcastResponse.newBuilder()
-              .setSucceeded(false)
-              .setReason("NumberOfWorkers does not match in the broadcast message and JobMaster")
-              .build();
-      rrServer.sendResponse(id, failResponse);
-      LOG.warning("BroadcastResponse sent to the driver: \n" + failResponse);
-      return;
-    }
+    JobMasterAPI.DriverMessage driverMessage =
+        JobMasterAPI.DriverMessage.newBuilder()
+            .setData(Any.pack(message).toByteString())
+            .build();
 
     // if all workers are not registered,
     // send a failure response message to the driver
     // do not send the broadcast message to any workers
     if (!allWorkersRegistered()) {
-      JobMasterAPI.BroadcastResponse failResponse =
-          JobMasterAPI.BroadcastResponse.newBuilder()
-              .setSucceeded(false)
-              .setReason("Not all workers are in RUNNING state")
-              .build();
-      rrServer.sendResponse(id, failResponse);
-      LOG.warning("BroadcastResponse sent to the driver: \n" + failResponse);
-      return;
+      LOG.warning("Could not send the broadcast message to all workers, "
+          + "since they are not all registered.");
+      return false;
     }
 
     // deliver the broadcast message to all workers
     for (int workerID : workers.keySet()) {
-      boolean queued = rrServer.sendMessage(broadcastMessage, workerID);
+      boolean queued = rrServer.sendMessage(driverMessage, workerID);
 
       // if the message can not be queued, send a failure response
       // this may deliver the broadcast message to some workers but not to all
       // workers may be in an inconsistent state
       // TODO: we may need to find a solution to this
       if (!queued) {
-        JobMasterAPI.BroadcastResponse failResponse =
-            JobMasterAPI.BroadcastResponse.newBuilder()
+        LOG.warning("Broadcast message can not be sent to workerID: " + workerID);
+        return false;
+      }
+    }
+
+    // TODO: before successfully completing,
+    // we need to watch sendComplete events for the broadcast messages to the workers
+    // that will make sure that the broadcast message is delivered to all workers
+
+    return true;
+  }
+
+  /**
+   * send a protocol buffer message to a list of workers
+   */
+  public boolean sendMessageToWorkerList(Message message, List<Integer> workerList) {
+
+    JobMasterAPI.DriverMessage driverMessage =
+        JobMasterAPI.DriverMessage.newBuilder()
+            .setData(Any.pack(message).toByteString())
+            .build();
+
+    // if all workers are not registered,
+    // send a failure response message to the driver
+    // do not send the broadcast message to any workers
+    for (int workerID : workerList) {
+      WorkerWithState worker = workers.get(workerID);
+      if (worker == null) {
+        LOG.warning("There is no worker in JobMaster with workerID: " + workerID);
+        return false;
+      } else if (worker.getLastState() != JobMasterAPI.WorkerState.RUNNING
+          && worker.getLastState() != JobMasterAPI.WorkerState.STARTING) {
+        LOG.warning("workerID[" + workerID + "] is neither in RUNNING nor in STARTING scate. "
+            + "Worker state: " + worker.getLastState());
+        return false;
+      }
+    }
+
+    // deliver the broadcast message to all workers
+    for (int workerID : workerList) {
+      boolean queued = rrServer.sendMessage(driverMessage, workerID);
+
+      // if the message can not be queued, send a failure response
+      // this may deliver the broadcast message to some workers but not to all
+      // workers may be in an inconsistent state
+      // TODO: we may need to find a solution to this
+      if (!queued) {
+        LOG.warning("Message can not be sent to workerID: " + workerID
+            + " It is not sending the message to remaining workers in the list.");
+        return false;
+      }
+    }
+
+    // TODO: before successfully completing,
+    // we need to watch sendComplete events for the broadcast messages to the workers
+    // that will make sure that the broadcast message is delivered to all workers
+
+    return true;
+  }
+
+  private void workerMessageReceived(RequestID id,
+                                     JobMasterAPI.WorkerMessage workerMessage) {
+
+    // first send the received message to the driver
+    if (driver != null) {
+      try {
+        Any any = Any.parseFrom(workerMessage.getData());
+        driver.workerMessageReceived(any, workerMessage.getWorkerID());
+      } catch (InvalidProtocolBufferException e) {
+        LOG.log(Level.SEVERE, "Can not parse received protocol buffer message to Any", e);
+        JobMasterAPI.WorkerMessageResponse failResponse =
+            JobMasterAPI.WorkerMessageResponse.newBuilder()
                 .setSucceeded(false)
-                .setReason("Broadcast message can not be sent to workerID: " + workerID)
+                .setReason("Can not parse received protocol buffer message to Any")
                 .build();
         rrServer.sendResponse(id, failResponse);
-        LOG.warning("BroadcastResponse sent to the driver: \n" + failResponse);
+        LOG.warning("WorkerMessageResponse sent to the driver: \n" + failResponse);
         return;
       }
     }
 
-    // TODO: before sending a success response,
-    // we need to watch sendComplete events for the broadcast messages to the workers
-    // that will make sure that the broadcast message is delivered to all workers
-    JobMasterAPI.BroadcastResponse successResponse = JobMasterAPI.BroadcastResponse.newBuilder()
-        .setSucceeded(true)
-        .build();
-
-    rrServer.sendResponse(id, successResponse);
-    LOG.fine("BroadcastResponse sent to the driver: \n" + successResponse);
-  }
-
-  private void toDriverMessageReceived(RequestID id, JobMasterAPI.WorkerToDriver toDriverMessage) {
-
-    // first send the received message to the driver
-    boolean queued = rrServer.sendMessage(toDriverMessage, RRServer.DRIVER_ID);
-
-    // if the message can not be queued to send to the driver,
-    // it is because the driver is not connected to the worker
-    if (!queued) {
-      JobMasterAPI.WorkerToDriverResponse failResponse =
-          JobMasterAPI.WorkerToDriverResponse.newBuilder()
-              .setSucceeded(false)
-              .setReason("Driver is not connected to JobMaster")
-              .build();
-      rrServer.sendResponse(id, failResponse);
-      LOG.warning("WorkerToDriverResponse sent to the driver: \n" + failResponse);
-      return;
-    }
-
-    JobMasterAPI.WorkerToDriverResponse successResponse =
-        JobMasterAPI.WorkerToDriverResponse.newBuilder()
+    JobMasterAPI.WorkerMessageResponse successResponse =
+        JobMasterAPI.WorkerMessageResponse.newBuilder()
             .setSucceeded(true)
             .build();
 
     rrServer.sendResponse(id, successResponse);
-    LOG.fine("WorkerToDriverResponse sent to the driver: \n" + successResponse);
+    LOG.fine("WorkerMessageResponse sent to the driver: \n" + successResponse);
   }
 
   /**
@@ -674,9 +643,10 @@ public class WorkerMonitor implements MessageHandler {
 
     JobMasterAPI.WorkersJoined joinedMessage = constructWorkersJoinedMessage();
 
-    // send the message to the driver, if any
-    // if there is no driver, no problem, this method will return false
-    rrServer.sendMessage(joinedMessage, RRServer.DRIVER_ID);
+    // inform Driver if exist
+    if (driver != null) {
+      driver.allWorkersJoined(constructWorkerList());
+    }
 
     // send the message to all workers
     for (Integer workerID : workers.keySet()) {
@@ -698,6 +668,20 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     return joinedBuilder.build();
+  }
+
+  /**
+   * construct WorkerList to send to Driver
+   */
+  private List<JobMasterAPI.WorkerInfo> constructWorkerList() {
+
+    List<JobMasterAPI.WorkerInfo> workerList = new LinkedList<>();
+
+    for (WorkerWithState worker : workers.values()) {
+      workerList.add(worker.getWorkerInfo());
+    }
+
+    return workerList;
   }
 
 }

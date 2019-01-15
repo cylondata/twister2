@@ -57,7 +57,7 @@ public class KubernetesController {
   private String namespace;
   private ApiClient client = null;
   private CoreV1Api coreApi;
-  private AppsV1beta2Api beta2Api;
+  private AppsV1beta2Api appsApi;
 
   public void init(String nspace) {
     this.namespace = nspace;
@@ -74,7 +74,7 @@ public class KubernetesController {
     Configuration.setDefaultApiClient(client);
 
     coreApi = new CoreV1Api();
-    beta2Api = new AppsV1beta2Api(client);
+    appsApi = new AppsV1beta2Api(client);
   }
 
   /**
@@ -84,7 +84,7 @@ public class KubernetesController {
   public boolean existStatefulSets(List<String> statefulSetNames) {
     V1beta2StatefulSetList setList = null;
     try {
-      setList = beta2Api.listNamespacedStatefulSet(
+      setList = appsApi.listNamespacedStatefulSet(
           namespace, null, null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
@@ -110,7 +110,7 @@ public class KubernetesController {
   public ArrayList<String> getStatefulSetsForJobWorkers(String jobName) {
     V1beta2StatefulSetList setList = null;
     try {
-      setList = beta2Api.listNamespacedStatefulSet(
+      setList = appsApi.listNamespacedStatefulSet(
           namespace, null, null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
@@ -136,7 +136,7 @@ public class KubernetesController {
 
     String statefulSetName = statefulSet.getMetadata().getName();
     try {
-      Response response = beta2Api.createNamespacedStatefulSetCall(
+      Response response = appsApi.createNamespacedStatefulSetCall(
           namespace, statefulSet, null, null, null).execute();
 
       if (response.isSuccessful()) {
@@ -168,7 +168,7 @@ public class KubernetesController {
       deleteOptions.setGracePeriodSeconds(0L);
       deleteOptions.setPropagationPolicy(KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY);
 
-      Response response = beta2Api.deleteNamespacedStatefulSetCall(
+      Response response = appsApi.deleteNamespacedStatefulSetCall(
           statefulSetName, namespace, deleteOptions, null, null, null, null, null, null).execute();
 
       if (response.isSuccessful()) {
@@ -209,7 +209,7 @@ public class KubernetesController {
     objectList.add(obj);
 
     try {
-      Response response = beta2Api.patchNamespacedStatefulSetCall(
+      Response response = appsApi.patchNamespacedStatefulSetCall(
           ssName, namespace, objectList, null, null, null).execute();
 
       if (response.isSuccessful()) {

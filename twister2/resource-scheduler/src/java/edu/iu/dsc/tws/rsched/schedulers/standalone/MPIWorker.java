@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
@@ -363,8 +364,9 @@ public final class MPIWorker {
       String hostAddress = InetAddress.getLocalHost().getHostAddress();
       LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
       JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
-      JobMaster jobMaster =
-          new JobMaster(cfg, hostAddress, port, new NomadTerminator(), job, jobMasterNodeInfo);
+      IScalerPerCluster clusterScaler = null;
+      JobMaster jobMaster = new JobMaster(
+          cfg, hostAddress, port, new NomadTerminator(), job, jobMasterNodeInfo, clusterScaler);
       jobMaster.addShutdownHook(false);
       Thread jmThread = jobMaster.startJobMasterThreaded();
 

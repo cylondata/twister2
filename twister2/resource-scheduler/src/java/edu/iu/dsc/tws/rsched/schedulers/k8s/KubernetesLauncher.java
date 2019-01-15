@@ -20,13 +20,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.driver.DriverMessenger;
-import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -103,8 +99,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     if (KubernetesContext.clientToPodsUploading(config)) {
       uploader = new UploaderForJob(config, job, jobPackageFile);
       uploader.start();
-//      JobPackageTransferThread.startTransferThreads(
-//          namespace, job, jobPackageFile, KubernetesContext.watchBeforeUploadAttempts(config));
     }
 
     // initialize the service in Kubernetes master
@@ -134,7 +128,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       // transfer the job package to pods, measure the transfer time
       long start = System.currentTimeMillis();
       boolean transferred = uploader.completeFileTransfers();
-//      boolean transferred = JobPackageTransferThread.completeFileTransfers();
 
       if (transferred) {
         long duration = System.currentTimeMillis() - start;
@@ -160,49 +153,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
         return false;
       }
     }
-
-    // if the driver class is specified in the job, start it
-    if (!job.getDriverClassName().isEmpty()) {
-      startDriver(job, jobPackageFile);
-    }
-
-    return true;
-  }
-
-  private boolean startDriver(JobAPI.Job job, String jobPackageFile) {
-
-    // first construct the driver
-    String driverClass = job.getDriverClassName();
-    IDriver driver;
-    try {
-      Object object = ReflectionUtils.newInstance(driverClass);
-      driver = (IDriver) object;
-      LOG.info("loaded driver class: " + driverClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.severe(String.format("failed to load the driver class %s", driverClass));
-      throw new RuntimeException(e);
-    }
-
-    // second initialize JMDriverAgent
-    String jobMasterIP = getJobMasterIP(job);
-    int jmPort = JobMasterContext.jobMasterPort(config);
-    JMDriverAgent driverAgent =
-        JMDriverAgent.createJMDriverAgent(config, jobMasterIP, jmPort, job.getNumberOfWorkers());
-
-    // start the agent
-    driverAgent.startThreaded();
-
-    // construct DriverMessenger
-    DriverMessenger driverMessenger = new DriverMessenger(driverAgent);
-
-    // construct scaler
-    K8sScaler scaler = new K8sScaler(config, driverAgent, job, jobPackageFile, controller);
-
-    // execute the driver
-    driver.execute(config, scaler, driverMessenger);
-
-    // close the driver, since computation is done
-    driverAgent.close();
 
     return true;
   }
@@ -245,10 +195,11 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     }
 
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(hostAdress, null, null);
-    JobMaster jobMaster = new JobMaster(config, hostAdress, this, job, nodeInfo);
+    K8sScaler k8sScaler = new K8sScaler(config, job, controller);
+    JobMaster jobMaster = new JobMaster(config, hostAdress, this, job, nodeInfo, k8sScaler);
     jobMaster.addShutdownHook(true);
-    jobMaster.startJobMasterThreaded();
-//    jobMaster.startJobMasterBlocking();
+//    jobMaster.startJobMasterThreaded();
+    jobMaster.startJobMasterBlocking();
 
     return true;
   }

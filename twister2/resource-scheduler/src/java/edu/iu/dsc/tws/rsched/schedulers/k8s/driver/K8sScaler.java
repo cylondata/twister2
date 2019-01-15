@@ -11,73 +11,58 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.driver;
 
-import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.driver.IScaler;
-import edu.iu.dsc.tws.master.driver.JMDriverAgent;
+import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 
-public class K8sScaler implements IScaler {
+public class K8sScaler implements IScalerPerCluster {
 
   private static final Logger LOG = Logger.getLogger(K8sScaler.class.getName());
 
-  private JMDriverAgent driverAgent;
-  private KubernetesController k8sController;
+  private JobAPI.Job job;
   private Config config;
+  private KubernetesController k8sController;
 
   // replicas and workersPerPod values for scalable compute resource (scalable statefulSet)
-  private boolean computeResourceScalable;
   private String scalableSSName;
   private int replicas;
   private int workersPerPod;
   private int computeResourceIndex;
 
-  // job package file to be transferred to newly created pods
-  private String jobPackageFile;
 
-  // number of workers in the job
-  // when the number of workers changes, this value is updated accordingly
-  // it shows the up-to-date value
-  private int numberOfWorkers;
-
-  public K8sScaler(Config config, JMDriverAgent driverAgent, JobAPI.Job job,
-                   String jobPackageFile, KubernetesController k8sController) {
-    this.config = config;
-    this.jobPackageFile = jobPackageFile;
+  public K8sScaler(Config config, JobAPI.Job job, KubernetesController k8sController) {
     this.k8sController = k8sController;
+    this.job = job;
+    this.config = config;
 
     computeResourceIndex = job.getComputeResourceCount() - 1;
-
-    // if the last ComputeResource is scalable,
-    // it means, ComputeResource is scalable
-    computeResourceScalable = job.getComputeResource(computeResourceIndex).getScalable();
 
     this.replicas = job.getComputeResource(computeResourceIndex).getInstances();
     this.workersPerPod = job.getComputeResource(computeResourceIndex).getWorkersPerPod();
 
     scalableSSName = KubernetesUtils.createWorkersStatefulSetName(
         job.getJobName(), job.getComputeResourceCount() - 1);
-
-    this.numberOfWorkers = job.getNumberOfWorkers();
-
-    this.driverAgent = driverAgent;
   }
 
   @Override
   public boolean isScalable() {
-
+    // if there is no scalable compute resource in the job, can not be scalable
+    boolean computeResourceScalable =
+        job.getComputeResource(job.getComputeResourceCount() - 1).getScalable();
     if (!computeResourceScalable) {
       return false;
     }
 
+    // if it is an OpenMPI job, it is not scalable
     if (SchedulerContext.useOpenMPI(config)) {
       return false;
     }
+
     return true;
   }
 
@@ -88,17 +73,6 @@ public class K8sScaler implements IScaler {
   @Override
   public boolean scaleUpWorkers(int instancesToAdd) {
 
-    if (!isScalable()) {
-      LOG.severe("Job is not scalable. Either ComputeResource is not scalable or "
-          + "this is an OpenMPI job.");
-      return false;
-    }
-
-    if (instancesToAdd <= 0) {
-      LOG.severe("instancesToAdd has to be a positive integer");
-      return false;
-    }
-
     if (instancesToAdd % workersPerPod != 0) {
       LOG.severe("instancesToAdd has to be a multiple of workersPerPod=" + workersPerPod);
       return false;
@@ -106,41 +80,12 @@ public class K8sScaler implements IScaler {
 
     int podsToAdd = instancesToAdd / workersPerPod;
 
-    // if the submitting client is uploading the job package, start the upload threads
-//    if (KubernetesContext.clientToPodsUploading(config)) {
-//      ArrayList<String> podNames = generatePodNames(podsToAdd);
-//      String namespace = KubernetesContext.namespace(config);
-//      JobPackageTransferThread.startTransferThreadsForScaledUpPods(
-//          namespace, podNames, jobPackageFile);
-//    }
-
     boolean scaledUp = k8sController.patchStatefulSet(scalableSSName, replicas + podsToAdd);
     if (!scaledUp) {
       return false;
     }
 
-    // complete the uploading
-//    if (KubernetesContext.clientToPodsUploading(config)) {
-//      boolean uploaded = JobPackageTransferThread.completeFileTransfers();
-//
-//      // if scaling up pods is successful but uploading is unsuccessful,
-//      // scale down again
-//      if (!uploaded) {
-//        k8sController.patchStatefulSet(scalableSSName, replicas);
-//        return false;
-//      }
-//    }
-
-    boolean sent = driverAgent.sendScaledMessage(instancesToAdd, numberOfWorkers + instancesToAdd);
-    if (!sent) {
-      // if the message can not be sent, scale down to the previous value
-      k8sController.patchStatefulSet(scalableSSName, replicas);
-      return false;
-    }
-
     replicas = replicas + podsToAdd;
-    numberOfWorkers += instancesToAdd;
-    driverAgent.setNumberOfWorkers(numberOfWorkers);
 
     return true;
   }
@@ -152,17 +97,6 @@ public class K8sScaler implements IScaler {
    */
   @Override
   public boolean scaleDownWorkers(int instancesToRemove) {
-
-    if (!isScalable()) {
-      LOG.severe("Job is not scalable. Either ComputeResource is not scalable or "
-          + "this is an OpenMPI job.");
-      return false;
-    }
-
-    if (instancesToRemove <= 0) {
-      LOG.severe("instancesToRemove has to be a positive integer");
-      return false;
-    }
 
     if (instancesToRemove % workersPerPod != 0) {
       LOG.severe("instancesToRemove has to be a multiple of workersPerPod=" + workersPerPod);
@@ -184,31 +118,8 @@ public class K8sScaler implements IScaler {
 
     // update replicas
     replicas = replicas - podsToRemove;
-    numberOfWorkers -= instancesToRemove;
-    driverAgent.setNumberOfWorkers(numberOfWorkers);
 
-    // send scaled message to job master
-    return driverAgent.sendScaledMessage(0 - instancesToRemove, numberOfWorkers);
-  }
-
-  /**
-   * generate the pod names that will be scaled up, newly created
-   * @param instancesToAdd
-   * @return
-   */
-  private  ArrayList<String> generatePodNames(int instancesToAdd) {
-
-    ArrayList<String> podNames = new ArrayList<>();
-
-    // this is the index of the first pod that will be created
-    int podIndex = replicas;
-
-    for (int i = 0; i < instancesToAdd; i++) {
-      String podName = KubernetesUtils.podNameFromStatefulSetName(scalableSSName, podIndex + i);
-      podNames.add(podName);
-    }
-
-    return podNames;
+    return true;
   }
 
 }

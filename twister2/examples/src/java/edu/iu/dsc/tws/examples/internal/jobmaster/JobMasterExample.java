@@ -37,6 +37,9 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 
 public final class JobMasterExample {
   private static final Logger LOG = Logger.getLogger(JobMasterExample.class.getName());
@@ -78,7 +81,11 @@ public final class JobMasterExample {
     JobMasterAPI.NodeInfo jobMasterNode = NodeInfoUtils.createNodeInfo(ip, null, null);
 
     String host = "localhost";
-    JobMaster jobMaster = new JobMaster(config, host, null, job, jobMasterNode);
+    KubernetesController controller = new KubernetesController();
+    controller.init(KubernetesContext.namespace(config));
+    K8sScaler k8sScaler = new K8sScaler(config, job, controller);
+
+    JobMaster jobMaster = new JobMaster(config, host, null, job, jobMasterNode, k8sScaler);
     jobMaster.startJobMasterThreaded();
 
     LOG.info("Threaded Job Master started:"
