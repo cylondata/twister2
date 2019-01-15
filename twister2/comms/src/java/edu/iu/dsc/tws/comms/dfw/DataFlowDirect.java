@@ -100,6 +100,11 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
    */
   private MessageType type;
 
+  /**
+   * Keep sources as a set to return
+   */
+  private Set<Integer> sourceSet;
+
   public DataFlowDirect(TWSChannel channel,
                         List<Integer> src, List<Integer> target,
                         MessageReceiver finalRcvr, Config cfg, MessageType t,
@@ -114,6 +119,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     this.router = new DirectRouter(plan, sources, targets);
     this.config = cfg;
     this.type = t;
+    this.sourceSet = new HashSet<>(sources);
 
     init();
   }
@@ -159,7 +165,6 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
-    Set<Integer> sourceSet = new HashSet<>(this.sources);
     Set<Integer> srcs = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sourceSet);
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
@@ -262,7 +267,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public TaskPlan getTaskPlan() {
-    return null;
+    return taskPlan;
   }
 
   @Override
@@ -311,5 +316,9 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     }
     routingParameters.setDestinationId(target);
     return routingParameters;
+  }
+
+  public Set<Integer> getSources() {
+    return sourceSet;
   }
 }

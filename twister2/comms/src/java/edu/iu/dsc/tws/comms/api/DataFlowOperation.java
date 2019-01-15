@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import java.util.Set;
+
 /**
  * The communication operation interface.
  */
@@ -120,4 +122,20 @@ public interface DataFlowOperation {
    * @return an unique id as a String
    */
   String getUniqueId();
+
+  /**
+   * Get the sources of the operation
+   * @return source set
+   */
+  default Set<Integer> getSources() {
+    return null;
+  }
+
+  /**
+   * Get targets of operation
+   * @return target set
+   */
+  default Set<Integer> getTargets() {
+    return null;
+  }
 }

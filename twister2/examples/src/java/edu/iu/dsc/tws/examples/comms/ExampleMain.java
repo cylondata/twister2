@@ -171,6 +171,9 @@ public class ExampleMain {
         case "djoin":
           submitJob(config, workers, jobConfig, BDJoinExample.class.getName());
           break;
+        case "direct":
+          submitJob(config, workers, jobConfig, BDirectExample.class.getName());
+          break;
       }
     } else {
       switch (operation) {
