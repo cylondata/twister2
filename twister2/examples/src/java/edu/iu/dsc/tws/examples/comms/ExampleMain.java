@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.stream.SAllGatherExample;
 import edu.iu.dsc.tws.examples.comms.stream.SAllReduceExample;
 import edu.iu.dsc.tws.examples.comms.stream.SBroadcastExample;
+import edu.iu.dsc.tws.examples.comms.stream.SDirectExample;
 import edu.iu.dsc.tws.examples.comms.stream.SGatherExample;
 import edu.iu.dsc.tws.examples.comms.stream.SKeyedGatherExample;
 import edu.iu.dsc.tws.examples.comms.stream.SKeyedPartitionExample;
@@ -74,7 +75,7 @@ public class ExampleMain {
     if (cmd.hasOption(Constants.ARGS_SIZE)) {
       size = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_SIZE));
     }
-    if (cmd.hasOption(Constants.ARGS_THREADS)) {
+    if (cmd.hasOption(Constants.ARGS_ITR)) {
       itr = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_ITR));
     }
     String threads = "true";
@@ -203,6 +204,9 @@ public class ExampleMain {
           break;
         case "allgather":
           submitJob(config, workers, jobConfig, SAllGatherExample.class.getName());
+          break;
+        case "direct":
+          submitJob(config, workers, jobConfig, SDirectExample.class.getName());
           break;
         default:
           LOG.log(Level.SEVERE, "Un-supported operation: " + operation);

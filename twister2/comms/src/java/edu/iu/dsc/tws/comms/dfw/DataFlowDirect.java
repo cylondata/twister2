@@ -27,6 +27,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -105,6 +106,23 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
    */
   private Set<Integer> sourceSet;
 
+  /**
+   * The sources which are pending for finish
+   */
+  private Set<Integer> pendingFinishSources;
+
+  /**
+   * The sources that are finished
+   */
+  private Set<Integer> finishedSources;
+
+  /**
+   * Sources of this worker
+   */
+  private Set<Integer> thisSources;
+
+  private Map<Integer, Integer> sourcesToDestinations = new HashMap<>();
+
   public DataFlowDirect(TWSChannel channel,
                         List<Integer> src, List<Integer> target,
                         MessageReceiver finalRcvr, Config cfg, MessageType t,
@@ -120,7 +138,12 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     this.config = cfg;
     this.type = t;
     this.sourceSet = new HashSet<>(sources);
-
+    this.pendingFinishSources = new HashSet<>();
+    this.finishedSources = new HashSet<>();
+    // the sources to targets mapping
+    for (int i = 0; i < src.size(); i++) {
+      sourcesToDestinations.put(sources.get(i), target.get(i));
+    }
     init();
   }
 
@@ -153,10 +176,6 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
    * Initialize
    */
   private void init() {
-    // initialize the final receiver
-    if (this.finalReceiver != null && router.isLastReceiver()) {
-      this.finalReceiver.init(config, this, receiveExpectedTaskIds());
-    }
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
     Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource
@@ -165,8 +184,8 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
-    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sourceSet);
-    for (int s : srcs) {
+    thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sourceSet);
+    for (int s : thisSources) {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<Pair<Object, OutMessage>>(
           DataFlowContext.sendPendingMax(config)));
@@ -182,6 +201,9 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
 
     // calculate the routing parameters
     calculateRoutingParameters();
+
+    // initialize the final receiver
+    this.finalReceiver.init(config, this, receiveExpectedTaskIds());
 
     delegate.init(config, type, taskPlan, edgeValue, router.receivingExecutors(),
         router.isLastReceiver(), this, pendingSendMessagesPerSource,
@@ -212,8 +234,12 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean progress() {
     boolean partialNeedsProgress = false;
+    boolean needFinishProgress;
     boolean done;
     try {
+      // lets send the finished one
+      needFinishProgress = handleFinish();
+
       delegate.progress();
       done = delegate.isComplete();
       if (lock.tryLock()) {
@@ -227,7 +253,27 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-    return partialNeedsProgress && done;
+    return partialNeedsProgress || !done || needFinishProgress;
+  }
+
+  private boolean handleFinish() {
+    for (int source : pendingFinishSources) {
+      if (!finishedSources.contains(source)) {
+        int dest = sourcesToDestinations.get(source);
+        if (send(source, new byte[1], MessageFlags.END, dest)) {
+          finishedSources.add(source);
+        } else {
+          // no point in going further
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public boolean isDelegeteComplete() {
+    return delegate.isComplete();
   }
 
   @Override
@@ -236,7 +282,8 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
       boolean done = delegate.isComplete();
       try {
         boolean needsFurtherProgress = finalReceiver.progress();
-        return done && !needsFurtherProgress;
+        boolean needFinishProgress = handleFinish();
+        return done && !needsFurtherProgress && !needFinishProgress;
       } finally {
         lock.unlock();
       }
@@ -261,8 +308,8 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void finish(int target) {
-
+  public void finish(int source) {
+    pendingFinishSources.add(source);
   }
 
   @Override

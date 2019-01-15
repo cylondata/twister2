@@ -9,29 +9,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.comms.batch;
+package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.collect.Iterators;
-
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BDirect;
+import edu.iu.dsc.tws.comms.api.stream.SDirect;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 
-public class BDirectExample extends BenchWorker {
-  private static final Logger LOG = Logger.getLogger(BDirectExample.class.getName());
+public class SDirectExample extends BenchWorker {
+  private static final Logger LOG = Logger.getLogger(SDirectExample.class.getName());
 
-  private BDirect direct;
+  private SDirect direct;
 
   private boolean partitionDone = false;
 
@@ -52,8 +49,8 @@ public class BDirectExample extends BenchWorker {
     }
 
     // create the communication
-    direct = new BDirect(communicator, taskPlan, sources, targets,
-        new DirectReceiver(), MessageType.INTEGER);
+    direct = new SDirect(communicator, taskPlan, sources, targets,
+        MessageType.INTEGER, new PartitionReceiver());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -63,11 +60,6 @@ public class BDirectExample extends BenchWorker {
       Thread mapThread = new Thread(new BenchWorker.MapWorker(t));
       mapThread.start();
     }
-  }
-
-  @Override
-  public void close() {
-    direct.close();
   }
 
   @Override
@@ -82,32 +74,40 @@ public class BDirectExample extends BenchWorker {
 
   @Override
   protected boolean sendMessages(int task, Object data, int flag) {
-    while (!direct.direct(task, data, flag)) {
+    while (!direct.partition(task, data, flag)) {
       // lets wait a litte and try again
       direct.progress();
     }
     return true;
   }
 
-  public class DirectReceiver implements BulkReceiver {
+  public class PartitionReceiver implements SingularReceiver {
+    private int count = 0;
     private int expected;
 
     @Override
-    public void init(Config cfg, Set<Integer> expectedIds) {
-      expected = jobParameters.getIterations();
+    public void init(Config cfg, Set<Integer> targets) {
+      expected = jobParameters.getTaskStages().get(0)
+          * jobParameters.getIterations() / jobParameters.getTaskStages().get(1);
     }
 
     @Override
-    public boolean receive(int target, Iterator<Object> it) {
+    public boolean receive(int target, Object object) {
+      count += 1;
+
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
-          workerId, target, Iterators.size(it), expected));
-      partitionDone = true;
+          workerId, target, count, expected));
+      // Since this is a streaming example we will simply stop after a number of messages are
+      // received
+      if (count >= expected) {
+        partitionDone = true;
+      }
+
       return true;
     }
   }
 
   @Override
   protected void finishCommunication(int src) {
-    direct.finish(src);
   }
 }
