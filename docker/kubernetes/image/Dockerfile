@@ -24,7 +24,7 @@ RUN apt-get update && \
   apt-get install -y --no-install-recommends oracle-java8-installer oracle-java8-set-default && \
   apt-get clean all
 
-ARG OPENMPI_VERSION="3.0.0"
+ARG OPENMPI_VERSION="3.1.2"
 ARG WITH_CUDA="false"
 
 # install ssh and basic dependencies
@@ -76,8 +76,8 @@ VOLUME $HOME
 
 ENV CLASSPATH="/twister2/lib/*"
 
-COPY image/rootfs /
-COPY lib/ /twister2/lib/
+COPY docker/kubernetes/image/rootfs /
+COPY bazel-bin/scripts/package/twister2-0.1.0/lib/ /twister2/lib/
 
 # check if open mpi was successfully built with cuda support.
 RUN if [ "$WITH_CUDA" = "true" ]; then \
