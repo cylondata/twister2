@@ -77,7 +77,8 @@ VOLUME $HOME
 ENV CLASSPATH="/twister2/lib/*"
 
 COPY docker/kubernetes/image/rootfs /
-COPY bazel-bin/scripts/package/twister2-0.1.0/lib/ /twister2/lib/
+COPY twister2-0.1.0/lib /twister2/lib
+COPY twister2-0.1.0/bin /twister2/bin
 
 # check if open mpi was successfully built with cuda support.
 RUN if [ "$WITH_CUDA" = "true" ]; then \
