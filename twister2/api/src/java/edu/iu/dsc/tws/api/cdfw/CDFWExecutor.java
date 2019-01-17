@@ -48,9 +48,6 @@ public final class CDFWExecutor {
   public CDFWExecutor(Config cfg, IDriverMessenger messenger) {
     this.config = cfg;
     this.driverMessenger = messenger;
-    // set the driver events queue, this will make sure that we only create one instance of
-    // submitter
-    Twister2HTGInstance.getTwister2HTGInstance().setDriverEvents(inDriverEvents);
   }
 
   /**

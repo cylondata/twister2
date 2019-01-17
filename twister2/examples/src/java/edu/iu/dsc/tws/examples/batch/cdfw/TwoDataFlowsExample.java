@@ -22,14 +22,18 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.cdfw.BaseDriver;
 import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSource;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.task.cdfw.CDFWWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DSet;
@@ -47,6 +51,21 @@ public final class TwoDataFlowsExample {
   private static final Logger LOG = Logger.getLogger(TwoDataFlowsExample.class.getName());
 
   private TwoDataFlowsExample() {
+  }
+
+  public static class TwoDataFlowsDriver extends BaseDriver {
+    @Override
+    public void execute(Config config, CDFWExecutor exec) {
+      // build JobConfig
+      JobConfig jobConfig = new JobConfig();
+
+      LOG.log(Level.INFO, "Executing the first graph");
+      // run the first job
+      runFirstJob(config, exec, 4, jobConfig);
+      // run the second job
+      LOG.log(Level.INFO, "Executing the second graph");
+      runSecondJob(config, exec, 4, jobConfig);
+    }
   }
 
   private static class HTGSourceTask extends BaseSource implements Receptor {
@@ -127,14 +146,16 @@ public final class TwoDataFlowsExample {
     config = Config.newBuilder().putAll(config)
         .put(SchedulerContext.DRIVER_CLASS, null).build();
 
-    CDFWExecutor cdfwExecutor = new CDFWExecutor(config, null);
-    LOG.log(Level.INFO, "Executing the first graph");
-    // run the first job
-    runFirstJob(config, cdfwExecutor, parallelismValue, jobConfig);
-    // run the second job
-    LOG.log(Level.INFO, "Executing the second graph");
-    runSecondJob(config, cdfwExecutor, parallelismValue, jobConfig);
-    cdfwExecutor.close();
+    Twister2Job twister2Job;
+    twister2Job = Twister2Job.newBuilder()
+        .setJobName(HelloExample.class.getName())
+        .setWorkerClass(CDFWWorker.class)
+        .setDriverClass(TwoDataFlowsDriver.class.getName())
+        .addComputeResource(1, 512, instances)
+        .setConfig(jobConfig)
+        .build();
+    // now submit the job
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 
   private static void runFirstJob(Config config, CDFWExecutor cdfwExecutor,
