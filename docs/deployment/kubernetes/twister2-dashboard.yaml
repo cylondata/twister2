@@ -1,0 +1,88 @@
+# Running Twister2 Dashboard on Kubernetes as StatefulSet
+# We define a service, a persistent volume claim and a StatefulSet
+################################################################
+# ------------------- Dashboard Service ---------------------- #
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: default
+spec:
+  ports:
+    - port: 443
+      targetPort: 8080
+  selector:
+    k8s-app: kubernetes-dashboard
+
+---
+################################################################
+# ------------------- Dashboard PVC -------------------------- #
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: twister2-storage-dashboard
+  namespace: default
+  annotations:
+    # the value of this needs to be updated
+    volume.beta.kubernetes.io/storage-class: twister2-nfs-storage
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+################################################################
+# ------------------- Dashboard StatefulSet ------------------ #
+
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name: twister2-dashboard
+  namespace: default
+  labels:
+    app: twister2-dashboard
+
+spec:
+  replicas: 1
+  serviceName: twister2-service-dashboard
+
+  selector:
+    matchLabels:
+      app: twister2-dashboard
+
+  template:
+    metadata:
+      labels:
+        app: twister2-dashboard
+
+    spec:
+      terminationGracePeriodSeconds: 1
+      volumes:
+        - name: persistent-volume
+          persistentVolumeClaim:
+            claimName: twister2-storage-dashboard
+
+      containers:
+        name: twister2-dashboard
+        image: twister2/twister2-k8s:0.1.1
+        imagePullPolicy: IfNotPresent
+        command: ["/twister2/bin/twister2"]
+        args: ["dash"]
+
+        ports:
+          name: dash-port
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 1
+            memory: 2048Mi
+        volumeMounts:
+          - name: persistent-volume
+            mountPath: /persistent
