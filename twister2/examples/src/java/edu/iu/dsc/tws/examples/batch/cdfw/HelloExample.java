@@ -22,15 +22,17 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.cdfw.BaseDriver;
 import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
-import edu.iu.dsc.tws.api.cdfw.Twister2HTGDriver;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.driver.IDriverMessenger;
+import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DSet;
 import edu.iu.dsc.tws.dataset.Partition;
@@ -42,10 +44,15 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public final class HelloExample {
+public final class HelloExample extends BaseDriver {
   private static final Logger LOG = Logger.getLogger(HelloExample.class.getName());
 
   private HelloExample() {
+  }
+
+  @Override
+  public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
+
   }
 
   private static class FirstSource extends BaseSource implements Receptor {
@@ -124,7 +131,7 @@ public final class HelloExample {
     jobConfig.putAll(configurations);
 
     config = Config.newBuilder().putAll(config)
-        .put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName()).build();
+        .put(SchedulerContext.DRIVER_CLASS, null).build();
 
 
     FirstSource firstSource = new FirstSource();
@@ -140,7 +147,7 @@ public final class HelloExample {
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
     //Invoke HTG Submitter and send the metagraph
-    CDFWExecutor cdfwExecutor = new CDFWExecutor(config);
+    CDFWExecutor cdfwExecutor = new CDFWExecutor(config, null);
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
         setWorkers(4).addJobConfig(jobConfig);
     cdfwExecutor.execute(job);

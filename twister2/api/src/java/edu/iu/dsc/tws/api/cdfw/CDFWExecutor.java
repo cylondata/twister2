@@ -26,15 +26,12 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.cdfw.CDFWWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.driver.DriverJobListener;
+import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
-import edu.iu.dsc.tws.master.driver.DriverMessenger;
-import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
-import edu.iu.dsc.tws.rsched.core.ResourceRuntime;
 
-public final class CDFWExecutor implements DriverJobListener {
+public final class CDFWExecutor {
   private static final Logger LOG = Logger.getLogger(CDFWExecutor.class.getName());
 
   /**
@@ -55,7 +52,7 @@ public final class CDFWExecutor implements DriverJobListener {
   /**
    * The driver messenger
    */
-  private IDriverMessenger messenger;
+  private IDriverMessenger driverMessenger;
 
   /**
    * The submitter thread
@@ -67,17 +64,13 @@ public final class CDFWExecutor implements DriverJobListener {
    */
   private int jobCount = 0;
 
-  /**
-   * Driver agent
-   */
-  private JMDriverAgent driverAgent;
-
   private List<JobMasterAPI.WorkerInfo> workerInfoList;
 
   private AtomicBoolean workerjoined;
 
-  public CDFWExecutor(Config cfg) {
+  public CDFWExecutor(Config cfg, IDriverMessenger messenger) {
     this.config = cfg;
+    this.driverMessenger = messenger;
     // set the driver events queue, this will make sure that we only create one instance of
     // submitter
     Twister2HTGInstance.getTwister2HTGInstance().setDriverEvents(inDriverEvents);
@@ -106,8 +99,6 @@ public final class CDFWExecutor implements DriverJobListener {
         Thread.sleep(2000);
       } catch (InterruptedException ignore) {
       }
-      // set the workers as number of instances
-      startDriver(job.getInstances());
 
       driverState = DriverState.WAIT_FOR_WORKERS_TO_START;
       // lets wait until the worker start message received
@@ -163,8 +154,6 @@ public final class CDFWExecutor implements DriverJobListener {
         Thread.sleep(2000);
       } catch (InterruptedException ignore) {
       }
-      // set the workers as number of instances
-      startDriver(job.getInstances());
 
       driverState = DriverState.WAIT_FOR_WORKERS_TO_START;
       // lets wait until the worker start message received
@@ -218,7 +207,6 @@ public final class CDFWExecutor implements DriverJobListener {
     sendCloseMessage();
     // lets wait for the submitter thread to finish
     try {
-      driverAgent.close();
       LOG.log(Level.INFO, "Waiting for submitter thread");
       submitterThread.join();
       LOG.log(Level.INFO, "Submitter thread finished, we are closed");
@@ -229,7 +217,7 @@ public final class CDFWExecutor implements DriverJobListener {
   private void sendCloseMessage() {
     HTGJobAPI.HTGJobCompletedMessage.Builder builder = HTGJobAPI.HTGJobCompletedMessage.
         newBuilder().setHtgJobname("");
-    messenger.broadcastToAllWorkers(builder.build());
+    driverMessenger.broadcastToAllWorkers(builder.build());
   }
 
   /**
@@ -243,7 +231,7 @@ public final class CDFWExecutor implements DriverJobListener {
     HTGJobAPI.ExecuteMessage.Builder builder = HTGJobAPI.ExecuteMessage.newBuilder();
     builder.setSubgraphName(job.getName());
     builder.setGraph(job);
-    messenger.broadcastToAllWorkers(builder.build());
+    driverMessenger.broadcastToAllWorkers(builder.build());
   }
 
   /**
@@ -254,14 +242,12 @@ public final class CDFWExecutor implements DriverJobListener {
     return job.build();
   }
 
-  @Override
   public void workerMessageReceived(Any anyMessage, int senderWorkerID) {
     LOG.log(Level.INFO, String.format("Received worker message %d: %s", senderWorkerID,
         anyMessage.getClass().getName()));
     inDriverEvents.offer(new DriverEvent(DriveEventType.FINISHED_JOB, anyMessage));
   }
 
-  @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
     inDriverEvents.offer(new DriverEvent(DriveEventType.INITIALIZE, null));
 
@@ -281,7 +267,7 @@ public final class CDFWExecutor implements DriverJobListener {
 
     @Override
     public void run() {
-      startWorkers(htgJob);
+      startWorkers(htgJob, null);
     }
   }
 
@@ -291,7 +277,7 @@ public final class CDFWExecutor implements DriverJobListener {
    *
    * @param htgJob subgraph
    */
-  private void startWorkers(HTGJobAPI.SubGraph htgJob) {
+  private void startWorkers(HTGJobAPI.SubGraph htgJob, Class<IDriver> driver) {
     //send the singleton object to the HTG Driver
     Twister2HTGInstance twister2HTGInstance = Twister2HTGInstance.getTwister2HTGInstance();
     twister2HTGInstance.setHtgSchedulerClassName(DefaultScheduler.class.getName());
@@ -303,7 +289,7 @@ public final class CDFWExecutor implements DriverJobListener {
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName(htgJob.getName())
         .setWorkerClass(CDFWWorker.class.getName())
-        .setDriverClass(Twister2HTGDriver.class.getName())
+        .setDriverClass(driver.getName())
         .addComputeResource(htgJob.getCpu(), htgJob.getRamMegaBytes(),
             htgJob.getDiskGigaBytes(), htgJob.getInstances())
         .build();
@@ -322,27 +308,6 @@ public final class CDFWExecutor implements DriverJobListener {
     } catch (InterruptedException e) {
       throw new RuntimeException("Failed to take event", e);
     }
-  }
-
-  private void startDriver(int numberOfWorkers) {
-    long start = System.currentTimeMillis();
-    while (ResourceRuntime.getInstance().getJobMasterHost() == null) {
-      if ((System.currentTimeMillis() - start) > 1000) {
-        return;
-      }
-    }
-    // first start JMDriverAgent
-    String jobMasterIP = ResourceRuntime.getInstance().getJobMasterHost();
-    int jmPort = ResourceRuntime.getInstance().getJobMasterPort();
-
-    driverAgent =
-        JMDriverAgent.createJMDriverAgent(config, jobMasterIP, jmPort, numberOfWorkers);
-    driverAgent.startThreaded();
-    // construct DriverMessenger
-    messenger = new DriverMessenger(driverAgent);
-
-    // add listener to receive worker messages
-    JMDriverAgent.addDriverJobListener(this);
   }
 
   private String getJobName(String name) {

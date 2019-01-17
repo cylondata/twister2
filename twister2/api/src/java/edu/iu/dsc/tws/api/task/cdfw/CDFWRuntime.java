@@ -199,7 +199,7 @@ public class CDFWRuntime implements JobListener {
   }
 
   @Override
-  public void broadcastReceived(Any anyMessage) {
+  public void driverMessageReceived(Any anyMessage) {
     // put every message on the queue.
     try {
       this.executeMessageQueue.put(anyMessage);

@@ -36,7 +36,6 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
-import edu.iu.dsc.tws.api.cdfw.Twister2HTGDriver;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSource;
 import edu.iu.dsc.tws.api.task.Collector;
@@ -138,9 +137,9 @@ public final class ParallelDataFlowsExample {
     jobConfig.putAll(configurations);
 
     config = Config.newBuilder().putAll(config)
-        .put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName()).build();
+        .put(SchedulerContext.DRIVER_CLASS, null).build();
 
-    CDFWExecutor cdfwExecutor = new CDFWExecutor(config);
+    CDFWExecutor cdfwExecutor = new CDFWExecutor(config, null);
 
     DataFlowGraph job1 = generateFirstJob(config, parallelismValue, jobConfig);
     DataFlowGraph job2 = generateSecondJob(config, parallelismValue, jobConfig);
