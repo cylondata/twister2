@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.jobmaster;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
@@ -22,19 +24,36 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public final class DashboardClientExample {
+  private static final Logger LOG = Logger.getLogger(DashboardClientExample.class.getName());
 
   private DashboardClientExample() { }
 
   public static void main(String[] args) {
 
-    DashboardClient dashClient = new DashboardClient("http://localhost:8080", "job-1");
+    if (args.length < 2) {
+      printUsage();
+      return;
+    }
+
+    String dashAddress = args[0];
+    String jobID = args[1];
+    DashboardClient dashClient = new DashboardClient(dashAddress, jobID);
+    sendJobKilledMessage(dashClient);
+
+//    DashboardClient dashClient = new DashboardClient("http://localhost:8080", "job-1");
 
 //    testRegisterJob(dashClient);
 //    testRegisterWorker(dashClient);
 
     // test state change
-    dashClient.jobStateChange(JobState.STARTED);
+//    dashClient.jobStateChange(JobState.STARTED);
 //    dashClient.workerStateChange(0, JobMasterAPI.WorkerState.RUNNING);
+  }
+
+  public static void sendJobKilledMessage(DashboardClient dashClient) {
+
+    dashClient.jobStateChange(JobState.KILLED);
+
   }
 
   public static void testRegisterJob(DashboardClient dashClient) {
@@ -67,4 +86,9 @@ public final class DashboardClientExample {
     dashClient.registerWorker(workerInfo);
   }
 
+  public static void printUsage() {
+    LOG.info("Usage: java edu.iu.dsc.tws.examples.internal.jobmaster.DashboardClientExample "
+        + "dashAddress jobID"
+        + "\n sends job KILLED message to Dashboard for this job.");
+  }
 }

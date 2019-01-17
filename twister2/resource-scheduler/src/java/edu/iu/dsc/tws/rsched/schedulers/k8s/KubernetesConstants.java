@@ -30,8 +30,6 @@ public final class KubernetesConstants {
   public static final String PERSISTENT_VOLUME_MOUNT = "/persistent";
   public static final String SECRET_VOLUME_NAME = "kube-openmpi-ssh-key";
   public static final String SECRET_VOLUME_MOUNT = "/ssh-key/openmpi";
-  public static final String CONFIG_MAP_VOLUME_NAME = "config-map-volume";
-  public static final String CONFIG_MAP_VOLUME_MOUNT = "/twister2/configs";
 
   // https://kubernetes.io/docs/concepts/workloads/controllers/garbage-collection/
   public static final String DELETE_OPTIONS_PROPAGATION_POLICY = "Foreground";

@@ -50,7 +50,7 @@ public interface JobListener {
    * received a broadcast message from the driver
    * @param anyMessage received message from the driver
    */
-  void broadcastReceived(Any anyMessage);
+  void driverMessageReceived(Any anyMessage);
 
   /**
    * this method is invoked when all workers joined the job initially

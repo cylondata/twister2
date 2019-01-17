@@ -1,9 +1,10 @@
 #! /bin/bash
 ####################################################################
-# This script starts a Twister2 worker in jobs that do not use openmpi
+# This script starts a Twister2 worker or Job Master in jobs
 # It:
 #   gets the job package and unpacks it, if it is the first worker in a pod
-#   if it is not the first worker, it waits for the first worker to get the job package and unpacks it
+#   if it is not the first worker,
+#   it waits for the first worker to get the job package and unpack it
 #   sets the classpath
 #   starts the worker class
 ####################################################################
@@ -22,6 +23,6 @@ CLASSPATH=$POD_MEMORY_VOLUME/$JOB_ARCHIVE_DIRECTORY/$USER_JOB_JAR_FILE:$CLASSPAT
 
 # start the class to run
 echo "Starting $CLASS_TO_RUN .... "
-java $CLASS_TO_RUN
+exec java $CLASS_TO_RUN
 echo "$CLASS_TO_RUN is done. Starting to sleep infinity ..."
 sleep infinity

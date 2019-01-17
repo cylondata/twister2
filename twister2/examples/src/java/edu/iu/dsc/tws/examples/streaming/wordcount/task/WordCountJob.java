@@ -9,17 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.taskwordcount;
+package edu.iu.dsc.tws.examples.streaming.wordcount.task;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -29,6 +27,7 @@ import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.api.task.function.ReduceFn;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Op;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -44,10 +43,8 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
  * A simple wordcount program where fixed number of words are generated and the global counts
  * of words are calculated
  */
-public class WordCountTaskJob extends TaskWorker {
-  private static final Logger LOG = Logger.getLogger(WordCountTaskJob.class.getName());
-
-  private static final int NUMBER_MESSAGES = 1000;
+public class WordCountJob extends TaskWorker {
+  private static final Logger LOG = Logger.getLogger(WordCountJob.class.getName());
 
   private static final String EDGE = "reduce-edge";
 
@@ -57,16 +54,16 @@ public class WordCountTaskJob extends TaskWorker {
 
   @Override
   public void execute() {
-    // source and aggregator
+    // create source and aggregator
     WordSource source = new WordSource();
     WordAggregator counter = new WordAggregator();
 
-    // build the task graph
+    // build the graph
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
     builder.addSource("word-source", source, 4);
     builder.addSink("word-aggregator", counter, 4).keyedReduce("word-source", EDGE,
         new ReduceFn(Op.SUM, DataType.INTEGER), DataType.OBJECT, DataType.INTEGER);
-    builder.setMode(OperationMode.BATCH);
+    builder.setMode(OperationMode.STREAMING);
 
     // execute the graph
     DataFlowTaskGraph graph = builder.build();
@@ -77,10 +74,10 @@ public class WordCountTaskJob extends TaskWorker {
   private static class WordSource extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
 
-    private int count = 0;
-
+    // sample words
     private List<String> sampleWords = new ArrayList<>();
 
+    // the random used to pick he words
     private Random random;
 
     @Override
@@ -96,40 +93,23 @@ public class WordCountTaskJob extends TaskWorker {
     @Override
     public void execute() {
       String word = sampleWords.get(random.nextInt(sampleWords.size()));
-      // indicate the end
-      if (count == NUMBER_MESSAGES - 1) {
-        if (context.writeEnd(EDGE, word, new int[]{1})) {
-          count++;
-        }
-      } else if (count < NUMBER_MESSAGES - 1) {
-        if (context.write(EDGE, word, new int[]{1})) {
-          count++;
-        }
-      }
+      context.write(EDGE, word, new int[]{1});
     }
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
   private static class WordAggregator extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
 
+    // keep track of the counts
+    private Map<String, Integer> counts = new HashMap<>();
+
     @Override
     public boolean execute(IMessage message) {
-      // we get everything at once
-      Iterator<Object> it;
-      if (message.getContent() instanceof Iterator) {
-        it = (Iterator<Object>) message.getContent();
-
-        while (it.hasNext()) {
-          Object next = it.next();
-          if (next instanceof ImmutablePair) {
-            ImmutablePair kc = (ImmutablePair) next;
-            LOG.log(Level.INFO, String.format("%d Word %s count %s",
-                context.taskId(), kc.getKey(), ((int[]) kc.getValue())[0]));
-          }
-        }
+      if (message.getContent() instanceof Tuple) {
+        Tuple kc = (Tuple) message.getContent();
+        LOG.log(Level.INFO, String.format("%d Word %s count %s", context.taskId(),
+            kc.getKey(), ((int[]) kc.getValue())[0]));
       }
-
       return true;
     }
   }
@@ -141,8 +121,8 @@ public class WordCountTaskJob extends TaskWorker {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("wordcount-batch-task");
-    jobBuilder.setWorkerClass(WordCountTaskJob.class);
+    jobBuilder.setJobName("wordcount-streaming-task");
+    jobBuilder.setWorkerClass(WordCountJob.class);
     jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 

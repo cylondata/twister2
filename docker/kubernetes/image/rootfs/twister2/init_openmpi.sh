@@ -53,7 +53,7 @@ lastFourChars=$(echo $HOSTNAME| cut -c $(($length-3))-$length)
 if [ "$lastFourChars" = "-0-0" ]; then
   echo "This is the first pod in the first StatefulSet of the job: $HOSTNAME"
   echo "Starting $CLASS_TO_RUN .... "
-  java $CLASS_TO_RUN
+  exec java $CLASS_TO_RUN
   echo "$CLASS_TO_RUN is done. Starting to sleep infinity ..."
   sleep infinity
 else

@@ -33,6 +33,7 @@ t2_java_lib(
         "@io_kubernetes_client_java_api//jar",
         "@io_kubernetes_client_java_proto//jar",
         "@io_swagger_swagger_annotations//jar",
+        "@joda_time_joda_time//jar",
         "@org_apache_commons_commons_compress//jar",
         "@org_apache_curator_curator_client//jar",
         "@org_apache_curator_curator_framework//jar",

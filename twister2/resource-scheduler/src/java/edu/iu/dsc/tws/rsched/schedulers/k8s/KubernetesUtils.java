@@ -196,15 +196,6 @@ public final class KubernetesUtils {
   }
 
   /**
-   * create ConfigMap name for the given job name
-   * add a suffix to job name
-   * @return
-   */
-  public static String createJobMasterConfigMapName(String jobName) {
-    return jobName + "-cm";
-  }
-
-  /**
    * create pod name for the job master
    * there will be one pod for the job master
    * we add a suffix to statefulset name

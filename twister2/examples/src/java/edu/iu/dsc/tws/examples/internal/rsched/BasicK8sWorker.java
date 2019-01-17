@@ -108,7 +108,7 @@ public class BasicK8sWorker implements IWorker, JobListener {
   }
 
   @Override
-  public void broadcastReceived(Any anyMessage) {
+  public void driverMessageReceived(Any anyMessage) {
 
     if (anyMessage.is(JobMasterAPI.NodeInfo.class)) {
       try {

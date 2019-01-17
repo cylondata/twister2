@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.driver;
 
+import java.util.List;
+
 import com.google.protobuf.Message;
 
 /**
@@ -23,5 +25,17 @@ public interface IDriverMessenger {
    * @return
    */
   boolean broadcastToAllWorkers(Message message);
+
+  /**
+   * send a protocol buffer message to a list of workers in the job
+   * @return
+   */
+  boolean sendToWorkerList(Message message, List<Integer> workerList);
+
+  /**
+   * send a protocol buffer message to a worker in the job
+   * @return
+   */
+  boolean sendToWorker(Message message, Integer workerID);
 
 }

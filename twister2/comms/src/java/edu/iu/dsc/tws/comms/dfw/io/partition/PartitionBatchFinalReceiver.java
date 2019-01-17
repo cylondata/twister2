@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 
 public class PartitionBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
@@ -84,7 +83,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     executor = op.getTaskPlan().getThisExecutor();
     thisWorker = op.getTaskPlan().getThisExecutor();
     this.operation = op;
-    this.sources = ((DataFlowPartition) op).getSources();
+    this.sources = op.getSources();
 
     // lists to keep track of messages for destinations
     for (int d : expectedIds.keySet()) {
