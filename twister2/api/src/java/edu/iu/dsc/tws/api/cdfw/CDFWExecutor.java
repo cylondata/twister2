@@ -24,7 +24,7 @@ import com.google.protobuf.Any;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
+import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 
 public final class CDFWExecutor {
   private static final Logger LOG = Logger.getLogger(CDFWExecutor.class.getName());
@@ -60,8 +60,8 @@ public final class CDFWExecutor {
   }
 
   /**
-   * The executeHTG method first call the schedule method to get the schedule list of the HTG.
-   * Then, it invokes the build HTG Job object to build the cdfw job object for the scheduled graphs.
+   * The executeCDFW method first call the schedule method to get the schedule list of the CDFW.
+   * Then, it invokes the build CDFW Job object to build the cdfw job object for the scheduled graphs.
    */
   public void execute(DataFlowGraph graph) {
     LOG.info("Starting task graph Requirements:" + graph.getGraphName());
@@ -71,7 +71,7 @@ public final class CDFWExecutor {
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
 
-    HTGJobAPI.SubGraph job = buildHTGJob(graph);
+    CDFWJobAPI.SubGraph job = buildCDFWJob(graph);
     // this is the first time
     if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
       try {
@@ -90,8 +90,8 @@ public final class CDFWExecutor {
   }
 
   /**
-   * The executeHTG method first call the schedule method to get the schedule list of the HTG.
-   * Then, it invokes the build HTG Job object to build the htg job object for the scheduled graphs.
+   * The executeCDFW method first call the schedule method to get the schedule list of the CDFW.
+   * Then, it invokes the build CDFW Job object to build the htg job object for the scheduled graphs.
    */
 
   //Added to test and schedule multiple graphs at a time.
@@ -101,7 +101,7 @@ public final class CDFWExecutor {
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
 
-    HTGJobAPI.SubGraph job = buildHTGJob(graph[0]);
+    CDFWJobAPI.SubGraph job = buildCDFWJob(graph[0]);
     // this is the first time
     if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
       // lets wait until the worker start message received
@@ -135,7 +135,7 @@ public final class CDFWExecutor {
   }
 
   private void sendCloseMessage() {
-    HTGJobAPI.HTGJobCompletedMessage.Builder builder = HTGJobAPI.HTGJobCompletedMessage.
+    CDFWJobAPI.CDFWJobCompletedMessage.Builder builder = CDFWJobAPI.CDFWJobCompletedMessage.
         newBuilder().setHtgJobname("");
     driverMessenger.broadcastToAllWorkers(builder.build());
   }
@@ -145,10 +145,10 @@ public final class CDFWExecutor {
    *
    * @param job subgraph
    */
-  private void submitJob(HTGJobAPI.SubGraph job) {
+  private void submitJob(CDFWJobAPI.SubGraph job) {
 
     LOG.log(Level.INFO, "Sending graph to workers for execution: " + job.getName());
-    HTGJobAPI.ExecuteMessage.Builder builder = HTGJobAPI.ExecuteMessage.newBuilder();
+    CDFWJobAPI.ExecuteMessage.Builder builder = CDFWJobAPI.ExecuteMessage.newBuilder();
     builder.setSubgraphName(job.getName());
     builder.setGraph(job);
     driverMessenger.broadcastToAllWorkers(builder.build());
@@ -158,7 +158,7 @@ public final class CDFWExecutor {
    * This method is responsible for building the cdfw job object which is based on the outcome of
    * the scheduled graphs list.
    */
-  private HTGJobAPI.SubGraph buildHTGJob(DataFlowGraph job) {
+  private CDFWJobAPI.SubGraph buildCDFWJob(DataFlowGraph job) {
     return job.build();
   }
 

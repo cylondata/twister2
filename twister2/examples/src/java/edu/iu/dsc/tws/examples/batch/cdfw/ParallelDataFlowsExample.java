@@ -38,20 +38,16 @@ import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSource;
-import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DSet;
-import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -61,7 +57,7 @@ public final class ParallelDataFlowsExample {
   private ParallelDataFlowsExample() {
   }
 
-  private static class HTGSourceTask extends BaseSource implements Receptor {
+  private static class FirstSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
     @Override
@@ -72,22 +68,6 @@ public final class ParallelDataFlowsExample {
     @Override
     public void add(String name, DSet<Object> data) {
       LOG.log(Level.FINE, "Received input: " + name);
-    }
-  }
-
-  private static class HTGReduceTask extends BaseSink implements Collector<Object> {
-    private static final long serialVersionUID = -5190777711234234L;
-
-    @Override
-    public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
-          + ":" + context.taskId() + message.getContent());
-      return true;
-    }
-
-    @Override
-    public Partition<Object> get() {
-      return null;
     }
   }
 
@@ -152,12 +132,12 @@ public final class ParallelDataFlowsExample {
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
                                                 JobConfig jobConfig) {
 
-    HTGSourceTask htgSourceTask = new HTGSourceTask();
-    ConnectedSink htgReduceTask = new ConnectedSink();
+    FirstSourceTask firstSourceTask = new FirstSourceTask();
+    ConnectedSink connectedSink = new ConnectedSink();
 
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
-    graphBuilderX.addSource("source1", htgSourceTask, parallelismValue);
-    ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", htgReduceTask,
+    graphBuilderX.addSource("source1", firstSourceTask, parallelismValue);
+    ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", connectedSink,
         parallelismValue);
     partitionConnection.partition("source1", "partition",
         DataType.OBJECT);
@@ -174,12 +154,12 @@ public final class ParallelDataFlowsExample {
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
                                                  JobConfig jobConfig) {
 
-    ConnectedSource htgSourceTask = new ConnectedSource();
-    ConnectedSink htgReduceTask = new ConnectedSink();
+    ConnectedSource connectedSource = new ConnectedSource();
+    ConnectedSink connectedSink = new ConnectedSink();
 
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
-    graphBuilderX.addSource("source1", htgSourceTask, parallelismValue);
-    ComputeConnection reduceConn = graphBuilderX.addSink("sink1", htgReduceTask,
+    graphBuilderX.addSource("source1", connectedSource, parallelismValue);
+    ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink,
         1);
     reduceConn.reduce("source1", "reduce", new Aggregator(),
         DataType.OBJECT);

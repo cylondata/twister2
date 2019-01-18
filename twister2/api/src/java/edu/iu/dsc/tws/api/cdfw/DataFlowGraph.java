@@ -18,7 +18,7 @@ import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
-import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
+import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
@@ -42,7 +42,7 @@ public final class DataFlowGraph {
   private JobConfig jobConfig = new JobConfig();
 
   // input names to this
-  private List<HTGJobAPI.Input> inputs = new ArrayList<>();
+  private List<CDFWJobAPI.Input> inputs = new ArrayList<>();
 
   // output names to this dataflow
   private List<String> outputs = new ArrayList<>();
@@ -112,7 +112,7 @@ public final class DataFlowGraph {
   }
 
   public DataFlowGraph addInput(String g, String input) {
-    inputs.add(HTGJobAPI.Input.newBuilder().setParentGraph(g).setName(input).build());
+    inputs.add(CDFWJobAPI.Input.newBuilder().setParentGraph(g).setName(input).build());
     return this;
   }
 
@@ -121,7 +121,7 @@ public final class DataFlowGraph {
     return this;
   }
 
-  public List<HTGJobAPI.Input> getInputs() {
+  public List<CDFWJobAPI.Input> getInputs() {
     return inputs;
   }
 
@@ -133,7 +133,7 @@ public final class DataFlowGraph {
     return outputs;
   }
 
-  public HTGJobAPI.SubGraph build() {
+  public CDFWJobAPI.SubGraph build() {
     JobAPI.Config.Builder configBuilder = JobAPI.Config.newBuilder();
 
     if (graphName == null) {
@@ -146,8 +146,8 @@ public final class DataFlowGraph {
     });
     byte[] graphBytes = kryoMemorySerializer.serialize(graph);
 
-    //Construct the HTGJob object to be sent to the HTG Driver
-    return HTGJobAPI.SubGraph.newBuilder()
+    //Construct the CDFWJob object to be sent to the CDFW Driver
+    return CDFWJobAPI.SubGraph.newBuilder()
         .setName(graphName)
         .setConfig(configBuilder)
         .setGraphSerialized(ByteString.copyFrom(graphBytes))

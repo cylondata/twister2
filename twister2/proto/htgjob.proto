@@ -5,7 +5,7 @@ import "job.proto";
 import "jobmaster.proto";
 
 option java_package = "edu.iu.dsc.tws.proto.system.job";
-option java_outer_classname = "HTGJobAPI";
+option java_outer_classname = "CDFWJobAPI";
 
 message SubGraph {
     double cpu = 1;
@@ -35,7 +35,7 @@ message Relation {
     string operation = 3;
 }
 
-message HTGJob {
+message CDFWJob {
     string htg_jobname = 1;
     repeated Relation relations = 2;
     repeated SubGraph graphs = 3;
@@ -52,6 +52,6 @@ message ExecuteCompletedMessage {
     string subgraph_name = 1;
 }
 
-message HTGJobCompletedMessage {
+message CDFWJobCompletedMessage {
     string htg_jobname = 1;
 }

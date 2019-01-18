@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.system.job.HTGJobAPI;
+import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public class CDFWRuntime implements JobListener {
@@ -89,12 +89,12 @@ public class CDFWRuntime implements JobListener {
       try {
         msg = executeMessageQueue.take();
 
-        if (msg.is(HTGJobAPI.ExecuteMessage.class)) {
+        if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
           if (handleExecuteMessage(msg)) {
             return false;
           }
-        } else if (msg.is(HTGJobAPI.HTGJobCompletedMessage.class)) {
-          LOG.log(Level.INFO, workerId + "Received HTG job completed message. Leaving execution "
+        } else if (msg.is(CDFWJobAPI.CDFWJobCompletedMessage.class)) {
+          LOG.log(Level.INFO, workerId + "Received CDFW job completed message. Leaving execution "
               + "loop");
           break;
         } else {
@@ -111,16 +111,16 @@ public class CDFWRuntime implements JobListener {
 
   private boolean handleExecuteMessage(Any msg) {
     JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
-    HTGJobAPI.ExecuteMessage executeMessage;
+    CDFWJobAPI.ExecuteMessage executeMessage;
     ExecutionPlan executionPlan;
-    HTGJobAPI.ExecuteCompletedMessage completedMessage;
+    CDFWJobAPI.ExecuteCompletedMessage completedMessage;
     try {
-      executeMessage = msg.unpack(HTGJobAPI.ExecuteMessage.class);
+      executeMessage = msg.unpack(CDFWJobAPI.ExecuteMessage.class);
 //      LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
 //      LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
 
       // get the subgraph from the map
-      HTGJobAPI.SubGraph subGraph = executeMessage.getGraph();
+      CDFWJobAPI.SubGraph subGraph = executeMessage.getGraph();
       DataFlowTaskGraph taskGraph = (DataFlowTaskGraph) serializer.deserialize(
           subGraph.getGraphSerialized().toByteArray());
       if (taskGraph == null) {
@@ -133,7 +133,7 @@ public class CDFWRuntime implements JobListener {
 //      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
 
       if (subGraph.getInputsList().size() != 0) {
-        for (HTGJobAPI.Input input : subGraph.getInputsList()) {
+        for (CDFWJobAPI.Input input : subGraph.getInputsList()) {
           String inputName = input.getName();
           String inputGraph = input.getParentGraph();
 
@@ -152,9 +152,9 @@ public class CDFWRuntime implements JobListener {
         }
       }
 
-      List<HTGJobAPI.Input> inputs = subGraph.getInputsList();
+      List<CDFWJobAPI.Input> inputs = subGraph.getInputsList();
       // now lets get those inputs
-      for (HTGJobAPI.Input in : inputs) {
+      for (CDFWJobAPI.Input in : inputs) {
         DataSet<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
         taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
       }
@@ -165,7 +165,7 @@ public class CDFWRuntime implements JobListener {
       LOG.log(Level.INFO, workerId + " Completed subgraph : " + subGraph.getName());
 
 //      LOG.log(Level.INFO, workerId + " Sending subgraph completed message to driver");
-      completedMessage = HTGJobAPI.ExecuteCompletedMessage.newBuilder()
+      completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();
 
       List<String> outPutNames = subGraph.getOutputsList();

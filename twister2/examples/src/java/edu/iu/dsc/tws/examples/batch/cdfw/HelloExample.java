@@ -58,10 +58,10 @@ public final class HelloExample {
       // build JobConfig
       JobConfig jobConfig = new JobConfig();
       FirstSource firstSource = new FirstSource();
-      SecondSink htgReduceTask = new SecondSink();
+      SecondSink secondSink = new SecondSink();
       TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
       graphBuilderX.addSource("source1", firstSource, 4);
-      ComputeConnection reduceConn = graphBuilderX.addSink("sink1", htgReduceTask,
+      ComputeConnection reduceConn = graphBuilderX.addSink("sink1", secondSink,
           1);
       reduceConn.reduce("source1", "all-reduce", new Aggregator(),
           DataType.OBJECT);
@@ -69,7 +69,7 @@ public final class HelloExample {
       graphBuilderX.setMode(OperationMode.BATCH);
       DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
-      //Invoke HTG Submitter and send the metagraph
+      //Invoke CDFW Submitter and send the metagraph
       DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
           setWorkers(4).addJobConfig(jobConfig);
       exec.execute(job);
