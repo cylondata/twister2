@@ -146,7 +146,6 @@ public final class ParallelDataFlowsExample {
 
     LOG.info("Job 1 and Job 2 are:" + job1 + "\t" + job2);
     cdfwExecutor.executeCDFW(job1, job2);
-    cdfwExecutor.close();
   }
 
 
