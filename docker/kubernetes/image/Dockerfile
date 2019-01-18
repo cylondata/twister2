@@ -1,28 +1,35 @@
-FROM ubuntu:16.04
-
-# Java installation is based on:
-#    https://github.com/mlaccetti/docker-oracle-java8-ubuntu-16.04/blob/master/Dockerfile
-# ssh and MPI installation is based on the Dockerfile from
-#    https://github.com/everpeace
+FROM ubuntu:18.04
 
 # Disable prompts from apt.
 ENV DEBIAN_FRONTEND noninteractive
 
-ENV JAVA_HOME       /usr/lib/jvm/java-8-oracle
+##############################################################################
+# Install Java.
+# Based on:
+#    https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
+#    https://stackoverflow.com/questions/49914574/install-jdk-8-update-172-in-dockerfile-with-ubuntu-image
+#
+
+RUN \
+   apt-get update && \
+   apt-get -y install software-properties-common && \
+   echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
+   add-apt-repository -y ppa:webupd8team/java && \
+   apt-get update && \
+   apt-get install -y oracle-java8-installer && \
+   rm -rf /var/cache/oracle-jdk8-installer
+
+# Define commonly used JAVA_HOME variable
+ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
+
+###############################################################################
+# Install OpenMPI
+#
+# ssh and MPI installation is based on the Dockerfile from
+#    https://github.com/everpeace
+
 ENV LANG            en_US.UTF-8
 ENV LC_ALL          en_US.UTF-8
-
-RUN apt-get update && \
-  apt-get install -y --no-install-recommends locales && \
-  locale-gen en_US.UTF-8 && \
-  apt-get dist-upgrade -y && \
-  apt-get --purge remove openjdk* && \
-  echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | debconf-set-selections && \
-  echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu xenial main" > /etc/apt/sources.list.d/webupd8team-java-trusty.list && \
-  apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886 && \
-  apt-get update && \
-  apt-get install -y --no-install-recommends oracle-java8-installer oracle-java8-set-default && \
-  apt-get clean all
 
 ARG OPENMPI_VERSION="3.1.2"
 ARG WITH_CUDA="false"
@@ -31,14 +38,15 @@ ARG WITH_CUDA="false"
 RUN apt-get update && \
     apt-get install -yq --no-install-recommends \
       locales wget ca-certificates ssh build-essential && \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    rm -rf /var/cache/apt/archives/*
 
 #
 # install openmpi
 #
 RUN echo "WITH_CUDA=$WITH_CUDA"
 RUN cd /tmp && \
-  wget -q https://www.open-mpi.org/software/ompi/v$(echo $OPENMPI_VERSION | sed -e s'/\(.*\)\.[0-9]/\1/')/downloads/openmpi-$OPENMPI_VERSION.tar.bz2 && \
+  wget -q https://www.open-mpi.org/software/ompi/v$(echo $OPENMPI_VERSION | sed -e s'/\(.*\)\.[0-9]/\1/')/downloads/openmpi-$OPENMPI_VER
+SION.tar.bz2 && \
   tar -xjf openmpi-$OPENMPI_VERSION.tar.bz2 && \
   cd /tmp/openmpi-$OPENMPI_VERSION && \
   if [ "$WITH_CUDA" = "true" ]; then export WITH_CUDA_OPT="--with-cuda"; else export WITH_CUDA_OPT=""; fi && \
@@ -74,20 +82,27 @@ ARG HOME=/home/$SSH_USER
 RUN mkdir -p $HOME && chown $SSH_USER:$SSH_USER $HOME && chmod 755 $HOME
 VOLUME $HOME
 
-# install python
-RUN apt-get update && apt-get install -y python
-
-ENV CLASSPATH="/twister2/lib/*"
-
-COPY docker/kubernetes/image/rootfs /
-COPY twister2-0.1.0/lib /twister2/lib
-COPY twister2-0.1.0/bin /twister2/bin
-
 # check if open mpi was successfully built with cuda support.
 RUN if [ "$WITH_CUDA" = "true" ]; then \
   if ! ompi_info --parsable --all | grep -q "mpi_built_with_cuda_support:value:true" ; then \
     exit 1; \
   fi; fi;
+
+###############################################################################
+# install python
+# clear apt-get cache, no more apt usage after this point
+RUN apt-get update && \
+    apt-get install -y python && \
+    rm -rf /var/lib/apt/lists/*
+
+###############################################################################
+# Install Twister2 files and packages
+#
+ENV CLASSPATH="/twister2/lib/*"
+
+COPY docker/kubernetes/image/rootfs /
+COPY twister2-0.1.0/lib /twister2/lib
+COPY twister2-0.1.0/bin /twister2/bin
 
 # expose 2022 for ssh server (password free ssh support)
 # expose 8080 for dashboard server if it runs
