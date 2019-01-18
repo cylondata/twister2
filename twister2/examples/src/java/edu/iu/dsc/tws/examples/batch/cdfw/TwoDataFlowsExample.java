@@ -22,24 +22,24 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.cdfw.BaseDriver;
 import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSource;
-import edu.iu.dsc.tws.api.task.Collector;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.task.cdfw.CDFWWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DSet;
-import edu.iu.dsc.tws.dataset.Partition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -49,7 +49,22 @@ public final class TwoDataFlowsExample {
   private TwoDataFlowsExample() {
   }
 
-  private static class HTGSourceTask extends BaseSource implements Receptor {
+  public static class TwoDataFlowsDriver extends BaseDriver {
+    @Override
+    public void execute(Config config, CDFWExecutor exec) {
+      // build JobConfig
+      JobConfig jobConfig = new JobConfig();
+
+      LOG.log(Level.INFO, "Executing the first graph");
+      // run the first job
+      runFirstJob(config, exec, 4, jobConfig);
+      // run the second job
+      LOG.log(Level.INFO, "Executing the second graph");
+      runSecondJob(config, exec, 4, jobConfig);
+    }
+  }
+
+  private static class FirstSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
     @Override
@@ -60,22 +75,6 @@ public final class TwoDataFlowsExample {
     @Override
     public void add(String name, DSet<Object> data) {
       LOG.log(Level.FINE, "Received input: " + name);
-    }
-  }
-
-  private static class HTGReduceTask extends BaseSink implements Collector<Object> {
-    private static final long serialVersionUID = -5190777711234234L;
-
-    @Override
-    public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
-          + ":" + context.taskId() + message.getContent());
-      return true;
-    }
-
-    @Override
-    public Partition<Object> get() {
-      return null;
     }
   }
 
@@ -127,24 +126,26 @@ public final class TwoDataFlowsExample {
     config = Config.newBuilder().putAll(config)
         .put(SchedulerContext.DRIVER_CLASS, null).build();
 
-    CDFWExecutor cdfwExecutor = new CDFWExecutor(config, null);
-    LOG.log(Level.INFO, "Executing the first graph");
-    // run the first job
-    runFirstJob(config, cdfwExecutor, parallelismValue, jobConfig);
-    // run the second job
-    LOG.log(Level.INFO, "Executing the second graph");
-    runSecondJob(config, cdfwExecutor, parallelismValue, jobConfig);
-    cdfwExecutor.close();
+    Twister2Job twister2Job;
+    twister2Job = Twister2Job.newBuilder()
+        .setJobName(HelloExample.class.getName())
+        .setWorkerClass(CDFWWorker.class)
+        .setDriverClass(TwoDataFlowsDriver.class.getName())
+        .addComputeResource(1, 512, instances)
+        .setConfig(jobConfig)
+        .build();
+    // now submit the job
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 
   private static void runFirstJob(Config config, CDFWExecutor cdfwExecutor,
                                           int parallelismValue, JobConfig jobConfig) {
-    HTGSourceTask htgSourceTask = new HTGSourceTask();
-    ConnectedSink htgReduceTask = new ConnectedSink("first_out");
+    FirstSourceTask firstSourceTask = new FirstSourceTask();
+    ConnectedSink connectedSink = new ConnectedSink("first_out");
 
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
-    graphBuilderX.addSource("source1", htgSourceTask, parallelismValue);
-    ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", htgReduceTask,
+    graphBuilderX.addSource("source1", firstSourceTask, parallelismValue);
+    ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", connectedSink,
         parallelismValue);
     partitionConnection.partition("source1", "partition",
         DataType.OBJECT);
@@ -159,12 +160,12 @@ public final class TwoDataFlowsExample {
 
   private static void runSecondJob(Config config, CDFWExecutor cdfwExecutor,
                                           int parallelismValue, JobConfig jobConfig) {
-    ConnectedSource htgSourceTask = new ConnectedSource("reduce");
-    ConnectedSink htgReduceTask = new ConnectedSink();
+    ConnectedSource connectedSource = new ConnectedSource("reduce");
+    ConnectedSink connectedSink = new ConnectedSink();
 
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
-    graphBuilderX.addSource("source1", htgSourceTask, parallelismValue);
-    ComputeConnection reduceConn = graphBuilderX.addSink("sink1", htgReduceTask,
+    graphBuilderX.addSource("source1", connectedSource, parallelismValue);
+    ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink,
         1);
     reduceConn.reduce("source1", "reduce", new Aggregator(),
         DataType.OBJECT);

@@ -60,6 +60,8 @@ public class ConnectedSink extends BaseSink implements Collector<Object> {
       while (itr.hasNext()) {
         partition.add(itr.next());
       }
+    } else {
+      partition.add(message.getContent());
     }
     return true;
   }

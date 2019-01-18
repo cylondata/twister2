@@ -1,6 +1,6 @@
 # Compiling
 
-Twister2 relies on the [Bazel build](https://bazel.build/) system to provide a flexible and fast build. Twister2 has been tested on Bazel 0.8.1 version and it is recommended to use it for building.
+Twister2 relies on the [Bazel build](https://bazel.build/) system to provide a flexible and fast build. Twister2 has been tested on Bazel 0.18.1 version and it is recommended to use it for building.
 
 Twister2 developers are mainly working on Ubuntu 16.04 and Ubuntu 18.04. So it is recommended to use those platforms with the early versions and we would like to expand our system to different platforms in the future.
 
