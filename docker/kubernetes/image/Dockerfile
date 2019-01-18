@@ -45,8 +45,7 @@ RUN apt-get update && \
 #
 RUN echo "WITH_CUDA=$WITH_CUDA"
 RUN cd /tmp && \
-  wget -q https://www.open-mpi.org/software/ompi/v$(echo $OPENMPI_VERSION | sed -e s'/\(.*\)\.[0-9]/\1/')/downloads/openmpi-$OPENMPI_VER
-SION.tar.bz2 && \
+  wget -q https://www.open-mpi.org/software/ompi/v$(echo $OPENMPI_VERSION | sed -e s'/\(.*\)\.[0-9]/\1/')/downloads/openmpi-$OPENMPI_VERSION.tar.bz2 && \
   tar -xjf openmpi-$OPENMPI_VERSION.tar.bz2 && \
   cd /tmp/openmpi-$OPENMPI_VERSION && \
   if [ "$WITH_CUDA" = "true" ]; then export WITH_CUDA_OPT="--with-cuda"; else export WITH_CUDA_OPT=""; fi && \
