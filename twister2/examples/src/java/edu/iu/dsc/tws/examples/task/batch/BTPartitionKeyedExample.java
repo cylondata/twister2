@@ -39,7 +39,6 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
-    //keyed partition not implemented yet
   }
 
   protected static class KeyedPartitionSinkTask extends BaseSink {

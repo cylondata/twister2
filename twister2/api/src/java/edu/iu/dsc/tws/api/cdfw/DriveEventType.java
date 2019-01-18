@@ -13,5 +13,6 @@ package edu.iu.dsc.tws.api.cdfw;
 
 public enum DriveEventType {
   INITIALIZE,
-  FINISHED_JOB
+  FINISHED_JOB,
+  WORKER_MESSAGE,
 }

@@ -30,14 +30,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.driver.IDriver;
+import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
+import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.master.dashclient.models.JobState;
+import edu.iu.dsc.tws.master.driver.DriverMessenger;
+import edu.iu.dsc.tws.master.driver.Scaler;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
@@ -134,6 +139,17 @@ public class JobMaster {
   private JobMasterAPI.NodeInfo nodeInfo;
 
   /**
+   * the scaler for the cluster in that Job Master is running
+   */
+  private IScalerPerCluster clusterScaler;
+
+
+  /**
+   * the driver object
+   */
+  private IDriver driver;
+
+  /**
    * a UUID generated for each job
    * it is primarily used when communicating with Dashboard
    */
@@ -176,13 +192,16 @@ public class JobMaster {
                    int port,
                    IJobTerminator jobTerminator,
                    JobAPI.Job job,
-                   JobMasterAPI.NodeInfo nodeInfo) {
+                   JobMasterAPI.NodeInfo nodeInfo,
+                   IScalerPerCluster clusterScaler) {
     this.config = config;
     this.masterAddress = masterAddress;
     this.jobTerminator = jobTerminator;
     this.job = job;
     this.nodeInfo = nodeInfo;
     this.masterPort = port;
+    this.clusterScaler = clusterScaler;
+
     this.numberOfWorkers = job.getNumberOfWorkers();
 
     this.jobID = UUID.randomUUID().toString();
@@ -208,9 +227,11 @@ public class JobMaster {
                    String masterAddress,
                    IJobTerminator jobTerminator,
                    JobAPI.Job job,
-                   JobMasterAPI.NodeInfo nodeInfo) {
+                   JobMasterAPI.NodeInfo nodeInfo,
+                   IScalerPerCluster clusterScaler) {
+
     this(config, masterAddress, JobMasterContext.jobMasterPort(config),
-        jobTerminator, job, nodeInfo);
+        jobTerminator, job, nodeInfo, clusterScaler);
   }
 
 
@@ -234,7 +255,11 @@ public class JobMaster {
     rrServer =
         new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
-    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job,
+    // init Driver if it exists
+    // this ha to be done before WorkerMonitor initialization
+    initDriver();
+
+    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver,
         JobMasterContext.jobMasterAssignsWorkerIDs(config));
 
     barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
@@ -245,11 +270,6 @@ public class JobMaster {
         JobMasterAPI.RegisterWorker.newBuilder();
     JobMasterAPI.RegisterWorkerResponse.Builder registerWorkerResponseBuilder
         = JobMasterAPI.RegisterWorkerResponse.newBuilder();
-
-    JobMasterAPI.RegisterDriver.Builder registerDriverBuilder =
-        JobMasterAPI.RegisterDriver.newBuilder();
-    JobMasterAPI.RegisterDriverResponse.Builder registerDriverResponseBuilder
-        = JobMasterAPI.RegisterDriverResponse.newBuilder();
 
     JobMasterAPI.WorkerStateChange.Builder stateChangeBuilder =
         JobMasterAPI.WorkerStateChange.newBuilder();
@@ -265,17 +285,14 @@ public class JobMaster {
 
     JobMasterAPI.WorkersScaled.Builder scaledMessageBuilder =
         JobMasterAPI.WorkersScaled.newBuilder();
-    JobMasterAPI.ScaledResponse.Builder scaledResponseBuilder
-        = JobMasterAPI.ScaledResponse.newBuilder();
 
-    JobMasterAPI.Broadcast.Builder broadcastBuilder = JobMasterAPI.Broadcast.newBuilder();
-    JobMasterAPI.BroadcastResponse.Builder broadcastResponseBuilder
-        = JobMasterAPI.BroadcastResponse.newBuilder();
+    JobMasterAPI.DriverMessage.Builder driverMessageBuilder =
+        JobMasterAPI.DriverMessage.newBuilder();
 
-    JobMasterAPI.WorkerToDriver.Builder toDriverBuilder =
-        JobMasterAPI.WorkerToDriver.newBuilder();
-    JobMasterAPI.WorkerToDriverResponse.Builder toDriverResponseBuilder
-        = JobMasterAPI.WorkerToDriverResponse.newBuilder();
+    JobMasterAPI.WorkerMessage.Builder workerMessageBuilder =
+        JobMasterAPI.WorkerMessage.newBuilder();
+    JobMasterAPI.WorkerMessageResponse.Builder workerResponseBuilder
+        = JobMasterAPI.WorkerMessageResponse.newBuilder();
 
     JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
 
@@ -283,9 +300,6 @@ public class JobMaster {
 
     rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
     rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerMonitor);
-
-    rrServer.registerRequestHandler(registerDriverBuilder, workerMonitor);
-    rrServer.registerRequestHandler(registerDriverResponseBuilder, workerMonitor);
 
     rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
@@ -297,13 +311,10 @@ public class JobMaster {
     rrServer.registerRequestHandler(barrierResponseBuilder, barrierMonitor);
 
     rrServer.registerRequestHandler(scaledMessageBuilder, workerMonitor);
-    rrServer.registerRequestHandler(scaledResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(driverMessageBuilder, workerMonitor);
 
-    rrServer.registerRequestHandler(broadcastBuilder, workerMonitor);
-    rrServer.registerRequestHandler(broadcastResponseBuilder, workerMonitor);
-
-    rrServer.registerRequestHandler(toDriverBuilder, workerMonitor);
-    rrServer.registerRequestHandler(toDriverResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(workerMessageBuilder, workerMonitor);
+    rrServer.registerRequestHandler(workerResponseBuilder, workerMonitor);
 
     rrServer.registerRequestHandler(joinedBuilder, workerMonitor);
 
@@ -318,6 +329,9 @@ public class JobMaster {
   public Thread startJobMasterThreaded() {
     // first call the init method
     init();
+
+    // start Driver thread if the driver exists
+    startDriverThread();
 
     Thread jmThread = new Thread() {
       public void run() {
@@ -337,6 +351,9 @@ public class JobMaster {
     // first call the init method
     init();
 
+    // start Driver thread if the driver exists
+    startDriverThread();
+
     startLooping();
   }
 
@@ -353,6 +370,47 @@ public class JobMaster {
 
     // send the remaining messages if any and stop
     rrServer.stopGraceFully(2000);
+  }
+
+  private void initDriver() {
+
+    // if Driver is not set, can not initialize Driver
+    if (job.getDriverClassName().isEmpty()) {
+      return;
+    }
+
+    // first construct the driver
+    String driverClass = job.getDriverClassName();
+    try {
+      Object object = ReflectionUtils.newInstance(driverClass);
+      driver = (IDriver) object;
+      LOG.info("loaded driver class: " + driverClass);
+    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+      LOG.severe(String.format("failed to load the driver class %s", driverClass));
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * start Driver in a Thread
+   */
+  public Thread startDriverThread() {
+
+    if (driver == null) {
+      return null;
+    }
+
+    Thread driverThread = new Thread() {
+      public void run() {
+        Scaler scaler = new Scaler(clusterScaler, workerMonitor);
+        DriverMessenger driverMessenger = new DriverMessenger(workerMonitor);
+        driver.execute(config, scaler, driverMessenger);
+      }
+    };
+
+    driverThread.start();
+
+    return driverThread;
   }
 
   /**
@@ -405,10 +463,10 @@ public class JobMaster {
    *      when the job master runs in the cluster, it should not clear resources.
    *      The resources should be cleared by the job killing process.
    *
-   * @param clearJobResourcesWhenKilled
+   * @param clearJobResourcesOnKill
    */
-  public void addShutdownHook(boolean clearJobResourcesWhenKilled) {
-    this.clearResourcesWhenKilled = clearJobResourcesWhenKilled;
+  public void addShutdownHook(boolean clearJobResourcesOnKill) {
+    clearResourcesWhenKilled = clearJobResourcesOnKill;
 
     Thread hookThread = new Thread() {
       public void run() {
@@ -423,7 +481,7 @@ public class JobMaster {
           dashClient.jobStateChange(JobState.KILLED);
         }
 
-        if (JobMaster.this.clearResourcesWhenKilled) {
+        if (clearResourcesWhenKilled) {
           jobCompleted = true;
           looper.wakeup();
 

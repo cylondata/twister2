@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.examples.comms.batch.*;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -26,21 +28,10 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.comms.batch.BAllGatherExample;
-import edu.iu.dsc.tws.examples.comms.batch.BAllReduceExample;
-import edu.iu.dsc.tws.examples.comms.batch.BDJoinExample;
-import edu.iu.dsc.tws.examples.comms.batch.BDKeyedGatherExample;
-import edu.iu.dsc.tws.examples.comms.batch.BGatherExample;
-import edu.iu.dsc.tws.examples.comms.batch.BJoinExample;
-import edu.iu.dsc.tws.examples.comms.batch.BKeyedGatherExample;
-import edu.iu.dsc.tws.examples.comms.batch.BKeyedPartitionBasedReduceExample;
-import edu.iu.dsc.tws.examples.comms.batch.BKeyedPartitionExample;
-import edu.iu.dsc.tws.examples.comms.batch.BKeyedReduceExample;
-import edu.iu.dsc.tws.examples.comms.batch.BPartitionExample;
-import edu.iu.dsc.tws.examples.comms.batch.BReduceExample;
 import edu.iu.dsc.tws.examples.comms.stream.SAllGatherExample;
 import edu.iu.dsc.tws.examples.comms.stream.SAllReduceExample;
 import edu.iu.dsc.tws.examples.comms.stream.SBroadcastExample;
+import edu.iu.dsc.tws.examples.comms.stream.SDirectExample;
 import edu.iu.dsc.tws.examples.comms.stream.SGatherExample;
 import edu.iu.dsc.tws.examples.comms.stream.SKeyedGatherExample;
 import edu.iu.dsc.tws.examples.comms.stream.SKeyedPartitionExample;
@@ -75,12 +66,18 @@ public class ExampleMain {
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
     int workers = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_WORKERS));
-    int size = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_SIZE));
-    int itr = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_ITR));
+
     String operation = cmd.getOptionValue(Constants.ARGS_OPERATION);
     boolean stream = cmd.hasOption(Constants.ARGS_STREAM);
     boolean verify = cmd.hasOption(Constants.ARGS_VERIFY);
-
+    int size = 1;
+    int itr = 1;
+    if (cmd.hasOption(Constants.ARGS_SIZE)) {
+      size = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_SIZE));
+    }
+    if (cmd.hasOption(Constants.ARGS_ITR)) {
+      itr = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_ITR));
+    }
     String threads = "true";
     if (cmd.hasOption(Constants.ARGS_THREADS)) {
       threads = cmd.getOptionValue(Constants.ARGS_THREADS);
@@ -169,8 +166,14 @@ public class ExampleMain {
         case "join":
           submitJob(config, workers, jobConfig, BJoinExample.class.getName());
           break;
+        case "joinstudent":
+          submitJob(config, workers, jobConfig, BJoinStudentExample.class.getName());
+          break;
         case "djoin":
           submitJob(config, workers, jobConfig, BDJoinExample.class.getName());
+          break;
+        case "direct":
+          submitJob(config, workers, jobConfig, BDirectExample.class.getName());
           break;
       }
     } else {
@@ -201,6 +204,9 @@ public class ExampleMain {
           break;
         case "allgather":
           submitJob(config, workers, jobConfig, SAllGatherExample.class.getName());
+          break;
+        case "direct":
+          submitJob(config, workers, jobConfig, SDirectExample.class.getName());
           break;
         default:
           LOG.log(Level.SEVERE, "Un-supported operation: " + operation);

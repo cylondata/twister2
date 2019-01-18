@@ -19,27 +19,23 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.driver.DriverJobListener;
 import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
-import edu.iu.dsc.tws.master.driver.JMDriverAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
-public class DriverExample implements IDriver, DriverJobListener {
+public class DriverExample implements IDriver {
   private static final Logger LOG = Logger.getLogger(DriverExample.class.getName());
 
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
-    // add listener to receive worker messages
-    JMDriverAgent.addDriverJobListener(this);
-
 //    broadcastExample(messenger);
+//    scalingExampleCLI(scaler);
     scalingExample(scaler);
 
     LOG.info("Driver has finished execution.");
@@ -50,7 +46,7 @@ public class DriverExample implements IDriver, DriverJobListener {
     LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
   }
 
-  private void scalingExample(IScaler scaler) {
+  private void scalingExampleCLI(IScaler scaler) {
     java.util.Scanner scanner = new java.util.Scanner(System.in);
     LOG.info("Testing scaling up and down ............................. ");
 
@@ -77,6 +73,48 @@ public class DriverExample implements IDriver, DriverJobListener {
     }
   }
 
+  private void scalingExample(IScaler scaler) {
+    LOG.info("Testing scaling up and down ............................. ");
+
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    LOG.info("Adding 4 new workers.");
+    scaler.scaleUpWorkers(4);
+
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    LOG.info("removing 2 workers.");
+    scaler.scaleDownWorkers(2);
+
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    LOG.info("Adding 4 new workers.");
+    scaler.scaleUpWorkers(4);
+
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+  }
+
   private void broadcastExample(IDriverMessenger messenger) {
 
     LOG.info("Testing broadcasting  ............................. ");
@@ -91,7 +129,7 @@ public class DriverExample implements IDriver, DriverJobListener {
     JobMasterAPI.NodeInfo nodeInfo =
         NodeInfoUtils.createNodeInfo("example.nodeIP", "rack-01", "dc-01");
 
-    LOG.info("Broadcasting an example protocol buffer message: " + nodeInfo);
+    LOG.info("Broadcasting an example NodeInfo protocol buffer message: " + nodeInfo);
     messenger.broadcastToAllWorkers(nodeInfo);
 
     try {
@@ -104,7 +142,7 @@ public class DriverExample implements IDriver, DriverJobListener {
     JobAPI.ComputeResource computeResource =
         ComputeResourceUtils.createComputeResource(10, 0.5, 2048, 2.0);
 
-    LOG.info("Broadcasting another example protocol buffer message: " + computeResource);
+    LOG.info("Broadcasting an example ComputeResource protocol buffer message: " + computeResource);
     messenger.broadcastToAllWorkers(computeResource);
   }
 
@@ -113,7 +151,7 @@ public class DriverExample implements IDriver, DriverJobListener {
     if (anyMessage.is(JobMasterAPI.NodeInfo.class)) {
       try {
         JobMasterAPI.NodeInfo nodeInfo = anyMessage.unpack(JobMasterAPI.NodeInfo.class);
-        LOG.info("Received WorkerToDriver message from worker: " + senderID
+        LOG.info("Received WorkerMessage from worker: " + senderID
             + ". NodeInfo: " + nodeInfo);
 
       } catch (InvalidProtocolBufferException e) {
@@ -122,7 +160,7 @@ public class DriverExample implements IDriver, DriverJobListener {
     } else if (anyMessage.is(JobAPI.ComputeResource.class)) {
       try {
         JobAPI.ComputeResource computeResource = anyMessage.unpack(JobAPI.ComputeResource.class);
-        LOG.info("Received WorkerToDriver message from worker: " + senderID
+        LOG.info("Received WorkerMessage from worker: " + senderID
             + ". ComputeResource: " + computeResource);
 
       } catch (InvalidProtocolBufferException e) {

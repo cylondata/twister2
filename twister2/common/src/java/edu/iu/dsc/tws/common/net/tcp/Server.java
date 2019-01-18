@@ -162,6 +162,8 @@ public class Server implements SelectHandler {
     // we need to handle the false
     channel.addWriteRequest(request);
 
+    progress.wakeup();
+
     return request;
   }
 

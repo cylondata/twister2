@@ -22,14 +22,17 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.cdfw.BaseDriver;
 import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
-import edu.iu.dsc.tws.api.cdfw.Twister2HTGDriver;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.task.cdfw.CDFWWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DSet;
@@ -46,6 +49,31 @@ public final class HelloExample {
   private static final Logger LOG = Logger.getLogger(HelloExample.class.getName());
 
   private HelloExample() {
+  }
+
+  public static class HelloDriver extends BaseDriver {
+
+    @Override
+    public void execute(Config config, CDFWExecutor exec) {
+      // build JobConfig
+      JobConfig jobConfig = new JobConfig();
+      FirstSource firstSource = new FirstSource();
+      SecondSink secondSink = new SecondSink();
+      TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
+      graphBuilderX.addSource("source1", firstSource, 4);
+      ComputeConnection reduceConn = graphBuilderX.addSink("sink1", secondSink,
+          1);
+      reduceConn.reduce("source1", "all-reduce", new Aggregator(),
+          DataType.OBJECT);
+
+      graphBuilderX.setMode(OperationMode.BATCH);
+      DataFlowTaskGraph batchGraph = graphBuilderX.build();
+
+      //Invoke CDFW Submitter and send the metagraph
+      DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
+          setWorkers(4).addJobConfig(jobConfig);
+      exec.execute(job);
+    }
   }
 
   private static class FirstSource extends BaseSource implements Receptor {
@@ -124,27 +152,18 @@ public final class HelloExample {
     jobConfig.putAll(configurations);
 
     config = Config.newBuilder().putAll(config)
-        .put(SchedulerContext.DRIVER_CLASS, Twister2HTGDriver.class.getName()).build();
+        .put(SchedulerContext.DRIVER_CLASS, null).build();
 
-
-    FirstSource firstSource = new FirstSource();
-    SecondSink htgReduceTask = new SecondSink();
-    TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
-    graphBuilderX.addSource("source1", firstSource, parallelismValue);
-    ComputeConnection reduceConn = graphBuilderX.addSink("sink1", htgReduceTask,
-        1);
-    reduceConn.reduce("source1", "all-reduce", new Aggregator(),
-        DataType.OBJECT);
-
-    graphBuilderX.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph batchGraph = graphBuilderX.build();
-
-    //Invoke HTG Submitter and send the metagraph
-    CDFWExecutor cdfwExecutor = new CDFWExecutor(config);
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
-        setWorkers(4).addJobConfig(jobConfig);
-    cdfwExecutor.execute(job);
-    cdfwExecutor.close();
+    Twister2Job twister2Job;
+    twister2Job = Twister2Job.newBuilder()
+        .setJobName(HelloExample.class.getName())
+        .setWorkerClass(CDFWWorker.class)
+        .setDriverClass(HelloDriver.class.getName())
+        .addComputeResource(1, 512, instances)
+        .setConfig(jobConfig)
+        .build();
+    // now submit the job
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 }
 

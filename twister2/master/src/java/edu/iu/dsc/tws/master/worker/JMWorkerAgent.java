@@ -181,15 +181,16 @@ public final class JMWorkerAgent {
     JobMasterAPI.WorkerStateChangeResponse.Builder stateChangeResponseBuilder
         = JobMasterAPI.WorkerStateChangeResponse.newBuilder();
 
-    JobMasterAPI.WorkerToDriver.Builder toDriverBuilder =
-        JobMasterAPI.WorkerToDriver.newBuilder();
-    JobMasterAPI.WorkerToDriverResponse.Builder toDriverResponseBuilder
-        = JobMasterAPI.WorkerToDriverResponse.newBuilder();
+    JobMasterAPI.WorkerMessage.Builder workerMessageBuilder =
+        JobMasterAPI.WorkerMessage.newBuilder();
+    JobMasterAPI.WorkerMessageResponse.Builder workerResponseBuilder
+        = JobMasterAPI.WorkerMessageResponse.newBuilder();
 
     JobMasterAPI.WorkersScaled.Builder scaledMessageBuilder =
         JobMasterAPI.WorkersScaled.newBuilder();
 
-    JobMasterAPI.Broadcast.Builder broadcastBuilder = JobMasterAPI.Broadcast.newBuilder();
+    JobMasterAPI.DriverMessage.Builder driverMessageBuilder =
+        JobMasterAPI.DriverMessage.newBuilder();
 
     JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
 
@@ -200,11 +201,11 @@ public final class JMWorkerAgent {
     rrClient.registerResponseHandler(stateChangeBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(stateChangeResponseBuilder, responseMessageHandler);
 
-    rrClient.registerResponseHandler(toDriverBuilder, responseMessageHandler);
-    rrClient.registerResponseHandler(toDriverResponseBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(workerMessageBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(workerResponseBuilder, responseMessageHandler);
 
     rrClient.registerResponseHandler(scaledMessageBuilder, responseMessageHandler);
-    rrClient.registerResponseHandler(broadcastBuilder, responseMessageHandler);
+    rrClient.registerResponseHandler(driverMessageBuilder, responseMessageHandler);
     rrClient.registerResponseHandler(joinedBuilder, responseMessageHandler);
 
     // try to connect to JobMaster
@@ -450,18 +451,18 @@ public final class JMWorkerAgent {
 
   public boolean sendWorkerToDriverMessage(Message message) {
 
-    JobMasterAPI.WorkerToDriver workerToDriver = JobMasterAPI.WorkerToDriver.newBuilder()
+    JobMasterAPI.WorkerMessage workerMessage = JobMasterAPI.WorkerMessage.newBuilder()
         .setData(Any.pack(message).toByteString())
         .setWorkerID(thisWorker.getWorkerID())
         .build();
 
-    RequestID requestID = rrClient.sendRequest(workerToDriver);
+    RequestID requestID = rrClient.sendRequest(workerMessage);
     if (requestID == null) {
       LOG.severe("Could not send WorkerToDriver message.");
       return false;
     }
 
-    LOG.fine("Sent WorkerToDriver message: \n" + workerToDriver);
+    LOG.fine("Sent WorkerToDriver message: \n" + workerMessage);
     return true;
   }
 
@@ -500,12 +501,13 @@ public final class JMWorkerAgent {
         jobListener.workersScaledDown(0 - scaledMessage.getChange());
       }
 
-    } else if (message instanceof JobMasterAPI.Broadcast) {
+    } else if (message instanceof JobMasterAPI.DriverMessage) {
 
-      JobMasterAPI.Broadcast broadcast = (JobMasterAPI.Broadcast) message;
+      JobMasterAPI.DriverMessage driverMessage =
+          (JobMasterAPI.DriverMessage) message;
       try {
-        Any any = Any.parseFrom(broadcast.getData());
-        jobListener.broadcastReceived(any);
+        Any any = Any.parseFrom(driverMessage.getData());
+        jobListener.driverMessageReceived(any);
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Can not parse received protocol buffer message to Any", e);
       }
@@ -542,10 +544,10 @@ public final class JMWorkerAgent {
         LOG.fine("Received a WorkerStateChange response from the master. \n" + message);
 
         // nothing to do
-      } else if (message instanceof JobMasterAPI.WorkerToDriverResponse) {
-        LOG.info("Received a WorkerToDriverResponse from the master. \n" + message);
+      } else if (message instanceof JobMasterAPI.WorkerMessageResponse) {
+        LOG.info("Received a WorkerMessageResponse from the master. \n" + message);
 
-      } else if (message instanceof JobMasterAPI.Broadcast
+      } else if (message instanceof JobMasterAPI.DriverMessage
           || message instanceof JobMasterAPI.WorkersJoined
           || message instanceof JobMasterAPI.WorkersScaled) {
 
