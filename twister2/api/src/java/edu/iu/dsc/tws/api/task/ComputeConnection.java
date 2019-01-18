@@ -588,6 +588,21 @@ public class ComputeConnection {
     return this;
   }
 
+  /**
+   * Create a direct connection between two parallel task sets
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param dataType data type
+   * @return the ComputeConnection
+   */
+  public ComputeConnection direct(String parent, String name, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.DIRECT, dataType);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
   void build(DataFlowTaskGraph graph) {
     for (Map.Entry<String, Edge> e : inputs.entrySet()) {
       Vertex v1 = graph.vertex(nodeName);
