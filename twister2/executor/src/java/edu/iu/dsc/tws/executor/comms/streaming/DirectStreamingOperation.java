@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.executor.comms.streaming;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
@@ -47,7 +48,12 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
       throw new IllegalArgumentException("Targets should have more than 0 elements");
     }
 
-    op = new SDirect(channel, taskPlan, new ArrayList<Integer>(srcs), new ArrayList<Integer>(dests),
+    ArrayList<Integer> sources = new ArrayList<>(srcs);
+    Collections.sort(sources);
+    ArrayList<Integer> targets = new ArrayList<>(dests);
+    Collections.sort(targets);
+
+    op = new SDirect(channel, taskPlan, sources, targets,
         Utils.dataTypeToMessageType(dataType), new DirectReceiver());
     communicationEdge = e.generate(edgeName);
   }

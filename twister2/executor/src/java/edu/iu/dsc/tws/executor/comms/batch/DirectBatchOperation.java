@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -35,8 +36,14 @@ public class DirectBatchOperation extends AbstractParallelOperation {
                                  DataType dataType, String edgeName) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
-    //LOG.info("ParitionOperation Prepare 1");
-    op = new BDirect(channel, taskPlan, new ArrayList<>(srcs), new ArrayList<>(dests),
+
+    // we assume a uniform task id association, so this will work
+    ArrayList<Integer> sources = new ArrayList<>(srcs);
+    Collections.sort(sources);
+    ArrayList<Integer> targets = new ArrayList<>(dests);
+    Collections.sort(targets);
+
+    op = new BDirect(channel, taskPlan, sources, targets,
         new PartitionReceiver(), Utils.dataTypeToMessageType(dataType));
     communicationEdge = e.generate(edgeName);
   }
