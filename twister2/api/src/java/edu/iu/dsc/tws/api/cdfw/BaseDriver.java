@@ -68,6 +68,10 @@ public abstract class BaseDriver implements IDriver {
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+    if (executor != null) {
+      executor.addWorkerList(workerList);
+    }
+
     inMessages.offer(new DriverEvent(DriveEventType.INITIALIZE, null));
 
     //Added to get the worker info list for testing
