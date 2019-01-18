@@ -18,7 +18,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public class DataSet<T> {
+public class DataSet<T> implements DSet<T> {
   private Map<Integer, Partition<T>> partitions = new HashMap<>();
 
   private int id;
@@ -57,5 +57,15 @@ public class DataSet<T> {
       t.add(e.getValue().getData());
     }
     return t;
+  }
+
+  @Override
+  public PSet<T>[] getPartitions(int procId) {
+    return new PSet[0];
+  }
+
+  @Override
+  public PSet<T> getPartitions(int procId, int partitionId) {
+    return partitions.get(partitionId);
   }
 }

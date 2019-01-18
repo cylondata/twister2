@@ -9,17 +9,33 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
+package edu.iu.dsc.tws.dataset;
 
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import java.util.Iterator;
 
-public class SourceConnection {
-  private String nodeName;
+/**
+ * Partition of a distributed set
+ *
+ * @param <T> partition
+ */
+public interface PSet<T> {
+  /**
+   * Get the process id this partition belongs to
+   *
+   * @return the process id
+   */
+  int getWorkerId();
 
-  public SourceConnection(String name) {
-    this.nodeName = name;
-  }
+  /**
+   * Get the id of the partition
+   * @return the id of the partition
+   */
+  int getPartitionId();
 
-  void build(DataFlowTaskGraph graph) {
-  }
+  /**
+   * Weather there is a next record
+   *
+   * @return true if there is a next record
+   */
+  Iterator<T> iterator();
 }

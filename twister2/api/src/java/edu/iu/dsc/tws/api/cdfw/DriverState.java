@@ -9,17 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
+package edu.iu.dsc.tws.api.cdfw;
 
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-
-public class SourceConnection {
-  private String nodeName;
-
-  public SourceConnection(String name) {
-    this.nodeName = name;
-  }
-
-  void build(DataFlowTaskGraph graph) {
-  }
+public enum DriverState {
+  INITIALIZE,
+  WAIT_FOR_WORKERS_TO_START,
+  DRIVER_LISTENER_INITIALIZED,
+  JOB_SUBMITTED,
+  JOB_FINISHED
 }

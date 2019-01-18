@@ -9,46 +9,32 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dataset;
+package edu.iu.dsc.tws.rsched.core;
 
-import java.util.Iterator;
+public final class ResourceRuntime {
+  private static ResourceRuntime ourInstance = new ResourceRuntime();
 
-public class Partition<T> implements PSet<T> {
-  private T data;
+  private String jobMasterHost = null;
 
-  private int id;
+  private int jobMasterPort = -1;
 
-  private int workerId;
-
-  public Partition(int id) {
-    this.id = id;
+  public static ResourceRuntime getInstance() {
+    return ourInstance;
   }
 
-  public Partition(int pId, T d) {
-    this.data = d;
-    this.id = pId;
+  private ResourceRuntime() {
   }
 
-  public T getData() {
-    return data;
+  public void setJobMasterHostPort(String host, int port) {
+    this.jobMasterHost = host;
+    this.jobMasterPort = port;
   }
 
-  public int getId() {
-    return id;
+  public String getJobMasterHost() {
+    return jobMasterHost;
   }
 
-  @Override
-  public int getWorkerId() {
-    return id;
-  }
-
-  @Override
-  public int getPartitionId() {
-    return 0;
-  }
-
-  @Override
-  public Iterator<T> iterator() {
-    return null;
+  public int getJobMasterPort() {
+    return jobMasterPort;
   }
 }

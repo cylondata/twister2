@@ -9,17 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
+package edu.iu.dsc.tws.api.cdfw;
 
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import com.google.protobuf.Any;
 
-public class SourceConnection {
-  private String nodeName;
+/**
+ * Represents an event for Driver
+ */
+public class DriverEvent {
+  private DriveEventType type;
 
-  public SourceConnection(String name) {
-    this.nodeName = name;
+  private Any message;
+
+  public DriverEvent(DriveEventType type, Any message) {
+    this.type = type;
+    this.message = message;
   }
 
-  void build(DataFlowTaskGraph graph) {
+  public DriveEventType getType() {
+    return type;
+  }
+
+  public Any getMessage() {
+    return message;
   }
 }

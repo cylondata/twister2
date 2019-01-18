@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.ResourceRuntime;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
@@ -211,6 +212,7 @@ public class MPILauncher implements ILauncher {
             config, hostAddress, port, new NomadTerminator(), job, jobMasterNodeInfo, nullScaler);
         jobMaster.addShutdownHook(true);
         jmThread = jobMaster.startJobMasterThreaded();
+        ResourceRuntime.getInstance().setJobMasterHostPort(hostAddress, port);
       } catch (UnknownHostException e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
         throw new RuntimeException(e);
@@ -229,11 +231,6 @@ public class MPILauncher implements ILauncher {
     });
     controllerThread.start();
 
-    // if the driver class is specified in the job, start it
-//    if (!job.getDriverClassName().isEmpty()) {
-//      startDriver(job);
-//    }
-
     // wait until the controller finishes
     try {
       controllerThread.join();
@@ -251,35 +248,6 @@ public class MPILauncher implements ILauncher {
 
     return start[0];
   }
-
-//  private void startDriver(JobAPI.Job job) {
-//    // first start JMDriverAgent
-//    String jobMasterIP = config.getStringValue("__job_master_ip__");
-//    int jmPort = config.getIntegerValue("__job_master_port__", 0);
-//    JMDriverAgent driverAgent =
-//        JMDriverAgent.createJMDriverAgent(config, jobMasterIP, jmPort, job.getNumberOfWorkers());
-//    driverAgent.startThreaded();
-//
-//    // construct DriverMessenger
-////    DriverMessenger driverMessenger = new DriverMessenger(driverAgent);
-//    DriverMessenger driverMessenger = null;
-//
-//    IScalerPerCluster nullScaler = new NullScalar();
-//
-//    String driverClass = job.getDriverClassName();
-//    IDriver driver;
-//    try {
-//      Object object = ReflectionUtils.newInstance(driverClass);
-//      driver = (IDriver) object;
-//      LOG.info("loaded driver class: " + driverClass);
-//    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-//      LOG.severe(String.format("failed to load the driver class %s", driverClass));
-//      throw new RuntimeException(e);
-//    }
-//
-//    driver.execute(config, scaler, driverMessenger);
-//    driverAgent.close();
-//  }
 
   /**
    * setup the working directory mainly it downloads and extracts the job package

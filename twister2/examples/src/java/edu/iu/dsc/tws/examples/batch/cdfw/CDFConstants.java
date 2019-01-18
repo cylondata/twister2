@@ -9,17 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
+package edu.iu.dsc.tws.examples.batch.cdfw;
 
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+public class CDFConstants {
 
-public class SourceConnection {
-  private String nodeName;
+  public static final String ARGS_WORKERS = "workers";
+  public static final String ARGS_PARALLELISM_VALUE = "parallelism";
+  public static final String ARGS_DUMMY = "dummy"; // todo: remove this
 
-  public SourceConnection(String name) {
-    this.nodeName = name;
-  }
-
-  void build(DataFlowTaskGraph graph) {
+  protected CDFConstants() {
   }
 }

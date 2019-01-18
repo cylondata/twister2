@@ -68,6 +68,7 @@ native.proto_library(
     name = "proto",
     srcs = [
         "checkpoint.proto",
+        "htgjob.proto",
         "job.proto",
         "job_state.proto",
         "jobmaster.proto",

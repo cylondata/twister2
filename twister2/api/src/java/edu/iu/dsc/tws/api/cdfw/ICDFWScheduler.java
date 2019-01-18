@@ -9,18 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.spi.taskschedule;
+package edu.iu.dsc.tws.api.cdfw;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.graph.HierarchicalTaskGraph;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
+import java.util.Map;
+import java.util.Set;
 
-public interface IHierarchicalTaskScheduler {
+/**
+ * This schedule is the base method for making decisions to run the part of the task graph which
+ * will be improved further with the complex logic. Now, based on the relations(parent -> child)
+ * it will initiate the execution.
+ */
+public interface ICDFWScheduler {
 
-  void initialize(Config cfg);
+  Set<Integer> schedule(DataFlowGraph graphJob);
 
-  TaskSchedulePlan schedule(HierarchicalTaskGraph hierarchicalTaskGraph, WorkerPlan workerPlan);
-
-  /*List<TaskSchedulePlan> schedule(Config config, HierarchicalTaskGraph hierarchicalTaskGraph,
-   WorkerPlan workerPlan);*/
+  Map<DataFlowGraph, Set<Integer>> schedule(DataFlowGraph... graphJob);
 }

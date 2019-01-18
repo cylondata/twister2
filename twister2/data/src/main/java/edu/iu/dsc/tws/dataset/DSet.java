@@ -9,17 +9,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
+package edu.iu.dsc.tws.dataset;
 
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+/**
+ * Distributed data set
+ *
+ * @param <T> the distributed set interface
+ */
+public interface DSet<T> {
+  /**
+   * Get the list of partitions for a process
+   *
+   * @param procId process id
+   * @return the partitions
+   */
+  PSet<T>[] getPartitions(int procId);
 
-public class SourceConnection {
-  private String nodeName;
-
-  public SourceConnection(String name) {
-    this.nodeName = name;
-  }
-
-  void build(DataFlowTaskGraph graph) {
-  }
+  /**
+   * Get the partition with the specific partition id
+   * @param procId
+   * @param partitionId
+   * @return PSet
+   */
+  PSet<T> getPartitions(int procId, int partitionId);
 }
