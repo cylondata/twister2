@@ -46,12 +46,12 @@ Extract this to a directory called maven configure the environmental variables
   export MAVEN_HOME PATH
 ```
 
-1. Install bazel 0.8.1
+1. Install bazel 0.18.1
 
    ```bash
-   wget https://github.com/bazelbuild/bazel/releases/download/0.8.1/bazel-0.8.1-installer-linux-x86_64.sh
-   chmod +x bazel-0.8.1-installer-linux-x86_64.sh
-   ./bazel-0.8.1-installer-linux-x86_64.sh --user
+   wget https://github.com/bazelbuild/bazel/releases/download/0.18.1/bazel-0.18.1-installer-linux-x86_64.sh
+   chmod +x bazel-0.18.1-installer-linux-x86_64.sh
+   ./bazel-0.18.1-installer-linux-x86_64.sh --user
    ```
 
    Make sure to add the bazel bin to PATH
