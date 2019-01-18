@@ -6,6 +6,7 @@ To compile & install Twister2 on a machine, please follow the steps in [compilin
 
 Here are the things that you need to do to run Twister2 jobs on Kubernetes clusters:
 * **Authorization of Pods**: This is a required step to run any Twister2 job on Kubernetes clusters. 
+* **Deploying Twister2 Dashboard**: This is a recommended step to monitor Twister2 jobs on Kubernetes clusters. 
 * **Persistent Storage Settings**: This is optional. You can set up persistent storage only if you want to use. 
 * **Generating Secret Object for OpenMPI Jobs**: This is required if you are going to run OpenMPI jobs. 
 * **Providing Rack and Datacenter information**: This is required only if you want Twister2 to perform rack and data center aware scheduling. 
@@ -15,18 +16,87 @@ Here are the things that you need to do to run Twister2 jobs on Kubernetes clust
 
 ## Authorization of Pods
 
-Twister2 Worker pods need to watch Job Master pod and get its IP address. In addition, Job Master needs to be able to delete used resources after the job has completed. Therefore, before submitting a job, a Role and a RoleBinding object need to be created. We prepared the following YAML file: twister2-auth.yaml.
+Twister2 Worker pods need to watch Job Master pod and get its IP address. 
+In addition, Job Master needs to be able to delete used resources after the job has completed. 
+Therefore, before submitting a job, a Role and a RoleBinding object need to be created. 
+We prepared the following YAML file: twister2-auth.yaml.
 
 If you are going to use the default namespace, then execute the following command: 
 
 ```bash
-    $kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/docs/deployment/kubernetes/twister2-auth.yaml
+    $kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/twister2/config/src/yaml/conf/kubernetes/deployment/twister2-auth.yaml
 ```
 
-If you are not going to use the default namespace, download the above yaml file, change the namespace field value to a namespace value that your users will use to submit Twister2 jobs. Then, execute the following command:
+If you are not going to use the default namespace, download the above yaml file, 
+change the namespace field value to a namespace value that your users will use to submit Twister2 jobs. 
+Then, execute the following command:
 
 ```bash
     $kubectl create -f /path/to/file/twister2-auth.yaml
+```
+
+## Deploying Twister2 Dashboard
+
+Twister2 Dashboard enables users to monitor their jobs through a web browser. 
+Although it is not mandatory, it is highly recommended. 
+A single instance of the Dashboard runs in each cluster. 
+
+There are two versions of Dashboard. One version saves Dashboard state in a persistent storage. 
+Another version does not use persistent storage. It looses its content if its pod restarts. 
+
+If you are using default namespace, then you can deploy Dashboard without persistent storage as:
+
+```bash
+    $kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/twister2/config/src/yaml/conf/kubernetes/deployment/twister2-dashboard-wo-ps.yaml
+```
+
+You can deploy Dashboard with persistent storage as:
+
+```bash
+    $kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/twister2/config/src/yaml/conf/kubernetes/deployment/twister2-dashboard-with-ps.yaml
+```
+
+If you are using another namespace, or would like to change a parameter of Dashboard, 
+then you can download one of these files, 
+change the desired parameter value in them and execute the create command on modified file. 
+
+### Accessing Dashboard
+
+You can access the Dashboard from any machine that has kubectl installed and 
+has the credentials to connect to the kubernetes cluster. 
+
+First run the following command in your workstation to create a secure channel: 
+
+```bash
+    $kubectl proxy
+```
+
+Then, access Dashboard at the following URL:
+
+```bash
+    http://localhost:8001/api/v1/namespaces/default/services/http:twister2-dashboard:/proxy/#/
+```
+
+If you are using a namespace other than the default, change namespace value in the URL. 
+
+### Running Dashboard as a standalone web server
+
+You can also run Dashboard as a standalone webserver in your cluster. 
+All pods should be able to access the machine that is running Dashboard to be able to feed their status data. 
+
+Run Dashboard server with the following command: 
+
+```bash
+    $ bin/twister2 dash
+```
+
+Dashboard runs at the port 8080. 
+
+You need to give the address of Dashboard at the configuration file: conf/kubernetes/system.yaml 
+You should set the value of following parameter:  
+
+```bash
+    twister2.dashboard.host: "http://<host-address>:8080"
 ```
 
 ## Persistent Storage Settings
