@@ -74,6 +74,9 @@ ARG HOME=/home/$SSH_USER
 RUN mkdir -p $HOME && chown $SSH_USER:$SSH_USER $HOME && chmod 755 $HOME
 VOLUME $HOME
 
+# install python
+RUN apt-get update && apt-get install -y python
+
 ENV CLASSPATH="/twister2/lib/*"
 
 COPY docker/kubernetes/image/rootfs /
@@ -86,6 +89,8 @@ RUN if [ "$WITH_CUDA" = "true" ]; then \
     exit 1; \
   fi; fi;
 
-EXPOSE 2022
+# expose 2022 for ssh server (password free ssh support)
+# expose 8080 for dashboard server if it runs
+EXPOSE 2022 8080
 
 WORKDIR /twister2/
