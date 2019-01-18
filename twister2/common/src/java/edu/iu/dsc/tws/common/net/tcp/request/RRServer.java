@@ -332,6 +332,9 @@ public class RRServer {
    */
   public void removeWorkerChannel(int workerID) {
     SocketChannel removedChannel = workerChannels.inverse().remove(workerID);
+    if (removedChannel == null) {
+      return;
+    }
 
     try {
       removedChannel.close();
