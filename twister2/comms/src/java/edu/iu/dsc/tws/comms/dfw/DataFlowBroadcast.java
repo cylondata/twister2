@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.dfw;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -27,6 +28,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -38,6 +40,7 @@ import edu.iu.dsc.tws.comms.dfw.io.SingleMessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.SingleMessageSerializer;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   private static final Logger LOG = Logger.getLogger(DataFlowBroadcast.class.getName());
@@ -50,7 +53,27 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
 
   private MessageReceiver finalReceiver;
 
-  private ChannelDataFlowOperation delegete;
+  /**
+   * Keep sources as a set to return
+   */
+  private Set<Integer> sourceSet;
+
+  /**
+   * The sources which are pending for finish
+   */
+  private Set<Integer> pendingFinishSources;
+
+  /**
+   * The sources that are finished
+   */
+  private Set<Integer> finishedSources;
+
+  /**
+   * Sources of this worker
+   */
+  private Set<Integer> thisSources;
+
+  private ChannelDataFlowOperation delegate;
   private Config config;
   private TaskPlan instancePlan;
   private int executor;
@@ -68,7 +91,13 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     this.destinations = dests;
     this.finalReceiver = finalRcvr;
 
-    this.delegete = new ChannelDataFlowOperation(channel);
+    this.delegate = new ChannelDataFlowOperation(channel);
+
+    this.sourceSet = new HashSet<>();
+    sourceSet.add(src);
+
+    this.pendingFinishSources = new HashSet<>();
+    this.finishedSources = new HashSet<>();
   }
 
   @Override
@@ -76,7 +105,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     if (finalReceiver != null) {
       finalReceiver.close();
     }
-    delegete.close();
+    delegate.close();
   }
 
   @Override
@@ -88,7 +117,10 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int target) {
-
+    if (!thisSources.contains(source)) {
+      throw new RuntimeException("Invalid source completion: " + source);
+    }
+    pendingFinishSources.add(source);
   }
 
   @Override
@@ -136,7 +168,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
 
     LOG.log(Level.FINE, String.format("%d bast sources %d dest %s send tasks: %s", executor,
         source, destinations, router.sendQueueIds()));
-
+    thisSources = TaskPlanUtils.getTasksOfThisWorker(tPlan, sourceSet);
 
     Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource =
         new HashMap<>();
@@ -174,7 +206,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
       routingParametersCache.put(s, sendRoutingParameters(s, 0));
     }
 
-    delegete.init(cfg, t, tPlan, ed,
+    delegate.init(cfg, t, tPlan, ed,
         router.receivingExecutors(), router.isLastReceiver(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
@@ -185,12 +217,14 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     throw new RuntimeException("Not supported method");
   }
 
+  @Override
   public boolean isComplete() {
-    boolean done = delegete.isComplete();
     if (lock.tryLock()) {
+      boolean done = delegate.isComplete();
       try {
         boolean needsFurtherProgress = finalReceiver.progress();
-        return done && !needsFurtherProgress;
+        boolean needFinishProgress = handleFinish();
+        return done && !needsFurtherProgress && !needFinishProgress;
       } finally {
         lock.unlock();
       }
@@ -201,13 +235,13 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean send(int src, Object message, int flags) {
     RoutingParameters routingParameters = sendRoutingParameters(src, 0);
-    return delegete.sendMessage(src, message, 0, flags, routingParameters);
+    return delegate.sendMessage(src, message, 0, flags, routingParameters);
   }
 
   @Override
   public boolean send(int src, Object message, int flags, int target) {
     RoutingParameters routingParameters = sendRoutingParameters(src, 0);
-    return delegete.sendMessage(src, message, target, flags, routingParameters);
+    return delegate.sendMessage(src, message, target, flags, routingParameters);
   }
 
   @Override
@@ -218,8 +252,14 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean progress() {
     boolean partialNeedsProgress = false;
+    boolean needFinishProgress;
+    boolean done;
     try {
-      delegete.progress();
+      // lets send the finished one
+      needFinishProgress = handleFinish();
+
+      delegate.progress();
+      done = delegate.isComplete();
       if (lock.tryLock()) {
         try {
           partialNeedsProgress = finalReceiver.progress();
@@ -231,7 +271,26 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-    return partialNeedsProgress;
+    return partialNeedsProgress || !done || needFinishProgress;
+  }
+
+  private boolean handleFinish() {
+    for (int src : pendingFinishSources) {
+      if (!finishedSources.contains(src)) {
+        if (send(src, new byte[1], MessageFlags.END, 0)) {
+          finishedSources.add(src);
+        } else {
+          // no point in going further
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public boolean isDelegeteComplete() {
+    return delegate.isComplete();
   }
 
   public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
@@ -249,7 +308,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
         pendingSendMessagesPerSource.get(src);
 
     ChannelMessage channelMessage = new ChannelMessage(src, type,
-        MessageDirection.OUT, delegete);
+        MessageDirection.OUT, delegate);
 
     // create a send message to keep track of the serialization
     // at the intial stage the sub-edge is 0

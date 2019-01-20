@@ -121,6 +121,9 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
    */
   private Set<Integer> thisSources;
 
+  /**
+   * Mapping between source and destinations
+   */
   private Map<Integer, Integer> sourcesToDestinations = new HashMap<>();
 
   public DataFlowDirect(TWSChannel channel,
@@ -309,6 +312,9 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
+    if (!thisSources.contains(source)) {
+      throw new RuntimeException("Invalid source completion: " + source);
+    }
     pendingFinishSources.add(source);
   }
 

@@ -175,6 +175,9 @@ public class ExampleMain {
         case "direct":
           submitJob(config, workers, jobConfig, BDirectExample.class.getName());
           break;
+        case "bcast":
+          submitJob(config, workers, jobConfig, BBroadcastExample.class.getName());
+          break;
       }
     } else {
       switch (operation) {
