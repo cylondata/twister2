@@ -142,6 +142,9 @@ public final class TSetExampleMain {
       case "fileaccess":
         submitJob(config, workers, jobConfig, TSetFileAccessExample.class.getName());
         break;
+      case "bcast":
+        submitJob(config, workers, jobConfig, TSetReplicateExample.class.getName());
+        break;
       default:
         System.out.println("Un-supported");
     }

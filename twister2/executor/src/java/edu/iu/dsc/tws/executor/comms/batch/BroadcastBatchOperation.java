@@ -70,7 +70,6 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      LOG.info("RECEIVED: ********* : " + target);
       TaskMessage msg = new TaskMessage(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
