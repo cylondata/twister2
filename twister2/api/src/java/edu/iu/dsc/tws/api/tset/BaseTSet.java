@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public abstract class BaseTSet<T> implements TSet<T> {
   private static final Logger LOG = Logger.getLogger(BaseTSet.class.getName());
@@ -185,21 +186,43 @@ public abstract class BaseTSet<T> implements TSet<T> {
         || parent instanceof KeyedPartitionTSet;
   }
 
-  static <T> boolean isIterableInput(BaseTSet<T> parent) {
-    if (parent instanceof ReduceTSet) {
-      return false;
-    } else if (parent instanceof KeyedReduceTSet) {
-      return true;
-    } else if (parent instanceof GatherTSet || parent instanceof KeyedGatherTSet) {
-      return true;
-    } else if (parent instanceof AllReduceTSet) {
-      return false;
-    } else if (parent instanceof AllGatherTSet) {
-      return true;
-    } else if (parent instanceof PartitionTSet || parent instanceof KeyedPartitionTSet) {
-      return true;
+  static <T> boolean isIterableInput(BaseTSet<T> parent, OperationMode mode) {
+    if (mode == OperationMode.STREAMING) {
+      if (parent instanceof ReduceTSet) {
+        return false;
+      } else if (parent instanceof KeyedReduceTSet) {
+        return true;
+      } else if (parent instanceof GatherTSet || parent instanceof KeyedGatherTSet) {
+        return true;
+      } else if (parent instanceof AllReduceTSet) {
+        return false;
+      } else if (parent instanceof AllGatherTSet) {
+        return true;
+      } else if (parent instanceof PartitionTSet || parent instanceof KeyedPartitionTSet) {
+        return true;
+      } else if (parent instanceof ReplicateTSet) {
+        return false;
+      } else {
+        throw new RuntimeException("Failed to build un-supported operation: " + parent);
+      }
     } else {
-      throw new RuntimeException("Failed to build un-supported operation: " + parent);
+      if (parent instanceof ReduceTSet) {
+        return false;
+      } else if (parent instanceof KeyedReduceTSet) {
+        return true;
+      } else if (parent instanceof GatherTSet || parent instanceof KeyedGatherTSet) {
+        return true;
+      } else if (parent instanceof AllReduceTSet) {
+        return false;
+      } else if (parent instanceof AllGatherTSet) {
+        return true;
+      } else if (parent instanceof PartitionTSet || parent instanceof KeyedPartitionTSet) {
+        return true;
+      } else if (parent instanceof ReplicateTSet) {
+        return true;
+      } else {
+        throw new RuntimeException("Failed to build un-supported operation: " + parent);
+      }
     }
   }
 

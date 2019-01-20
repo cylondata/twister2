@@ -30,7 +30,7 @@ public class IMapTSet<T, P> extends BaseTSet<T> {
 
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
-    boolean isIterable = isIterableInput(parent);
+    boolean isIterable = isIterableInput(parent, builder.getMode());
     boolean keyed = isKeyedInput(parent);
     int p = calculateParallelism(parent);
 
