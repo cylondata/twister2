@@ -13,34 +13,40 @@ package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.ops.IterableMapOp;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 
-public class IMapTSet<T, P> extends BaseTSet<T> {
-  private BaseTSet<P> parent;
+public class ReplicateTSet<T> extends BaseTSet<T> {
+  private BaseTSet<T> parent;
 
-  private IterableMapFunction<P, T> mapFn;
+  private int replications;
 
-  public IMapTSet(Config cfg, TaskGraphBuilder builder,
-                  BaseTSet<P> parent, IterableMapFunction<P, T> mapFunc) {
-    super(cfg, builder);
-    this.parent = parent;
-    this.mapFn = mapFunc;
+  public ReplicateTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt, int reps) {
+    super(cfg, bldr);
+    this.parent = prnt;
+    this.name = "clone-" + parent.getName();
+    this.replications = reps;
   }
 
-  @SuppressWarnings("unchecked")
-  public boolean baseBuild() {
-    boolean isIterable = isIterableInput(parent, builder.getMode());
-    boolean keyed = isKeyedInput(parent);
-    int p = calculateParallelism(parent);
+  @Override
+  protected int overrideParallelism() {
+    return replications;
+  }
 
-    ComputeConnection connection = builder.addCompute(generateName("i-map", parent),
-        new IterableMapOp<>(mapFn, isIterable, keyed), p);
-    parent.buildConnection(connection);
+  @Override
+  public String getName() {
+    return parent.getName();
+  }
+
+  @Override
+  public boolean baseBuild() {
     return true;
   }
 
   @Override
   void buildConnection(ComputeConnection connection) {
+    DataType dataType = getDataType(getType());
+
+    connection.broadcast(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
 }

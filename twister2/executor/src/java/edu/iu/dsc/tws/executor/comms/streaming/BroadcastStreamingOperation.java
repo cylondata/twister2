@@ -11,16 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.streaming;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SBroadCast;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -60,14 +57,14 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
     return op.progress();
   }
 
-  public class BcastReceiver implements MessageReceiver {
+  public class BcastReceiver implements SingularReceiver {
     @Override
-    public void init(Config cfg, DataFlowOperation operation,
-                     Map<Integer, List<Integer>> expectedIds) {
+    public void init(Config cfg, Set<Integer> targets) {
+
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean receive(int target, Object object) {
       TaskMessage msg = new TaskMessage(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
@@ -75,11 +72,6 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
         return messages.offer(msg);
       }
       return false;
-    }
-
-    @Override
-    public boolean progress() {
-      return true;
     }
   }
 

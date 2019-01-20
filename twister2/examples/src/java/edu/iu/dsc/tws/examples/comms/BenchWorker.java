@@ -60,6 +60,8 @@ public abstract class BenchWorker implements IWorker {
 
   protected ExperimentData experimentData;
 
+  protected Object inputData;
+
   @Override
   public void execute(Config cfg, int workerID,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
@@ -83,6 +85,15 @@ public abstract class BenchWorker implements IWorker {
     communicator = new Communicator(cfg, channel);
     //collect experiment data
     experimentData = new ExperimentData();
+    if (jobParameters.isStream()) {
+      experimentData.setOperationMode(OperationMode.STREAMING);
+    } else {
+      experimentData.setOperationMode(OperationMode.BATCH);
+    }
+    inputData = generateData();
+    experimentData.setInput(inputData);
+    experimentData.setTaskStages(jobParameters.getTaskStages());
+    experimentData.setIterations(jobParameters.getIterations());
 
     // now lets execute
     execute();
@@ -140,23 +151,13 @@ public abstract class BenchWorker implements IWorker {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
-      Object data = generateData();
-      experimentData.setInput(data);
-      experimentData.setTaskStages(jobParameters.getTaskStages());
-      experimentData.setIterations(jobParameters.getIterations());
-      if (jobParameters.isStream()) {
-        experimentData.setOperationMode(OperationMode.STREAMING);
-      } else {
-        experimentData.setOperationMode(OperationMode.BATCH);
-      }
-
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
         int flag = 0;
         if (i == jobParameters.getIterations() - 1) {
           flag = MessageFlags.LAST;
         }
-        sendMessages(task, data, flag);
+        sendMessages(task, inputData, flag);
       }
       LOG.info(String.format("%d Done sending", workerId));
       lock.lock();

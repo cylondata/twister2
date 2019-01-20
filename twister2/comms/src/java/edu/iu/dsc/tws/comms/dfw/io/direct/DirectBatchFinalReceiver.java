@@ -89,7 +89,7 @@ public class DirectBatchFinalReceiver implements MessageReceiver {
       targetMessages.put(d, new ArrayList<>());
     }
 
-    LOG.log(Level.INFO, String.format("%d Expected ids %s", executor, expectedIds));
+    LOG.log(Level.FINE, String.format("%d Expected ids %s", executor, expectedIds));
   }
 
   /**

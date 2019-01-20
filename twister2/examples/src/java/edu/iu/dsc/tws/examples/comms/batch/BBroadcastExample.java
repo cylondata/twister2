@@ -9,28 +9,29 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.comms.stream;
+package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.stream.SBroadCast;
+import edu.iu.dsc.tws.comms.api.batch.BBroadcast;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
-public class SBroadcastExample extends BenchWorker {
-  private static final Logger LOG = Logger.getLogger(SBroadcastExample.class.getName());
+public class BBroadcastExample extends BenchWorker {
+  private static final Logger LOG = Logger.getLogger(BBroadcastExample.class.getName());
 
-  private SBroadCast bcast;
+  private BBroadcast bcast;
 
   private boolean bCastDone;
 
@@ -47,8 +48,8 @@ public class SBroadcastExample extends BenchWorker {
     int source = 0;
 
     // create the communication
-    bcast = new SBroadCast(communicator, taskPlan, source, targets,
-        MessageType.INTEGER, new BCastReceiver());
+    bcast = new BBroadcast(communicator, taskPlan, source, targets,
+        new BCastReceiver(), MessageType.INTEGER);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -71,6 +72,15 @@ public class SBroadcastExample extends BenchWorker {
     bcast.progress();
   }
 
+  protected void finishCommunication(int src) {
+    bcast.finish(src);
+  }
+
+  @Override
+  public void close() {
+    bcast.close();
+  }
+
   @Override
   protected boolean isDone() {
     return bCastDone && sourcesDone && !bcast.hasPending();
@@ -85,7 +95,7 @@ public class SBroadcastExample extends BenchWorker {
     return true;
   }
 
-  public class BCastReceiver implements SingularReceiver {
+  public class BCastReceiver implements BulkReceiver {
     private int count = 0;
     private int expected = 0;
 
@@ -95,23 +105,24 @@ public class SBroadcastExample extends BenchWorker {
     }
 
     @Override
-    public boolean receive(int target, Object object) {
+    public boolean receive(int target, Iterator<Object> object) {
       count++;
       if (count % jobParameters.getPrintInterval() == 0) {
         LOG.log(Level.INFO, String.format("%d Received message to %d - %d",
             workerId, target, count));
       }
-      if (count == expected) {
-        bCastDone = true;
-      }
-      experimentData.setTaskId(target);
-      experimentData.setOutput(object);
+      while (object.hasNext()) {
+        experimentData.setTaskId(target);
 
-      try {
-        verify();
-      } catch (VerificationException e) {
-        LOG.info("Exception Message : " + e.getMessage());
+        experimentData.setOutput(object.next());
+
+        try {
+          verify();
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
+        }
       }
+      bCastDone = true;
       return true;
     }
   }
