@@ -12,16 +12,13 @@
 package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SBroadCast;
 import edu.iu.dsc.tws.examples.Utils;
@@ -88,17 +85,17 @@ public class SBroadcastExample extends BenchWorker {
     return true;
   }
 
-  public class BCastReceiver implements MessageReceiver {
+  public class BCastReceiver implements SingularReceiver {
     private int count = 0;
     private int expected = 0;
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      expected = expectedIds.keySet().size() * jobParameters.getIterations();
+    public void init(Config cfg, Set<Integer> targets) {
+      expected = targets.size() * jobParameters.getIterations();
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    public boolean receive(int target, Object object) {
       count++;
       if (count % jobParameters.getPrintInterval() == 0) {
         LOG.log(Level.INFO, String.format("%d Received message to %d - %d",
@@ -117,16 +114,11 @@ public class SBroadcastExample extends BenchWorker {
       }
       return true;
     }
-
-    @Override
-    public boolean progress() {
-      return false;
-    }
   }
 
   public void verify() throws VerificationException {
     boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
+    boolean isVerified;
     if (doVerify) {
       LOG.info("Verifying results ...");
       ExperimentVerification experimentVerification
