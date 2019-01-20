@@ -155,6 +155,19 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   @Override
+  public ReplicateTSet<T> replicate(int replications) {
+    if (parallel != 1) {
+      String msg = "TSets with parallelism 1 can be replicated: " + parallel;
+      LOG.log(Level.SEVERE, msg);
+      throw new RuntimeException(msg);
+    }
+
+    ReplicateTSet<T> cloneTSet = new ReplicateTSet<>(config, builder, this, replications);
+    children.add(cloneTSet);
+    return cloneTSet;
+  }
+
+  @Override
   public void build() {
     // first build our selves
     baseBuild();
