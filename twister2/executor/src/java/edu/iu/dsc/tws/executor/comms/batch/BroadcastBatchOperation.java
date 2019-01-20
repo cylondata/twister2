@@ -54,11 +54,12 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() || hasPending();
+    return op.progress() || op.hasPending();
   }
 
-  public boolean hasPending() {
-    return op.hasPending();
+  @Override
+  public void finish(int source) {
+    op.finish(source);
   }
 
   public class BcastReceiver implements BulkReceiver {
@@ -69,6 +70,7 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
+      LOG.info("RECEIVED: ********* : " + target);
       TaskMessage msg = new TaskMessage(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
