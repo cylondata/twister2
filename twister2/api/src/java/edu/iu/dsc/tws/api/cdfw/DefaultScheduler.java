@@ -49,7 +49,7 @@ public class DefaultScheduler implements ICDFWScheduler {
       workerList.add(workerInfos.getWorkerID());
     }
 
-    scheduledGraphMap.put(graphJob, workerList);
+    //scheduledGraphMap.put(graphJob, workerList);
     LOG.info("%%%% Scheduled Graph list details: %%%%" + scheduledGraph);
 
     return scheduledGraph;

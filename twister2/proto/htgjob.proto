@@ -22,6 +22,16 @@ message SubGraph {
     repeated Input inputs = 10;
     repeated string outputs = 11;
     repeated jobmaster.WorkerInfo worker_info = 12;
+    CDFWSchedulePlan cdfw_scheduleplan = 13;
+}
+
+message CDFWSchedulePlan {
+    SubGraph subgraph = 1;
+    repeated int32 workers = 2;
+}
+
+message WorkerList {
+    repeated int32 workers = 1;
 }
 
 message Input {
@@ -40,6 +50,9 @@ message CDFWJob {
     repeated Relation relations = 2;
     repeated SubGraph graphs = 3;
     repeated ExecuteMessage execute_message = 4;
+    //TODO: do we need this object here?
+    repeated CDFWSchedulePlan cdfw_scheduleplan = 5;
+
 }
 
 // The messages used between driver and workers
