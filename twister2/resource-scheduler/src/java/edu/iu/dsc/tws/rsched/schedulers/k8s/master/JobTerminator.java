@@ -49,10 +49,6 @@ public class JobTerminator implements IJobTerminator {
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
     boolean pvcDeleted = controller.deletePersistentVolumeClaim(pvcName);
 
-    // delete the ConfigMap for job master
-    String configMapName = KubernetesUtils.createJobMasterConfigMapName(jobName);
-    boolean configMapDeleted = controller.deleteConfigMap(configMapName);
-
     // last delete the job master StatefulSet
     String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
     boolean ssForJobMasterDeleted =
@@ -62,7 +58,6 @@ public class JobTerminator implements IJobTerminator {
         && serviceForWorkersDeleted
         && serviceForJobMasterDeleted
         && pvcDeleted
-        && ssForJobMasterDeleted
-        && configMapDeleted;
+        && ssForJobMasterDeleted;
   }
 }

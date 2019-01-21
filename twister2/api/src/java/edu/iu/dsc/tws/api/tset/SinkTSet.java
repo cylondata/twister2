@@ -30,7 +30,7 @@ public class SinkTSet<T> extends BaseTSet<T> {
 
   @Override
   public boolean baseBuild() {
-    boolean isIterable = isIterableInput(parent);
+    boolean isIterable = isIterableInput(parent, builder.getMode());
     boolean keyed = isKeyedInput(parent);
     // lets override the parallelism
     int p = calculateParallelism(parent);

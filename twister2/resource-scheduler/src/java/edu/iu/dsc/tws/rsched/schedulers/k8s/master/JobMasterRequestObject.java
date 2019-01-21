@@ -23,34 +23,28 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.RequestObjectBuilder;
+import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 
 import io.kubernetes.client.custom.IntOrString;
 import io.kubernetes.client.custom.Quantity;
-import io.kubernetes.client.models.V1ConfigMap;
-import io.kubernetes.client.models.V1ConfigMapVolumeSource;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1ContainerPort;
+import io.kubernetes.client.models.V1EmptyDirVolumeSource;
 import io.kubernetes.client.models.V1EnvVar;
 import io.kubernetes.client.models.V1EnvVarSource;
 import io.kubernetes.client.models.V1LabelSelector;
@@ -73,12 +67,14 @@ public final class JobMasterRequestObject {
   private static Config config;
   private static String jobName;
   private static String encodedNodeInfoList;
+  private static long jobPackageFileSize;
 
   private JobMasterRequestObject() { }
 
-  public static void init(Config cnfg, String jName) {
+  public static void init(Config cnfg, String jName, long jpFileSize) {
     config = cnfg;
     jobName = jName;
+    jobPackageFileSize = jpFileSize;
   }
 
   /**
@@ -144,9 +140,15 @@ public final class JobMasterRequestObject {
     template.setMetadata(templateMetaData);
 
     V1PodSpec podSpec = new V1PodSpec();
-    podSpec.setTerminationGracePeriodSeconds(0L);
+    podSpec.setTerminationGracePeriodSeconds(1L);
 
     ArrayList<V1Volume> volumes = new ArrayList<>();
+    V1Volume memoryVolume = new V1Volume();
+    memoryVolume.setName(KubernetesConstants.POD_MEMORY_VOLUME_NAME);
+    V1EmptyDirVolumeSource volumeSource1 = new V1EmptyDirVolumeSource();
+    volumeSource1.setMedium("Memory");
+    memoryVolume.setEmptyDir(volumeSource1);
+    volumes.add(memoryVolume);
 
     // a volatile disk based volume
     // create it if the requested disk space is positive
@@ -162,9 +164,6 @@ public final class JobMasterRequestObject {
       volumes.add(persistentVolume);
     }
 
-    V1Volume configMapVolume = createConfigMapVolume();
-    volumes.add(configMapVolume);
-
     podSpec.setVolumes(volumes);
 
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
@@ -175,17 +174,6 @@ public final class JobMasterRequestObject {
     return template;
   }
 
-  public static V1Volume createConfigMapVolume() {
-    V1Volume configMapVolume = new V1Volume();
-    configMapVolume.setName(KubernetesConstants.CONFIG_MAP_VOLUME_NAME);
-    V1ConfigMapVolumeSource volumeSource = new V1ConfigMapVolumeSource();
-    volumeSource.setName(KubernetesUtils.createJobMasterConfigMapName(jobName));
-    configMapVolume.setConfigMap(volumeSource);
-    return configMapVolume;
-  }
-
-
-
   /**
    * construct a container
    * @return
@@ -193,7 +181,7 @@ public final class JobMasterRequestObject {
   public static V1Container constructContainer() {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
-    container.setName("twister2-job-master");
+    container.setName("twister2-job-master-0");
 
     String containerImage = KubernetesContext.twister2DockerImageForK8s(config);
     if (containerImage == null) {
@@ -201,14 +189,8 @@ public final class JobMasterRequestObject {
           + "twister2.docker.image.for.kubernetes can not be null");
     }
     container.setImage(containerImage);
-
-    // by default: IfNotPresent
-    // can be set to Always from client.yaml
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
-
-//        container.setArgs(Arrays.asList("1000000")); parameter to the main method
-    container.setCommand(
-        Arrays.asList("java", "edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter"));
+    container.setCommand(Arrays.asList("./init.sh"));
 
     V1ResourceRequirements resReq = new V1ResourceRequirements();
     resReq.putRequestsItem("cpu", new Quantity(JobMasterContext.jobMasterCpu(config) + ""));
@@ -216,6 +198,10 @@ public final class JobMasterRequestObject {
     container.setResources(resReq);
 
     ArrayList<V1VolumeMount> volumeMounts = new ArrayList<>();
+    V1VolumeMount memoryVolumeMount = new V1VolumeMount();
+    memoryVolumeMount.setName(KubernetesConstants.POD_MEMORY_VOLUME_NAME);
+    memoryVolumeMount.setMountPath(KubernetesConstants.POD_MEMORY_VOLUME);
+    volumeMounts.add(memoryVolumeMount);
 
     if (JobMasterContext.volatileVolumeRequested(config)) {
       V1VolumeMount volatileVolumeMount = new V1VolumeMount();
@@ -230,11 +216,6 @@ public final class JobMasterRequestObject {
       persVolumeMount.setMountPath(KubernetesConstants.PERSISTENT_VOLUME_MOUNT);
       volumeMounts.add(persVolumeMount);
     }
-
-    V1VolumeMount configMapVolumeMount = new V1VolumeMount();
-    configMapVolumeMount.setName(KubernetesConstants.CONFIG_MAP_VOLUME_NAME);
-    configMapVolumeMount.setMountPath(KubernetesConstants.CONFIG_MAP_VOLUME_MOUNT);
-    volumeMounts.add(configMapVolumeMount);
 
     container.setVolumeMounts(volumeMounts);
 
@@ -272,6 +253,44 @@ public final class JobMasterRequestObject {
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.HOST_IP + "")
         .valueFrom(varSource));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.JOB_PACKAGE_FILE_SIZE + "")
+        .value(jobPackageFileSize + ""));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.CONTAINER_NAME + "")
+        .value("twister2-job-master-0"));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.USER_JOB_JAR_FILE + "")
+        .value(SchedulerContext.userJobJarFile(config)));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.CLASS_TO_RUN + "")
+        .value("edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter"));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.POD_MEMORY_VOLUME + "")
+        .value(KubernetesConstants.POD_MEMORY_VOLUME));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.JOB_ARCHIVE_DIRECTORY + "")
+        .value(Context.JOB_ARCHIVE_DIRECTORY));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.JOB_PACKAGE_FILENAME + "")
+        .value(SchedulerContext.jobPackageFileName(config)));
+
+    envVars.add(new V1EnvVar()
+        .name(K8sEnvVariables.UPLOAD_METHOD + "")
+        .value(KubernetesContext.uploadMethod(config)));
+
+    if (!KubernetesContext.clientToPodsUploading(config)) {
+      envVars.add(new V1EnvVar()
+          .name(K8sEnvVariables.DOWNLOAD_DIRECTORY + "")
+          .value(ScpContext.downloadDirectory(config)));
+    }
 
     return envVars;
   }
@@ -343,82 +362,6 @@ public final class JobMasterRequestObject {
     service.setSpec(serviceSpec);
 
     return service;
-  }
-
-  /**
-   * create a ConfigMap object for Job Master
-   * It will have job as binary data and config files as text data
-   * @param job
-   * @return
-   */
-  public static V1ConfigMap createJobMasterConfigMap(JobAPI.Job job) {
-    String configMapName = KubernetesUtils.createJobMasterConfigMapName(jobName);
-
-    V1ConfigMap configMap = new V1ConfigMap();
-    configMap.apiVersion("v1");
-    configMap.setKind("ConfigMap");
-
-    // construct and set metadata
-    V1ObjectMeta meta = new V1ObjectMeta();
-    meta.setName(configMapName);
-    configMap.setMetadata(meta);
-
-    String jobDescFileName = SchedulerContext.createJobDescriptionFileName(job.getJobName());
-    configMap.putBinaryDataItem(jobDescFileName, job.toByteArray());
-
-    String clientYaml = Context.clientConfigurationFile(config);
-    String fileContent = readYAMLFile(clientYaml);
-    configMap.putDataItem("client.yaml", fileContent);
-
-    String taskYaml = Context.taskConfigurationFile(config);
-    fileContent = readYAMLFile(taskYaml);
-    configMap.putDataItem("task.yaml", fileContent);
-
-    String resourceYaml = Context.resourceSchedulerConfigurationFile(config);
-    fileContent = readYAMLFile(resourceYaml);
-    configMap.putDataItem("resource.yaml", fileContent);
-
-    String uploaderYaml = Context.uploaderConfigurationFile(config);
-    fileContent = readYAMLFile(uploaderYaml);
-    configMap.putDataItem("uploader.yaml", fileContent);
-
-    String networkYaml = Context.networkConfigurationFile(config);
-    fileContent = readYAMLFile(networkYaml);
-    configMap.putDataItem("network.yaml", fileContent);
-
-    String systemYaml = Context.systemConfigurationFile(config);
-    fileContent = readYAMLFile(systemYaml);
-    configMap.putDataItem("system.yaml", fileContent);
-
-    String dataYaml = Context.dataConfigurationFile(config);
-    fileContent = readYAMLFile(dataYaml);
-    configMap.putDataItem("data.yaml", fileContent);
-
-    return configMap;
-  }
-
-  /**
-   * read the given YAML file as a single String
-   * @param filename
-   * @return
-   */
-  private static String readYAMLFile(String filename) {
-
-    Path filepath = Paths.get(filename);
-
-    if (!Files.exists(filepath)) {
-      LOG.fine("Config file " + filename + " does not exist. "
-          + "It will not be transferred to JobMaster.");
-      return null;
-    }
-
-    try {
-      return new String(Files.readAllBytes(filepath));
-    } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Can not read the config file: " + filename
-          + " This config file will not be transferred to JobMaster.", e);
-      return null;
-    }
   }
 
 }

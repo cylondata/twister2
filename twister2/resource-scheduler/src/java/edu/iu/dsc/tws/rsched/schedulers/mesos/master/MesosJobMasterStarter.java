@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -113,9 +114,10 @@ public final class MesosJobMasterStarter {
       try {
         //TODO: a valid NodeInfo object need to be provided to JobMaster constructor
         JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
+        IScalerPerCluster clusterScaler = null;
         jobMaster =
             new JobMaster(config, InetAddress.getLocalHost().getHostAddress(),
-                terminator, job, jobMasterNodeInfo);
+                terminator, job, jobMasterNodeInfo, clusterScaler);
         LOG.info("JobMaster host address:" + InetAddress.getLocalHost().getHostAddress());
         jobMaster.startJobMasterBlocking();
       } catch (Exception e) {

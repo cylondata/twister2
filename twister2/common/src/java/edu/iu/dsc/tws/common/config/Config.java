@@ -30,7 +30,6 @@ public class Config {
   private final Map<String, Object> cfgMap;
 
   private final Mode mode;
-  private final Config initialConfig;     // what the user first creates
   private Config transformedConfig = null;  // what gets generated after transformations
 
   private enum Mode {
@@ -41,7 +40,6 @@ public class Config {
   // Used to initialize a raw config. Should be used by consumers of Config via the builder
   protected Config(Builder build) {
     this.mode = Mode.INITIAL;
-    this.initialConfig = this;
     this.cfgMap = new HashMap<>(build.keyValues);
   }
 
@@ -49,7 +47,6 @@ public class Config {
   // cluster config
   private Config(Mode mode, Config initialConfig, Config newConfig) {
     this.mode = mode;
-    this.initialConfig = initialConfig;
     this.transformedConfig = newConfig;
     switch (mode) {
       case INITIAL:
@@ -125,7 +122,7 @@ public class Config {
   private Config lazyCreateConfig(Mode newMode, Map<String, ConfigEntry> subtitutions) {
     // this is here so that we don't keep cascading deeper into object creation so:
     // localConfig == toLocalMode(toClusterMode(localConfig))
-    Config newInitialConfig = this.initialConfig;
+    Config newInitialConfig = this;
     Config newTransformedConfig = this.transformedConfig;
     switch (this.mode) {
       case INITIAL:
@@ -143,7 +140,7 @@ public class Config {
       case TRANSFORMED:
         if (this.transformedConfig == null) {
           Config tempConfig = expand(
-              Config.newBuilder().putAll(initialConfig.cfgMap).build(), 0, subtitutions);
+              Config.newBuilder().putAll(this).build(), 0, subtitutions);
           this.transformedConfig = new Config(Mode.TRANSFORMED, newInitialConfig, tempConfig);
         }
         return this.transformedConfig;
@@ -163,7 +160,7 @@ public class Config {
       case TRANSFORMED:
         return transformedConfig.cfgMap.get(key);
       case INITIAL:
-        return initialConfig.cfgMap.get(key);
+        return this.cfgMap.get(key);
       default:
         throw new IllegalArgumentException(String.format(
             "Unrecognized mode passed to get for key=%s: %s", key, mode));

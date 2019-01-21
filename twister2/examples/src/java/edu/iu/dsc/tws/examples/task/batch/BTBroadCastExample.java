@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,12 +51,17 @@ public class BTBroadCastExample extends BenchTaskWorker {
       count++;
       if (count % jobParameters.getPrintInterval() == 0) {
         Object object = message.getContent();
-        experimentData.setOutput(object);
-        LOG.log(Level.INFO, String.format("Received messages to %d: %d", context.taskId(), count));
-        try {
-          verify(OperationNames.BROADCAST);
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
+        if (object instanceof Iterator) {
+          while (((Iterator) object).hasNext()) {
+            experimentData.setOutput(((Iterator) object).next());
+            LOG.log(Level.INFO, String.format("Received messages to %d: %d",
+                context.taskId(), count));
+            try {
+              verify(OperationNames.BROADCAST);
+            } catch (VerificationException e) {
+              LOG.info("Exception Message : " + e.getMessage());
+            }
+          }
         }
       }
       return true;

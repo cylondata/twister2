@@ -11,10 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset;
 
-public class Partition<T> {
+import java.util.Iterator;
+
+public class Partition<T> implements PSet<T> {
   private T data;
 
   private int id;
+
+  private int workerId;
+
+  public Partition(int id) {
+    this.id = id;
+  }
 
   public Partition(int pId, T d) {
     this.data = d;
@@ -27,5 +35,20 @@ public class Partition<T> {
 
   public int getId() {
     return id;
+  }
+
+  @Override
+  public int getWorkerId() {
+    return id;
+  }
+
+  @Override
+  public int getPartitionId() {
+    return 0;
+  }
+
+  @Override
+  public Iterator<T> iterator() {
+    return null;
   }
 }

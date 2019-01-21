@@ -113,6 +113,12 @@ public interface TSet<T> {
   <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction, Selector<T, K> selector);
 
   /**
+   * Create a cloned dataset
+   * @return the cloned set
+   */
+  ReplicateTSet<T> replicate(int replications);
+
+  /**
    * Add a sink
    *
    * @param sink sink function

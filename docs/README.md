@@ -100,3 +100,4 @@ Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/L
 ## Acknowledgements
 
 This work was partially supported by NSF CIF21 DIBBS 1443054 and the Indiana University Precision Health initiative.
+We thank Intel for their support of the Juliet and Victor systems and extend our gratitude to the FutureSystems team for their support with the infrastructure.

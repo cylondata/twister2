@@ -196,8 +196,14 @@ public class ExperimentVerification implements IVerification {
                 .toString(Arrays.copyOfRange(res, 0, res.length));
             String outputRes = Arrays
                 .toString(Arrays.copyOfRange(output, 0, res.length));
-            LOG.info("Expected Result : " + resString);
-            LOG.info("Generated Result : " + outputRes);
+            String msg = String.format("Expected Result : %s Generated Result : %s",
+                resString, outputRes);
+            if (isVerified) {
+              LOG.info(msg);
+            } else {
+              LOG.severe(msg);
+              throw new VerificationException(msg);
+            }
           }
         }
       }
@@ -454,8 +460,14 @@ public class ExperimentVerification implements IVerification {
             String outputRes = Arrays
                 .toString(Arrays.copyOfRange(output, 0, res.length));
             isVerified = resString.equals(outputRes);
-            LOG.info("Expected Result : " + resString);
-            LOG.info("Generated Result : " + outputRes);
+            String msg = String.format("Expected Result : %s Generated Result : %s",
+                resString, outputRes);
+            if (isVerified) {
+              LOG.severe(msg);
+            } else {
+              LOG.info(msg);
+              throw new VerificationException(msg);
+            }
           }
         }
       }

@@ -182,6 +182,14 @@ public final class TaskGraphBuilder {
     return sc;
   }
 
+  /**
+   * Get the operation mode
+   * @return the operation mode
+   */
+  public OperationMode getMode() {
+    return mode;
+  }
+
   public DataFlowTaskGraph build() {
     DataFlowTaskGraph graph = new DataFlowTaskGraph();
     graph.setOperationMode(mode);

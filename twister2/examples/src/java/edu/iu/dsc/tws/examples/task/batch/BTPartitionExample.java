@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 
 public class BTPartitionExample extends BenchTaskWorker {
-
   private static final Logger LOG = Logger.getLogger(BTPartitionExample.class.getName());
 
   @Override

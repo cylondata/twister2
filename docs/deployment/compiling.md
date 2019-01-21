@@ -1,6 +1,6 @@
 # Compiling
 
-Twister2 relies on the [Bazel build](https://bazel.build/) system to provide a flexible and fast build. Twister2 has been tested on Bazel 0.8.1 version and it is recommended to use it for building.
+Twister2 relies on the [Bazel build](https://bazel.build/) system to provide a flexible and fast build. Twister2 has been tested on Bazel 0.18.1 version and it is recommended to use it for building.
 
 Twister2 developers are mainly working on Ubuntu 16.04 and Ubuntu 18.04. So it is recommended to use those platforms with the early versions and we would like to expand our system to different platforms in the future.
 
@@ -46,12 +46,12 @@ Extract this to a directory called maven configure the environmental variables
   export MAVEN_HOME PATH
 ```
 
-1. Install bazel 0.8.1
+1. Install bazel 0.18.1
 
    ```bash
-   wget https://github.com/bazelbuild/bazel/releases/download/0.8.1/bazel-0.8.1-installer-linux-x86_64.sh
-   chmod +x bazel-0.8.1-installer-linux-x86_64.sh
-   ./bazel-0.8.1-installer-linux-x86_64.sh --user
+   wget https://github.com/bazelbuild/bazel/releases/download/0.18.1/bazel-0.18.1-installer-linux-x86_64.sh
+   chmod +x bazel-0.18.1-installer-linux-x86_64.sh
+   ./bazel-0.18.1-installer-linux-x86_64.sh --user
    ```
 
    Make sure to add the bazel bin to PATH

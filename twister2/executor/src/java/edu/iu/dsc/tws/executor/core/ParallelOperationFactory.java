@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.comms.batch.AllGatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.AllReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.BroadcastBatchOperation;
+import edu.iu.dsc.tws.executor.comms.batch.DirectBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.GatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedGatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedPartitionBatchOperation;
@@ -29,6 +30,7 @@ import edu.iu.dsc.tws.executor.comms.batch.ReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.AllGatherStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.AllReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.BroadcastStreamingOperation;
+import edu.iu.dsc.tws.executor.comms.streaming.DirectStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.GatherStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.KeyedGatherStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.KeyedPartitionStreamOperation;
@@ -110,6 +112,9 @@ public class ParallelOperationFactory {
           return new AllReduceBatchOperation(config,
               channel, taskPlan, sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName(), edge.getFunction());
+        } else if (OperationNames.DIRECT.equals(edge.getOperation())) {
+          return new DirectBatchOperation(config, channel, taskPlan, sources, dests,
+              edgeGenerator, edge.getDataType(), edge.getName());
         }
       } else {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
@@ -161,6 +166,9 @@ public class ParallelOperationFactory {
           return new AllGatherStreamingOperation(
               config, channel, taskPlan, sources, dests, edgeGenerator, edge.getDataType(),
               edge.getName());
+        } else if (OperationNames.DIRECT.equals(edge.getOperation())) {
+          return new DirectStreamingOperation(config, channel, taskPlan, sources, dests,
+              edgeGenerator, edge.getDataType(), edge.getName());
         }
       } else {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {

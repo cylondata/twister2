@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
-import edu.iu.dsc.tws.task.graph.HierarchicalTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
 /**
@@ -75,6 +74,20 @@ public class ComputeConnection {
    */
   public ComputeConnection broadcast(String parent, String name) {
     Edge edge = new Edge(name, OperationNames.BROADCAST);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
+   * Create a broadcast connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @return the ComputeConnection
+   */
+  public ComputeConnection broadcast(String parent, String name, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.BROADCAST, dataType);
     inputs.put(parent, edge);
 
     return this;
@@ -588,6 +601,21 @@ public class ComputeConnection {
     return this;
   }
 
+  /**
+   * Create a direct connection between two parallel task sets
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param dataType data type
+   * @return the ComputeConnection
+   */
+  public ComputeConnection direct(String parent, String name, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.DIRECT, dataType);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
   void build(DataFlowTaskGraph graph) {
     for (Map.Entry<String, Edge> e : inputs.entrySet()) {
       Vertex v1 = graph.vertex(nodeName);
@@ -600,27 +628,6 @@ public class ComputeConnection {
         throw new RuntimeException("Failed to connect non-existing task: " + e.getKey());
       }
       graph.addTaskEdge(v2, v1, e.getValue());
-    }
-  }
-
-
-  void build(HierarchicalTaskGraph graph) {
-    for (Map.Entry<String, Edge> e : inputs.entrySet()) {
-      DataFlowTaskGraph graph1 = graph.dataFlowTaskGraph(nodeName);
-      if (graph1 == null) {
-        throw new RuntimeException("Failed to connect non-existing taskgraph: " + nodeName);
-      }
-
-      DataFlowTaskGraph graph2 = graph.dataFlowTaskGraph(e.getKey());
-      if (graph2 == null) {
-        throw new RuntimeException("Failed to connect non-existing task graph: " + e.getKey());
-      }
-
-      try {
-        graph.addTaskGraphEdge(graph2, graph1, e.getValue());
-      } catch (IllegalArgumentException ee) {
-        ee.printStackTrace();
-      }
     }
   }
 

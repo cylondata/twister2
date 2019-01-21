@@ -39,13 +39,15 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
  * JobMaster sends a single response message to each request message
  *
  * However, sometimes job master may send messages to workers that are not response messages
- * For example, a client request message may result in Job Master sending a message to all workers
+ * For example, the driver in Job Master may send messages to workers
+ * The messages that are initiated from Job Master are one-way messages
+ * They don't have response messages
  *
  * Message Format:
  * RequestID (32 bytes), message type length, message type data, senderID (4 bytes), message data
  * message type is the class name of the protocol buffer for that message
  *
- * RequestID is generated in request senders (worker or client),
+ * RequestID is generated in request senders (workers or the client),
  * and the same requestID is used in the response message.
  *
  * When job master sends a message that is not a response to a request,
@@ -62,9 +64,9 @@ public class RRServer {
   private HashBiMap<SocketChannel, Integer> workerChannels = HashBiMap.create();
 
   /**
-   * the driver channel,
+   * the client channel,
    */
-  private SocketChannel driverChannel;
+  private SocketChannel clientChannel;
 
   /**
    * Keep track of the request handler using protocol buffer message types
@@ -87,9 +89,9 @@ public class RRServer {
   private int serverID;
 
   /**
-   * The driver id
+   * The client id
    */
-  public static final int DRIVER_ID = -100;
+  public static final int CLIENT_ID = -100;
 
   /**
    * Connection handler
@@ -149,7 +151,7 @@ public class RRServer {
       LOG.log(Level.SEVERE, "Channel is NULL for response");
     }
 
-    if (!workerChannels.containsKey(channel) && !channel.equals(driverChannel)) {
+    if (!workerChannels.containsKey(channel) && !channel.equals(clientChannel)) {
       LOG.log(Level.WARNING, "Failed to send response on disconnected socket");
       return false;
     }
@@ -172,12 +174,12 @@ public class RRServer {
   public boolean sendMessage(Message message, int targetID) {
 
     SocketChannel channel;
-    if (targetID == DRIVER_ID) {
-      if (driverChannel == null) {
-        LOG.severe("Trying to send a message to the driver, but it has not connected yet.");
+    if (targetID == CLIENT_ID) {
+      if (clientChannel == null) {
+        LOG.severe("Trying to send a message to the client, but it has not connected yet.");
         return false;
       }
-      channel = driverChannel;
+      channel = clientChannel;
     } else if (workerChannels.containsValue(targetID)) {
       channel = workerChannels.inverse().get(targetID);
     } else {
@@ -246,8 +248,8 @@ public class RRServer {
       workerChannels.remove(channel);
       connectHandler.onClose(channel);
 
-      if (channel.equals(driverChannel)) {
-        driverChannel = null;
+      if (channel.equals(clientChannel)) {
+        clientChannel = null;
       }
     }
 
@@ -330,6 +332,9 @@ public class RRServer {
    */
   public void removeWorkerChannel(int workerID) {
     SocketChannel removedChannel = workerChannels.inverse().remove(workerID);
+    if (removedChannel == null) {
+      return;
+    }
 
     try {
       removedChannel.close();
@@ -340,10 +345,10 @@ public class RRServer {
 
   /**
    * save if it is a new channel
-   * if it is a driver channel, save it in that variable
+   * if it is a client channel, save it in that variable
    * if it is a new worker channel that will get its id from the job master
    * save it in the temporary variable
-   * otherwise add it to channel list
+   * otherwise add it to the channel list
    */
   private void saveChannel(SocketChannel channel, int senderID, Message message) {
 
@@ -352,11 +357,11 @@ public class RRServer {
       return;
     }
 
-    // if it is the driver
+    // if it is the client
     // set it, no need to check whether it is already set
     // since it does not harm setting again
-    if (senderID == DRIVER_ID) {
-      driverChannel = channel;
+    if (senderID == CLIENT_ID) {
+      clientChannel = channel;
       LOG.info("Message received from submitting client. Channel set.");
       return;
     }
