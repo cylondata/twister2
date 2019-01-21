@@ -42,6 +42,11 @@ def twister2_client_kubernetes_files():
         "//twister2/config/src/yaml:conf-kubernetes-yaml",
     ]
 
+def twister2_client_kubernetes_deployment_files():
+    return [
+        "//twister2/config/src/yaml:conf-kubernetes-deployment-yaml",
+    ]
+
 def twister2_client_mesos_files():
     return [
         "//twister2/config/src/yaml:conf-mesos-yaml",
