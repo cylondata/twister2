@@ -71,7 +71,14 @@ public final class CDFWExecutor {
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
 
+    DefaultScheduler defaultScheduler = new DefaultScheduler(this.workerInfoList);
+    Set<Integer> workerIDs = defaultScheduler.schedule(graph);
+
     CDFWJobAPI.SubGraph job = buildCDFWJob(graph);
+
+    CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlan = buildCDFWSchedulePlan(job, workerIDs);
+    LOG.info("CDFW Schedule Plan:" + cdfwSchedulePlan);
+
     // this is the first time
     if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
       try {
@@ -111,20 +118,14 @@ public final class CDFWExecutor {
       // this is the first time
       if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
 
-        //now submit the job
-        //submitJob(job);
         try {
           DataFlowGraph dataFlowGraph = dataFlowGraphEntry.getKey();
           Set<Integer> workerIDs = dataFlowGraphEntry.getValue();
 
           CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph);
-
-          CDFWJobAPI.CDFWSchedulePlan.Builder builder
-              = CDFWJobAPI.CDFWSchedulePlan.newBuilder();
-          builder.setSubgraph(job);
-          builder.addAllWorkers(workerIDs);
-          builder.build();
-          LOG.info("CDFW Schedule Plan:" + builder);
+          CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlan
+              = buildCDFWSchedulePlan(job, workerIDs);
+          LOG.info("CDFW Schedule Plan:" + cdfwSchedulePlan);
 
           submitJob(job);
           driverState = DriverState.JOB_SUBMITTED;
@@ -141,6 +142,16 @@ public final class CDFWExecutor {
   void close() {
     // send the close message
     sendCloseMessage();
+  }
+
+  private CDFWJobAPI.CDFWSchedulePlan buildCDFWSchedulePlan(
+      CDFWJobAPI.SubGraph job, Set<Integer> workerIDs) {
+
+    CDFWJobAPI.CDFWSchedulePlan.Builder builder
+        = CDFWJobAPI.CDFWSchedulePlan.newBuilder();
+    builder.setSubgraph(job);
+    builder.addAllWorkers(workerIDs);
+    return builder.build();
   }
 
   private void sendCloseMessage() {
@@ -169,15 +180,6 @@ public final class CDFWExecutor {
   private CDFWJobAPI.SubGraph buildCDFWJob(DataFlowGraph job) {
     return job.build();
   }
-
-  /*private CDFWJobAPI.SubGraph buildCDFWJob(CDFWJobAPI.SubGraph job, Set<Integer> workerIds) {
-
-    CDFWJobAPI.CDFWSchedulePlan.Builder builder
-        = CDFWJobAPI.CDFWSchedulePlan.newBuilder();
-    builder.setSubgraph(job);
-    builder.addAllWorkers(workerIds);
-    return builder;
-  }*/
 
   void workerMessageReceived(Any anyMessage, int senderWorkerID) {
     LOG.log(Level.INFO, String.format("Received worker message %d: %s", senderWorkerID,

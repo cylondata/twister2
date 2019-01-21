@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.api.cdfw;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,14 +41,8 @@ public class DefaultScheduler implements ICDFWScheduler {
   @Override
   public Set<Integer> schedule(DataFlowGraph graphJob) {
 
-    Set<Integer> scheduledGraph = new LinkedHashSet<>();
-    Set<Integer> workerList = new HashSet<>();
+    Set<Integer> scheduledGraph = scheduleGraphs(graphJob);
 
-    for (JobMasterAPI.WorkerInfo workerInfos : workerInfoList) {
-      workerList.add(workerInfos.getWorkerID());
-    }
-
-    //scheduledGraphMap.put(graphJob, workerList);
     LOG.info("%%%% Scheduled Graph list details: %%%%" + scheduledGraph);
 
     return scheduledGraph;
@@ -61,9 +54,6 @@ public class DefaultScheduler implements ICDFWScheduler {
    */
   @Override
   public Map<DataFlowGraph, Set<Integer>> schedule(DataFlowGraph... graphJob) {
-
-    //Map<DataFlowGraph, Set<Integer>> scheduledGraphMap = new LinkedHashMap<>();
-    //Set<Integer> workerList = new HashSet<>();
 
     Set<Integer> workerList;
 
