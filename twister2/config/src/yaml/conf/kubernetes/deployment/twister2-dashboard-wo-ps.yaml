@@ -1,0 +1,75 @@
+################################################################
+# Running Twister2 Dashboard on Kubernetes as a StatefulSet with Persistent Storage
+#
+# We define:
+#   a service,
+#   a StatefulSet
+#
+# Things to update when running in a new cluster:
+#   1. default namespace is used. If you are using another namespace,
+#      please change namespace value in both entities below.
+#   2. Update Dashboard resources.
+#      By default it uses 1.0 core and 2048MB of memory
+#
+################################################################
+# ------------------- Dashboard Service ---------------------- #
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: twister2-dashboard
+  name: twister2-dashboard
+  namespace: default
+spec:
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: twister2-dashboard
+
+---
+################################################################
+# ------------------- Dashboard StatefulSet ------------------ #
+
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name: twister2-dashboard
+  namespace: default
+  labels:
+    app: twister2-dashboard
+
+spec:
+  replicas: 1
+  serviceName: twister2-dashboard
+
+  selector:
+    matchLabels:
+      app: twister2-dashboard
+
+  template:
+    metadata:
+      labels:
+        app: twister2-dashboard
+
+    spec:
+      terminationGracePeriodSeconds: 0
+
+      containers:
+        - name: twister2-dashboard
+          image: twister2/twister2-k8s:0.1.1
+          imagePullPolicy: IfNotPresent
+          command: ["/twister2/bin/twister2"]
+          args: ["dash"]
+
+          ports:
+            - name: dash-port
+              containerPort: 8080
+              protocol: TCP
+
+          resources:
+            requests:
+              cpu: 1.0
+              memory: 2048Mi
+
