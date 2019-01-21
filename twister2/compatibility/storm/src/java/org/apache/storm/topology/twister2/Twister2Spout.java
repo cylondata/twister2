@@ -23,9 +23,9 @@
 //  limitations under the License.
 package org.apache.storm.topology.twister2;
 
-import org.apache.storm.spout.ISpout;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
+import org.apache.storm.topology.IRichSpout;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ISource;
@@ -33,13 +33,23 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class Twister2Spout implements ISource {
 
-  private ISpout stormSpout; //todo need BaseRichSpout??
+  private IRichSpout stormSpout; //todo need BaseRichSpout??
   //todo currently omitting declare output fields
   private Twister2SpoutDeclarer spoutDeclarer;
 
-  public Twister2Spout(ISpout stormSpout) {
+  private Integer parallelism = 1;
+
+  public Twister2Spout(IRichSpout stormSpout) {
     this.stormSpout = stormSpout;
     this.spoutDeclarer = new Twister2SpoutDeclarer();
+  }
+
+  public void setParallelism(Integer parallelism) {
+    this.parallelism = parallelism;
+  }
+
+  public Integer getParallelism() {
+    return parallelism;
   }
 
   public Twister2SpoutDeclarer getSpoutDeclarer() {

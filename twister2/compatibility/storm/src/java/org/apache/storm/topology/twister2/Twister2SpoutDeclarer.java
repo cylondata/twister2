@@ -30,7 +30,6 @@ import org.apache.storm.topology.SpoutDeclarer;
 
 public class Twister2SpoutDeclarer implements SpoutDeclarer {
 
-
   private Number maxTaskParallelism;
   private Number maxSpoutPending;
   private Number numTasks;

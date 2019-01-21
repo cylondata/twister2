@@ -23,9 +23,9 @@
 //  limitations under the License.
 package org.apache.storm.topology.twister2;
 
-import org.apache.storm.task.IBolt;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
+import org.apache.storm.topology.IRichBolt;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ICompute;
@@ -34,10 +34,25 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class Twister2Bolt implements ICompute {
 
-  private IBolt stormBolt;
+  private IRichBolt stormBolt;
+  private Twister2BoltDeclarer boltDeclarer;
+  private Integer parallelism = 1;
 
-  public Twister2Bolt(IBolt stormBolt) {
+  public Twister2Bolt(IRichBolt stormBolt) {
     this.stormBolt = stormBolt;
+    this.boltDeclarer = new Twister2BoltDeclarer();
+  }
+
+  public Integer getParallelism() {
+    return parallelism;
+  }
+
+  public void setParallelism(Integer parallelism) {
+    this.parallelism = parallelism;
+  }
+
+  public Twister2BoltDeclarer getBoltDeclarer() {
+    return boltDeclarer;
   }
 
   @Override
