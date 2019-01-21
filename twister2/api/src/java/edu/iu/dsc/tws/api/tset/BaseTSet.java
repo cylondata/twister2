@@ -191,7 +191,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
       if (parent instanceof ReduceTSet) {
         return false;
       } else if (parent instanceof KeyedReduceTSet) {
-        return true;
+        return false;
       } else if (parent instanceof GatherTSet || parent instanceof KeyedGatherTSet) {
         return true;
       } else if (parent instanceof AllReduceTSet) {
