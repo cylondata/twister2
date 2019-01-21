@@ -1,10 +1,17 @@
-FROM ubuntu:18.04
+FROM ubuntu:16.04
 
 # Disable prompts from apt.
 ENV DEBIAN_FRONTEND noninteractive
 
 ##############################################################################
-# Install Java.
+# install apt-utils and locales, set up language
+RUN apt-get update && apt-get install -y apt-utils locales locales-all
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
+
+##############################################################################
+# Install Java 8.
 # Based on:
 #    https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
 #    https://stackoverflow.com/questions/49914574/install-jdk-8-update-172-in-dockerfile-with-ubuntu-image
@@ -19,32 +26,31 @@ RUN \
    apt-get install -y oracle-java8-installer && \
    rm -rf /var/cache/oracle-jdk8-installer
 
-# Define commonly used JAVA_HOME variable
+# Define JAVA_HOME variable
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
 ###############################################################################
-# Install OpenMPI
+# Install SSH and OpenMPI
 #
 # ssh and MPI installation is based on the Dockerfile from
 #    https://github.com/everpeace
 
-ENV LANG            en_US.UTF-8
-ENV LC_ALL          en_US.UTF-8
-
 ARG OPENMPI_VERSION="3.1.2"
 ARG WITH_CUDA="false"
 
+#
 # install ssh and basic dependencies
+#
 RUN apt-get update && \
     apt-get install -yq --no-install-recommends \
-      locales wget ca-certificates ssh build-essential && \
+      wget ca-certificates ssh build-essential && \
     rm -rf /var/cache/apt/archives/*
 
 #
 # install openmpi
 #
-RUN echo "WITH_CUDA=$WITH_CUDA"
 RUN cd /tmp && \
+  echo "WITH_CUDA=$WITH_CUDA" && \
   wget -q https://www.open-mpi.org/software/ompi/v$(echo $OPENMPI_VERSION | sed -e s'/\(.*\)\.[0-9]/\1/')/downloads/openmpi-$OPENMPI_VERSION.tar.bz2 && \
   tar -xjf openmpi-$OPENMPI_VERSION.tar.bz2 && \
   cd /tmp/openmpi-$OPENMPI_VERSION && \
@@ -53,32 +59,37 @@ RUN cd /tmp && \
   ./configure --prefix=/usr --enable-mpi-java $WITH_CUDA_OPT && \
   make -j2 && \
   make install && \
-  rm -r /tmp/openmpi-$OPENMPI_VERSION
-
-# remove the install package
-RUN rm /tmp/openmpi-$OPENMPI_VERSION.tar.bz2
+  rm -rf /tmp/openmpi-$OPENMPI_VERSION /tmp/openmpi-$OPENMPI_VERSION.tar.bz2
 
 # set LD_LIBRARY_PATH environment variable
 ENV LD_LIBRARY_PATH   /usr/lib
 
+#
 # Create ssh user(openmpi) and setup ssh key dir
 # - ssh identity file and authorized key file is expected to
 #   be mounted at /ssh-keys/$SSH_USER
+#
 ARG SSH_USER=openmpi
 ENV SSH_USER=$SSH_USER
 ARG SSH_UID=1000
 ARG SSH_GID=1000
-RUN addgroup --gid $SSH_GID $SSH_USER
-RUN adduser -q --gecos "" --disabled-password --uid $SSH_UID --gid $SSH_GID $SSH_USER
-RUN mkdir -p /ssh-key/$SSH_USER && chown -R $SSH_USER:$SSH_USER /ssh-key/$SSH_USER
-RUN mkdir -p /.sshd/host_keys && \
-  chown -R $SSH_USER:$SSH_USER /.sshd/host_keys && chmod 700 /.sshd/host_keys
-RUN mkdir -p /.sshd/user_keys/$SSH_USER && \
-  chown -R $SSH_USER:$SSH_USER /.sshd/user_keys/$SSH_USER && chmod 700 /.sshd/user_keys/$SSH_USER
 VOLUME /ssh-key/$SSH_USER
-
 ARG HOME=/home/$SSH_USER
-RUN mkdir -p $HOME && chown $SSH_USER:$SSH_USER $HOME && chmod 755 $HOME
+
+RUN addgroup --gid $SSH_GID $SSH_USER && \
+    adduser -q --gecos "" --disabled-password --uid $SSH_UID --gid $SSH_GID $SSH_USER && \
+    mkdir -p /ssh-key/$SSH_USER && \
+       chown -R $SSH_USER:$SSH_USER /ssh-key/$SSH_USER && \
+    mkdir -p /.sshd/host_keys && \
+       chown -R $SSH_USER:$SSH_USER /.sshd/host_keys && \
+       chmod 700 /.sshd/host_keys && \
+    mkdir -p /.sshd/user_keys/$SSH_USER && \
+       chown -R $SSH_USER:$SSH_USER /.sshd/user_keys/$SSH_USER && \
+       chmod 700 /.sshd/user_keys/$SSH_USER  && \
+    mkdir -p $HOME && \
+       chown $SSH_USER:$SSH_USER $HOME && \
+       chmod 755 $HOME
+
 VOLUME $HOME
 
 # check if open mpi was successfully built with cuda support.
