@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.Arrays;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,9 +21,10 @@ import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.dataset.DSet;
-import edu.iu.dsc.tws.dataset.DataSet;
-import edu.iu.dsc.tws.dataset.Partition;
+import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.dataset.DataObjectImpl;
+import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -95,12 +95,12 @@ public class KMeansJob extends TaskWorker {
     DataFlowTaskGraph graph = graphBuilder.build();
 
     //Store datapoints and centroids
-    DataSet<Object> datapoints = new DataSet<>(0);
-    DataSet<Object> centroids = new DataSet<>(1);
+    DataObject<double[][]> datapoints = new DataObjectImpl<>(config);
+    DataObject<double[][]> centroids = new DataObjectImpl<>(config);
 
     for (int i = 0; i < iterations; i++) {
-      datapoints.addPartition(0, dataPoint);
-      centroids.addPartition(1, centroid);
+      datapoints.addPartition(null);
+      centroids.addPartition(null);
 
       ExecutionPlan plan = taskExecutor.plan(graph);
 
@@ -108,12 +108,10 @@ public class KMeansJob extends TaskWorker {
       taskExecutor.addInput(graph, plan, "source", "centroids", centroids);
       taskExecutor.execute(graph, plan);
 
-      DataSet<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
-      Set<Object> values = dataSet.getData();
-      for (Object value : values) {
-        KMeansCenters kMeansCenters = (KMeansCenters) value;
-        centroid = kMeansCenters.getCenters();
-      }
+      DataObject<double[][]> dataSet = taskExecutor.getOutput(graph, plan, "sink");
+      DataPartition<double[][], double[][]> values = (DataPartition<double[][], double[][]>)
+          dataSet.getPartitions()[0];
+      centroid = values.getOut();
     }
 
     LOG.info("%%% Final Centroid Values Received: %%%" + Arrays.deepToString(centroid));
@@ -124,7 +122,6 @@ public class KMeansJob extends TaskWorker {
   private static class KMeansSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
-    private DataSet<Object> input;
     private double[][] centroid = null;
     private double[][] datapoints = null;
     private KMeansCalculator kMeansCalculator = null;
@@ -141,7 +138,7 @@ public class KMeansJob extends TaskWorker {
 
       kMeansCalculator = new KMeansCalculator(datapoints, centroid,
           context.taskIndex(), dim, startIndex, endIndex);
-      KMeansCenters kMeansCenters = kMeansCalculator.calculate();
+      double[][] kMeansCenters = kMeansCalculator.calculate();
 
       LOG.fine("Task Index:::" + context.taskIndex() + "\t"
               + "Calculated Centroid Value::::" + Arrays.deepToString(centroid));
@@ -150,24 +147,23 @@ public class KMeansJob extends TaskWorker {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void add(String name, DSet<Object> data) {
+    public void add(String name, DataObject<?> data) {
       LOG.log(Level.FINE, "Received input: " + name);
-      input = (DataSet<Object>) data;
-      int id = input.getId();
-
-      if (id == 0) {
-        Set<Object> dataPoints = input.getData();
-        this.datapoints = (double[][]) dataPoints.iterator().next();
+      if (name.equals("points")) {
+        DataPartition<double[][], double[][]> dataPoints = (DataPartition<double[][], double[][]>)
+            data.getPartitions()[0];
+        this.datapoints = dataPoints.getOut();
       }
 
-      if (id == 1) {
-        Set<Object> centroids = input.getData();
-        this.centroid = (double[][]) centroids.iterator().next();
+      if (name.equals("centroids")) {
+        DataPartition<double[][], double[][]> centroids = (DataPartition<double[][], double[][]>)
+            data.getPartitions()[0];
+        this.centroid = centroids.getOut();
       }
     }
   }
 
-  private static class KMeansAllReduceTask extends BaseSink implements Collector<Object> {
+  private static class KMeansAllReduceTask extends BaseSink implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private double[][] centroids;
@@ -177,7 +173,7 @@ public class KMeansJob extends TaskWorker {
     public boolean execute(IMessage message) {
       LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
               + ":" + context.taskId());
-      centroids = ((KMeansCenters) message.getContent()).getCenters();
+      centroids = (double[][]) message.getContent();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {
         for (int j = 0; j < centroids[0].length - 1; j++) {
@@ -190,8 +186,8 @@ public class KMeansJob extends TaskWorker {
     }
 
     @Override
-    public Partition<Object> get() {
-      return new Partition<>(context.taskIndex(), new KMeansCenters().setCenters(newCentroids));
+    public DataPartition<double[][], double[][]> get() {
+      return new EntityPartition<>(context.taskIndex(), newCentroids);
     }
   }
 
@@ -210,31 +206,28 @@ public class KMeansJob extends TaskWorker {
     @Override
     public Object onMessage(Object object1, Object object2) throws ArrayIndexOutOfBoundsException {
 
-      KMeansCenters kMeansCenters = (KMeansCenters) object1;
-      KMeansCenters kMeansCenters1 = (KMeansCenters) object2;
+      double[][] kMeansCenters = (double[][]) object1;
+      double[][] kMeansCenters1 = (double[][]) object2;
 
-      LOG.fine("Kmeans Centers 1:" + Arrays.deepToString(kMeansCenters.getCenters()));
-      LOG.fine("Kmeans Centers 2:" + Arrays.deepToString(kMeansCenters1.getCenters()));
+      LOG.fine("Kmeans Centers 1:" + Arrays.deepToString(kMeansCenters));
+      LOG.fine("Kmeans Centers 2:" + Arrays.deepToString(kMeansCenters1));
 
-      KMeansCenters ret = new KMeansCenters();
+      double[][] newCentroids = new double[kMeansCenters.length]
+              [kMeansCenters[0].length];
 
-      double[][] newCentroids = new double[kMeansCenters.getCenters().length]
-              [kMeansCenters.getCenters()[0].length];
-
-      if (kMeansCenters.getCenters().length != kMeansCenters1.getCenters().length) {
-        throw new RuntimeException("Center sizes not equal " + kMeansCenters.getCenters().length
-                + " != " + kMeansCenters1.getCenters().length);
+      if (kMeansCenters.length != kMeansCenters1.length) {
+        throw new RuntimeException("Center sizes not equal " + kMeansCenters.length
+                + " != " + kMeansCenters1.length);
       }
 
-      for (int j = 0; j < kMeansCenters.getCenters().length; j++) {
-        for (int k = 0; k < kMeansCenters.getCenters()[0].length; k++) {
-          double newVal = kMeansCenters.getCenters()[j][k] + kMeansCenters1.getCenters()[j][k];
+      for (int j = 0; j < kMeansCenters.length; j++) {
+        for (int k = 0; k < kMeansCenters[0].length; k++) {
+          double newVal = kMeansCenters[j][k] + kMeansCenters1[j][k];
           newCentroids[j][k] = newVal;
         }
       }
-      ret.setCenters(newCentroids);
       LOG.fine("Kmeans Centers final:" + Arrays.deepToString(newCentroids));
-      return ret;
+      return newCentroids;
     }
   }
 

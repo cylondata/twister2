@@ -16,8 +16,8 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskConfigurations;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.dataset.DSet;
-import edu.iu.dsc.tws.dataset.PSet;
+import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
@@ -25,13 +25,13 @@ import edu.iu.dsc.tws.task.api.TaskContext;
  * Connected source
  */
 public class ConnectedSource extends BaseSource implements Receptor {
-  private DSet<Object> dSet;
+  private DataObject<Object> dSet;
 
   private String edge = TaskConfigurations.DEFAULT_EDGE;
 
   private boolean finished = false;
 
-  private PSet<Object> data;
+  private DataPartition<Object, Object> data;
 
   private Iterator<Object> iterator;
 
@@ -43,19 +43,15 @@ public class ConnectedSource extends BaseSource implements Receptor {
   }
 
   @Override
-  public void add(String name, DSet<Object> d) {
-    dSet = d;
-  }
-
-  @Override
   public void execute() {
     if (finished) {
       return;
     }
 
     if (data == null) {
-      data = dSet.getPartitions(context.getWorkerId(), context.taskIndex());
-      iterator = data.iterator();
+      data = (DataPartition<Object, Object>) dSet.getPartitions(context.getWorkerId(),
+          context.taskIndex());
+      iterator = (Iterator<Object>) data.getOut();
     }
 
     if (iterator.hasNext()) {
@@ -77,5 +73,10 @@ public class ConnectedSource extends BaseSource implements Receptor {
 
   public void setEdge(String edge) {
     this.edge = edge;
+  }
+
+  @Override
+  public void add(String name, DataObject<?> data) {
+
   }
 }

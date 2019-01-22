@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.worker.JobListener;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
-import edu.iu.dsc.tws.dataset.DataSet;
+import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
@@ -57,7 +57,7 @@ public class CDFWRuntime implements JobListener {
    * The outputs from previous graphs
    * [graph, [output name, data set]]
    */
-  private Map<String, Map<String, DataSet<Object>>> outPuts = new HashMap<>();
+  private Map<String, Map<String, DataObject<Object>>> outPuts = new HashMap<>();
 
   /**
    * Task executor
@@ -141,13 +141,13 @@ public class CDFWRuntime implements JobListener {
             throw new RuntimeException("We cannot find the input graph: " + inputGraph);
           }
 
-          Map<String, DataSet<Object>> outsPerGraph = outPuts.get(inputGraph);
+          Map<String, DataObject<Object>> outsPerGraph = outPuts.get(inputGraph);
 
           if (!outsPerGraph.containsKey(inputName)) {
             throw new RuntimeException("We cannot find the input: " + inputName);
           }
 
-          DataSet<Object> outPutObject = outsPerGraph.get(inputName);
+          DataObject<Object> outPutObject = outsPerGraph.get(inputName);
           taskExecutor.addSourceInput(taskGraph, executionPlan, inputName, outPutObject);
         }
       }
@@ -155,7 +155,7 @@ public class CDFWRuntime implements JobListener {
       List<CDFWJobAPI.Input> inputs = subGraph.getInputsList();
       // now lets get those inputs
       for (CDFWJobAPI.Input in : inputs) {
-        DataSet<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
+        DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
         taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
       }
 
@@ -169,10 +169,10 @@ public class CDFWRuntime implements JobListener {
           .setSubgraphName(subGraph.getName()).build();
 
       List<String> outPutNames = subGraph.getOutputsList();
-      Map<String, DataSet<Object>> outs = new HashMap<>();
+      Map<String, DataObject<Object>> outs = new HashMap<>();
       for (String out : outPutNames) {
         // get the outputs
-        DataSet<Object> outPut = taskExecutor.getSinkOutput(taskGraph, executionPlan, out);
+        DataObject<Object> outPut = taskExecutor.getSinkOutput(taskGraph, executionPlan, out);
         outs.put(out, outPut);
       }
       outPuts.put(subGraph.getName(), outs);

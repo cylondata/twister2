@@ -43,7 +43,7 @@ import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.dataset.DSet;
+import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -66,7 +66,7 @@ public final class ParallelDataFlowsExample {
     }
 
     @Override
-    public void add(String name, DSet<Object> data) {
+    public void add(String name, DataObject<Object> data) {
       LOG.log(Level.FINE, "Received input: " + name);
     }
   }

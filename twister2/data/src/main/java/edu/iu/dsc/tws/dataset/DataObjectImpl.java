@@ -11,31 +11,28 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset;
 
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.Map;
 
-/**
- * Partition of a distributed set
- *
- * @param <T> partition
- */
-public interface PSet<T> {
-  /**
-   * Get the process id this partition belongs to
-   *
-   * @return the process id
-   */
-  int getWorkerId();
+import edu.iu.dsc.tws.common.config.Config;
 
-  /**
-   * Get the id of the partition
-   * @return the id of the partition
-   */
-  int getPartitionId();
+public class DataObjectImpl<T> implements DataObject<T> {
+  private Map<Integer, DataPartition<T, ?>> partitions = new HashMap<>();
 
-  /**
-   * Weather there is a next record
-   *
-   * @return true if there is a next record
-   */
-  Iterator<T> iterator();
+  public DataObjectImpl(Config config) {
+  }
+
+  @Override
+  public void addPartition(DataPartition<T, ?> partition) {
+
+  }
+
+  public DataPartition<T, ?>[] getPartitions() {
+    return null;
+  }
+
+  @Override
+  public DataPartition<T, ?> getPartitions(int procId, int partitionId) {
+    return partitions.get(partitionId);
+  }
 }

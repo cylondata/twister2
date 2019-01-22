@@ -16,20 +16,28 @@ package edu.iu.dsc.tws.dataset;
  *
  * @param <T> the distributed set interface
  */
-public interface DSet<T> {
+public interface DataObject<T> {
+
+  /**
+   * Add a partition to the data object
+   *
+   * @param partition the partition
+   */
+  void addPartition(DataPartition<T, ?> partition);
+
   /**
    * Get the list of partitions for a process
    *
-   * @param procId process id
    * @return the partitions
    */
-  PSet<T>[] getPartitions(int procId);
+  DataPartition<T, ?>[] getPartitions();
 
   /**
    * Get the partition with the specific partition id
-   * @param procId
-   * @param partitionId
-   * @return PSet
+   *
+   * @param procId process ID
+   * @param partitionId partition id
+   * @return DataPartition
    */
-  PSet<T> getPartitions(int procId, int partitionId);
+  DataPartition<T, ?> getPartitions(int procId, int partitionId);
 }

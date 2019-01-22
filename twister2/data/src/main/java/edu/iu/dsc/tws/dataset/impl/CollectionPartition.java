@@ -15,25 +15,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import edu.iu.dsc.tws.dataset.PSet;
-import edu.iu.dsc.tws.dataset.Partition;
+import edu.iu.dsc.tws.dataset.DataPartition;
 
-public class CollectionPSet<T> extends Partition<T> implements PSet<T> {
+public class CollectionPartition<T> implements DataPartition<T, Iterator<T>> {
   private List<T> dataList = new ArrayList<>();
-
-  private int workerId;
 
   private int id;
 
-  public CollectionPSet(int workerId, int id) {
-    super(id);
-    this.workerId = workerId;
+  public CollectionPartition(int id) {
     this.id = id;
-  }
-
-  @Override
-  public int getWorkerId() {
-    return workerId;
   }
 
   @Override
@@ -42,7 +32,7 @@ public class CollectionPSet<T> extends Partition<T> implements PSet<T> {
   }
 
   @Override
-  public Iterator<T> iterator() {
+  public Iterator<T> getOut() {
     return dataList.iterator();
   }
 

@@ -9,18 +9,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
+package edu.iu.dsc.tws.dataset.impl;
 
-import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.dataset.DataPartition;
 
-/**
- * Add input to a task graph
- */
-public interface Receptor {
-  /**
-   * This method is called when the data is available
-   * @param name name of the input
-   * @param data input data
-   */
-  void add(String name, DataObject<?> data);
+public class EntityPartition<T> implements DataPartition<T, T> {
+  private int id;
+
+  private T value;
+
+  public EntityPartition(int id, T val) {
+    this.id = id;
+    this.value = val;
+  }
+
+  @Override
+  public int getPartitionId() {
+    return id;
+  }
+
+  @Override
+  public T getOut() {
+    return value;
+  }
 }

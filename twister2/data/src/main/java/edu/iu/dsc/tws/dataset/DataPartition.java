@@ -11,44 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset;
 
-import java.util.Iterator;
+/**
+ * Partition of a distributed set
+ *
+ * @param <T> partition
+ */
+public interface DataPartition<T, O> {
+  /**
+   * Get the id of the partition
+   * @return the id of the partition
+   */
+  int getPartitionId();
 
-public class Partition<T> implements PSet<T> {
-  private T data;
-
-  private int id;
-
-  private int workerId;
-
-  public Partition(int id) {
-    this.id = id;
-  }
-
-  public Partition(int pId, T d) {
-    this.data = d;
-    this.id = pId;
-  }
-
-  public T getData() {
-    return data;
-  }
-
-  public int getId() {
-    return id;
-  }
-
-  @Override
-  public int getWorkerId() {
-    return id;
-  }
-
-  @Override
-  public int getPartitionId() {
-    return 0;
-  }
-
-  @Override
-  public Iterator<T> iterator() {
-    return null;
-  }
+  /**
+   * Weather there is a next record
+   *
+   * @return true if there is a next record
+   */
+  O getOut();
 }
