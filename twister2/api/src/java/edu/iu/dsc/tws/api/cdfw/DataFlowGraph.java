@@ -164,6 +164,7 @@ public final class DataFlowGraph {
         .setConfig(configBuilder)
         .setGraphSerialized(ByteString.copyFrom(graphBytes))
         .setInstances(workers)
+        .setCdfwScheduleplan(cdfwSchedulePlans)
         .addAllOutputs(outputs)
         .addAllInputs(inputs)
         .build();

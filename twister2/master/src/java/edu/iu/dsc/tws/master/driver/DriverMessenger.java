@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.master.driver;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
@@ -20,6 +21,8 @@ import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.master.server.WorkerMonitor;
 
 public class DriverMessenger implements IDriverMessenger {
+
+  private static final Logger LOG = Logger.getLogger(DriverMessenger.class.getName());
 
   private WorkerMonitor workerMonitor;
 
@@ -33,6 +36,7 @@ public class DriverMessenger implements IDriverMessenger {
    */
   @Override
   public boolean broadcastToAllWorkers(Message message) {
+    LOG.info("Received message:" + message);
     return workerMonitor.broadcastMessage(message);
   }
 

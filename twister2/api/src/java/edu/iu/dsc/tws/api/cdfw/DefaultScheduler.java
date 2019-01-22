@@ -42,7 +42,6 @@ public class DefaultScheduler implements ICDFWScheduler {
   public Set<Integer> schedule(DataFlowGraph graphJob) {
 
     Set<Integer> scheduledGraph = scheduleGraphs(graphJob);
-
     LOG.info("%%%% Scheduled Graph list details: %%%%" + scheduledGraph);
 
     return scheduledGraph;

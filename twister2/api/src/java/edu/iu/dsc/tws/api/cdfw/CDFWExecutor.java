@@ -74,10 +74,8 @@ public final class CDFWExecutor {
     DefaultScheduler defaultScheduler = new DefaultScheduler(this.workerInfoList);
     Set<Integer> workerIDs = defaultScheduler.schedule(graph);
 
-    CDFWJobAPI.SubGraph job = buildCDFWJob(graph);
-
-    CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlan = buildCDFWSchedulePlan(job, workerIDs);
-    LOG.info("CDFW Schedule Plan:" + cdfwSchedulePlan);
+    CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlan = buildCDFWSchedulePlan(workerIDs);
+    CDFWJobAPI.SubGraph job = buildCDFWJob(graph, cdfwSchedulePlan);
 
     // this is the first time
     if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
@@ -122,10 +120,8 @@ public final class CDFWExecutor {
           DataFlowGraph dataFlowGraph = dataFlowGraphEntry.getKey();
           Set<Integer> workerIDs = dataFlowGraphEntry.getValue();
 
-          CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph);
-          CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlan
-              = buildCDFWSchedulePlan(job, workerIDs);
-          LOG.info("CDFW Schedule Plan:" + cdfwSchedulePlan);
+          CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlan = buildCDFWSchedulePlan(workerIDs);
+          CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph, cdfwSchedulePlan);
 
           submitJob(job);
           driverState = DriverState.JOB_SUBMITTED;
@@ -144,12 +140,8 @@ public final class CDFWExecutor {
     sendCloseMessage();
   }
 
-  private CDFWJobAPI.CDFWSchedulePlan buildCDFWSchedulePlan(
-      CDFWJobAPI.SubGraph job, Set<Integer> workerIDs) {
-
-    CDFWJobAPI.CDFWSchedulePlan.Builder builder
-        = CDFWJobAPI.CDFWSchedulePlan.newBuilder();
-    builder.setSubgraph(job);
+  private CDFWJobAPI.CDFWSchedulePlan buildCDFWSchedulePlan(Set<Integer> workerIDs) {
+    CDFWJobAPI.CDFWSchedulePlan.Builder builder = CDFWJobAPI.CDFWSchedulePlan.newBuilder();
     builder.addAllWorkers(workerIDs);
     return builder.build();
   }
@@ -177,7 +169,9 @@ public final class CDFWExecutor {
    * This method is responsible for building the cdfw job object which is based on the outcome of
    * the scheduled graphs list.
    */
-  private CDFWJobAPI.SubGraph buildCDFWJob(DataFlowGraph job) {
+  private CDFWJobAPI.SubGraph buildCDFWJob(DataFlowGraph job,
+                                           CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlan) {
+    job.setCdfwSchedulePlans(cdfwSchedulePlan);
     return job.build();
   }
 
