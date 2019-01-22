@@ -168,7 +168,7 @@ public final class CDFWExecutor {
     inDriverEvents.offer(new DriverEvent(DriveEventType.FINISHED_JOB, anyMessage));
   }
 
-  void addWorkerList(List<JobMasterAPI.WorkerInfo> workerList) {
+  void setWorkerList(List<JobMasterAPI.WorkerInfo> workerList) {
     this.workerInfoList = workerList;
   }
 

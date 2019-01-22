@@ -24,6 +24,7 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.cdfw.BaseDriver;
+import edu.iu.dsc.tws.api.cdfw.CDFWEnv;
 import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
 import edu.iu.dsc.tws.api.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
@@ -55,7 +56,7 @@ public final class HelloExample {
   public static class HelloDriver extends BaseDriver {
 
     @Override
-    public void execute(Config config, CDFWExecutor exec) {
+    public void execute(Config config, CDFWEnv exec) {
       // build JobConfig
       DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
       FirstSource firstSource = new FirstSource();
@@ -73,7 +74,7 @@ public final class HelloExample {
       //Invoke CDFW Submitter and send the metagraph
       DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
           setWorkers(4).addDataFlowJobConfig(dafaFlowJobConfig);
-      exec.execute(job);
+      exec.executeDataFlowGraph(job);
     }
   }
 

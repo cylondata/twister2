@@ -24,6 +24,7 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.cdfw.BaseDriver;
+import edu.iu.dsc.tws.api.cdfw.CDFWEnv;
 import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
 import edu.iu.dsc.tws.api.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
@@ -52,7 +53,7 @@ public final class TwoDataFlowsExample {
 
   public static class TwoDataFlowsDriver extends BaseDriver {
     @Override
-    public void execute(Config config, CDFWExecutor exec) {
+    public void execute(Config config, CDFWEnv exec) {
       // build JobConfig
       DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
@@ -139,7 +140,7 @@ public final class TwoDataFlowsExample {
     Twister2Submitter.submitJob(twister2Job, config);
   }
 
-  private static void runFirstJob(Config config, CDFWExecutor cdfwExecutor,
+  private static void runFirstJob(Config config, CDFWEnv cdfwEnv,
                                           int parallelismValue, DafaFlowJobConfig jobConfig) {
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
@@ -156,10 +157,10 @@ public final class TwoDataFlowsExample {
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph).
         setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("first_out");
-    cdfwExecutor.execute(job);
+    cdfwEnv.executeDataFlowGraph(job);
   }
 
-  private static void runSecondJob(Config config, CDFWExecutor cdfwExecutor,
+  private static void runSecondJob(Config config, CDFWEnv cdfwEnv,
                                           int parallelismValue, DafaFlowJobConfig jobConfig) {
     ConnectedSource connectedSource = new ConnectedSource("reduce");
     ConnectedSink connectedSink = new ConnectedSink();
@@ -176,6 +177,6 @@ public final class TwoDataFlowsExample {
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph).
         setWorkers(4).addDataFlowJobConfig(jobConfig).addInput("first_graph", "first_out");
-    cdfwExecutor.execute(job);
+    cdfwEnv.executeDataFlowGraph(job);
   }
 }

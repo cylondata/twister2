@@ -28,14 +28,9 @@ public abstract class BaseDriver implements IDriver {
   private static final Logger LOG = Logger.getLogger(BaseDriver.class.getName());
 
   /**
-   * Worker list
+   * The cdfw execution environment
    */
-  private List<JobMasterAPI.WorkerInfo> workerInfoList;
-
-  /**
-   * The worker executor
-   */
-  private CDFWExecutor executor;
+  private CDFWEnv executionEnv;
 
   /**
    * The queue to coordinate between driver and workers
@@ -44,7 +39,7 @@ public abstract class BaseDriver implements IDriver {
 
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
-    executor = new CDFWExecutor(config, messenger);
+    this.executionEnv = new CDFWEnv(config, scaler, messenger);
 
     try {
       waitForEvent(DriveEventType.INITIALIZE);
@@ -53,31 +48,25 @@ public abstract class BaseDriver implements IDriver {
     }
 
     // call the execute method of the implementation
-    execute(config, executor);
+    execute(config, this.executionEnv);
 
     // now lets close
-    executor.close();
+    this.executionEnv.close();
   }
 
-  public abstract void execute(Config config, CDFWExecutor exec);
+  public abstract void execute(Config config, CDFWEnv executionEnv);
 
   @Override
   public void workerMessageReceived(Any anyMessage, int senderWorkerID) {
-    executor.workerMessageReceived(anyMessage, senderWorkerID);
+    this.executionEnv.workerMessageReceived(anyMessage, senderWorkerID);
   }
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    if (executor != null) {
-      executor.addWorkerList(workerList);
-    }
+    this.executionEnv.allWorkersJoined(workerList);
 
+    // todo: should this be moved to the execution env?
     inMessages.offer(new DriverEvent(DriveEventType.INITIALIZE, null));
-
-    //Added to get the worker info list for testing
-    if (workerList != null) {
-      this.workerInfoList = workerList;
-    }
   }
 
   private DriverEvent waitForEvent(DriveEventType type) throws Exception {
