@@ -16,7 +16,6 @@ import java.util.List;
 
 import com.google.protobuf.ByteString;
 
-import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -39,7 +38,7 @@ public final class DataFlowGraph {
   private int workers;
 
   // the job configurations
-  private JobConfig jobConfig = new JobConfig();
+  private DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
 
   // input names to this
   private List<CDFWJobAPI.Input> inputs = new ArrayList<>();
@@ -93,13 +92,13 @@ public final class DataFlowGraph {
     return diskGigaBytes;
   }
 
-  public DataFlowGraph addJobConfig(JobConfig jCfg) {
-    jobConfig.putAll(jCfg);
+  public DataFlowGraph addDataFlowJobConfig(DafaFlowJobConfig dafaFlowJobConfig) {
+    this.dafaFlowJobConfig.putAll(dafaFlowJobConfig);
     return this;
   }
 
-  public JobConfig getJobConfig() {
-    return jobConfig;
+  public DafaFlowJobConfig getDafaFlowJobConfig() {
+    return dafaFlowJobConfig;
   }
 
   public int getWorkers() {
@@ -140,7 +139,7 @@ public final class DataFlowGraph {
       throw new RuntimeException("A name should be specified");
     }
 
-    jobConfig.forEach((key, value) -> {
+    dafaFlowJobConfig.forEach((key, value) -> {
       byte[] objectByte = kryoMemorySerializer.serialize(value);
       configBuilder.putConfigByteMap(key, ByteString.copyFrom(objectByte));
     });

@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.cdfw.BaseDriver;
 import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
+import edu.iu.dsc.tws.api.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSource;
@@ -53,7 +54,7 @@ public final class TwoDataFlowsExample {
     @Override
     public void execute(Config config, CDFWExecutor exec) {
       // build JobConfig
-      JobConfig jobConfig = new JobConfig();
+      DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
       LOG.log(Level.INFO, "Executing the first graph");
       // run the first job
@@ -139,7 +140,7 @@ public final class TwoDataFlowsExample {
   }
 
   private static void runFirstJob(Config config, CDFWExecutor cdfwExecutor,
-                                          int parallelismValue, JobConfig jobConfig) {
+                                          int parallelismValue, DafaFlowJobConfig jobConfig) {
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
 
@@ -154,12 +155,12 @@ public final class TwoDataFlowsExample {
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph).
-        setWorkers(4).addJobConfig(jobConfig).addOutput("first_out");
+        setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("first_out");
     cdfwExecutor.execute(job);
   }
 
   private static void runSecondJob(Config config, CDFWExecutor cdfwExecutor,
-                                          int parallelismValue, JobConfig jobConfig) {
+                                          int parallelismValue, DafaFlowJobConfig jobConfig) {
     ConnectedSource connectedSource = new ConnectedSource("reduce");
     ConnectedSink connectedSink = new ConnectedSink();
 
@@ -174,7 +175,7 @@ public final class TwoDataFlowsExample {
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph).
-        setWorkers(4).addJobConfig(jobConfig).addInput("first_graph", "first_out");
+        setWorkers(4).addDataFlowJobConfig(jobConfig).addInput("first_graph", "first_out");
     cdfwExecutor.execute(job);
   }
 }

@@ -33,8 +33,8 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
+import edu.iu.dsc.tws.api.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSource;
@@ -113,16 +113,16 @@ public final class ParallelDataFlowsExample {
     configurations.put(CDFConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
 
     // build JobConfig
-    JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(configurations);
+    DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
+    dafaFlowJobConfig.putAll(configurations);
 
     config = Config.newBuilder().putAll(config)
         .put(SchedulerContext.DRIVER_CLASS, null).build();
 
     CDFWExecutor cdfwExecutor = new CDFWExecutor(config, null);
 
-    DataFlowGraph job1 = generateFirstJob(config, parallelismValue, jobConfig);
-    DataFlowGraph job2 = generateSecondJob(config, parallelismValue, jobConfig);
+    DataFlowGraph job1 = generateFirstJob(config, parallelismValue, dafaFlowJobConfig);
+    DataFlowGraph job2 = generateSecondJob(config, parallelismValue, dafaFlowJobConfig);
 
     LOG.info("Job 1 and Job 2 are:" + job1 + "\t" + job2);
     cdfwExecutor.executeCDFW(job1, job2);
@@ -130,7 +130,7 @@ public final class ParallelDataFlowsExample {
 
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
-                                                JobConfig jobConfig) {
+                                                DafaFlowJobConfig jobConfig) {
 
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink();
@@ -146,13 +146,13 @@ public final class ParallelDataFlowsExample {
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("Graph1", batchGraph).
-        setWorkers(4).addJobConfig(jobConfig);
+        setWorkers(4).addDataFlowJobConfig(jobConfig);
 
     return job;
   }
 
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
-                                                 JobConfig jobConfig) {
+                                                 DafaFlowJobConfig jobConfig) {
 
     ConnectedSource connectedSource = new ConnectedSource();
     ConnectedSink connectedSink = new ConnectedSink();
@@ -168,7 +168,7 @@ public final class ParallelDataFlowsExample {
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("Graph2", batchGraph).
-        setWorkers(2).addJobConfig(jobConfig);
+        setWorkers(2).addDataFlowJobConfig(jobConfig);
 
     return job;
   }

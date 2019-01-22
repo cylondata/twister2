@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.cdfw.BaseDriver;
 import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
+import edu.iu.dsc.tws.api.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.job.Twister2Job;
@@ -56,7 +57,7 @@ public final class HelloExample {
     @Override
     public void execute(Config config, CDFWExecutor exec) {
       // build JobConfig
-      JobConfig jobConfig = new JobConfig();
+      DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
       FirstSource firstSource = new FirstSource();
       SecondSink secondSink = new SecondSink();
       TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
@@ -71,7 +72,7 @@ public final class HelloExample {
 
       //Invoke CDFW Submitter and send the metagraph
       DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
-          setWorkers(4).addJobConfig(jobConfig);
+          setWorkers(4).addDataFlowJobConfig(dafaFlowJobConfig);
       exec.execute(job);
     }
   }
