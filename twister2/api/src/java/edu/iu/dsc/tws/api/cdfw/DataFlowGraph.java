@@ -52,15 +52,7 @@ public final class DataFlowGraph {
   // name to be used
   private String graphName;
 
-  public CDFWJobAPI.CDFWSchedulePlan getCdfwSchedulePlans() {
-    return cdfwSchedulePlans;
-  }
-
-  public DataFlowGraph setCdfwSchedulePlans(CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlan) {
-    this.cdfwSchedulePlans = cdfwSchedulePlan;
-    return this;
-  }
-
+  //schedule plan which has the workers to run the dataflow
   private CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlans;
 
   private DataFlowGraph(String name, DataFlowTaskGraph g) {
@@ -73,6 +65,14 @@ public final class DataFlowGraph {
     return new DataFlowGraph(name, g);
   }
 
+  public CDFWJobAPI.CDFWSchedulePlan getCdfwSchedulePlans() {
+    return cdfwSchedulePlans;
+  }
+
+  public DataFlowGraph setCdfwSchedulePlans(CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlan) {
+    this.cdfwSchedulePlans = cdfwSchedulePlan;
+    return this;
+  }
 
   public DataFlowGraph setCpu(int c) {
     this.cpu = c;
