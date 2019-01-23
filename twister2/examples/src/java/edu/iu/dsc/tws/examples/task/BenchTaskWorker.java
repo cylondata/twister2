@@ -45,6 +45,8 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   protected static JobParameters jobParameters;
 
+  protected static Object inputData;
+
   @Override
   public void execute() {
     experimentData = new ExperimentData();
@@ -62,6 +64,8 @@ public abstract class BenchTaskWorker extends TaskWorker {
       experimentData.setOperationMode(OperationMode.BATCH);
       experimentData.setIterations(jobParameters.getIterations());
     }
+    inputData = generateData();
+    experimentData.setInput(inputData);
     buildTaskGraph();
     dataFlowTaskGraph = taskGraphBuilder.build();
     executionPlan = taskExecutor.plan(dataFlowTaskGraph);
@@ -85,7 +89,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
     @Override
     public void execute() {
-      Object val = generateData();
+      Object val = inputData;
       int iterations = jobParameters.getIterations();
       while (count <= iterations) {
         if (count == iterations) {
@@ -117,7 +121,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
     @Override
     public void execute() {
-      Object val = generateData();
+      Object val = inputData;
       int iterations = jobParameters.getIterations();
       while (count <= iterations) {
         if (count == iterations) {
@@ -148,7 +152,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
     @Override
     public void execute() {
-      Object val = generateData();
+      Object val = inputData;
       experimentData.setInput(val);
       int iterations = jobParameters.getIterations();
       while (count <= iterations) {
@@ -176,10 +180,9 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
     @Override
     public void execute() {
-      Object val = generateData();
+      Object val = inputData;
       int iterations = jobParameters.getIterations();
       while (count <= iterations) {
-        experimentData.setInput(val);
         if (context.write(edge, count, val)) {
           //
         }

@@ -463,9 +463,9 @@ public class ExperimentVerification implements IVerification {
             String msg = String.format("Expected Result : %s Generated Result : %s",
                 resString, outputRes);
             if (isVerified) {
-              LOG.severe(msg);
-            } else {
               LOG.info(msg);
+            } else {
+              LOG.severe("Results Not Verified : " + msg);
               throw new VerificationException(msg);
             }
           }
