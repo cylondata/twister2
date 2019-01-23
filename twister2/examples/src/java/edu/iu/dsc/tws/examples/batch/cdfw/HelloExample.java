@@ -157,9 +157,8 @@ public final class HelloExample {
         .put(SchedulerContext.DRIVER_CLASS, null).build();
 
     Twister2Job twister2Job;
-    twister2Job = Twister2Job.newBuilder()
+    twister2Job = Twister2Job.newCDFWBuilder()
         .setJobName(HelloExample.class.getName())
-        .setWorkerClass(CDFWWorker.class)
         .setDriverClass(HelloDriver.class.getName())
         .addComputeResource(1, 512, instances)
         .setConfig(jobConfig)
