@@ -48,13 +48,13 @@ public abstract class BaseDriver implements IDriver {
     }
 
     // call the execute method of the implementation
-    execute(config, this.executionEnv);
+    execute(this.executionEnv);
 
     // now lets close
     this.executionEnv.close();
   }
 
-  public abstract void execute(Config config, CDFWEnv execEnv);
+  public abstract void execute(CDFWEnv execEnv);
 
   @Override
   public void workerMessageReceived(Any anyMessage, int senderWorkerID) {

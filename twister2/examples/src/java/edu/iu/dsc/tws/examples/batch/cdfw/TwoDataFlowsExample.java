@@ -52,16 +52,16 @@ public final class TwoDataFlowsExample {
 
   public static class TwoDataFlowsDriver extends BaseDriver {
     @Override
-    public void execute(Config config, CDFWEnv exec) {
+    public void execute(CDFWEnv exec) {
       // build JobConfig
       DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
       LOG.log(Level.INFO, "Executing the first graph");
       // run the first job
-      runFirstJob(config, exec, 4, jobConfig);
+      runFirstJob(exec.getConfig(), exec, 4, jobConfig);
       // run the second job
       LOG.log(Level.INFO, "Executing the second graph");
-      runSecondJob(config, exec, 4, jobConfig);
+      runSecondJob(exec.getConfig(), exec, 4, jobConfig);
     }
   }
 

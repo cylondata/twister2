@@ -54,12 +54,12 @@ public final class HelloExample {
   public static class HelloDriver extends BaseDriver {
 
     @Override
-    public void execute(Config config, CDFWEnv exec) {
+    public void execute(CDFWEnv execEnv) {
       // build JobConfig
       DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
       FirstSource firstSource = new FirstSource();
       SecondSink secondSink = new SecondSink();
-      TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
+      TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(execEnv.getConfig());
       graphBuilderX.addSource("source1", firstSource, 4);
       ComputeConnection reduceConn = graphBuilderX.addSink("sink1", secondSink,
           1);
@@ -72,7 +72,7 @@ public final class HelloExample {
       //Invoke CDFW Submitter and send the metagraph
       DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
           setWorkers(4).addDataFlowJobConfig(dafaFlowJobConfig);
-      exec.executeDataFlowGraph(job);
+      execEnv.executeDataFlowGraph(job);
     }
   }
 
