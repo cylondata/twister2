@@ -29,10 +29,6 @@ message CDFWSchedulePlan {
     repeated int32 workers = 1;
 }
 
-message WorkerList {
-    repeated int32 workers = 1;
-}
-
 message Input {
     string parentGraph = 1;
     string name = 2;

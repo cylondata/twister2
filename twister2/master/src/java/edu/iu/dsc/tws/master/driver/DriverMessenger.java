@@ -36,7 +36,6 @@ public class DriverMessenger implements IDriverMessenger {
    */
   @Override
   public boolean broadcastToAllWorkers(Message message) {
-    LOG.info("Received message:" + message);
     return workerMonitor.broadcastMessage(message);
   }
 
