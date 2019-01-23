@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.api.cdfw;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,30 +41,18 @@ public class DefaultScheduler implements ICDFWScheduler {
   @Override
   public Set<Integer> schedule(DataFlowGraph graphJob) {
 
-    Set<Integer> scheduledGraph = new LinkedHashSet<>();
-    Set<Integer> workerList = new HashSet<>();
-
-    for (JobMasterAPI.WorkerInfo workerInfos : workerInfoList) {
-      workerList.add(workerInfos.getWorkerID());
-    }
-
-    scheduledGraphMap.put(graphJob, workerList);
+    Set<Integer> scheduledGraph = scheduleGraphs(graphJob);
     LOG.info("%%%% Scheduled Graph list details: %%%%" + scheduledGraph);
 
     return scheduledGraph;
   }
 
-
   /**
-   * This method is able to schedule multiple dataflow
-   * graphs. It will return the map which corresponds to the dataflow graph and
-   * their worker ids.
+   * This method is able to schedule multiple dataflow graphs. It will return the map which
+   * corresponds to the dataflow graph and their worker ids.
    */
   @Override
   public Map<DataFlowGraph, Set<Integer>> schedule(DataFlowGraph... graphJob) {
-
-    //Map<DataFlowGraph, Set<Integer>> scheduledGraphMap = new LinkedHashMap<>();
-    //Set<Integer> workerList = new HashSet<>();
 
     Set<Integer> workerList;
 
@@ -75,13 +62,13 @@ public class DefaultScheduler implements ICDFWScheduler {
       scheduledGraphMap.put(graphJob[0], workerList);
 
     } else if (graphJob.length > 1) {
-      LOG.info("Graph Resource Requirements:" + graphJob[0].getWorkers()
-          + "\t" + graphJob[1].getWorkers() + "\t" + workerInfoList.size()
-          + "%%%% Scheduled Graph Map details: %%%%" + scheduledGraphMap);
       for (DataFlowGraph graph : graphJob) {
         workerList = scheduleGraphs(graph);
         scheduledGraphMap.put(graph, workerList);
       }
+      LOG.info("Graph Resource Requirements:" + graphJob[0].getWorkers()
+          + "\t" + graphJob[1].getWorkers() + "\t" + workerInfoList.size()
+          + "%%%% Scheduled Graph Map details: %%%%" + scheduledGraphMap);
     }
     return scheduledGraphMap;
   }
@@ -113,4 +100,3 @@ public class DefaultScheduler implements ICDFWScheduler {
     return workerList;
   }
 }
-
