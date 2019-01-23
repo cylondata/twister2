@@ -9,18 +9,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
+package edu.iu.dsc.tws.dataset.impl;
 
-import edu.iu.dsc.tws.dataset.DataObject;
+import java.util.Iterator;
 
-/**
- * Add input to a task graph
- */
-public interface Receptor {
-  /**
-   * This method is called when the data is available
-   * @param name name of the input
-   * @param data input data
-   */
-  void add(String name, DataObject<?> data);
+import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
+
+public class IterativeConsumer<T> implements DataPartitionConsumer<T> {
+  private Iterator<T> iterator;
+
+  public IterativeConsumer(Iterator<T> iterator) {
+    this.iterator = iterator;
+  }
+
+  @Override
+  public boolean hasNext() {
+    return iterator.hasNext();
+  }
+
+  @Override
+  public T next() {
+    return iterator.next();
+  }
 }

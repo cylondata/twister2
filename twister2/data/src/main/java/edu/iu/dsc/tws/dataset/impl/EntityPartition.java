@@ -11,42 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset.impl;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
 
-import edu.iu.dsc.tws.dataset.PSet;
-import edu.iu.dsc.tws.dataset.Partition;
-
-public class CollectionPSet<T> extends Partition<T> implements PSet<T> {
-  private List<T> dataList = new ArrayList<>();
-
-  private int workerId;
-
+public class EntityPartition<T> implements DataPartition<T> {
   private int id;
 
-  public CollectionPSet(int workerId, int id) {
-    super(id);
-    this.workerId = workerId;
+  private T value;
+
+  public EntityPartition(int id, T val) {
     this.id = id;
+    this.value = val;
   }
 
   @Override
-  public int getWorkerId() {
-    return workerId;
+  public DataPartitionConsumer<T> getConsumer() {
+    return new EntityConsumer<>(value);
   }
 
   @Override
   public int getPartitionId() {
     return id;
-  }
-
-  @Override
-  public Iterator<T> iterator() {
-    return dataList.iterator();
-  }
-
-  public void add(T val) {
-    dataList.add(val);
   }
 }

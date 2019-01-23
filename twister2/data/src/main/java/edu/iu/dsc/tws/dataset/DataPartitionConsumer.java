@@ -9,18 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task;
-
-import edu.iu.dsc.tws.dataset.DataObject;
+package edu.iu.dsc.tws.dataset;
 
 /**
- * Add input to a task graph
+ * The partition consumer
+ *
+ * @param <T> the type of output
  */
-public interface Receptor {
+public interface DataPartitionConsumer<T> {
   /**
-   * This method is called when the data is available
-   * @param name name of the input
-   * @param data input data
+   * Weather we have a next value
+   * @return true if there is a value in next call
    */
-  void add(String name, DataObject<?> data);
+  boolean hasNext();
+
+  /**
+   * Return the next value
+   * @return next value
+   */
+  T next();
 }
