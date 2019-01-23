@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.cdfw.BaseDriver;
 import edu.iu.dsc.tws.api.cdfw.CDFWEnv;
-import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
 import edu.iu.dsc.tws.api.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;

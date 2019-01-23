@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class TSetEnv{
+public class TSetEnv {
 
   private Config config;
 
@@ -39,11 +39,11 @@ public class TSetEnv{
     return this.tSetBuilder.createSource(source);
   }
 
-  public void setMode(OperationMode mode){
+  public void setMode(OperationMode mode) {
     this.tSetBuilder.setMode(mode);
   }
 
-  public void run(){ // todo: is this the best name? or should this be a method in the tset?
+  public void run() { // todo: is this the best name? or should this be a method in the tset?
     DataFlowTaskGraph graph = tSetBuilder.build();
     ExecutionPlan executionPlan = taskExecutor.plan(graph);
     this.taskExecutor.execute(graph, executionPlan);

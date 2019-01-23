@@ -70,7 +70,7 @@ public class CDFWEnv {
     setWorkerInfoList(workerList);
   }
 
-  public void close(){
+  public void close() {
     this.cdfwExecutor.close();
   }
 

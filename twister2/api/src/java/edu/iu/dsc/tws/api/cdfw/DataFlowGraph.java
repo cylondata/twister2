@@ -92,8 +92,8 @@ public final class DataFlowGraph {
     return diskGigaBytes;
   }
 
-  public DataFlowGraph addDataFlowJobConfig(DafaFlowJobConfig dafaFlowJobConfig) {
-    this.dafaFlowJobConfig.putAll(dafaFlowJobConfig);
+  public DataFlowGraph addDataFlowJobConfig(DafaFlowJobConfig jobConfig) {
+    this.dafaFlowJobConfig.putAll(jobConfig);
     return this;
   }
 

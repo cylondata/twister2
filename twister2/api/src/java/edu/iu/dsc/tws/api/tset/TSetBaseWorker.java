@@ -14,8 +14,6 @@ package edu.iu.dsc.tws.api.tset;
 import java.io.Serializable;
 
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public abstract class TSetBaseWorker extends TaskWorker implements Serializable {
 
