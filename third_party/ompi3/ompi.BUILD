@@ -715,7 +715,8 @@ genrule(
 filegroup(
     name = "ompi-lib-files",
     srcs = select (
-                { "@bazel_tools//src/conditions:darwin" : lib_files_darwin,
+                { "@bazel_tools//src/conditions:freebsd" : lib_files,
+                "@bazel_tools//src/conditions:darwin" : lib_files_darwin,
                 "//conditions:default" : lib_files }
                 ),
 )
@@ -723,7 +724,8 @@ filegroup(
 filegroup(
     name = "ompi-bin-files",
     srcs = select (
-                  { "@bazel_tools//src/conditions:darwin" : bin_files_darwin,
+                  { "@bazel_tools//src/conditions:freebsd" : bin_files,
+                  "@bazel_tools//src/conditions:darwin" : bin_files_darwin,
                   "//conditions:default" : bin_files }
                   ),
 )
@@ -731,7 +733,8 @@ filegroup(
 filegroup(
     name = "ompi-include-files",
     srcs = select (
-                  { "@bazel_tools//src/conditions:darwin" : include_files_darwin,
+                  { "@bazel_tools//src/conditions:freebsd" : include_files,
+                  "@bazel_tools//src/conditions:darwin" : include_files_darwin,
                   "//conditions:default" : include_files }
                   ),
 )
@@ -739,7 +742,8 @@ filegroup(
 filegroup(
     name = "ompi-etc-files",
     srcs = select (
-                  { "@bazel_tools//src/conditions:darwin" : etc_files_darwin,
+                  { "@bazel_tools//src/conditions:freebsd" : etc_files,
+                  "@bazel_tools//src/conditions:darwin" : etc_files_darwin,
                   "//conditions:default" : etc_files }
                   ),
 )
