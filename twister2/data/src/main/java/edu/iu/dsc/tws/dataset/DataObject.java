@@ -23,21 +23,20 @@ public interface DataObject<T> {
    *
    * @param partition the partition
    */
-  void addPartition(DataPartition<T, ?> partition);
+  void addPartition(DataPartition<T> partition);
 
   /**
    * Get the list of partitions for a process
    *
    * @return the partitions
    */
-  DataPartition<T, ?>[] getPartitions();
+  DataPartition<T>[] getPartitions();
 
   /**
    * Get the partition with the specific partition id
    *
-   * @param procId process ID
    * @param partitionId partition id
    * @return DataPartition
    */
-  DataPartition<T, ?> getPartitions(int procId, int partitionId);
+  DataPartition<T> getPartitions(int partitionId);
 }

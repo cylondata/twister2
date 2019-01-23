@@ -12,8 +12,9 @@
 package edu.iu.dsc.tws.dataset.impl;
 
 import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
 
-public class EntityPartition<T> implements DataPartition<T, T> {
+public class EntityPartition<T> implements DataPartition<T> {
   private int id;
 
   private T value;
@@ -24,12 +25,12 @@ public class EntityPartition<T> implements DataPartition<T, T> {
   }
 
   @Override
-  public int getPartitionId() {
-    return id;
+  public DataPartitionConsumer<T> getConsumer() {
+    return new EntityConsumer<>(value);
   }
 
   @Override
-  public T getOut() {
-    return value;
+  public int getPartitionId() {
+    return id;
   }
 }

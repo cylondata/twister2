@@ -22,7 +22,7 @@ public interface Collector {
    *
    * @return get the default output
    */
-  DataPartition<?, ?> get();
+  DataPartition<?> get();
 
   /**
    * get the collected valued
@@ -30,7 +30,7 @@ public interface Collector {
    * @param name name of the value to collect
    * @return the partition of the data
    */
-  default DataPartition<?, ?> get(String name) {
+  default DataPartition<?> get(String name) {
     return null;
   }
 }

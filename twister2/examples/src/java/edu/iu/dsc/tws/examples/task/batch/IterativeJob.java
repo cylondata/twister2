@@ -65,7 +65,7 @@ public class IterativeJob extends TaskWorker {
       // this is a blocking call
       taskExecutor.execute(graph, plan);
       DataObject<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
-      DataPartition<Object, ?>[] values = dataSet.getPartitions();
+      DataPartition<Object>[] values = dataSet.getPartitions();
 //      LOG.log(Level.INFO, "Values: " + values);
     }
   }
@@ -122,7 +122,7 @@ public class IterativeJob extends TaskWorker {
     }
 
     @Override
-    public DataPartition<Object, Object> get() {
+    public DataPartition<Object> get() {
       return new EntityPartition<>(context.taskIndex(), list);
     }
   }

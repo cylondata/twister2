@@ -12,20 +12,20 @@
 package edu.iu.dsc.tws.dataset;
 
 /**
- * Partition of a distributed set
+ * The partition consumer
  *
- * @param <T> partition
+ * @param <T> the type of output
  */
-public interface DataPartition<T> {
+public interface DataPartitionConsumer<T> {
   /**
-   * Get the data consumer
-   * @return the consumer
+   * Weather we have a next value
+   * @return true if there is a value in next call
    */
-  DataPartitionConsumer<T> getConsumer();
+  boolean hasNext();
 
   /**
-   * Get the id of the partition
-   * @return the id of the partition
+   * Return the next value
+   * @return next value
    */
-  int getPartitionId();
+  T next();
 }

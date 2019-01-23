@@ -9,23 +9,30 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dataset;
+package edu.iu.dsc.tws.dataset.impl;
 
-/**
- * Partition of a distributed set
- *
- * @param <T> partition
- */
-public interface DataPartition<T> {
-  /**
-   * Get the data consumer
-   * @return the consumer
-   */
-  DataPartitionConsumer<T> getConsumer();
+import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
 
-  /**
-   * Get the id of the partition
-   * @return the id of the partition
-   */
-  int getPartitionId();
+public class EntityConsumer<T> implements DataPartitionConsumer<T> {
+  private T value;
+
+  private boolean consumed = false;
+
+  public EntityConsumer(T value) {
+    this.value = value;
+  }
+
+  @Override
+  public boolean hasNext() {
+    if (consumed) {
+      return false;
+    }
+    consumed = true;
+    return true;
+  }
+
+  @Override
+  public T next() {
+    return value;
+  }
 }

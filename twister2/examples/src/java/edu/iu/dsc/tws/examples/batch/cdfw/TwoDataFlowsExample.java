@@ -73,7 +73,7 @@ public final class TwoDataFlowsExample {
     }
 
     @Override
-    public void add(String name, DataObject<Object> data) {
+    public void add(String name, DataObject<?> data) {
       LOG.log(Level.FINE, "Received input: " + name);
     }
   }

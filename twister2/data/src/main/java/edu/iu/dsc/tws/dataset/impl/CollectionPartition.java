@@ -12,12 +12,13 @@
 package edu.iu.dsc.tws.dataset.impl;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
 
 import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
 
-public class CollectionPartition<T> implements DataPartition<T, Iterator<T>> {
+public class CollectionPartition<T> implements DataPartition<T> {
   private List<T> dataList = new ArrayList<>();
 
   private int id;
@@ -26,17 +27,21 @@ public class CollectionPartition<T> implements DataPartition<T, Iterator<T>> {
     this.id = id;
   }
 
+  public void add(T val) {
+    dataList.add(val);
+  }
+
+  public void addAll(Collection<T> vals) {
+    dataList.addAll(vals);
+  }
+
+  @Override
+  public DataPartitionConsumer<T> getConsumer() {
+    return new IterativeConsumer<>(dataList.iterator());
+  }
+
   @Override
   public int getPartitionId() {
     return id;
-  }
-
-  @Override
-  public Iterator<T> getOut() {
-    return dataList.iterator();
-  }
-
-  public void add(T val) {
-    dataList.add(val);
   }
 }

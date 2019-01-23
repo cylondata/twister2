@@ -11,13 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.cdfw.task;
 
-import java.util.Iterator;
-
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskConfigurations;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
@@ -25,15 +24,15 @@ import edu.iu.dsc.tws.task.api.TaskContext;
  * Connected source
  */
 public class ConnectedSource extends BaseSource implements Receptor {
-  private DataObject<Object> dSet;
+  private DataObject<?> dSet;
 
   private String edge = TaskConfigurations.DEFAULT_EDGE;
 
   private boolean finished = false;
 
-  private DataPartition<Object, Object> data;
+  private DataPartition<?> data;
 
-  private Iterator<Object> iterator;
+  private DataPartitionConsumer<?> iterator;
 
   public ConnectedSource() {
   }
@@ -49,9 +48,8 @@ public class ConnectedSource extends BaseSource implements Receptor {
     }
 
     if (data == null) {
-      data = (DataPartition<Object, Object>) dSet.getPartitions(context.getWorkerId(),
-          context.taskIndex());
-      iterator = (Iterator<Object>) data.getOut();
+      data = dSet.getPartitions(context.taskIndex());
+      iterator = data.getConsumer();
     }
 
     if (iterator.hasNext()) {
@@ -76,7 +74,7 @@ public class ConnectedSource extends BaseSource implements Receptor {
   }
 
   @Override
-  public void add(String name, DataObject<?> data) {
-
+  public void add(String name, DataObject<?> dataObject) {
+    dSet = dataObject;
   }
 }

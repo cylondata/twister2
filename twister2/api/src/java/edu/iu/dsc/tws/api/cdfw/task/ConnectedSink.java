@@ -40,12 +40,12 @@ public class ConnectedSink extends BaseSink implements Collector {
   }
 
   @Override
-  public DataPartition<Object, Object> get() {
+  public DataPartition<Object> get() {
     return partition;
   }
 
   @Override
-  public DataPartition<Object, Object> get(String name) {
+  public DataPartition<Object> get(String name) {
     if (name.equals(outName)) {
       return partition;
     } else {
@@ -69,18 +69,6 @@ public class ConnectedSink extends BaseSink implements Collector {
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     super.prepare(cfg, ctx);
-    partition = new CollectionPartition<>(ctx.getWorkerId(), ctx.taskIndex());
-  }
-
-  /**
-   * Getter fo serializing the object
-   * @return
-   */
-  public String getOutName() {
-    return outName;
-  }
-
-  public void setOutName(String outName) {
-    this.outName = outName;
+    partition = new CollectionPartition<>(ctx.taskIndex());
   }
 }

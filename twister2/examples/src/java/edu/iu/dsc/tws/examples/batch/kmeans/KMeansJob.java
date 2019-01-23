@@ -34,7 +34,6 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class KMeansJob extends TaskWorker {
-
   private static final Logger LOG = Logger.getLogger(KMeansJob.class.getName());
 
   private KMeansJobParameters kMeansJobParameters;
@@ -88,19 +87,19 @@ public class KMeansJob extends TaskWorker {
               fileSystem);
     }
 
+
     double[][] dataPoint = kMeansFileReader.readDataPoints(dataPointsFile + workerId, dimension);
     double[][] centroid = kMeansFileReader.readCentroids(centroidFile + workerId, dimension,
             noOfClusters);
 
     DataFlowTaskGraph graph = graphBuilder.build();
-
     //Store datapoints and centroids
     DataObject<double[][]> datapoints = new DataObjectImpl<>(config);
     DataObject<double[][]> centroids = new DataObjectImpl<>(config);
 
     for (int i = 0; i < iterations; i++) {
-      datapoints.addPartition(null);
-      centroids.addPartition(null);
+      datapoints.addPartition(new EntityPartition<>(0, dataPoint));
+      centroids.addPartition(new EntityPartition<>(0, centroid));
 
       ExecutionPlan plan = taskExecutor.plan(graph);
 
@@ -109,9 +108,9 @@ public class KMeansJob extends TaskWorker {
       taskExecutor.execute(graph, plan);
 
       DataObject<double[][]> dataSet = taskExecutor.getOutput(graph, plan, "sink");
-      DataPartition<double[][], double[][]> values = (DataPartition<double[][], double[][]>)
+      DataPartition<double[][]> values = (DataPartition<double[][]>)
           dataSet.getPartitions()[0];
-      centroid = values.getOut();
+      centroid = values.getConsumer().next();
     }
 
     LOG.info("%%% Final Centroid Values Received: %%%" + Arrays.deepToString(centroid));
@@ -149,16 +148,16 @@ public class KMeansJob extends TaskWorker {
     @Override
     public void add(String name, DataObject<?> data) {
       LOG.log(Level.FINE, "Received input: " + name);
-      if (name.equals("points")) {
-        DataPartition<double[][], double[][]> dataPoints = (DataPartition<double[][], double[][]>)
+      if ("points".equals(name)) {
+        DataPartition<double[][]> dataPoints = (DataPartition<double[][]>)
             data.getPartitions()[0];
-        this.datapoints = dataPoints.getOut();
+        this.datapoints = dataPoints.getConsumer().next();
       }
 
-      if (name.equals("centroids")) {
-        DataPartition<double[][], double[][]> centroids = (DataPartition<double[][], double[][]>)
+      if ("centroids".equals(name)) {
+        DataPartition<double[][]> centroids = (DataPartition<double[][]>)
             data.getPartitions()[0];
-        this.centroid = centroids.getOut();
+        this.centroid = centroids.getConsumer().next();
       }
     }
   }
@@ -186,7 +185,7 @@ public class KMeansJob extends TaskWorker {
     }
 
     @Override
-    public DataPartition<double[][], double[][]> get() {
+    public DataPartition<double[][]> get() {
       return new EntityPartition<>(context.taskIndex(), newCentroids);
     }
   }
