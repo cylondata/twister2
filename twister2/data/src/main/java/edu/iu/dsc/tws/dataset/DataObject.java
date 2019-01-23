@@ -11,31 +11,32 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset;
 
-import java.util.Iterator;
-
 /**
- * Partition of a distributed set
+ * Distributed data set
  *
- * @param <T> partition
+ * @param <T> the distributed set interface
  */
-public interface PSet<T> {
-  /**
-   * Get the process id this partition belongs to
-   *
-   * @return the process id
-   */
-  int getWorkerId();
+public interface DataObject<T> {
 
   /**
-   * Get the id of the partition
-   * @return the id of the partition
+   * Add a partition to the data object
+   *
+   * @param partition the partition
    */
-  int getPartitionId();
+  void addPartition(DataPartition<T> partition);
 
   /**
-   * Weather there is a next record
+   * Get the list of partitions for a process
    *
-   * @return true if there is a next record
+   * @return the partitions
    */
-  Iterator<T> iterator();
+  DataPartition<T>[] getPartitions();
+
+  /**
+   * Get the partition with the specific partition id
+   *
+   * @param partitionId partition id
+   * @return DataPartition
+   */
+  DataPartition<T> getPartitions(int partitionId);
 }

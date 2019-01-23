@@ -51,6 +51,9 @@ public final class DataFlowGraph {
   // name to be used
   private String graphName;
 
+  //schedule plan which has the workers to run the dataflow
+  private CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlans;
+
   private DataFlowGraph(String name, DataFlowTaskGraph g) {
     this.graph = g;
     this.kryoMemorySerializer = new KryoMemorySerializer();
@@ -59,6 +62,15 @@ public final class DataFlowGraph {
 
   public static DataFlowGraph newSubGraphJob(String name, DataFlowTaskGraph g) {
     return new DataFlowGraph(name, g);
+  }
+
+  public CDFWJobAPI.CDFWSchedulePlan getCdfwSchedulePlans() {
+    return cdfwSchedulePlans;
+  }
+
+  public DataFlowGraph setCdfwSchedulePlans(CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlan) {
+    this.cdfwSchedulePlans = cdfwSchedulePlan;
+    return this;
   }
 
   public DataFlowGraph setCpu(int c) {
@@ -151,6 +163,7 @@ public final class DataFlowGraph {
         .setConfig(configBuilder)
         .setGraphSerialized(ByteString.copyFrom(graphBytes))
         .setInstances(workers)
+        .setCdfwScheduleplan(cdfwSchedulePlans)
         .addAllOutputs(outputs)
         .addAllInputs(inputs)
         .build();

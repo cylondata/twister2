@@ -31,12 +31,10 @@ import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.dataset.DSet;
-import edu.iu.dsc.tws.dataset.Partition;
+import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -76,21 +74,16 @@ public final class HelloExample {
     }
   }
 
-  private static class FirstSource extends BaseSource implements Receptor {
+  private static class FirstSource extends BaseSource {
     private static final long serialVersionUID = -254264120110286748L;
 
     @Override
     public void execute() {
       context.writeEnd("all-reduce", "Hello");
     }
-
-    @Override
-    public void add(String name, DSet<Object> data) {
-      LOG.log(Level.FINE, "Received input: " + name);
-    }
   }
 
-  private static class SecondSink extends ConnectedSink implements Collector<Object> {
+  private static class SecondSink extends ConnectedSink implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     @Override
@@ -101,7 +94,7 @@ public final class HelloExample {
     }
 
     @Override
-    public Partition<Object> get() {
+    public DataPartition<Object> get() {
       return null;
     }
   }

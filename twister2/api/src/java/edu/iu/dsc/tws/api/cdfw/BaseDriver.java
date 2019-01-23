@@ -28,9 +28,14 @@ public abstract class BaseDriver implements IDriver {
   private static final Logger LOG = Logger.getLogger(BaseDriver.class.getName());
 
   /**
-   * The cdfw execution environment
+   * Worker list
    */
-  private CDFWEnv executionEnv;
+  private volatile List<JobMasterAPI.WorkerInfo> workerInfoList;
+
+  /**
+   * The worker executor
+   */
+  private CDFWExecutor executor;
 
   /**
    * The queue to coordinate between driver and workers
@@ -39,33 +44,36 @@ public abstract class BaseDriver implements IDriver {
 
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
-    this.executionEnv = new CDFWEnv(config, scaler, messenger);
-
     try {
       waitForEvent(DriveEventType.INITIALIZE);
     } catch (Exception e) {
       throw new RuntimeException("Failed to wait for event");
     }
 
+    executor = new CDFWExecutor(config, messenger);
+    executor.addWorkerList(workerInfoList);
+
     // call the execute method of the implementation
-    execute(this.executionEnv);
+    execute(config, executor);
 
     // now lets close
-    this.executionEnv.close();
+    executor.close();
   }
 
-  public abstract void execute(CDFWEnv execEnv);
+  public abstract void execute(Config config, CDFWExecutor exec);
 
   @Override
   public void workerMessageReceived(Any anyMessage, int senderWorkerID) {
-    this.executionEnv.workerMessageReceived(anyMessage, senderWorkerID);
+    executor.workerMessageReceived(anyMessage, senderWorkerID);
   }
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    this.executionEnv.allWorkersJoined(workerList);
+    // Added to get the worker info list for testing
+    if (workerList != null) {
+      this.workerInfoList = workerList;
+    }
 
-    // todo: should this be moved to the execution env?
     inMessages.offer(new DriverEvent(DriveEventType.INITIALIZE, null));
   }
 

@@ -18,8 +18,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.dataset.DataSet;
-import edu.iu.dsc.tws.dataset.Partition;
+import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.dataset.DataObjectImpl;
+import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
@@ -132,7 +133,7 @@ public class TaskExecutor {
    * @param input input
    */
   public void addInput(DataFlowTaskGraph graph, ExecutionPlan plan,
-                       String taskName, String inputKey, DataSet<Object> input) {
+                       String taskName, String inputKey, DataObject<?> input) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {
       throw new RuntimeException(String.format("%d Failed to set input for non-existing "
@@ -158,7 +159,7 @@ public class TaskExecutor {
    * @param input input
    */
   public void addSourceInput(DataFlowTaskGraph graph, ExecutionPlan plan,
-                       String inputKey, DataSet<Object> input) {
+                       String inputKey, DataObject<Object> input) {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
     if (nodes == null) {
       throw new RuntimeException(String.format("%d Failed to set input for non-existing "
@@ -180,21 +181,21 @@ public class TaskExecutor {
    * @param graph the graph
    * @param plan plan created from the graph
    * @param taskName name of the output to retrieve
-   * @return a DataSet with set of partitions from each task in this executor
+   * @return a DataObjectImpl with set of partitions from each task in this executor
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public DataSet<Object> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan, String taskName) {
+  public <T> DataObject<T> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan, String taskName) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {
       throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);
     }
 
-    DataSet<Object> dataSet = new DataSet<>(0);
+    DataObject<T> dataSet = new DataObjectImpl<T>(config);
     for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
       INodeInstance node = e.getValue();
       INode task = node.getNode();
       if (task instanceof Collector) {
-        Partition partition = (Partition) ((Collector) task).get();
+        DataPartition<T> partition = (DataPartition<T>) ((Collector) task).get();
         dataSet.addPartition(partition);
       } else {
         throw new RuntimeException("Cannot collect from node because it is not a collector: "
@@ -210,19 +211,19 @@ public class TaskExecutor {
    * @param graph the graph
    * @param plan plan created from the graph
    * @param dataName name of the data set
-   * @return a DataSet with set of partitions from each task in this executor
+   * @return a DataObjectImpl with set of partitions from each task in this executor
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public DataSet<Object> getSinkOutput(DataFlowTaskGraph graph, ExecutionPlan plan,
-                                       String dataName) {
+  public <T> DataObject<T> getSinkOutput(DataFlowTaskGraph graph, ExecutionPlan plan,
+                                              String dataName) {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
 
-    DataSet<Object> dataSet = new DataSet<>(0);
+    DataObject<T> dataSet = new DataObjectImpl<>(config);
     for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
       INodeInstance node = e.getValue();
       INode task = node.getNode();
       if (task instanceof Collector && task instanceof ISink) {
-        Partition partition = (Partition) ((Collector) task).get(dataName);
+        DataPartition partition = ((Collector) task).get(dataName);
         if (partition != null) {
           dataSet.addPartition(partition);
         } else {
@@ -241,22 +242,22 @@ public class TaskExecutor {
    * @param plan plan created from the graph
    * @param taskName name of the output to retrieve
    * @param dataName name of the data set
-   * @return a DataSet with set of partitions from each task in this executor
+   * @return a DataObjectImpl with set of partitions from each task in this executor
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public DataSet<Object> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan,
-                                   String taskName, String dataName) {
+  public <T> DataObject<T> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan,
+                                          String taskName, String dataName) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {
       throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);
     }
 
-    DataSet<Object> dataSet = new DataSet<>(0);
+    DataObject<T> dataSet = new DataObjectImpl<T>(config);
     for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
       INodeInstance node = e.getValue();
       INode task = node.getNode();
       if (task instanceof Collector) {
-        Partition partition = (Partition) ((Collector) task).get(dataName);
+        DataPartition partition = ((Collector) task).get(dataName);
         if (partition != null) {
           dataSet.addPartition(partition);
         } else {

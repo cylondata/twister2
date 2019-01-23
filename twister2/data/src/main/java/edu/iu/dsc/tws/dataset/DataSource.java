@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
  * @param <T> type of the data
  * @param <O> type of InputSplit used for splitting the data
  */
-public class DataSource<T, O extends InputSplit<T>> extends DataSet<T> {
+public class DataSource<T, O extends InputSplit<T>> extends DataObjectImpl<T> {
   private static final Logger LOG = Logger.getLogger(DataSource.class.getName());
 
   private InputPartitioner<T, O> input;
@@ -33,7 +33,7 @@ public class DataSource<T, O extends InputSplit<T>> extends DataSet<T> {
   private O[] splits;
 
   public DataSource(Config config, InputPartitioner<T, O> input, int numSplits) {
-    super(0);
+    super(config);
     this.input = input;
     this.input.configure(config);
     try {

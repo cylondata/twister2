@@ -15,13 +15,13 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.dataset.PSet;
-import edu.iu.dsc.tws.dataset.impl.CollectionPSet;
+import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.impl.CollectionPartition;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class ConnectedSink extends BaseSink implements Collector<Object> {
+public class ConnectedSink extends BaseSink implements Collector {
   /**
    * The name of the data set
    */
@@ -30,7 +30,7 @@ public class ConnectedSink extends BaseSink implements Collector<Object> {
   /**
    * The partition to use
    */
-  private CollectionPSet<Object> partition;
+  private CollectionPartition<Object> partition;
 
   public ConnectedSink() {
   }
@@ -40,12 +40,12 @@ public class ConnectedSink extends BaseSink implements Collector<Object> {
   }
 
   @Override
-  public PSet<Object> get() {
+  public DataPartition<Object> get() {
     return partition;
   }
 
   @Override
-  public PSet<Object> get(String name) {
+  public DataPartition<Object> get(String name) {
     if (name.equals(outName)) {
       return partition;
     } else {
@@ -69,18 +69,6 @@ public class ConnectedSink extends BaseSink implements Collector<Object> {
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     super.prepare(cfg, ctx);
-    partition = new CollectionPSet<>(ctx.getWorkerId(), ctx.taskIndex());
-  }
-
-  /**
-   * Getter fo serializing the object
-   * @return
-   */
-  public String getOutName() {
-    return outName;
-  }
-
-  public void setOutName(String outName) {
-    this.outName = outName;
+    partition = new CollectionPartition<>(ctx.taskIndex());
   }
 }
