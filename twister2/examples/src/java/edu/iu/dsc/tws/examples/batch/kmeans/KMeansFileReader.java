@@ -33,16 +33,14 @@ public class KMeansFileReader {
    * It reads the datapoints from the corresponding file system and store the data in a two
    * -dimensional array for the later processing.
    */
-  protected double[][] readDataPoints(String fName, int dimension) throws IOException {
+  public double[][] readDataPoints(String fName, int dimension) throws IOException {
 
     double[][] dataPoints = null;
 
     if ("local".equals(fileSystem)) {
-
       KMeansLocalFileReader kMeansLocalFileReader = new KMeansLocalFileReader();
       dataPoints = kMeansLocalFileReader.readDataPoints(fName, dimension, fileSystem);
     } else if ("hdfs".equals(fileSystem)) {
-
       KMeansHDFSFileReader kMeansHDFSFileReader = new KMeansHDFSFileReader(config);
       dataPoints = kMeansHDFSFileReader.readDataPoints(fName, dimension, fileSystem);
     }
@@ -53,17 +51,15 @@ public class KMeansFileReader {
    * It reads the datapoints from the corresponding file system and store the data in a two
    * -dimensional array for the later processing.
    */
-  protected double[][] readCentroids(String fileName, int dimension, int numberOfClusters)
+  public double[][] readCentroids(String fileName, int dimension, int numberOfClusters)
       throws IOException {
 
     double[][] centroids = null;
 
     if ("local".equals(fileSystem)) {
-
       KMeansLocalFileReader kMeansLocalFileReader = new KMeansLocalFileReader();
       centroids = kMeansLocalFileReader.readCentroids(fileName, dimension, numberOfClusters);
     } else if ("hdfs".equals(fileSystem)) {
-
       KMeansHDFSFileReader kMeansHDFSFileReader = new KMeansHDFSFileReader(config);
       centroids = kMeansHDFSFileReader.readCentroids(fileName, dimension, numberOfClusters,
           fileSystem);

@@ -43,7 +43,10 @@ import edu.iu.dsc.tws.data.utils.HdfsUtils;
 
 public class KMeansUtils {
 
-  protected KMeansUtils() {
+  private Config config;
+
+  protected KMeansUtils(Config cfg) {
+    this.config = cfg;
   }
 
   private static BufferedReader bufferedReader = null;
@@ -55,9 +58,7 @@ public class KMeansUtils {
       Config config, String fileName, String fileSystem) {
     try {
       if ("hdfs".equals(fileSystem)) {
-        HdfsUtils hdfsUtils = new HdfsUtils(config, fileName);
-        hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
-        Path path = hdfsUtils.getPath();
+        Path path = getPath(config, fileName);
         if (hadoopFileSystem.exists(path)) {
           bufferedReader = new BufferedReader(new InputStreamReader(hadoopFileSystem.open(path)));
         }
@@ -81,9 +82,7 @@ public class KMeansUtils {
                                                  String fileSystem) {
     try {
       if ("hdfs".equals(fileSystem)) {
-        HdfsUtils hdfsUtils = new HdfsUtils(config, fileName);
-        hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
-        Path path = hdfsUtils.getPath();
+        Path path = getPath(config, fileName);
         if (hadoopFileSystem.exists(path)) {
           hadoopFileSystem.delete(path, false);
         }
@@ -101,6 +100,13 @@ public class KMeansUtils {
       throw new RuntimeException("Buffered Writer Creation Error", ioe);
     }
     return bufferedWriter;
+  }
+
+  private static Path getPath(Config config, String fileName) {
+    HdfsUtils hdfsUtils = new HdfsUtils(config, fileName);
+    hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
+    Path path = hdfsUtils.getPath();
+    return path;
   }
 
   public static void writeClose() {

@@ -52,7 +52,6 @@ public class KMeansHDFSFileReader {
     HdfsUtils hdfsUtils = new HdfsUtils(config, fName);
     int lengthOfFile = hdfsUtils.getLengthOfFile(fName);
     double[][] dataPoints = new double[lengthOfFile][dimension];
-
     BufferedReader bufferedReader = KMeansUtils.getBufferedReader(config, fName, filesystem);
     try {
       int value = 0;
@@ -64,7 +63,8 @@ public class KMeansHDFSFileReader {
         }
         value++;
       }
-
+    } catch (IOException e) {
+      throw new RuntimeException("Error while reading file", e);
     } finally {
       KMeansUtils.readClose();
     }
@@ -76,8 +76,8 @@ public class KMeansHDFSFileReader {
    * array for the later processing. The size of the two-dimensional array should be equal to the
    * number of clusters and the dimension considered for the clustering process.
    */
-  public double[][] readCentroids(String fName, int dimension, int numberOfClusters, String filesys)
-      throws IOException {
+  public double[][] readCentroids(String fName, int dimension, int numberOfClusters,
+                                  String filesys) {
 
     double[][] centroids = new double[numberOfClusters][dimension];
     BufferedReader bufferedReader = KMeansUtils.getBufferedReader(config, fName, filesys);
@@ -92,6 +92,9 @@ public class KMeansHDFSFileReader {
         }
         value++;
       }
+      bufferedReader.close();
+    } catch (IOException ioe) {
+      throw new RuntimeException("Error while reading centroids", ioe);
     } finally {
       KMeansUtils.readClose();
     }

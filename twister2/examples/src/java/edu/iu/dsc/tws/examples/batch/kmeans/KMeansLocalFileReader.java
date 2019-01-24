@@ -42,6 +42,7 @@ public class KMeansLocalFileReader {
     BufferedReader bufferedReader = KMeansUtils.getBufferedReader(null, fName, filesystem);
     int lengthOfFile = KMeansUtils.getNumberOfLines(fName);
     double[][] dataPoints = new double[lengthOfFile][dimension];
+
     try {
       int value = 0;
       String line;

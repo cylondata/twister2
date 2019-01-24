@@ -43,8 +43,8 @@ public class KMeansDataGenerator {
    * This method generates the datapoints which is based on the which is based on the number of data
    * points, required dimension, minimum and maximum value for the random points generation.
    */
-  static void generateDataPointsFile(String fileName, int numPoints, int dimension,
-                                     int seedValue, Config config, String fileSys) {
+  public static void generateDataPointsFile(String fileName, int numPoints, int dimension,
+                                            int seedValue, Config config, String fileSys) {
     String datapoints = buildPoints(numPoints, dimension, seedValue);
     writeToPointsFile(datapoints, fileName, config, fileSys);
   }
@@ -53,8 +53,8 @@ public class KMeansDataGenerator {
    * This method generates the datapoints which is based on the which is based on the number of
    * centroids, required dimension, minimum and maximum value for the random points generation.
    */
-  static void generateCentroidFile(String fileName, int numCentroids, int dimension,
-                                   int seedValue, Config config, String fileSys) {
+  public static void generateCentroidFile(String fileName, int numCentroids, int dimension,
+                                          int seedValue, Config config, String fileSys) {
     String centroids = buildPoints(numCentroids, dimension, seedValue);
     writeToPointsFile(centroids, fileName, config, fileSys);
   }
@@ -89,6 +89,8 @@ public class KMeansDataGenerator {
    */
   private static void writeToPointsFile(String datapoints, String fileName, Config config,
                                         String fileSystem) {
+
+    KMeansUtils kMeansUtils = new KMeansUtils(config);
     StringTokenizer stringTokenizer = new StringTokenizer(datapoints, "\n");
     try {
       BufferedWriter bufferedWriter = KMeansUtils.getBufferedWriter(config, fileName, fileSystem);
