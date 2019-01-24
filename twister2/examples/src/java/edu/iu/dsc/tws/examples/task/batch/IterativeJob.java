@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,9 +28,10 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.dataset.DSet;
-import edu.iu.dsc.tws.dataset.DataSet;
-import edu.iu.dsc.tws.dataset.Partition;
+import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.dataset.DataObjectImpl;
+import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -60,20 +60,20 @@ public class IterativeJob extends TaskWorker {
     DataFlowTaskGraph graph = graphBuilder.build();
     for (int i = 0; i < 10; i++) {
       ExecutionPlan plan = taskExecutor.plan(graph);
-      taskExecutor.addInput(graph, plan, "source", "input", new DataSet<>(0));
+      taskExecutor.addInput(graph, plan, "source", "input", new DataObjectImpl<>(config));
 
       // this is a blocking call
       taskExecutor.execute(graph, plan);
-      DataSet<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
-      Set<Object> values = dataSet.getData();
-      LOG.log(Level.INFO, "Values: " + values);
+      DataObject<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
+      DataPartition<Object>[] values = dataSet.getPartitions();
+//      LOG.log(Level.INFO, "Values: " + values);
     }
   }
 
   private static class IterativeSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
-    private DataSet<Object> input;
+    private DataObjectImpl<Object> input;
 
     private int count = 0;
 
@@ -91,13 +91,14 @@ public class IterativeJob extends TaskWorker {
     }
 
     @Override
-    public void add(String name, DSet<Object> data) {
+    @SuppressWarnings("rawtypes")
+    public void add(String name, DataObject<?> data) {
       LOG.log(Level.INFO, "Received input: " + name);
-      input = (DataSet<Object>) data;
+      input = (DataObjectImpl<Object>) data;
     }
   }
 
-  private static class PartitionTask extends BaseSink implements Collector<Object> {
+  private static class PartitionTask extends BaseSink implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private List<String> list = new ArrayList<>();
@@ -121,8 +122,8 @@ public class IterativeJob extends TaskWorker {
     }
 
     @Override
-    public Partition<Object> get() {
-      return new Partition<>(context.taskIndex(), list);
+    public DataPartition<Object> get() {
+      return new EntityPartition<>(context.taskIndex(), list);
     }
   }
 

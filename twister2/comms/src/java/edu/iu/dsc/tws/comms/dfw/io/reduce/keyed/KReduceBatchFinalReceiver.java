@@ -45,7 +45,6 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
     boolean needsFurtherProgress = false;
     boolean sourcesFinished = false;
     for (int target : messages.keySet()) {
-
       if (batchDone.get(target)) {
         continue;
       }
@@ -61,8 +60,6 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
         //TODO: check if we can simply remove the data, that is use messages.remove()
         bulkReceiver.receive(target, new ReduceIterator(messages.get(target)));
       }
-
-
     }
 
     return needsFurtherProgress;

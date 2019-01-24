@@ -51,10 +51,9 @@ public class KMeansCalculator {
    * This method invokes the findnearestcenter method to find the datapoints closer to the centroid
    * values. The calculated value is assigned to the KMeansCenters object and return the same.
    */
-  public KMeansCenters calculate() {
+  public double[][] calculate() {
     findNearestCenter(dimension, points, centroids);
-    KMeansCenters kMeansCenters = new KMeansCenters(centerSums);
-    return kMeansCenters;
+    return centerSums;
   }
 
   /**

@@ -65,8 +65,6 @@ public class KReduceStreamingFinalReceiver extends KReduceStreamingReceiver {
           && targetSendQueue.isEmpty()) {
         batchDone.put(target, true);
       }
-
-
     }
 
     return needsFurtherProgress;

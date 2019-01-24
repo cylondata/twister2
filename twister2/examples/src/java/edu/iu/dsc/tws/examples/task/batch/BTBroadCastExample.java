@@ -49,21 +49,21 @@ public class BTBroadCastExample extends BenchTaskWorker {
     @Override
     public boolean execute(IMessage message) {
       count++;
-      if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        if (object instanceof Iterator) {
-          while (((Iterator) object).hasNext()) {
-            experimentData.setOutput(((Iterator) object).next());
-            LOG.log(Level.INFO, String.format("Received messages to %d: %d",
-                context.taskId(), count));
-            try {
-              verify(OperationNames.BROADCAST);
-            } catch (VerificationException e) {
-              LOG.info("Exception Message : " + e.getMessage());
-            }
+      //  if (count % jobParameters.getPrintInterval() == 0) {
+      Object object = message.getContent();
+      if (object instanceof Iterator) {
+        while (((Iterator) object).hasNext()) {
+          experimentData.setOutput(((Iterator) object).next());
+          LOG.log(Level.INFO, String.format("Received messages to %d: %d",
+              context.taskId(), count));
+          try {
+            verify(OperationNames.BROADCAST);
+          } catch (VerificationException e) {
+            LOG.info("Exception Message : " + e.getMessage());
           }
         }
       }
+      // }
       return true;
     }
   }
