@@ -59,13 +59,13 @@ public class Twister2Spout implements ISource {
   @Override
   public void execute() {
     while (true) {
-      stormSpout.nextTuple();
+      this.stormSpout.nextTuple();
     }
   }
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
-    stormSpout.open(
+    this.stormSpout.open(
         cfg.toMap(),
         new TopologyContext(context),
         new SpoutOutputCollector(context)

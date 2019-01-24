@@ -26,6 +26,12 @@ public class Twister2BoltDeclarer implements BoltDeclarer {
   private Number maxSpoutPending;
   private Number numTasks;
 
+  private MadeASourceListener madeASourceListener;
+
+  public Twister2BoltDeclarer(MadeASourceListener madeASourceListener) {
+    this.madeASourceListener = madeASourceListener;
+  }
+
   @Override
   public BoltDeclarer addConfigurations(Map conf) {
     this.configuration.putAll(conf);
@@ -70,27 +76,34 @@ public class Twister2BoltDeclarer implements BoltDeclarer {
   @Override
   public BoltDeclarer fieldsGrouping(String componentId, String streamId, Fields fields) {
     //todo
+
+    this.madeASourceListener.onMadeASource(componentId);
     return this;
   }
 
   @Override
   public BoltDeclarer globalGrouping(String componentId) {
-    return null;
+    return this.globalGrouping(componentId, null);
   }
 
   @Override
   public BoltDeclarer globalGrouping(String componentId, String streamId) {
-    return null;
+    //todo
+    this.madeASourceListener.onMadeASource(componentId);
+    return this;
   }
 
   @Override
   public BoltDeclarer shuffleGrouping(String componentId) {
-    return null;
+    return this.shuffleGrouping(componentId,null);
   }
 
   @Override
   public BoltDeclarer shuffleGrouping(String componentId, String streamId) {
-    return null;
+    //todo
+
+    this.madeASourceListener.onMadeASource(componentId);
+    return this;
   }
 
   @Override

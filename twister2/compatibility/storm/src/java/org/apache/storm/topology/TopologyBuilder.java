@@ -32,6 +32,7 @@ import org.apache.storm.generated.StormTopology;
 import org.apache.storm.topology.twister2.Twister2Bolt;
 import org.apache.storm.topology.twister2.Twister2Spout;
 
+import edu.iu.dsc.tws.api.task.SourceConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.task.api.INode;
 
@@ -40,13 +41,32 @@ public class TopologyBuilder {
   private TaskGraphBuilder taskGraphBuilder;
   private HashMap<String, INode> nodes = new HashMap<>();
 
-  private Set<String> leafNodes = new HashSet<>();//these are the sinks in twitser2
+  private Set<String> sinkNodes = new HashSet<>();//these are the sinks in twitser2
+  private Set<String> sourceNodes = new HashSet<>();//these are the sources in twitser2
+  private Set<String> computeNodes = new HashSet<>();//these are the computes in twister2
 
   public TopologyBuilder() {
     this.taskGraphBuilder = TaskGraphBuilder.newBuilder(null);
   }
 
   public StormTopology createTopology() {
+    this.sourceNodes.forEach(source -> {
+      Twister2Spout twister2Spout = (Twister2Spout) nodes.get(source);
+      this.taskGraphBuilder.addSource(
+          source,
+          twister2Spout,
+          twister2Spout.getParallelism()
+      );
+    });
+
+    this.computeNodes.forEach(compute -> {
+      Twister2Bolt twister2Bolt = (Twister2Bolt) nodes.get(compute);
+      this.taskGraphBuilder.addCompute(
+          compute,
+          twister2Bolt,
+          twister2Bolt.getParallelism()
+      );
+    });
 
     return null;
   }
@@ -56,10 +76,14 @@ public class TopologyBuilder {
   }
 
   public BoltDeclarer setBolt(String id, IRichBolt bolt, Number parallelismHint) {
-    Twister2Bolt twister2Bolt = new Twister2Bolt(bolt);
+    Twister2Bolt twister2Bolt = new Twister2Bolt(bolt, source -> {
+      //the source is not a sink anymore, it is a source
+      this.sinkNodes.remove(source);
+      this.computeNodes.add(source);
+    });
     twister2Bolt.setParallelism(parallelismHint.intValue());
     this.nodes.put(id, twister2Bolt);
-
+    this.sinkNodes.add(id);//add all to the sink nodes initially
     return twister2Bolt.getBoltDeclarer();
   }
 
@@ -92,6 +116,7 @@ public class TopologyBuilder {
     Twister2Spout twister2Spout = new Twister2Spout(spout);
     twister2Spout.setParallelism(parallelismHint.intValue());
     this.nodes.put(id, twister2Spout);
+    this.sourceNodes.add(id);
     return twister2Spout.getSpoutDeclarer();
   }
 }

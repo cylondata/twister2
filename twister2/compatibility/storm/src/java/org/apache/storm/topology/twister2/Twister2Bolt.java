@@ -30,17 +30,18 @@ import org.apache.storm.topology.IRichBolt;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class Twister2Bolt implements ICompute {
+public class Twister2Bolt implements ICompute, ISink {
 
   private IRichBolt stormBolt;
   private Twister2BoltDeclarer boltDeclarer;
   private Integer parallelism = 1;
 
-  public Twister2Bolt(IRichBolt stormBolt) {
+  public Twister2Bolt(IRichBolt stormBolt,MadeASourceListener madeASourceListener) {
     this.stormBolt = stormBolt;
-    this.boltDeclarer = new Twister2BoltDeclarer();
+    this.boltDeclarer = new Twister2BoltDeclarer(madeASourceListener);
   }
 
   public Integer getParallelism() {
