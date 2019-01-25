@@ -25,4 +25,18 @@ public final class DFWIOUtils {
     String uid = op.getUniqueId();
     return "partition-" + uid + "-" + target + "-" + UUID.randomUUID().toString();
   }
+
+  public static boolean resetState(SerializeState state, boolean completed) {
+    if (completed) {
+      // add the key size at the end to total size
+      state.setBytesCopied(0);
+      state.setBufferNo(0);
+      state.setData(null);
+      state.setPart(SerializeState.Part.INIT);
+      state.setKeySize(0);
+      return true;
+    } else {
+      return false;
+    }
+  }
 }

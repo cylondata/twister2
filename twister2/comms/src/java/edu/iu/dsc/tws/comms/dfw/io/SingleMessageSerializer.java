@@ -260,17 +260,7 @@ public class SingleMessageSerializer implements MessageSerializer {
     targetBuffer.setSize(byteBuffer.position());
 
     // okay we are done with the message
-    if (completed) {
-      // add the key size at the end to total size
-      state.setBytesCopied(0);
-      state.setBufferNo(0);
-      state.setData(null);
-      state.setPart(SerializeState.Part.INIT);
-      state.setKeySize(0);
-      return true;
-    } else {
-      return false;
-    }
+    return DFWIOUtils.resetState(state, completed);
   }
 
   /**
@@ -305,17 +295,7 @@ public class SingleMessageSerializer implements MessageSerializer {
     targetBuffer.setSize(byteBuffer.position());
 
     // okay we are done with the message
-    if (completed) {
-      // add the key size at the end to total size
-      state.setBytesCopied(0);
-      state.setBufferNo(0);
-      state.setData(null);
-      state.setPart(SerializeState.Part.INIT);
-      state.setKeySize(0);
-      return true;
-    } else {
-      return false;
-    }
+    return DFWIOUtils.resetState(state, completed);
   }
 
   /**
