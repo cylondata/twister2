@@ -34,7 +34,6 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.OperationSemantics;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
@@ -48,16 +47,6 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   private static final Logger LOG = Logger.getLogger(DataFlowPartition.class.getName());
-
-  public enum PartitionStratergy {
-    RANDOM,  // load balancing
-    DIRECT,  // direct task based
-  }
-
-  /**
-   * Partitioning stratergy
-   */
-  private PartitionStratergy partitionStratergy;
 
   /**
    * Sources
@@ -185,11 +174,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   private DataFlowAllReduce allReduce;
 
   /**
-   * The operation semantics
-   */
-  private OperationSemantics opSemantics;
-
-  /**
    * A place holder for keeping the internal and external destinations
    */
   @SuppressWarnings("VisibilityModifier")
@@ -200,9 +184,8 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
   public DataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
                            MessageReceiver finalRcvr, MessageReceiver partialRcvr,
-                           PartitionStratergy partitionStratergy,
                            MessageType dataType, MessageType keyType) {
-    this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr, partitionStratergy);
+    this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr);
     this.isKeyed = true;
     this.keyType = keyType;
     this.dataType = dataType;
@@ -212,22 +195,19 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
   public DataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
                            MessageReceiver finalRcvr, MessageReceiver partialRcvr,
-                           PartitionStratergy partitionStratergy,
                            MessageType dataType) {
-    this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr, partitionStratergy);
+    this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr);
     this.dataType = dataType;
   }
 
   public DataFlowPartition(TWSChannel channel, Set<Integer> srcs,
                            Set<Integer> dests, MessageReceiver finalRcvr,
-                           MessageReceiver partialRcvr,
-                           PartitionStratergy stratergy) {
+                           MessageReceiver partialRcvr) {
     this.sources = srcs;
     this.destinations = dests;
     this.destinationIndex = new HashMap<>();
     this.destinationsList = new ArrayList<>(destinations);
     this.delegete = new ChannelDataFlowOperation(channel);
-    this.partitionStratergy = stratergy;
 
     for (int s : sources) {
       destinationIndex.put(s, 0);
@@ -240,22 +220,18 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   public DataFlowPartition(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> srcs,
                            Set<Integer> dests, MessageReceiver finalRcvr,
                            MessageReceiver partialRcvr,
-                           PartitionStratergy strategy,
                            MessageType dType, MessageType rcvType,
-                           OperationSemantics sem,
                            int e) {
-    this(cfg, channel, tPlan, srcs, dests, finalRcvr, partialRcvr, strategy, dType, rcvType,
-        null, null, sem, e);
+    this(cfg, channel, tPlan, srcs, dests, finalRcvr, partialRcvr, dType, rcvType,
+        null, null, e);
     this.isKeyed = false;
   }
 
   public DataFlowPartition(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> srcs,
                            Set<Integer> dests, MessageReceiver finalRcvr,
                            MessageReceiver partialRcvr,
-                           PartitionStratergy strategy,
                            MessageType dType, MessageType rcvType,
                            MessageType kType, MessageType rcvKType,
-                           OperationSemantics sem,
                            int e) {
     this.instancePlan = tPlan;
     this.config = cfg;
@@ -264,13 +240,11 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     this.destinationIndex = new HashMap<>();
     this.destinationsList = new ArrayList<>(destinations);
     this.delegete = new ChannelDataFlowOperation(channel);
-    this.partitionStratergy = strategy;
     this.dataType = dType;
     this.receiveType = rcvType;
     this.keyType = kType;
     this.receiveKeyType = rcvKType;
     this.edge = e;
-    this.opSemantics = sem;
 
     if (keyType != null) {
       this.isKeyed = true;
@@ -475,30 +449,8 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
       return routingParamCache.get(source, path);
     } else {
       RoutingParameters routingParameters = new RoutingParameters();
-      if (partitionStratergy == PartitionStratergy.RANDOM) {
-        routingParameters.setDestinationId(0);
-        if (!destinationIndex.containsKey(source)) {
-          throw new RuntimeException(String.format(
-              "Un-expected source %d in loadbalance executor %d %s", source,
-              executor, destinationIndex));
-        }
-
-        int index = destinationIndex.get(source);
-        int route = destinationsList.get(index);
-
-        if (thisTasks.contains(route)) {
-          routingParameters.addInteranlRoute(route);
-        }
-
-        routingParameters.setDestinationId(route);
-
-        index = (index + 1) % destinations.size();
-        destinationIndex.put(source, index);
-      } else if (partitionStratergy == PartitionStratergy.DIRECT) {
-        routingParameters.setDestinationId(path);
-        routingParameters.addInteranlRoute(source);
-
-      }
+      routingParameters.setDestinationId(path);
+      routingParameters.addInteranlRoute(source);
       routingParamCache.put(source, path, routingParameters);
       return routingParameters;
     }
@@ -509,33 +461,11 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
       return partialRoutingParamCache.get(source, destination);
     } else {
       RoutingParameters routingParameters = new RoutingParameters();
-      if (partitionStratergy == PartitionStratergy.RANDOM) {
-        routingParameters.setDestinationId(0);
-        if (!destinationIndex.containsKey(source)) {
-          throw new RuntimeException(String.format(
-              "Un-expected source %d in loadbalance executor %d %s", source,
-              executor, destinationIndex));
-        }
-
-        int index = destinationIndex.get(source);
-        int route = destinationsList.get(index);
-
-        if (thisTasks.contains(route)) {
-          routingParameters.addInteranlRoute(route);
-        } else {
-          routingParameters.addExternalRoute(route);
-        }
-        routingParameters.setDestinationId(route);
-
-        index = (index + 1) % destinations.size();
-        destinationIndex.put(source, index);
-      } else if (partitionStratergy == PartitionStratergy.DIRECT) {
-        routingParameters.setDestinationId(destination);
-        if (dests.external.contains(destination)) {
-          routingParameters.addExternalRoute(destination);
-        } else {
-          routingParameters.addInteranlRoute(destination);
-        }
+      routingParameters.setDestinationId(destination);
+      if (dests.external.contains(destination)) {
+        routingParameters.addExternalRoute(destination);
+      } else {
+        routingParameters.addInteranlRoute(destination);
       }
       partialRoutingParamCache.put(source, destination, routingParameters);
       return routingParameters;

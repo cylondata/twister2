@@ -76,11 +76,11 @@ public class BJoin {
 
     this.partitionLeft = new DataFlowPartition(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(0, finalRcvr), new PartitionPartialReceiver(),
-        DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
+        dataType, keyType);
 
     this.partitionRight = new DataFlowPartition(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
-        DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
+        dataType, keyType);
 
     this.partitionLeft.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.partitionRight.init(comm.getConfig(), dataType, plan, comm.nextEdge());
