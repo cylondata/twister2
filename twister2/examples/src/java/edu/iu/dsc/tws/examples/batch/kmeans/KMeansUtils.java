@@ -43,28 +43,26 @@ import edu.iu.dsc.tws.data.utils.HdfsUtils;
 
 public class KMeansUtils {
 
-  private Config config;
-
-  protected KMeansUtils(Config cfg) {
-    this.config = cfg;
-  }
-
   private static BufferedReader bufferedReader = null;
   private static BufferedWriter bufferedWriter = null;
   private static HadoopFileSystem hadoopFileSystem = null;
   private static HadoopDataOutputStream dataOutputStream = null;
 
+  protected KMeansUtils() {
+  }
+
   public static BufferedReader getBufferedReader(
       Config config, String fileName, String fileSystem) {
+
     try {
-      if ("hdfs".equals(fileSystem)) {
+      if ("local".equals(fileSystem)) {
+        File f = new File(fileName);
+        bufferedReader = new BufferedReader(new FileReader(f));
+      } else if ("hdfs".equals(fileSystem)) {
         Path path = getPath(config, fileName);
         if (hadoopFileSystem.exists(path)) {
           bufferedReader = new BufferedReader(new InputStreamReader(hadoopFileSystem.open(path)));
         }
-      } else if ("local".equals(fileSystem)) {
-        File f = new File(fileName);
-        bufferedReader = new BufferedReader(new FileReader(f));
       }
     } catch (FileNotFoundException e) {
       throw new RuntimeException("File Not Found:", e);
@@ -80,8 +78,15 @@ public class KMeansUtils {
    */
   public static BufferedWriter getBufferedWriter(Config config, String fileName,
                                                  String fileSystem) {
+
     try {
-      if ("hdfs".equals(fileSystem)) {
+      if ("local".equals(fileSystem)) {
+        File file = new File(fileName);
+        if (file.exists()) {
+          file.delete();
+        }
+        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
+      } else if ("hdfs".equals(fileSystem)) {
         Path path = getPath(config, fileName);
         if (hadoopFileSystem.exists(path)) {
           hadoopFileSystem.delete(path, false);
@@ -89,12 +94,6 @@ public class KMeansUtils {
         dataOutputStream = hadoopFileSystem.create(path);
         bufferedWriter = new BufferedWriter(new OutputStreamWriter(dataOutputStream,
             StandardCharsets.UTF_8));
-      } else if ("local".equals(fileSystem)) {
-        File file = new File(fileName);
-        if (file.exists()) {
-          file.delete();
-        }
-        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
       }
     } catch (IOException ioe) {
       throw new RuntimeException("Buffered Writer Creation Error", ioe);
@@ -105,8 +104,7 @@ public class KMeansUtils {
   private static Path getPath(Config config, String fileName) {
     HdfsUtils hdfsUtils = new HdfsUtils(config, fileName);
     hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
-    Path path = hdfsUtils.getPath();
-    return path;
+    return hdfsUtils.getPath();
   }
 
   public static void writeClose() {

@@ -71,13 +71,12 @@ public class KMeansDataGenerator {
       String line = "";
       for (int j = 0; j < dimension; j++) {
         double randomValue = r.nextDouble();
-        line = new StringBuilder().append(line).append(randomValue).toString();
+        line = line + randomValue;
         if (j == 0) {
           line = line + "," + "\t";
         }
       }
-      datapoints.append(line);
-      datapoints.append("\n");
+      datapoints.append(line).append("\n");
     }
     return datapoints.toString();
 
@@ -89,8 +88,6 @@ public class KMeansDataGenerator {
    */
   private static void writeToPointsFile(String datapoints, String fileName, Config config,
                                         String fileSystem) {
-
-    KMeansUtils kMeansUtils = new KMeansUtils(config);
     StringTokenizer stringTokenizer = new StringTokenizer(datapoints, "\n");
     try {
       BufferedWriter bufferedWriter = KMeansUtils.getBufferedWriter(config, fileName, fileSystem);
