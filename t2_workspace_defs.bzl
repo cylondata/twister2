@@ -120,6 +120,7 @@ def load_modules():
     _maven_import(artifact = "org.apache.commons:commons-compress:1.15", licenses = ["notice"], sha256 = "a778bbd659722889245fc52a0ec2873fbbb89ec661bc1ad3dc043c0757c784c4")
     _maven_import(artifact = "antlr:antlr:2.7.7", licenses = ["notice"], sha256 = "88fbda4b912596b9f56e8e12e580cc954bacfb51776ecfddd3e18fc1cf56dc4c")
     _maven_import(artifact = "org.apache.commons:commons-lang3:3.6", licenses = ["notice"], sha256 = "89c27f03fff18d0b06e7afd7ef25e209766df95b6c1269d6c3ebbdea48d5f284")
+    _maven_import(artifact = "commons-lang:commons-lang:2.6", licenses = ["notice"], sha256 = "50f11b09f877c294d56f24463f47d28f929cf5044f648661c0f0cfbae9a2f49c")
     _maven_import(artifact = "org.apache.httpcomponents:httpclient:4.5.2", licenses = ["notice"], sha256 = "0dffc621400d6c632f55787d996b8aeca36b30746a716e079a985f24d8074057")
     _maven_import(artifact = "commons-collections:commons-collections:3.2.2", licenses = ["notice"], sha256 = "eeeae917917144a68a741d4c0dff66aa5c5c5fd85593ff217bced3fc8ca783b8")
     _maven_import(artifact = "com.github.jnr:jnr-ffi:2.1.7", licenses = ["notice"], sha256 = "2ed1bedf59935cd3cc0964bac5cd91638b2e966a82041fe0a6c85f52279c9b34")
