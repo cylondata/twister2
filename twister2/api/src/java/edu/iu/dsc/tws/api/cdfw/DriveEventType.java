@@ -15,4 +15,5 @@ public enum DriveEventType {
   INITIALIZE,
   FINISHED_JOB,
   WORKER_MESSAGE,
+  WORKERS_JOINED
 }

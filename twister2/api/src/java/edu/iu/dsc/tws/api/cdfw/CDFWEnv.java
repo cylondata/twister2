@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.cdfw;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import com.google.protobuf.Any;
 
@@ -21,6 +22,7 @@ import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class CDFWEnv {
+  private static final Logger LOG = Logger.getLogger(CDFWEnv.class.getName());
 
   private CDFWExecutor cdfwExecutor;
 
@@ -28,13 +30,15 @@ public class CDFWEnv {
 
   private Config config;
 
-  private List<JobMasterAPI.WorkerInfo> workerInfoList;
+  // volatile because workerInfoList should be the same for all the threads
+  private volatile List<JobMasterAPI.WorkerInfo> workerInfoList;
 
-
-  public CDFWEnv(Config config, IScaler resourceScaler, IDriverMessenger driverMessenger) {
+  public CDFWEnv(Config config, IScaler resourceScaler, IDriverMessenger driverMessenger,
+                 List<JobMasterAPI.WorkerInfo> workers) {
     this.resourceScaler = resourceScaler;
     this.config = config;
-    this.cdfwExecutor = new CDFWExecutor(config, driverMessenger);
+    this.workerInfoList = workers;
+    this.cdfwExecutor = new CDFWExecutor(this, driverMessenger);
   }
 
   public Config getConfig() {
@@ -54,12 +58,8 @@ public class CDFWEnv {
   }
 
   public List<JobMasterAPI.WorkerInfo> getWorkerInfoList() {
+    // this method could be problematic, if the worker list changes in the middle of the execution
     return workerInfoList;
-  }
-
-  public void setWorkerInfoList(List<JobMasterAPI.WorkerInfo> workerInfoList) {
-    this.workerInfoList = workerInfoList;
-    this.cdfwExecutor.setWorkerList(workerInfoList);
   }
 
   public void workerMessageReceived(Any anyMessage, int senderWorkerID) {
@@ -67,7 +67,11 @@ public class CDFWEnv {
   }
 
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    setWorkerInfoList(workerList);
+    // this is the only method which could change the
+    // might have to put these messages into a queue to accommodate scaling up/ down workers
+
+    // when all workers joined, update the worker info list
+    this.workerInfoList = workerList;
   }
 
   public void close() {

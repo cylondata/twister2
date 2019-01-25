@@ -36,6 +36,7 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.cdfw.BaseDriver;
+import edu.iu.dsc.tws.api.cdfw.CDFWEnv;
 import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
@@ -64,7 +65,9 @@ public final class ParallelDataFlowsExample {
   public static class ParallelDataflowsDriver extends BaseDriver {
 
     @Override
-    public void execute(Config config, CDFWExecutor cdfwExecutor) {
+    public void execute(CDFWEnv cdfwEnv) {
+
+      Config config = cdfwEnv.getConfig();
 
       JobConfig jobConfig = new JobConfig();
 
