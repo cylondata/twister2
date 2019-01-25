@@ -275,11 +275,7 @@ public class MultiMessageSerializer implements MessageSerializer {
     }
   }
 
-  /**
-   * Serialized the message into the buffer
-   *
-   * @return true if the message is completely written
-   */
+
   /**
    * Serializes the message given in the payload. This method will call helper methods to perform
    * the actual serialization based on the type of message.
