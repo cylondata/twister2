@@ -63,6 +63,7 @@ public class KMeansHDFSFileReader {
         value++;
       }
     } catch (IOException e) {
+      KMeansUtils.readClose();
       throw new RuntimeException("Error while reading file", e);
     } finally {
       KMeansUtils.readClose();
@@ -93,6 +94,7 @@ public class KMeansHDFSFileReader {
       }
       bufferedReader.close();
     } catch (IOException ioe) {
+      KMeansUtils.readClose();
       throw new RuntimeException("Error while reading centroids", ioe);
     } finally {
       KMeansUtils.readClose();
@@ -100,4 +102,5 @@ public class KMeansHDFSFileReader {
     return centroids;
   }
 }
+
 

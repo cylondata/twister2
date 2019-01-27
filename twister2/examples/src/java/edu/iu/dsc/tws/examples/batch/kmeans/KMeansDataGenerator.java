@@ -97,6 +97,7 @@ public class KMeansDataGenerator {
         bufferedWriter.write("\n");
       }
     } catch (IOException ioe) {
+      KMeansUtils.writeClose();
       throw new RuntimeException("File Writing Exception", ioe);
     } finally {
       KMeansUtils.writeClose();

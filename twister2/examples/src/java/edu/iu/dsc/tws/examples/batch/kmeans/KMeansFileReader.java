@@ -57,7 +57,8 @@ public class KMeansFileReader {
 
     if ("local".equals(fileSystem)) {
       KMeansLocalFileReader kMeansLocalFileReader = new KMeansLocalFileReader();
-      centroids = kMeansLocalFileReader.readCentroids(fileName, dimension, numberOfClusters);
+      centroids = kMeansLocalFileReader.readCentroids(fileName, dimension, numberOfClusters,
+          fileSystem);
     } else if ("hdfs".equals(fileSystem)) {
       KMeansHDFSFileReader kMeansHDFSFileReader = new KMeansHDFSFileReader(config);
       centroids = kMeansHDFSFileReader.readCentroids(fileName, dimension, numberOfClusters,
