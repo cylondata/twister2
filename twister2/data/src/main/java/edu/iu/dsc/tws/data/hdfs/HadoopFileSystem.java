@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.hdfs;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Logger;
@@ -23,7 +24,7 @@ import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import static edu.iu.dsc.tws.data.utils.PreConditions.checkNotNull;
 
-public class HadoopFileSystem extends FileSystem {
+public class HadoopFileSystem extends FileSystem implements Closeable {
 
   private static final Logger LOG = Logger.getLogger(HadoopFileSystem.class.getName());
 

@@ -68,12 +68,12 @@ public class KMeansDataGenerator {
     StringBuilder datapoints = new StringBuilder();
     Random r = new Random(seedValue);
     for (int i = 0; i < numPoints; i++) {
-      String line = "";
+      StringBuilder line = new StringBuilder();
       for (int j = 0; j < dimension; j++) {
         double randomValue = r.nextDouble();
-        line = line + randomValue;
+        line.append(randomValue);
         if (j == 0) {
-          line = line + "," + "\t";
+          line.append(",").append("\t");
         }
       }
       datapoints.append(line).append("\n");
@@ -97,6 +97,7 @@ public class KMeansDataGenerator {
         bufferedWriter.write("\n");
       }
     } catch (IOException ioe) {
+      KMeansUtils.writeClose();
       throw new RuntimeException("File Writing Exception", ioe);
     } finally {
       KMeansUtils.writeClose();

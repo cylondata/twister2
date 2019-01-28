@@ -21,8 +21,8 @@ import edu.iu.dsc.tws.common.config.Config;
  */
 public class KMeansFileReader {
 
-  private Config config;
-  private String fileSystem;
+  private final Config config;
+  private final String fileSystem;
 
   public KMeansFileReader(Config cfg, String fileSys) {
     this.config = cfg;
@@ -51,14 +51,14 @@ public class KMeansFileReader {
    * It reads the datapoints from the corresponding file system and store the data in a two
    * -dimensional array for the later processing.
    */
-  public double[][] readCentroids(String fileName, int dimension, int numberOfClusters)
-      throws IOException {
+  public double[][] readCentroids(String fileName, int dimension, int numberOfClusters) {
 
     double[][] centroids = null;
 
     if ("local".equals(fileSystem)) {
       KMeansLocalFileReader kMeansLocalFileReader = new KMeansLocalFileReader();
-      centroids = kMeansLocalFileReader.readCentroids(fileName, dimension, numberOfClusters);
+      centroids = kMeansLocalFileReader.readCentroids(fileName, dimension, numberOfClusters,
+          fileSystem);
     } else if ("hdfs".equals(fileSystem)) {
       KMeansHDFSFileReader kMeansHDFSFileReader = new KMeansHDFSFileReader(config);
       centroids = kMeansHDFSFileReader.readCentroids(fileName, dimension, numberOfClusters,
