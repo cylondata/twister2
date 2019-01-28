@@ -48,6 +48,8 @@ public final class DataDeserializer {
         return deserializeShort(buffers, length);
       case BYTE:
         return deserializeBytes(buffers, length);
+      case LONG:
+        return deserializeLong(buffers, length);
       case OBJECT:
         return deserializeObject(buffers, length, deserializer);
       case MULTI_FIXED_BYTE:
@@ -79,6 +81,8 @@ public final class DataDeserializer {
         return deserializeShort(buffers, length);
       case BYTE:
         return deserializeBytes(buffers, length);
+      case LONG:
+        return deserializeLong(buffers, length);
       case OBJECT:
         return deserializeObject(buffers, length, deserializer);
       default:
@@ -183,7 +187,7 @@ public final class DataDeserializer {
   }
 
 
-  public static double[] deserializeDouble(List<DataBuffer> buffers, int byteLength) {
+  private static double[] deserializeDouble(List<DataBuffer> buffers, int byteLength) {
     int noOfDoubles = byteLength / Double.BYTES;
     double[] returnInts = new double[noOfDoubles];
     int bufferIndex = 0;
@@ -202,7 +206,7 @@ public final class DataDeserializer {
     return returnInts;
   }
 
-  public static int[] deserializeInteger(List<DataBuffer> buffers, int byteLength) {
+  private static int[] deserializeInteger(List<DataBuffer> buffers, int byteLength) {
     int noOfInts = byteLength / Integer.BYTES;
     int[] returnInts = new int[noOfInts];
     int bufferIndex = 0;
@@ -221,7 +225,7 @@ public final class DataDeserializer {
     return returnInts;
   }
 
-  public static short[] deserializeShort(List<DataBuffer> buffers, int byteLength) {
+  private static short[] deserializeShort(List<DataBuffer> buffers, int byteLength) {
     int noOfShorts = byteLength / Short.BYTES;
     short[] returnShorts = new short[noOfShorts];
     int bufferIndex = 0;
@@ -240,7 +244,7 @@ public final class DataDeserializer {
     return returnShorts;
   }
 
-  public static long[] deserializeLong(List<DataBuffer> buffers, int byteLength) {
+  private static long[] deserializeLong(List<DataBuffer> buffers, int byteLength) {
     int noOfLongs = byteLength / Long.BYTES;
     long[] returnLongs = new long[noOfLongs];
     int bufferIndex = 0;

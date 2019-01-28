@@ -320,7 +320,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   }
 
   @Override
-  public void onReceiveComplete(int id, int e, DataBuffer buffer) {
+  public void onReceiveComplete(int id, int e, DataBuffer buffer, boolean releaseBuffer) {
     // we need to try to build the message here, we may need many more messages to complete
     ChannelMessage currentMessage = currentMessages.get(id);
     ByteBuffer byteBuffer = buffer.getByteBuffer();
@@ -346,6 +346,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         throw new RuntimeException(executor + " We should have enough space: "
             + deserializeQueue.size());
       }
+    }
+
+    // we may need to free the buffer because we don't have space
+    if (releaseBuffer) {
+      freeReceiveBuffers(id);
     }
   }
 
@@ -669,8 +674,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     externalSendsPending.getAndDecrement();
   }
 
-  @Override
-  public void freeReceiveBuffers(int id, int stream) {
+  private void freeReceiveBuffers(int id) {
     ChannelMessage currentMessage = currentMessages.get(id);
     if (currentMessage == null) {
       return;

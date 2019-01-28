@@ -246,7 +246,7 @@ public class UnifiedSerializer implements MessageSerializer {
     }
 
     // first we need to copy the data size to buffer
-    if (!buildSubMessageHeader(targetBuffer, state.getDataSize())) {
+    if (buildSubMessageHeader(targetBuffer, state.getDataSize())) {
       return false;
     }
     // now lets copy the actual data
@@ -288,7 +288,7 @@ public class UnifiedSerializer implements MessageSerializer {
     }
 
     // first we need to copy the data size to buffer
-    if (!buildSubMessageHeader(targetBuffer, state.getDataSize())) {
+    if (buildSubMessageHeader(targetBuffer, state.getDataSize())) {
       return false;
     }
     boolean completed = DataSerializer.copyDataToBuffer(payload,
@@ -308,9 +308,9 @@ public class UnifiedSerializer implements MessageSerializer {
   private boolean buildSubMessageHeader(DataBuffer buffer, int length) {
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     if (byteBuffer.remaining() < NORMAL_SUB_MESSAGE_HEADER_SIZE) {
-      return false;
+      return true;
     }
     byteBuffer.putInt(length);
-    return true;
+    return false;
   }
 }
