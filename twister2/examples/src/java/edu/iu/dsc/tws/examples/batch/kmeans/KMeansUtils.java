@@ -159,6 +159,7 @@ public class KMeansUtils {
         bufferedWriter.write("\n");
       }
     } catch (IOException ioe) {
+      writeClose();
       throw new RuntimeException("Output File Writing Exception", ioe);
     } finally {
       writeClose();
