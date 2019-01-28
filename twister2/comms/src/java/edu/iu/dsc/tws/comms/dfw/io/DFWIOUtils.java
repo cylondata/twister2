@@ -11,9 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.comms.dfw.OutMessage;
+import static edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer.HEADER_SIZE;
 
 public final class DFWIOUtils {
 
@@ -26,6 +30,12 @@ public final class DFWIOUtils {
     return "partition-" + uid + "-" + target + "-" + UUID.randomUUID().toString();
   }
 
+  /**
+   * Reset the serialize state
+   * @param state state
+   * @param completed weather completed
+   * @return if completed
+   */
   public static boolean resetState(SerializeState state, boolean completed) {
     if (completed) {
       // add the key size at the end to total size
@@ -38,5 +48,58 @@ public final class DFWIOUtils {
     } else {
       return false;
     }
+  }
+
+  /**
+   * Builds the header of the message. The length value is inserted later so 0 is added as a place
+   * holder value. The header structure is |source|flags|destinationID|length|
+   *
+   * @param buffer the buffer to which the header is placed
+   * @param sendMessage the message that the header is build for
+   */
+  public static void buildHeader(DataBuffer buffer, OutMessage sendMessage) {
+    if (buffer.getCapacity() < HEADER_SIZE) {
+      throw new RuntimeException("The buffers should be able to hold the complete header");
+    }
+    ByteBuffer byteBuffer = buffer.getByteBuffer();
+    // now lets put the content of header in
+    byteBuffer.putInt(sendMessage.getSource());
+    // the path we are on, if not grouped it will be 0 and ignored
+    byteBuffer.putInt(sendMessage.getFlags());
+    // the destination id
+    byteBuffer.putInt(sendMessage.getPath());
+    // we set the number of messages
+    byteBuffer.putInt(0);
+    // at this point we haven't put the length and we will do it at the serialization
+    sendMessage.setWrittenHeaderSize(HEADER_SIZE);
+    // lets set the size for 16 for now
+    buffer.setSize(HEADER_SIZE);
+  }
+
+  /**
+   * Builds the header of the message. The length value is inserted later so 0 is added as a place
+   * holder value. The header structure is |source|flags|destinationID|length|
+   *
+   * @param buffer the buffer to which the header is placed
+   * @param sendMessage the message that the header is build for
+   * @param noOfMessages number of messages in this single message
+   */
+  public static void buildHeader(DataBuffer buffer, OutMessage sendMessage, int noOfMessages) {
+    if (buffer.getCapacity() < HEADER_SIZE) {
+      throw new RuntimeException("The buffers should be able to hold the complete header");
+    }
+    ByteBuffer byteBuffer = buffer.getByteBuffer();
+    // now lets put the content of header in
+    byteBuffer.putInt(sendMessage.getSource());
+    // the path we are on, if not grouped it will be 0 and ignored
+    byteBuffer.putInt(sendMessage.getFlags());
+    // the destination id
+    byteBuffer.putInt(sendMessage.getPath());
+    // we set the number of messages
+    byteBuffer.putInt(noOfMessages);
+    // at this point we haven't put the length and we will do it at the serialization
+    sendMessage.setWrittenHeaderSize(HEADER_SIZE);
+    // lets set the size for 16 for now
+    buffer.setSize(HEADER_SIZE);
   }
 }

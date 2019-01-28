@@ -37,11 +37,11 @@ public class MultiMessageSerializer implements MessageSerializer {
   private KryoSerializer serializer;
   private int executor;
 
-  private static final int HEADER_SIZE = 16;
+  public static final int HEADER_SIZE = 16;
   // we need to put the message length and key length if keyed message
-  private static final int MAX_SUB_MESSAGE_HEADER_SPACE = 4 + 4;
+  public static final int MAX_SUB_MESSAGE_HEADER_SPACE = 4 + 4;
   // for s normal message we only put the length
-  private static final int NORMAL_SUB_MESSAGE_HEADER_SIZE = 4;
+  public static final int NORMAL_SUB_MESSAGE_HEADER_SIZE = 4;
 
   private boolean keyed;
 
@@ -100,13 +100,12 @@ public class MultiMessageSerializer implements MessageSerializer {
       if (sendMessage.serializedState() == OutMessage.SendState.INIT
           || sendMessage.serializedState() == OutMessage.SendState.SENT_INTERNALLY) {
         // build the header
-        buildHeader(buffer, sendMessage);
+        DFWIOUtils.buildHeader(buffer, sendMessage);
         sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
         channelMessage.setPartial(true);
       }
 
       if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
-          || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT
           || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
           sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
@@ -115,7 +114,7 @@ public class MultiMessageSerializer implements MessageSerializer {
           // first we need to serialize the body if needed
           if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
             if (sendMessage.getChannelMessage().getBuffers().size() == 0) {
-              buildHeader(buffer, sendMessage);
+              DFWIOUtils.buildHeader(buffer, sendMessage);
             }
           }
           serializeBody(message, sendMessage, buffer);
@@ -181,31 +180,6 @@ public class MultiMessageSerializer implements MessageSerializer {
     return sendMessage;
   }
 
-  /**
-   * Builds the header of the message. The length value is inserted later so 0 is added as a place
-   * holder value. The header structure is |source|flags|destinationID|length|
-   *
-   * @param buffer the buffer to which the header is placed
-   * @param sendMessage the message that the header is build for
-   */
-  private void buildHeader(DataBuffer buffer, OutMessage sendMessage) {
-    if (buffer.getCapacity() < HEADER_SIZE) {
-      throw new RuntimeException("The buffers should be able to hold the complete header");
-    }
-    ByteBuffer byteBuffer = buffer.getByteBuffer();
-    // now lets put the content of header in
-    byteBuffer.putInt(sendMessage.getSource());
-    // the path we are on, if not grouped it will be 0 and ignored
-    byteBuffer.putInt(sendMessage.getFlags());
-    // the destination id
-    byteBuffer.putInt(sendMessage.getPath());
-    // we add 0 for length now and later change it
-    byteBuffer.putInt(0);
-    // at this point we haven't put the length and we will do it at the serialization
-    sendMessage.setWrittenHeaderSize(HEADER_SIZE);
-    // lets set the size for 16 for now
-    buffer.setSize(HEADER_SIZE);
-  }
 
   /**
    * Builds the body of the message. Based on the message type different build methods are called
@@ -507,8 +481,6 @@ public class MultiMessageSerializer implements MessageSerializer {
             + " into the next buffer");
         return false;
       }
-//      LOG.info(String.format("%d serialize data length: %d pos %d",
-//          executor, dataLength, byteBuffer.position()));
       // at this point we know the length of the data
       if (!buildSubMessageHeader(targetBuffer, dataLength + keyLength)) {
         LOG.warning("We should always be able to build the header in the current buffer");

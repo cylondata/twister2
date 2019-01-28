@@ -451,7 +451,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             lock.unlock();
           }
           if (!receiveAccepted) {
-//            LOG.info(String.format("%d SendID %b", sendId, false));
             canProgress = false;
             break;
           }
@@ -511,7 +510,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
           if (noOfExternalSends == exRoutes.size()) {
             // we are done
-            message.setSendState(OutMessage.SendState.FINISHED);
             pendingSendMessages.poll();
           }
         } else if (message.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
@@ -652,7 +650,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   }
 
   private boolean sendMessageToTarget(ChannelMessage channelMessage, int i) {
-//    channelMessage.incrementRefCount();
     int e = instancePlan.getExecutorForChannel(i);
     return channel.sendMessage(e, channelMessage, this);
   }
@@ -664,8 +661,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       releaseTheBuffers(originatingId, message);
     }
   }
-
-  private int sendCount = 0;
 
   @Override
   public void onSendComplete(int id, int messageStream, ChannelMessage message) {

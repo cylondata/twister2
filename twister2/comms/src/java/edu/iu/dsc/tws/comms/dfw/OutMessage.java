@@ -16,12 +16,12 @@ import java.util.Set;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
 /**
- * Keep track of a message while it is transisitioning through the send phases
+ * Keep track of a message while it is transitioning through the send phases
  */
 public class OutMessage {
   // keep track of the serialized bytes in case we don't
   // have enough space in the send buffers
-  protected SerializeState serializationState;
+  private SerializeState serializationState;
 
   //number of bytes copied to the network buffers so far
   private int byteCopied = 0;
@@ -55,10 +55,8 @@ public class OutMessage {
     INIT,
     SENT_INTERNALLY,
     HEADER_BUILT,
-    BODY_BUILT,
     PARTIALLY_SERIALIZED,
     SERIALIZED,
-    FINISHED,
   }
 
   private SendState sendState = SendState.INIT;
@@ -74,6 +72,7 @@ public class OutMessage {
     this.internalSends = intSends;
     this.externalSends = extSends;
     this.flags = flags;
+    this.serializationState = new SerializeState();
   }
 
   public SendState serializedState() {

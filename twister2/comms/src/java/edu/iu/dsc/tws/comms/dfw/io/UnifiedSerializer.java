@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Queue;
 import java.util.logging.Logger;
 
@@ -26,130 +27,159 @@ import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
-public class SingleMessageSerializer implements MessageSerializer {
-  private static final Logger LOG = Logger.getLogger(SingleMessageSerializer.class.getName());
+public class UnifiedSerializer implements MessageSerializer {
+  private static final Logger LOG = Logger.getLogger(UnifiedSerializer.class.getName());
 
+  public static final int HEADER_SIZE = 16;
+  // we need to put the message length and key length if keyed message
+  public static final int MAX_SUB_MESSAGE_HEADER_SPACE = 4 + 4;
+  // for s normal message we only put the length
+  public static final int NORMAL_SUB_MESSAGE_HEADER_SIZE = 4;
+
+  /**
+   * The DataBuffers available
+   */
   private Queue<DataBuffer> sendBuffers;
+
+  /**
+   * The kryo serializer to be used for objects
+   */
   private KryoSerializer serializer;
-  private Config config;
+
+
+  /**
+   * Weather this is a keyed message
+   */
   private boolean keyed;
 
-  private static final int HEADER_SIZE = 16;
-
-  public SingleMessageSerializer(KryoSerializer kryoSerializer) {
-    this.serializer = kryoSerializer;
-  }
+  /**
+   * The executor
+   */
+  private int executor;
 
   @Override
   public void init(Config cfg, Queue<DataBuffer> buffers, boolean k) {
-    this.config = cfg;
     this.sendBuffers = buffers;
     this.keyed = k;
   }
 
-  /**
-   * Builds the message and copies it into data buffers.The structure of the message depends on the
-   * type of message that is sent, for example if it is a keyed message or not. The main structure
-   * of the built message is |Header|Body|. The header has the following structure
-   * |source|flags|destinationID|length|, where length is the length of the body. For non-keyed
-   * message the body will simply be the set of bytes that represent the message. for keyed messages
-   * the key information is also added. So the body has the following structure.
-   * |(Key Size) + Key|Body|. The key size is optional since the size of the key is only added to
-   * the buffer if it is not a primitive type.
-   *
-   * @param message the message object that needs to be built and copied into data buffers
-   * @param partialBuildObject the sendMessage object that contains meta data that is needed and is
-   * used to route the message properly. the send message will contain the data buffers that keep
-   * the built message
-   * @return the sendMessage(or partialBuildObject) that contains the current state of the message
-   * including the message data buffers.
-   */
   @Override
   public Object build(Object message, Object partialBuildObject) {
     OutMessage sendMessage = (OutMessage) partialBuildObject;
     // we got an already serialized message, lets just return it
-    if (sendMessage.getChannelMessage().isComplete()) {
+    ChannelMessage channelMessage = sendMessage.getChannelMessage();
+    if (channelMessage.isComplete()) {
       sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
       return sendMessage;
     }
 
-    if (sendMessage.getSerializationState() == null) {
-      sendMessage.setSerializationState(new SerializeState());
-    }
+    // we loop until everything is serialized
+    while (sendBuffers.size() > 0
+        && sendMessage.serializedState() != OutMessage.SendState.SERIALIZED) {
 
-    while (sendBuffers.size() > 0 && sendMessage.serializedState()
-        != OutMessage.SendState.SERIALIZED) {
+      // we can continue only if there is a data buffer
       DataBuffer buffer = sendBuffers.poll();
-
       if (buffer == null) {
         break;
       }
 
+      // this is the first time we are seeing this message
       if (sendMessage.serializedState() == OutMessage.SendState.INIT
           || sendMessage.serializedState() == OutMessage.SendState.SENT_INTERNALLY) {
         // build the header
-        DFWIOUtils.buildHeader(buffer, sendMessage);
-        sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
-      }
-
-      if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
-          || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
-        if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
-          sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
-          sendMessage.getSerializationState().setTotalBytes(0);
+        if (message instanceof List) {
+          // for list message we need to put the size of the list
+          DFWIOUtils.buildHeader(buffer, sendMessage, ((List) message).size());
         } else {
-          // build the body
-          // first we need to serialize the body if needed
-          boolean complete = serializeBody(message, sendMessage, buffer);
-          if (complete) {
+          if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
             sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
+            // we set the number of messages to 0, only header will be sent
+            DFWIOUtils.buildHeader(buffer, sendMessage, 0);
           } else {
-            sendMessage.setSendState(OutMessage.SendState.PARTIALLY_SERIALIZED);
+            // for single message we need to put the size as 1
+            DFWIOUtils.buildHeader(buffer, sendMessage, 1);
           }
         }
+        sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
+        channelMessage.setPartial(true);
       }
+
+      // okay we have a body to build and it is not done fully yet
+      if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
+          || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+        sendMessage.setSendState(OutMessage.SendState.PARTIALLY_SERIALIZED);
+        serializeBody(message, sendMessage, buffer);
+      }
+
       // okay we are adding this buffer
-      sendMessage.getChannelMessage().addBuffer(buffer);
+      channelMessage.addBuffer(buffer);
       if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
-        ChannelMessage channelMessage = sendMessage.getChannelMessage();
-        SerializeState state = sendMessage.getSerializationState();
-        if (!channelMessage.isHeaderSent()) {
-          int totalBytes = state.getTotalBytes();
-          channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
-              totalBytes);
-
-
-          MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-              sendMessage.getEdge(), totalBytes);
-          builder.destination(sendMessage.getPath());
-          channelMessage.setHeader(builder.build());
-          state.setTotalBytes(0);
-          channelMessage.setHeaderSent(true);
-        }
-        // mark the original message as complete
+        MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+            sendMessage.getEdge(), 0);
+        builder.destination(sendMessage.getPath());
+        channelMessage.setHeader(builder.build());
         channelMessage.setComplete(true);
-      } else if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
-        ChannelMessage channelMessage = sendMessage.getChannelMessage();
-        SerializeState state = sendMessage.getSerializationState();
-        if (!channelMessage.isHeaderSent()) {
-          int totalBytes = state.getCurretHeaderLength();
-          channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
-              totalBytes);
-
-          MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-              sendMessage.getEdge(), totalBytes);
-          builder.destination(sendMessage.getPath());
-          channelMessage.setHeader(builder.build());
-          channelMessage.setHeaderSent(true);
-        }
-        state.setTotalBytes(0);
-        LOG.fine("Message Partially serialized");
-
-      } else {
-        LOG.fine("Message NOT FULLY serialized");
       }
     }
     return sendMessage;
+  }
+
+  /**
+   * Builds the body of the message. Based on the message type different build methods are called
+   *
+   * @param payload the message that needs to be built, this is assumed to be a List that contains
+   * several message objects that need to be built
+   * @param sendMessage the send message object that contains all the metadata
+   * @param targetBuffer the data buffer to which the built message needs to be copied
+   */
+  @SuppressWarnings("rawtypes")
+  private void serializeBody(Object payload, OutMessage sendMessage, DataBuffer targetBuffer) {
+    SerializeState state = sendMessage.getSerializationState();
+
+    // we assume remaining = capacity of the targetBuffer as we always get a fresh targetBuffer her
+    int remaining = targetBuffer.getByteBuffer().remaining();
+    // we cannot use this targetBuffer as we cannot put the sub header
+    if (remaining <= MAX_SUB_MESSAGE_HEADER_SPACE) {
+      throw new RuntimeException("This targetBuffer is too small to fit a message: " + remaining);
+    }
+
+    if (payload instanceof List) {
+      List objectList = (List) payload;
+      int startIndex = state.getCurrentObject();
+      // we will copy until we have space left or we are have serialized all the objects
+      for (int i = startIndex; i < objectList.size(); i++) {
+        Object o = objectList.get(i);
+        boolean complete = serializeSingleMessage(o, sendMessage, targetBuffer);
+        if (complete) {
+          sendMessage.getChannelMessage().setPartial(false);
+          state.setCurretHeaderLength(state.getTotalBytes());
+          state.setCurrentObject(i + 1);
+        } else {
+          break;
+        }
+
+        // check how much space left in this targetBuffer
+        remaining = targetBuffer.getByteBuffer().remaining();
+        // if we have less than this amount of space, that means we may not be able to put the next
+        // header in a contigous space, so we cannot use this targetBuffer anymore
+        if (!(remaining > MAX_SUB_MESSAGE_HEADER_SPACE
+            && state.getCurrentObject() < objectList.size())) {
+          break;
+        }
+      }
+
+      // we have serialized all the objects
+      if (state.getCurrentObject() == objectList.size()) {
+        sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
+      } else {
+        sendMessage.setSendState(OutMessage.SendState.PARTIALLY_SERIALIZED);
+      }
+    } else {
+      boolean complete = serializeSingleMessage(payload, sendMessage, targetBuffer);
+      if (complete) {
+        sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
+      }
+    }
   }
 
   /**
@@ -160,25 +190,16 @@ public class SingleMessageSerializer implements MessageSerializer {
    * @param targetBuffer the data targetBuffer to which the built message needs to be copied
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
-  private boolean serializeBody(Object payload,
+  private boolean serializeSingleMessage(Object payload,
                                 OutMessage sendMessage, DataBuffer targetBuffer) {
     MessageType type = sendMessage.getChannelMessage().getType();
-    if ((sendMessage.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+    if (!keyed) {
       return serializeData(payload, sendMessage.getSerializationState(), targetBuffer, type);
     } else {
-      if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
-          || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
-          || type == MessageType.MULTI_FIXED_BYTE) {
-        if (!keyed) {
-          return serializeData(payload, sendMessage.getSerializationState(), targetBuffer, type);
-        } else {
-          Tuple tuple = (Tuple) payload;
-          return serializeKeyedData(tuple.getValue(), tuple.getKey(),
-              sendMessage.getSerializationState(), targetBuffer, type, tuple.getKeyType());
-        }
-      }
+      Tuple tuple = (Tuple) payload;
+      return serializeKeyedData(tuple.getValue(), tuple.getKey(),
+          sendMessage.getSerializationState(), targetBuffer, type, tuple.getKeyType());
     }
-    return false;
   }
 
   /**
@@ -204,13 +225,12 @@ public class SingleMessageSerializer implements MessageSerializer {
       int dataLength = DataSerializer.serializeData(payload,
           messageType, state, serializer);
       state.setCurretHeaderLength(dataLength + keyLength);
+      state.setDataSize(dataLength);
     }
 
     if (state.getPart() == SerializeState.Part.INIT
         || state.getPart() == SerializeState.Part.HEADER) {
-      if (key instanceof byte[]) {
-        LOG.info("Byte message with size: " + ((byte[]) key).length);
-      }
+      // this call will copy the key length to buffer as well
       boolean complete = KeySerializer.copyKeyToBuffer(key,
           keyType, targetBuffer.getByteBuffer(), state, serializer);
       if (complete) {
@@ -225,6 +245,11 @@ public class SingleMessageSerializer implements MessageSerializer {
       return false;
     }
 
+    // first we need to copy the data size to buffer
+    if (!buildSubMessageHeader(targetBuffer, state.getDataSize())) {
+      return false;
+    }
+    // now lets copy the actual data
     boolean completed = DataSerializer.copyDataToBuffer(payload,
         messageType, byteBuffer, state, serializer);
     // now set the size of the buffer
@@ -253,6 +278,8 @@ public class SingleMessageSerializer implements MessageSerializer {
       state.setCurretHeaderLength(dataLength);
       // add the header bytes to the total bytes
       state.setPart(SerializeState.Part.BODY);
+      // we need to keep track to put this to message
+      state.setDataSize(dataLength);
     }
 
     // now we can serialize the body
@@ -260,6 +287,10 @@ public class SingleMessageSerializer implements MessageSerializer {
       return false;
     }
 
+    // first we need to copy the data size to buffer
+    if (!buildSubMessageHeader(targetBuffer, state.getDataSize())) {
+      return false;
+    }
     boolean completed = DataSerializer.copyDataToBuffer(payload,
         messageType, byteBuffer, state, serializer);
     // now set the size of the buffer
@@ -267,5 +298,19 @@ public class SingleMessageSerializer implements MessageSerializer {
 
     // okay we are done with the message
     return DFWIOUtils.resetState(state, completed);
+  }
+
+  /**
+   * Builds the sub message header which is used in multi messages to identify the lengths of each
+   * sub message. The structure of the sub message header is |length + (key length)|. The key length
+   * is added for keyed messages
+   */
+  private boolean buildSubMessageHeader(DataBuffer buffer, int length) {
+    ByteBuffer byteBuffer = buffer.getByteBuffer();
+    if (byteBuffer.remaining() < NORMAL_SUB_MESSAGE_HEADER_SIZE) {
+      return false;
+    }
+    byteBuffer.putInt(length);
+    return true;
   }
 }
