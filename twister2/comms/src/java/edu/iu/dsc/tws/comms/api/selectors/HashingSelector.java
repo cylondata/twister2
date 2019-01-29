@@ -44,7 +44,7 @@ public class HashingSelector implements DestinationSelector {
   @Override
   public int next(int source, Object key, Object data) {
     List<Integer> destinations = destination.get(source);
-    int next = key.hashCode() % destinations.size();
+    int next = Math.abs(key.hashCode()) % destinations.size();
     return destinations.get(next);
   }
 
