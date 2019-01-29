@@ -23,39 +23,36 @@
 //  limitations under the License.
 package org.apache.storm.topology;
 
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.storm.utils.Utils;
-
-import edu.iu.dsc.tws.task.api.TaskContext;
+import org.apache.storm.task.OutputCollector;
 
 public class BasicOutputCollector implements IBasicOutputCollector {
 
-  private final TaskContext t2TaskContext;
+  private final String defaultEdge;
+  private OutputCollector outputCollector;
 
-  public BasicOutputCollector(TaskContext t2TaskContext) {
-    this.t2TaskContext = t2TaskContext;
+  public BasicOutputCollector(OutputCollector outputCollector, String defaultEdge) {
+    this.outputCollector = outputCollector;
+    this.defaultEdge = defaultEdge;
   }
 
   public List<Integer> emit(List<Object> tuple) {
-    return emit(Utils.DEFAULT_STREAM_ID, tuple);
+    return emit(this.defaultEdge, tuple);
   }
 
   @Override
   public List<Integer> emit(String streamId, List<Object> tuple) {
-    this.t2TaskContext.write(streamId, tuple);
-    //todo return task ids
-    return Collections.singletonList(0);
+    return this.outputCollector.emit(streamId, null, tuple);
   }
 
   @Override
   public void emitDirect(int taskId, String streamId, List<Object> tuple) {
-
+    this.outputCollector.emitDirect(taskId, streamId, null, tuple);
   }
 
   @Override
   public void reportError(Throwable t) {
-
+    this.outputCollector.reportError(t);
   }
 }

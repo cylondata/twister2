@@ -11,22 +11,28 @@
 //  limitations under the License.
 package org.apache.storm.topology.twister2;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.storm.grouping.CustomStreamGrouping;
 import org.apache.storm.topology.BoltDeclarer;
 import org.apache.storm.tuple.Fields;
+import org.apache.storm.utils.Utils;
 
-public class Twister2BoltDeclarer implements BoltDeclarer {
+public class Twister2BoltDeclarer implements BoltDeclarer, Serializable {
 
   private final HashMap<String, Object> configuration = new HashMap<>();
-  private boolean debug;
-  private Number maxTaskParallelism;
-  private Number maxSpoutPending;
-  private Number numTasks;
+  private boolean debugOn;
+  private Number maxTParallelism;
+  private Number maxSpPending;
+  private Number nTasks;
 
-  private MadeASourceListener madeASourceListener;
+  private transient MadeASourceListener madeASourceListener;
+
+  private List<Twister2BoltGrouping> groupings = new ArrayList<>();
 
   public Twister2BoltDeclarer(MadeASourceListener madeASourceListener) {
     this.madeASourceListener = madeASourceListener;
@@ -46,44 +52,47 @@ public class Twister2BoltDeclarer implements BoltDeclarer {
 
   @Override
   public BoltDeclarer setDebug(boolean debug) {
-    this.debug = debug;
+    this.debugOn = debug;
     return this;
   }
 
   @Override
   public BoltDeclarer setMaxTaskParallelism(Number val) {
-    this.maxTaskParallelism = val;
+    this.maxTParallelism = val;
     return this;
   }
 
   @Override
   public BoltDeclarer setMaxSpoutPending(Number val) {
-    this.maxSpoutPending = val;
+    this.maxSpPending = val;
     return this;
   }
 
   @Override
   public BoltDeclarer setNumTasks(Number val) {
-    this.numTasks = val;
+    this.nTasks = val;
     return this;
   }
 
   @Override
   public BoltDeclarer fieldsGrouping(String componentId, Fields fields) {
-    return this.fieldsGrouping(componentId, null, fields);
+    return this.fieldsGrouping(componentId, Utils.getDefaultStream(componentId), fields);
   }
 
   @Override
   public BoltDeclarer fieldsGrouping(String componentId, String streamId, Fields fields) {
-    //todo
-
+    this.addGrouping(
+        componentId,
+        streamId,
+        GroupingTechnique.FIELD
+    ).setGroupingKey(fields);
     this.madeASourceListener.onMadeASource(componentId);
     return this;
   }
 
   @Override
   public BoltDeclarer globalGrouping(String componentId) {
-    return this.globalGrouping(componentId, null);
+    return this.globalGrouping(componentId, Utils.getDefaultStream(componentId));
   }
 
   @Override
@@ -95,67 +104,83 @@ public class Twister2BoltDeclarer implements BoltDeclarer {
 
   @Override
   public BoltDeclarer shuffleGrouping(String componentId) {
-    return this.shuffleGrouping(componentId,null);
+    return this.shuffleGrouping(componentId, Utils.getDefaultStream(componentId));
   }
 
   @Override
   public BoltDeclarer shuffleGrouping(String componentId, String streamId) {
-    //todo
-
+    this.addGrouping(componentId, streamId, GroupingTechnique.SHUFFLE);
     this.madeASourceListener.onMadeASource(componentId);
     return this;
   }
 
   @Override
   public BoltDeclarer localOrShuffleGrouping(String componentId) {
-    return null;
+    return this.localOrShuffleGrouping(componentId, Utils.getDefaultStream(componentId));
   }
 
   @Override
   public BoltDeclarer localOrShuffleGrouping(String componentId, String streamId) {
-    return null;
+    //todo
+    return this;
   }
 
   @Override
   public BoltDeclarer noneGrouping(String componentId) {
-    return null;
+    return this.noneGrouping(componentId, Utils.getDefaultStream(componentId));
   }
 
   @Override
   public BoltDeclarer noneGrouping(String componentId, String streamId) {
-    return null;
+    //todo
+    return this;
   }
 
   @Override
   public BoltDeclarer allGrouping(String componentId) {
-    return null;
+    return this.allGrouping(componentId, Utils.getDefaultStream(componentId));
   }
 
   @Override
   public BoltDeclarer allGrouping(String componentId, String streamId) {
-    return null;
+    this.addGrouping(componentId, streamId, GroupingTechnique.ALL);
+    return this;
   }
 
   @Override
   public BoltDeclarer directGrouping(String componentId) {
-    return null;
+    return this.directGrouping(componentId, Utils.getDefaultStream(componentId));
   }
 
   @Override
   public BoltDeclarer directGrouping(String componentId, String streamId) {
-    return null;
+    this.addGrouping(componentId, streamId, GroupingTechnique.DIRECT);
+    return this;
   }
 
   @Override
   public BoltDeclarer customGrouping(String componentId, CustomStreamGrouping grouping) {
-    return null;
+    return this.customGrouping(componentId, Utils.getDefaultStream(componentId), grouping);
   }
 
   @Override
   public BoltDeclarer customGrouping(String componentId,
                                      String streamId,
                                      CustomStreamGrouping grouping) {
-    return null;
+    //todo
+    return this;
+  }
+
+  //Utils for twister2
+  private Twister2BoltGrouping addGrouping(String componentId,
+                                           String streamId,
+                                           GroupingTechnique technique) {
+    Twister2BoltGrouping t2BoltGrouping = new Twister2BoltGrouping();
+    t2BoltGrouping.setComponentId(componentId);
+    t2BoltGrouping.setStreamId(streamId);
+    t2BoltGrouping.setGroupingTechnique(technique);
+    this.groupings.add(t2BoltGrouping);
+    return t2BoltGrouping;
   }
 
   //Accessors for twister2
@@ -165,18 +190,24 @@ public class Twister2BoltDeclarer implements BoltDeclarer {
   }
 
   public boolean isDebug() {
-    return debug;
+    return debugOn;
   }
 
   public Number getMaxTaskParallelism() {
-    return maxTaskParallelism;
+    return maxTParallelism;
   }
 
   public Number getMaxSpoutPending() {
-    return maxSpoutPending;
+    return maxSpPending;
   }
 
   public Number getNumTasks() {
-    return numTasks;
+    return nTasks;
   }
+
+  public List<Twister2BoltGrouping> getGroupings() {
+    return groupings;
+  }
+
+  //Mutators
 }

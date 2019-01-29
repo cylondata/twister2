@@ -35,8 +35,12 @@ public class StormTopology {
   private Map<String, SpoutSpec> spouts; // required
   private Map<String, Bolt> bolts; // required
 
-  public StormTopology() {
+  public StormTopology(DataFlowTaskGraph t2DataFlowTaskGraph) {
+    this.t2DataFlowTaskGraph = t2DataFlowTaskGraph;
+  }
 
+  public DataFlowTaskGraph getT2DataFlowTaskGraph() {
+    return t2DataFlowTaskGraph;
   }
 
   public int get_bolts_size() {

@@ -26,6 +26,8 @@ package org.apache.storm.spout;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.storm.topology.twister2.EdgeFieldMap;
+import org.apache.storm.tuple.Fields;
 import org.apache.storm.utils.Utils;
 
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -33,12 +35,23 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 public class SpoutOutputCollector implements ISpoutOutputCollector {
 
   private final TaskContext taskContext;
+  private final String spoutId;
+  private final EdgeFieldMap keyedOutEdges;
+  private final EdgeFieldMap outFieldsForEdge;
 
   /**
+   * Initializes a SpoutOutputCollector
+   *
    * @param taskContext the instance of twister2 task context
    */
-  public SpoutOutputCollector(TaskContext taskContext) {
+  public SpoutOutputCollector(String spoutId,
+                              TaskContext taskContext,
+                              EdgeFieldMap outFieldsForEdge,
+                              EdgeFieldMap keyedOutEdges) {
+    this.spoutId = spoutId;
     this.taskContext = taskContext;
+    this.keyedOutEdges = keyedOutEdges;
+    this.outFieldsForEdge = outFieldsForEdge;
   }
 
   /**
@@ -62,13 +75,22 @@ public class SpoutOutputCollector implements ISpoutOutputCollector {
    * @return the list of task ids that this tuple was sent to
    */
   public List<Integer> emit(List<Object> tuple, Object messageId) {
-    return emit(Utils.DEFAULT_STREAM_ID, tuple, messageId);
+    return emit(Utils.getDefaultStream(this.spoutId), tuple, messageId);
   }
 
   @Override
   public List<Integer> emit(String streamId, List<Object> tuple, Object messageId) {
-    this.taskContext.write(streamId, messageId, tuple);
-    //todo return task ids
+    System.out.println("Writing to the stream " + streamId
+        + " data : " + tuple + " | " + this.taskContext.taskId());
+    if (!this.keyedOutEdges.containsKey(streamId)) {
+      this.taskContext.write(streamId, tuple);
+    } else {
+      Fields allFields = outFieldsForEdge.get(streamId);
+      Fields fieldsForKey = keyedOutEdges.get(streamId);
+      List<Object> key = allFields.select(fieldsForKey, tuple);
+      this.taskContext.write(streamId, key, tuple);
+    }
+    //todo return task ids, not yet supported by twister2
     return Collections.singletonList(0);
   }
 

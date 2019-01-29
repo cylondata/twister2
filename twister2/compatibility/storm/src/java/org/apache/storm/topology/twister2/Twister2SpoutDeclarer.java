@@ -23,17 +23,19 @@
 //  limitations under the License.
 package org.apache.storm.topology.twister2;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.storm.topology.SpoutDeclarer;
 
-public class Twister2SpoutDeclarer implements SpoutDeclarer {
+public class Twister2SpoutDeclarer implements SpoutDeclarer, Serializable {
 
-  private Number maxTaskParallelism;
-  private Number maxSpoutPending;
-  private Number numTasks;
-  private boolean debug;
+  //changing names to prevent HiddenFiled style checker error
+  private Number maxTParallelism;
+  private Number maxSpPending;
+  private Number nTasks;
+  private boolean debugOn;
   private HashMap<String, Object> configuration = new HashMap<>();
 
   @Override
@@ -50,44 +52,44 @@ public class Twister2SpoutDeclarer implements SpoutDeclarer {
 
   @Override
   public SpoutDeclarer setDebug(boolean debug) {
-    this.debug = debug;
+    this.debugOn = debug;
     return this;
   }
 
   @Override
   public SpoutDeclarer setMaxTaskParallelism(Number maxTaskParallelism) {
-    this.maxTaskParallelism = maxTaskParallelism;
+    this.maxTParallelism = maxTaskParallelism;
     return this;
   }
 
   @Override
   public SpoutDeclarer setMaxSpoutPending(Number maxSpoutPending) {
-    this.maxSpoutPending = maxSpoutPending;
+    this.maxSpPending = maxSpoutPending;
     return this;
   }
 
   @Override
   public SpoutDeclarer setNumTasks(Number numTasks) {
-    this.numTasks = numTasks;
+    this.nTasks = numTasks;
     return this;
   }
 
   //Accessors for twister2
 
   public Number getMaxTaskParallelism() {
-    return maxTaskParallelism;
+    return maxTParallelism;
   }
 
   public Number getMaxSpoutPending() {
-    return maxSpoutPending;
+    return maxSpPending;
   }
 
   public Number getNumTasks() {
-    return numTasks;
+    return nTasks;
   }
 
   public boolean isDebug() {
-    return debug;
+    return debugOn;
   }
 
   public HashMap<String, Object> getConfiguration() {

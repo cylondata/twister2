@@ -29,9 +29,17 @@ import java.util.List;
 import java.util.Map;
 
 public final class Utils {
-  public static final String DEFAULT_STREAM_ID = null;//todo
+
+  private static final String DEFAULT_STREAM_ID = "default";
 
   private Utils() {
+  }
+
+  /**
+   * In twister2-storm we append source node id to the default stream
+   */
+  public static String getDefaultStream(String sourceName) {
+    return sourceName + "_" + DEFAULT_STREAM_ID;
   }
 
   public static Object newInstance(String klass) {

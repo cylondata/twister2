@@ -11,6 +11,8 @@
 //  limitations under the License.
 package org.apache.storm.topology.twister2;
 
-public interface MadeASourceListener {
+import java.io.Serializable;
+
+public interface MadeASourceListener extends Serializable {
   void onMadeASource(String id);
 }

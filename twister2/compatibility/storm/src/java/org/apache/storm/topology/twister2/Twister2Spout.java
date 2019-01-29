@@ -23,25 +23,40 @@
 //  limitations under the License.
 package org.apache.storm.topology.twister2;
 
+import java.util.logging.Logger;
+
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.IRichSpout;
+import org.apache.storm.tuple.Fields;
+import org.apache.storm.utils.Utils;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class Twister2Spout implements ISource {
+public class Twister2Spout implements ISource, Twister2StormNode {
 
-  private IRichSpout stormSpout; //todo need BaseRichSpout??
-  //todo currently omitting declare output fields
+  private static final Logger LOG = Logger.getLogger(Twister2Spout.class.getName());
+
+  private IRichSpout stormSpout;
   private Twister2SpoutDeclarer spoutDeclarer;
 
   private Integer parallelism = 1;
 
-  public Twister2Spout(IRichSpout stormSpout) {
+  private String id;
+
+  private EdgeFieldMap outFieldsForEdge;
+
+  private EdgeFieldMap keyedOutEdges;
+
+  public Twister2Spout(String id, IRichSpout stormSpout) {
+    this.id = id;
     this.stormSpout = stormSpout;
     this.spoutDeclarer = new Twister2SpoutDeclarer();
+    this.outFieldsForEdge = new EdgeFieldMap(Utils.getDefaultStream(id));
+    this.keyedOutEdges = new EdgeFieldMap(Utils.getDefaultStream(id));
+    this.stormSpout.declareOutputFields(this.outFieldsForEdge);
   }
 
   public void setParallelism(Integer parallelism) {
@@ -57,18 +72,39 @@ public class Twister2Spout implements ISource {
   }
 
   @Override
+  public Fields getOutFieldsForEdge(String edge) {
+    return this.outFieldsForEdge.get(edge);
+  }
+
+  @Override
+  public void setKeyedOutEdges(String edge, Fields keys) {
+    LOG.info(String.format("[Storm-Spout : %s] Setting out edge %s with keys %s", id, edge, keys));
+    this.keyedOutEdges.put(edge, keys);
+  }
+
+  @Override
+  public String getId() {
+    return id;
+  }
+
+  @Override
   public void execute() {
-    while (true) {
-      this.stormSpout.nextTuple();
-    }
+    this.stormSpout.nextTuple();
   }
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
+    LOG.info("Preparing storm-spout : " + this.id);
+
     this.stormSpout.open(
         cfg.toMap(),
         new TopologyContext(context),
-        new SpoutOutputCollector(context)
+        new SpoutOutputCollector(
+            this.id,
+            context,
+            this.outFieldsForEdge,
+            this.keyedOutEdges
+        )
     );
   }
 }

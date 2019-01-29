@@ -23,18 +23,25 @@
 //  limitations under the License.
 package org.apache.storm.topology.twister2;
 
+import java.util.logging.Logger;
+
 import org.apache.storm.generated.StormTopology;
 
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public class Twister2TaskWorker extends TaskWorker {
+public abstract class Twister2TaskWorker extends TaskWorker {
 
-  public Twister2TaskWorker(StormTopology stormTopology) {
+  private static final Logger LOG = Logger.getLogger(Twister2TaskWorker.class.getName());
 
-  }
+  public abstract StormTopology buildTopology();
 
   @Override
   public void execute() {
+    DataFlowTaskGraph graph = this.buildTopology().getT2DataFlowTaskGraph();
 
+    ExecutionPlan executionPlan = taskExecutor.plan(graph);
+    taskExecutor.execute(graph, executionPlan);
   }
 }

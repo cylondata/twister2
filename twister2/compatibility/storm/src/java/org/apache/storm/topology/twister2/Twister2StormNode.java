@@ -9,35 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package org.apache.storm.tuple;
+package org.apache.storm.topology.twister2;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import org.apache.storm.tuple.Fields;
 
-/**
- * A convenience class for making tuple values using new Values("field1", 2, 3)
- * syntax.
- */
-public class Values extends ArrayList<Object> {
-  public Values() {
+import edu.iu.dsc.tws.task.api.INode;
 
-  }
+public interface Twister2StormNode extends INode {
 
-  public Values(Object... vals) {
-    super(vals.length);
-    for (Object o : vals) {
-      add(o);
-    }
-  }
+  String getId();
 
-  public Values(List vals) {
-    this.addAll(vals);
-  }
+  Fields getOutFieldsForEdge(String edge);
 
-  public Values(Iterator itr) {
-    while (itr.hasNext()) {
-      this.add(itr.next());
-    }
-  }
+  void setKeyedOutEdges(String edge, Fields keys);
 }
