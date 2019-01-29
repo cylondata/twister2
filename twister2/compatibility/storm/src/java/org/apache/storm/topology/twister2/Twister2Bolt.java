@@ -67,25 +67,18 @@ public class Twister2Bolt implements ICompute, ISink, Twister2StormNode {
   private final EdgeFieldMap outFieldsForEdge;
   private final EdgeFieldMap keyedOutEdges;
 
-  private Twister2Bolt(String id, MadeASourceListener madeASourceListener) {
+  public Twister2Bolt(String id, Object bolt, MadeASourceListener madeASourceListener) {
     this.id = id;
     this.boltDeclarer = new Twister2BoltDeclarer(madeASourceListener);
     this.outFieldsForEdge = new EdgeFieldMap(Utils.getDefaultStream(id));
     this.keyedOutEdges = new EdgeFieldMap(Utils.getDefaultStream(id));
-  }
-
-  public Twister2Bolt(String id, IRichBolt stormBolt, MadeASourceListener madeASourceListener) {
-    this(id, madeASourceListener);
-    this.stormBolt = stormBolt;
-    this.stormBolt.declareOutputFields(this.outFieldsForEdge);
-  }
-
-  public Twister2Bolt(String id,
-                      IBasicBolt stormBasicBolt,
-                      MadeASourceListener madeASourceListener) {
-    this(id, madeASourceListener);
-    this.stormBasicBolt = stormBasicBolt;
-    this.stormBasicBolt.declareOutputFields(this.outFieldsForEdge);
+    if (bolt instanceof IRichBolt) {
+      this.stormBolt = (IRichBolt) bolt;
+      this.stormBolt.declareOutputFields(this.outFieldsForEdge);
+    } else {
+      this.stormBasicBolt = (IBasicBolt) bolt;
+      this.stormBasicBolt.declareOutputFields(this.outFieldsForEdge);
+    }
   }
 
   public Integer getParallelism() {

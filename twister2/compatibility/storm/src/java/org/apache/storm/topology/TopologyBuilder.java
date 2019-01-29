@@ -49,8 +49,8 @@ public class TopologyBuilder implements Serializable {
   private transient TaskGraphBuilder taskGraphBuilder;
   private HashMap<String, Twister2StormNode> nodes = new HashMap<>();
 
-  private Set<String> sinkNodes = new HashSet<>(); //these are the sinks in twitser2
-  private Set<String> sourceNodes = new HashSet<>(); //these are the sources in twitser2
+  private Set<String> sinkNodes = new HashSet<>(); //these are the sinks in twister2
+  private Set<String> sourceNodes = new HashSet<>(); //these are the sources in twister2
   private Set<String> computeNodes = new HashSet<>(); //these are the computes in twister2
 
   public TopologyBuilder() {
@@ -166,19 +166,7 @@ public class TopologyBuilder implements Serializable {
   }
 
   public BoltDeclarer setBolt(String id, IRichBolt bolt, Number parallelismHint) {
-    Twister2Bolt twister2Bolt = new Twister2Bolt(id, bolt, source -> {
-      // the source is not a sink anymore,
-      // it is a source for another node(compute node)
-      boolean sourceWasInSinkNodes = this.sinkNodes.remove(source);
-      if (sourceWasInSinkNodes) {
-        this.computeNodes.add(source);
-      }
-    });
-
-    twister2Bolt.setParallelism(parallelismHint.intValue());
-    this.nodes.put(id, twister2Bolt);
-    this.sinkNodes.add(id); //add all to the sink nodes initially
-    return twister2Bolt.getBoltDeclarer();
+    return this.createT2Bolt(id, bolt, parallelismHint);
   }
 
   public BoltDeclarer setBolt(String id, IBasicBolt bolt) {
@@ -186,6 +174,10 @@ public class TopologyBuilder implements Serializable {
   }
 
   public BoltDeclarer setBolt(String id, IBasicBolt bolt, Number parallelismHint) {
+    return this.createT2Bolt(id, bolt, parallelismHint);
+  }
+
+  private BoltDeclarer createT2Bolt(String id, Object bolt, Number parallelismHint) {
     Twister2Bolt twister2Bolt = new Twister2Bolt(id, bolt, source -> {
       // the source is not a sink anymore,
       // it is a source for another node(compute node)
@@ -194,7 +186,6 @@ public class TopologyBuilder implements Serializable {
         this.computeNodes.add(source);
       }
     });
-
     twister2Bolt.setParallelism(parallelismHint.intValue());
     this.nodes.put(id, twister2Bolt);
     this.sinkNodes.add(id); //add all to the sink nodes initially

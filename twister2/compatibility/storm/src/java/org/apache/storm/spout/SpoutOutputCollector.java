@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SpoutOutputCollector implements ISpoutOutputCollector {
 
-  private final static Logger LOG = Logger.getLogger(SpoutOutputCollector.class.getName());
+  private static final Logger LOG = Logger.getLogger(SpoutOutputCollector.class.getName());
 
   private final TaskContext taskContext;
   private final String spoutId;
