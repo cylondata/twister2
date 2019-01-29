@@ -322,10 +322,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   @Override
   public void onReceiveComplete(int id, int e, DataBuffer buffer, boolean releaseBuffer) {
     // we need to try to build the message here, we may need many more messages to complete
-    ChannelMessage currentMessage = currentMessages.get(id);
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     byteBuffer.position(buffer.getSize());
     byteBuffer.flip();
+
+    ChannelMessage currentMessage = currentMessages.get(id);
     if (currentMessage == null) {
       currentMessage = new ChannelMessage(id, receiveDataType, MessageDirection.IN, this);
       if (isKeyed) {
@@ -451,28 +452,38 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           pendingSendMessages.poll();
           continue;
         }
+        Queue<ChannelMessage> channelMessages = outMessage.getChannelMessages();
         // at this point lets build the message
-        ChannelMessage chMessage = (ChannelMessage)
+        ChannelMessage serializeMessage = (ChannelMessage)
             messageSerializer.get(sendId).build(pair.getKey(), outMessage);
+        if (serializeMessage != null) {
+          channelMessages.offer(serializeMessage);
+        }
+
+        ChannelMessage chMessage = channelMessages.peek();
+        if (chMessage == null) {
+          continue;
+        }
+
+        List<Integer> externalRoutes = new ArrayList<>(outMessage.getExternalSends());
         // okay we build the message, send it
         if (outMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
-          List<Integer> externalRoutes = new ArrayList<>(outMessage.getExternalSends());
           int startOfExternalRouts = chMessage.getAcceptedExternalSends();
           canProgress = sendExternally(outMessage, chMessage, externalRoutes, startOfExternalRouts);
           if (startOfExternalRouts == externalRoutes.size()) {
             // we are done
             pendingSendMessages.poll();
+            channelMessages.poll();
           }
         } else if (outMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
-          // If the message is partially serialized we will clone the message and send a clone
-          // the original message will be kept so that the rest of the message can be serialized
-          if (chMessage.getBuffers().size() == 0) {
-            break;
-          }
           List<Integer> exRoutes = new ArrayList<>(outMessage.getExternalSends());
           int startOfExternalRouts = chMessage.getAcceptedExternalSends();
 
           canProgress = sendExternally(outMessage, chMessage, exRoutes, startOfExternalRouts);
+          if (startOfExternalRouts == externalRoutes.size()) {
+            // we are done sending this channel message
+            channelMessages.poll();
+          }
         } else {
           break;
         }

@@ -89,6 +89,12 @@ public class ChannelMessage {
    */
   private int headerSize;
 
+  /**
+   * The current reading buffer index, this can change from 0 > to 0 when we release the buffers
+   * while we are still reading
+   */
+  private int currentReadingBuffer;
+
   public enum ReceivedState {
     INIT,
     DOWN,
@@ -100,9 +106,30 @@ public class ChannelMessage {
    */
   private ReceivedState receivedState;
 
+  /**
+   * Keep track of accepted external sends
+   */
   private int acceptedExternalSends = 0;
 
+  /**
+   * Keep track weather out count updated
+   */
   private boolean outCountUpdated = false;
+
+  /**
+   * Number of objects we have read so far
+   */
+  private int objectsRead = 0;
+
+  /**
+   * The object that is been built
+   */
+  private Object buildingObject;
+
+  /**
+   * The current buffer read index
+   */
+  private int currentBufferIndex = 0;
 
   public ChannelMessage() {
   }
@@ -223,7 +250,6 @@ public class ChannelMessage {
   }
 
   public boolean build() {
-
     if (header == null && buffers.size() > 0) {
       return false;
     }
@@ -231,18 +257,7 @@ public class ChannelMessage {
     if (header != null) {
       int currentSize = 0;
       for (DataBuffer buffer : getBuffers()) {
-        currentSize += buffer.getByteBuffer().remaining();
-      }
-      if (currentSize > header.getLength()) {
-        throw new RuntimeException(String.format("source %d target %d ChannelMessage data"
-                + " length %d exceeded expected"
-                + " length in header %d buffer count %d overflow count %d",
-            header.getSourceId(), header.getDestinationIdentifier(), currentSize,
-            header.getLength(), buffers.size(), overflowBuffers.size()));
-      }
-      if (currentSize == header.getLength()) {
-        complete = true;
-        return true;
+
       }
     }
     return false;
@@ -250,14 +265,6 @@ public class ChannelMessage {
 
   public boolean isComplete() {
     return complete;
-  }
-
-  public int getCurrentSize() {
-    int currentSize = 0;
-    for (DataBuffer buffer : getBuffers()) {
-      currentSize += buffer.getByteBuffer().position();
-    }
-    return currentSize;
   }
 
   public void setComplete(boolean complete) {

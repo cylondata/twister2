@@ -57,6 +57,12 @@ public class UnifiedSerializer implements MessageSerializer {
    */
   private int executor;
 
+
+  public UnifiedSerializer(KryoSerializer serializer, int exec) {
+    this.executor = exec;
+    this.serializer = serializer;
+  }
+
   @Override
   public void init(Config cfg, Queue<DataBuffer> buffers, boolean k) {
     this.sendBuffers = buffers;
@@ -225,11 +231,15 @@ public class UnifiedSerializer implements MessageSerializer {
       int dataLength = DataSerializer.serializeData(payload,
           messageType, state, serializer);
       state.setCurretHeaderLength(dataLength + keyLength);
-      state.setDataSize(dataLength);
     }
 
     if (state.getPart() == SerializeState.Part.INIT
         || state.getPart() == SerializeState.Part.HEADER) {
+
+      // first we need to copy the data size to buffer
+      if (buildSubMessageHeader(targetBuffer, state.getCurretHeaderLength())) {
+        return false;
+      }
       // this call will copy the key length to buffer as well
       boolean complete = KeySerializer.copyKeyToBuffer(key,
           keyType, targetBuffer.getByteBuffer(), state, serializer);
@@ -245,10 +255,6 @@ public class UnifiedSerializer implements MessageSerializer {
       return false;
     }
 
-    // first we need to copy the data size to buffer
-    if (buildSubMessageHeader(targetBuffer, state.getDataSize())) {
-      return false;
-    }
     // now lets copy the actual data
     boolean completed = DataSerializer.copyDataToBuffer(payload,
         messageType, byteBuffer, state, serializer);
@@ -278,8 +284,6 @@ public class UnifiedSerializer implements MessageSerializer {
       state.setCurretHeaderLength(dataLength);
       // add the header bytes to the total bytes
       state.setPart(SerializeState.Part.BODY);
-      // we need to keep track to put this to message
-      state.setDataSize(dataLength);
     }
 
     // now we can serialize the body
@@ -288,7 +292,7 @@ public class UnifiedSerializer implements MessageSerializer {
     }
 
     // first we need to copy the data size to buffer
-    if (buildSubMessageHeader(targetBuffer, state.getDataSize())) {
+    if (buildSubMessageHeader(targetBuffer, state.getCurretHeaderLength())) {
       return false;
     }
     boolean completed = DataSerializer.copyDataToBuffer(payload,

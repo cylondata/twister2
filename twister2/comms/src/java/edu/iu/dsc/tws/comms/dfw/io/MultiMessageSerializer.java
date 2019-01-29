@@ -303,8 +303,9 @@ public class MultiMessageSerializer implements MessageSerializer {
 
     //If we cannot fit the whole message in the current buffer return false
     if (message.getHeader() != null) {
-      state.setCurretHeaderLength(message.getHeader().getLength() + message.getHeaderSize());
-      if (countInBuffer > 0 && targetRemainingSpace < message.getHeader().getLength()) {
+      state.setCurretHeaderLength(message.getHeader().getNumberMessages()
+          + message.getHeaderSize());
+      if (countInBuffer > 0 && targetRemainingSpace < message.getHeader().getNumberMessages()) {
         return false;
       }
     } else {

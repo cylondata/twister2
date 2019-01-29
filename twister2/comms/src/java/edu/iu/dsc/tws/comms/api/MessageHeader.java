@@ -31,7 +31,7 @@ public final class MessageHeader {
   /**
    * Length of the message
    */
-  private int length;
+  private int numberMessages;
 
   /**
    * An integer value used to identify the destination
@@ -46,7 +46,7 @@ public final class MessageHeader {
   private MessageHeader(int srcId, int e, int l) {
     this.sourceId = srcId;
     this.edge = e;
-    this.length = l;
+    this.numberMessages = l;
   }
 
   private MessageHeader(int srcId, int e) {
@@ -62,8 +62,8 @@ public final class MessageHeader {
     return edge;
   }
 
-  public int getLength() {
-    return length;
+  public int getNumberMessages() {
+    return numberMessages;
   }
 
   public int getFlags() {
@@ -108,8 +108,8 @@ public final class MessageHeader {
       return this;
     }
 
-    public Builder length(int l) {
-      header.length = l;
+    public Builder numberMessages(int l) {
+      header.numberMessages = l;
       return this;
     }
 

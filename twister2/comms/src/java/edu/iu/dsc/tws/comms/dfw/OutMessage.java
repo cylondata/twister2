@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
@@ -48,6 +50,8 @@ public class OutMessage {
 
   private int acceptedInternalSends = 0;
 
+  private Queue<ChannelMessage> channelMessages = new LinkedBlockingQueue<>();
+
   public enum SendState {
     INIT,
     SENT_INTERNALLY,
@@ -70,6 +74,8 @@ public class OutMessage {
     this.externalSends = extSends;
     this.flags = flags;
     this.serializationState = new SerializeState();
+    // lets add the message
+    channelMessages.offer(message);
   }
 
   public SendState serializedState() {
@@ -150,5 +156,9 @@ public class OutMessage {
 
   public int getFlags() {
     return flags;
+  }
+
+  public Queue<ChannelMessage> getChannelMessages() {
+    return channelMessages;
   }
 }
