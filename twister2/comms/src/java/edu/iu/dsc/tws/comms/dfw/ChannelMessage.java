@@ -203,18 +203,35 @@ public class ChannelMessage {
     buffers.add(buffer);
   }
 
+  // the amount of data we have seen for current object
+  private int previousReadForObject = 0;
+
+  // keep track of the current object length
+  private int currentObjectLength = 0;
+
+  // the objects we have in buffers so far
+  private int seenObjects = 0;
+
   public boolean addBufferAndCalculate(DataBuffer buffer) {
     buffers.add(buffer);
     addedBuffers++;
 
     int expectedObjects = header.getNumberTuples();
     if (addedBuffers == 1) {
-      int numberOfObjects = 0;
-
-      for (int i = 0; i < getBuffers().size(); i++) {
-
-      }
+      currentObjectLength = buffer.getByteBuffer().getInt(16);
     }
+
+    while (true) {
+      // need to read this much
+      int moreToReadForCurrentObject = currentObjectLength - previousReadForObject;
+      // amount of data in the buffer
+      int remaining = buffer.getByteBuffer().remaining();
+      if (moreToReadForCurrentObject < remaining) {
+        seenObjects++;
+      }
+      break;
+    }
+
     return false;
   }
 
@@ -269,21 +286,6 @@ public class ChannelMessage {
 
   public void setDataType(MessageType type) {
     this.type = type;
-  }
-
-  public boolean build() {
-    if (header == null && buffers.size() > 0) {
-      return false;
-    }
-
-    if (header != null) {
-      int currentSize = 0;
-      List<DataBuffer> buffers = getBuffers();
-      for (int i = 0; i < buffers.size(); i++) {
-
-      }
-    }
-    return false;
   }
 
   public boolean isComplete() {
