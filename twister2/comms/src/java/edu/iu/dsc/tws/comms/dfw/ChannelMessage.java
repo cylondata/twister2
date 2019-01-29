@@ -100,6 +100,10 @@ public class ChannelMessage {
    */
   private ReceivedState receivedState;
 
+  private int acceptedExternalSends = 0;
+
+  private boolean outCountUpdated = false;
+
   public ChannelMessage() {
   }
 
@@ -229,8 +233,6 @@ public class ChannelMessage {
       for (DataBuffer buffer : getBuffers()) {
         currentSize += buffer.getByteBuffer().remaining();
       }
-//      LOG.info(String.format("Current size %d length %d", currentSize,
-//          header.getLength()));
       if (currentSize > header.getLength()) {
         throw new RuntimeException(String.format("source %d target %d ChannelMessage data"
                 + " length %d exceeded expected"
@@ -304,5 +306,21 @@ public class ChannelMessage {
 
   public void setPartial(boolean partial) {
     isPartial = partial;
+  }
+
+  public int getAcceptedExternalSends() {
+    return acceptedExternalSends;
+  }
+
+  public int incrementAcceptedExternalSends() {
+    return ++acceptedExternalSends;
+  }
+
+  public void setOutCountUpdated(boolean outCountUpdated) {
+    this.outCountUpdated = outCountUpdated;
+  }
+
+  public boolean isOutCountUpdated() {
+    return outCountUpdated;
   }
 }

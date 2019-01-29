@@ -441,30 +441,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       Pair<Object, OutMessage> pair = pendingSendMessages.peek();
       OutMessage outMessage = pair.getValue();
       Object messageObject = pair.getKey();
-      if (outMessage.serializedState() == OutMessage.SendState.INIT) {
-        // send it internally
-        int startOfInternalRouts = outMessage.getAcceptedInternalSends();
-        List<Integer> inRoutes = new ArrayList<>(outMessage.getInternalSends());
-        for (int i = startOfInternalRouts; i < outMessage.getInternalSends().size(); i++) {
-          boolean receiveAccepted;
-          lock.lock();
-          try {
-            receiveAccepted = receiver.receiveSendInternally(
-                outMessage.getSource(), inRoutes.get(i), outMessage.getTarget(),
-                outMessage.getFlags(), messageObject);
-          } finally {
-            lock.unlock();
-          }
-          if (!receiveAccepted) {
-            canProgress = false;
-            break;
-          }
-          outMessage.incrementAcceptedInternalSends();
-        }
-        if (canProgress) {
-          outMessage.setSendState(OutMessage.SendState.SENT_INTERNALLY);
-        }
-      }
+
+      // first lets send the message to internal destinations
+      canProgress = sendInternally(outMessage, messageObject);
 
       if (canProgress) {
         // we don't have an external executor to send this message
@@ -473,96 +452,86 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           continue;
         }
         // at this point lets build the message
-        //TODO: do we need to return the object since we are sending back the same outMessage
-        //TODO: that we send in as a param. This can cause a confusion
-        OutMessage message = (OutMessage)
+        ChannelMessage chMessage = (ChannelMessage)
             messageSerializer.get(sendId).build(pair.getKey(), outMessage);
         // okay we build the message, send it
-        if (message.serializedState() == OutMessage.SendState.SERIALIZED) {
-          List<Integer> exRoutes = new ArrayList<>(message.getExternalSends());
-          int startOfExternalRouts = message.getAcceptedExternalSends();
-          int noOfExternalSends = startOfExternalRouts;
-          lock.lock();
-          try {
-            if (!message.isOutCountUpdated()) {
-              message.getChannelMessage().incrementRefCount(
-                  message.getExternalSends().size());
-              message.setOutCountUpdated(true);
-            }
-            for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
-
-              if (message.getChannelMessage().getHeader().getLength() + 16
-                  != message.getChannelMessage().getCurrentSize()) {
-                LOG.info(String.format("%d incorrect headers hlen %d and buffer sizes %d",
-                    executor, message.getChannelMessage().getHeader().getLength(),
-                    message.getChannelMessage().getCurrentSize()));
-              }
-              boolean sendAccepted = sendMessageToTarget(message.getChannelMessage(),
-                  exRoutes.get(i));
-              // if no longer accepts stop
-              if (!sendAccepted) {
-                canProgress = false;
-
-                break;
-              } else {
-                noOfExternalSends = message.incrementAcceptedExternalSends();
-                externalSendsPending.incrementAndGet();
-              }
-            }
-          } finally {
-            lock.unlock();
-          }
-
-          if (noOfExternalSends == exRoutes.size()) {
+        if (outMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
+          List<Integer> externalRoutes = new ArrayList<>(outMessage.getExternalSends());
+          int startOfExternalRouts = chMessage.getAcceptedExternalSends();
+          canProgress = sendExternally(outMessage, chMessage, externalRoutes, startOfExternalRouts);
+          if (startOfExternalRouts == externalRoutes.size()) {
             // we are done
             pendingSendMessages.poll();
           }
-        } else if (message.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+        } else if (outMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
           // If the message is partially serialized we will clone the message and send a clone
           // the original message will be kept so that the rest of the message can be serialized
-          if (message.getChannelMessage().getBuffers().size() == 0) {
+          if (chMessage.getBuffers().size() == 0) {
             break;
           }
-          List<Integer> exRoutes = new ArrayList<>(message.getExternalSends());
-          int startOfExternalRouts = message.getAcceptedExternalSends();
+          List<Integer> exRoutes = new ArrayList<>(outMessage.getExternalSends());
+          int startOfExternalRouts = chMessage.getAcceptedExternalSends();
 
-          //making a copy to send
-          lock.lock();
-
-          ChannelMessage sendCopy = createChannelMessageCopy(message.getChannelMessage());
-          try {
-            if (!message.isOutCountUpdated()) {
-              sendCopy.incrementRefCount(
-                  message.getExternalSends().size());
-              message.setOutCountUpdated(true);
-            }
-            //TODO make sure messages are sent
-            for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
-              if (sendCopy.getHeader().getLength() + 16
-                  != sendCopy.getCurrentSize()) {
-                LOG.info(String.format("%d incorrect headers hlen %d and buffer sizes %d",
-                    executor, sendCopy.getHeader().getLength(),
-                    sendCopy.getCurrentSize()));
-              }
-              boolean sendAccepted = sendMessageToTarget(sendCopy, exRoutes.get(i));
-              // if no longer accepts stop
-              if (!sendAccepted) {
-                canProgress = false;
-                break;
-              } else {
-                //remove the buffers from the original message
-                message.getChannelMessage().removeAllBuffers();
-                externalSendsPending.incrementAndGet();
-              }
-            }
-          } finally {
-            message.setOutCountUpdated(false);
-            lock.unlock();
-          }
-          //send and remove buffers from object
+          canProgress = sendExternally(outMessage, chMessage, exRoutes, startOfExternalRouts);
         } else {
           break;
         }
+      }
+    }
+    return canProgress;
+  }
+
+  private boolean sendExternally(OutMessage outMessage, ChannelMessage chMessage,
+                                 List<Integer> exRoutes, int startOfExternalRouts) {
+    boolean canProgress = true;
+    lock.lock();
+    try {
+      if (!chMessage.isOutCountUpdated()) {
+        chMessage.incrementRefCount(outMessage.getExternalSends().size());
+        chMessage.setOutCountUpdated(true);
+      }
+      for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
+        boolean sendAccepted = sendMessageToTarget(chMessage, exRoutes.get(i));
+        // if no longer accepts stop
+        if (!sendAccepted) {
+          canProgress = false;
+          break;
+        } else {
+          //remove the buffers from the original message
+          chMessage.removeAllBuffers();
+          externalSendsPending.incrementAndGet();
+        }
+      }
+    } finally {
+      lock.unlock();
+    }
+    return canProgress;
+  }
+
+  private boolean sendInternally(OutMessage outMessage, Object messageObject) {
+    boolean canProgress = true;
+    if (outMessage.serializedState() == OutMessage.SendState.INIT) {
+      // send it internally
+      int startOfInternalRouts = outMessage.getAcceptedInternalSends();
+      List<Integer> inRoutes = new ArrayList<>(outMessage.getInternalSends());
+      for (int i = startOfInternalRouts; i < outMessage.getInternalSends().size(); i++) {
+        boolean receiveAccepted;
+        lock.lock();
+        try {
+          receiveAccepted = receiver.receiveSendInternally(
+              outMessage.getSource(), inRoutes.get(i), outMessage.getTarget(),
+              outMessage.getFlags(), messageObject);
+        } finally {
+          lock.unlock();
+        }
+        if (!receiveAccepted) {
+          canProgress = false;
+          break;
+        }
+        outMessage.incrementAcceptedInternalSends();
+      }
+      if (canProgress) {
+        outMessage.setSendState(OutMessage.SendState.SENT_INTERNALLY);
       }
     }
     return canProgress;

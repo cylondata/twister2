@@ -70,7 +70,7 @@ public class UnifiedSerializer implements MessageSerializer {
     ChannelMessage channelMessage = sendMessage.getChannelMessage();
     if (channelMessage.isComplete()) {
       sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
-      return sendMessage;
+      return channelMessage;
     }
 
     // we loop until everything is serialized
@@ -121,7 +121,7 @@ public class UnifiedSerializer implements MessageSerializer {
         channelMessage.setComplete(true);
       }
     }
-    return sendMessage;
+    return channelMessage;
   }
 
   /**

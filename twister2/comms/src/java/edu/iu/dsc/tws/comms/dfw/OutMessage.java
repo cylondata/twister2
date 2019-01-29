@@ -23,7 +23,7 @@ public class OutMessage {
   // have enough space in the send buffers
   private SerializeState serializationState;
 
-  //number of bytes copied to the network buffers so far
+  // number of bytes copied to the network buffers so far
   private int byteCopied = 0;
 
   private int writtenHeaderSize = 0;
@@ -44,12 +44,9 @@ public class OutMessage {
 
   private Set<Integer> externalSends;
 
-  private int acceptedExternalSends = 0;
-  private int acceptedInternalSends = 0;
-
   private int flags;
 
-  private boolean outCountUpdated = false;
+  private int acceptedInternalSends = 0;
 
   public enum SendState {
     INIT,
@@ -143,14 +140,6 @@ public class OutMessage {
     return externalSends;
   }
 
-  public int getAcceptedExternalSends() {
-    return acceptedExternalSends;
-  }
-
-  public int incrementAcceptedExternalSends() {
-    return ++acceptedExternalSends;
-  }
-
   public int getAcceptedInternalSends() {
     return acceptedInternalSends;
   }
@@ -161,13 +150,5 @@ public class OutMessage {
 
   public int getFlags() {
     return flags;
-  }
-
-  public void setOutCountUpdated(boolean outCountUpdated) {
-    this.outCountUpdated = outCountUpdated;
-  }
-
-  public boolean isOutCountUpdated() {
-    return outCountUpdated;
   }
 }
