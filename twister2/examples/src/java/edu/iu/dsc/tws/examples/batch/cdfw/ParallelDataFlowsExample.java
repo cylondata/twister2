@@ -69,7 +69,7 @@ public final class ParallelDataFlowsExample {
       JobConfig jobConfig = new JobConfig();
 
       DataFlowGraph job1 = generateFirstJob(config, 4, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, 4, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, 2, jobConfig);
 
       cdfwExecutor.executeCDFW(job1, job2);
     }
@@ -167,7 +167,7 @@ public final class ParallelDataFlowsExample {
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph).
-        setWorkers(4).addJobConfig(jobConfig).addOutput("first_out");
+        setWorkers(parallelismValue).addJobConfig(jobConfig).addOutput("first_out");
 
     return job;
   }
@@ -189,7 +189,7 @@ public final class ParallelDataFlowsExample {
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph).
-        setWorkers(2).addJobConfig(jobConfig).addInput("first_graph", "first_out");
+        setWorkers(parallelismValue).addJobConfig(jobConfig).addInput("first_graph", "first_out");
 
     return job;
   }

@@ -65,8 +65,10 @@ public class KMeansUtils {
         }
       }
     } catch (FileNotFoundException e) {
+      readClose();
       throw new RuntimeException("File Not Found:", e);
     } catch (IOException e) {
+      readClose();
       throw new RuntimeException("IO Exception occured", e);
     }
     return bufferedReader;
@@ -96,6 +98,7 @@ public class KMeansUtils {
             StandardCharsets.UTF_8));
       }
     } catch (IOException ioe) {
+      writeClose();
       throw new RuntimeException("Buffered Writer Creation Error", ioe);
     }
     return bufferedWriter;
