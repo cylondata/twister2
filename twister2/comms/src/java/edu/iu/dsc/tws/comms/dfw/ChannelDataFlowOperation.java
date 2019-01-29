@@ -337,8 +337,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       currentMessage.setHeader(header);
       currentMessage.setHeaderSize(16);
     }
-    currentMessage.addBuffer(buffer);
-    currentMessage.build();
+    currentMessage.addBufferAndCalculate(buffer);
 
     if (currentMessage.isComplete()) {
       currentMessages.remove(id);
@@ -556,7 +555,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     copy.setOriginatingId(channelMessage.getOriginatingId());
     copy.setHeader(channelMessage.getHeader());
     copy.setComplete(channelMessage.isComplete());
-    copy.setType(channelMessage.getType());
+    copy.setDataType(channelMessage.getType());
     copy.setKeyType(channelMessage.getKeyType());
     copy.setHeaderSize(channelMessage.getHeaderSize());
     copy.setReceivedState(channelMessage.getReceivedState());

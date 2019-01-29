@@ -112,7 +112,7 @@ public class Test {
     message.setKeyType(MessageType.SHORT);
     MessageHeader header = multiMessageDeserializer.buildHeader(message.getBuffers().get(0), 0);
     message.setHeader(header);
-    System.out.println(String.format("%d %d %d", header.getNumberMessages(),
+    System.out.println(String.format("%d %d %d", header.getNumberTuples(),
         header.getSourceId(), header.getEdge()));
     Object d = multiMessageDeserializer.build(message, 0);
     List list = (List) d;

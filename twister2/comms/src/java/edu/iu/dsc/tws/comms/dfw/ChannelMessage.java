@@ -42,7 +42,9 @@ public class ChannelMessage {
    */
   private MessageDirection messageDirection;
 
-
+  /**
+   * We call this to release the buffers
+   */
   private ChannelMessageReleaseCallback releaseListener;
 
   /**
@@ -131,6 +133,11 @@ public class ChannelMessage {
    */
   private int currentBufferIndex = 0;
 
+  /**
+   * Number of buffers added
+   */
+  private int addedBuffers = 0;
+
   public ChannelMessage() {
   }
 
@@ -196,6 +203,21 @@ public class ChannelMessage {
     buffers.add(buffer);
   }
 
+  public boolean addBufferAndCalculate(DataBuffer buffer) {
+    buffers.add(buffer);
+    addedBuffers++;
+
+    int expectedObjects = header.getNumberTuples();
+    if (addedBuffers == 1) {
+      int numberOfObjects = 0;
+
+      for (int i = 0; i < getBuffers().size(); i++) {
+
+      }
+    }
+    return false;
+  }
+
   protected void addBuffers(List<DataBuffer> bufferList) {
     buffers.addAll(bufferList);
   }
@@ -245,7 +267,7 @@ public class ChannelMessage {
     this.releaseListener = releaseListener;
   }
 
-  public void setType(MessageType type) {
+  public void setDataType(MessageType type) {
     this.type = type;
   }
 
@@ -256,7 +278,8 @@ public class ChannelMessage {
 
     if (header != null) {
       int currentSize = 0;
-      for (DataBuffer buffer : getBuffers()) {
+      List<DataBuffer> buffers = getBuffers();
+      for (int i = 0; i < buffers.size(); i++) {
 
       }
     }
