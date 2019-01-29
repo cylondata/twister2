@@ -70,23 +70,23 @@ public class KMeansJobMain {
     String dataInput = commandLine.getOptionValue(KMeansConstants.ARGS_DATA_INPUT);
 
     int numberOfPoints = Integer.parseInt(commandLine.getOptionValue(
-            KMeansConstants.ARGS_NUMBER_OF_POINTS));
+        KMeansConstants.ARGS_NUMBER_OF_POINTS));
     int workers = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_WORKERS));
     int itr = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_ITR));
     int dim = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_DIMENSIONS));
     int numOfClusters = Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_CLUSTERS));
     int pSeedValue =
-            Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_POINTS_SEED_VALUE));
+        Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_POINTS_SEED_VALUE));
     int cSeedValue =
-            Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_CENTERS_SEED_VALUE));
+        Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_CENTERS_SEED_VALUE));
     int parallelismValue =
-            Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_PARALLELISM_VALUE));
+        Integer.parseInt(commandLine.getOptionValue(KMeansConstants.ARGS_PARALLELISM_VALUE));
 
     LOG.fine("workers:" + workers + "\titeration:" + itr + "\tdimension:" + dim
-            + "\tnumber of clusters:" + numOfClusters + "\tfilename:" + fileName
-            + "\tnumber of datapoints:" + numberOfPoints + "\tdatapoints file:" + datapointsFile
-            + "\tcenters file:" + centersFile + "\tfilesys:" + fileSystem
-            + "\tparllelism:" + parallelismValue);
+        + "\tnumber of clusters:" + numOfClusters + "\tfilename:" + fileName
+        + "\tnumber of datapoints:" + numberOfPoints + "\tdatapoints file:" + datapointsFile
+        + "\tcenters file:" + centersFile + "\tfilesys:" + fileSystem
+        + "\tparllelism:" + parallelismValue);
 
     configurations.put(KMeansConstants.ARGS_FNAME, fileName);
     configurations.put(KMeansConstants.ARGS_POINTS, datapointsFile);
