@@ -25,6 +25,7 @@ package org.apache.storm.spout;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.apache.storm.topology.twister2.EdgeFieldMap;
 import org.apache.storm.tuple.Fields;
@@ -33,6 +34,8 @@ import org.apache.storm.utils.Utils;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SpoutOutputCollector implements ISpoutOutputCollector {
+
+  private final static Logger LOG = Logger.getLogger(SpoutOutputCollector.class.getName());
 
   private final TaskContext taskContext;
   private final String spoutId;
@@ -80,8 +83,7 @@ public class SpoutOutputCollector implements ISpoutOutputCollector {
 
   @Override
   public List<Integer> emit(String streamId, List<Object> tuple, Object messageId) {
-    System.out.println("Writing to the stream " + streamId
-        + " data : " + tuple + " | " + this.taskContext.taskId());
+    LOG.finest("Writing to the stream " + streamId + " data : " + tuple);
     if (!this.keyedOutEdges.containsKey(streamId)) {
       this.taskContext.write(streamId, tuple);
     } else {
