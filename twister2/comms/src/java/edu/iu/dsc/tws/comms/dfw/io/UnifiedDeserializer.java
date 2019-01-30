@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.comms.dfw.InChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -54,7 +55,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
    */
   @Override
   public Object build(Object partialObject, int edge) {
-    ChannelMessage currentMessage = (ChannelMessage) partialObject;
+    InChannelMessage currentMessage = (InChannelMessage) partialObject;
     int readLength = 0;
     int bufferIndex = 0;
     List<DataBuffer> buffers = currentMessage.getBuffers();

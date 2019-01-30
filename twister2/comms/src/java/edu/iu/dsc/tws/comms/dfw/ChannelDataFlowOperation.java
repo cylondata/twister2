@@ -127,7 +127,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   /**
    * Non grouped current messages
    */
-  private Map<Integer, ChannelMessage> currentMessages = new HashMap<>();
+  private Map<Integer, InChannelMessage> currentMessages = new HashMap<>();
 
   /**
    * These are the workers from which we receive messages
@@ -326,9 +326,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     byteBuffer.position(buffer.getSize());
     byteBuffer.flip();
 
-    ChannelMessage currentMessage = currentMessages.get(id);
+    InChannelMessage currentMessage = currentMessages.get(id);
     if (currentMessage == null) {
-      currentMessage = new ChannelMessage(id, receiveDataType, MessageDirection.IN, this);
+      currentMessage = new InChannelMessage(id, receiveDataType, MessageDirection.IN, this);
       if (isKeyed) {
         currentMessage.setKeyType(receiveKeyType);
       }
