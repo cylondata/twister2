@@ -121,12 +121,12 @@ public class ChannelMessage {
   /**
    * Number of objects we have read so far
    */
-  private int objectsRead = 0;
+  private int objectsDeserialized = 0;
 
   /**
    * The object that is been built
    */
-  private Object buildingObject;
+  private Object deserializingObject;
 
   /**
    * The current buffer read index
@@ -137,6 +137,16 @@ public class ChannelMessage {
    * Number of buffers added
    */
   private int addedBuffers = 0;
+
+  // the amount of data we have seen for current object
+  private int previousReadForObject = 0;
+
+  // keep track of the current object length
+  private int currentObjectLength = 0;
+
+  // the objects we have in buffers so far
+  private int seenObjects = 0;
+
 
   public ChannelMessage() {
   }
@@ -203,36 +213,44 @@ public class ChannelMessage {
     buffers.add(buffer);
   }
 
-  // the amount of data we have seen for current object
-  private int previousReadForObject = 0;
-
-  // keep track of the current object length
-  private int currentObjectLength = 0;
-
-  // the objects we have in buffers so far
-  private int seenObjects = 0;
-
   public boolean addBufferAndCalculate(DataBuffer buffer) {
     buffers.add(buffer);
     addedBuffers++;
 
     int expectedObjects = header.getNumberTuples();
+    int remaining = 0;
     if (addedBuffers == 1) {
       currentObjectLength = buffer.getByteBuffer().getInt(16);
+      remaining = buffer.getByteBuffer().remaining() + Integer.BYTES;
     }
 
-    while (true) {
+
+    while (remaining > 0) {
       // need to read this much
       int moreToReadForCurrentObject = currentObjectLength - previousReadForObject;
       // amount of data in the buffer
-      int remaining = buffer.getByteBuffer().remaining();
       if (moreToReadForCurrentObject < remaining) {
         seenObjects++;
+        remaining = remaining - moreToReadForCurrentObject;
+      } else {
+        previousReadForObject += remaining;
+        break;
       }
-      break;
+
+      // if we have seen all, lets break
+      if (expectedObjects == seenObjects) {
+        complete = true;
+        break;
+      }
+
+      // we can read another object
+      if (remaining > Integer.BYTES) {
+        currentObjectLength = buffer.getByteBuffer().getInt();
+        previousReadForObject = 0;
+      }
     }
 
-    return false;
+    return complete;
   }
 
   protected void addBuffers(List<DataBuffer> bufferList) {

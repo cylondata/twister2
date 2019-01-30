@@ -337,9 +337,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       currentMessage.setHeader(header);
       currentMessage.setHeaderSize(16);
     }
-    currentMessage.addBufferAndCalculate(buffer);
 
-    if (currentMessage.isComplete()) {
+    if (currentMessage.addBufferAndCalculate(buffer)) {
       currentMessages.remove(id);
       Queue<ChannelMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
       if (!deserializeQueue.offer(currentMessage)) {
