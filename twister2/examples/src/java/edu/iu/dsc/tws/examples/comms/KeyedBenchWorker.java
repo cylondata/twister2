@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -78,12 +77,6 @@ public abstract class KeyedBenchWorker implements IWorker {
       workerList = workerController.getAllWorkers();
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
-    if (workerList != null) {
-      LOG.info("All workers joined. " + WorkerInfoUtils.workerListAsString(workerList));
-    } else {
-      LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
       return;
     }
 

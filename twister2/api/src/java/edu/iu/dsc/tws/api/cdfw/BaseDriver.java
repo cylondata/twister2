@@ -30,7 +30,7 @@ public abstract class BaseDriver implements IDriver {
   /**
    * Worker list
    */
-  private List<JobMasterAPI.WorkerInfo> workerInfoList;
+  private volatile List<JobMasterAPI.WorkerInfo> workerInfoList;
 
   /**
    * The worker executor
@@ -44,13 +44,14 @@ public abstract class BaseDriver implements IDriver {
 
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
-    executor = new CDFWExecutor(config, messenger);
-
     try {
       waitForEvent(DriveEventType.INITIALIZE);
     } catch (Exception e) {
       throw new RuntimeException("Failed to wait for event");
     }
+
+    executor = new CDFWExecutor(config, messenger);
+    executor.addWorkerList(workerInfoList);
 
     // call the execute method of the implementation
     execute(config, executor);
@@ -68,16 +69,12 @@ public abstract class BaseDriver implements IDriver {
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    if (executor != null) {
-      executor.addWorkerList(workerList);
-    }
-
-    inMessages.offer(new DriverEvent(DriveEventType.INITIALIZE, null));
-
-    //Added to get the worker info list for testing
+    // Added to get the worker info list for testing
     if (workerList != null) {
       this.workerInfoList = workerList;
     }
+
+    inMessages.offer(new DriverEvent(DriveEventType.INITIALIZE, null));
   }
 
   private DriverEvent waitForEvent(DriveEventType type) throws Exception {

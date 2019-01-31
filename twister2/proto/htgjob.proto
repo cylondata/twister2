@@ -22,6 +22,11 @@ message SubGraph {
     repeated Input inputs = 10;
     repeated string outputs = 11;
     repeated jobmaster.WorkerInfo worker_info = 12;
+    CDFWSchedulePlan cdfw_scheduleplan = 13;
+}
+
+message CDFWSchedulePlan {
+    repeated int32 workers = 1;
 }
 
 message Input {

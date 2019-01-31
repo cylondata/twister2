@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task;
 
-import edu.iu.dsc.tws.dataset.DSet;
+import edu.iu.dsc.tws.dataset.DataObject;
 
 /**
  * Add input to a task graph
@@ -22,5 +22,5 @@ public interface Receptor {
    * @param name name of the input
    * @param data input data
    */
-  void add(String name, DSet<Object> data);
+  void add(String name, DataObject<?> data);
 }

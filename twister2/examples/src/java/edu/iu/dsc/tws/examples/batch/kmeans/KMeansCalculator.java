@@ -11,50 +11,58 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
-import java.util.Arrays;
-import java.util.logging.Logger;
-
 /**
  * This class is responsible for calculating the distance values between the datapoints and the
- * centroid values. The calculated new centroid values are stored in the KMeansCenters centersums
- * object.
+ * centroid values. The calculated new centroid values are stored in the centerSums array object.
  */
 public class KMeansCalculator {
 
-  private static final Logger LOG = Logger.getLogger(KMeansCalculator.class.getName());
+  /**
+   * Represents the data points to perform the calculation
+   */
+  private final double[][] points;
 
-  private double[][] points;
-  private double[][] centerSums;
-  private double[][] centroids;
+  /**
+   * Represents the centroids to perform the calculation
+   */
+  private final double[][] centroids;
 
-  private int[] centerCounts;
+  /**
+   * Represents the center sum values after the calculation
+   */
+  private final double[][] centerSums;
 
-  private int taskId;
-  private int dimension;
+  /**
+   * Represents the dimension of the data
+   */
+  private final int dimension;
 
-  private int startIndex;
-  private int endIndex;
+  /**
+   * Represents the start index for each task instances
+   */
+  private final int startIndex;
 
-  public KMeansCalculator(double[][] points, double[][] centres, int taskId, int dim,
-                          int sIndex, int eIndex) {
+  /**
+   * Represents the end index for each task instances
+   */
+  private final int endIndex;
+
+  public KMeansCalculator(double[][] points, double[][] centres, int dim, int sIndex, int eIndex) {
     this.points = points;
     this.centroids = centres;
-    this.taskId = taskId;
     this.dimension = dim;
     this.centerSums = new double[this.centroids.length][this.centroids[0].length + 1];
-    this.centerCounts = new int[this.centroids.length];
     this.startIndex = sIndex;
     this.endIndex = eIndex;
   }
 
   /**
    * This method invokes the findnearestcenter method to find the datapoints closer to the centroid
-   * values. The calculated value is assigned to the KMeansCenters object and return the same.
+   * values. The calculated value is assigned to the center sums object and return the same.
    */
-  public KMeansCenters calculate() {
+  public double[][] calculate() {
     findNearestCenter(dimension, points, centroids);
-    KMeansCenters kMeansCenters = new KMeansCenters(centerSums);
-    return kMeansCenters;
+    return centerSums;
   }
 
   /**
@@ -63,9 +71,7 @@ public class KMeansCalculator {
    * The calculated centroid values and the number of data points closer to the particular centroid
    * values assigned to the centerSums array object.
    */
-  public double[][] findNearestCenter(int dim, double[][] datapoints,
-                                      double[][] centers) {
-    LOG.fine("Start index:" + startIndex + "\tend index:" + endIndex);
+  private void findNearestCenter(int dim, double[][] datapoints, double[][] centers) {
     for (int i = startIndex; i < endIndex; i++) {
       int minimumCentroid = 0;
       double minValue = 0;
@@ -88,17 +94,18 @@ public class KMeansCalculator {
       }
       centerSums[minimumCentroid][dim] += 1;
     }
-    LOG.fine("Kmeans centroid values:" + Arrays.deepToString(centerSums));
-    return centerSums;
   }
 
   /**
-   * This method calculates the distance between the datapoint and the centroid value.
+   * This method calculates the distance between the datapoint and the centroid value. The value 1
+   * represents the data point value, value 2 represents the centroid value, and the length
+   * represents the dimension of the data point and centroid values.
    */
-  public double calculateEuclideanDistance(double[] value1, double[] value2, int length) {
-    double sum = 0;
+  private double calculateEuclideanDistance(double[] value1, double[] value2, int length) {
+    double sum = 0.0;
     for (int i = 0; i < length; i++) {
-      sum += (value1[i] - value2[i]) * (value1[i] - value2[i]);
+      double v = (value1[i] - value2[i]) * (value1[i] - value2[i]);
+      sum += v;
     }
     return sum;
   }

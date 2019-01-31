@@ -33,6 +33,7 @@ load("//tools:rules/twister2_core.bzl", "twister2_core_lib_executor_files")
 load("//tools:rules/twister2_core.bzl", "twister2_core_lib_data_lmdb_files")
 load("//tools:rules/twister2_core.bzl", "twister2_harp_integration_files")
 load("//tools:rules/twister2_core.bzl", "twister2_dashboard_files")
+load("//tools:rules/twister2_core.bzl", "twister2_storm_files")
 load("//tools:rules/twister2_master.bzl", "twister2_master_lib_files")
 load("//tools:rules/twister2_master.bzl", "twister2_master_jersey_files")
 load(":pack_functions.bzl", "pack_tw2")
@@ -298,6 +299,7 @@ pack_tw2(
         ":twister2-ompi-etc",
         ":twister2-ompi-include",
         ":twister2-ompi-lib",
+        ":twister2-storm",
     ],
 )
 
@@ -465,6 +467,13 @@ pack_tw2(
 pack_tw2(
     name = "twister2-dashboard",
     srcs = twister2_dashboard_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-storm",
+    srcs = twister2_storm_files(),
     package_dir = "lib",
     version = T2_VERSION,
 )

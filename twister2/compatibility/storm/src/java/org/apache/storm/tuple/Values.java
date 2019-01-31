@@ -9,44 +9,35 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dataset.impl;
+package org.apache.storm.tuple;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import edu.iu.dsc.tws.dataset.PSet;
-import edu.iu.dsc.tws.dataset.Partition;
+/**
+ * A convenience class for making tuple values using new Values("field1", 2, 3)
+ * syntax.
+ */
+public class Values extends ArrayList<Object> {
+  public Values() {
 
-public class CollectionPSet<T> extends Partition<T> implements PSet<T> {
-  private List<T> dataList = new ArrayList<>();
-
-  private int workerId;
-
-  private int id;
-
-  public CollectionPSet(int workerId, int id) {
-    super(id);
-    this.workerId = workerId;
-    this.id = id;
   }
 
-  @Override
-  public int getWorkerId() {
-    return workerId;
+  public Values(Object... vals) {
+    super(vals.length);
+    for (Object o : vals) {
+      add(o);
+    }
   }
 
-  @Override
-  public int getPartitionId() {
-    return id;
+  public Values(List vals) {
+    this.addAll(vals);
   }
 
-  @Override
-  public Iterator<T> iterator() {
-    return dataList.iterator();
-  }
-
-  public void add(T val) {
-    dataList.add(val);
+  public Values(Iterator itr) {
+    while (itr.hasNext()) {
+      this.add(itr.next());
+    }
   }
 }

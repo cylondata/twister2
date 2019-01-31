@@ -34,16 +34,20 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.cdfw.BaseDriver;
 import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSource;
+import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.task.cdfw.CDFWWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.dataset.DSet;
+import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -57,6 +61,20 @@ public final class ParallelDataFlowsExample {
   private ParallelDataFlowsExample() {
   }
 
+  public static class ParallelDataflowsDriver extends BaseDriver {
+
+    @Override
+    public void execute(Config config, CDFWExecutor cdfwExecutor) {
+
+      JobConfig jobConfig = new JobConfig();
+
+      DataFlowGraph job1 = generateFirstJob(config, 4, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, 2, jobConfig);
+
+      cdfwExecutor.executeCDFW(job1, job2);
+    }
+  }
+
   private static class FirstSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
@@ -66,7 +84,7 @@ public final class ParallelDataFlowsExample {
     }
 
     @Override
-    public void add(String name, DSet<Object> data) {
+    public void add(String name, DataObject<?> data) {
       LOG.log(Level.FINE, "Received input: " + name);
     }
   }
@@ -119,13 +137,16 @@ public final class ParallelDataFlowsExample {
     config = Config.newBuilder().putAll(config)
         .put(SchedulerContext.DRIVER_CLASS, null).build();
 
-    CDFWExecutor cdfwExecutor = new CDFWExecutor(config, null);
-
-    DataFlowGraph job1 = generateFirstJob(config, parallelismValue, jobConfig);
-    DataFlowGraph job2 = generateSecondJob(config, parallelismValue, jobConfig);
-
-    LOG.info("Job 1 and Job 2 are:" + job1 + "\t" + job2);
-    cdfwExecutor.executeCDFW(job1, job2);
+    Twister2Job twister2Job;
+    twister2Job = Twister2Job.newBuilder()
+        .setJobName(ParallelDataFlowsExample.class.getName())
+        .setWorkerClass(CDFWWorker.class)
+        .setDriverClass(ParallelDataflowsDriver.class.getName())
+        .addComputeResource(1, 512, instances)
+        .setConfig(jobConfig)
+        .build();
+    // now submit the job
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 
 
@@ -133,7 +154,7 @@ public final class ParallelDataFlowsExample {
                                                 JobConfig jobConfig) {
 
     FirstSourceTask firstSourceTask = new FirstSourceTask();
-    ConnectedSink connectedSink = new ConnectedSink();
+    ConnectedSink connectedSink = new ConnectedSink("first_out");
 
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", firstSourceTask, parallelismValue);
@@ -145,8 +166,8 @@ public final class ParallelDataFlowsExample {
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("Graph1", batchGraph).
-        setWorkers(4).addJobConfig(jobConfig);
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph).
+        setWorkers(parallelismValue).addJobConfig(jobConfig).addOutput("first_out");
 
     return job;
   }
@@ -154,7 +175,7 @@ public final class ParallelDataFlowsExample {
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
                                                  JobConfig jobConfig) {
 
-    ConnectedSource connectedSource = new ConnectedSource();
+    ConnectedSource connectedSource = new ConnectedSource("reduce");
     ConnectedSink connectedSink = new ConnectedSink();
 
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
@@ -167,8 +188,8 @@ public final class ParallelDataFlowsExample {
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("Graph2", batchGraph).
-        setWorkers(2).addJobConfig(jobConfig);
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph).
+        setWorkers(parallelismValue).addJobConfig(jobConfig).addInput("first_graph", "first_out");
 
     return job;
   }

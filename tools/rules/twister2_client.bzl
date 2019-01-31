@@ -123,6 +123,7 @@ def twister2_client_lib_data_files():
         "@commons_io_commons_io//jar",
         "@commons_collections_commons_collections//jar",
         "@org_apache_commons_commons_lang3//jar",
+        "@commons_lang_commons_lang//jar",
         "@commons_configuration_commons_configuration//jar",
         "@log4j_log4j//jar",
         "@org_apache_htrace_htrace_core4//jar",

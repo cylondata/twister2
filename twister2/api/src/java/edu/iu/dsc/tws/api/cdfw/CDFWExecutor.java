@@ -71,10 +71,16 @@ public final class CDFWExecutor {
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
 
-    CDFWJobAPI.SubGraph job = buildCDFWJob(graph);
+    DefaultScheduler defaultScheduler = new DefaultScheduler(this.workerInfoList);
+    Set<Integer> workerIDs = defaultScheduler.schedule(graph);
+
     // this is the first time
     if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
       try {
+
+        DataFlowGraph dataFlowGraph = buildCDFWSchedulePlan(graph, workerIDs);
+        CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph);
+
         // now submit the job
         submitJob(job);
         driverState = DriverState.JOB_SUBMITTED;
@@ -91,7 +97,7 @@ public final class CDFWExecutor {
 
   /**
    * The executeCDFW method first call the schedule method to get the schedule list of the CDFW.
-   * Then, it invokes the build CDFW Job object to build the htg job object for the scheduled graphs.
+   * Then, it invokes the buildCDFWJob method to build the job object for the scheduled graphs.
    */
 
   //Added to test and schedule multiple graphs at a time.
@@ -101,30 +107,30 @@ public final class CDFWExecutor {
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
 
-    CDFWJobAPI.SubGraph job = buildCDFWJob(graph[0]);
-    // this is the first time
-    if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
-      // lets wait until the worker start message received
-      try {
-        // We can be able to retrieve the workers info list after the submit job.
-        DefaultScheduler defaultScheduler = new DefaultScheduler(this.workerInfoList);
-        Map<DataFlowGraph, Set<Integer>> scheduleGraphMap = defaultScheduler.schedule(graph);
-        LOG.info("Scheduled Dataflow Graph Details:" + scheduleGraphMap);
-        for (Map.Entry<DataFlowGraph, Set<Integer>> dataFlowGraphEntry
-            : scheduleGraphMap.entrySet()) {
+    DefaultScheduler defaultScheduler = new DefaultScheduler(this.workerInfoList);
+    Map<DataFlowGraph, Set<Integer>> scheduleGraphMap = defaultScheduler.schedule(graph);
+
+    for (Map.Entry<DataFlowGraph, Set<Integer>> dataFlowGraphEntry : scheduleGraphMap.entrySet()) {
+
+      // this is the first time
+      if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
+        try {
           DataFlowGraph dataFlowGraph = dataFlowGraphEntry.getKey();
           Set<Integer> workerIDs = dataFlowGraphEntry.getValue();
-          /* TODO: We have to set the worker ids from the scheduled list to the dataflow graph **/
-        }
 
-        //now submit the job
-        submitJob(job);
-        driverState = DriverState.JOB_SUBMITTED;
-        // lets wait for another event
-        waitForEvent(DriveEventType.FINISHED_JOB);
-        driverState = DriverState.JOB_FINISHED;
-      } catch (Exception e) {
-        throw new RuntimeException("Driver is not initialized", e);
+          //build the schedule plan for the dataflow graph
+          dataFlowGraph = buildCDFWSchedulePlan(dataFlowGraph, workerIDs);
+          CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph);
+
+          //now submit the job
+          submitJob(job);
+          driverState = DriverState.JOB_SUBMITTED;
+          // lets wait for another event
+          waitForEvent(DriveEventType.FINISHED_JOB);
+          driverState = DriverState.JOB_FINISHED;
+        } catch (Exception e) {
+          throw new RuntimeException("Driver is not initialized", e);
+        }
       }
     }
   }
@@ -132,6 +138,13 @@ public final class CDFWExecutor {
   void close() {
     // send the close message
     sendCloseMessage();
+  }
+
+  private DataFlowGraph buildCDFWSchedulePlan(DataFlowGraph dataFlowGraph,
+                                              Set<Integer> workerIDs) {
+    dataFlowGraph.setCdfwSchedulePlans(
+        CDFWJobAPI.CDFWSchedulePlan.newBuilder().addAllWorkers(workerIDs).build());
+    return dataFlowGraph;
   }
 
   private void sendCloseMessage() {
@@ -146,7 +159,6 @@ public final class CDFWExecutor {
    * @param job subgraph
    */
   private void submitJob(CDFWJobAPI.SubGraph job) {
-
     LOG.log(Level.INFO, "Sending graph to workers for execution: " + job.getName());
     CDFWJobAPI.ExecuteMessage.Builder builder = CDFWJobAPI.ExecuteMessage.newBuilder();
     builder.setSubgraphName(job.getName());
@@ -168,7 +180,7 @@ public final class CDFWExecutor {
     inDriverEvents.offer(new DriverEvent(DriveEventType.FINISHED_JOB, anyMessage));
   }
 
-  void addWorkerList(List<JobMasterAPI.WorkerInfo> workerList) {
+  public void addWorkerList(List<JobMasterAPI.WorkerInfo> workerList) {
     this.workerInfoList = workerList;
   }
 

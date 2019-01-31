@@ -9,27 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dataset;
 
-/**
- * Distributed data set
- *
- * @param <T> the distributed set interface
- */
-public interface DSet<T> {
-  /**
-   * Get the list of partitions for a process
-   *
-   * @param procId process id
-   * @return the partitions
-   */
-  PSet<T>[] getPartitions(int procId);
+package org.apache.storm.topology.base;
 
-  /**
-   * Get the partition with the specific partition id
-   * @param procId
-   * @param partitionId
-   * @return PSet
-   */
-  PSet<T> getPartitions(int procId, int partitionId);
+import org.apache.storm.topology.IRichBolt;
+
+public abstract class BaseRichBolt extends BaseComponent implements IRichBolt {
+  private static final long serialVersionUID = 5749013017107995933L;
+
+  @Override
+  public void cleanup() {
+  }
 }
