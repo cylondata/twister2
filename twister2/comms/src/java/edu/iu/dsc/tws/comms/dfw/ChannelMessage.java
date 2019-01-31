@@ -91,18 +91,6 @@ public class ChannelMessage {
    */
   private int headerSize;
 
-  public enum ReceivedState {
-    INIT,
-    BUILT,
-    DOWN,
-    RECEIVE
-  }
-
-  /**
-   * Received state
-   */
-  private ReceivedState receivedState;
-
   /**
    * Keep track of accepted external sends
    */
@@ -126,7 +114,6 @@ public class ChannelMessage {
     this.originatingId = originatingId;
     this.complete = false;
     this.dataType = messageType;
-    this.receivedState = ReceivedState.INIT;
   }
 
   public List<DataBuffer> getBuffers() {
@@ -250,14 +237,6 @@ public class ChannelMessage {
 
   public int getHeaderSize() {
     return headerSize;
-  }
-
-  public ReceivedState getReceivedState() {
-    return receivedState;
-  }
-
-  public void setReceivedState(ReceivedState receivedState) {
-    this.receivedState = receivedState;
   }
 
   public void setKeyType(MessageType keyType) {

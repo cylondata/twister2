@@ -584,7 +584,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
     Queue<Pair<Object, InMessage>> pendingReceiveMessages =
         pendingReceiveMessagesPerSource.get(id);
-    currentMessage.setReceivedState(ChannelMessage.ReceivedState.INIT);
+    currentMessage.setReceivedState(InMessage.ReceivedState.INIT);
     if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
       throw new RuntimeException(executor + " We should have enough space: "
           + pendingReceiveMessages.size());
@@ -595,34 +595,35 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private void receiveProgress(Queue<Pair<Object, InMessage>> pendingReceiveMessages) {
     while (pendingReceiveMessages.size() > 0) {
       Pair<Object, InMessage> pair = pendingReceiveMessages.peek();
-      ChannelMessage.ReceivedState state = pair.getRight().getReceivedState();
+      InMessage.ReceivedState state = pair.getRight().getReceivedState();
       InMessage currentMessage = pair.getRight();
-      Object object = pair.getLeft();
-
-      if (state == ChannelMessage.ReceivedState.INIT) {
-        currentMessage.incrementRefCount();
-      }
 
       lock.lock();
       try {
-        if (state == ChannelMessage.ReceivedState.DOWN
-            || state == ChannelMessage.ReceivedState.INIT) {
-          currentMessage.setReceivedState(ChannelMessage.ReceivedState.DOWN);
-          if (!receiver.handleReceivedChannelMessage(currentMessage)) {
+        if (state == InMessage.ReceivedState.BUILDING
+            || state == InMessage.ReceivedState.BUILT) {
+          // get the first channel message
+          ChannelMessage msg = currentMessage.getBuiltMessages().peek();
+          if (msg != null) {
+            if (!receiver.handleReceivedChannelMessage(msg)) {
+              break;
+            }
+            currentMessage.getBuiltMessages().poll();
+          }
+
+          if (state == InMessage.ReceivedState.BUILT
+              && currentMessage.getBuiltMessages().size() == 0) {
+            currentMessage.setReceivedState(InMessage.ReceivedState.RECEIVE);
+          }
+        }
+
+        if (state == InMessage.ReceivedState.RECEIVE) {
+          Object object = currentMessage.getDeserializedData();
+          if (!receiver.receiveMessage(currentMessage.getHeader(), object)) {
             break;
           }
-          currentMessage.setReceivedState(ChannelMessage.ReceivedState.RECEIVE);
-          if (!receiver.receiveMessage(currentMessage, object)) {
-            break;
-          }
-          currentMessage.release();
-          pendingReceiveMessages.poll();
-        } else if (state == ChannelMessage.ReceivedState.RECEIVE) {
-          currentMessage.setReceivedState(ChannelMessage.ReceivedState.RECEIVE);
-          if (!receiver.receiveMessage(currentMessage, object)) {
-            break;
-          }
-          currentMessage.release();
+
+          currentMessage.setReceivedState(InMessage.ReceivedState.DONE);
           pendingReceiveMessages.poll();
         }
       } finally {

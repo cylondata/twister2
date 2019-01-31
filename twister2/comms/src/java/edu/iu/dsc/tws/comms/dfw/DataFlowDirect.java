@@ -151,8 +151,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
-    MessageHeader header = currentMessage.getHeader();
+  public boolean receiveMessage(MessageHeader header, Object object) {
     int target = header.getDestinationIdentifier();
     // check weather this message is for a sub task
     return finalReceiver.onMessage(header.getSourceId(), 0,

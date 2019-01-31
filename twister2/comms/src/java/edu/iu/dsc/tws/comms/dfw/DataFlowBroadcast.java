@@ -133,9 +133,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     return String.valueOf(edge);
   }
 
-  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
-    MessageHeader header = currentMessage.getHeader();
-
+  public boolean receiveMessage(MessageHeader header, Object object) {
     // we always receive to the main task
     return finalReceiver.onMessage(
         header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
@@ -307,9 +305,6 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(src);
 
-    ChannelMessage channelMessage = new ChannelMessage(src, type,
-        MessageDirection.OUT, delegate);
-
     // create a send message to keep track of the serialization
     // at the intial stage the sub-edge is 0
     int di = -1;
@@ -321,10 +316,13 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
         di, DataFlowContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
         routingParameters.getInternalRoutes(),
         routingParameters.getExternalRoutes(), type, null, delegate);
+    sendMessage.getChannelMessages().offer(currentMessage);
+    // this is a complete message
+    sendMessage.setComplete(true);
 
     // now try to put this into pending
     return pendingSendMessages.offer(
-        new ImmutablePair<Object, OutMessage>(object, sendMessage));
+        new ImmutablePair<>(object, sendMessage));
   }
 
   private RoutingParameters sendRoutingParameters(int s, int path) {

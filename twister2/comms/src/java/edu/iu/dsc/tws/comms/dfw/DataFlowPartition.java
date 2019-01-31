@@ -507,8 +507,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return destinations.contains(taskIdentifier);
   }
 
-  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
-    MessageHeader header = currentMessage.getHeader();
+  public boolean receiveMessage(MessageHeader header, Object object) {
     return finalReceiver.onMessage(header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
         header.getDestinationIdentifier(), header.getFlags(), object);
   }

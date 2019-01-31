@@ -116,6 +116,24 @@ public class InMessage {
    */
   private int currentReadingBuffer;
 
+  /**
+   * The messages already consumed
+   */
+  private Queue<ChannelMessage> builtMessages = new LinkedBlockingQueue<>();
+
+  public enum ReceivedState {
+    INIT,
+    BUILDING,
+    BUILT,
+    RECEIVE,
+    DONE,
+  }
+
+  /**
+   * Received state
+   */
+  private ReceivedState receivedState;
+
   public InMessage(int originatingId, MessageType messageType,
                         MessageDirection messageDirection,
                         ChannelMessageReleaseCallback releaseListener) {
@@ -123,6 +141,7 @@ public class InMessage {
     this.originatingId = originatingId;
     this.complete = false;
     this.dataType = messageType;
+    this.receivedState = ReceivedState.INIT;
   }
 
   public void setDataType(MessageType dataType) {
@@ -203,5 +222,21 @@ public class InMessage {
 
   public List<DataBuffer> getBuffers() {
     return new ArrayList<>(buffers);
+  }
+
+  public ReceivedState getReceivedState() {
+    return receivedState;
+  }
+
+  public void setReceivedState(ReceivedState receivedState) {
+    this.receivedState = receivedState;
+  }
+
+  public Queue<ChannelMessage> getBuiltMessages() {
+    return builtMessages;
+  }
+
+  public Object getDeserializedData() {
+    return deserializedData;
   }
 }

@@ -124,11 +124,9 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
    * to the main task of the executor and we go from there
    */
   @Override
-  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
-    MessageHeader header = currentMessage.getHeader();
-
+  public boolean receiveMessage(MessageHeader header, Object object) {
     // we always receive to the main task
-    int messageDestId = currentMessage.getHeader().getDestinationIdentifier();
+    int messageDestId = header.getDestinationIdentifier();
     // check weather this message is for a sub task
     if (!isLast()
         && partialReceiver != null) {
