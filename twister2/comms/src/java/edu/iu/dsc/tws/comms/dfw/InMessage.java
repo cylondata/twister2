@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class InMessage {
-  private List<ChannelMessage> channelMessages = new ArrayList<>();
+  private Queue<ChannelMessage> channelMessages = new LinkedBlockingQueue<>();
 
   /**
    * The buffers added to this message
@@ -183,6 +183,18 @@ public class InMessage {
     }
 
     return complete;
+  }
+
+  public Queue<ChannelMessage> getChannelMessages() {
+    return channelMessages;
+  }
+
+  public ChannelMessage getFirstChannelMessage() {
+    return channelMessages.peek();
+  }
+
+  public void addChannelMessage(ChannelMessage channelMessage) {
+    channelMessages.add(channelMessage);
   }
 
   public int getOriginatingId() {

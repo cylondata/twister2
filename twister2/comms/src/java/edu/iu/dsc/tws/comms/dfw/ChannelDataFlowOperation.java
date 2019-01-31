@@ -656,7 +656,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (currentMessage == null) {
       return;
     }
-    if (currentMessage.getNormalBuffers().size() == 0) {
+    Queue<ChannelMessage> channelMessages = currentMessage.getChannelMessages();
+    ChannelMessage channelMessage = channelMessages.peek();
+    if (channelMessage == null) {
       LOG.info("There are no receive buffers to be released for rank : " + id);
       return;
     }
@@ -668,7 +670,14 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     } else {
       local = localReceiveBuffers.poll();
     }
-    copyToLocalBuffer(id, currentMessage.getNormalBuffers().remove(0), local, currentMessage);
+
+    // we should always have a buffer
+    if (channelMessage.getBuffers().size() > 0) {
+      copyToLocalBuffer(id, channelMessage.getBuffers().get(0),
+          local, channelMessage);
+    } else {
+      throw new RuntimeException("Channel message should at least have one buffer");
+    }
   }
 
   private void copyToLocalBuffer(int id, DataBuffer dataBuffer, DataBuffer localBuffer,
