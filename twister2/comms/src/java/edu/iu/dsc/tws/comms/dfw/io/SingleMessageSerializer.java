@@ -68,7 +68,7 @@ public class SingleMessageSerializer implements MessageSerializer {
   public Object build(Object message, Object partialBuildObject) {
     OutMessage sendMessage = (OutMessage) partialBuildObject;
     // we got an already serialized message, lets just return it
-    if (sendMessage.getChannelMessage().isComplete()) {
+    if (sendMessage.getChannelMessages().peek().isComplete()) {
       sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
       return sendMessage;
     }
@@ -109,9 +109,9 @@ public class SingleMessageSerializer implements MessageSerializer {
         }
       }
       // okay we are adding this buffer
-      sendMessage.getChannelMessage().addBuffer(buffer);
+      sendMessage.getChannelMessages().peek().addBuffer(buffer);
       if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
-        ChannelMessage channelMessage = sendMessage.getChannelMessage();
+        ChannelMessage channelMessage = sendMessage.getChannelMessages().peek();
         SerializeState state = sendMessage.getSerializationState();
         if (!channelMessage.isHeaderSent()) {
           int totalBytes = state.getTotalBytes();
@@ -129,7 +129,7 @@ public class SingleMessageSerializer implements MessageSerializer {
         // mark the original message as complete
         channelMessage.setComplete(true);
       } else if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
-        ChannelMessage channelMessage = sendMessage.getChannelMessage();
+        ChannelMessage channelMessage = sendMessage.getChannelMessages().peek();
         SerializeState state = sendMessage.getSerializationState();
         if (!channelMessage.isHeaderSent()) {
           int totalBytes = state.getCurretHeaderLength();
@@ -162,7 +162,7 @@ public class SingleMessageSerializer implements MessageSerializer {
    */
   private boolean serializeBody(Object payload,
                                 OutMessage sendMessage, DataBuffer targetBuffer) {
-    MessageType type = sendMessage.getChannelMessage().getType();
+    MessageType type = sendMessage.getDataType();
     if ((sendMessage.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
       return serializeData(payload, sendMessage.getSerializationState(), targetBuffer, type);
     } else {

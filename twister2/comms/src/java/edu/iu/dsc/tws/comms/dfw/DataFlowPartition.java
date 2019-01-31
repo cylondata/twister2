@@ -308,9 +308,9 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource
+    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
         = new HashMap<>();
-    Map<Integer, Queue<ChannelMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
@@ -338,11 +338,11 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     Set<Integer> execs = router.receivingExecutors();
     for (int ex : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, ChannelMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<Pair<Object, ChannelMessage>>(
+      Queue<Pair<Object, InMessage>> pendingReceiveMessages =
+          new ArrayBlockingQueue<>(
               capacity);
       pendingReceiveMessagesPerSource.put(ex, pendingReceiveMessages);
-      pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<ChannelMessage>(capacity));
+      pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<InMessage>(capacity));
       deSerializerMap.put(ex, new MultiMessageDeserializer(new KryoSerializer(), executor));
     }
 
@@ -353,7 +353,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     }
 
     delegete.init(cfg, t, receiveType, keyType, receiveKeyType, taskPlan, edge,
-        router.receivingExecutors(), router.isLastReceiver(), this,
+        router.receivingExecutors(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
   }

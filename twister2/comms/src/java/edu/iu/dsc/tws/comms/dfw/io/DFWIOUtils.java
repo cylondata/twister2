@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 import static edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer.HEADER_SIZE;
@@ -70,8 +71,6 @@ public final class DFWIOUtils {
     byteBuffer.putInt(sendMessage.getPath());
     // we set the number of messages
     byteBuffer.putInt(0);
-    // at this point we haven't put the length and we will do it at the serialization
-    sendMessage.setWrittenHeaderSize(HEADER_SIZE);
     // lets set the size for 16 for now
     buffer.setSize(HEADER_SIZE);
   }
@@ -97,9 +96,32 @@ public final class DFWIOUtils {
     byteBuffer.putInt(sendMessage.getPath());
     // we set the number of messages
     byteBuffer.putInt(noOfMessages);
-    // at this point we haven't put the length and we will do it at the serialization
-    sendMessage.setWrittenHeaderSize(HEADER_SIZE);
     // lets set the size for 16 for now
     buffer.setSize(HEADER_SIZE);
   }
+
+  /**
+   * Create a copy of the channel message
+   * @param channelMessage message
+   * @return the copy
+   */
+  public static ChannelMessage createChannelMessageCopy(ChannelMessage channelMessage) {
+    ChannelMessage copy = new ChannelMessage();
+    //Values that are not copied: refCount,
+    copy.setMessageDirection(channelMessage.getMessageDirection());
+    copy.setReleaseListener(channelMessage.getReleaseListener());
+    copy.setOriginatingId(channelMessage.getOriginatingId());
+    copy.setHeader(channelMessage.getHeader());
+    copy.setComplete(channelMessage.isComplete());
+    copy.setDataType(channelMessage.getDataType());
+    copy.setKeyType(channelMessage.getKeyType());
+    copy.setHeaderSize(channelMessage.getHeaderSize());
+    copy.setReceivedState(channelMessage.getReceivedState());
+    copy.addBuffers(channelMessage.getNormalBuffers());
+    copy.addOverFlowBuffers(channelMessage.getOverflowBuffers());
+
+    return copy;
+  }
 }
+
+

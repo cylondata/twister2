@@ -78,7 +78,7 @@ public class MultiMessageSerializer implements MessageSerializer {
     OutMessage sendMessage = (OutMessage) partialBuildObject;
 
     // we got an already serialized message, lets just return it
-    ChannelMessage channelMessage = sendMessage.getChannelMessage();
+    ChannelMessage channelMessage = sendMessage.getChannelMessages().peek();
     if (channelMessage.isComplete()) {
       sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
       return sendMessage;
@@ -113,7 +113,7 @@ public class MultiMessageSerializer implements MessageSerializer {
         } else {
           // first we need to serialize the body if needed
           if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
-            if (sendMessage.getChannelMessage().getBuffers().size() == 0) {
+            if (sendMessage.getChannelMessages().peek().getBuffers().size() == 0) {
               DFWIOUtils.buildHeader(buffer, sendMessage);
             }
           }
@@ -214,7 +214,7 @@ public class MultiMessageSerializer implements MessageSerializer {
             targetBuffer, countInBuffer);
         // we copied this completely
         if (complete) {
-          sendMessage.getChannelMessage().setPartial(false);
+          sendMessage.getChannelMessages().peek().setPartial(false);
           state.setCurretHeaderLength(state.getTotalBytes());
           state.setCurrentObject(i + 1);
           countInBuffer++;
@@ -224,7 +224,7 @@ public class MultiMessageSerializer implements MessageSerializer {
       } else {
         boolean complete = serializeMessage(o, sendMessage, targetBuffer, countInBuffer);
         if (complete) {
-          sendMessage.getChannelMessage().setPartial(false);
+          sendMessage.getChannelMessages().peek().setPartial(false);
           state.setCurretHeaderLength(state.getTotalBytes());
           state.setCurrentObject(i + 1);
           countInBuffer++;
@@ -267,7 +267,7 @@ public class MultiMessageSerializer implements MessageSerializer {
    */
   private boolean serializeMessage(Object payload, OutMessage sendMessage,
                                    DataBuffer targetBuffer, int countInBuffer) {
-    MessageType type = sendMessage.getChannelMessage().getType();
+    MessageType type = sendMessage.getChannelMessages().peek().getDataType();
     if (!keyed) {
       return serializeData(payload,
           sendMessage.getSerializationState(), targetBuffer, type, countInBuffer);

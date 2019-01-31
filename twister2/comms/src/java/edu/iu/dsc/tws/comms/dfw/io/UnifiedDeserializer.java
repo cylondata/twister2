@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InChannelMessage;
+import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -55,7 +56,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
    */
   @Override
   public Object build(Object partialObject, int edge) {
-    InChannelMessage currentMessage = (InChannelMessage) partialObject;
+    InMessage currentMessage = (InMessage) partialObject;
     int readLength = 0;
     int bufferIndex = 0;
     List<DataBuffer> buffers = currentMessage.getBuffers();
@@ -134,7 +135,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
    * @return the built message object
    */
   private Object buildMessage(ChannelMessage channelMessage, List<DataBuffer> message, int length) {
-    MessageType type = channelMessage.getType();
+    MessageType type = channelMessage.getDataType();
     if (keyed) {
       Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(channelMessage.getKeyType(),
           message, serializer);
@@ -149,7 +150,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
             serializer, type);
       }
       return new Tuple(keyPair.getValue(), data,
-          channelMessage.getKeyType(), channelMessage.getType());
+          channelMessage.getKeyType(), channelMessage.getDataType());
     } else {
       return DataDeserializer.deserializeData(message, length, serializer, type);
     }

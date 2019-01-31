@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeySerializer;
@@ -58,8 +59,8 @@ public class UnifiedSerializer implements MessageSerializer {
   private int executor;
 
 
-  public UnifiedSerializer(KryoSerializer serializer, int exec) {
-    this.executor = exec;
+  public UnifiedSerializer(KryoSerializer serializer, int executor) {
+    this.executor = executor;
     this.serializer = serializer;
   }
 
@@ -70,14 +71,11 @@ public class UnifiedSerializer implements MessageSerializer {
   }
 
   @Override
-  public Object build(Object message, Object partialBuildObject) {
+  public Object build(Object data, Object partialBuildObject) {
     OutMessage sendMessage = (OutMessage) partialBuildObject;
     // we got an already serialized message, lets just return it
-    ChannelMessage channelMessage = sendMessage.getChannelMessage();
-    if (channelMessage.isComplete()) {
-      sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
-      return channelMessage;
-    }
+    ChannelMessage channelMessage = new ChannelMessage(sendMessage.getSource(),
+        sendMessage.getDataType(), MessageDirection.OUT, sendMessage.getReleaseCallback());
 
     // we loop until everything is serialized
     while (sendBuffers.size() > 0
@@ -93,9 +91,9 @@ public class UnifiedSerializer implements MessageSerializer {
       if (sendMessage.serializedState() == OutMessage.SendState.INIT
           || sendMessage.serializedState() == OutMessage.SendState.SENT_INTERNALLY) {
         // build the header
-        if (message instanceof List) {
+        if (data instanceof List) {
           // for list message we need to put the size of the list
-          DFWIOUtils.buildHeader(buffer, sendMessage, ((List) message).size());
+          DFWIOUtils.buildHeader(buffer, sendMessage, ((List) data).size());
         } else {
           if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
             sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
@@ -107,14 +105,13 @@ public class UnifiedSerializer implements MessageSerializer {
           }
         }
         sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
-        channelMessage.setPartial(true);
       }
 
       // okay we have a body to build and it is not done fully yet
       if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
           || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         sendMessage.setSendState(OutMessage.SendState.PARTIALLY_SERIALIZED);
-        serializeBody(message, sendMessage, buffer);
+        serializeBody(data, sendMessage, buffer);
       }
 
       // okay we are adding this buffer
@@ -127,6 +124,12 @@ public class UnifiedSerializer implements MessageSerializer {
         channelMessage.setComplete(true);
       }
     }
+
+    // if we didn't do anything lets return null
+    if (channelMessage.getBuffers().size() == 0) {
+      return null;
+    }
+
     return channelMessage;
   }
 
@@ -157,7 +160,6 @@ public class UnifiedSerializer implements MessageSerializer {
         Object o = objectList.get(i);
         boolean complete = serializeSingleMessage(o, sendMessage, targetBuffer);
         if (complete) {
-          sendMessage.getChannelMessage().setPartial(false);
           state.setCurretHeaderLength(state.getTotalBytes());
           state.setCurrentObject(i + 1);
         } else {
@@ -198,7 +200,7 @@ public class UnifiedSerializer implements MessageSerializer {
    */
   private boolean serializeSingleMessage(Object payload,
                                 OutMessage sendMessage, DataBuffer targetBuffer) {
-    MessageType type = sendMessage.getChannelMessage().getType();
+    MessageType type = sendMessage.getDataType();
     if (!keyed) {
       return serializeData(payload, sendMessage.getSerializationState(), targetBuffer, type);
     } else {

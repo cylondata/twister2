@@ -79,7 +79,7 @@ public class ChannelMessage {
   /**
    * Message type
    */
-  private MessageType type;
+  private MessageType dataType;
 
   /**
    * If a keyed message, the key being used
@@ -93,6 +93,7 @@ public class ChannelMessage {
 
   public enum ReceivedState {
     INIT,
+    BUILT,
     DOWN,
     RECEIVE
   }
@@ -124,7 +125,7 @@ public class ChannelMessage {
     this.releaseListener = releaseListener;
     this.originatingId = originatingId;
     this.complete = false;
-    this.type = messageType;
+    this.dataType = messageType;
     this.receivedState = ReceivedState.INIT;
   }
 
@@ -178,12 +179,11 @@ public class ChannelMessage {
     buffers.add(buffer);
   }
 
-
-  protected void addBuffers(List<DataBuffer> bufferList) {
+  public void addBuffers(List<DataBuffer> bufferList) {
     buffers.addAll(bufferList);
   }
 
-  protected void addOverFlowBuffers(List<DataBuffer> bufferList) {
+  public void addOverFlowBuffers(List<DataBuffer> bufferList) {
     overflowBuffers.addAll(bufferList);
   }
 
@@ -228,8 +228,8 @@ public class ChannelMessage {
     this.releaseListener = releaseListener;
   }
 
-  public void setDataType(MessageType type) {
-    this.type = type;
+  public void setDataType(MessageType dataType) {
+    this.dataType = dataType;
   }
 
   public boolean isComplete() {
@@ -240,8 +240,8 @@ public class ChannelMessage {
     this.complete = complete;
   }
 
-  public MessageType getType() {
-    return type;
+  public MessageType getDataType() {
+    return dataType;
   }
 
   public void setHeaderSize(int headerSize) {

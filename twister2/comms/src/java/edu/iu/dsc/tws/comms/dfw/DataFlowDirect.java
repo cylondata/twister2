@@ -181,18 +181,18 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   private void init() {
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource
+    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
         = new HashMap<>();
-    Map<Integer, Queue<ChannelMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
     thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sourceSet);
     for (int s : thisSources) {
       // later look at how not to allocate pairs for this each time
-      pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<Pair<Object, OutMessage>>(
+      pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
-      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<ChannelMessage>(
+      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
       serializerMap.put(s, new SingleMessageSerializer(new KryoSerializer()));
     }
@@ -209,7 +209,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     this.finalReceiver.init(config, this, receiveExpectedTaskIds());
 
     delegate.init(config, type, taskPlan, edgeValue, router.receivingExecutors(),
-        router.isLastReceiver(), this, pendingSendMessagesPerSource,
+        this, pendingSendMessagesPerSource,
         pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
   }

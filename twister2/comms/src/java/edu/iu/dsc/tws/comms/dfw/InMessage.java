@@ -11,9 +11,76 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 
-public class InChannelMessage extends ChannelMessage {
+public class InMessage {
+  private List<ChannelMessage> channelMessages = new ArrayList<>();
+
+  /**
+   * The buffers added to this message
+   */
+  private Queue<DataBuffer> buffers = new LinkedBlockingQueue<>();
+
+  /**
+   * We call this to release the buffers
+   */
+  private ChannelMessageReleaseCallback releaseListener;
+
+  /**
+   * Keep track of the originating id, this is required to release the buffers allocated.
+   */
+  private int originatingId;
+
+  /**
+   * The message header
+   */
+  protected MessageHeader header;
+
+  /**
+   * Keeps track of whether header of the object contained in the buffer was sent or not.
+   * This is only used when a message is broken down into several buffers and each buffer is sent
+   * separately
+   */
+  private boolean headerSent;
+
+  /**
+   * Keep whether the current message is a partial object. This depends on whether all the data
+   * is copied into the buffers or not. This is used when large messages are broken down into
+   * several smaller messages
+   */
+  private boolean isPartial;
+
+  /**
+   * Keep whether we have all the buffers added
+   */
+  protected boolean complete = false;
+
+  /**
+   * Message type
+   */
+  private MessageType dataType;
+
+  /**
+   * If a keyed message, the key being used
+   */
+  private MessageType keyType = MessageType.INTEGER;
+
+  /**
+   * Type of the message, weather request or send
+   */
+  private MessageDirection messageDirection;
+
+  /**
+   * The deserialized data
+   */
+  private Object deserializedData;
+
   /**
    * Number of objects we have read so far
    */
@@ -49,10 +116,33 @@ public class InChannelMessage extends ChannelMessage {
    */
   private int currentReadingBuffer;
 
-  public InChannelMessage(int originatingId, MessageType messageType,
+  public InMessage(int originatingId, MessageType messageType,
                         MessageDirection messageDirection,
                         ChannelMessageReleaseCallback releaseListener) {
-    super(originatingId, messageType, messageDirection, releaseListener);
+    this.releaseListener = releaseListener;
+    this.originatingId = originatingId;
+    this.complete = false;
+    this.dataType = messageType;
+  }
+
+  public void setDataType(MessageType dataType) {
+    this.dataType = dataType;
+  }
+
+  public void setKeyType(MessageType keyType) {
+    this.keyType = keyType;
+  }
+
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  public void setHeader(MessageHeader header) {
+    this.header = header;
+  }
+
+  public MessageHeader getHeader() {
+    return header;
   }
 
   public boolean addBufferAndCalculate(DataBuffer buffer) {
@@ -95,4 +185,11 @@ public class InChannelMessage extends ChannelMessage {
     return complete;
   }
 
+  public int getOriginatingId() {
+    return originatingId;
+  }
+
+  public List<DataBuffer> getBuffers() {
+    return new ArrayList<>(buffers);
+  }
 }

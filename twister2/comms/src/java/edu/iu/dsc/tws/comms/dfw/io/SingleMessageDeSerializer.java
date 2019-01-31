@@ -110,7 +110,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
   @SuppressWarnings("unchecked")
   public Object getDataBuffers(Object partialObject, int edge) {
     ChannelMessage message = (ChannelMessage) partialObject;
-    MessageType type = message.getType();
+    MessageType type = message.getDataType();
     //Used when handling multi messages
     List<Tuple> results;
     if (!keyed) {
@@ -157,7 +157,7 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
    */
   @SuppressWarnings("unchecked")
   private Object buildMessage(ChannelMessage message) {
-    MessageType type = message.getType();
+    MessageType type = message.getDataType();
 
     if (!keyed) {
       return DataDeserializer.deserializeData(message.getBuffers(),
