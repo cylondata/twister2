@@ -148,6 +148,10 @@ public class InMessage {
     this.dataType = dataType;
   }
 
+  public MessageType getDataType() {
+    return dataType;
+  }
+
   public void setKeyType(MessageType keyType) {
     this.keyType = keyType;
   }

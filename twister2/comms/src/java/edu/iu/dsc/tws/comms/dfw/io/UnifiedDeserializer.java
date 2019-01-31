@@ -65,38 +65,9 @@ public class UnifiedDeserializer implements MessageDeSerializer {
     if (header == null) {
       throw new RuntimeException("Header must be built before the message");
     }
+
     while (readLength < header.getNumberTuples()) {
-      List<DataBuffer> messageBuffers = new ArrayList<>();
-      DataBuffer dataBuffer = buffers.get(bufferIndex);
-      ByteBuffer byteBuffer = dataBuffer.getByteBuffer();
-      // now read the length
-      int length = byteBuffer.getInt();
-      int tempLength = 0;
-      int tempBufferIndex = bufferIndex;
-      while (tempLength < length) {
-        dataBuffer = buffers.get(tempBufferIndex);
-        messageBuffers.add(dataBuffer);
-        tempLength += dataBuffer.getByteBuffer().remaining();
-        tempBufferIndex++;
-      }
-
-      Object object = buildMessage(currentMessage, messageBuffers, length);
-      readLength += length + Integer.BYTES;
-      if (keyed && !currentMessage.getKeyType().isPrimitive()) {
-        //adding 4 to the length since the key length is also kept
-        readLength += Integer.BYTES;
-        if (currentMessage.getKeyType().isMultiMessageType()) {
-          readLength += Integer.BYTES;
-        }
-      }
-      byteBuffer = dataBuffer.getByteBuffer();
-      if (byteBuffer.remaining() > 0) {
-        bufferIndex = tempBufferIndex - 1;
-      } else {
-        bufferIndex = tempBufferIndex;
-      }
-
-      returnList.add(object);
+      throw new RuntimeException("HH");
     }
     return returnList;
   }
