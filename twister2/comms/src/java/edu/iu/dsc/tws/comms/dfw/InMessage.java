@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -28,6 +26,11 @@ public class InMessage {
   private Queue<DataBuffer> buffers = new LinkedBlockingQueue<>();
 
   /**
+   * The overflow buffers created
+   */
+  private Queue<DataBuffer> overFlowBuffers = new LinkedBlockingQueue<>();
+
+  /**
    * We call this to release the buffers
    */
   private ChannelMessageReleaseCallback releaseListener;
@@ -41,20 +44,6 @@ public class InMessage {
    * The message header
    */
   protected MessageHeader header;
-
-  /**
-   * Keeps track of whether header of the object contained in the buffer was sent or not.
-   * This is only used when a message is broken down into several buffers and each buffer is sent
-   * separately
-   */
-  private boolean headerSent;
-
-  /**
-   * Keep whether the current message is a partial object. This depends on whether all the data
-   * is copied into the buffers or not. This is used when large messages are broken down into
-   * several smaller messages
-   */
-  private boolean isPartial;
 
   /**
    * Keep whether we have all the buffers added
@@ -82,19 +71,9 @@ public class InMessage {
   private Object deserializedData;
 
   /**
-   * Number of objects we have read so far
-   */
-  private int objectsDeserialized = 0;
-
-  /**
    * The object that is been built
    */
   private Object deserializingObject;
-
-  /**
-   * The current buffer read index
-   */
-  private int currentBufferIndex = 0;
 
   /**
    * Number of buffers added
@@ -102,24 +81,39 @@ public class InMessage {
   private int addedBuffers = 0;
 
   // the amount of data we have seen for current object
-  private int previousReadForObject = 0;
+  private int bufferPreviousReadForObject = 0;
 
   // keep track of the current object length
-  private int currentObjectLength = 0;
+  private int bufferCurrentObjectLength = 0;
 
-  // the objects we have in buffers so far
-  private int seenObjects = 0;
-
-  /**
-   * The current reading buffer index, this can change from 0 > to 0 when we release the buffers
-   * while we are still reading
-   */
-  private int currentReadingBuffer;
+  // the objects we have in buffers so far, this doesn't mean we have un-packed them
+  private int bufferSeenObjects = 0;
 
   /**
    * The messages already consumed
    */
   private Queue<ChannelMessage> builtMessages = new LinkedBlockingQueue<>();
+
+  /**
+   * Following variables keep track of the reading object
+   */
+  private int unPkCurrentObjectLength = 0;
+
+  /**
+   * The number of objects unpacked
+   */
+  private int unPkNumberObjects = 0;
+
+  /**
+   * Number of buffers we have unpacked
+   */
+  private int unPkBuffers = 0;
+
+  /**
+   * The current index of unpack
+   */
+  private int unPkCurrentIndex = 0;
+
 
   public enum ReceivedState {
     INIT,
@@ -174,34 +168,47 @@ public class InMessage {
 
     int expectedObjects = header.getNumberTuples();
     int remaining = 0;
+    int currentLocation = 0;
+    // if this is the first buffer or, we haven't read the current object length
     if (addedBuffers == 1) {
-      currentObjectLength = buffer.getByteBuffer().getInt(16);
-      remaining = buffer.getByteBuffer().remaining() + Integer.BYTES;
+      currentLocation = 16;
+      bufferCurrentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
+      remaining = buffer.getSize() - Integer.BYTES - 16;
+      currentLocation += Integer.BYTES;
+    } else if (bufferCurrentObjectLength == -1) {
+      bufferCurrentObjectLength = buffer.getByteBuffer().getInt(0);
+      remaining = buffer.getSize() - Integer.BYTES - 16;
+      currentLocation += Integer.BYTES;
     }
-
 
     while (remaining > 0) {
       // need to read this much
-      int moreToReadForCurrentObject = currentObjectLength - previousReadForObject;
+      int moreToReadForCurrentObject = bufferCurrentObjectLength - bufferPreviousReadForObject;
       // amount of data in the buffer
       if (moreToReadForCurrentObject < remaining) {
-        seenObjects++;
+        bufferSeenObjects++;
         remaining = remaining - moreToReadForCurrentObject;
+        currentLocation += moreToReadForCurrentObject;
       } else {
-        previousReadForObject += remaining;
+        bufferPreviousReadForObject += remaining;
         break;
       }
 
       // if we have seen all, lets break
-      if (expectedObjects == seenObjects) {
+      if (expectedObjects == bufferSeenObjects) {
         complete = true;
         break;
       }
 
       // we can read another object
       if (remaining > Integer.BYTES) {
-        currentObjectLength = buffer.getByteBuffer().getInt();
-        previousReadForObject = 0;
+        bufferCurrentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
+        bufferPreviousReadForObject = 0;
+      } else {
+        // we need to break, we set the length to -1 because we need to read the length
+        // in next buffer
+        bufferCurrentObjectLength = -1;
+        break;
       }
     }
 
@@ -224,8 +231,8 @@ public class InMessage {
     return originatingId;
   }
 
-  public List<DataBuffer> getBuffers() {
-    return new ArrayList<>(buffers);
+  public Queue<DataBuffer> getBuffers() {
+    return buffers;
   }
 
   public ReceivedState getReceivedState() {
@@ -242,5 +249,41 @@ public class InMessage {
 
   public Object getDeserializedData() {
     return deserializedData;
+  }
+
+  public Object getDeserializingObject() {
+    return deserializingObject;
+  }
+
+  public void setDeserializingObject(Object deserializingObject) {
+    this.deserializingObject = deserializingObject;
+  }
+
+  public void addOverFlowBuffer(DataBuffer buffer) {
+    overFlowBuffers.offer(buffer);
+  }
+
+  public int getBufferSeenObjects() {
+    return bufferSeenObjects;
+  }
+
+  public int getUnPkCurrentObjectLength() {
+    return unPkCurrentObjectLength;
+  }
+
+  public int getUnPkNumberObjects() {
+    return unPkNumberObjects;
+  }
+
+  public int getUnPkBuffers() {
+    return unPkBuffers;
+  }
+
+  public int getUnPkCurrentIndex() {
+    return unPkCurrentIndex;
+  }
+
+  public void setUnPkCurrentIndex(int unPkCurrentIndex) {
+    this.unPkCurrentIndex = unPkCurrentIndex;
   }
 }

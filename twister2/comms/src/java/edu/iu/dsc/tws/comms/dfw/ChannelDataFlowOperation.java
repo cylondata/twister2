@@ -584,7 +584,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
     Queue<Pair<Object, InMessage>> pendingReceiveMessages =
         pendingReceiveMessagesPerSource.get(id);
-    currentMessage.setReceivedState(InMessage.ReceivedState.INIT);
     if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
       throw new RuntimeException(executor + " We should have enough space: "
           + pendingReceiveMessages.size());
@@ -657,8 +656,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (currentMessage == null) {
       return;
     }
-    Queue<ChannelMessage> channelMessages = currentMessage.getChannelMessages();
-    ChannelMessage channelMessage = channelMessages.peek();
+    Queue<DataBuffer> channelMessages = currentMessage.getBuffers();
+    DataBuffer channelMessage = channelMessages.peek();
     if (channelMessage == null) {
       LOG.info("There are no receive buffers to be released for rank : " + id);
       return;
@@ -673,16 +672,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
 
     // we should always have a buffer
-    if (channelMessage.getBuffers().size() > 0) {
-      copyToLocalBuffer(id, channelMessage.getBuffers().get(0),
-          local, channelMessage);
-    } else {
-      throw new RuntimeException("Channel message should at least have one buffer");
-    }
+    copyToLocalBuffer(id, channelMessage, local, currentMessage);
   }
 
   private void copyToLocalBuffer(int id, DataBuffer dataBuffer, DataBuffer localBuffer,
-                                 ChannelMessage message) {
+                                 InMessage message) {
     ByteBuffer original = dataBuffer.getByteBuffer();
     ByteBuffer local = localBuffer.getByteBuffer();
     int position = original.position();
@@ -691,7 +685,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     local.flip();
     local.position(position);
     localBuffer.setSize(dataBuffer.getSize());
-    message.addToOverFlowBuffer(localBuffer);
+    message.addOverFlowBuffer(localBuffer);
     original.clear();
     Queue<DataBuffer> list = receiveBuffers.get(id);
     if (!list.offer(dataBuffer)) {

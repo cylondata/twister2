@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.types;
 
-
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -21,21 +20,23 @@ public final class PartialDataDeserializer {
   private PartialDataDeserializer() {
   }
 
-  private static void deserializeInteger(List<DataBuffer> buffers, int noOfInts,
-                                         int[] value, int startIndex) {
-    int bufferIndex = 0;
+  public static int deserializeInteger(DataBuffer buffers, int byteLength,
+                                         int[] value, int startIndex, int bufferLocation) {
+    int noOfInts = byteLength / Integer.BYTES;
+    int bytesRead = 0;
+    int currentBufferLocation = bufferLocation;
     for (int i = startIndex; i < noOfInts; i++) {
-      ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
+      ByteBuffer byteBuffer = buffers.getByteBuffer();
       int remaining = byteBuffer.remaining();
       if (remaining >= Integer.BYTES) {
-        value[i] = byteBuffer.getInt();
+        value[i] = byteBuffer.getInt(currentBufferLocation);
+        bytesRead += Integer.BYTES;
+        currentBufferLocation += Integer.BYTES;
       } else {
-        bufferIndex = getReadBuffer(buffers, Integer.BYTES, bufferIndex);
-        if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the ints");
-        }
+        break;
       }
     }
+    return bytesRead;
   }
 
   private static int getReadBuffer(List<DataBuffer> bufs, int size, int currentBufferIndex) {

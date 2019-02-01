@@ -11,9 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.types.PartialDataDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class UnifiedDeserializer implements MessageDeSerializer {
@@ -56,9 +57,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
   @Override
   public Object build(Object partialObject, int edge) {
     InMessage currentMessage = (InMessage) partialObject;
-    int readLength = 0;
-    int bufferIndex = 0;
-    List<DataBuffer> buffers = currentMessage.getBuffers();
+    Queue<DataBuffer> buffers = currentMessage.getBuffers();
     List<Object> returnList = new ArrayList<>();
     MessageHeader header = currentMessage.getHeader();
 
@@ -66,8 +65,45 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       throw new RuntimeException("Header must be built before the message");
     }
 
-    while (readLength < header.getNumberTuples()) {
-      throw new RuntimeException("HH");
+    // get the number of objects deserialized
+    int readObjectNumber = currentMessage.getUnPkNumberObjects();
+    while (readObjectNumber < currentMessage.getBufferSeenObjects()) {
+      int currentLocation = 0;
+      int remaining = 0;
+      // lets read the object
+      DataBuffer buffer = buffers.peek();
+      if (buffer == null) {
+        break;
+      }
+
+      int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
+      if (currentMessage.getUnPkBuffers() == 0) {
+        currentLocation = 16;
+        currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
+        currentLocation += Integer.BYTES;
+
+        int[] value = new int[currentLocation];
+        currentMessage.setDeserializingObject(value);
+        currentMessage.setUnPkCurrentIndex(0);
+      } else if (currentObjectLength == -1) {
+        currentObjectLength = buffer.getByteBuffer().getInt(0);
+        remaining = buffer.getSize() - Integer.BYTES - 16;
+        currentLocation += Integer.BYTES;
+
+        int[] value = new int[currentLocation];
+        currentMessage.setDeserializingObject(value);
+        currentMessage.setUnPkCurrentIndex(0);
+      }
+
+      int[] val = (int[]) currentMessage.getDeserializingObject();
+      int startIndex = currentMessage.getUnPkCurrentIndex();
+      int bytesRead = PartialDataDeserializer.deserializeInteger(buffer, currentObjectLength,
+          val, startIndex, currentLocation);
+      int valsRead = bytesRead / Integer.BYTES;
+      // okay we are done with this object
+      if (valsRead == currentObjectLength) {
+        readObjectNumber++;
+      }
     }
     return returnList;
   }
