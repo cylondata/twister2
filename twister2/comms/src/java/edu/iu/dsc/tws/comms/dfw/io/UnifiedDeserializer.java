@@ -79,14 +79,12 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
       if (currentMessage.getUnPkBuffers() == 0) {
         currentLocation = 16;
-        currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-        currentLocation += Integer.BYTES;
+      } else if (currentMessage.getUnPkBuffers() == -1) {
+        currentLocation = 0;
+      }
 
-        int[] value = new int[currentLocation];
-        currentMessage.setDeserializingObject(value);
-        currentMessage.setUnPkCurrentIndex(0);
-      } else if (currentObjectLength == -1) {
-        currentObjectLength = buffer.getByteBuffer().getInt(0);
+      if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {
+        currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
         remaining = buffer.getSize() - Integer.BYTES - 16;
         currentLocation += Integer.BYTES;
 
@@ -100,6 +98,9 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       if (valsRead == currentObjectLength) {
         readObjectNumber++;
       }
+
+      // lets remove this buffer
+      buffers.poll();
     }
     return returnList;
   }

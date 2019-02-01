@@ -35,8 +35,8 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.SingleMessageDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.SingleMessageSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.DirectRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
@@ -193,11 +193,12 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
           DataFlowContext.sendPendingMax(config)));
       pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
-      serializerMap.put(s, new SingleMessageSerializer(new KryoSerializer()));
+      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), taskPlan.getThisExecutor()));
     }
 
     for (int tar : targets) {
-      MessageDeSerializer messageDeSerializer = new SingleMessageDeSerializer(new KryoSerializer());
+      MessageDeSerializer messageDeSerializer = new UnifiedDeserializer(new KryoSerializer(),
+          taskPlan.getThisExecutor());
       deSerializerMap.put(tar, messageDeSerializer);
     }
 

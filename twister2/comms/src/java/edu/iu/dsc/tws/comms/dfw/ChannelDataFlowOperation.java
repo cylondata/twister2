@@ -656,8 +656,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (currentMessage == null) {
       return;
     }
-    Queue<DataBuffer> channelMessages = currentMessage.getBuffers();
-    DataBuffer channelMessage = channelMessages.peek();
+    Queue<DataBuffer> buffers = currentMessage.getBuffers();
+    DataBuffer channelMessage = buffers.peek();
     if (channelMessage == null) {
       LOG.info("There are no receive buffers to be released for rank : " + id);
       return;
