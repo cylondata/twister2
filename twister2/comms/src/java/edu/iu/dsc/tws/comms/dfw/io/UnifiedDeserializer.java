@@ -95,17 +95,21 @@ public class UnifiedDeserializer implements MessageDeSerializer {
         currentMessage.setUnPkCurrentIndex(0);
       }
 
-      int[] val = (int[]) currentMessage.getDeserializingObject();
-      int startIndex = currentMessage.getUnPkCurrentIndex();
-      int bytesRead = PartialDataDeserializer.deserializeInteger(buffer, currentObjectLength,
-          val, startIndex, currentLocation);
-      int valsRead = bytesRead / Integer.BYTES;
+      int valsRead = readInt(currentMessage, currentLocation, buffer, currentObjectLength);
       // okay we are done with this object
       if (valsRead == currentObjectLength) {
         readObjectNumber++;
       }
     }
     return returnList;
+  }
+
+  private int readInt(InMessage currentMessage, int currentLocation, DataBuffer buffer, int currentObjectLength) {
+    int[] val = (int[]) currentMessage.getDeserializingObject();
+    int startIndex = currentMessage.getUnPkCurrentIndex();
+    int bytesRead = PartialDataDeserializer.deserializeInteger(buffer, currentObjectLength,
+        val, startIndex, currentLocation);
+    return bytesRead / Integer.BYTES;
   }
 
   @Override
