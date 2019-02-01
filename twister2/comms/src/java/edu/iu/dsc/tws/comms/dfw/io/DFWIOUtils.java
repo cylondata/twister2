@@ -116,7 +116,6 @@ public final class DFWIOUtils {
     copy.setDataType(channelMessage.getDataType());
     copy.setKeyType(channelMessage.getKeyType());
     copy.setHeaderSize(channelMessage.getHeaderSize());
-    copy.setReceivedState(channelMessage.getReceivedState());
     copy.addBuffers(channelMessage.getNormalBuffers());
     copy.addOverFlowBuffers(channelMessage.getOverflowBuffers());
 

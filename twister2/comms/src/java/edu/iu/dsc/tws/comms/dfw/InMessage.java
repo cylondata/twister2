@@ -162,6 +162,11 @@ public class InMessage {
     return header;
   }
 
+  /**
+   * Add a buffer and calculate weather we have seen all the buffers for an object
+   * @param buffer buffer
+   * @return true if all the buffers for a message is received
+   */
   public boolean addBufferAndCalculate(DataBuffer buffer) {
     buffers.add(buffer);
     addedBuffers++;

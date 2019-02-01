@@ -104,7 +104,8 @@ public class UnifiedDeserializer implements MessageDeSerializer {
     return returnList;
   }
 
-  private int readInt(InMessage currentMessage, int currentLocation, DataBuffer buffer, int currentObjectLength) {
+  private int readInt(InMessage currentMessage, int currentLocation,
+                      DataBuffer buffer, int currentObjectLength) {
     int[] val = (int[]) currentMessage.getDeserializingObject();
     int startIndex = currentMessage.getUnPkCurrentIndex();
     int bytesRead = PartialDataDeserializer.deserializeInteger(buffer, currentObjectLength,

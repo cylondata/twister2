@@ -36,7 +36,6 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 import edu.iu.dsc.tws.comms.dfw.io.SingleMessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.SingleMessageSerializer;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
