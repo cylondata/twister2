@@ -329,7 +329,7 @@ genrule(
         'export INSTALL_DIR=$$(pwd)/$(@D)',
         'export TMP_DIR=$$(mktemp -d -t ompi.XXXXX)',
         'mkdir -p $$TMP_DIR',
-        'cp -pLR $$(pwd)/external/ompi3/* $$TMP_DIR',
+        'cp -pLR $$(pwd)/external/ompi3darwin/* $$TMP_DIR',
         'cd $$TMP_DIR',
         './configure --prefix=$$INSTALL_DIR --enable-mpi-java',
         'make install',

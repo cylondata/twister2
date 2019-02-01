@@ -69,7 +69,7 @@ new_http_archive(
 )
 
 new_http_archive(
-    name = "ompi3",
+    name = "ompi3darwin",
     build_file = "third_party/ompi3darwin/ompi.darwin.BUILD",
     strip_prefix = "openmpi-3.1.2",
     urls = ["https://github.com/DSC-SPIDAL/twister2-thridparty-bin/raw/master/mpi/openmpi-3.1.2.tar.gz"],
