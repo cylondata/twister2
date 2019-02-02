@@ -12,22 +12,27 @@
 package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.api.task.dataparallelimpl.DataParallelConstants;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
+import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
+import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.DataSource;
+import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
@@ -72,25 +77,17 @@ public class KMeansJob extends TaskWorker {
       }
     }
 
-    /*TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
-    KMeansDataParallelSource sourceTask = new KMeansDataParallelSource();
-    KMeansDataParallelSink sinkTask = new KMeansDataParallelSink();
-    graphBuilder.addSource("map", sourceTask, parallelismValue);
-    graphBuilder.addSink("reduce", sinkTask, parallelismValue);
-    graphBuilder.setMode(OperationMode.BATCH);*/
-
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     KMeansDataParallelSource sourceTask = new KMeansDataParallelSource();
     KMeansDataParallelSink sinkTask = new KMeansDataParallelSink();
 
-    TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
-    graphBuilder.addSource("source", sourceTask, parallelismValue);
-    ComputeConnection computeConnection = graphBuilder.addSink("sink", sinkTask,
+    taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
+    ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
-    computeConnection.partition("source", "reduce");
-    graphBuilder.setMode(OperationMode.BATCH);
+    computeConnection.direct("source", "direct", DataType.OBJECT);
+    taskGraphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph dataFlowTaskGraph = graphBuilder.build();
-
+    DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(dataFlowTaskGraph);
     taskExecutor.execute(dataFlowTaskGraph, plan);
   }
@@ -102,170 +99,91 @@ public class KMeansJob extends TaskWorker {
     private static final long serialVersionUID = -1L;
 
     private DataSource<String, ?> source;
-
     private DataSink<String> sink;
-
-    private String datainputDirectory;
-    private String outputDirectory;
-
-    private String centroidinputDirectory;
-    private int numFiles;
-    private int datapointSize;
-    private int centroidSize;
-    private int dimension;
-    private int sizeOfMargin = 100;
-
-    private Config config;
-    private TaskContext taskContext;
 
     @Override
     public void execute() {
-      LOG.info("Context Task Index:" + context.taskIndex());
-      Map<Integer, String> partitionValue = new HashMap<>();
+      LOG.info("Context Task Index:" + context.taskIndex() + "\tWorker:" + context.getWorkerId());
       InputSplit<String> inputSplit = source.getNextSplit(context.taskIndex());
       int splitCount = 0;
       int totalCount = 0;
 
       while (inputSplit != null) {
         try {
-          StringBuilder stringBuilder = new StringBuilder();
-
           int count = 0;
           while (!inputSplit.reachedEnd()) {
             String value = inputSplit.nextRecord(null);
-            //LOG.info("We read value: " + value);
-            //sink.add(context.taskIndex(), value);
+            LOG.fine("We read value: " + value);
             if (value != null) {
-              stringBuilder.append(value);
+              context.write("direct", "points", value);
+              count += 1;
+              totalCount += 1;
             }
-            count += 1;
-            totalCount += 1;
-            partitionValue.put(context.taskIndex(), stringBuilder.toString());
           }
           splitCount += 1;
           inputSplit = source.getNextSplit(context.taskIndex());
-          LOG.info("Finished: " + context.taskIndex() + " count: " + count
+          LOG.info("Finished task index:" + context.taskIndex() + " count: " + count
               + " split: " + splitCount + " total count: " + totalCount);
         } catch (IOException e) {
           LOG.log(Level.SEVERE, "Failed to read the input", e);
         }
       }
-      LOG.info("Partitioned Values:" + partitionValue.keySet()
-          + "\t" + partitionValue.entrySet());
-      context.writeEnd("partition", partitionValue);
-      //sink.persist();
+      //sink.persist(); //for testing writing to the file
+      context.writeEnd("direct", "Finished writing");
     }
 
     public void prepare(Config cfg, TaskContext context) {
       super.prepare(cfg, context);
-      datainputDirectory = cfg.getStringValue(DataParallelConstants.ARGS_DINPUT_DIRECTORY);
-      centroidinputDirectory = cfg.getStringValue(DataParallelConstants.ARGS_CINPUT_DIRECTORY);
-      outputDirectory = cfg.getStringValue(DataParallelConstants.ARGS_OUTPUT_DIRECTORY);
-      numFiles = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_NUMBER_OF_FILES));
-      datapointSize = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_DSIZE));
-      centroidSize = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_CSIZE));
-      dimension = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_DIMENSIONS));
 
+      String datainputDirectory = cfg.getStringValue(KMeansConstants.ARGS_DINPUT_DIRECTORY);
+      String outDir = cfg.getStringValue(KMeansConstants.ARGS_OUTPUT_DIRECTORY);
       ExecutionRuntime runtime = (ExecutionRuntime)
           cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
 
-      LOG.info("Data Input Directory:" + datainputDirectory);
-
-      boolean shared = cfg.getBooleanValue(DataParallelConstants.ARGS_SHARED_FILE_SYSTEM);
+      boolean shared = cfg.getBooleanValue(KMeansConstants.ARGS_SHARED_FILE_SYSTEM);
       if (!shared) {
         this.source = runtime.createInput(cfg, context,
             new LocalTextInputPartitioner(new Path(datainputDirectory), context.getParallelism()));
-
       } else {
         this.source = runtime.createInput(cfg, context,
             new SharedTextInputPartitioner(new Path(datainputDirectory)));
       }
-      /*this.sink = new DataSink<>(cfg,
-          new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outputDirectory)));
-
-      LOG.info("This source is::::::::::::" + this.source + "\t" + this.sink);*/
+      this.sink = new DataSink<String>(cfg,
+          new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
     }
   }
 
-  public static class KMeansDataParallelSink extends BaseSink {
+  public static class KMeansDataParallelSink extends BaseSink implements Collector {
 
     private static final Logger LOG = Logger.getLogger(KMeansDataParallelSink.class.getName());
 
     private static final long serialVersionUID = -1L;
 
-    private DataSource<String, ?> source;
-    private DataSink<String> sink;
-
-    private String datainputDirectory;
-    private String centroidinputDirectory;
-    private String outputDirectory;
-    private int numFiles;
-    private int datapointSize;
-    private int centroidSize;
+    private double[][] datapoints;
     private int dimension;
-    private int sizeOfMargin = 100;
-
-    //private ArrayList<Iterator> partitionValue = new ArrayList<>(Arrays.asList());
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received centroids: (worker id) " + context.getWorkerId()
+      int count = 0;
+      LOG.log(Level.INFO, "worker id " + context.getWorkerId()
           + "\ttask id:" + context.taskId());
-      LOG.info("map values:" + message.getContent());
+      Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>) message.getContent();
+      while (arrayListIterator.hasNext()) {
+        count++;
+        LOG.fine("List Values:" + arrayListIterator.next());
+      }
+      LOG.info("Total Elements to be processed:" + count);
       return true;
     }
 
     public void prepare(Config cfg, TaskContext context) {
       super.prepare(cfg, context);
+      dimension = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DIMENSIONS));
+    }
+
+    @Override
+    public DataPartition<double[][]> get() {
+      return new EntityPartition<>(context.taskIndex(), datapoints);
     }
   }
-
-    /* public static class KMeansDataParallelSource extends DataParallelSourceTaskImpl {
-
-      private static final Logger LOG = Logger.getLogger(KMeansDataParallelSource.class.getName());
-
-      private static final long serialVersionUID = -1L;
-
-      private DataSource<String, ?> source;
-
-      private DataSink<String> sink;
-
-      @Override
-      public void prepare(Config cfg, TaskContext context) {
-        super.prepare(cfg, context);
-        LOG.fine("Context Task Index:" + context.taskIndex());
-      }
-
-      @Override
-      public void execute() {
-        super.execute();
-        LOG.fine("Context Task Index:" + context.taskIndex());
-        //DataParallelSourceTaskImpl dataParallelSourceTask = new DataParallelSourceTaskImpl();
-        //dataParallelSourceTask.execute();
-        context.writeEnd("reduce", "hello");
-      }
-    }
-
-  public static class KMeansDataParallelSink extends DataParallelSinkTaskImpl {
-
-    private static final Logger LOG = Logger.getLogger(KMeansDataParallelSink.class.getName());
-
-    private static final long serialVersionUID = -1L;
-
-    private DataSource<String, ?> source;
-
-    private DataSink<String> sink;
-
-    @Override
-    public boolean execute(IMessage message) {
-      super.execute(message);
-      LOG.log(Level.INFO, "Received worker id: " + context.getWorkerId()
-          + "\t" + message.getContent());
-      return true;
-    }
-
-    public void prepare(Config cfg, TaskContext context) {
-      super.prepare(cfg, context);
-    }
-  }*/
 }
