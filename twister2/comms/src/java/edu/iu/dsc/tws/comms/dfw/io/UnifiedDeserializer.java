@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
+import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.PartialDataDeserializer;
@@ -65,16 +66,12 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       throw new RuntimeException("Header must be built before the message");
     }
 
+    List<DataBuffer> builtBuffers = new ArrayList<>();
     // get the number of objects deserialized
-    int readObjectNumber = currentMessage.getUnPkNumberObjects();
-    while (readObjectNumber < currentMessage.getBufferSeenObjects()) {
+    DataBuffer buffer = buffers.peek();
+    while (buffer != null) {
       int currentLocation = 0;
-      int remaining = 0;
-      // lets read the object
-      DataBuffer buffer = buffers.peek();
-      if (buffer == null) {
-        break;
-      }
+      int remaining = buffer.getSize();
 
       int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
       if (currentMessage.getUnPkBuffers() == 0) {
@@ -93,25 +90,70 @@ public class UnifiedDeserializer implements MessageDeSerializer {
         currentMessage.setUnPkCurrentIndex(0);
       }
 
-      int valsRead = readInt(currentMessage, currentLocation, buffer, currentObjectLength);
-      // okay we are done with this object
-      if (valsRead == currentObjectLength) {
-        readObjectNumber++;
+      while (remaining > 0) {
+        // read the values from
+        int valsRead = readInt(currentMessage, currentLocation, buffer, currentObjectLength);
+        int totalBytesRead = totalBytesRead(currentMessage.getDataType(),
+            currentMessage.getUnPkCurrentIndex(), valsRead);
+        // okay we are done with this object
+        if (totalBytesRead == currentObjectLength) {
+          // lets add the object
+          remaining = remaining - valsRead;
+          currentMessage.addCurrentObject();
+          // lets reset to read the next
+          currentMessage.resetUnPk();
+        } else {
+          // lets break the inner while loop
+          break;
+        }
+
+        if (remaining > Integer.BYTES) {
+          currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
+          currentLocation += Integer.BYTES;
+
+          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
+        }
       }
 
       // lets remove this buffer
       buffers.poll();
+      builtBuffers.add(buffer);
+      // increment the unpacked buffers
+      currentMessage.incrementUnPkBuffers();
+
+      // lets check weather we have read everythong
+      int readObjectNumber = currentMessage.getUnPkNumberObjects();
+      if (readObjectNumber == currentMessage.getHeader().getNumberTuples()) {
+        break;
+      }
+
+      // lets move to next
+      buffer = buffers.peek();
     }
+
+    if (builtBuffers.size() > 0) {
+      ChannelMessage channelMessage = new ChannelMessage(currentMessage.getOriginatingId(),
+          currentMessage.getDataType(), MessageDirection.IN, currentMessage.getReleaseListener());
+      channelMessage.addBuffers(builtBuffers);
+      currentMessage.addBuiltMessage(channelMessage);
+    }
+
     return returnList;
+  }
+
+  private int totalBytesRead(MessageType type, int index, int valsRead) {
+    if (type == MessageType.INTEGER) {
+      return valsRead + index * 4;
+    }
+    return 0;
   }
 
   private int readInt(InMessage currentMessage, int currentLocation,
                       DataBuffer buffer, int currentObjectLength) {
     int[] val = (int[]) currentMessage.getDeserializingObject();
     int startIndex = currentMessage.getUnPkCurrentIndex();
-    int bytesRead = PartialDataDeserializer.deserializeInteger(buffer, currentObjectLength,
+    return PartialDataDeserializer.deserializeInteger(buffer, currentObjectLength,
         val, startIndex, currentLocation);
-    return bytesRead / Integer.BYTES;
   }
 
   @Override

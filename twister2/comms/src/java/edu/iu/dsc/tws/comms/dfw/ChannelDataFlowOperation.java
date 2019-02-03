@@ -333,14 +333,13 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
     InMessage currentMessage = currentMessages.get(id);
     if (currentMessage == null) {
-      currentMessage = new InMessage(id, receiveDataType, MessageDirection.IN, this);
+      MessageHeader header = messageDeSerializer.get(id).buildHeader(buffer, e);
+
+      currentMessage = new InMessage(id, receiveDataType, this, header);
       if (isKeyed) {
         currentMessage.setKeyType(receiveKeyType);
       }
-
       currentMessages.put(id, currentMessage);
-      MessageHeader header = messageDeSerializer.get(id).buildHeader(buffer, e);
-      currentMessage.setHeader(header);
 
       // we add the message immediately to the deserialization as we can deserialize partially
       Queue<InMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
@@ -404,7 +403,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       int deserializeId = deserializeProgressTracker.next();
       if (deserializeId != Integer.MIN_VALUE) {
         receiveDeserializeProgress(
-            pendingReceiveDeSerializations.get(deserializeId).poll(), deserializeId);
+            pendingReceiveDeSerializations.get(deserializeId), deserializeId);
         deserializeProgressTracker.finish(deserializeId);
       }
     }
@@ -568,10 +567,12 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     return canProgress;
   }
 
-  private void receiveDeserializeProgress(InMessage currentMessage, int receiveId) {
+  private void receiveDeserializeProgress(Queue<InMessage> msgQueue, int receiveId) {
+    InMessage currentMessage = msgQueue.peek();
     if (currentMessage == null) {
       return;
     }
+
     int id = currentMessage.getOriginatingId();
     MessageHeader header = currentMessage.getHeader();
     Object object = DataFlowContext.EMPTY_OBJECT;
@@ -587,6 +588,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
       throw new RuntimeException(executor + " We should have enough space: "
           + pendingReceiveMessages.size());
+    }
+
+    // we remove only when the unpacking is complete and ready to receive
+    if (currentMessage.getReceivedState() == InMessage.ReceivedState.RECEIVE) {
+      msgQueue.poll();
     }
   }
 

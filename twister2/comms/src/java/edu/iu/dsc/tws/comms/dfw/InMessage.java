@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -18,7 +20,7 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class InMessage {
-  private Queue<ChannelMessage> channelMessages = new LinkedBlockingQueue<>();
+  private Queue<ChannelMessage> builtMessages = new LinkedBlockingQueue<>();
 
   /**
    * The buffers added to this message
@@ -61,11 +63,6 @@ public class InMessage {
   private MessageType keyType = MessageType.INTEGER;
 
   /**
-   * Type of the message, weather request or send
-   */
-  private MessageDirection messageDirection;
-
-  /**
    * The deserialized data
    */
   private Object deserializedData;
@@ -90,12 +87,7 @@ public class InMessage {
   private int bufferSeenObjects = 0;
 
   /**
-   * The messages already consumed
-   */
-  private Queue<ChannelMessage> builtMessages = new LinkedBlockingQueue<>();
-
-  /**
-   * Following variables keep track of the reading object
+   * The length of the total object
    */
   private int unPkCurrentObjectLength = 0;
 
@@ -129,13 +121,17 @@ public class InMessage {
   private ReceivedState receivedState;
 
   public InMessage(int originatingId, MessageType messageType,
-                        MessageDirection messageDirection,
-                        ChannelMessageReleaseCallback releaseListener) {
+                   ChannelMessageReleaseCallback releaseListener,
+                   MessageHeader header) {
     this.releaseListener = releaseListener;
     this.originatingId = originatingId;
     this.complete = false;
     this.dataType = messageType;
     this.receivedState = ReceivedState.INIT;
+    this.header = header;
+    if (header.getNumberTuples() > 0) {
+      deserializedData = new ArrayList<>();
+    }
   }
 
   public void setDataType(MessageType dataType) {
@@ -152,10 +148,6 @@ public class InMessage {
 
   public MessageType getKeyType() {
     return keyType;
-  }
-
-  public void setHeader(MessageHeader header) {
-    this.header = header;
   }
 
   public MessageHeader getHeader() {
@@ -209,6 +201,7 @@ public class InMessage {
       if (remaining > Integer.BYTES) {
         bufferCurrentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
         bufferPreviousReadForObject = 0;
+        currentLocation += Integer.BYTES;
       } else {
         // we need to break, we set the length to -1 because we need to read the length
         // in next buffer
@@ -220,16 +213,23 @@ public class InMessage {
     return complete;
   }
 
-  public Queue<ChannelMessage> getChannelMessages() {
-    return channelMessages;
+  @SuppressWarnings("unchecked")
+  public void addCurrentObject() {
+    if (header.getNumberTuples() == 1) {
+      deserializedData = deserializingObject;
+    } else {
+      ((List<Object>) deserializedData).add(deserializingObject);
+    }
+    unPkNumberObjects++;
+    deserializingObject = null;
   }
 
-  public ChannelMessage getFirstChannelMessage() {
-    return channelMessages.peek();
+  public void addBuiltMessage(ChannelMessage channelMessage) {
+    builtMessages.add(channelMessage);
   }
 
-  public void addChannelMessage(ChannelMessage channelMessage) {
-    channelMessages.add(channelMessage);
+  public ChannelMessageReleaseCallback getReleaseListener() {
+    return releaseListener;
   }
 
   public int getOriginatingId() {
@@ -276,6 +276,10 @@ public class InMessage {
     return unPkCurrentObjectLength;
   }
 
+  public void setUnPkCurrentObjectLength(int unPkCurrentObjectLength) {
+    this.unPkCurrentObjectLength = unPkCurrentObjectLength;
+  }
+
   public int getUnPkNumberObjects() {
     return unPkNumberObjects;
   }
@@ -284,11 +288,20 @@ public class InMessage {
     return unPkBuffers;
   }
 
+  public void incrementUnPkBuffers() {
+    unPkBuffers++;
+  }
+
   public int getUnPkCurrentIndex() {
     return unPkCurrentIndex;
   }
 
   public void setUnPkCurrentIndex(int unPkCurrentIndex) {
     this.unPkCurrentIndex = unPkCurrentIndex;
+  }
+
+  public void resetUnPk() {
+    unPkCurrentObjectLength = -1;
+    unPkCurrentIndex = 0;
   }
 }
