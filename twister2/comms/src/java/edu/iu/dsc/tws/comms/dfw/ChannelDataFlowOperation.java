@@ -572,25 +572,34 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       return;
     }
 
-    int id = currentMessage.getOriginatingId();
-    MessageHeader header = currentMessage.getHeader();
-    Object object = DataFlowContext.EMPTY_OBJECT;
-    if ((header.getFlags() & MessageFlags.END) != MessageFlags.END) {
-      object = messageDeSerializer.get(receiveId).build(currentMessage,
-          currentMessage.getHeader().getEdge());
-    } else if ((header.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-      object = messageDeSerializer.get(receiveId).build(currentMessage,
-          currentMessage.getHeader().getEdge());
-    }
-    Queue<Pair<Object, InMessage>> pendingReceiveMessages =
-        pendingReceiveMessagesPerSource.get(id);
-    if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
-      throw new RuntimeException(executor + " We should have enough space: "
-          + pendingReceiveMessages.size());
+    if (currentMessage.getReceivedState() == InMessage.ReceivedState.INIT
+        || currentMessage.getReceivedState() == InMessage.ReceivedState.BUILDING) {
+      int id = currentMessage.getOriginatingId();
+      MessageHeader header = currentMessage.getHeader();
+      Object object = DataFlowContext.EMPTY_OBJECT;
+
+      if (currentMessage.getReceivedState() == InMessage.ReceivedState.INIT) {
+        Queue<Pair<Object, InMessage>> pendingReceiveMessages =
+            pendingReceiveMessagesPerSource.get(id);
+        if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
+          throw new RuntimeException(executor + " We should have enough space: "
+              + pendingReceiveMessages.size());
+        }
+        currentMessage.setReceivedState(InMessage.ReceivedState.BUILDING);
+      }
+
+      if ((header.getFlags() & MessageFlags.END) != MessageFlags.END) {
+        messageDeSerializer.get(receiveId).build(currentMessage,
+            currentMessage.getHeader().getEdge());
+      } else if ((header.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+        messageDeSerializer.get(receiveId).build(currentMessage,
+            currentMessage.getHeader().getEdge());
+      }
     }
 
     // we remove only when the unpacking is complete and ready to receive
-    if (currentMessage.getReceivedState() == InMessage.ReceivedState.RECEIVE) {
+    if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT
+        || currentMessage.getReceivedState() == InMessage.ReceivedState.RECEIVE) {
       msgQueue.poll();
     }
   }
@@ -599,13 +608,12 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private void receiveProgress(Queue<Pair<Object, InMessage>> pendingReceiveMessages) {
     while (pendingReceiveMessages.size() > 0) {
       Pair<Object, InMessage> pair = pendingReceiveMessages.peek();
-      InMessage.ReceivedState state = pair.getRight().getReceivedState();
       InMessage currentMessage = pair.getRight();
 
       lock.lock();
       try {
-        if (state == InMessage.ReceivedState.BUILDING
-            || state == InMessage.ReceivedState.BUILT) {
+        if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILDING
+            || currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT) {
           // get the first channel message
           ChannelMessage msg = currentMessage.getBuiltMessages().peek();
           if (msg != null) {
@@ -615,13 +623,13 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             currentMessage.getBuiltMessages().poll();
           }
 
-          if (state == InMessage.ReceivedState.BUILT
+          if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT
               && currentMessage.getBuiltMessages().size() == 0) {
             currentMessage.setReceivedState(InMessage.ReceivedState.RECEIVE);
           }
         }
 
-        if (state == InMessage.ReceivedState.RECEIVE) {
+        if (currentMessage.getReceivedState() == InMessage.ReceivedState.RECEIVE) {
           Object object = currentMessage.getDeserializedData();
           if (!receiver.receiveMessage(currentMessage.getHeader(), object)) {
             break;

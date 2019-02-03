@@ -124,6 +124,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       // lets check weather we have read everythong
       int readObjectNumber = currentMessage.getUnPkNumberObjects();
       if (readObjectNumber == currentMessage.getHeader().getNumberTuples()) {
+        currentMessage.setReceivedState(InMessage.ReceivedState.BUILT);
         break;
       }
 
