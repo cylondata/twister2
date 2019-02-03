@@ -37,7 +37,7 @@ public final class TaskPlanUtils {
     Set<Integer> tasksOfThisExec = new HashSet<>();
 
     for (int t : tasks) {
-      if (allTasksOfThisExec.contains(t)) {
+      if (allTasksOfThisExec != null && allTasksOfThisExec.contains(t)) {
         tasksOfThisExec.add(t);
       }
     }

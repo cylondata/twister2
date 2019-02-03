@@ -335,7 +335,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
       int src = sources.get(i);
       int tar = targets.get(i);
 
-      if (workerTasks.contains(src)) {
+      if (workerTasks != null && workerTasks.contains(src)) {
         RoutingParameters params = sendRoutingParameters(src, tar);
         routes.put(src, params);
       }

@@ -182,7 +182,7 @@ public class InMessage {
       // need to read this much
       int moreToReadForCurrentObject = bufferCurrentObjectLength - bufferPreviousReadForObject;
       // amount of data in the buffer
-      if (moreToReadForCurrentObject < remaining) {
+      if (moreToReadForCurrentObject <= remaining) {
         bufferSeenObjects++;
         remaining = remaining - moreToReadForCurrentObject;
         currentLocation += moreToReadForCurrentObject;
@@ -198,7 +198,7 @@ public class InMessage {
       }
 
       // we can read another object
-      if (remaining > Integer.BYTES) {
+      if (remaining >= Integer.BYTES) {
         bufferCurrentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
         bufferPreviousReadForObject = 0;
         currentLocation += Integer.BYTES;

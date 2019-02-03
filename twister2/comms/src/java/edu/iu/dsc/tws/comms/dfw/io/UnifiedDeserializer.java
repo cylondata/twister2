@@ -107,7 +107,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
           break;
         }
 
-        if (remaining > Integer.BYTES) {
+        if (remaining >= Integer.BYTES) {
           currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
           currentLocation += Integer.BYTES;
 

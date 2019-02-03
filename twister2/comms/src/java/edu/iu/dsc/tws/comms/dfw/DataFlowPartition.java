@@ -38,8 +38,8 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.MultiMessageDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.PartitionRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
@@ -167,11 +167,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
    * Edge used for communication
    */
   private int edge;
-
-  /**
-   * The all reduce operation for sycnronizing at the end
-   */
-  private DataFlowAllReduce allReduce;
 
   /**
    * A place holder for keeping the internal and external destinations
@@ -327,7 +322,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
           new ArrayBlockingQueue<Pair<Object, OutMessage>>(
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      serializerMap.put(s, new MultiMessageSerializer(new KryoSerializer(), executor));
+      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor));
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -343,7 +338,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
               capacity);
       pendingReceiveMessagesPerSource.put(ex, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<InMessage>(capacity));
-      deSerializerMap.put(ex, new MultiMessageDeserializer(new KryoSerializer(), executor));
+      deSerializerMap.put(ex, new UnifiedDeserializer(new KryoSerializer(), executor));
     }
 
     for (int src : srcs) {

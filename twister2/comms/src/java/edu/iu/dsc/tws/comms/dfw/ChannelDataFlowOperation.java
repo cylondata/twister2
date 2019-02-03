@@ -490,17 +490,16 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         if (outMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
           int startOfExternalRouts = chMessage.getAcceptedExternalSends();
           canProgress = sendExternally(outMessage, chMessage, externalRoutes, startOfExternalRouts);
-          if (startOfExternalRouts == externalRoutes.size()) {
+          if (chMessage.getAcceptedExternalSends() == externalRoutes.size()) {
             // we are done
             pendingSendMessages.poll();
             channelMessages.poll();
           }
         } else if (outMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
-          List<Integer> exRoutes = new ArrayList<>(outMessage.getExternalSends());
           int startOfExternalRouts = chMessage.getAcceptedExternalSends();
 
-          canProgress = sendExternally(outMessage, chMessage, exRoutes, startOfExternalRouts);
-          if (startOfExternalRouts == externalRoutes.size()) {
+          canProgress = sendExternally(outMessage, chMessage, externalRoutes, startOfExternalRouts);
+          if (chMessage.getAcceptedExternalSends() == externalRoutes.size()) {
             // we are done sending this channel message
             channelMessages.poll();
           }
@@ -528,7 +527,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           break;
         } else {
           //remove the buffers from the original message
-          chMessage.removeAllBuffers();
+          chMessage.incrementAcceptedExternalSends();
           externalSendsPending.incrementAndGet();
         }
       }
