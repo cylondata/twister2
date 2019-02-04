@@ -127,7 +127,7 @@ public final class PartialDataDeserializer {
     int currentBufferLocation = bufferLocation;
     for (int i = startIndex; i < noOfInts; i++) {
       ByteBuffer byteBuffer = buffers.getByteBuffer();
-      int remaining = byteBuffer.remaining();
+      int remaining = buffers.getSize() - currentBufferLocation;
       if (remaining >= Integer.BYTES) {
         value[i] = byteBuffer.getInt(currentBufferLocation);
         bytesRead += Integer.BYTES;
@@ -146,7 +146,7 @@ public final class PartialDataDeserializer {
     int currentBufferLocation = bufferLocation;
     for (int i = startIndex; i < noOfLongs; i++) {
       ByteBuffer byteBuffer = buffers.getByteBuffer();
-      int remaining = byteBuffer.remaining();
+      int remaining = buffers.getSize() - currentBufferLocation;
       if (remaining >= Long.BYTES) {
         value[i] = byteBuffer.getLong(currentBufferLocation);
         bytesRead += Long.BYTES;
@@ -165,7 +165,7 @@ public final class PartialDataDeserializer {
     int currentBufferLocation = bufferLocation;
     for (int i = startIndex; i < noOfLongs; i++) {
       ByteBuffer byteBuffer = buffers.getByteBuffer();
-      int remaining = byteBuffer.remaining();
+      int remaining = buffers.getSize() - currentBufferLocation;
       if (remaining >= Double.BYTES) {
         value[i] = byteBuffer.getDouble(currentBufferLocation);
         bytesRead += Double.BYTES;
@@ -184,7 +184,7 @@ public final class PartialDataDeserializer {
     int currentBufferLocation = bufferLocation;
     for (int i = startIndex; i < noOfLongs; i++) {
       ByteBuffer byteBuffer = buffers.getByteBuffer();
-      int remaining = byteBuffer.remaining();
+      int remaining = buffers.getSize() - currentBufferLocation;
       if (remaining >= Short.BYTES) {
         value[i] = byteBuffer.getShort(currentBufferLocation);
         bytesRead += Short.BYTES;
@@ -202,7 +202,7 @@ public final class PartialDataDeserializer {
     int currentBufferLocation = bufferLocation;
     for (int i = startIndex; i < byteLength; i++) {
       ByteBuffer byteBuffer = buffers.getByteBuffer();
-      int remaining = byteBuffer.remaining();
+      int remaining = buffers.getSize() - currentBufferLocation;
       if (remaining >= 1) {
         value[i] = byteBuffer.get(currentBufferLocation);
         bytesRead += 1;

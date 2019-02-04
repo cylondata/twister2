@@ -68,9 +68,14 @@ public class InMessage {
   private Object deserializedData;
 
   /**
-   * The object that is been built
+   * The object that is being built
    */
   private Object deserializingObject;
+
+  /**
+   * The key that is being built
+   */
+  private Object deserializingKey;
 
   /**
    * Number of buffers added
@@ -105,6 +110,11 @@ public class InMessage {
    * The current index of unpack
    */
   private int unPkCurrentIndex = 0;
+
+  /**
+   * Weather this is a keyed message
+   */
+  private boolean keyed;
 
 
   public enum ReceivedState {
@@ -147,6 +157,7 @@ public class InMessage {
   }
 
   public MessageType getKeyType() {
+    keyed = true;
     return keyType;
   }
 
@@ -264,6 +275,14 @@ public class InMessage {
     this.deserializingObject = deserializingObject;
   }
 
+  public Object getDeserializingKey() {
+    return deserializingKey;
+  }
+
+  public void setDeserializingKey(Object deserializingKey) {
+    this.deserializingKey = deserializingKey;
+  }
+
   public void addOverFlowBuffer(DataBuffer buffer) {
     overFlowBuffers.offer(buffer);
   }
@@ -303,5 +322,10 @@ public class InMessage {
   public void resetUnPk() {
     unPkCurrentObjectLength = -1;
     unPkCurrentIndex = 0;
+    deserializingObject = null;
+  }
+
+  public boolean isKeyed() {
+    return keyed;
   }
 }
