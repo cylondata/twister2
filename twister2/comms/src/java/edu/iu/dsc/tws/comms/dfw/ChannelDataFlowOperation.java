@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -161,7 +162,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
   private AtomicInteger externalSendsPending = new AtomicInteger(0);
 
-  public ChannelDataFlowOperation(TWSChannel channel) {
+  ChannelDataFlowOperation(TWSChannel channel) {
     this.channel = channel;
   }
 
@@ -294,8 +295,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    * @param routingParameters routing parameter
    * @return true if the message is accepted
    */
-  public boolean sendMessagePartial(int source, Object message, int target,
+  protected boolean sendMessagePartial(int source, Object message, int target,
                                     int flags, RoutingParameters routingParameters) {
+//    LOG.log(Level.INFO, String.format("%d Partial send %d -> %d", executor, source, target));
     // for partial sends we use minus value to find the correct queue
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);
@@ -320,8 +322,10 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (pendingSendMessages == null) {
       throw new RuntimeException(String.format("%d No send messages %d", executor, source));
     }
-    return offerForSend(source, message, target, flags,
+    boolean offer = offerForSend(source, message, target, flags,
         routingParameters, pendingSendMessages);
+//  LOG.log(Level.INFO, String.format("%d FULL send %d -> %d %b", executor, source, target, offer));
+    return offer;
   }
 
   @Override
@@ -457,6 +461,14 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private void sendProgress(Queue<Pair<Object, OutMessage>> pendingSendMessages, int sendId) {
     boolean canProgress = true;
 
+    StringBuilder s = new StringBuilder();
+    for (Map.Entry<Integer, Queue<DataBuffer>> e : receiveBuffers.entrySet()) {
+      s.append(e.getKey()).append(": ").append(e.getValue().size());
+    }
+
+    LOG.log(Level.INFO, String.format("%d SEND PROGRESS sendBuffers: %d recvBuffers: %s",
+        executor, sendBuffers.size(), s.toString()));
+
     while (pendingSendMessages.size() > 0 && canProgress) {
       // take out pending messages
       Pair<Object, OutMessage> pair = pendingSendMessages.peek();
@@ -477,6 +489,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         ChannelMessage serializeMessage = (ChannelMessage)
             messageSerializer.get(sendId).build(pair.getKey(), outMessage);
         if (serializeMessage != null) {
+          // we are incrementing the reference count here
           channelMessages.offer(serializeMessage);
         }
 
@@ -487,7 +500,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
         List<Integer> externalRoutes = new ArrayList<>(outMessage.getExternalSends());
         // okay we build the message, send it
-        if (outMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
+        if (outMessage.getSendState() == OutMessage.SendState.SERIALIZED) {
           int startOfExternalRouts = chMessage.getAcceptedExternalSends();
           canProgress = sendExternally(outMessage, chMessage, externalRoutes, startOfExternalRouts);
           if (chMessage.getAcceptedExternalSends() == externalRoutes.size()) {
@@ -495,7 +508,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             pendingSendMessages.poll();
             channelMessages.poll();
           }
-        } else if (outMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+        } else if (outMessage.getSendState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
           int startOfExternalRouts = chMessage.getAcceptedExternalSends();
 
           canProgress = sendExternally(outMessage, chMessage, externalRoutes, startOfExternalRouts);
@@ -539,7 +552,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
   private boolean sendInternally(OutMessage outMessage, Object messageObject) {
     boolean canProgress = true;
-    if (outMessage.serializedState() == OutMessage.SendState.INIT) {
+    if (outMessage.getSendState() == OutMessage.SendState.INIT) {
       // send it internally
       int startOfInternalRouts = outMessage.getAcceptedInternalSends();
       List<Integer> inRoutes = new ArrayList<>(outMessage.getInternalSends());
@@ -599,7 +612,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
     // we remove only when the unpacking is complete and ready to receive
     if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT
-        || currentMessage.getReceivedState() == InMessage.ReceivedState.RECEIVE) {
+        || currentMessage.getReceivedState() == InMessage.ReceivedState.RECEIVE
+        || currentMessage.getReceivedState() == InMessage.ReceivedState.DONE) {
       msgQueue.poll();
     }
   }
@@ -620,7 +634,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             if (!receiver.handleReceivedChannelMessage(msg)) {
               break;
             }
-            currentMessage.getBuiltMessages().poll();
+            ChannelMessage releaseMsg = currentMessage.getBuiltMessages().poll();
+            Objects.requireNonNull(releaseMsg).release();
           }
 
           if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT
@@ -646,6 +661,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
   private boolean sendMessageToTarget(ChannelMessage channelMessage, int i) {
     int e = instancePlan.getExecutorForChannel(i);
+//    LOG.log(Level.INFO, String.format("%d Sending message to target %d -> %d", executor,
+//        channelMessage.getOriginatingId(), e));
     return channel.sendMessage(e, channelMessage, this);
   }
 
@@ -660,6 +677,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   @Override
   public void onSendComplete(int id, int messageStream, ChannelMessage message) {
     // ok we don't have anything else to do
+    LOG.log(Level.INFO, String.format("%d Release: %d", executor, id));
     message.release();
     externalSendsPending.getAndDecrement();
   }
@@ -685,7 +703,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
 
     // we should always have a buffer
-    copyToLocalBuffer(id, channelMessage, local, currentMessage);
+    copyToLocalBuffer(id, Objects.requireNonNull(buffers.poll()), local, currentMessage);
   }
 
   private void copyToLocalBuffer(int id, DataBuffer dataBuffer, DataBuffer localBuffer,

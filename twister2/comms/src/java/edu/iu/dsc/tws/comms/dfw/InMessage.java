@@ -20,6 +20,17 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class InMessage {
+  public enum ReceivedState {
+    INIT,
+    BUILDING,
+    BUILT,
+    RECEIVE,
+    DONE,
+  }
+
+  /**
+   * The channels built
+   */
   private Queue<ChannelMessage> builtMessages = new LinkedBlockingQueue<>();
 
   /**
@@ -117,18 +128,15 @@ public class InMessage {
   private int unPkCurrentIndex = 0;
 
   /**
+   * The current index of unpack of key
+   */
+  private int unPkCurrentKeyIndex = 0;
+
+  /**
    * Weather this is a keyed message
    */
   private boolean keyed;
 
-
-  public enum ReceivedState {
-    INIT,
-    BUILDING,
-    BUILT,
-    RECEIVE,
-    DONE,
-  }
 
   /**
    * Received state
@@ -182,6 +190,12 @@ public class InMessage {
     int expectedObjects = header.getNumberTuples();
     int remaining = 0;
     int currentLocation = 0;
+
+    if (expectedObjects == 0) {
+      complete = true;
+      return true;
+    }
+
     // if this is the first buffer or, we haven't read the current object length
     if (addedBuffers == 1) {
       currentLocation = 16;
@@ -208,7 +222,7 @@ public class InMessage {
       }
 
       // if we have seen all, lets break
-      if (expectedObjects == bufferSeenObjects) {
+      if (Math.abs(expectedObjects) == bufferSeenObjects) {
         complete = true;
         break;
       }
@@ -231,7 +245,7 @@ public class InMessage {
 
   @SuppressWarnings("unchecked")
   public void addCurrentObject() {
-    if (header.getNumberTuples() == 1) {
+    if (header.getNumberTuples() == -1) {
       deserializedData = deserializingObject;
     } else {
       ((List<Object>) deserializedData).add(deserializingObject);
@@ -340,5 +354,13 @@ public class InMessage {
 
   public boolean isKeyed() {
     return keyed;
+  }
+
+  public int getUnPkCurrentKeyIndex() {
+    return unPkCurrentKeyIndex;
+  }
+
+  public void setUnPkCurrentKeyIndex(int unPkCurrentKeyIndex) {
+    this.unPkCurrentKeyIndex = unPkCurrentKeyIndex;
   }
 }

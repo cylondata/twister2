@@ -15,6 +15,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
@@ -105,6 +106,11 @@ public class OutMessage {
    */
   private ChannelMessageReleaseCallback releaseCallback;
 
+  /**
+   * The header for this out message
+   */
+  private MessageHeader header;
+
   public OutMessage(int src, int edge, int path, int target, int flags,
                     Set<Integer> intSends, Set<Integer> extSends,
                     MessageType dataType, MessageType keyType,
@@ -122,7 +128,7 @@ public class OutMessage {
     this.releaseCallback = releaseCallback;
   }
 
-  public SendState serializedState() {
+  public SendState getSendState() {
     return sendState;
   }
 
@@ -196,5 +202,13 @@ public class OutMessage {
 
   public ChannelMessageReleaseCallback getReleaseCallback() {
     return releaseCallback;
+  }
+
+  public MessageHeader getHeader() {
+    return header;
+  }
+
+  public void setHeader(MessageHeader header) {
+    this.header = header;
   }
 }

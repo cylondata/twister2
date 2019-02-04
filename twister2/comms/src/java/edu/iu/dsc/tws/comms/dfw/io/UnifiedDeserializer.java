@@ -75,8 +75,6 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
       if (currentMessage.getUnPkBuffers() == 0) {
         currentLocation = 16;
-      } else if (currentMessage.getUnPkBuffers() == -1) {
-        currentLocation = 0;
       }
 
       if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {
@@ -138,7 +136,8 @@ public class UnifiedDeserializer implements MessageDeSerializer {
 
       // lets check weather we have read everythong
       int readObjectNumber = currentMessage.getUnPkNumberObjects();
-      if (readObjectNumber == currentMessage.getHeader().getNumberTuples()) {
+      // we need to get number of tuples and get abs because we are using -1 for single messages
+      if (readObjectNumber == Math.abs(currentMessage.getHeader().getNumberTuples())) {
         currentMessage.setReceivedState(InMessage.ReceivedState.BUILT);
         break;
       }
@@ -151,6 +150,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       ChannelMessage channelMessage = new ChannelMessage(currentMessage.getOriginatingId(),
           currentMessage.getDataType(), MessageDirection.IN, currentMessage.getReleaseListener());
       channelMessage.addBuffers(builtBuffers);
+      channelMessage.incrementRefCount();
       currentMessage.addBuiltMessage(channelMessage);
     }
 

@@ -90,29 +90,29 @@ public class MultiMessageSerializer implements MessageSerializer {
       sendMessage.setSerializationState(new SerializeState());
     }
 
-    while (sendBuffers.size() > 0 && sendMessage.serializedState()
+    while (sendBuffers.size() > 0 && sendMessage.getSendState()
         != OutMessage.SendState.SERIALIZED) {
       DataBuffer buffer = sendBuffers.poll();
       if (buffer == null) {
         break;
       }
 
-      if (sendMessage.serializedState() == OutMessage.SendState.INIT
-          || sendMessage.serializedState() == OutMessage.SendState.SENT_INTERNALLY) {
+      if (sendMessage.getSendState() == OutMessage.SendState.INIT
+          || sendMessage.getSendState() == OutMessage.SendState.SENT_INTERNALLY) {
         // build the header
         DFWIOUtils.buildHeader(buffer, sendMessage);
         sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
         channelMessage.setPartial(true);
       }
 
-      if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
-          || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+      if (sendMessage.getSendState() == OutMessage.SendState.HEADER_BUILT
+          || sendMessage.getSendState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
           sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
           sendMessage.getSerializationState().setTotalBytes(0);
         } else {
           // first we need to serialize the body if needed
-          if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+          if (sendMessage.getSendState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
             if (sendMessage.getChannelMessages().peek().getBuffers().size() == 0) {
               DFWIOUtils.buildHeader(buffer, sendMessage);
             }
@@ -123,7 +123,7 @@ public class MultiMessageSerializer implements MessageSerializer {
 
       // okay we are adding this buffer
       channelMessage.addBuffer(buffer);
-      if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
+      if (sendMessage.getSendState() == OutMessage.SendState.SERIALIZED) {
         SerializeState state = sendMessage.getSerializationState();
 
         int totalBytes = state.getTotalBytes();
@@ -140,26 +140,13 @@ public class MultiMessageSerializer implements MessageSerializer {
 
         // mark the original message as complete
         channelMessage.setComplete(true);
-      } else if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+      } else if (sendMessage.getSendState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         SerializeState state = sendMessage.getSerializationState();
 
         if (channelMessage.isPartial()) {
           throw new UnsupportedOperationException("Code trying to break large single object into"
               + "multiple messages, this is not supported currently please increase"
               + " network buffer sizes");
-//          if (!channelMessage.isHeaderSent()) {
-//            int totalBytes = state.getCurretHeaderLength();
-//            int currentSize = channelMessage.getBuffers().get(0).getByteBuffer().getInt(
-//                HEADER_SIZE - Integer.BYTES);
-//            channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
-//                currentSize + totalBytes);
-//
-//            MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-//                sendMessage.getEdge(), currentSize + totalBytes);
-//            builder.destination(sendMessage.getPath());
-//            channelMessage.setHeader(builder.build());
-//            channelMessage.setHeaderSent(true);
-//          }
         } else {
           int totalBytes = state.getTotalBytes();
           //Need to calculate the true total bites since a part of the message may come separately

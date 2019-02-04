@@ -79,7 +79,7 @@ public class UnifiedSerializer implements MessageSerializer {
 
     // we loop until everything is serialized
     while (sendBuffers.size() > 0
-        && sendMessage.serializedState() != OutMessage.SendState.SERIALIZED) {
+        && sendMessage.getSendState() != OutMessage.SendState.SERIALIZED) {
 
       // we can continue only if there is a data buffer
       DataBuffer buffer = sendBuffers.poll();
@@ -88,39 +88,39 @@ public class UnifiedSerializer implements MessageSerializer {
       }
 
       // this is the first time we are seeing this message
-      if (sendMessage.serializedState() == OutMessage.SendState.INIT
-          || sendMessage.serializedState() == OutMessage.SendState.SENT_INTERNALLY) {
+      if (sendMessage.getSendState() == OutMessage.SendState.INIT
+          || sendMessage.getSendState() == OutMessage.SendState.SENT_INTERNALLY) {
+        // we set the state here, because we can set it to serialized below
+        sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
         // build the header
         if (data instanceof List) {
           // for list message we need to put the size of the list
           DFWIOUtils.buildHeader(buffer, sendMessage, ((List) data).size());
+          buildHeader(sendMessage, channelMessage, ((List) data).size());
         } else {
           if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
             sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
             // we set the number of messages to 0, only header will be sent
             DFWIOUtils.buildHeader(buffer, sendMessage, 0);
+            buildHeader(sendMessage, channelMessage, 0);
           } else {
             // for single message we need to put the size as 1
-            DFWIOUtils.buildHeader(buffer, sendMessage, 1);
+            DFWIOUtils.buildHeader(buffer, sendMessage, -1);
+            buildHeader(sendMessage, channelMessage, -1);
           }
         }
-        sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
       }
 
       // okay we have a body to build and it is not done fully yet
-      if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
-          || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+      if (sendMessage.getSendState() == OutMessage.SendState.HEADER_BUILT
+          || sendMessage.getSendState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         sendMessage.setSendState(OutMessage.SendState.PARTIALLY_SERIALIZED);
         serializeBody(data, sendMessage, buffer);
       }
 
       // okay we are adding this buffer
       channelMessage.addBuffer(buffer);
-      if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
-        MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-            sendMessage.getEdge(), 0);
-        builder.destination(sendMessage.getPath());
-        channelMessage.setHeader(builder.build());
+      if (sendMessage.getSendState() == OutMessage.SendState.SERIALIZED) {
         channelMessage.setComplete(true);
       }
     }
@@ -134,6 +134,20 @@ public class UnifiedSerializer implements MessageSerializer {
   }
 
   /**
+   * Build the header to set for channel messages laters
+   * @param sendMessage messages
+   * @param channelMessage channel message
+   * @param numMessages number of messages
+   */
+  private void buildHeader(OutMessage sendMessage, ChannelMessage channelMessage,
+                           int numMessages) {
+    MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
+        sendMessage.getEdge(), numMessages);
+    builder.destination(sendMessage.getPath());
+    channelMessage.setHeader(builder.build());
+  }
+
+  /**
    * Builds the body of the message. Based on the message type different build methods are called
    *
    * @param payload the message that needs to be built, this is assumed to be a List that contains
@@ -143,6 +157,11 @@ public class UnifiedSerializer implements MessageSerializer {
    */
   @SuppressWarnings("rawtypes")
   private void serializeBody(Object payload, OutMessage sendMessage, DataBuffer targetBuffer) {
+    // if serialized nothing to do
+    if (sendMessage.getSendState() == OutMessage.SendState.SERIALIZED) {
+      return;
+    }
+
     SerializeState state = sendMessage.getSerializationState();
 
     // we assume remaining = capacity of the targetBuffer as we always get a fresh targetBuffer her

@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -229,6 +230,8 @@ public class PartitionPartialReceiver implements MessageReceiver {
           progressAttempts = 0;
           continue;
         }
+        LOG.log(Level.INFO, String.format("%d PR Sending to %d -> %d",
+            executor, representSource, e.getKey()));
         // if we send this list successfully
         if (operation.sendPartial(representSource, send, 0, e.getKey())) {
           // lets remove from ready list and clear the list

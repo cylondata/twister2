@@ -77,7 +77,7 @@ public class SingleMessageSerializer implements MessageSerializer {
       sendMessage.setSerializationState(new SerializeState());
     }
 
-    while (sendBuffers.size() > 0 && sendMessage.serializedState()
+    while (sendBuffers.size() > 0 && sendMessage.getSendState()
         != OutMessage.SendState.SERIALIZED) {
       DataBuffer buffer = sendBuffers.poll();
 
@@ -85,15 +85,15 @@ public class SingleMessageSerializer implements MessageSerializer {
         break;
       }
 
-      if (sendMessage.serializedState() == OutMessage.SendState.INIT
-          || sendMessage.serializedState() == OutMessage.SendState.SENT_INTERNALLY) {
+      if (sendMessage.getSendState() == OutMessage.SendState.INIT
+          || sendMessage.getSendState() == OutMessage.SendState.SENT_INTERNALLY) {
         // build the header
         DFWIOUtils.buildHeader(buffer, sendMessage);
         sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
       }
 
-      if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
-          || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+      if (sendMessage.getSendState() == OutMessage.SendState.HEADER_BUILT
+          || sendMessage.getSendState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
           sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
           sendMessage.getSerializationState().setTotalBytes(0);
@@ -110,7 +110,7 @@ public class SingleMessageSerializer implements MessageSerializer {
       }
       // okay we are adding this buffer
       sendMessage.getChannelMessages().peek().addBuffer(buffer);
-      if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
+      if (sendMessage.getSendState() == OutMessage.SendState.SERIALIZED) {
         ChannelMessage channelMessage = sendMessage.getChannelMessages().peek();
         SerializeState state = sendMessage.getSerializationState();
         if (!channelMessage.isHeaderSent()) {
@@ -128,7 +128,7 @@ public class SingleMessageSerializer implements MessageSerializer {
         }
         // mark the original message as complete
         channelMessage.setComplete(true);
-      } else if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+      } else if (sendMessage.getSendState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         ChannelMessage channelMessage = sendMessage.getChannelMessages().peek();
         SerializeState state = sendMessage.getSerializationState();
         if (!channelMessage.isHeaderSent()) {
