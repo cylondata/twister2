@@ -91,3 +91,8 @@ def twister2_dashboard_files():
     return [
         "//dashboard/server:twister2-dash-server",
     ]
+
+def twister2_storm_files():
+    return [
+        "//twister2/compatibility/storm:twister2-storm",
+    ]

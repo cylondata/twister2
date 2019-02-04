@@ -138,6 +138,8 @@ public class SourceStreamingInstance implements INodeInstance {
           // we need to break
           break;
         }
+      } else {
+        break;
       }
     }
 
