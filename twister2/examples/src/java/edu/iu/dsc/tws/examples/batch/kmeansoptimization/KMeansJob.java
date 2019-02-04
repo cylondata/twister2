@@ -62,9 +62,11 @@ public class KMeansJob extends TaskWorker {
 
     String dinputDirectory = kMeansJobParameters.getDatapointDirectory();
     String cinputDirectory = kMeansJobParameters.getCentroidDirectory();
-    String outputDirecotry = kMeansJobParameters.getOutputDirectory();
+    String outputDirectory = kMeansJobParameters.getOutputDirectory();
 
     boolean shared = kMeansJobParameters.isShared();
+
+    LOG.info("Boolean Shared Value:" + shared);
 
     if (workerId == 0) {
       try {
@@ -103,11 +105,10 @@ public class KMeansJob extends TaskWorker {
 
     @Override
     public void execute() {
-      LOG.info("Context Task Index:" + context.taskIndex() + "\tWorker:" + context.getWorkerId());
+      LOG.info("Context Task Index:" + context.taskIndex());
       InputSplit<String> inputSplit = source.getNextSplit(context.taskIndex());
       int splitCount = 0;
       int totalCount = 0;
-
       while (inputSplit != null) {
         try {
           int count = 0;
@@ -116,19 +117,20 @@ public class KMeansJob extends TaskWorker {
             LOG.fine("We read value: " + value);
             if (value != null) {
               context.write("direct", "points", value);
-              count += 1;
-              totalCount += 1;
+              sink.add(context.taskIndex(), value);
             }
+            count += 1;
+            totalCount += 1;
           }
           splitCount += 1;
           inputSplit = source.getNextSplit(context.taskIndex());
-          LOG.info("Finished task index:" + context.taskIndex() + " count: " + count
-              + " split: " + splitCount + " total count: " + totalCount);
+          LOG.info("Task index:" + context.taskIndex() + " count: " + count
+              + "split: " + splitCount + " total count: " + totalCount);
         } catch (IOException e) {
           LOG.log(Level.SEVERE, "Failed to read the input", e);
         }
       }
-      //sink.persist(); //for testing writing to the file
+      sink.persist(); //for testing writing to the file
       context.writeEnd("direct", "Finished writing");
     }
 
@@ -166,7 +168,7 @@ public class KMeansJob extends TaskWorker {
     public boolean execute(IMessage message) {
       int count = 0;
       LOG.log(Level.INFO, "worker id " + context.getWorkerId()
-          + "\ttask id:" + context.taskId());
+          + "\ttask id:" + context.taskIndex());
       Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>) message.getContent();
       while (arrayListIterator.hasNext()) {
         count++;

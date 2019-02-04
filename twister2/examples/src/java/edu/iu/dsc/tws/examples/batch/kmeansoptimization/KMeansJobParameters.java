@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.dataparallelimpl.DataParallelConstants;
 import edu.iu.dsc.tws.common.config.Config;
 
 public final class KMeansJobParameters {
@@ -128,18 +127,18 @@ public final class KMeansJobParameters {
    */
   public static KMeansJobParameters build(Config cfg) {
 
-    String datapointDirectory = cfg.getStringValue(DataParallelConstants.ARGS_DINPUT_DIRECTORY);
-    String centroidDirectory = cfg.getStringValue(DataParallelConstants.ARGS_CINPUT_DIRECTORY);
-    String outputDirectory = cfg.getStringValue(DataParallelConstants.ARGS_OUTPUT_DIRECTORY);
+    String datapointDirectory = cfg.getStringValue(KMeansConstants.ARGS_DINPUT_DIRECTORY);
+    String centroidDirectory = cfg.getStringValue(KMeansConstants.ARGS_CINPUT_DIRECTORY);
+    String outputDirectory = cfg.getStringValue(KMeansConstants.ARGS_OUTPUT_DIRECTORY);
 
-    int workers = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_WORKERS));
-    int dsize = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_DSIZE));
-    int csize = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_CSIZE));
-    int dimension = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_DIMENSIONS));
+    int workers = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_WORKERS));
+    int dsize = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DSIZE));
+    int csize = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_CSIZE));
+    int dimension = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DIMENSIONS));
     int parallelismVal = Integer.parseInt(
-        cfg.getStringValue(DataParallelConstants.ARGS_PARALLELISM_VALUE));
-    int numFiles = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_NUMBER_OF_FILES));
-    boolean shared = cfg.getBooleanValue(DataParallelConstants.ARGS_SHARED_FILE_SYSTEM);
+        cfg.getStringValue(KMeansConstants.ARGS_PARALLELISM_VALUE));
+    int numFiles = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_NUMBER_OF_FILES));
+    boolean shared = cfg.getBooleanValue(KMeansConstants.ARGS_SHARED_FILE_SYSTEM);
 
     KMeansJobParameters jobParameters = new KMeansJobParameters(workers);
 
