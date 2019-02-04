@@ -11,5 +11,50 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.types;
 
-public class PartialKeyDeSerializer {
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+
+import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.comms.dfw.InMessage;
+
+public final class PartialKeyDeSerializer {
+  private PartialKeyDeSerializer() {
+  }
+
+  public static Pair<Integer, Integer> createKey(InMessage message,
+                                                 DataBuffer buffers) {
+    int keyLength = 0;
+    int readBytes = 0;
+    // first we need to read the key type
+    switch (message.getKeyType()) {
+      case INTEGER:
+        keyLength = Integer.BYTES;
+        break;
+      case SHORT:
+        keyLength = Short.BYTES;
+        break;
+      case LONG:
+        keyLength = Long.BYTES;
+        break;
+      case DOUBLE:
+        keyLength = Double.BYTES;
+        break;
+      case OBJECT:
+        keyLength = buffers.getByteBuffer().getInt();
+        readBytes = Integer.BYTES;
+        byte[] b = new byte[keyLength];
+        message.setDeserializingKey(b);
+        break;
+      case BYTE:
+        keyLength = buffers.getByteBuffer().getInt();
+        readBytes = Integer.BYTES;
+        byte[] bytes = new byte[keyLength];
+        message.setDeserializingKey(bytes);
+        break;
+      default:
+        break;
+    }
+
+    return new ImmutablePair<>(keyLength, readBytes);
+  }
 }

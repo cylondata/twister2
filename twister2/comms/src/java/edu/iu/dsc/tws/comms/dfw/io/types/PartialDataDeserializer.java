@@ -62,34 +62,34 @@ public final class PartialDataDeserializer {
     }
   }
 
-  public static void createDataObject(InMessage currentMessage, int currentLocation) {
+  public static void createDataObject(InMessage currentMessage, int length) {
     switch (currentMessage.getDataType()) {
       case INTEGER:
-        int[] value = new int[currentLocation];
+        int[] value = new int[length];
         currentMessage.setDeserializingObject(value);
         break;
       case LONG:
-        long[] longValue = new long[currentLocation];
+        long[] longValue = new long[length];
         currentMessage.setDeserializingObject(longValue);
         break;
       case DOUBLE:
-        double[] doubleValue = new double[currentLocation];
+        double[] doubleValue = new double[length];
         currentMessage.setDeserializingObject(doubleValue);
         break;
       case SHORT:
-        short[] shortValue = new short[currentLocation];
+        short[] shortValue = new short[length];
         currentMessage.setDeserializingObject(shortValue);
         break;
       case CHAR:
-        char[] charValue = new char[currentLocation];
+        char[] charValue = new char[length];
         currentMessage.setDeserializingObject(charValue);
         break;
       case BYTE:
-        byte[] byteValue = new byte[currentLocation];
+        byte[] byteValue = new byte[length];
         currentMessage.setDeserializingObject(byteValue);
         break;
       case OBJECT:
-        byte[] objectValue = new byte[currentLocation];
+        byte[] objectValue = new byte[length];
         currentMessage.setDeserializingObject(objectValue);
         break;
       default:

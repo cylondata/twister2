@@ -97,6 +97,11 @@ public class InMessage {
   private int unPkCurrentObjectLength = 0;
 
   /**
+   * The length of the key unpacked
+   */
+  private int unPkCurrentKeyLength = 0;
+
+  /**
    * The number of objects unpacked
    */
   private int unPkNumberObjects = 0;
@@ -297,6 +302,14 @@ public class InMessage {
 
   public void setUnPkCurrentObjectLength(int unPkCurrentObjectLength) {
     this.unPkCurrentObjectLength = unPkCurrentObjectLength;
+  }
+
+  public int getUnPkCurrentKeyLength() {
+    return unPkCurrentKeyLength;
+  }
+
+  public void setUnPkCurrentKeyLength(int unPkCurrentKeyLength) {
+    this.unPkCurrentKeyLength = unPkCurrentKeyLength;
   }
 
   public int getUnPkNumberObjects() {

@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
@@ -22,6 +24,7 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 import edu.iu.dsc.tws.comms.dfw.io.types.PartialDataDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.types.PartialKeyDeSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class UnifiedDeserializer implements MessageDeSerializer {
@@ -81,8 +84,19 @@ public class UnifiedDeserializer implements MessageDeSerializer {
         remaining = buffer.getSize() - Integer.BYTES - 16;
         currentLocation += Integer.BYTES;
 
-        PartialDataDeserializer.createDataObject(currentMessage, currentLocation);
-        currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
+        if (keyed) {
+          // we assume we can read the key length from here
+          Pair<Integer, Integer> keyLength = PartialKeyDeSerializer.createKey(
+              currentMessage, buffer);
+          // we advance the key length amount
+          currentLocation += keyLength.getRight();
+          PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);
+          currentMessage.setUnPkCurrentKeyLength(keyLength.getLeft());
+          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
+        } else {
+          PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);
+          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
+        }
       }
 
       while (remaining > 0) {
@@ -108,8 +122,11 @@ public class UnifiedDeserializer implements MessageDeSerializer {
           remaining = buffer.getSize() - Integer.BYTES;
           currentLocation += Integer.BYTES;
 
-          PartialDataDeserializer.createDataObject(currentMessage, currentLocation);
+          PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);
           currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
+        } else {
+          // we have to break here as we cannot read further
+          break;
         }
       }
 
