@@ -18,28 +18,25 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
-import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
-import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
-import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class KMeansDataParallelTask extends BaseSource {
-  private static final Logger LOG = Logger.getLogger(KMeansDataParallelTask.class.getName());
+public class DataParallelSourceImpl extends BaseSource {
+
+  private static final Logger LOG = Logger.getLogger(DataParallelSourceImpl.class.getName());
 
   private static final long serialVersionUID = -1L;
 
   private DataSource<String, ?> source;
 
-  private DataSink<String> sink;
-
   @Override
   public void execute() {
+    LOG.info("Context Task Index:" + context.taskIndex());
     InputSplit<String> inputSplit = source.getNextSplit(context.taskIndex());
     int splitCount = 0;
     int totalCount = 0;
@@ -48,41 +45,38 @@ public class KMeansDataParallelTask extends BaseSource {
         int count = 0;
         while (!inputSplit.reachedEnd()) {
           String value = inputSplit.nextRecord(null);
-
-          LOG.info("We read value: " + value);
-          sink.add(context.taskIndex(), value);
+          LOG.fine("We read value: " + value);
+          if (value != null) {
+            context.write("direct", "points", value);
+          }
           count += 1;
           totalCount += 1;
         }
         splitCount += 1;
         inputSplit = source.getNextSplit(context.taskIndex());
-        LOG.info("Finished: " + context.taskIndex() + " count: " + count
-            + " split: " + splitCount + " total count: " + totalCount);
+        LOG.info("Task index:" + context.taskIndex() + " count: " + count
+            + "split: " + splitCount + " total count: " + totalCount);
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
       }
     }
-    sink.persist();
+    context.writeEnd("direct", "Finished writing");
   }
 
-  @Override
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
 
-    String directory = cfg.getStringValue(KMeansConstants.ARGS_DINPUT_DIRECTORY);
-    ExecutionRuntime runtime = (ExecutionRuntime) config.get(
-        ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    String outDir = cfg.getStringValue(KMeansConstants.ARGS_OUTPUT_DIRECTORY);
-    boolean shared = cfg.getBooleanValue(KMeansConstants.ARGS_SHARED_FILE_SYSTEM);
+    String datainputDirectory = cfg.getStringValue(KMeansConstants.ARGS_DINPUT_DIRECTORY);
+    ExecutionRuntime runtime = (ExecutionRuntime)
+        cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
 
+    boolean shared = cfg.getBooleanValue(KMeansConstants.ARGS_SHARED_FILE_SYSTEM);
     if (!shared) {
       this.source = runtime.createInput(cfg, context,
-          new LocalTextInputPartitioner(new Path(directory), context.getParallelism()));
+          new LocalTextInputPartitioner(new Path(datainputDirectory), context.getParallelism()));
     } else {
       this.source = runtime.createInput(cfg, context,
-          new SharedTextInputPartitioner(new Path(directory)));
+          new SharedTextInputPartitioner(new Path(datainputDirectory)));
     }
-    this.sink = new DataSink<>(cfg,
-        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
   }
 }

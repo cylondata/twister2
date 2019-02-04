@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.cdfw;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -83,7 +84,9 @@ public class DefaultScheduler implements ICDFWScheduler {
 
     if (workerInfoList.size() == graph.getWorkers()) {
       for (JobMasterAPI.WorkerInfo workerInfos : workerInfoList) {
-        workerList.add(workerInfos.getWorkerID());
+        if (!workerList.containsAll(Collections.singleton(workerInfos.getWorkerID()))) {
+          workerList.add(workerInfos.getWorkerID());
+        }
       }
     } else if (workerInfoList.size() > graph.getWorkers()) {
       for (JobMasterAPI.WorkerInfo workerInfos : workerInfoList) {

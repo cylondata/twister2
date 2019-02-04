@@ -13,7 +13,9 @@ package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,12 +27,11 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
-import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
-import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.DataPartition;
-import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -62,7 +63,6 @@ public class KMeansJob extends TaskWorker {
 
     String dinputDirectory = kMeansJobParameters.getDatapointDirectory();
     String cinputDirectory = kMeansJobParameters.getCentroidDirectory();
-    String outputDirectory = kMeansJobParameters.getOutputDirectory();
 
     boolean shared = kMeansJobParameters.isShared();
 
@@ -101,7 +101,6 @@ public class KMeansJob extends TaskWorker {
     private static final long serialVersionUID = -1L;
 
     private DataSource<String, ?> source;
-    private DataSink<String> sink;
 
     @Override
     public void execute() {
@@ -117,7 +116,6 @@ public class KMeansJob extends TaskWorker {
             LOG.fine("We read value: " + value);
             if (value != null) {
               context.write("direct", "points", value);
-              sink.add(context.taskIndex(), value);
             }
             count += 1;
             totalCount += 1;
@@ -130,15 +128,13 @@ public class KMeansJob extends TaskWorker {
           LOG.log(Level.SEVERE, "Failed to read the input", e);
         }
       }
-      sink.persist(); //for testing writing to the file
-      context.writeEnd("direct", "Finished writing");
+      context.writeEnd("direct", "Finished");
     }
 
     public void prepare(Config cfg, TaskContext context) {
       super.prepare(cfg, context);
 
       String datainputDirectory = cfg.getStringValue(KMeansConstants.ARGS_DINPUT_DIRECTORY);
-      String outDir = cfg.getStringValue(KMeansConstants.ARGS_OUTPUT_DIRECTORY);
       ExecutionRuntime runtime = (ExecutionRuntime)
           cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
 
@@ -150,8 +146,6 @@ public class KMeansJob extends TaskWorker {
         this.source = runtime.createInput(cfg, context,
             new SharedTextInputPartitioner(new Path(datainputDirectory)));
       }
-      this.sink = new DataSink<String>(cfg,
-          new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
     }
   }
 
@@ -161,31 +155,72 @@ public class KMeansJob extends TaskWorker {
 
     private static final long serialVersionUID = -1L;
 
-    private double[][] datapoints;
     private int dimension;
+    private int count = 1;
+    private double[][] datapoint = new double[40][dimension];
+    private DataObject<double[][]> datapoints = null;
 
     @Override
     public boolean execute(IMessage message) {
-      int count = 0;
+      int j = 0;
       LOG.log(Level.INFO, "worker id " + context.getWorkerId()
           + "\ttask id:" + context.taskIndex());
       Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>) message.getContent();
       while (arrayListIterator.hasNext()) {
-        count++;
-        LOG.fine("List Values:" + arrayListIterator.next());
+        String value = String.valueOf(arrayListIterator.next());
+        if (!"Finished".equals(value)) {
+          count++;
+          break;
+        }
       }
-      LOG.info("Total Elements to be processed:" + count);
+      LOG.info("Count value:::" + count);
+      datapoint = new double[count][dimension];
+      while (arrayListIterator.hasNext()) {
+        String value = String.valueOf(arrayListIterator.next());
+        if (!"Finished".equals(value)) {
+          StringTokenizer st = new StringTokenizer(value, ",");
+          //if (!st.nextToken().equals("Finished")) {
+          String val = st.nextToken();
+          datapoint[j][0] = Double.valueOf(val);
+          datapoint[j][1] = Double.valueOf(val);
+          j++;
+          LOG.info("Dpoints::::" + Arrays.deepToString(datapoint));
+          if (j == count) {
+            break;
+          }
+          //}
+        }
+
+        /*if (!"Finished".equals(value)) {
+          count++;
+          StringTokenizer st = new StringTokenizer(value, ",");
+          if (!st.nextToken().equals("Finished")) {
+            String val = st.nextToken();
+            datapoint[j][0] = Double.valueOf(val);
+            datapoint[j][1] = Double.valueOf(val);
+            j++;
+            if (j == count) {
+              break;
+            }
+          }
+        }*/
+      }
+      datapoints.addPartition(new EntityPartition<>(0, datapoint));
+      LOG.info("Total Elements to be processed:" + count + "\t" + Arrays.deepToString(datapoint));
       return true;
     }
 
     public void prepare(Config cfg, TaskContext context) {
       super.prepare(cfg, context);
       dimension = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DIMENSIONS));
+      datapoints = new DataObjectImpl<>(config);
     }
 
     @Override
     public DataPartition<double[][]> get() {
-      return new EntityPartition<>(context.taskIndex(), datapoints);
+      LOG.info("Datapoints are::::" + datapoints);
+      //return new EntityPartition<>(context.taskIndex(), datapoints);
+      return null;
     }
   }
 }
