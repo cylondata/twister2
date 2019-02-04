@@ -15,17 +15,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.PartialDataDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
@@ -168,33 +163,5 @@ public class UnifiedDeserializer implements MessageDeSerializer {
     headerBuilder.flags(flags);
     headerBuilder.destination(destId);
     return headerBuilder.build();
-  }
-
-  /**
-   * Builds the message from the data in the data buffers.
-   *
-   * @param message the object that contains all the message details and data buffers
-   * @return the built message object
-   */
-  private Object buildMessage(ChannelMessage channelMessage, List<DataBuffer> message, int length) {
-    MessageType type = channelMessage.getDataType();
-    if (keyed) {
-      Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(channelMessage.getKeyType(),
-          message, serializer);
-      Object data;
-      if (channelMessage.getKeyType().isMultiMessageType()) {
-        //TODO :need to check correctness for multi-message
-        data = DataDeserializer.deserializeData(message,
-            length - keyPair.getKey(), serializer, type,
-            ((List) keyPair.getValue()).size());
-      } else {
-        data = DataDeserializer.deserializeData(message, length - keyPair.getKey(),
-            serializer, type);
-      }
-      return new Tuple(keyPair.getValue(), data,
-          channelMessage.getKeyType(), channelMessage.getDataType());
-    } else {
-      return DataDeserializer.deserializeData(message, length, serializer, type);
-    }
   }
 }

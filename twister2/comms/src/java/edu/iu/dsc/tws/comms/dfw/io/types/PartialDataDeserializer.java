@@ -120,7 +120,7 @@ public final class PartialDataDeserializer {
     return 0;
   }
 
-  public static int deserializeInteger(DataBuffer buffers, int byteLength,
+  private static int deserializeInteger(DataBuffer buffers, int byteLength,
                                          int[] value, int startIndex, int bufferLocation) {
     int noOfInts = byteLength / Integer.BYTES;
     int bytesRead = 0;
@@ -139,7 +139,7 @@ public final class PartialDataDeserializer {
     return bytesRead;
   }
 
-  public static int deserializeLong(DataBuffer buffers, int byteLength,
+  private static int deserializeLong(DataBuffer buffers, int byteLength,
                                        long[] value, int startIndex, int bufferLocation) {
     int noOfLongs = byteLength / Long.BYTES;
     int bytesRead = 0;
@@ -158,7 +158,7 @@ public final class PartialDataDeserializer {
     return bytesRead;
   }
 
-  public static int deserializeDouble(DataBuffer buffers, int byteLength,
+  private static int deserializeDouble(DataBuffer buffers, int byteLength,
                                     double[] value, int startIndex, int bufferLocation) {
     int noOfLongs = byteLength / Double.BYTES;
     int bytesRead = 0;
@@ -177,7 +177,7 @@ public final class PartialDataDeserializer {
     return bytesRead;
   }
 
-  public static int deserializeShort(DataBuffer buffers, int byteLength,
+  private static int deserializeShort(DataBuffer buffers, int byteLength,
                                       short[] value, int startIndex, int bufferLocation) {
     int noOfLongs = byteLength / Short.BYTES;
     int bytesRead = 0;
@@ -196,7 +196,7 @@ public final class PartialDataDeserializer {
     return bytesRead;
   }
 
-  public static int deserializeByte(DataBuffer buffers, int byteLength,
+  private static int deserializeByte(DataBuffer buffers, int byteLength,
                                      byte[] value, int startIndex, int bufferLocation) {
     int bytesRead = 0;
     int currentBufferLocation = bufferLocation;
