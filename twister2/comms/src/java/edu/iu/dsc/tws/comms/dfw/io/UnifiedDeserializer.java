@@ -73,6 +73,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       int currentLocation = 0;
       int remaining = buffer.getSize();
 
+      // if we are at the begining
       int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
       if (currentMessage.getUnPkBuffers() == 0) {
         currentLocation = 16;
@@ -85,15 +86,15 @@ public class UnifiedDeserializer implements MessageDeSerializer {
         remaining = buffer.getSize() - Integer.BYTES - 16;
         currentLocation += Integer.BYTES;
 
-        int[] value = new int[currentLocation];
-        currentMessage.setDeserializingObject(value);
-        currentMessage.setUnPkCurrentIndex(0);
+        PartialDataDeserializer.createDataObject(currentMessage, currentLocation);
+        currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
       }
 
       while (remaining > 0) {
-        // read the values from
-        int valsRead = readInt(currentMessage, currentLocation, buffer, currentObjectLength);
-        int totalBytesRead = totalBytesRead(currentMessage.getDataType(),
+        // read the values from the buffer
+        int valsRead = PartialDataDeserializer.readFromBuffer(currentMessage, currentLocation,
+            buffer, currentObjectLength, serializer);
+        int totalBytesRead = PartialDataDeserializer.totalBytesRead(currentMessage.getDataType(),
             currentMessage.getUnPkCurrentIndex(), valsRead);
         // okay we are done with this object
         if (totalBytesRead == currentObjectLength) {
@@ -111,6 +112,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
           currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
           currentLocation += Integer.BYTES;
 
+          PartialDataDeserializer.createDataObject(currentMessage, currentLocation);
           currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
         }
       }
@@ -142,21 +144,6 @@ public class UnifiedDeserializer implements MessageDeSerializer {
     return returnList;
   }
 
-  private int totalBytesRead(MessageType type, int index, int valsRead) {
-    if (type == MessageType.INTEGER) {
-      return valsRead + index * 4;
-    }
-    return 0;
-  }
-
-  private int readInt(InMessage currentMessage, int currentLocation,
-                      DataBuffer buffer, int currentObjectLength) {
-    int[] val = (int[]) currentMessage.getDeserializingObject();
-    int startIndex = currentMessage.getUnPkCurrentIndex();
-    return PartialDataDeserializer.deserializeInteger(buffer, currentObjectLength,
-        val, startIndex, currentLocation);
-  }
-
   @Override
   public Object getDataBuffers(Object partialObject, int edge) {
     return null;
@@ -171,10 +158,10 @@ public class UnifiedDeserializer implements MessageDeSerializer {
    */
   @Override
   public MessageHeader buildHeader(DataBuffer buffer, int edge) {
-    int sourceId = buffer.getByteBuffer().getInt();
-    int flags = buffer.getByteBuffer().getInt();
-    int destId = buffer.getByteBuffer().getInt();
-    int length = buffer.getByteBuffer().getInt();
+    int sourceId = buffer.getByteBuffer().getInt(0);
+    int flags = buffer.getByteBuffer().getInt(Integer.BYTES);
+    int destId = buffer.getByteBuffer().getInt(Integer.BYTES * 2);
+    int length = buffer.getByteBuffer().getInt(Integer.BYTES * 3);
 
     MessageHeader.Builder headerBuilder = MessageHeader.newBuilder(
         sourceId, edge, length);

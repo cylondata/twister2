@@ -11,5 +11,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.types;
 
-public class PartialKeySerializer {
+public class PartialKeyDeSerializer {
 }
