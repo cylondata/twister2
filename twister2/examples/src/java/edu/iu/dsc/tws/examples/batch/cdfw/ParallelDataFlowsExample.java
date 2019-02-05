@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.cdfw.BaseDriver;
 import edu.iu.dsc.tws.api.cdfw.CDFWEnv;
-import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
+import edu.iu.dsc.tws.api.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSource;
@@ -69,12 +69,14 @@ public final class ParallelDataFlowsExample {
 
       Config config = cdfwEnv.getConfig();
 
-      JobConfig jobConfig = new JobConfig();
+      DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
       DataFlowGraph job1 = generateFirstJob(config, 4, jobConfig);
       DataFlowGraph job2 = generateSecondJob(config, 4, jobConfig);
 
-      cdfwExecutor.executeCDFW(job1, job2);
+      //todo: CDFWExecutor.executeCDFW(DataFlowGraph... graph) deprecated
+      cdfwEnv.executeDataFlowGraph(job1);
+      cdfwEnv.executeDataFlowGraph(job2);
     }
   }
 
@@ -154,7 +156,7 @@ public final class ParallelDataFlowsExample {
 
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
-                                                JobConfig jobConfig) {
+                                                DafaFlowJobConfig jobConfig) {
 
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
@@ -170,13 +172,13 @@ public final class ParallelDataFlowsExample {
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph).
-        setWorkers(4).addJobConfig(jobConfig).addOutput("first_out");
+        setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("first_out");
 
     return job;
   }
 
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
-                                                 JobConfig jobConfig) {
+                                                 DafaFlowJobConfig jobConfig) {
 
     ConnectedSource connectedSource = new ConnectedSource("reduce");
     ConnectedSink connectedSink = new ConnectedSink();
@@ -192,7 +194,7 @@ public final class ParallelDataFlowsExample {
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph).
-        setWorkers(2).addJobConfig(jobConfig).addInput("first_graph", "first_out");
+        setWorkers(2).addDataFlowJobConfig(jobConfig).addInput("first_graph", "first_out");
 
     return job;
   }
