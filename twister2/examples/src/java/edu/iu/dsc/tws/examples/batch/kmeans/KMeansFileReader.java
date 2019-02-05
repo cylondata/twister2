@@ -11,8 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
-import java.util.Arrays;
-import java.util.logging.Logger;
+import java.io.IOException;
 
 import edu.iu.dsc.tws.common.config.Config;
 
@@ -22,10 +21,8 @@ import edu.iu.dsc.tws.common.config.Config;
  */
 public class KMeansFileReader {
 
-  private static final Logger LOG = Logger.getLogger(KMeansFileReader.class.getName());
-
-  private Config config;
-  private String fileSystem;
+  private final Config config;
+  private final String fileSystem;
 
   public KMeansFileReader(Config cfg, String fileSys) {
     this.config = cfg;
@@ -36,18 +33,17 @@ public class KMeansFileReader {
    * It reads the datapoints from the corresponding file system and store the data in a two
    * -dimensional array for the later processing.
    */
-  public double[][] readDataPoints(String fName, int dimension) {
+  public double[][] readDataPoints(String fName, int dimension) throws IOException {
 
     double[][] dataPoints = null;
 
     if ("local".equals(fileSystem)) {
       KMeansLocalFileReader kMeansLocalFileReader = new KMeansLocalFileReader();
-      dataPoints = kMeansLocalFileReader.readDataPoints(fName, dimension);
+      dataPoints = kMeansLocalFileReader.readDataPoints(fName, dimension, fileSystem);
     } else if ("hdfs".equals(fileSystem)) {
-      KMeansHDFSFileReader kMeansHDFSFileReader = new KMeansHDFSFileReader(this.config);
-      dataPoints = kMeansHDFSFileReader.readDataPoints(fName, dimension);
+      KMeansHDFSFileReader kMeansHDFSFileReader = new KMeansHDFSFileReader(config);
+      dataPoints = kMeansHDFSFileReader.readDataPoints(fName, dimension, fileSystem);
     }
-    LOG.fine("%%%% Datapoints:" + Arrays.deepToString(dataPoints));
     return dataPoints;
   }
 
@@ -61,12 +57,13 @@ public class KMeansFileReader {
 
     if ("local".equals(fileSystem)) {
       KMeansLocalFileReader kMeansLocalFileReader = new KMeansLocalFileReader();
-      centroids = kMeansLocalFileReader.readCentroids(fileName, dimension, numberOfClusters);
+      centroids = kMeansLocalFileReader.readCentroids(fileName, dimension, numberOfClusters,
+          fileSystem);
     } else if ("hdfs".equals(fileSystem)) {
-      KMeansHDFSFileReader kMeansHDFSFileReader = new KMeansHDFSFileReader(this.config);
-      centroids = kMeansHDFSFileReader.readCentroids(fileName, dimension, numberOfClusters);
+      KMeansHDFSFileReader kMeansHDFSFileReader = new KMeansHDFSFileReader(config);
+      centroids = kMeansHDFSFileReader.readCentroids(fileName, dimension, numberOfClusters,
+          fileSystem);
     }
-    LOG.fine("%%%% Centroids:" + Arrays.deepToString(centroids));
     return centroids;
   }
 }
