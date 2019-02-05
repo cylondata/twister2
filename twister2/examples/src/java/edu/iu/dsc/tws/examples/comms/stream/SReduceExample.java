@@ -12,16 +12,18 @@
 package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.Op;
+import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.api.stream.SReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
@@ -49,8 +51,8 @@ public class SReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    reduce = new SReduce(communicator, taskPlan, sources, target, MessageType.INTEGER,
-        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
+    reduce = new SReduce(communicator, taskPlan, sources, target, MessageType.OBJECT,
+        new ReduceFunctionImpl(),
         new FinalSingularReceiver(jobParameters.getIterations()));
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -73,6 +75,27 @@ public class SReduceExample extends BenchWorker {
       mapThread.start();
     }
   }
+
+  private class ReduceFunctionImpl implements ReduceFunction {
+
+    @Override
+    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+
+    }
+
+    @Override
+    public Object reduce(Object t1, Object t2) {
+      int[] v1 = (int[]) t1;
+      int[] v2 = (int[]) t2;
+      int[] v3 = new int[v1.length];
+
+      for (int i = 0; i < v1.length; i++) {
+        v3[i] = v1[i] + v2[i];
+      }
+      return v3;
+    }
+  }
+
 
   @Override
   protected void progressCommunication() {
@@ -110,8 +133,8 @@ public class SReduceExample extends BenchWorker {
     @Override
     public boolean receive(int target, Object object) {
       count++;
+      LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
       if (count == expected) {
-        LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
         reduceDone = true;
       }
       experimentData.setOutput(object);

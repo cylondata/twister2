@@ -13,23 +13,21 @@ package edu.iu.dsc.tws.comms.dfw;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class ChannelMessage {
-  private static final Logger LOG = Logger.getLogger(ChannelMessage.class.getName());
   /**
    * List of buffers filled with the message
    */
-  protected final List<DataBuffer> buffers = new ArrayList<DataBuffer>();
+  private final List<DataBuffer> buffers = new ArrayList<>();
 
   /**
    * List of byte arrays which are used to copy data from {@link ChannelMessage#buffers}
    * When the system runs out of receive buffers
    */
-  protected final List<DataBuffer> overflowBuffers = new ArrayList<DataBuffer>();
+  private final List<DataBuffer> overflowBuffers = new ArrayList<>();
 
   /**
    * Keeps the number of references to this message
@@ -118,7 +116,7 @@ public class ChannelMessage {
 
   public List<DataBuffer> getBuffers() {
     if (overflowBuffers.size() > 0) {
-      List<DataBuffer> total = new ArrayList<DataBuffer>();
+      List<DataBuffer> total = new ArrayList<>();
       total.addAll(overflowBuffers);
       total.addAll(buffers);
       return total;
@@ -134,14 +132,12 @@ public class ChannelMessage {
     return buffers;
   }
 
-  public int incrementRefCount() {
+  public void incrementRefCount() {
     refCount++;
-    return refCount;
   }
 
-  public int incrementRefCount(int count) {
+  public void incrementRefCount(int count) {
     refCount += count;
-    return refCount;
   }
 
   public MessageDirection getMessageDirection() {

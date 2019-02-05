@@ -461,13 +461,13 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private void sendProgress(Queue<Pair<Object, OutMessage>> pendingSendMessages, int sendId) {
     boolean canProgress = true;
 
-    StringBuilder s = new StringBuilder();
-    for (Map.Entry<Integer, Queue<DataBuffer>> e : receiveBuffers.entrySet()) {
-      s.append(e.getKey()).append(": ").append(e.getValue().size());
-    }
-
-    LOG.log(Level.INFO, String.format("%d SEND PROGRESS sendBuffers: %d recvBuffers: %s",
-        executor, sendBuffers.size(), s.toString()));
+//    StringBuilder s = new StringBuilder();
+//    for (Map.Entry<Integer, Queue<DataBuffer>> e : receiveBuffers.entrySet()) {
+//      s.append(e.getKey()).append(": ").append(e.getValue().size());
+//    }
+//
+//    LOG.log(Level.INFO, String.format("%d SEND PROGRESS sendBuffers: %d recvBuffers: %s",
+//        executor, sendBuffers.size(), s.toString()));
 
     while (pendingSendMessages.size() > 0 && canProgress) {
       // take out pending messages
@@ -495,7 +495,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
         ChannelMessage chMessage = channelMessages.peek();
         if (chMessage == null) {
-          continue;
+          break;
         }
 
         List<Integer> externalRoutes = new ArrayList<>(outMessage.getExternalSends());
@@ -519,7 +519,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         } else {
           break;
         }
-      }
+      }/* else {
+        LOG.info(String.format("%d CANNOT SENT INTERNALLY", executor));
+      }*/
     }
   }
 
@@ -677,7 +679,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   @Override
   public void onSendComplete(int id, int messageStream, ChannelMessage message) {
     // ok we don't have anything else to do
-    LOG.log(Level.INFO, String.format("%d Release: %d", executor, id));
+//    LOG.log(Level.INFO, String.format("%d Release: %d", executor, id));
     message.release();
     externalSendsPending.getAndDecrement();
   }
@@ -725,12 +727,16 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
   }
 
+  private int releaseCount = 0;
+
   private void releaseTheBuffers(int id, ChannelMessage message) {
     if (MessageDirection.IN == message.getMessageDirection()) {
       Queue<DataBuffer> list = receiveBuffers.get(id);
       for (DataBuffer buffer : message.getNormalBuffers()) {
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
+        releaseCount++;
+        LOG.info(String.format("%d RELEASE COUNT %d", executor, releaseCount));
         if (!list.offer(buffer)) {
           throw new RuntimeException(String.format("%d Buffer release failed for target %d",
               executor, message.getHeader().getDestinationIdentifier()));
