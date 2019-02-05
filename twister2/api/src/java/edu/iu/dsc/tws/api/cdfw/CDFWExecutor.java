@@ -90,8 +90,9 @@ public final class CDFWExecutor {
   /**
    * The executeCDFW method first call the schedule method to get the schedule list of the CDFW.
    * Then, it invokes the buildCDFWJob method to build the job object for the scheduled graphs.
+   * @param graph the dataflow graph
+   * @deprecated we are not using this method as of now
    */
-
   // Added to test and schedule multiple graphs at a time.
   //todo: implement this in different way, because this is not running the graphs in parallel
   @Deprecated
