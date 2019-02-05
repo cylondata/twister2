@@ -24,14 +24,14 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.cdfw.BaseDriver;
-import edu.iu.dsc.tws.api.cdfw.CDFWExecutor;
+import edu.iu.dsc.tws.api.cdfw.CDFWEnv;
+import edu.iu.dsc.tws.api.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.cdfw.CDFWWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataPartition;
@@ -52,12 +52,12 @@ public final class HelloExample {
   public static class HelloDriver extends BaseDriver {
 
     @Override
-    public void execute(Config config, CDFWExecutor exec) {
+    public void execute(CDFWEnv execEnv) {
       // build JobConfig
-      JobConfig jobConfig = new JobConfig();
+      DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
       FirstSource firstSource = new FirstSource();
       SecondSink secondSink = new SecondSink();
-      TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
+      TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(execEnv.getConfig());
       graphBuilderX.addSource("source1", firstSource, 4);
       ComputeConnection reduceConn = graphBuilderX.addSink("sink1", secondSink,
           1);
@@ -69,8 +69,8 @@ public final class HelloExample {
 
       //Invoke CDFW Submitter and send the metagraph
       DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
-          setWorkers(4).addJobConfig(jobConfig);
-      exec.execute(job);
+          setWorkers(4).addDataFlowJobConfig(dafaFlowJobConfig);
+      execEnv.executeDataFlowGraph(job);
     }
   }
 
@@ -148,9 +148,8 @@ public final class HelloExample {
         .put(SchedulerContext.DRIVER_CLASS, null).build();
 
     Twister2Job twister2Job;
-    twister2Job = Twister2Job.newBuilder()
+    twister2Job = Twister2Job.newCDFWBuilder()
         .setJobName(HelloExample.class.getName())
-        .setWorkerClass(CDFWWorker.class)
         .setDriverClass(HelloDriver.class.getName())
         .addComputeResource(1, 512, instances)
         .setConfig(jobConfig)

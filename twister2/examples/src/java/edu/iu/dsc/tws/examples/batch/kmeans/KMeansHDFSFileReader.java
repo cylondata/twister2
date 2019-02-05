@@ -36,7 +36,7 @@ import edu.iu.dsc.tws.data.utils.HdfsUtils;
  */
 public class KMeansHDFSFileReader {
 
-  private Config config;
+  private final Config config;
 
   public KMeansHDFSFileReader(Config cfg) {
     this.config = cfg;
@@ -46,8 +46,7 @@ public class KMeansHDFSFileReader {
    * It reads the datapoints from the corresponding file and store the data in a two-dimensional
    * array for the later processing.
    */
-  public double[][] readDataPoints(String fName, int dimension, String filesystem)
-      throws IOException {
+  public double[][] readDataPoints(String fName, int dimension, String filesystem) {
 
     HdfsUtils hdfsUtils = new HdfsUtils(config, fName);
     int lengthOfFile = hdfsUtils.getLengthOfFile(fName);
@@ -64,6 +63,7 @@ public class KMeansHDFSFileReader {
         value++;
       }
     } catch (IOException e) {
+      KMeansUtils.readClose();
       throw new RuntimeException("Error while reading file", e);
     } finally {
       KMeansUtils.readClose();
@@ -94,6 +94,7 @@ public class KMeansHDFSFileReader {
       }
       bufferedReader.close();
     } catch (IOException ioe) {
+      KMeansUtils.readClose();
       throw new RuntimeException("Error while reading centroids", ioe);
     } finally {
       KMeansUtils.readClose();
@@ -101,4 +102,5 @@ public class KMeansHDFSFileReader {
     return centroids;
   }
 }
+
 

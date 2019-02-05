@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import com.google.protobuf.ByteString;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.task.cdfw.CDFWWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
@@ -215,11 +216,14 @@ public final class Twister2Job {
         .loadComputeResources(config)
         .setConfig(jobConfig)
         .build();
-
   }
 
   public static Twister2JobBuilder newBuilder() {
     return new Twister2JobBuilder();
+  }
+
+  public static Twister2JobBuilder newCDFWBuilder() {
+    return (new Twister2JobBuilder()).setWorkerClass(CDFWWorker.class.getName());
   }
 
   public static final class Twister2JobBuilder {

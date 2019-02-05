@@ -20,32 +20,32 @@ public class KMeansCalculator {
   /**
    * Represents the data points to perform the calculation
    */
-  private double[][] points;
+  private final double[][] points;
 
   /**
    * Represents the centroids to perform the calculation
    */
-  private double[][] centroids;
+  private final double[][] centroids;
 
   /**
    * Represents the center sum values after the calculation
    */
-  private double[][] centerSums;
+  private final double[][] centerSums;
 
   /**
    * Represents the dimension of the data
    */
-  private int dimension;
+  private final int dimension;
 
   /**
    * Represents the start index for each task instances
    */
-  private int startIndex;
+  private final int startIndex;
 
   /**
    * Represents the end index for each task instances
    */
-  private int endIndex;
+  private final int endIndex;
 
   public KMeansCalculator(double[][] points, double[][] centres, int dim, int sIndex, int eIndex) {
     this.points = points;

@@ -24,7 +24,6 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 
 /**
@@ -53,8 +52,8 @@ public class KMeansLocalFileReader {
         }
         value++;
       }
-      bufferedReader.close();
     } catch (IOException ioe) {
+      KMeansUtils.readClose();
       throw new RuntimeException("Error while reading datapoints", ioe);
     } finally {
       KMeansUtils.readClose();
@@ -67,13 +66,13 @@ public class KMeansLocalFileReader {
    * array for the later processing. The size of the two-dimensional array should be equal to the
    * number of clusters and the dimension considered for the clustering process.
    */
-  public double[][] readCentroids(String fileName, int dimension, int numberOfClusters) {
+  public double[][] readCentroids(String fileName, int dimension, int numberOfClusters,
+                                  String filesystem) {
 
     double[][] centroids = new double[numberOfClusters][dimension];
-    BufferedReader bufferedReader;
+    BufferedReader bufferedReader = KMeansUtils.getBufferedReader(null, fileName, filesystem);
     try {
       int value = 0;
-      bufferedReader = new BufferedReader(new FileReader(fileName));
       String line;
       while ((line = bufferedReader.readLine()) != null) {
         String[] data = line.split(",");
@@ -83,11 +82,12 @@ public class KMeansLocalFileReader {
         }
         value++;
       }
-      bufferedReader.close();
     } catch (IOException ioe) {
+      KMeansUtils.readClose();
       throw new RuntimeException("Error while reading centroids", ioe);
+    } finally {
+      KMeansUtils.readClose();
     }
     return centroids;
   }
 }
-

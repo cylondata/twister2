@@ -33,6 +33,7 @@ load("//tools:rules/twister2_core.bzl", "twister2_core_lib_executor_files")
 load("//tools:rules/twister2_core.bzl", "twister2_core_lib_data_lmdb_files")
 load("//tools:rules/twister2_core.bzl", "twister2_harp_integration_files")
 load("//tools:rules/twister2_core.bzl", "twister2_dashboard_files")
+load("//tools:rules/twister2_core.bzl", "twister2_storm_files")
 load("//tools:rules/twister2_master.bzl", "twister2_master_lib_files")
 load("//tools:rules/twister2_master.bzl", "twister2_master_jersey_files")
 load(":pack_functions.bzl", "pack_tw2")
@@ -120,28 +121,40 @@ pack_tw2(
 
 pack_tw2(
     name = "twister2-ompi-lib",
-    srcs = ["@ompi3//:ompi-lib-files"],
+    srcs = select({
+                   "//tools/platform:darwin": ["@ompi3darwin//:ompi-lib-files"],
+                   "//conditions:default": ["@ompi3//:ompi-lib-files"],
+               }),
     package_dir = "ompi/lib",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-ompi-bin",
-    srcs = ["@ompi3//:ompi-bin-files"],
+    srcs = select({
+                   "//tools/platform:darwin": ["@ompi3darwin//:ompi-bin-files"],
+                   "//conditions:default": ["@ompi3//:ompi-bin-files"],
+               }),
     package_dir = "ompi/bin",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-ompi-include",
-    srcs = ["@ompi3//:ompi-include-files"],
+        srcs = select({
+                       "//tools/platform:darwin": ["@ompi3darwin//:ompi-include-files"],
+                       "//conditions:default": ["@ompi3//:ompi-include-files"],
+                   }),
     package_dir = "ompi/include",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-ompi-etc",
-    srcs = ["@ompi3//:ompi-etc-files"],
+        srcs = select({
+                       "//tools/platform:darwin": ["@ompi3darwin//:ompi-etc-files"],
+                       "//conditions:default": ["@ompi3//:ompi-etc-files"],
+                   }),
     package_dir = "ompi/etc",
     version = T2_VERSION,
 )
@@ -298,6 +311,7 @@ pack_tw2(
         ":twister2-ompi-etc",
         ":twister2-ompi-include",
         ":twister2-ompi-lib",
+        ":twister2-storm",
     ],
 )
 
@@ -465,6 +479,13 @@ pack_tw2(
 pack_tw2(
     name = "twister2-dashboard",
     srcs = twister2_dashboard_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-storm",
+    srcs = twister2_storm_files(),
     package_dir = "lib",
     version = T2_VERSION,
 )
