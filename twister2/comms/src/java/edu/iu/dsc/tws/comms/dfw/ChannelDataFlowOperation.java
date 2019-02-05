@@ -633,7 +633,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private void receiveProgress(Queue<Pair<Object, InMessage>> pendingReceiveMessages) {
     LOG.info(String.format("%d RELEASE COUNT %d attempts %d receive %d", executor, releaseCount,
         releaseAttemtCount, receiveCount));
-    while (pendingReceiveMessages.size() > 0) {
+    boolean canProgress = true;
+    while (pendingReceiveMessages.size() > 0 && canProgress) {
       Pair<Object, InMessage> pair = pendingReceiveMessages.peek();
       InMessage currentMessage = pair.getRight();
 
@@ -646,6 +647,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             ChannelMessage msg = currentMessage.getBuiltMessages().peek();
             if (msg != null) {
               if (!receiver.handleReceivedChannelMessage(msg)) {
+                canProgress = false;
                 break;
               }
               ChannelMessage releaseMsg = currentMessage.getBuiltMessages().poll();
