@@ -461,13 +461,13 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private void sendProgress(Queue<Pair<Object, OutMessage>> pendingSendMessages, int sendId) {
     boolean canProgress = true;
 
-//    StringBuilder s = new StringBuilder();
-//    for (Map.Entry<Integer, Queue<DataBuffer>> e : receiveBuffers.entrySet()) {
-//      s.append(e.getKey()).append(": ").append(e.getValue().size());
-//    }
-//
-//    LOG.log(Level.INFO, String.format("%d SEND PROGRESS sendBuffers: %d recvBuffers: %s",
-//        executor, sendBuffers.size(), s.toString()));
+    StringBuilder s = new StringBuilder();
+    for (Map.Entry<Integer, Queue<DataBuffer>> e : receiveBuffers.entrySet()) {
+      s.append(e.getKey()).append(": ").append(e.getValue().size());
+    }
+
+    LOG.log(Level.INFO, String.format("%d SEND PROGRESS sendBuffers: %d recvBuffers: %s",
+        executor, sendBuffers.size(), s.toString()));
 
     while (pendingSendMessages.size() > 0 && canProgress) {
       // take out pending messages
@@ -631,8 +631,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private int receiveCount = 0;
 
   private void receiveProgress(Queue<Pair<Object, InMessage>> pendingReceiveMessages) {
-//    LOG.info(String.format("%d RELEASE COUNT %d attempts %d receive %d", executor, releaseCount,
-//        releaseAttemtCount, receiveCount));
+    LOG.info(String.format("%d RELEASE COUNT %d attempts %d receive %d", executor, releaseCount,
+        releaseAttemtCount, receiveCount));
     while (pendingReceiveMessages.size() > 0) {
       Pair<Object, InMessage> pair = pendingReceiveMessages.peek();
       InMessage currentMessage = pair.getRight();
@@ -675,8 +675,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
   private boolean sendMessageToTarget(ChannelMessage channelMessage, int i) {
     int e = instancePlan.getExecutorForChannel(i);
-//    LOG.log(Level.INFO, String.format("%d Sending message to target %d -> %d", executor,
-//        channelMessage.getOriginatingId(), e));
+    LOG.log(Level.INFO, String.format("%d Sending message to target %d -> %d", executor,
+        channelMessage.getOriginatingId(), e));
     return channel.sendMessage(e, channelMessage, this);
   }
 

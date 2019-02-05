@@ -104,6 +104,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
             buffer, currentObjectLength, serializer);
         int totalBytesRead = PartialDataDeserializer.totalBytesRead(currentMessage.getDataType(),
             currentMessage.getUnPkCurrentIndex(), valsRead);
+        currentLocation += valsRead;
         // okay we are done with this object
         if (totalBytesRead == currentObjectLength) {
           // lets add the object
@@ -118,7 +119,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
 
         if (remaining >= Integer.BYTES) {
           currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-          remaining = buffer.getSize() - Integer.BYTES;
+          remaining = remaining - Integer.BYTES;
           currentLocation += Integer.BYTES;
 
           PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);
