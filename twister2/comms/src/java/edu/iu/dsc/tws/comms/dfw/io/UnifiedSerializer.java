@@ -76,6 +76,7 @@ public class UnifiedSerializer implements MessageSerializer {
     // we got an already serialized message, lets just return it
     ChannelMessage channelMessage = new ChannelMessage(sendMessage.getSource(),
         sendMessage.getDataType(), MessageDirection.OUT, sendMessage.getReleaseCallback());
+    buildHeader(sendMessage, channelMessage, 0);
 
     // we loop until everything is serialized
     while (sendBuffers.size() > 0
@@ -252,15 +253,15 @@ public class UnifiedSerializer implements MessageSerializer {
       int dataLength = DataSerializer.serializeData(payload,
           messageType, state, serializer);
       state.setCurretHeaderLength(dataLength + keyLength);
+      state.setPart(SerializeState.Part.HEADER);
     }
 
-    if (state.getPart() == SerializeState.Part.INIT
-        || state.getPart() == SerializeState.Part.HEADER) {
-
+    if (state.getPart() == SerializeState.Part.HEADER) {
       // first we need to copy the data size to buffer
       if (buildSubMessageHeader(targetBuffer, state.getCurretHeaderLength())) {
         return false;
       }
+      // todo: what happens if we cannot copy key
       // this call will copy the key length to buffer as well
       boolean complete = KeySerializer.copyKeyToBuffer(key,
           keyType, targetBuffer.getByteBuffer(), state, serializer);
@@ -303,7 +304,16 @@ public class UnifiedSerializer implements MessageSerializer {
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(payload, messageType, state, serializer);
       state.setCurretHeaderLength(dataLength);
+
       // add the header bytes to the total bytes
+      state.setPart(SerializeState.Part.HEADER);
+    }
+
+    if (state.getPart() == SerializeState.Part.HEADER) {
+      // first we need to copy the data size to buffer
+      if (buildSubMessageHeader(targetBuffer, state.getCurretHeaderLength())) {
+        return false;
+      }
       state.setPart(SerializeState.Part.BODY);
     }
 
@@ -312,10 +322,6 @@ public class UnifiedSerializer implements MessageSerializer {
       return false;
     }
 
-    // first we need to copy the data size to buffer
-    if (buildSubMessageHeader(targetBuffer, state.getCurretHeaderLength())) {
-      return false;
-    }
     boolean completed = DataSerializer.copyDataToBuffer(payload,
         messageType, byteBuffer, state, serializer);
     // now set the size of the buffer

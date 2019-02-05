@@ -641,20 +641,22 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       try {
         if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILDING
             || currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT) {
-          // get the first channel message
-          ChannelMessage msg = currentMessage.getBuiltMessages().peek();
-          if (msg != null) {
-            if (!receiver.handleReceivedChannelMessage(msg)) {
-              break;
+          while (currentMessage.getBuiltMessages().size() > 0) {
+            // get the first channel message
+            ChannelMessage msg = currentMessage.getBuiltMessages().peek();
+            if (msg != null) {
+              if (!receiver.handleReceivedChannelMessage(msg)) {
+                break;
+              }
+              ChannelMessage releaseMsg = currentMessage.getBuiltMessages().poll();
+              Objects.requireNonNull(releaseMsg).release();
+              releaseAttemtCount++;
             }
-            ChannelMessage releaseMsg = currentMessage.getBuiltMessages().poll();
-            Objects.requireNonNull(releaseMsg).release();
-            releaseAttemtCount++;
-          }
 
-          if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT
-              && currentMessage.getBuiltMessages().size() == 0) {
-            currentMessage.setReceivedState(InMessage.ReceivedState.RECEIVE);
+            if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT
+                && currentMessage.getBuiltMessages().size() == 0) {
+              currentMessage.setReceivedState(InMessage.ReceivedState.RECEIVE);
+            }
           }
         }
 
@@ -666,6 +668,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           receiveCount++;
           currentMessage.setReceivedState(InMessage.ReceivedState.DONE);
           pendingReceiveMessages.poll();
+        } else {
+          break;
         }
       } finally {
         lock.unlock();

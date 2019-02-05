@@ -342,6 +342,10 @@ public class InMessage {
     return unPkCurrentIndex;
   }
 
+  public void addUnPkCurrentIndex(int index) {
+    unPkCurrentIndex = unPkCurrentIndex + index;
+  }
+
   public void setUnPkCurrentIndex(int unPkCurrentIndex) {
     this.unPkCurrentIndex = unPkCurrentIndex;
   }

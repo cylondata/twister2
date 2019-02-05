@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.dfw.io.types;
 
 import java.nio.ByteBuffer;
 
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -98,22 +97,29 @@ public final class PartialDataDeserializer {
     currentMessage.setUnPkCurrentIndex(0);
   }
 
-  public static int totalBytesRead(MessageType type, int index, int valsRead) {
-    switch (type) {
+  public static int totalBytesRead(InMessage msg, int valsRead) {
+    switch (msg.getDataType()) {
       case INTEGER:
-        return valsRead + index * Integer.BYTES;
+        msg.addUnPkCurrentIndex(valsRead / Integer.BYTES);
+        return valsRead + msg.getUnPkCurrentIndex() * Integer.BYTES;
       case DOUBLE:
-        return valsRead + index * Double.BYTES;
+        msg.addUnPkCurrentIndex(valsRead / Double.BYTES);
+        return valsRead + msg.getUnPkCurrentIndex() * Double.BYTES;
       case LONG:
-        return valsRead + index * Long.BYTES;
+        msg.addUnPkCurrentIndex(valsRead / Long.BYTES);
+        return valsRead + msg.getUnPkCurrentIndex() * Long.BYTES;
       case SHORT:
-        return valsRead + index * Short.BYTES;
+        msg.addUnPkCurrentIndex(valsRead / Short.BYTES);
+        return valsRead + msg.getUnPkCurrentIndex() * Short.BYTES;
       case CHAR:
-        return valsRead + index * Character.BYTES;
+        msg.addUnPkCurrentIndex(valsRead / Character.BYTES);
+        return valsRead + msg.getUnPkCurrentIndex() * Character.BYTES;
       case BYTE:
-        return valsRead + index;
+        msg.addUnPkCurrentIndex(valsRead);
+        return valsRead + msg.getUnPkCurrentIndex();
       case OBJECT:
-        return valsRead + index;
+        msg.addUnPkCurrentIndex(valsRead);
+        return valsRead + msg.getUnPkCurrentIndex();
       default:
         break;
     }
