@@ -11,35 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.cdfw;
 
-import com.google.protobuf.Any;
+import java.util.HashMap;
 
-/**
- * Represents an event for Driver
- * <p>
- * todo: check whether this is really required!
- */
-public class DriverEvent {
-  private DriveEventType type;
-
-  private Any message;
-
-  private int senderId;
-
-  public DriverEvent(DriveEventType type, Any message, int senderId) {
-    this.type = type;
-    this.message = message;
-    this.senderId = senderId;
-  }
-
-  public DriveEventType getType() {
-    return type;
-  }
-
-  public Any getMessage() {
-    return message;
-  }
-
-  public int getSenderId() {
-    return senderId;
-  }
+public class DafaFlowJobConfig extends HashMap<String, Object> {
+  private static final long serialVersionUID = 271141341213046590L;
 }
