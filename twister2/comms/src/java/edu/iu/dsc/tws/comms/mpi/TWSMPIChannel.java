@@ -237,7 +237,7 @@ public class TWSMPIChannel implements TWSChannel {
    * Progress the communications that are pending
    */
   public void progress() {
-    LOG.info(String.format("%d PROGRESS HAPPENING", workerId));
+//    LOG.info(String.format("%d PROGRESS HAPPENING", workerId));
     // we should rate limit here
     while (pendingSends.size() > 0) {
       // post the message
@@ -292,7 +292,7 @@ public class TWSMPIChannel implements TWSChannel {
       }
     }
 
-    if (true) {
+    if (debug) {
       LOG.info(String.format(
           "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
           workerId, sendCount, completedSendCount, receiveCount,

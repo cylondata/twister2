@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -98,7 +97,8 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
 
   @Override
   public boolean progress() {
-    LOG.log(Level.INFO, String.format("%d RECEIVE COUNTS %s", executor, counts));
+//    LOG.log(Level.INFO, String.format("%d RECEIVE COUNTS %s total: %s",
+//        executor, counts, totalCounts));
     boolean needsFurtherProgress = false;
     for (int t : messages.keySet()) {
       boolean canProgress = true;

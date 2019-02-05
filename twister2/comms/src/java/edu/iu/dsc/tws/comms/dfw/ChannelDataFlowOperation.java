@@ -610,6 +610,13 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         messageDeSerializer.get(receiveId).build(currentMessage,
             currentMessage.getHeader().getEdge());
       }
+
+      // lets check weather we have read everythong
+      int readObjectNumber = currentMessage.getUnPkNumberObjects();
+      // we need to get number of tuples and get abs because we are using -1 for single messages
+      if (readObjectNumber == Math.abs(currentMessage.getHeader().getNumberTuples())) {
+        currentMessage.setReceivedState(InMessage.ReceivedState.BUILT);
+      }
     }
 
     // we remove only when the unpacking is complete and ready to receive
@@ -620,8 +627,12 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
   }
 
+  private int releaseAttemtCount = 0;
+  private int receiveCount = 0;
 
   private void receiveProgress(Queue<Pair<Object, InMessage>> pendingReceiveMessages) {
+//    LOG.info(String.format("%d RELEASE COUNT %d attempts %d receive %d", executor, releaseCount,
+//        releaseAttemtCount, receiveCount));
     while (pendingReceiveMessages.size() > 0) {
       Pair<Object, InMessage> pair = pendingReceiveMessages.peek();
       InMessage currentMessage = pair.getRight();
@@ -638,6 +649,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             }
             ChannelMessage releaseMsg = currentMessage.getBuiltMessages().poll();
             Objects.requireNonNull(releaseMsg).release();
+            releaseAttemtCount++;
           }
 
           if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT
@@ -651,7 +663,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           if (!receiver.receiveMessage(currentMessage.getHeader(), object)) {
             break;
           }
-
+          receiveCount++;
           currentMessage.setReceivedState(InMessage.ReceivedState.DONE);
           pendingReceiveMessages.poll();
         }
@@ -736,7 +748,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
         releaseCount++;
-        LOG.info(String.format("%d RELEASE COUNT %d", executor, releaseCount));
         if (!list.offer(buffer)) {
           throw new RuntimeException(String.format("%d Buffer release failed for target %d",
               executor, message.getHeader().getDestinationIdentifier()));

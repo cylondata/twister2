@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
+import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -28,6 +29,7 @@ import edu.iu.dsc.tws.comms.dfw.io.types.PartialKeyDeSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class UnifiedDeserializer implements MessageDeSerializer {
+  private static final Logger LOG = Logger.getLogger(UnifiedDeserializer.class.getName());
 
   private KryoSerializer serializer;
 
@@ -57,7 +59,6 @@ public class UnifiedDeserializer implements MessageDeSerializer {
   public Object build(Object partialObject, int edge) {
     InMessage currentMessage = (InMessage) partialObject;
     Queue<DataBuffer> buffers = currentMessage.getBuffers();
-    List<Object> returnList = new ArrayList<>();
     MessageHeader header = currentMessage.getHeader();
 
     if (header == null) {
@@ -138,13 +139,15 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       int readObjectNumber = currentMessage.getUnPkNumberObjects();
       // we need to get number of tuples and get abs because we are using -1 for single messages
       if (readObjectNumber == Math.abs(currentMessage.getHeader().getNumberTuples())) {
-        currentMessage.setReceivedState(InMessage.ReceivedState.BUILT);
+//        LOG.info(String.format("%d read objects %d buffers %d", executor,
+//            readObjectNumber, builtBuffers.size()));
         break;
       }
 
       // lets move to next
       buffer = buffers.peek();
     }
+
 
     if (builtBuffers.size() > 0) {
       ChannelMessage channelMessage = new ChannelMessage(currentMessage.getOriginatingId(),
@@ -153,8 +156,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       channelMessage.incrementRefCount();
       currentMessage.addBuiltMessage(channelMessage);
     }
-
-    return returnList;
+    return null;
   }
 
   @Override
