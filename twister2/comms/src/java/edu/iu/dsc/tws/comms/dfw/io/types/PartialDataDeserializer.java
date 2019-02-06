@@ -64,23 +64,23 @@ public final class PartialDataDeserializer {
   public static void createDataObject(InMessage currentMessage, int length) {
     switch (currentMessage.getDataType()) {
       case INTEGER:
-        int[] value = new int[length];
+        int[] value = new int[length / Integer.BYTES];
         currentMessage.setDeserializingObject(value);
         break;
       case LONG:
-        long[] longValue = new long[length];
+        long[] longValue = new long[length / Long.BYTES];
         currentMessage.setDeserializingObject(longValue);
         break;
       case DOUBLE:
-        double[] doubleValue = new double[length];
+        double[] doubleValue = new double[length / Double.BYTES];
         currentMessage.setDeserializingObject(doubleValue);
         break;
       case SHORT:
-        short[] shortValue = new short[length];
+        short[] shortValue = new short[length / Short.BYTES];
         currentMessage.setDeserializingObject(shortValue);
         break;
       case CHAR:
-        char[] charValue = new char[length];
+        char[] charValue = new char[length / Character.BYTES];
         currentMessage.setDeserializingObject(charValue);
         break;
       case BYTE:
