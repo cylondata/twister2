@@ -49,4 +49,5 @@ java_tests_debug(
     runtime_deps = [
         ":comms-tests",
     ],
+    size = "enormous",
 )

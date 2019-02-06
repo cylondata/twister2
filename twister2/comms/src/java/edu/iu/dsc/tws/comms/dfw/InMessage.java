@@ -236,6 +236,7 @@ public class InMessage {
           bufferCurrentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
           bufferPreviousReadForObject = 0;
           currentLocation += Integer.BYTES;
+          remaining = remaining - Integer.BYTES;
         } catch (IndexOutOfBoundsException e) {
           LOG.info(String.format("Exception remaining %d size %d currentLoc %d", remaining,
               buffer.getSize(), currentLocation));
