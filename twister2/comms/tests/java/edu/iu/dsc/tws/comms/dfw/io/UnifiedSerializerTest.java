@@ -31,20 +31,66 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class UnifiedSerializerTest {
   @Test
-  public void testBuildLargeMessage() {
+  public void testBuildLargeIntegerMessage() {
     int numBuffers = 10;
     int size = 1000;
+    MessageType type = MessageType.INTEGER;
+    Object data = createData(800, type);
+    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Assert.assertArrayEquals((int[]) inMessage.getDeserializedData(), (int[]) data);
+  }
+
+  @Test
+  public void testBuildLargeDoubleMessage() {
+    int numBuffers = 10;
+    int size = 1000;
+    MessageType type = MessageType.DOUBLE;
+    Object data = createData(800, type);
+    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Assert.assertArrayEquals((double[]) inMessage.getDeserializedData(), (double[]) data, .01);
+  }
+
+  @Test
+  public void testBuildLargeLongMessage() {
+    int numBuffers = 10;
+    int size = 1000;
+    MessageType type = MessageType.LONG;
+    Object data = createData(800, type);
+    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Assert.assertArrayEquals((long[]) inMessage.getDeserializedData(), (long[]) data);
+  }
+
+  @Test
+  public void testBuildLargeShortMessage() {
+    int numBuffers = 10;
+    int size = 1000;
+    MessageType type = MessageType.SHORT;
+    Object data = createData(800, type);
+    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Assert.assertArrayEquals((short[]) inMessage.getDeserializedData(), (short[]) data);
+  }
+
+  @Test
+  public void testBuildLargeByteMessage() {
+    int numBuffers = 10;
+    int size = 1000;
+    MessageType type = MessageType.BYTE;
+    Object data = createData(800, type);
+    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Assert.assertArrayEquals((byte[]) inMessage.getDeserializedData(), (byte[]) data);
+  }
+
+  private InMessage singleValueCase(int numBuffers, int size, MessageType type, Object data) {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
 
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
-        null, MessageType.INTEGER, null, null);
+        null, type, null, null);
 
     UnifiedSerializer serializer = new UnifiedSerializer(new KryoSerializer(), 0);
     serializer.init(Config.newBuilder().build(), bufferQueue, false);
 
     List<ChannelMessage> messages = new ArrayList<>();
 
-    Object data = createData(800, MessageType.INTEGER);
     while (outMessage.getSendState() != OutMessage.SendState.SERIALIZED) {
       ChannelMessage ch = (ChannelMessage) serializer.build(data, outMessage);
       messages.add(ch);
@@ -55,7 +101,7 @@ public class UnifiedSerializerTest {
 
     MessageHeader header = deserializer.buildHeader(
         messages.get(0).getBuffers().get(0), 1);
-    InMessage inMessage = new InMessage(0, MessageType.INTEGER,
+    InMessage inMessage = new InMessage(0, type,
         null, header);
     for (ChannelMessage channelMessage : messages) {
       for (DataBuffer dataBuffer : channelMessage.getBuffers()) {
@@ -63,8 +109,7 @@ public class UnifiedSerializerTest {
       }
     }
     deserializer.build(inMessage, 1);
-
-    Assert.assertArrayEquals((int[]) inMessage.getDeserializedData(), (int[]) data);
+    return inMessage;
   }
 
   @Test
@@ -107,15 +152,38 @@ public class UnifiedSerializerTest {
   }
 
   private Object createData(int size, MessageType type) {
-    switch (type) {
-      case INTEGER:
-        int[] ints = new int[size];
-        for (int i = 0; i < ints.length; i++) {
-          ints[i] = i;
-        }
-        return ints;
-      default:
-        return null;
+    if (type == MessageType.INTEGER) {
+      int[] vals = new int[size];
+      for (int i = 0; i < vals.length; i++) {
+        vals[i] = i;
+      }
+      return vals;
+    } else if (type == MessageType.LONG) {
+      long[] vals = new long[size];
+      for (int i = 0; i < vals.length; i++) {
+        vals[i] = i;
+      }
+      return vals;
+    } else if (type == MessageType.DOUBLE) {
+      double[] vals = new double[size];
+      for (int i = 0; i < vals.length; i++) {
+        vals[i] = i;
+      }
+      return vals;
+    } else if (type == MessageType.SHORT) {
+      short[] vals = new short[size];
+      for (int i = 0; i < vals.length; i++) {
+        vals[i] = (short) i;
+      }
+      return vals;
+    } else if (type == MessageType.BYTE) {
+      byte[] vals = new byte[size];
+      for (int i = 0; i < vals.length; i++) {
+        vals[i] = (byte) i;
+      }
+      return vals;
+    } else {
+      return null;
     }
   }
 
