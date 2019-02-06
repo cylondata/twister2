@@ -37,7 +37,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
 
   private boolean keyed;
 
-  public UnifiedDeserializer(KryoSerializer kryoSerializer, int exec) {
+  public  UnifiedDeserializer(KryoSerializer kryoSerializer, int exec) {
     this.serializer = kryoSerializer;
     this.executor = exec;
   }
@@ -46,6 +46,8 @@ public class UnifiedDeserializer implements MessageDeSerializer {
   public void init(Config cfg, boolean k) {
     this.keyed = k;
   }
+
+  private int bufferCount = 0;
 
   /**
    * Builds the message from the data buffers in the partialObject. Since this method
@@ -71,6 +73,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
     while (buffer != null) {
       int currentLocation = 0;
       int remaining = buffer.getSize();
+      bufferCount++;
 
       // if we are at the begining
       int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
@@ -80,6 +83,8 @@ public class UnifiedDeserializer implements MessageDeSerializer {
 
       if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {
         currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
+        LOG.info(String.format("%d number %d header read 1, buffer count %d lenght %d",
+            executor, header.getNumberTuples(), bufferCount, currentObjectLength));
         remaining = buffer.getSize() - Integer.BYTES - 16;
         currentLocation += Integer.BYTES;
 

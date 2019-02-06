@@ -364,9 +364,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         completedReceives, buffersReceived));
 
     // we need to free the buffer because we don't have space
-//    if (releaseBuffer) {
-//      freeReceiveBuffers(id);
-//    }
+    // if (releaseBuffer) {
+    //   freeReceiveBuffers(id);
+    // }
   }
 
   /**

@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessageReleaseCallback;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
-import edu.iu.dsc.tws.comms.dfw.OutMessage;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -134,9 +133,9 @@ public class Test {
     channelMessage.setKeyType(MessageType.INTEGER);
 
     int di = -1;
-    OutMessage sendMessage = new OutMessage(source, channelMessage, 0,
-        di, 0, 0, null, null);
-    multiMessageSerializer.build(object, sendMessage);
+//    OutMessage sendMessage = new OutMessage(source, channelMessage, 0,
+//        di, 0, 0, null, null);
+//    multiMessageSerializer.build(object, sendMessage);
 
     return channelMessage;
   }

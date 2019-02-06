@@ -15,11 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class InMessage {
+  private static final Logger LOG = Logger.getLogger(InMessage.class.getName());
+
   public enum ReceivedState {
     INIT,
     BUILDING,
@@ -213,6 +216,7 @@ public class InMessage {
       // amount of data in the buffer
       if (moreToReadForCurrentObject <= remaining) {
         bufferSeenObjects++;
+        bufferPreviousReadForObject = 0;
         remaining = remaining - moreToReadForCurrentObject;
         currentLocation += moreToReadForCurrentObject;
       } else {
@@ -228,9 +232,15 @@ public class InMessage {
 
       // we can read another object
       if (remaining >= Integer.BYTES) {
-        bufferCurrentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-        bufferPreviousReadForObject = 0;
-        currentLocation += Integer.BYTES;
+        try {
+          bufferCurrentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
+          bufferPreviousReadForObject = 0;
+          currentLocation += Integer.BYTES;
+        } catch (IndexOutOfBoundsException e) {
+          LOG.info(String.format("Exception remaining %d size %d currentLoc %d", remaining,
+              buffer.getSize(), currentLocation));
+          throw e;
+        }
       } else {
         // we need to break, we set the length to -1 because we need to read the length
         // in next buffer

@@ -1,7 +1,7 @@
 twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel"
 
 # the buffer size to be used
-network.buffer.size: 1024000
+network.buffer.size: 1000
 
 # number of send buffers to be used
 network.sendBuffer.count: 4
