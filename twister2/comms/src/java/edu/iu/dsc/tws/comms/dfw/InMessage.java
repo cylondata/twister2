@@ -184,11 +184,10 @@ public class InMessage {
    * @return true if all the buffers for a message is received
    */
   public boolean addBufferAndCalculate(DataBuffer buffer) {
-    buffers.add(buffer);
     addedBuffers++;
 
     int expectedObjects = header.getNumberTuples();
-    int remaining = 0;
+    int remaining = buffer.getSize();
     int currentLocation = 0;
 
     if (expectedObjects == 0) {
@@ -200,11 +199,11 @@ public class InMessage {
     if (addedBuffers == 1) {
       currentLocation = 16;
       bufferCurrentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-      remaining = buffer.getSize() - Integer.BYTES - 16;
+      remaining = remaining - Integer.BYTES - 16;
       currentLocation += Integer.BYTES;
     } else if (bufferCurrentObjectLength == -1) {
       bufferCurrentObjectLength = buffer.getByteBuffer().getInt(0);
-      remaining = buffer.getSize() - Integer.BYTES - 16;
+      remaining = remaining - Integer.BYTES;
       currentLocation += Integer.BYTES;
     }
 
@@ -239,7 +238,7 @@ public class InMessage {
         break;
       }
     }
-
+    buffers.add(buffer);
     return complete;
   }
 

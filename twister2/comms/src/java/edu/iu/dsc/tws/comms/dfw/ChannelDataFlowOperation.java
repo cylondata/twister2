@@ -328,6 +328,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     return offer;
   }
 
+  private int completedReceives = 0;
+
+  private int buffersReceived = 0;
   @Override
   public void onReceiveComplete(int id, int e, DataBuffer buffer, boolean releaseBuffer) {
     // we need to try to build the message here, we may need many more messages to complete
@@ -344,7 +347,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         currentMessage.setKeyType(receiveKeyType);
       }
       currentMessages.put(id, currentMessage);
-
+      LOG.info(String.format("%d number of messages %d", executor, header.getNumberTuples()));
       // we add the message immediately to the deserialization as we can deserialize partially
       Queue<InMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
       if (!deserializeQueue.offer(currentMessage)) {
@@ -352,15 +355,18 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             + deserializeQueue.size());
       }
     }
-
+    buffersReceived++;
     if (currentMessage.addBufferAndCalculate(buffer)) {
+      completedReceives++;
       currentMessages.remove(id);
     }
+    LOG.info(String.format("%d completed recvs %d buffers %d", executor,
+        completedReceives, buffersReceived));
 
     // we need to free the buffer because we don't have space
-    if (releaseBuffer) {
-      freeReceiveBuffers(id);
-    }
+//    if (releaseBuffer) {
+//      freeReceiveBuffers(id);
+//    }
   }
 
   /**
