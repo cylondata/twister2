@@ -112,25 +112,122 @@ public class UnifiedSerializerTest {
     return inMessage;
   }
 
+  @SuppressWarnings("Unchecked")
   @Test
-  public void testBuildLargeListMessage() {
+  public void testBuildLargeListIntMessage() {
     int numBuffers = 16;
     int size = 1000;
-    BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
+    List<Object> data = new ArrayList<>();
+    for (int i = 0; i < 4; i++) {
+      Object o = createData(800, MessageType.INTEGER);
+      data.add(o);
+    }
 
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.INTEGER);
+    List<Object> result = (List<Object>) inMessage.getDeserializedData();
+    for (int i = 0; i < result.size(); i++) {
+      Object exp = result.get(i);
+      Object d = data.get(i);
+
+      Assert.assertArrayEquals((int[]) exp, (int[]) d);
+    }
+  }
+
+  @SuppressWarnings("Unchecked")
+  @Test
+  public void testBuildLargeListLongMessage() {
+    int numBuffers = 32;
+    int size = 1000;
+    List<Object> data = new ArrayList<>();
+    for (int i = 0; i < 4; i++) {
+      Object o = createData(800, MessageType.LONG);
+      data.add(o);
+    }
+
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.LONG);
+    List<Object> result = (List<Object>) inMessage.getDeserializedData();
+    for (int i = 0; i < result.size(); i++) {
+      Object exp = result.get(i);
+      Object d = data.get(i);
+
+      Assert.assertArrayEquals((long[]) exp, (long[]) d);
+    }
+  }
+
+  @SuppressWarnings("Unchecked")
+  @Test
+  public void testBuildLargeListDoubleMessage() {
+    int numBuffers = 32;
+    int size = 1000;
+    List<Object> data = new ArrayList<>();
+    for (int i = 0; i < 4; i++) {
+      Object o = createData(800, MessageType.DOUBLE);
+      data.add(o);
+    }
+
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.DOUBLE);
+    List<Object> result = (List<Object>) inMessage.getDeserializedData();
+    for (int i = 0; i < result.size(); i++) {
+      Object exp = result.get(i);
+      Object d = data.get(i);
+
+      Assert.assertArrayEquals((double[]) exp, (double[]) d, 0.01);
+    }
+  }
+
+  @SuppressWarnings("Unchecked")
+  @Test
+  public void testBuildLargeListShortMessage() {
+    int numBuffers = 32;
+    int size = 1000;
+    List<Object> data = new ArrayList<>();
+    for (int i = 0; i < 4; i++) {
+      Object o = createData(800, MessageType.SHORT);
+      data.add(o);
+    }
+
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.SHORT);
+    List<Object> result = (List<Object>) inMessage.getDeserializedData();
+    for (int i = 0; i < result.size(); i++) {
+      Object exp = result.get(i);
+      Object d = data.get(i);
+
+      Assert.assertArrayEquals((short[]) exp, (short[]) d);
+    }
+  }
+
+  @SuppressWarnings("Unchecked")
+  @Test
+  public void testBuildLargeListByteMessage() {
+    int numBuffers = 32;
+    int size = 1000;
+    List<Object> data = new ArrayList<>();
+    for (int i = 0; i < 4; i++) {
+      Object o = createData(800, MessageType.BYTE);
+      data.add(o);
+    }
+
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.BYTE);
+    List<Object> result = (List<Object>) inMessage.getDeserializedData();
+    for (int i = 0; i < result.size(); i++) {
+      Object exp = result.get(i);
+      Object d = data.get(i);
+
+      Assert.assertArrayEquals((byte[]) exp, (byte[]) d);
+    }
+  }
+
+  private InMessage listValueCase(int numBuffers, int size, List<Object> data, MessageType type) {
+    BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
-        null, MessageType.INTEGER, null, null);
+        null, type, null, null);
 
     UnifiedSerializer serializer = new UnifiedSerializer(new KryoSerializer(), 0);
     serializer.init(Config.newBuilder().build(), bufferQueue, false);
 
     List<ChannelMessage> messages = new ArrayList<>();
 
-    List<Object> data = new ArrayList<>();
-    for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageType.INTEGER);
-      data.add(o);
-    }
+
     while (outMessage.getSendState() != OutMessage.SendState.SERIALIZED) {
       ChannelMessage ch = (ChannelMessage) serializer.build(data, outMessage);
       messages.add(ch);
@@ -141,7 +238,7 @@ public class UnifiedSerializerTest {
 
     MessageHeader header = deserializer.buildHeader(
         messages.get(0).getBuffers().get(0), 1);
-    InMessage inMessage = new InMessage(0, MessageType.INTEGER,
+    InMessage inMessage = new InMessage(0, type,
         null, header);
     for (ChannelMessage channelMessage : messages) {
       for (DataBuffer dataBuffer : channelMessage.getBuffers()) {
@@ -149,6 +246,7 @@ public class UnifiedSerializerTest {
       }
     }
     deserializer.build(inMessage, 1);
+    return inMessage;
   }
 
   private Object createData(int size, MessageType type) {
