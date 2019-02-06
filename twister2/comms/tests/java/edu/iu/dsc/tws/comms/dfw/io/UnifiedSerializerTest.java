@@ -54,21 +54,66 @@ public class UnifiedSerializerTest {
     deserializer.init(Config.newBuilder().build(), false);
 
     MessageHeader header = deserializer.buildHeader(
-        outMessage.getChannelMessages().peek().getBuffers().get(0), 1);
+        messages.get(0).getBuffers().get(0), 1);
     InMessage inMessage = new InMessage(0, MessageType.INTEGER,
         null, header);
     for (ChannelMessage channelMessage : messages) {
-      inMessage.addBuiltMessage(channelMessage);
+      for (DataBuffer dataBuffer : channelMessage.getBuffers()) {
+        inMessage.addBufferAndCalculate(dataBuffer);
+      }
     }
     deserializer.build(inMessage, 1);
 
-    Assert.assertEquals(inMessage.getReceivedState(), InMessage.ReceivedState.BUILT);
+    Assert.assertArrayEquals((int[]) inMessage.getDeserializedData(), (int[]) data);
+  }
+
+  @Test
+  public void testBuildLargeListMessage() {
+    int numBuffers = 16;
+    int size = 1000;
+    BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
+
+    OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
+        null, MessageType.INTEGER, null, null);
+
+    UnifiedSerializer serializer = new UnifiedSerializer(new KryoSerializer(), 0);
+    serializer.init(Config.newBuilder().build(), bufferQueue, false);
+
+    List<ChannelMessage> messages = new ArrayList<>();
+
+    List<Object> data = new ArrayList<>();
+    for (int i = 0; i < 4; i++) {
+      Object o = createData(800, MessageType.INTEGER);
+      data.add(o);
+    }
+    while (outMessage.getSendState() != OutMessage.SendState.SERIALIZED) {
+      ChannelMessage ch = (ChannelMessage) serializer.build(data, outMessage);
+      messages.add(ch);
+    }
+
+    UnifiedDeserializer deserializer = new UnifiedDeserializer(new KryoSerializer(), 0);
+    deserializer.init(Config.newBuilder().build(), false);
+
+    MessageHeader header = deserializer.buildHeader(
+        messages.get(0).getBuffers().get(0), 1);
+    InMessage inMessage = new InMessage(0, MessageType.INTEGER,
+        null, header);
+    for (ChannelMessage channelMessage : messages) {
+      for (DataBuffer dataBuffer : channelMessage.getBuffers()) {
+        inMessage.addBufferAndCalculate(dataBuffer);
+      }
+    }
+    deserializer.build(inMessage, 1);
   }
 
   private Object createData(int size, MessageType type) {
     switch (type) {
       case INTEGER:
-        return new int[size];
+        int[] ints = new int[size];
+        for (int i = 0; i < ints.length; i++) {
+          ints[i] = i;
+        }
+        return ints;
       default:
         return null;
     }
