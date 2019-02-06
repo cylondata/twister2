@@ -18,7 +18,7 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.Collector;
+import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
@@ -32,21 +32,20 @@ import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
-import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class KMeansJob extends TaskWorker {
+public class KMeansDataParallelWorker extends TaskWorker {
+
   private static final Logger LOG = Logger.getLogger(KMeansJob.class.getName());
 
   @SuppressWarnings("unchecked")
@@ -68,8 +67,6 @@ public class KMeansJob extends TaskWorker {
       try {
         KMeansDataGenerator.generateData(
             "txt", new Path(dinputDirectory), numFiles, dsize, 100, dimension);
-        /*KMeansDataGenerator.generateData(
-            "txt", new Path(cinputDirectory), numFiles, csize, 100, dimension);*/
       } catch (IOException ioe) {
         throw new RuntimeException("Failed to create input data:", ioe);
       }
@@ -77,7 +74,7 @@ public class KMeansJob extends TaskWorker {
 
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     KMeansDataParallelSource sourceTask = new KMeansDataParallelSource();
-    KMeansDataParallelSink sinkTask = new KMeansDataParallelSink();
+    KMeansDataParallelSink sinkTask = new KMeansDataParallelSink("out");
 
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", sinkTask,
@@ -97,8 +94,7 @@ public class KMeansJob extends TaskWorker {
     private static final long serialVersionUID = -1L;
 
     private DataSource<String, ?> source;
-
-    private DataSink<String> sink;
+    private DataSink<String> sink; //TODO:remove the sink object
 
     @Override
     public void execute() {
@@ -110,9 +106,10 @@ public class KMeansJob extends TaskWorker {
         try {
           int count = 0;
           while (!inputSplit.reachedEnd()) {
-            String value = inputSplit.nextRecord(null);
+            String value = inputSplit.nextRecord(null); //Bug here...
             if (value != null) {
-              LOG.info("We read value: " + value);
+              LOG.info("We read value: " + value); //First index reads more value than for
+              //example 100,index 0 reads 51 & 1 reads 49.
               sink.add(context.taskIndex(), value);
               context.write("direct", value);
               count += 1;
@@ -153,7 +150,7 @@ public class KMeansJob extends TaskWorker {
     }
   }
 
-  public static class KMeansDataParallelSink extends BaseSink implements Collector {
+  public static class KMeansDataParallelSink extends ConnectedSink {
 
     private static final Logger LOG = Logger.getLogger(KMeansDataParallelSink.class.getName());
 
@@ -164,13 +161,18 @@ public class KMeansJob extends TaskWorker {
     private double[][] datapoint;
     // make the dynamic value for the row
     private DataObject<double[][]> datapoints = null;
+    private String name;
+
+    public KMeansDataParallelSink(String outName) {
+      this.name = outName;
+    }
 
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.INFO, "worker id " + context.getWorkerId()
           + "\ttask id:" + context.taskIndex());
       Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>) message.getContent();
-      datapoint = new double[dsize + 1][dimension]; //Replace with size if possible
+      datapoint = new double[dsize + 1][dimension]; //Remove +1 after fixing the bug...
       int value = 0;
       while (arrayListIterator.hasNext()) {
         String val = String.valueOf(arrayListIterator.next());
@@ -180,8 +182,9 @@ public class KMeansJob extends TaskWorker {
         }
         value++;
       }
-      LOG.info("Dpoints::::" + Arrays.deepToString(datapoint));
+      LOG.info("Dpoints::::" + Arrays.deepToString(datapoint)); //for testing
       datapoints.addPartition(new EntityPartition<>(0, datapoint));
+      //context.writeEnd("partition", datapoints);
       return true;
     }
 
@@ -191,13 +194,6 @@ public class KMeansJob extends TaskWorker {
       dsize = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DSIZE))
           / context.getParallelism();
       datapoints = new DataObjectImpl<>(config);
-    }
-
-    @Override
-    public DataPartition<double[][]> get() {
-      LOG.info("Datapoints are::::" + datapoints);
-      //return new EntityPartition<>(context.taskIndex(), datapoints);
-      return null;
     }
   }
 }

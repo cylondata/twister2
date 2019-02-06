@@ -15,24 +15,28 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.cdfw.task.ConnectedSource;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
+import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
+import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
-import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class DataParallelSourceImpl extends BaseSource {
+public abstract class DataParallelSourceImpl extends ConnectedSource {
 
   private static final Logger LOG = Logger.getLogger(DataParallelSourceImpl.class.getName());
 
   private static final long serialVersionUID = -1L;
 
   private DataSource<String, ?> source;
+  private DataSink<String> sink; //TODO:remove the sink object
 
   @Override
   public void execute() {
@@ -44,14 +48,17 @@ public class DataParallelSourceImpl extends BaseSource {
       try {
         int count = 0;
         while (!inputSplit.reachedEnd()) {
-          String value = inputSplit.nextRecord(null);
-          LOG.fine("We read value: " + value);
+          String value = inputSplit.nextRecord(null); //Bug here...
           if (value != null) {
-            context.write("direct", "points", value);
+            LOG.fine("We read value: " + value); //First index reads more value than for
+            //example 100,index 0 reads 51 & 1 reads 49.
+            sink.add(context.taskIndex(), value);
+            context.write("direct", value);
+            count += 1;
+            totalCount += 1;
           }
-          count += 1;
-          totalCount += 1;
         }
+        LOG.info("************************************************************************");
         splitCount += 1;
         inputSplit = source.getNextSplit(context.taskIndex());
         LOG.info("Task index:" + context.taskIndex() + " count: " + count
@@ -60,7 +67,8 @@ public class DataParallelSourceImpl extends BaseSource {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
       }
     }
-    context.writeEnd("direct", "Finished writing");
+    sink.persist();
+    context.end("direct");
   }
 
   public void prepare(Config cfg, TaskContext context) {
@@ -69,6 +77,7 @@ public class DataParallelSourceImpl extends BaseSource {
     String datainputDirectory = cfg.getStringValue(KMeansConstants.ARGS_DINPUT_DIRECTORY);
     ExecutionRuntime runtime = (ExecutionRuntime)
         cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+    String outDir = cfg.getStringValue(KMeansConstants.ARGS_OUTPUT_DIRECTORY);
 
     boolean shared = cfg.getBooleanValue(KMeansConstants.ARGS_SHARED_FILE_SYSTEM);
     if (!shared) {
@@ -78,5 +87,7 @@ public class DataParallelSourceImpl extends BaseSource {
       this.source = runtime.createInput(cfg, context,
           new SharedTextInputPartitioner(new Path(datainputDirectory)));
     }
+    this.sink = new DataSink<String>(cfg,
+        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
   }
 }

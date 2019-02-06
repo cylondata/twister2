@@ -21,7 +21,7 @@ public final class KMeansConstants {
 
   public static final String ARGS_WORKERS = "workers";
   public static final String ARGS_DIMENSIONS = "dim";
-  public static final String ARGS_PARALLELISM_VALUE = "parallel";
+  public static final String ARGS_PARALLELISM_VALUE = "parallelism";
   public static final String ARGS_SHARED_FILE_SYSTEM = "fShared";
   public static final String ARGS_DSIZE = "dsize";
   public static final String ARGS_CSIZE = "csize";
@@ -29,5 +29,6 @@ public final class KMeansConstants {
   public static final String ARGS_CINPUT_DIRECTORY = "cinput";
   public static final String ARGS_OUTPUT_DIRECTORY = "output";
   public static final String ARGS_NUMBER_OF_FILES = "nFiles";
-
+  public static final String ARGS_NUMBER_OF_CLUSTERS = "clusters";
+  public static final String ARGS_FILE_SYSTEM = "filesys";
 }

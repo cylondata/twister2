@@ -74,6 +74,19 @@ public final class KMeansJobParameters {
    */
   private int parallelismValue;
 
+  public int getNumberOfClusters() {
+    return numberOfClusters;
+  }
+
+  private int numberOfClusters;
+
+
+  public String getFilesystem() {
+    return filesystem;
+  }
+
+  private String filesystem;
+
   public int getWorkers() {
     return workers;
   }
@@ -130,6 +143,7 @@ public final class KMeansJobParameters {
     String datapointDirectory = cfg.getStringValue(KMeansConstants.ARGS_DINPUT_DIRECTORY);
     String centroidDirectory = cfg.getStringValue(KMeansConstants.ARGS_CINPUT_DIRECTORY);
     String outputDirectory = cfg.getStringValue(KMeansConstants.ARGS_OUTPUT_DIRECTORY);
+    String fileSystem = cfg.getStringValue(KMeansConstants.ARGS_FILE_SYSTEM);
 
     int workers = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_WORKERS));
     int dsize = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DSIZE));
@@ -138,6 +152,8 @@ public final class KMeansJobParameters {
     int parallelismVal = Integer.parseInt(
         cfg.getStringValue(KMeansConstants.ARGS_PARALLELISM_VALUE));
     int numFiles = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_NUMBER_OF_FILES));
+    int numberOfClusters = Integer.parseInt(
+        cfg.getStringValue(KMeansConstants.ARGS_NUMBER_OF_CLUSTERS));
     boolean shared = cfg.getBooleanValue(KMeansConstants.ARGS_SHARED_FILE_SYSTEM);
 
     KMeansJobParameters jobParameters = new KMeansJobParameters(workers);
@@ -152,6 +168,8 @@ public final class KMeansJobParameters {
     jobParameters.csize = csize;
     jobParameters.shared = shared;
     jobParameters.parallelismValue = parallelismVal;
+    jobParameters.filesystem = fileSystem;
+    jobParameters.numberOfClusters = numberOfClusters;
 
     return jobParameters;
   }

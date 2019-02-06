@@ -14,67 +14,55 @@ package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.Collector;
+import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
-import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class DataParallelSinkImpl extends BaseSink implements Collector {
+public abstract class DataParallelSinkImpl extends ConnectedSink {
 
   private static final Logger LOG = Logger.getLogger(DataParallelSinkImpl.class.getName());
 
   private static final long serialVersionUID = -1L;
 
+  private int dsize;
   private int dimension;
-  private int count = 1;
   private double[][] datapoint;
-  private DataObject<double[][]> datapoints;
+  // make the dynamic value for the row
+  private DataObject<double[][]> datapoints = null;
 
   @Override
   public boolean execute(IMessage message) {
-    int j = 0;
     LOG.log(Level.INFO, "worker id " + context.getWorkerId()
         + "\ttask id:" + context.taskIndex());
     Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>) message.getContent();
+    datapoint = new double[dsize + 1][dimension]; //Remove +1 after fixing the bug...
+    int value = 0;
     while (arrayListIterator.hasNext()) {
-      String value = String.valueOf(arrayListIterator.next());
-      if (!"Finished".equals(value)) {
-        count++;
+      String val = String.valueOf(arrayListIterator.next());
+      String[] data = val.split(",");
+      for (int i = 0; i < dimension; i++) {
+        datapoint[value][i] = Double.parseDouble(data[i].trim());
       }
-      datapoint = new double[count][dimension];
-      StringTokenizer st = new StringTokenizer(value, ",");
-      if (!st.nextToken().equals("Finished")) {
-        String val = st.nextToken();
-        datapoint[j][0] = Double.valueOf(val);
-        datapoint[j][1] = Double.valueOf(val);
-        j++;
-        if (j == 40) {
-          break;
-        }
-      }
-      datapoints.addPartition(new EntityPartition<>(0, datapoint));
+      value++;
     }
-    LOG.info("Total Elements to be processed:" + count + "\t" + Arrays.toString(datapoint));
+
+    LOG.info("Dpoints::::" + Arrays.deepToString(datapoint)); //for testing
+    datapoints.addPartition(new EntityPartition<>(0, datapoint));
     return true;
   }
 
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
     dimension = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DIMENSIONS));
-    datapoints = new DataObjectImpl<>(config);
-  }
-
-  @Override
-  public DataPartition<double[][]> get() {
-    return null;
+    dsize = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DSIZE))
+        / context.getParallelism();
+    this.datapoints = new DataObjectImpl<>(config);
   }
 }
