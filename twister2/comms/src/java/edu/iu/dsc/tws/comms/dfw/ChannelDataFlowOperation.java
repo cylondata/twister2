@@ -654,11 +654,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
               Objects.requireNonNull(releaseMsg).release();
               releaseAttemtCount++;
             }
+          }
 
-            if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT
-                && currentMessage.getBuiltMessages().size() == 0) {
-              currentMessage.setReceivedState(InMessage.ReceivedState.RECEIVE);
-            }
+          if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT
+              && currentMessage.getBuiltMessages().size() == 0 && canProgress) {
+            currentMessage.setReceivedState(InMessage.ReceivedState.RECEIVE);
           }
         }
 
