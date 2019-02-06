@@ -133,6 +133,7 @@ public class KMeansJob extends TaskWorker {
       int endIndex = startIndex + datapoints.length / context.getParallelism();
       int dim = Integer.parseInt(config.getStringValue("dim"));
 
+      LOG.info("Start index and end index:" + startIndex + "\t" + endIndex);
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim, startIndex, endIndex);
       double[][] kMeansCenters = kMeansCalculator.calculate();
       context.writeEnd("all-reduce", kMeansCenters);
