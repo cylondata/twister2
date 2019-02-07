@@ -86,8 +86,8 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       if (keyed) {
         if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {
           currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-          LOG.info(String.format("%d number %d header read 1, buffer count %d lenght %d",
-              executor, header.getNumberTuples(), bufferCount, currentObjectLength));
+//          LOG.info(String.format("%d number %d header read 1, buffer count %d lenght %d",
+//              executor, header.getNumberTuples(), bufferCount, currentObjectLength));
           remaining = buffer.getSize() - Integer.BYTES - 16;
           currentLocation += Integer.BYTES;
         }
@@ -113,8 +113,8 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       } else {
         if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {
           currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-          LOG.info(String.format("%d number %d header read 1, buffer count %d lenght %d",
-              executor, header.getNumberTuples(), bufferCount, currentObjectLength));
+//          LOG.info(String.format("%d number %d header read 1, buffer count %d lenght %d",
+//              executor, header.getNumberTuples(), bufferCount, currentObjectLength));
           remaining = buffer.getSize() - Integer.BYTES - 16;
           currentLocation += Integer.BYTES;
           PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);

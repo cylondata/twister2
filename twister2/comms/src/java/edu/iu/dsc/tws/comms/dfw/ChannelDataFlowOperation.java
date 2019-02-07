@@ -347,7 +347,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         currentMessage.setKeyType(receiveKeyType);
       }
       currentMessages.put(id, currentMessage);
-      LOG.info(String.format("%d number of messages %d", executor, header.getNumberTuples()));
+//      LOG.info(String.format("%d number of messages %d", executor, header.getNumberTuples()));
       // we add the message immediately to the deserialization as we can deserialize partially
       Queue<InMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
       if (!deserializeQueue.offer(currentMessage)) {
@@ -360,8 +360,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       completedReceives++;
       currentMessages.remove(id);
     }
-    LOG.info(String.format("%d completed recvs %d buffers %d", executor,
-        completedReceives, buffersReceived));
+//    LOG.info(String.format("%d completed recvs %d buffers %d", executor,
+//        completedReceives, buffersReceived));
 
     // we need to free the buffer because we don't have space
     // if (releaseBuffer) {
@@ -467,13 +467,13 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private void sendProgress(Queue<Pair<Object, OutMessage>> pendingSendMessages, int sendId) {
     boolean canProgress = true;
 
-    StringBuilder s = new StringBuilder();
-    for (Map.Entry<Integer, Queue<DataBuffer>> e : receiveBuffers.entrySet()) {
-      s.append(e.getKey()).append(": ").append(e.getValue().size());
-    }
-
-    LOG.log(Level.INFO, String.format("%d SEND PROGRESS sendBuffers: %d recvBuffers: %s",
-        executor, sendBuffers.size(), s.toString()));
+//    StringBuilder s = new StringBuilder();
+//    for (Map.Entry<Integer, Queue<DataBuffer>> e : receiveBuffers.entrySet()) {
+//      s.append(e.getKey()).append(": ").append(e.getValue().size());
+//    }
+//
+//    LOG.log(Level.INFO, String.format("%d SEND PROGRESS sendBuffers: %d recvBuffers: %s",
+//        executor, sendBuffers.size(), s.toString()));
 
     while (pendingSendMessages.size() > 0 && canProgress) {
       // take out pending messages
@@ -637,8 +637,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private int receiveCount = 0;
 
   private void receiveProgress(Queue<Pair<Object, InMessage>> pendingReceiveMessages) {
-    LOG.info(String.format("%d RELEASE COUNT %d attempts %d receive %d", executor, releaseCount,
-        releaseAttemtCount, receiveCount));
+//    LOG.info(String.format("%d RELEASE COUNT %d attempts %d receive %d", executor, releaseCount,
+//        releaseAttemtCount, receiveCount));
     boolean canProgress = true;
     while (pendingReceiveMessages.size() > 0 && canProgress) {
       Pair<Object, InMessage> pair = pendingReceiveMessages.peek();
@@ -687,8 +687,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
   private boolean sendMessageToTarget(ChannelMessage channelMessage, int i) {
     int e = instancePlan.getExecutorForChannel(i);
-    LOG.log(Level.INFO, String.format("%d Sending message to target %d -> %d", executor,
-        channelMessage.getOriginatingId(), e));
+//    LOG.log(Level.INFO, String.format("%d Sending message to target %d -> %d", executor,
+//        channelMessage.getOriginatingId(), e));
     return channel.sendMessage(e, channelMessage, this);
   }
 
