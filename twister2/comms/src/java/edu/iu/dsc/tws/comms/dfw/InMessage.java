@@ -380,6 +380,7 @@ public class InMessage {
 
   public void resetUnPk() {
     unPkCurrentObjectLength = -1;
+    unPkCurrentKeyLength = -1;
     unPkCurrentIndex = 0;
     deserializingObject = null;
   }
@@ -397,10 +398,9 @@ public class InMessage {
   }
 
   public void resetUnPkKey() {
-    unPkCurrentObjectLength = -1;
     unPkCurrentIndex = 0;
+    deserializedKey = deserializingKey;
     deserializingKey = null;
     readingKey = false;
-    deserializedKey = deserializingKey;
   }
 }
