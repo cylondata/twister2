@@ -96,6 +96,8 @@ public class UnifiedDeserializer implements MessageDeSerializer {
           // we assume we can read the key length from here
           Pair<Integer, Integer> keyLength = PartialKeyDeSerializer.createKey(
               currentMessage, buffer, currentLocation);
+          remaining = remaining - keyLength.getRight();
+          currentLocation += keyLength.getRight();
 
           // we have to set the current object length
           currentObjectLength = currentObjectLength - keyLength.getLeft();
@@ -193,9 +195,8 @@ public class UnifiedDeserializer implements MessageDeSerializer {
               // we assume we can read the key length from here
               Pair<Integer, Integer> keyLength = PartialKeyDeSerializer.createKey(
                   currentMessage, buffer, currentLocation);
-              // we advance the read bytes amount
-              currentLocation += keyLength.getRight();
               remaining = remaining - keyLength.getRight();
+              currentLocation += keyLength.getRight();
 
               // we have to set the current object length
               currentObjectLength = currentObjectLength - keyLength.getLeft();
