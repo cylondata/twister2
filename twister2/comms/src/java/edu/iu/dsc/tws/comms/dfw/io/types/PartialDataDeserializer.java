@@ -209,7 +209,7 @@ public final class PartialDataDeserializer {
     return bytesRead;
   }
 
-  private static int deserializeByte(DataBuffer buffers, int byteLength,
+  public static int deserializeByte(DataBuffer buffers, int byteLength,
                                      byte[] value, int startIndex, int bufferLocation) {
     int bytesRead = 0;
     int currentBufferLocation = bufferLocation;

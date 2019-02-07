@@ -261,14 +261,15 @@ public class UnifiedSerializer implements MessageSerializer {
       if (buildSubMessageHeader(targetBuffer, state.getCurretHeaderLength())) {
         return false;
       }
-      // todo: what happens if we cannot copy key
+      state.setPart(SerializeState.Part.KEY);
+    }
+
+    if (state.getPart() == SerializeState.Part.KEY) {
       // this call will copy the key length to buffer as well
       boolean complete = KeySerializer.copyKeyToBuffer(key,
           keyType, targetBuffer.getByteBuffer(), state, serializer);
       if (complete) {
         state.setPart(SerializeState.Part.BODY);
-      } else {
-        state.setPart(SerializeState.Part.HEADER);
       }
     }
 

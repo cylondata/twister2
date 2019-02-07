@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 public class InMessage {
   private static final Logger LOG = Logger.getLogger(InMessage.class.getName());
@@ -82,6 +83,11 @@ public class InMessage {
   private Object deserializedData;
 
   /**
+   * Deserialized key
+   */
+  private Object deserializedKey;
+
+  /**
    * The object that is being built
    */
   private Object deserializingObject;
@@ -113,7 +119,7 @@ public class InMessage {
   /**
    * The length of the key unpacked
    */
-  private int unPkCurrentKeyLength = 0;
+  private int unPkCurrentKeyLength = -1;
 
   /**
    * The number of objects unpacked
@@ -131,9 +137,9 @@ public class InMessage {
   private int unPkCurrentIndex = 0;
 
   /**
-   * The current index of unpack of key
+   * Weather we are reading the key
    */
-  private int unPkCurrentKeyIndex = 0;
+  private boolean readingKey = true;
 
   /**
    * Weather this is a keyed message
@@ -254,6 +260,18 @@ public class InMessage {
   }
 
   @SuppressWarnings("unchecked")
+  public void addCurrentKeyedObject() {
+    if (header.getNumberTuples() == -1) {
+      deserializedData = new Tuple(deserializedKey, deserializedData, keyType, dataType);
+    } else {
+      ((List<Object>) deserializedData).add(new Tuple(deserializedKey, deserializingObject,
+          keyType, dataType));
+    }
+    unPkNumberObjects++;
+    deserializingObject = null;
+  }
+
+  @SuppressWarnings("unchecked")
   public void addCurrentObject() {
     if (header.getNumberTuples() == -1) {
       deserializedData = deserializingObject;
@@ -370,11 +388,19 @@ public class InMessage {
     return keyed;
   }
 
-  public int getUnPkCurrentKeyIndex() {
-    return unPkCurrentKeyIndex;
+  public boolean isReadingKey() {
+    return readingKey;
   }
 
-  public void setUnPkCurrentKeyIndex(int unPkCurrentKeyIndex) {
-    this.unPkCurrentKeyIndex = unPkCurrentKeyIndex;
+  public void setReadingKey(boolean readingKey) {
+    this.readingKey = readingKey;
+  }
+
+  public void resetUnPkKey() {
+    unPkCurrentObjectLength = -1;
+    unPkCurrentIndex = 0;
+    deserializingKey = null;
+    readingKey = false;
+    deserializedKey = deserializingKey;
   }
 }

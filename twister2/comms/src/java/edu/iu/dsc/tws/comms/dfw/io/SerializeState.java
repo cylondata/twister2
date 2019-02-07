@@ -38,6 +38,7 @@ public class SerializeState {
   public enum Part {
     INIT,
     HEADER,
+    KEY,
     BODY,
   }
 
