@@ -291,6 +291,40 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     return delegate.isComplete();
   }
 
+  public boolean handleReceivedChannelMessage(ChannelMessage currentMessage) {
+    int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+        DataFlowContext.DEFAULT_DESTINATION);
+
+    RoutingParameters routingParameters;
+    if (routingParametersCache.containsKey(src)) {
+      routingParameters = routingParametersCache.get(src);
+    } else {
+      routingParameters = sendRoutingParameters(src, DataFlowContext.DEFAULT_DESTINATION);
+    }
+
+    ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
+        pendingSendMessagesPerSource.get(src);
+
+    // create a send message to keep track of the serialization at the initial stage
+    // the sub-edge is 0
+    int di = -1;
+    if (routingParameters.getExternalRoutes().size() > 0) {
+      di = routingParameters.getDestinationId();
+    }
+    OutMessage sendMessage = new OutMessage(src,
+        currentMessage.getHeader().getEdge(),
+        di, DataFlowContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
+        routingParameters.getInternalRoutes(),
+        routingParameters.getExternalRoutes(), type, null, delegate);
+    sendMessage.getChannelMessages().offer(currentMessage);
+    // this is a complete message
+    sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
+
+    // now try to put this into pending
+    return pendingSendMessages.offer(
+        new ImmutablePair<>(DataFlowContext.EMPTY_OBJECT, sendMessage));
+  }
+
   public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
     int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
         DataFlowContext.DEFAULT_DESTINATION);

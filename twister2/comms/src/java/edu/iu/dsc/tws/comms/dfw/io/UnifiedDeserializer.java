@@ -248,6 +248,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       ChannelMessage channelMessage = new ChannelMessage(currentMessage.getOriginatingId(),
           currentMessage.getDataType(), MessageDirection.IN, currentMessage.getReleaseListener());
       channelMessage.addBuffers(builtBuffers);
+      channelMessage.setHeader(currentMessage.getHeader());
       channelMessage.incrementRefCount();
       currentMessage.addBuiltMessage(channelMessage);
     }
