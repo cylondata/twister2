@@ -28,14 +28,39 @@ import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
+/**
+ * Builds the message and copies it into data buffers.The structure of the message depends on the
+ * type of message that is sent, for example if it is a keyed message or not.
+ *
+ * The main structure of the built message is |Header|Body|.
+ *
+ * The header has the following structure
+ * |source|flags|destinationID|numberOfMessages|,
+ * source - source of the message
+ * flags - message flags
+ * destinationId - where the message is sent
+ * numberOfMessages - number of messages
+ *
+ * Header can be followed by 0 or more messages, each message will have the following structure
+ * |length(integer)|message body|
+ *
+ * For a keyed message the message body consists of two parts
+ * |key|body|
+ *
+ * For some keys we need to send the length of the key, i.e. byte arrays and objects. In that case
+ * key consists of two parts
+ * |key length(integer)|actual key|
+ *
+ * For other cases such as integer or double keys, we know the length of the key, so we only send
+ * the key.
+ */
 public class UnifiedSerializer implements MessageSerializer {
   private static final Logger LOG = Logger.getLogger(UnifiedSerializer.class.getName());
 
-  public static final int HEADER_SIZE = 16;
   // we need to put the message length and key length if keyed message
-  public static final int MAX_SUB_MESSAGE_HEADER_SPACE = 4 + 4;
+  private static final int MAX_SUB_MESSAGE_HEADER_SPACE = 4 + 4;
   // for s normal message we only put the length
-  public static final int NORMAL_SUB_MESSAGE_HEADER_SIZE = 4;
+  private static final int NORMAL_SUB_MESSAGE_HEADER_SIZE = 4;
 
   /**
    * The DataBuffers available
@@ -53,15 +78,10 @@ public class UnifiedSerializer implements MessageSerializer {
    */
   private boolean keyed;
 
-  /**
-   * The executor
-   */
-  private int executor;
-
 
   public UnifiedSerializer(KryoSerializer serializer, int executor) {
-    this.executor = executor;
     this.serializer = serializer;
+    LOG.fine("Initializing serializer on worker: " + executor);
   }
 
   @Override
