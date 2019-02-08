@@ -75,6 +75,11 @@ public class UnifiedDeserializer implements MessageDeSerializer {
       int remaining = buffer.getSize();
       bufferCount++;
 
+      if (header.getNumberTuples() == 0) {
+        builtBuffers.add(buffer);
+        break;
+      }
+
       // if we are at the begining
       int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
       int currentKeyLength = currentMessage.getUnPkCurrentKeyLength();

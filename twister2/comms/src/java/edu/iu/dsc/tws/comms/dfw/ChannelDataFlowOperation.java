@@ -32,7 +32,6 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
@@ -609,13 +608,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         currentMessage.setReceivedState(InMessage.ReceivedState.BUILDING);
       }
 
-      if ((header.getFlags() & MessageFlags.END) != MessageFlags.END) {
-        messageDeSerializer.get(receiveId).build(currentMessage,
-            currentMessage.getHeader().getEdge());
-      } else if ((header.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-        messageDeSerializer.get(receiveId).build(currentMessage,
-            currentMessage.getHeader().getEdge());
-      }
+      messageDeSerializer.get(receiveId).build(currentMessage,
+          currentMessage.getHeader().getEdge());
 
       // lets check weather we have read everythong
       int readObjectNumber = currentMessage.getUnPkNumberObjects();

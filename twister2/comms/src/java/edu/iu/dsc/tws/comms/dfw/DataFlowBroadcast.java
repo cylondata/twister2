@@ -317,6 +317,12 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
         routingParameters.getInternalRoutes(),
         routingParameters.getExternalRoutes(), type, null, delegate);
     sendMessage.getChannelMessages().offer(currentMessage);
+
+    // we need to update here
+    if (!currentMessage.isOutCountUpdated()) {
+      currentMessage.incrementRefCount(routingParameters.getExternalRoutes().size());
+      currentMessage.setOutCountUpdated(true);
+    }
     // this is a complete message
     sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
 
