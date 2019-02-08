@@ -119,6 +119,7 @@ public class KeyedUnifiedSerializerTest {
         messages.get(0).getBuffers().get(0), 1);
     InMessage inMessage = new InMessage(0, type,
         null, header);
+    inMessage.setKeyType(type);
     for (ChannelMessage channelMessage : messages) {
       for (DataBuffer dataBuffer : channelMessage.getBuffers()) {
         inMessage.addBufferAndCalculate(dataBuffer);
@@ -147,7 +148,7 @@ public class KeyedUnifiedSerializerTest {
 
       Assert.assertEquals((int) exp.getKey(), (int) ((Tuple) d).getKey());
       Assert.assertArrayEquals((int[]) exp.getValue(),
-          (int[]) ((Tuple) data).getValue());
+          (int[]) ((Tuple) d).getValue());
     }
   }
 
@@ -262,12 +263,13 @@ public class KeyedUnifiedSerializerTest {
     }
 
     UnifiedDeserializer deserializer = new UnifiedDeserializer(new KryoSerializer(), 0);
-    deserializer.init(Config.newBuilder().build(), false);
+    deserializer.init(Config.newBuilder().build(), true);
 
     MessageHeader header = deserializer.buildHeader(
         messages.get(0).getBuffers().get(0), 1);
     InMessage inMessage = new InMessage(0, type,
         null, header);
+    inMessage.setKeyType(type);
     for (ChannelMessage channelMessage : messages) {
       for (DataBuffer dataBuffer : channelMessage.getBuffers()) {
         inMessage.addBufferAndCalculate(dataBuffer);

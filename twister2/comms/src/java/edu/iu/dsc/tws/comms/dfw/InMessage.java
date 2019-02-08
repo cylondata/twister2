@@ -265,7 +265,7 @@ public class InMessage {
   @SuppressWarnings("unchecked")
   public void addCurrentKeyedObject() {
     if (header.getNumberTuples() == -1) {
-      deserializedData = new Tuple(deserializedKey, deserializedData, keyType, dataType);
+      deserializedData = new Tuple(deserializedKey, deserializingObject, keyType, dataType);
     } else {
       ((List<Object>) deserializedData).add(new Tuple(deserializedKey, deserializingObject,
           keyType, dataType));
