@@ -27,10 +27,10 @@ java_library(
 
 java_tests(
     test_classes = [
-        #"edu.iu.dsc.tws.comms.shuffle.FSMergerTest",
-        #"edu.iu.dsc.tws.comms.shuffle.FSKeyedMergerTest",
-        #"edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMergerTest",
-        #"edu.iu.dsc.tws.comms.utils.HeapTest",
+        "edu.iu.dsc.tws.comms.shuffle.FSMergerTest",
+        "edu.iu.dsc.tws.comms.shuffle.FSKeyedMergerTest",
+        "edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMergerTest",
+        "edu.iu.dsc.tws.comms.utils.HeapTest",
         "edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializerTest",
         "edu.iu.dsc.tws.comms.dfw.io.KeyedUnifiedSerializerTest",
     ],
@@ -39,17 +39,17 @@ java_tests(
     ],
 )
 
-java_tests_debug(
-    test_classes = [
+#java_tests_debug(
+#    test_classes = [
         #"edu.iu.dsc.tws.comms.shuffle.FSMergerTest",
         #"edu.iu.dsc.tws.comms.shuffle.FSKeyedMergerTest",
         #"edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMergerTest",
         #"edu.iu.dsc.tws.comms.utils.HeapTest",
-        "edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializerTest",
-        "edu.iu.dsc.tws.comms.dfw.io.KeyedUnifiedSerializerTest",
-    ],
-    runtime_deps = [
-        ":comms-tests",
-    ],
-    size = "enormous",
-)
+#        "edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializerTest",
+#        "edu.iu.dsc.tws.comms.dfw.io.KeyedUnifiedSerializerTest",
+#    ],
+#    runtime_deps = [
+#        ":comms-tests",
+#    ],
+#    size = "enormous",
+#)
