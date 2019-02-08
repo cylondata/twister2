@@ -37,7 +37,10 @@ public class KeyedUnifiedSerializerTest {
     MessageType type = MessageType.INTEGER;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
-    Assert.assertArrayEquals((int[]) inMessage.getDeserializedData(), (int[]) data);
+    Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
+    Assert.assertEquals((int) deserializedData.getKey(), (int) ((Tuple) data).getKey());
+    Assert.assertArrayEquals((int[]) deserializedData.getValue(),
+        (int[]) ((Tuple) data).getValue());
   }
 
   @Test
@@ -47,7 +50,11 @@ public class KeyedUnifiedSerializerTest {
     MessageType type = MessageType.DOUBLE;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
-    Assert.assertArrayEquals((double[]) inMessage.getDeserializedData(), (double[]) data, .01);
+    Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
+    Assert.assertEquals((double) deserializedData.getKey(), (double) ((Tuple) data).getKey(),
+        0.1);
+    Assert.assertArrayEquals((double[]) deserializedData.getValue(),
+        (double[]) ((Tuple) data).getValue(), 0.01);
   }
 
   @Test
@@ -57,7 +64,10 @@ public class KeyedUnifiedSerializerTest {
     MessageType type = MessageType.LONG;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
-    Assert.assertArrayEquals((long[]) inMessage.getDeserializedData(), (long[]) data);
+    Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
+    Assert.assertEquals((long) deserializedData.getKey(), (long) ((Tuple) data).getKey());
+    Assert.assertArrayEquals((long[]) deserializedData.getValue(),
+        (long[]) ((Tuple) data).getValue());
   }
 
   @Test
@@ -67,7 +77,10 @@ public class KeyedUnifiedSerializerTest {
     MessageType type = MessageType.SHORT;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
-    Assert.assertArrayEquals((short[]) inMessage.getDeserializedData(), (short[]) data);
+    Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
+    Assert.assertEquals((short) deserializedData.getKey(), (short) ((Tuple) data).getKey());
+    Assert.assertArrayEquals((short[]) deserializedData.getValue(),
+        (short[]) ((Tuple) data).getValue());
   }
 
   @Test
@@ -77,7 +90,10 @@ public class KeyedUnifiedSerializerTest {
     MessageType type = MessageType.BYTE;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
-    Assert.assertArrayEquals((byte[]) inMessage.getDeserializedData(), (byte[]) data);
+    Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
+    Assert.assertArrayEquals((byte[]) deserializedData.getKey(), (byte[]) ((Tuple) data).getKey());
+    Assert.assertArrayEquals((byte[]) deserializedData.getValue(),
+        (byte[]) ((Tuple) data).getValue());
   }
 
   private InMessage singleValueCase(int numBuffers, int size, MessageType type, Object data) {
@@ -126,10 +142,12 @@ public class KeyedUnifiedSerializerTest {
     InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.INTEGER);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
-      Object exp = result.get(i);
-      Object d = data.get(i);
+      Tuple exp = (Tuple) result.get(i);
+      Tuple d = (Tuple) data.get(i);
 
-      Assert.assertArrayEquals((int[]) exp, (int[]) d);
+      Assert.assertEquals((int) exp.getKey(), (int) ((Tuple) d).getKey());
+      Assert.assertArrayEquals((int[]) exp.getValue(),
+          (int[]) ((Tuple) data).getValue());
     }
   }
 
@@ -147,10 +165,13 @@ public class KeyedUnifiedSerializerTest {
     InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.LONG);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
-      Object exp = result.get(i);
-      Object d = data.get(i);
+      Tuple deserializedData = (Tuple) result.get(i);
+      Tuple d = (Tuple) data.get(i);
 
-      Assert.assertArrayEquals((long[]) exp, (long[]) d);
+      Assert.assertEquals((long) deserializedData.getKey(), (long) ((Tuple) d).getKey(),
+          0.1);
+      Assert.assertArrayEquals((long[]) deserializedData.getValue(),
+          (long[]) ((Tuple) d).getValue());
     }
   }
 
@@ -168,10 +189,13 @@ public class KeyedUnifiedSerializerTest {
     InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.DOUBLE);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
-      Object exp = result.get(i);
-      Object d = data.get(i);
+      Tuple deserializedData = (Tuple) result.get(i);
+      Tuple d = (Tuple) data.get(i);
 
-      Assert.assertArrayEquals((double[]) exp, (double[]) d, 0.01);
+      Assert.assertEquals((double) deserializedData.getKey(), (double) ((Tuple) d).getKey(),
+          0.1);
+      Assert.assertArrayEquals((double[]) deserializedData.getValue(),
+          (double[]) ((Tuple) d).getValue(), 0.01);
     }
   }
 
@@ -189,10 +213,12 @@ public class KeyedUnifiedSerializerTest {
     InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.SHORT);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
-      Object exp = result.get(i);
-      Object d = data.get(i);
+      Tuple deserializedData = (Tuple) result.get(i);
+      Tuple d = (Tuple) data.get(i);
 
-      Assert.assertArrayEquals((short[]) exp, (short[]) d);
+      Assert.assertEquals((short) deserializedData.getKey(), (short) ((Tuple) d).getKey());
+      Assert.assertArrayEquals((short[]) deserializedData.getValue(),
+          (short[]) ((Tuple) d).getValue());
     }
   }
 
@@ -210,10 +236,12 @@ public class KeyedUnifiedSerializerTest {
     InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.BYTE);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
-      Object exp = result.get(i);
-      Object d = data.get(i);
+      Tuple deserializedData = (Tuple) result.get(i);
+      Tuple d = (Tuple) data.get(i);
 
-      Assert.assertArrayEquals((byte[]) exp, (byte[]) d);
+      Assert.assertArrayEquals((byte[]) deserializedData.getKey(), (byte[]) ((Tuple) d).getKey());
+      Assert.assertArrayEquals((byte[]) deserializedData.getValue(),
+          (byte[]) ((Tuple) d).getValue());
     }
   }
 
@@ -255,31 +283,31 @@ public class KeyedUnifiedSerializerTest {
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
-      return vals;
+      return new Tuple(1, vals, MessageType.INTEGER, MessageType.INTEGER);
     } else if (type == MessageType.LONG) {
       long[] vals = new long[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
-      return vals;
+      return new Tuple(1L, vals, MessageType.LONG, MessageType.LONG);
     } else if (type == MessageType.DOUBLE) {
       double[] vals = new double[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
-      return vals;
+      return new Tuple(1.0, vals, MessageType.DOUBLE, MessageType.DOUBLE);
     } else if (type == MessageType.SHORT) {
       short[] vals = new short[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (short) i;
       }
-      return vals;
+      return new Tuple((short) 1, vals, MessageType.SHORT, MessageType.SHORT);
     } else if (type == MessageType.BYTE) {
       byte[] vals = new byte[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (byte) i;
       }
-      return vals;
+      return new Tuple(new byte[]{0, 0, 0, 0}, vals, MessageType.BYTE, MessageType.BYTE);
     } else {
       return null;
     }

@@ -32,6 +32,7 @@ java_tests(
         #"edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMergerTest",
         #"edu.iu.dsc.tws.comms.utils.HeapTest",
         "edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializerTest",
+        "edu.iu.dsc.tws.comms.dfw.io.KeyedUnifiedSerializerTest",
     ],
     runtime_deps = [
         ":comms-tests",

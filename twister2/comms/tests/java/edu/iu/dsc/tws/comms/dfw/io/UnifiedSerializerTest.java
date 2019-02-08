@@ -249,7 +249,7 @@ public class UnifiedSerializerTest {
     return inMessage;
   }
 
-  private Object createData(int size, MessageType type) {
+  public static Object createData(int size, MessageType type) {
     if (type == MessageType.INTEGER) {
       int[] vals = new int[size];
       for (int i = 0; i < vals.length; i++) {
