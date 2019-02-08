@@ -251,7 +251,7 @@ public class KeyedUnifiedSerializerTest {
         null, type, null, null);
 
     UnifiedSerializer serializer = new UnifiedSerializer(new KryoSerializer(), 0);
-    serializer.init(Config.newBuilder().build(), bufferQueue, false);
+    serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
     List<ChannelMessage> messages = new ArrayList<>();
 
