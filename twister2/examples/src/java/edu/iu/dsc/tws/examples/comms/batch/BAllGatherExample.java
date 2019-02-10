@@ -125,7 +125,7 @@ public class BAllGatherExample extends BenchWorker {
 
   public void verify() throws VerificationException {
     boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
+    boolean isVerified;
     if (doVerify) {
       LOG.info("Verifying results ...");
       ExperimentVerification experimentVerification
