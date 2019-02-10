@@ -119,6 +119,8 @@ public abstract class BaseReduceBatchFinalReceiver extends ReduceBatchReceiver {
           batchDone.put(t, true);
           onFinish(t);
         }
+      } else {
+        needsFurtherProgress = true;
       }
     }
     return needsFurtherProgress;
