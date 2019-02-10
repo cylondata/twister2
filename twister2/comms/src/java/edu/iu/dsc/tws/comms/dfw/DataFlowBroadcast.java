@@ -140,23 +140,27 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     return String.valueOf(edge);
   }
 
-  private Pair<MessageHeader, Object> currentReceiveMessage = null;
+  private Queue<Pair<MessageHeader, Object>> currentReceiveMessage;
 
   private int receiveIndex = 0;
 
   public boolean receiveMessage(MessageHeader h, Object o) {
-    boolean done = true;
     // we always receive to the main task
-    if (currentReceiveMessage == null) {
-      currentReceiveMessage = new ImmutablePair<>(h, o);
-    } else {
-      done = false;
+    return currentReceiveMessage.offer(new ImmutablePair<>(h, o));
+  }
+
+  private boolean receiveProgressMessage() {
+    Pair<MessageHeader, Object> pair = currentReceiveMessage.peek();
+
+    if (pair == null) {
+      return false;
     }
 
-    boolean allSent = true;
-    MessageHeader header = currentReceiveMessage.getLeft();
-    Object object = currentReceiveMessage.getRight();
+    MessageHeader header = pair.getLeft();
+    Object object = pair.getRight();
 
+    boolean allSent = true;
+    boolean done = true;
     for (int i = receiveIndex; i < receiveTasks.size(); i++) {
       if (!finalReceiver.onMessage(
           header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
@@ -169,7 +173,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     }
 
     if (allSent) {
-      currentReceiveMessage = null;
+      currentReceiveMessage.poll();
       receiveIndex = 0;
     }
 
@@ -190,6 +194,8 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     this.type = t;
     this.edge = ed;
     this.executor = tPlan.getThisExecutor();
+    this.currentReceiveMessage = new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(cfg));
+
     // we will only have one distinct route
     router = new BinaryTreeRouter(cfg, tPlan, source, destinations);
 
@@ -301,9 +307,13 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     boolean partialNeedsProgress = false;
     boolean needFinishProgress;
     boolean done;
+    boolean needReceiveProgress;
     try {
       // lets send the finished one
       needFinishProgress = handleFinish();
+
+      // send the messages to targets
+      needReceiveProgress = receiveProgressMessage();
 
       delegate.progress();
       done = delegate.isComplete();
@@ -316,9 +326,9 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
       }
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);
-      throw new RuntimeException(t);
+      throw new RuntimeException(String.format("%d exception", executor), t);
     }
-    return partialNeedsProgress || !done || needFinishProgress;
+    return partialNeedsProgress || !done || needFinishProgress || needReceiveProgress;
   }
 
   private boolean handleFinish() {
