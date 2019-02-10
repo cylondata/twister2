@@ -9,6 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
 import java.io.Serializable;
@@ -18,26 +30,23 @@ import java.util.HashMap;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetBuilder;
+import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class HelloTSet extends TaskWorker implements Serializable {
+public class HelloTSetEnv extends TSetBaseWorker implements Serializable {
   private static final long serialVersionUID = -2;
+
   @Override
-  public void execute() {
-    TSetBuilder builder = TSetBuilder.newBuilder(config);
-    TSet<int[]> source = builder.createSource(new Source<int[]>() {
+  public void execute(TSetEnv executionEnv) {
+    TSet<int[]> source = executionEnv.createSource(new Source<int[]>() {
       private static final long serialVersionUID = -1;
 
       private int count = 0;
@@ -91,11 +100,7 @@ public class HelloTSet extends TaskWorker implements Serializable {
       }
     });
 
-    builder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph graph = builder.build();
-
-    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, executionPlan);
+    executionEnv.run();
   }
 
   public static void main(String[] args) {
@@ -103,7 +108,7 @@ public class HelloTSet extends TaskWorker implements Serializable {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    submitJob(config, 4, jobConfig, HelloTSet.class.getName());
+    submitJob(config, 4, jobConfig, HelloTSetEnv.class.getName());
   }
 
   private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {

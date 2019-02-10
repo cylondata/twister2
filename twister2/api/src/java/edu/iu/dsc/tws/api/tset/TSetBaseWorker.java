@@ -9,11 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.cdfw;
+package edu.iu.dsc.tws.api.tset;
 
-public enum DriveEventType {
-  INITIALIZE,
-  FINISHED_JOB,
-  WORKER_MESSAGE,
-  WORKERS_JOINED
+import java.io.Serializable;
+
+import edu.iu.dsc.tws.api.task.TaskWorker;
+
+public abstract class TSetBaseWorker extends TaskWorker implements Serializable {
+
+  @Override
+  public void execute() {
+    TSetEnv execEnv = new TSetEnv(this.config, this.taskExecutor);
+    execute(execEnv);
+  }
+
+  public abstract void execute(TSetEnv executionEnv);
 }
+

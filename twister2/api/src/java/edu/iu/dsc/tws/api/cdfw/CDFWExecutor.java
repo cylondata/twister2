@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.cdfw;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -21,23 +20,16 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Any;
 
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 
 public final class CDFWExecutor {
   private static final Logger LOG = Logger.getLogger(CDFWExecutor.class.getName());
 
   /**
-   * Configuration
-   */
-  private Config config;
-
-  /**
    * The queue to coordinate between driver and submitter
    */
-  private BlockingQueue<DriverEvent> inDriverEvents = new LinkedBlockingDeque<>();
+  private BlockingQueue<DriverEvent> driverEvents = new LinkedBlockingDeque<>();
 
   /**
    * This submitter keeps track of state
@@ -50,13 +42,13 @@ public final class CDFWExecutor {
   private IDriverMessenger driverMessenger;
 
   /**
-   * The list of workers
+   * Execution env object to get the information about the workers
    */
-  private List<JobMasterAPI.WorkerInfo> workerInfoList;
+  private CDFWEnv executionEnv;
 
-  public CDFWExecutor(Config cfg, IDriverMessenger messenger) {
-    this.config = cfg;
+  public CDFWExecutor(CDFWEnv executionEnv, IDriverMessenger messenger) {
     this.driverMessenger = messenger;
+    this.executionEnv = executionEnv;
   }
 
   /**
@@ -71,7 +63,7 @@ public final class CDFWExecutor {
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
 
-    DefaultScheduler defaultScheduler = new DefaultScheduler(this.workerInfoList);
+    DefaultScheduler defaultScheduler = new DefaultScheduler(this.executionEnv.getWorkerInfoList());
     Set<Integer> workerIDs = defaultScheduler.schedule(graph);
 
     // this is the first time
@@ -98,16 +90,19 @@ public final class CDFWExecutor {
   /**
    * The executeCDFW method first call the schedule method to get the schedule list of the CDFW.
    * Then, it invokes the buildCDFWJob method to build the job object for the scheduled graphs.
+   * @param graph the dataflow graph
+   * @deprecated we are not using this method as of now
    */
-
-  //Added to test and schedule multiple graphs at a time.
+  // Added to test and schedule multiple graphs at a time.
+  //todo: implement this in different way, because this is not running the graphs in parallel
+  @Deprecated
   public void executeCDFW(DataFlowGraph... graph) {
     if (!(driverState == DriverState.JOB_FINISHED || driverState == DriverState.INITIALIZE)) {
       // now we need to send messages
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
 
-    DefaultScheduler defaultScheduler = new DefaultScheduler(this.workerInfoList);
+    DefaultScheduler defaultScheduler = new DefaultScheduler(this.executionEnv.getWorkerInfoList());
     Map<DataFlowGraph, Set<Integer>> scheduleGraphMap = defaultScheduler.schedule(graph);
 
     for (Map.Entry<DataFlowGraph, Set<Integer>> dataFlowGraphEntry : scheduleGraphMap.entrySet()) {
@@ -177,17 +172,14 @@ public final class CDFWExecutor {
   void workerMessageReceived(Any anyMessage, int senderWorkerID) {
     LOG.log(Level.INFO, String.format("Received worker message %d: %s", senderWorkerID,
         anyMessage.getClass().getName()));
-    inDriverEvents.offer(new DriverEvent(DriveEventType.FINISHED_JOB, anyMessage));
+    driverEvents.offer(new DriverEvent(DriveEventType.FINISHED_JOB, anyMessage, senderWorkerID));
   }
 
-  public void addWorkerList(List<JobMasterAPI.WorkerInfo> workerList) {
-    this.workerInfoList = workerList;
-  }
 
   private DriverEvent waitForEvent(DriveEventType type) throws Exception {
     // lets wait for driver events
     try {
-      DriverEvent event = inDriverEvents.take();
+      DriverEvent event = driverEvents.take();
       if (event.getType() != type) {
         throw new Exception("Un-expected event: " + type);
       }
