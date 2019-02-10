@@ -53,4 +53,8 @@ public final class TaskPlanUtils {
     }
     return workersOfTasks;
   }
+
+  public static Set<Integer> getThisWorkerTasks(TaskPlan plan) {
+    return plan.getChannelsOfExecutor(plan.getThisExecutor());
+  }
 }

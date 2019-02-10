@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -72,6 +74,11 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
    * Sources of this worker
    */
   private Set<Integer> thisSources;
+
+  /**
+   * When we receive a message, we need to distribute it to these tasks running in the same worker
+   */
+  private List<Integer> receiveTasks = new ArrayList<>();
 
   private ChannelDataFlowOperation delegate;
   private Config config;
@@ -133,12 +140,40 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     return String.valueOf(edge);
   }
 
-  public boolean receiveMessage(MessageHeader header, Object object) {
+  private Pair<MessageHeader, Object> currentReceiveMessage = null;
+
+  private int receiveIndex = 0;
+
+  public boolean receiveMessage(MessageHeader h, Object o) {
+    boolean done = true;
     // we always receive to the main task
-    return finalReceiver.onMessage(
-        header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
-        router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-            DataFlowContext.DEFAULT_DESTINATION), header.getFlags(), object);
+    if (currentReceiveMessage == null) {
+      currentReceiveMessage = new ImmutablePair<>(h, o);
+    } else {
+      done = false;
+    }
+
+    boolean allSent = true;
+    MessageHeader header = currentReceiveMessage.getLeft();
+    Object object = currentReceiveMessage.getRight();
+
+    for (int i = receiveIndex; i < receiveTasks.size(); i++) {
+      if (!finalReceiver.onMessage(
+          header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
+          receiveTasks.get(receiveIndex), header.getFlags(), object)) {
+        done = false;
+        allSent = false;
+        break;
+      }
+      receiveIndex++;
+    }
+
+    if (allSent) {
+      currentReceiveMessage = null;
+      receiveIndex = 0;
+    }
+
+    return done;
   }
 
 
@@ -200,6 +235,8 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
       deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), executor));
     }
 
+    calculateRoutingParameters();
+
     for (Integer s : srcs) {
       routingParametersCache.put(s, sendRoutingParameters(s, 0));
     }
@@ -240,6 +277,18 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   public boolean send(int src, Object message, int flags, int target) {
     RoutingParameters routingParameters = sendRoutingParameters(src, 0);
     return delegate.sendMessage(src, message, target, flags, routingParameters);
+  }
+
+  private void calculateRoutingParameters() {
+    Set<Integer> workerTasks = instancePlan.getTasksOfThisExecutor();
+    RoutingParameters parameters = sendRoutingParameters(source, 0);
+    routingParametersCache.put(source, parameters);
+
+    Set<Integer> thisTargets = TaskPlanUtils.getTasksOfThisWorker(instancePlan, destinations);
+    Set<Integer> thisWorkerTasks = TaskPlanUtils.getThisWorkerTasks(instancePlan);
+    if (!thisWorkerTasks.contains(source)) {
+      receiveTasks.addAll(thisTargets);
+    }
   }
 
   @Override
@@ -380,8 +429,6 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
       if (internalSourceRouting != null) {
         // we always use path 0 because only one path
         routingParameters.addInternalRoutes(internalSourceRouting);
-      } else {
-        LOG.info(String.format("%d No internal routes for source %d", executor, s));
       }
 
       // get the expected routes
