@@ -113,6 +113,7 @@ public class KMeansJob extends TaskWorker {
       DataObject<double[][]> dataSet = taskExecutor.getOutput(graph, plan, "sink");
       DataPartition<double[][]> values = dataSet.getPartitions()[0];
       centroid = values.getConsumer().next();
+      LOG.log(Level.INFO, String.format("%d iteration done %d", workerId, i));
     }
 
     //To write the final value into the local file system or hdfs
