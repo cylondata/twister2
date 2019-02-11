@@ -20,13 +20,17 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import static edu.iu.dsc.tws.comms.routing.RoutingTestUtils.createTaskPlan;
 import static edu.iu.dsc.tws.comms.routing.RoutingTestUtils.destinations;
 
-public class InvertedTreeRouterTest {
+public class BinaryTreeTest {
   @Test
   public void testUniqueTrees() {
     TaskPlan p = createTaskPlan(256, 1, 0);
 
     Set<Integer> s = destinations(256, 1);
-    InvertedBinaryTreeRouter router = new InvertedBinaryTreeRouter(Config.newBuilder().build(),
-        p, 0,  s, 0);
+    BinaryTree router = new BinaryTree(2,
+        2, p, 0, s);
+
+    Node node = router.buildInterGroupTree(0);
+
+
   }
 }
