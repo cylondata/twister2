@@ -54,6 +54,31 @@ public class RoundRobinTaskSchedulerTest {
     }
   }
 
+  @Test
+  public void testUniqueSchedules2() {
+    int parallel = 256;
+    DataFlowTaskGraph graph = createGraph(parallel);
+    RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
+    scheduler.initialize(Config.newBuilder().build());
+
+    WorkerPlan workerPlan = createWorkPlan(parallel);
+    TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
+
+    WorkerPlan workerPlan2 = createWorkPlan2(parallel);
+    for (int i = 0; i < 1000; i++) {
+      TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
+
+      Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
+
+      Map<Integer, TaskSchedulePlan.ContainerPlan> map2 = plan2.getContainersMap();
+      for (TaskSchedulePlan.ContainerPlan containerPlan : plan1.getContainers()) {
+        TaskSchedulePlan.ContainerPlan p2 = map2.get(containerPlan.getContainerId());
+
+        Assert.assertTrue(containerEquals(containerPlan, p2));
+      }
+    }
+  }
+
 
   private boolean containerEquals(TaskSchedulePlan.ContainerPlan p1,
                                  TaskSchedulePlan.ContainerPlan p2) {
@@ -76,6 +101,14 @@ public class RoundRobinTaskSchedulerTest {
   private WorkerPlan createWorkPlan(int workers) {
     WorkerPlan plan = new WorkerPlan();
     for (int i = 0; i < workers; i++) {
+      plan.addWorker(new Worker(i));
+    }
+    return plan;
+  }
+
+  private WorkerPlan createWorkPlan2(int workers) {
+    WorkerPlan plan = new WorkerPlan();
+    for (int i = workers - 1; i >= 0; i--) {
       plan.addWorker(new Worker(i));
     }
     return plan;
