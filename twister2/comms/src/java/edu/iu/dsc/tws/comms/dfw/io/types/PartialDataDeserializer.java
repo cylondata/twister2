@@ -51,7 +51,8 @@ public final class PartialDataDeserializer {
         int value = PartialDataDeserializer.deserializeByte(buffer, currentObjectLength,
             objectVal, startIndex, currentLocation);
         // at the end we switch to the actual object
-        if (value == currentObjectLength) {
+        int totalBytesRead = startIndex + value;
+        if (totalBytesRead == currentObjectLength) {
           Object kryoValue = serializer.deserialize(objectVal);
           currentMessage.setDeserializingObject(kryoValue);
         }

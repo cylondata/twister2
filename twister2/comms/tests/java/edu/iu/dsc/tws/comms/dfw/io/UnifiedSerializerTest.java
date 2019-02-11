@@ -80,6 +80,16 @@ public class UnifiedSerializerTest {
     Assert.assertArrayEquals((byte[]) inMessage.getDeserializedData(), (byte[]) data);
   }
 
+  @Test
+  public void testBuildLargeObjectMessage() {
+    int numBuffers = 20;
+    int size = 1000;
+    MessageType type = MessageType.OBJECT;
+    Object data = createData(800, type);
+    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Assert.assertArrayEquals((int[]) inMessage.getDeserializedData(), (int[]) data);
+  }
+
   private InMessage singleValueCase(int numBuffers, int size, MessageType type, Object data) {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
 
@@ -278,6 +288,12 @@ public class UnifiedSerializerTest {
       byte[] vals = new byte[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (byte) i;
+      }
+      return vals;
+    } else if (type == MessageType.OBJECT) {
+      int[] vals = new int[size];
+      for (int i = 0; i < vals.length; i++) {
+        vals[i] = i;
       }
       return vals;
     } else {
