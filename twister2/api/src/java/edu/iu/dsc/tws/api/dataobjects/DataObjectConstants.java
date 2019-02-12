@@ -9,12 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
+package edu.iu.dsc.tws.api.dataobjects;
 
-/**
- * This class is to declare the variables required for the K-Means Clustering Process.
- */
-public final class KMeansConstants {
+public class DataObjectConstants {
+
+  protected DataObjectConstants() {
+  }
 
   public static final String ARGS_WORKERS = "workers";
   public static final String ARGS_DIMENSIONS = "dim";
@@ -28,7 +28,5 @@ public final class KMeansConstants {
   public static final String ARGS_NUMBER_OF_FILES = "nFiles";
   public static final String ARGS_NUMBER_OF_CLUSTERS = "clusters";
   public static final String ARGS_FILE_SYSTEM = "filesys";
-
-  private KMeansConstants() {
-  }
+  public static final String ARGS_ITERATIONS = "iter";
 }

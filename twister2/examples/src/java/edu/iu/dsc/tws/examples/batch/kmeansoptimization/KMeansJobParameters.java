@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
 
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.dataobjects.DataObjectConstants;
 import edu.iu.dsc.tws.common.config.Config;
 
 public final class KMeansJobParameters {
@@ -73,19 +74,63 @@ public final class KMeansJobParameters {
    * Task parallelism value
    */
   private int parallelismValue;
+  private int numberOfClusters;
+  private String filesystem;
+
+
+  private KMeansJobParameters(int workers) {
+    this.workers = workers;
+  }
+
+  /**
+   * This method is to build the job parameters which is based on the configuration value.
+   */
+  public static KMeansJobParameters build(Config cfg) {
+
+    String datapointDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
+    String centroidDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
+    String outputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_OUTPUT_DIRECTORY);
+    String fileSystem = cfg.getStringValue(DataObjectConstants.ARGS_FILE_SYSTEM);
+
+    int workers = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_WORKERS));
+    int dsize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DSIZE));
+    int csize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_CSIZE));
+    int dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DIMENSIONS));
+    int parallelismVal = Integer.parseInt(
+        cfg.getStringValue(DataObjectConstants.ARGS_PARALLELISM_VALUE));
+    int iterations = Integer.parseInt(
+        cfg.getStringValue(DataObjectConstants.ARGS_ITERATIONS));
+    int numFiles = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_NUMBER_OF_FILES));
+    int numberOfClusters = Integer.parseInt(
+        cfg.getStringValue(DataObjectConstants.ARGS_NUMBER_OF_CLUSTERS));
+    boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
+
+    KMeansJobParameters jobParameters = new KMeansJobParameters(workers);
+
+    jobParameters.workers = workers;
+    jobParameters.dimension = dimension;
+    jobParameters.centroidDirectory = centroidDirectory;
+    jobParameters.datapointDirectory = datapointDirectory;
+    jobParameters.outputDirectory = outputDirectory;
+    jobParameters.numFiles = numFiles;
+    jobParameters.iterations = iterations;
+    jobParameters.dsize = dsize;
+    jobParameters.csize = csize;
+    jobParameters.shared = shared;
+    jobParameters.parallelismValue = parallelismVal;
+    jobParameters.filesystem = fileSystem;
+    jobParameters.numberOfClusters = numberOfClusters;
+
+    return jobParameters;
+  }
 
   public int getNumberOfClusters() {
     return numberOfClusters;
   }
 
-  private int numberOfClusters;
-
-
   public String getFilesystem() {
     return filesystem;
   }
-
-  private String filesystem;
 
   public int getWorkers() {
     return workers;
@@ -129,49 +174,6 @@ public final class KMeansJobParameters {
 
   public int getParallelismValue() {
     return parallelismValue;
-  }
-
-  private KMeansJobParameters(int workers) {
-    this.workers = workers;
-  }
-
-  /**
-   * This method is to build the job parameters which is based on the configuration value.
-   */
-  public static KMeansJobParameters build(Config cfg) {
-
-    String datapointDirectory = cfg.getStringValue(KMeansConstants.ARGS_DINPUT_DIRECTORY);
-    String centroidDirectory = cfg.getStringValue(KMeansConstants.ARGS_CINPUT_DIRECTORY);
-    String outputDirectory = cfg.getStringValue(KMeansConstants.ARGS_OUTPUT_DIRECTORY);
-    String fileSystem = cfg.getStringValue(KMeansConstants.ARGS_FILE_SYSTEM);
-
-    int workers = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_WORKERS));
-    int dsize = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DSIZE));
-    int csize = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_CSIZE));
-    int dimension = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DIMENSIONS));
-    int parallelismVal = Integer.parseInt(
-        cfg.getStringValue(KMeansConstants.ARGS_PARALLELISM_VALUE));
-    int numFiles = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_NUMBER_OF_FILES));
-    int numberOfClusters = Integer.parseInt(
-        cfg.getStringValue(KMeansConstants.ARGS_NUMBER_OF_CLUSTERS));
-    boolean shared = cfg.getBooleanValue(KMeansConstants.ARGS_SHARED_FILE_SYSTEM);
-
-    KMeansJobParameters jobParameters = new KMeansJobParameters(workers);
-
-    jobParameters.workers = workers;
-    jobParameters.dimension = dimension;
-    jobParameters.centroidDirectory = centroidDirectory;
-    jobParameters.datapointDirectory = datapointDirectory;
-    jobParameters.outputDirectory = outputDirectory;
-    jobParameters.numFiles = numFiles;
-    jobParameters.dsize = dsize;
-    jobParameters.csize = csize;
-    jobParameters.shared = shared;
-    jobParameters.parallelismValue = parallelismVal;
-    jobParameters.filesystem = fileSystem;
-    jobParameters.numberOfClusters = numberOfClusters;
-
-    return jobParameters;
   }
 
   @Override

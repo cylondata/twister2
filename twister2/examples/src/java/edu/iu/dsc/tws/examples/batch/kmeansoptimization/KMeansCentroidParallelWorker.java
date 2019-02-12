@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.cdfw.task.ConnectedSource;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
@@ -26,6 +25,7 @@ import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansFileReader;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -62,7 +62,7 @@ public class KMeansCentroidParallelWorker extends TaskWorker {
     taskExecutor.execute(dataFlowTaskGraph, plan);
   }
 
-  public static class KMeansCentroidParallelTask extends ConnectedSource {
+  public static class KMeansCentroidParallelTask extends BaseSource {
 
     private static final Logger LOG
         = Logger.getLogger(KMeansCentroidParallelWorker.class.getName());
@@ -92,20 +92,17 @@ public class KMeansCentroidParallelWorker extends TaskWorker {
 
       DataObject<double[][]> centroids = new DataObjectImpl<>(config);
       centroids.addPartition(new EntityPartition<>(0, centroid));
-
       LOG.info("Centroid Values are:::" + Arrays.deepToString(centroid));
-      //context.writeEnd("partition", centroids);
     }
 
     public void prepare(Config cfg, TaskContext context) {
       super.prepare(cfg, context);
-      kMeansFileReader = new KMeansFileReader(config, fileSystem);
       centroidDirectory = cfg.getStringValue(KMeansConstants.ARGS_CINPUT_DIRECTORY);
       fileSystem = cfg.getStringValue(KMeansConstants.ARGS_FILE_SYSTEM);
       dimension = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DIMENSIONS));
       numberOfClusters = Integer.parseInt(cfg.getStringValue(KMeansConstants.
           ARGS_NUMBER_OF_CLUSTERS));
+      kMeansFileReader = new KMeansFileReader(config, fileSystem);
     }
   }
-
 }

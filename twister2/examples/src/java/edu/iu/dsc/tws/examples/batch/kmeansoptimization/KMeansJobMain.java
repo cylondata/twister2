@@ -24,6 +24,7 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.dataobjects.DataObjectConstants;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.Utils;
@@ -40,45 +41,48 @@ public class KMeansJobMain {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     Options options = new Options();
-    options.addOption(KMeansConstants.ARGS_WORKERS, true, "Workers");
-    options.addOption(KMeansConstants.ARGS_CSIZE, true, "Size of the dapoints file");
-    options.addOption(KMeansConstants.ARGS_DSIZE, true, "Size of the centroids file");
-    options.addOption(KMeansConstants.ARGS_NUMBER_OF_FILES, true, "Number of files");
-    options.addOption(KMeansConstants.ARGS_SHARED_FILE_SYSTEM, false, "Shared file system");
-    options.addOption(KMeansConstants.ARGS_DIMENSIONS, true, "dim");
-    options.addOption(KMeansConstants.ARGS_PARALLELISM_VALUE, true, "parallelism");
-    options.addOption(KMeansConstants.ARGS_NUMBER_OF_CLUSTERS, true, "clusters");
+    options.addOption(DataObjectConstants.ARGS_WORKERS, true, "Workers");
+    options.addOption(DataObjectConstants.ARGS_CSIZE, true, "Size of the dapoints file");
+    options.addOption(DataObjectConstants.ARGS_DSIZE, true, "Size of the centroids file");
+    options.addOption(DataObjectConstants.ARGS_NUMBER_OF_FILES, true, "Number of files");
+    options.addOption(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM, false, "Shared file system");
+    options.addOption(DataObjectConstants.ARGS_DIMENSIONS, true, "dim");
+    options.addOption(DataObjectConstants.ARGS_PARALLELISM_VALUE, true, "parallelism");
+    options.addOption(DataObjectConstants.ARGS_NUMBER_OF_CLUSTERS, true, "clusters");
+    options.addOption(DataObjectConstants.ARGS_ITERATIONS, true, "iter");
 
-    options.addOption(Utils.createOption(KMeansConstants.ARGS_DINPUT_DIRECTORY,
+    options.addOption(Utils.createOption(DataObjectConstants.ARGS_DINPUT_DIRECTORY,
         true, "Data points Input directory", true));
-    options.addOption(Utils.createOption(KMeansConstants.ARGS_CINPUT_DIRECTORY,
+    options.addOption(Utils.createOption(DataObjectConstants.ARGS_CINPUT_DIRECTORY,
         true, "Centroids Input directory", true));
-    options.addOption(Utils.createOption(KMeansConstants.ARGS_OUTPUT_DIRECTORY,
+    options.addOption(Utils.createOption(DataObjectConstants.ARGS_OUTPUT_DIRECTORY,
         true, "Output directory", true));
-    options.addOption(Utils.createOption(KMeansConstants.ARGS_FILE_SYSTEM,
+    options.addOption(Utils.createOption(DataObjectConstants.ARGS_FILE_SYSTEM,
         true, "file system", true));
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
-    int workers = Integer.parseInt(cmd.getOptionValue(KMeansConstants.ARGS_WORKERS));
-    int dsize = Integer.parseInt(cmd.getOptionValue(KMeansConstants.ARGS_DSIZE));
-    int csize = Integer.parseInt(cmd.getOptionValue(KMeansConstants.ARGS_CSIZE));
-    int numFiles = Integer.parseInt(cmd.getOptionValue(KMeansConstants.ARGS_NUMBER_OF_FILES));
-    int dimension = Integer.parseInt(cmd.getOptionValue(KMeansConstants.ARGS_DIMENSIONS));
+    int workers = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.ARGS_WORKERS));
+    int dsize = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.ARGS_DSIZE));
+    int csize = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.ARGS_CSIZE));
+    int numFiles = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.ARGS_NUMBER_OF_FILES));
+    int dimension = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.ARGS_DIMENSIONS));
     int parallelismValue = Integer.parseInt(cmd.getOptionValue(
-        KMeansConstants.ARGS_PARALLELISM_VALUE));
+        DataObjectConstants.ARGS_PARALLELISM_VALUE));
     int numberOfClusters = Integer.parseInt(cmd.getOptionValue(
-        KMeansConstants.ARGS_NUMBER_OF_CLUSTERS));
+        DataObjectConstants.ARGS_NUMBER_OF_CLUSTERS));
+    int iterations = Integer.parseInt(cmd.getOptionValue(
+        DataObjectConstants.ARGS_ITERATIONS));
 
-    String dataDirectory = cmd.getOptionValue(KMeansConstants.ARGS_DINPUT_DIRECTORY);
-    String centroidDirectory = cmd.getOptionValue(KMeansConstants.ARGS_CINPUT_DIRECTORY);
-    String outputDirectory = cmd.getOptionValue(KMeansConstants.ARGS_OUTPUT_DIRECTORY);
-    String fileSystem = cmd.getOptionValue(KMeansConstants.ARGS_FILE_SYSTEM);
+    String dataDirectory = cmd.getOptionValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
+    String centroidDirectory = cmd.getOptionValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
+    String outputDirectory = cmd.getOptionValue(DataObjectConstants.ARGS_OUTPUT_DIRECTORY);
+    String fileSystem = cmd.getOptionValue(DataObjectConstants.ARGS_FILE_SYSTEM);
 
     boolean shared =
-        Boolean.parseBoolean(cmd.getOptionValue(KMeansConstants.ARGS_SHARED_FILE_SYSTEM));
-    
+        Boolean.parseBoolean(cmd.getOptionValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM));
+
     // we we are a shared file system, lets generate data at the client
     /*if (shared) {
       KMeansDataGenerator.generateData(
@@ -90,23 +94,25 @@ public class KMeansJobMain {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
 
-    jobConfig.put(KMeansConstants.ARGS_DINPUT_DIRECTORY, dataDirectory);
-    jobConfig.put(KMeansConstants.ARGS_CINPUT_DIRECTORY, centroidDirectory);
-    jobConfig.put(KMeansConstants.ARGS_OUTPUT_DIRECTORY, outputDirectory);
-    jobConfig.put(KMeansConstants.ARGS_FILE_SYSTEM, fileSystem);
-    jobConfig.put(KMeansConstants.ARGS_DSIZE, Integer.toString(dsize));
-    jobConfig.put(KMeansConstants.ARGS_CSIZE, Integer.toString(csize));
-    jobConfig.put(KMeansConstants.ARGS_WORKERS, Integer.toString(workers));
-    jobConfig.put(KMeansConstants.ARGS_NUMBER_OF_FILES, Integer.toString(numFiles));
-    jobConfig.put(KMeansConstants.ARGS_DIMENSIONS, Integer.toString(dimension));
-    jobConfig.put(KMeansConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
-    jobConfig.put(KMeansConstants.ARGS_SHARED_FILE_SYSTEM, shared);
-    jobConfig.put(KMeansConstants.ARGS_NUMBER_OF_CLUSTERS, Integer.toString(numberOfClusters));
+    jobConfig.put(DataObjectConstants.ARGS_DINPUT_DIRECTORY, dataDirectory);
+    jobConfig.put(DataObjectConstants.ARGS_CINPUT_DIRECTORY, centroidDirectory);
+    jobConfig.put(DataObjectConstants.ARGS_OUTPUT_DIRECTORY, outputDirectory);
+    jobConfig.put(DataObjectConstants.ARGS_FILE_SYSTEM, fileSystem);
+    jobConfig.put(DataObjectConstants.ARGS_DSIZE, Integer.toString(dsize));
+    jobConfig.put(DataObjectConstants.ARGS_CSIZE, Integer.toString(csize));
+    jobConfig.put(DataObjectConstants.ARGS_WORKERS, Integer.toString(workers));
+    jobConfig.put(DataObjectConstants.ARGS_NUMBER_OF_FILES, Integer.toString(numFiles));
+    jobConfig.put(DataObjectConstants.ARGS_DIMENSIONS, Integer.toString(dimension));
+    jobConfig.put(DataObjectConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
+    jobConfig.put(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM, shared);
+    jobConfig.put(DataObjectConstants.ARGS_NUMBER_OF_CLUSTERS, Integer.toString(numberOfClusters));
+    jobConfig.put(DataObjectConstants.ARGS_ITERATIONS, Integer.toString(iterations));
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("KMeans-job");
-    jobBuilder.setWorkerClass(KMeansDataParallelWorker.class.getName());
+    //jobBuilder.setWorkerClass(KMeansDataParallelWorker.class.getName());
     //jobBuilder.setWorkerClass(KMeansCentroidParallelWorker.class.getName());
+    jobBuilder.setWorkerClass(KMeansJob.class.getName());
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);
 
