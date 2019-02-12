@@ -11,10 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,7 +26,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   private static final Logger LOG = Logger.getLogger(BatchSharingExecutor.class.getName());
 
   // keep track of finished executions
-  private Map<Integer, Boolean> finishedInstances = new HashMap<>();
+  private Map<Integer, Boolean> finishedInstances = new ConcurrentHashMap<>();
 
   private int workerId;
 
@@ -69,7 +69,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     for (Thread t : threads) {
       try {
         t.join();
-      } catch (InterruptedException e) {
+      } catch (InterruptedException ignore) {
       }
     }
 
