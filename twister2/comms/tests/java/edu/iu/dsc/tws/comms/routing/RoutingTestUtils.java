@@ -18,7 +18,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 
-public class RoutingTestUtils {
+public final class RoutingTestUtils {
   private RoutingTestUtils() {
   }
 
