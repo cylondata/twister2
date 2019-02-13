@@ -37,6 +37,7 @@ public class DataParallelWorker extends TaskWorker {
     boolean shared = config.getBooleanValue(Constants.ARGS_SHARED_FILE_SYSTEM);
     int numFiles = config.getIntegerValue(Constants.ARGS_NUMBER_OF_FILES, 4);
     int size = config.getIntegerValue(Constants.ARGS_SIZE, 1000);
+    int parallel = config.getIntegerValue(Constants.ARGS_PARALLEL, 2);
 
     if (!shared && workerId == 0) {
       try {
@@ -47,7 +48,7 @@ public class DataParallelWorker extends TaskWorker {
     }
 
     DataParallelTask task = new DataParallelTask();
-    taskGraphBuilder.addSource("map", task, 4);
+    taskGraphBuilder.addSource("map", task, parallel);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();

@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.task.dataparallel;
+package edu.iu.dsc.tws.api.task.dataparallelimpl;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -24,14 +24,14 @@ import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.DataSource;
-import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class DataParallelTask extends BaseSource {
-  private static final Logger LOG = Logger.getLogger(DataParallelTask.class.getName());
+public class DataParallelSourceTaskImpl extends BaseSource {
+
+  private static final Logger LOG = Logger.getLogger(DataParallelSourceTaskImpl.class.getName());
 
   private static final long serialVersionUID = -1L;
 
@@ -39,8 +39,28 @@ public class DataParallelTask extends BaseSource {
 
   private DataSink<String> sink;
 
+  private String datainputDirectory;
+  private String centroidinputDirectory;
+  private String outputDirectory;
+  private int numFiles;
+  private int datapointSize;
+  private int centroidSize;
+  private int dimension;
+  private int sizeOfMargin = 100;
+
+  private Config config;
+  private TaskContext taskContext;
+
+  public DataParallelSourceTaskImpl(Config cfg) {
+    this.config = cfg;
+  }
+
+  public DataParallelSourceTaskImpl() {
+  }
+
   @Override
   public void execute() {
+    LOG.info("Context Task Index:" + context.taskIndex());
     InputSplit<String> inputSplit = source.getNextSplit(context.taskIndex());
     int splitCount = 0;
     int totalCount = 0;
@@ -49,12 +69,10 @@ public class DataParallelTask extends BaseSource {
         int count = 0;
         while (!inputSplit.reachedEnd()) {
           String value = inputSplit.nextRecord(null);
-          if (value != null) {
-            LOG.fine("We read value: " + value);
-            sink.add(context.taskIndex(), value);
-            count += 1;
-            totalCount += 1;
-          }
+          //LOG.info("We read value: " + value);
+          sink.add(context.taskIndex(), value);
+          count += 1;
+          totalCount += 1;
         }
         splitCount += 1;
         inputSplit = source.getNextSplit(context.taskIndex());
@@ -63,28 +81,37 @@ public class DataParallelTask extends BaseSource {
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
       }
+      context.write("reduce", sink);
     }
-    sink.persist();
+    LOG.info("Sink Values are:" + sink.toString());
+    //sink.persist();
   }
 
-  @Override
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
+    datainputDirectory = cfg.getStringValue(DataParallelConstants.ARGS_DINPUT_DIRECTORY);
+    centroidinputDirectory = cfg.getStringValue(DataParallelConstants.ARGS_CINPUT_DIRECTORY);
+    outputDirectory = cfg.getStringValue(DataParallelConstants.ARGS_OUTPUT_DIRECTORY);
+    numFiles = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_NUMBER_OF_FILES));
+    datapointSize = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_DSIZE));
+    centroidSize = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_CSIZE));
+    dimension = Integer.parseInt(cfg.getStringValue(DataParallelConstants.ARGS_DIMENSIONS));
 
-    String directory = cfg.getStringValue(Constants.ARGS_INPUT_DIRECTORY);
-    ExecutionRuntime runtime = (ExecutionRuntime) config.get(
-        ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    String outDir = cfg.getStringValue(Constants.ARGS_OUTPUT_DIRECTORY);
+    ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
 
-    boolean shared = cfg.getBooleanValue(Constants.ARGS_SHARED_FILE_SYSTEM);
+    LOG.info("Data Input Directory:" + datainputDirectory);
+
+    boolean shared = cfg.getBooleanValue(DataParallelConstants.ARGS_SHARED_FILE_SYSTEM);
     if (!shared) {
       this.source = runtime.createInput(cfg, context,
-          new LocalTextInputPartitioner(new Path(directory), context.getParallelism()));
+          new LocalTextInputPartitioner(new Path(datainputDirectory), context.getParallelism()));
     } else {
       this.source = runtime.createInput(cfg, context,
-          new SharedTextInputPartitioner(new Path(directory)));
+          new SharedTextInputPartitioner(new Path(datainputDirectory)));
     }
-    this.sink = new DataSink<String>(cfg,
-        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
+    this.sink = new DataSink<>(cfg,
+        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outputDirectory)));
+
+    LOG.info("This source is::::::::::::" + this.source + "\t" + this.sink);
   }
 }
