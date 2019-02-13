@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -36,8 +38,8 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.SingleMessageDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.SingleMessageSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
@@ -72,6 +74,11 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
    * Sources of this worker
    */
   private Set<Integer> thisSources;
+
+  /**
+   * When we receive a message, we need to distribute it to these tasks running in the same worker
+   */
+  private List<Integer> receiveTasks = new ArrayList<>();
 
   private ChannelDataFlowOperation delegate;
   private Config config;
@@ -133,14 +140,44 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     return String.valueOf(edge);
   }
 
-  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
-    MessageHeader header = currentMessage.getHeader();
+  private Queue<Pair<MessageHeader, Object>> currentReceiveMessage;
 
+  private int receiveIndex = 0;
+
+  public boolean receiveMessage(MessageHeader h, Object o) {
     // we always receive to the main task
-    return finalReceiver.onMessage(
-        header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
-        router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-            DataFlowContext.DEFAULT_DESTINATION), header.getFlags(), object);
+    return currentReceiveMessage.offer(new ImmutablePair<>(h, o));
+  }
+
+  private boolean receiveProgressMessage() {
+    Pair<MessageHeader, Object> pair = currentReceiveMessage.peek();
+
+    if (pair == null) {
+      return false;
+    }
+
+    MessageHeader header = pair.getLeft();
+    Object object = pair.getRight();
+
+    boolean allSent = true;
+    boolean done = true;
+    for (int i = receiveIndex; i < receiveTasks.size(); i++) {
+      if (!finalReceiver.onMessage(
+          header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
+          receiveTasks.get(receiveIndex), header.getFlags(), object)) {
+        done = false;
+        allSent = false;
+        break;
+      }
+      receiveIndex++;
+    }
+
+    if (allSent) {
+      currentReceiveMessage.poll();
+      receiveIndex = 0;
+    }
+
+    return done;
   }
 
 
@@ -157,6 +194,8 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     this.type = t;
     this.edge = ed;
     this.executor = tPlan.getThisExecutor();
+    this.currentReceiveMessage = new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(cfg));
+
     // we will only have one distinct route
     router = new BinaryTreeRouter(cfg, tPlan, source, destinations);
 
@@ -170,9 +209,9 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
         source, destinations, router.sendQueueIds()));
     thisSources = TaskPlanUtils.getTasksOfThisWorker(tPlan, sourceSet);
 
-    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource =
+    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<ChannelMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
@@ -183,7 +222,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
           new ArrayBlockingQueue<Pair<Object, OutMessage>>(
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      serializerMap.put(s, new SingleMessageSerializer(new KryoSerializer()));
+      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor));
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -194,20 +233,22 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     Set<Integer> execs = router.receivingExecutors();
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, ChannelMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<Pair<Object, ChannelMessage>>(
+      Queue<Pair<Object, InMessage>> pendingReceiveMessages =
+          new ArrayBlockingQueue<>(
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
-      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<ChannelMessage>(capacity));
-      deSerializerMap.put(e, new SingleMessageDeSerializer(new KryoSerializer()));
+      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
+      deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), executor));
     }
+
+    calculateRoutingParameters();
 
     for (Integer s : srcs) {
       routingParametersCache.put(s, sendRoutingParameters(s, 0));
     }
 
     delegate.init(cfg, t, tPlan, ed,
-        router.receivingExecutors(), router.isLastReceiver(), this,
+        router.receivingExecutors(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
   }
@@ -244,6 +285,18 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     return delegate.sendMessage(src, message, target, flags, routingParameters);
   }
 
+  private void calculateRoutingParameters() {
+    Set<Integer> workerTasks = instancePlan.getTasksOfThisExecutor();
+    RoutingParameters parameters = sendRoutingParameters(source, 0);
+    routingParametersCache.put(source, parameters);
+
+    Set<Integer> thisTargets = TaskPlanUtils.getTasksOfThisWorker(instancePlan, destinations);
+    Set<Integer> thisWorkerTasks = TaskPlanUtils.getThisWorkerTasks(instancePlan);
+    if (!thisWorkerTasks.contains(source)) {
+      receiveTasks.addAll(thisTargets);
+    }
+  }
+
   @Override
   public boolean sendPartial(int src, Object message, int flags, int target) {
     return false;
@@ -254,9 +307,13 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     boolean partialNeedsProgress = false;
     boolean needFinishProgress;
     boolean done;
+    boolean needReceiveProgress;
     try {
       // lets send the finished one
       needFinishProgress = handleFinish();
+
+      // send the messages to targets
+      needReceiveProgress = receiveProgressMessage();
 
       delegate.progress();
       done = delegate.isComplete();
@@ -269,9 +326,9 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
       }
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);
-      throw new RuntimeException(t);
+      throw new RuntimeException(String.format("%d exception", executor), t);
     }
-    return partialNeedsProgress || !done || needFinishProgress;
+    return partialNeedsProgress || !done || needFinishProgress || needReceiveProgress;
   }
 
   private boolean handleFinish() {
@@ -293,6 +350,46 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     return delegate.isComplete();
   }
 
+  public boolean handleReceivedChannelMessage(ChannelMessage currentMessage) {
+    int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+        DataFlowContext.DEFAULT_DESTINATION);
+
+    RoutingParameters routingParameters;
+    if (routingParametersCache.containsKey(src)) {
+      routingParameters = routingParametersCache.get(src);
+    } else {
+      routingParameters = sendRoutingParameters(src, DataFlowContext.DEFAULT_DESTINATION);
+    }
+
+    ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
+        pendingSendMessagesPerSource.get(src);
+
+    // create a send message to keep track of the serialization at the initial stage
+    // the sub-edge is 0
+    int di = -1;
+    if (routingParameters.getExternalRoutes().size() > 0) {
+      di = routingParameters.getDestinationId();
+    }
+    OutMessage sendMessage = new OutMessage(src,
+        currentMessage.getHeader().getEdge(),
+        di, DataFlowContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
+        routingParameters.getInternalRoutes(),
+        routingParameters.getExternalRoutes(), type, null, delegate);
+    sendMessage.getChannelMessages().offer(currentMessage);
+
+    // we need to update here
+    if (!currentMessage.isOutCountUpdated()) {
+      currentMessage.incrementRefCount(routingParameters.getExternalRoutes().size());
+      currentMessage.setOutCountUpdated(true);
+    }
+    // this is a complete message
+    sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
+
+    // now try to put this into pending
+    return pendingSendMessages.offer(
+        new ImmutablePair<>(DataFlowContext.EMPTY_OBJECT, sendMessage));
+  }
+
   public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
     int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
         DataFlowContext.DEFAULT_DESTINATION);
@@ -307,24 +404,24 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(src);
 
-    ChannelMessage channelMessage = new ChannelMessage(src, type,
-        MessageDirection.OUT, delegate);
-
     // create a send message to keep track of the serialization
     // at the intial stage the sub-edge is 0
     int di = -1;
     if (routingParameters.getExternalRoutes().size() > 0) {
       di = routingParameters.getDestinationId();
     }
-    OutMessage sendMessage = new OutMessage(src, channelMessage,
+    OutMessage sendMessage = new OutMessage(src,
         currentMessage.getHeader().getEdge(),
         di, DataFlowContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
         routingParameters.getInternalRoutes(),
-        routingParameters.getExternalRoutes());
+        routingParameters.getExternalRoutes(), type, null, delegate);
+    sendMessage.getChannelMessages().offer(currentMessage);
+    // this is a complete message
+    sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
 
     // now try to put this into pending
     return pendingSendMessages.offer(
-        new ImmutablePair<Object, OutMessage>(object, sendMessage));
+        new ImmutablePair<>(object, sendMessage));
   }
 
   private RoutingParameters sendRoutingParameters(int s, int path) {
@@ -342,8 +439,6 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
       if (internalSourceRouting != null) {
         // we always use path 0 because only one path
         routingParameters.addInternalRoutes(internalSourceRouting);
-      } else {
-        LOG.info(String.format("%d No internal routes for source %d", executor, s));
       }
 
       // get the expected routes
@@ -370,14 +465,6 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
 
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return router.receiveExpectedTaskIds();
-  }
-
-  protected boolean isLast(int src, int path, int taskIdentifier) {
-    return false;
-  }
-
-  protected boolean isLastReceiver() {
-    return true;
   }
 }
 

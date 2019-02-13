@@ -19,15 +19,11 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.api.tset.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBuilder;
-import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -39,7 +35,6 @@ public class HelloTSet extends TaskWorker implements Serializable {
   public void execute() {
     TSetBuilder builder = TSetBuilder.newBuilder(config);
     TSet<int[]> source = builder.createSource(new Source<int[]>() {
-      private static final long serialVersionUID = -1;
 
       private int count = 0;
 
@@ -53,50 +48,25 @@ public class HelloTSet extends TaskWorker implements Serializable {
         count++;
         return new int[]{1, 1, 1};
       }
-
-      @Override
-      public void prepare(TSetContext context) {
-      }
     }).setName("Source");
 
     TSet<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
 
-    TSet<int[]> reduce = partitioned.reduce(new ReduceFunction<int[]>() {
-      private static final long serialVersionUID = -2;
-      @Override
-      public int[] reduce(int[] t1, int[] t2) {
-        int[] ret = new int[t1.length];
-        for (int i = 0; i < t1.length; i++) {
-          ret[i] = t1[i] + t2[i];
-        }
-        return ret;
+    TSet<int[]> reduce = partitioned.reduce((t1, t2) -> {
+      int[] ret = new int[t1.length];
+      for (int i = 0; i < t1.length; i++) {
+        ret[i] = t1[i] + t2[i];
       }
-
-      @Override
-      public void prepare(TSetContext context) {
-
-      }
+      return ret;
     }).setName("Reduce");
 
-    reduce.sink(new Sink<int[]>() {
-      @Override
-      public void prepare(TSetContext context) {
-
-      }
-
-      private static final long serialVersionUID = -3;
-      @Override
-      public boolean add(int[] value) {
-        System.out.println(Arrays.toString(value));
-        return false;
-      }
+    reduce.sink(value -> {
+      System.out.println(Arrays.toString(value));
+      return false;
     });
 
     builder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph graph = builder.build();
-
-    KryoMemorySerializer memorySerializer = new KryoMemorySerializer();
-    byte[] ret = memorySerializer.serialize(graph);
 
     ExecutionPlan executionPlan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, executionPlan);

@@ -72,7 +72,7 @@ public class KMeansDataGenerator {
       for (int j = 0; j < dimension; j++) {
         double randomValue = r.nextDouble();
         line.append(randomValue);
-        if (j == 0) {
+        if (j != dimension - 1) {
           line.append(",").append("\t");
         }
       }

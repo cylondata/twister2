@@ -28,65 +28,72 @@ public abstract class BaseDriver implements IDriver {
   private static final Logger LOG = Logger.getLogger(BaseDriver.class.getName());
 
   /**
-   * Worker list
+   * Execution environment
    */
-  private volatile List<JobMasterAPI.WorkerInfo> workerInfoList;
+  private CDFWEnv executionEnv;
 
   /**
-   * The worker executor
+   * This queue is only used to keep the events relating to driver
    */
-  private CDFWExecutor executor;
+  private BlockingQueue<List<JobMasterAPI.WorkerInfo>> driverQueue = new LinkedBlockingDeque<>();
 
   /**
-   * The queue to coordinate between driver and workers
+   * Current driver state
    */
-  private BlockingQueue<DriverEvent> inMessages = new LinkedBlockingDeque<>();
+  private DriverState driverState = DriverState.WAIT_FOR_WORKERS_TO_START;
 
+  // there is no guarantee that execute will be called after workers joined. So, any message
+  // coming from there needs to be put into the driverQueue. After the driver is initialized,
+  // events will be handed over to the CDFWExecutor
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
-    try {
-      waitForEvent(DriveEventType.INITIALIZE);
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to wait for event");
-    }
 
-    executor = new CDFWExecutor(config, messenger);
-    executor.addWorkerList(workerInfoList);
+    // wait for the cluster to initialize
+    List<JobMasterAPI.WorkerInfo> workers = waitForDriverInit();
+
+    // init cdfw env
+    this.executionEnv = new CDFWEnv(config, scaler, messenger, workers);
 
     // call the execute method of the implementation
-    execute(config, executor);
+    execute(executionEnv);
 
     // now lets close
-    executor.close();
+    executionEnv.close();
   }
 
-  public abstract void execute(Config config, CDFWExecutor exec);
+  public abstract void execute(CDFWEnv exec);
 
   @Override
   public void workerMessageReceived(Any anyMessage, int senderWorkerID) {
-    executor.workerMessageReceived(anyMessage, senderWorkerID);
+    this.executionEnv.workerMessageReceived(anyMessage, senderWorkerID);
   }
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    // Added to get the worker info list for testing
-    if (workerList != null) {
-      this.workerInfoList = workerList;
+    if (driverState != DriverState.WAIT_FOR_WORKERS_TO_START) {
+      // if the driver is in the 'wait got workers' state, insert the events to the driver's queue
+      this.executionEnv.allWorkersJoined(workerList);
+    } else {
+      // else hand the events over to the executor through the exec env
+      try {
+        this.driverQueue.put(workerList);
+      } catch (InterruptedException e) {
+        throw new RuntimeException("Failed to insert the event", e);
+      }
     }
-
-    inMessages.offer(new DriverEvent(DriveEventType.INITIALIZE, null));
   }
 
-  private DriverEvent waitForEvent(DriveEventType type) throws Exception {
-    // lets wait for driver events
+  private List<JobMasterAPI.WorkerInfo> waitForDriverInit() {
+    // waiting till the workers join the cluster
     try {
-      DriverEvent event = inMessages.take();
-      if (event.getType() != type) {
-        throw new Exception("Un-expected event: " + type);
-      }
-      return event;
+      List<JobMasterAPI.WorkerInfo> workers = this.driverQueue.take();
+
+      this.driverState = DriverState.INITIALIZE;
+
+      return workers;
     } catch (InterruptedException e) {
-      throw new RuntimeException("Failed to take event", e);
+      throw new RuntimeException("Failed to take events from the queue", e);
     }
+
   }
 }

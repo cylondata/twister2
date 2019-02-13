@@ -251,15 +251,17 @@ public class TWSTCPChannel implements TWSChannel {
         if (status == TCPStatus.COMPLETE) {
           // lets call the callback about the receive complete
           r.buffer.setSize(r.buffer.getByteBuffer().limit());
-          receiveRequests.callback.onReceiveComplete(
-              receiveRequests.rank, receiveRequests.edge, r.buffer);
-          requestIterator.remove();
+
           if (receiveRequests.pendingRequests.size() == 0
               && receiveRequests.availableBuffers.size() == 0) {
             //We do not have any buffers to receive messages so we need to free a buffer
-            receiveRequests.callback.freeReceiveBuffers(receiveRequests.rank,
-                receiveRequests.edge);
+            receiveRequests.callback.onReceiveComplete(
+                receiveRequests.rank, receiveRequests.edge, r.buffer, true);
+          } else {
+            receiveRequests.callback.onReceiveComplete(
+                receiveRequests.rank, receiveRequests.edge, r.buffer, false);
           }
+          requestIterator.remove();
         }
       }
     }

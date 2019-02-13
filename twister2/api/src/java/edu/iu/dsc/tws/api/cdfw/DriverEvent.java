@@ -15,15 +15,20 @@ import com.google.protobuf.Any;
 
 /**
  * Represents an event for Driver
+ * <p>
+ * todo: check whether this is really required!
  */
 public class DriverEvent {
   private DriveEventType type;
 
   private Any message;
 
-  public DriverEvent(DriveEventType type, Any message) {
+  private int senderId;
+
+  public DriverEvent(DriveEventType type, Any message, int senderId) {
     this.type = type;
     this.message = message;
+    this.senderId = senderId;
   }
 
   public DriveEventType getType() {
@@ -32,5 +37,9 @@ public class DriverEvent {
 
   public Any getMessage() {
     return message;
+  }
+
+  public int getSenderId() {
+    return senderId;
   }
 }

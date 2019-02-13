@@ -11,8 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import edu.iu.dsc.tws.comms.api.MessageHeader;
+
 public interface ChannelReceiver {
-  boolean receiveMessage(ChannelMessage currentMessage, Object object);
+  boolean receiveMessage(MessageHeader header, Object object);
   boolean receiveSendInternally(int source, int target, int path, int flags, Object message);
   boolean passMessageDownstream(Object object, ChannelMessage currentMessage);
+
+  default boolean handleReceivedChannelMessage(ChannelMessage currentMessage) {
+    return true;
+  }
 }

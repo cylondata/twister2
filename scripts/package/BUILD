@@ -121,28 +121,40 @@ pack_tw2(
 
 pack_tw2(
     name = "twister2-ompi-lib",
-    srcs = ["@ompi3//:ompi-lib-files"],
+    srcs = select({
+                   "//tools/platform:darwin": ["@ompi3darwin//:ompi-lib-files"],
+                   "//conditions:default": ["@ompi3//:ompi-lib-files"],
+               }),
     package_dir = "ompi/lib",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-ompi-bin",
-    srcs = ["@ompi3//:ompi-bin-files"],
+    srcs = select({
+                   "//tools/platform:darwin": ["@ompi3darwin//:ompi-bin-files"],
+                   "//conditions:default": ["@ompi3//:ompi-bin-files"],
+               }),
     package_dir = "ompi/bin",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-ompi-include",
-    srcs = ["@ompi3//:ompi-include-files"],
+        srcs = select({
+                       "//tools/platform:darwin": ["@ompi3darwin//:ompi-include-files"],
+                       "//conditions:default": ["@ompi3//:ompi-include-files"],
+                   }),
     package_dir = "ompi/include",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-ompi-etc",
-    srcs = ["@ompi3//:ompi-etc-files"],
+        srcs = select({
+                       "//tools/platform:darwin": ["@ompi3darwin//:ompi-etc-files"],
+                       "//conditions:default": ["@ompi3//:ompi-etc-files"],
+                   }),
     package_dir = "ompi/etc",
     version = T2_VERSION,
 )

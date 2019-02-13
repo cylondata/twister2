@@ -1,0 +1,106 @@
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.examples.tset;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashMap;
+
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Submitter;
+import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.tset.Source;
+import edu.iu.dsc.tws.api.tset.TSet;
+import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+
+public class HelloTSetEnv extends TSetBaseWorker implements Serializable {
+  private static final long serialVersionUID = -2;
+
+  @Override
+  public void execute(TSetEnv executionEnv) {
+    TSet<int[]> source = executionEnv.createSource(new Source<int[]>() {
+      private static final long serialVersionUID = -1;
+
+      private int count = 0;
+
+      @Override
+      public boolean hasNext() {
+        return count < 1;
+      }
+
+      @Override
+      public int[] next() {
+        count++;
+        return new int[]{1, 1, 1};
+      }
+
+      @Override
+      public void prepare(TSetContext context) {
+      }
+    }).setName("Source");
+
+    TSet<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
+
+    TSet<int[]> reduce = partitioned.reduce((t1, t2) -> {
+      int[] ret = new int[t1.length];
+      for (int i = 0; i < t1.length; i++) {
+        ret[i] = t1[i] + t2[i];
+      }
+      return ret;
+    }).setName("Reduce");
+
+    reduce.sink(value -> {
+      System.out.println(Arrays.toString(value));
+      return false;
+    });
+
+    executionEnv.run();
+  }
+
+  public static void main(String[] args) {
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+    submitJob(config, 4, jobConfig, HelloTSetEnv.class.getName());
+  }
+
+  private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
+    Twister2Job twister2Job;
+    twister2Job = Twister2Job.newBuilder()
+        .setJobName(clazz)
+        .setWorkerClass(clazz)
+        .addComputeResource(1, 512, containers)
+        .setConfig(jobConfig)
+        .build();
+    // now submit the job
+    Twister2Submitter.submitJob(twister2Job, config);
+  }
+
+}

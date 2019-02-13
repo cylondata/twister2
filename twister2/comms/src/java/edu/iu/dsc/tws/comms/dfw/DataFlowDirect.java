@@ -35,8 +35,8 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.SingleMessageDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.SingleMessageSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.DirectRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
@@ -151,8 +151,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
-    MessageHeader header = currentMessage.getHeader();
+  public boolean receiveMessage(MessageHeader header, Object object) {
     int target = header.getDestinationIdentifier();
     // check weather this message is for a sub task
     return finalReceiver.onMessage(header.getSourceId(), 0,
@@ -181,24 +180,25 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   private void init() {
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource
+    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
         = new HashMap<>();
-    Map<Integer, Queue<ChannelMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
     thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sourceSet);
     for (int s : thisSources) {
       // later look at how not to allocate pairs for this each time
-      pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<Pair<Object, OutMessage>>(
+      pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
-      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<ChannelMessage>(
+      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
-      serializerMap.put(s, new SingleMessageSerializer(new KryoSerializer()));
+      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), taskPlan.getThisExecutor()));
     }
 
     for (int tar : targets) {
-      MessageDeSerializer messageDeSerializer = new SingleMessageDeSerializer(new KryoSerializer());
+      MessageDeSerializer messageDeSerializer = new UnifiedDeserializer(new KryoSerializer(),
+          taskPlan.getThisExecutor());
       deSerializerMap.put(tar, messageDeSerializer);
     }
 
@@ -209,7 +209,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     this.finalReceiver.init(config, this, receiveExpectedTaskIds());
 
     delegate.init(config, type, taskPlan, edgeValue, router.receivingExecutors(),
-        router.isLastReceiver(), this, pendingSendMessagesPerSource,
+        this, pendingSendMessagesPerSource,
         pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
   }
@@ -335,7 +335,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
       int src = sources.get(i);
       int tar = targets.get(i);
 
-      if (workerTasks.contains(src)) {
+      if (workerTasks != null && workerTasks.contains(src)) {
         RoutingParameters params = sendRoutingParameters(src, tar);
         routes.put(src, params);
       }

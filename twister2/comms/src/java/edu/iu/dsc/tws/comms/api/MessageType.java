@@ -24,7 +24,6 @@ public enum MessageType {
   LONG(true),
   DOUBLE(true),
   OBJECT,
-  BUFFER,
   EMPTY,
   SHORT(true);
 

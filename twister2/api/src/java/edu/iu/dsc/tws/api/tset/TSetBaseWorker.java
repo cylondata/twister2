@@ -9,19 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.api.tset;
 
-public enum OperationSemantics {
-  /**
-   * Pure streaming without an end
-   */
-  STREAMING,
-  /**
-   * Only one communication
-   */
-  BATCH,
-  /**
-   * Streaming with and end, not sorted
-   */
-  STREAMING_BATCH,
+import java.io.Serializable;
+
+import edu.iu.dsc.tws.api.task.TaskWorker;
+
+public abstract class TSetBaseWorker extends TaskWorker implements Serializable {
+
+  @Override
+  public void execute() {
+    TSetEnv execEnv = new TSetEnv(this.config, this.taskExecutor);
+    execute(execEnv);
+  }
+
+  public abstract void execute(TSetEnv executionEnv);
 }
+

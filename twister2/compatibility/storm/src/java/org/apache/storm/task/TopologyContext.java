@@ -40,4 +40,14 @@ public class TopologyContext {
   public TopologyContext(TaskContext t2TaskContext) {
     this.t2TaskContext = t2TaskContext;
   }
+
+  public int getThisTaskId() {
+    return this.t2TaskContext.taskId();
+  }
+
+  public String getThisComponentId() {
+    return this.t2TaskContext.taskName();
+  }
+
+  //todo implement other methods if required
 }
