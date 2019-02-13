@@ -22,5 +22,7 @@ public interface TFunction extends Serializable {
    *
    * @param context context
    */
-  void prepare(TSetContext context);
+  default void prepare(TSetContext context) {
+
+  }
 }
