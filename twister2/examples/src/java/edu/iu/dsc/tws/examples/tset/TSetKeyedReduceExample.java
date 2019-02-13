@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -35,19 +34,12 @@ public class TSetKeyedReduceExample extends BaseTSetWorker {
     TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
     TSet<int[]> reduce = source.groupBy(new LoadBalancePartitioner<>(), new IdentitySelector<>()).
-        keyedReduce(new ReduceFunction<int[]>() {
-          @Override
-          public int[] reduce(int[] t1, int[] t2) {
-            int[] val = new int[t1.length];
-            for (int i = 0; i < t1.length; i++) {
-              val[i] = t1[i] + t2[i];
-            }
-            return val;
+        keyedReduce((t1, t2) -> {
+          int[] val = new int[t1.length];
+          for (int i = 0; i < t1.length; i++) {
+            val[i] = t1[i] + t2[i];
           }
-
-          @Override
-          public void prepare(TSetContext context) {
-          }
+          return val;
         }).setParallelism(10);
 
     reduce.sink(new Sink<int[]>() {
