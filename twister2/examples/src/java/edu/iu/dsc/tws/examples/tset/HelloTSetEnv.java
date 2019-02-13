@@ -30,8 +30,6 @@ import java.util.HashMap;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.tset.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
@@ -69,35 +67,17 @@ public class HelloTSetEnv extends TSetBaseWorker implements Serializable {
 
     TSet<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
 
-    TSet<int[]> reduce = partitioned.reduce(new ReduceFunction<int[]>() {
-      private static final long serialVersionUID = -2;
-      @Override
-      public int[] reduce(int[] t1, int[] t2) {
-        int[] ret = new int[t1.length];
-        for (int i = 0; i < t1.length; i++) {
-          ret[i] = t1[i] + t2[i];
-        }
-        return ret;
+    TSet<int[]> reduce = partitioned.reduce((t1, t2) -> {
+      int[] ret = new int[t1.length];
+      for (int i = 0; i < t1.length; i++) {
+        ret[i] = t1[i] + t2[i];
       }
-
-      @Override
-      public void prepare(TSetContext context) {
-
-      }
+      return ret;
     }).setName("Reduce");
 
-    reduce.sink(new Sink<int[]>() {
-      @Override
-      public void prepare(TSetContext context) {
-
-      }
-
-      private static final long serialVersionUID = -3;
-      @Override
-      public boolean add(int[] value) {
-        System.out.println(Arrays.toString(value));
-        return false;
-      }
+    reduce.sink(value -> {
+      System.out.println(Arrays.toString(value));
+      return false;
     });
 
     executionEnv.run();
