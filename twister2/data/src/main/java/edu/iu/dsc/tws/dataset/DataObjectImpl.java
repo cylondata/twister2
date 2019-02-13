@@ -28,12 +28,8 @@ public class DataObjectImpl<T> implements DataObject<T> {
   }
 
   public DataPartition<T>[] getPartitions() {
-    DataPartition<T>[] parts = new DataPartition[partitions.values().size()];
-    int i = 0;
-    for (DataPartition<T> t : partitions.values()) {
-      parts[i++] = t;
-    }
-    return parts;
+    DataPartition<T>[] parts = new DataPartition[partitions.size()];
+    return partitions.values().toArray(parts);
   }
 
   @Override
