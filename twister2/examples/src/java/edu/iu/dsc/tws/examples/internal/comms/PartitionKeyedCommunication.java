@@ -105,7 +105,6 @@ public class PartitionKeyedCommunication implements IWorker {
       FinalPartitionReciver finalPartitionRec = new FinalPartitionReciver();
       partition = new DataFlowPartition(network,
           sources, dests, finalPartitionRec, new PartialPartitionReciver(),
-          DataFlowPartition.PartitionStratergy.DIRECT,
           MessageType.INTEGER, MessageType.INTEGER);
       partition.init(cfg, MessageType.INTEGER, taskPlan, 0);
 

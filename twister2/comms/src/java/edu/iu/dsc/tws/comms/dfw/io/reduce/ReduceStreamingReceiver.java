@@ -97,6 +97,8 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
 
   @Override
   public boolean progress() {
+//    LOG.log(Level.INFO, String.format("%d RECEIVE COUNTS %s total: %s",
+//        executor, counts, totalCounts));
     boolean needsFurtherProgress = false;
     for (int t : messages.keySet()) {
       boolean canProgress = true;
@@ -106,6 +108,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
       Queue<Object> reducedValues = this.reducedValuesMap.get(t);
 
       while (canProgress) {
+//        LOG.info(String.format("%d Reduce ENTER", executor));
         boolean found = true;
         boolean moreThanOne = false;
         for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
@@ -150,6 +153,7 @@ public abstract class ReduceStreamingReceiver implements MessageReceiver {
             needsFurtherProgress = true;
           }
         }
+//        LOG.info(String.format("%d Reduce EXIT", executor));
       }
     }
     return needsFurtherProgress;

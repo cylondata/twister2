@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,7 +99,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
     this.executor = taskPlan.getThisExecutor();
 
     broadcast = new DataFlowBroadcast(channel, middleTask, destinations,
-        new BCastReceiver(finalReceiver));
+        new BCastReceiver(finalReceiver, streaming));
     broadcast.init(config, t, instancePlan, broadCastEdge);
 
     MessageReceiver receiver;
@@ -191,23 +192,44 @@ public class DataFlowAllReduce implements DataFlowOperation {
   private static class BCastReceiver implements MessageReceiver {
     private SingularReceiver singularReceiver;
 
-    BCastReceiver(SingularReceiver reduceRcvr) {
+    private Map<Integer, Boolean> finished = new HashMap<>();
+
+    private boolean strm = false;
+
+    BCastReceiver(SingularReceiver reduceRcvr, boolean strm) {
       this.singularReceiver = reduceRcvr;
+      this.strm = strm;
     }
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       this.singularReceiver.init(cfg, expectedIds.keySet());
+      for (int i : expectedIds.keySet()) {
+        finished.put(i, false);
+      }
     }
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      return singularReceiver.receive(target, object);
+      boolean offer = singularReceiver.receive(target, object);
+      if (offer) {
+        finished.put(target, true);
+      }
+      return offer;
     }
 
     @Override
     public boolean progress() {
-      return false;
+      if (strm) {
+        return true;
+      } else {
+        for (Boolean b : finished.values()) {
+          if (!b) {
+            return true;
+          }
+        }
+        return false;
+      }
     }
   }
 }

@@ -18,7 +18,6 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.OperationSemantics;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -38,8 +37,7 @@ public class BKeyedPartition {
     String shuffleDir = comm.getPersistentDirectory();
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
         new DPartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
-        new PartitionPartialReceiver(),
-        DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
+        new PartitionPartialReceiver(), dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
@@ -52,8 +50,7 @@ public class BKeyedPartition {
     String shuffleDir = comm.getPersistentDirectory();
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
         new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
-        new PartitionPartialReceiver(),
-        DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
+        new PartitionPartialReceiver(), dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
@@ -69,9 +66,8 @@ public class BKeyedPartition {
     this.partition = new DataFlowPartition(comm.getConfig(), comm.getChannel(), plan,
         sources, destinations,
         new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
-        new PartitionPartialReceiver(),
-        DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType, recvKeyType,
-        recvDataType, OperationSemantics.STREAMING_BATCH, e);
+        new PartitionPartialReceiver(), dataType, keyType, recvKeyType,
+        recvDataType, e);
     this.partition.init(comm.getConfig(), dataType, plan, e);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
@@ -87,9 +83,8 @@ public class BKeyedPartition {
     this.partition = new DataFlowPartition(comm.getConfig(), comm.getChannel(), plan,
         sources, destinations,
         new DPartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
-        new PartitionPartialReceiver(),
-        DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType, recvKeyType,
-        recvDataType, OperationSemantics.STREAMING_BATCH, e);
+        new PartitionPartialReceiver(), dataType, keyType, recvKeyType,
+        recvDataType, e);
     this.partition.init(comm.getConfig(), dataType, plan, e);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }

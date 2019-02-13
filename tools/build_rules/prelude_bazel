@@ -36,6 +36,7 @@ load(
 load(
     "@//tools/rules:java_tests.bzl",
     "java_tests",
+    "java_tests_debug",
 )
 
 

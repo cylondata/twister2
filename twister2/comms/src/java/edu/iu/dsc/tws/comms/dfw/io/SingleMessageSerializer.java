@@ -33,7 +33,6 @@ public class SingleMessageSerializer implements MessageSerializer {
   private KryoSerializer serializer;
   private Config config;
   private boolean keyed;
-  private int executor;
 
   private static final int HEADER_SIZE = 16;
 
@@ -69,7 +68,7 @@ public class SingleMessageSerializer implements MessageSerializer {
   public Object build(Object message, Object partialBuildObject) {
     OutMessage sendMessage = (OutMessage) partialBuildObject;
     // we got an already serialized message, lets just return it
-    if (sendMessage.getChannelMessage().isComplete()) {
+    if (sendMessage.getChannelMessages().peek().isComplete()) {
       sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
       return sendMessage;
     }
@@ -78,7 +77,7 @@ public class SingleMessageSerializer implements MessageSerializer {
       sendMessage.setSerializationState(new SerializeState());
     }
 
-    while (sendBuffers.size() > 0 && sendMessage.serializedState()
+    while (sendBuffers.size() > 0 && sendMessage.getSendState()
         != OutMessage.SendState.SERIALIZED) {
       DataBuffer buffer = sendBuffers.poll();
 
@@ -86,16 +85,15 @@ public class SingleMessageSerializer implements MessageSerializer {
         break;
       }
 
-      if (sendMessage.serializedState() == OutMessage.SendState.INIT
-          || sendMessage.serializedState() == OutMessage.SendState.SENT_INTERNALLY) {
+      if (sendMessage.getSendState() == OutMessage.SendState.INIT
+          || sendMessage.getSendState() == OutMessage.SendState.SENT_INTERNALLY) {
         // build the header
-        buildHeader(buffer, sendMessage);
+        DFWIOUtils.buildHeader(buffer, sendMessage);
         sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
       }
 
-      if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT
-          || sendMessage.serializedState() == OutMessage.SendState.BODY_BUILT
-          || sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+      if (sendMessage.getSendState() == OutMessage.SendState.HEADER_BUILT
+          || sendMessage.getSendState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
         if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
           sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
           sendMessage.getSerializationState().setTotalBytes(0);
@@ -111,9 +109,9 @@ public class SingleMessageSerializer implements MessageSerializer {
         }
       }
       // okay we are adding this buffer
-      sendMessage.getChannelMessage().addBuffer(buffer);
-      if (sendMessage.serializedState() == OutMessage.SendState.SERIALIZED) {
-        ChannelMessage channelMessage = sendMessage.getChannelMessage();
+      sendMessage.getChannelMessages().peek().addBuffer(buffer);
+      if (sendMessage.getSendState() == OutMessage.SendState.SERIALIZED) {
+        ChannelMessage channelMessage = sendMessage.getChannelMessages().peek();
         SerializeState state = sendMessage.getSerializationState();
         if (!channelMessage.isHeaderSent()) {
           int totalBytes = state.getTotalBytes();
@@ -130,8 +128,8 @@ public class SingleMessageSerializer implements MessageSerializer {
         }
         // mark the original message as complete
         channelMessage.setComplete(true);
-      } else if (sendMessage.serializedState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
-        ChannelMessage channelMessage = sendMessage.getChannelMessage();
+      } else if (sendMessage.getSendState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
+        ChannelMessage channelMessage = sendMessage.getChannelMessages().peek();
         SerializeState state = sendMessage.getSerializationState();
         if (!channelMessage.isHeaderSent()) {
           int totalBytes = state.getCurretHeaderLength();
@@ -155,31 +153,6 @@ public class SingleMessageSerializer implements MessageSerializer {
   }
 
   /**
-   * Builds the header of the message. The length value is inserted later so 0 is added as a place
-   * holder value. The header structure is |source|flags|destinationID|length|
-   *
-   * @param buffer the buffer to which the header is placed
-   * @param sendMessage the message that the header is build for
-   */
-  private void buildHeader(DataBuffer buffer, OutMessage sendMessage) {
-    if (buffer.getCapacity() < HEADER_SIZE) {
-      throw new RuntimeException("The buffers should be able to hold the complete header");
-    }
-    ByteBuffer byteBuffer = buffer.getByteBuffer();
-    // now lets put the content of header in
-    byteBuffer.putInt(sendMessage.getSource());
-    // the path we are on, if not grouped it will be 0 and ignored
-    byteBuffer.putInt(sendMessage.getFlags());
-    byteBuffer.putInt(sendMessage.getPath());
-    // we add 0 for now and late change it
-    byteBuffer.putInt(0);
-    // at this point we haven't put the length and we will do it at the serialization
-    sendMessage.setWrittenHeaderSize(HEADER_SIZE);
-    // lets set the size for 16 for now
-    buffer.setSize(HEADER_SIZE);
-  }
-
-  /**
    * Builds the body of the message. Based on the message type different build methods are called
    *
    * @param payload the message that needs to be built
@@ -189,7 +162,7 @@ public class SingleMessageSerializer implements MessageSerializer {
    */
   private boolean serializeBody(Object payload,
                                 OutMessage sendMessage, DataBuffer targetBuffer) {
-    MessageType type = sendMessage.getChannelMessage().getType();
+    MessageType type = sendMessage.getDataType();
     if ((sendMessage.getFlags() & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
       return serializeData(payload, sendMessage.getSerializationState(), targetBuffer, type);
     } else {
@@ -203,8 +176,6 @@ public class SingleMessageSerializer implements MessageSerializer {
           return serializeKeyedData(tuple.getValue(), tuple.getKey(),
               sendMessage.getSerializationState(), targetBuffer, type, tuple.getKeyType());
         }
-      } else if (type == MessageType.BUFFER) {
-        return serializeBuffer(payload, sendMessage, targetBuffer);
       }
     }
     return false;
@@ -260,17 +231,7 @@ public class SingleMessageSerializer implements MessageSerializer {
     targetBuffer.setSize(byteBuffer.position());
 
     // okay we are done with the message
-    if (completed) {
-      // add the key size at the end to total size
-      state.setBytesCopied(0);
-      state.setBufferNo(0);
-      state.setData(null);
-      state.setPart(SerializeState.Part.INIT);
-      state.setKeySize(0);
-      return true;
-    } else {
-      return false;
-    }
+    return DFWIOUtils.resetState(state, completed);
   }
 
   /**
@@ -305,43 +266,6 @@ public class SingleMessageSerializer implements MessageSerializer {
     targetBuffer.setSize(byteBuffer.position());
 
     // okay we are done with the message
-    if (completed) {
-      // add the key size at the end to total size
-      state.setBytesCopied(0);
-      state.setBufferNo(0);
-      state.setData(null);
-      state.setPart(SerializeState.Part.INIT);
-      state.setKeySize(0);
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  /**
-   * Helper method that builds the body of the message for targetBuffer type messages.
-   *
-   * @param payload the message that needs to be built
-   * @param sendMessage the send message object that contains all the metadata
-   * @param targetBuffer the data targetBuffer to which the built message needs to be copied
-   * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
-   */
-  private boolean serializeBuffer(Object payload, OutMessage sendMessage, DataBuffer targetBuffer) {
-    DataBuffer dataBuffer = (DataBuffer) payload;
-    ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
-    if (sendMessage.serializedState() == OutMessage.SendState.HEADER_BUILT) {
-      // okay we need to serialize the data
-      // at this point we know the length of the data
-      byteBuffer.putInt(HEADER_SIZE - Integer.BYTES, dataBuffer.getSize());
-      // now lets set the header
-      MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
-          sendMessage.getEdge(), dataBuffer.getSize());
-      builder.destination(sendMessage.getPath());
-      sendMessage.getChannelMessage().setHeader(builder.build());
-    }
-    targetBuffer.setSize(HEADER_SIZE + dataBuffer.getSize());
-    // okay we are done with the message
-    sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
-    return true;
+    return DFWIOUtils.resetState(state, completed);
   }
 }

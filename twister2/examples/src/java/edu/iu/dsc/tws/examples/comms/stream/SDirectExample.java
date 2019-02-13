@@ -95,7 +95,7 @@ public class SDirectExample extends BenchWorker {
     public boolean receive(int target, Object object) {
       count += 1;
 
-      LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
+      LOG.log(Level.INFO, String.format("%d Received message to task: %d count: %d expected: %d",
           workerId, target, count, expected));
       // Since this is a streaming example we will simply stop after a number of messages are
       // received

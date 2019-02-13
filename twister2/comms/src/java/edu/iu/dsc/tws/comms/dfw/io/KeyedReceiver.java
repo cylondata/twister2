@@ -365,12 +365,12 @@ public abstract class KeyedReceiver implements MessageReceiver {
     return isSent;
   }
 
-  @Override
   /**
    * Default progress method for keyed receivers. This method is targeted at partial receivers
    * which typically execute the same logic. For custom progress logic this method needs to be
    * overwritten
    */
+  @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;
     boolean sourcesFinished = false;

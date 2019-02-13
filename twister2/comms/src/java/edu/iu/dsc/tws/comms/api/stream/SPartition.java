@@ -54,7 +54,7 @@ public class SPartition {
                     DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
     this.partition = new DataFlowPartition(comm.getChannel(), sources, targets, rcvr,
-        new PartitionPartialReceiver(), DataFlowPartition.PartitionStratergy.DIRECT, dataType);
+        new PartitionPartialReceiver(), dataType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }

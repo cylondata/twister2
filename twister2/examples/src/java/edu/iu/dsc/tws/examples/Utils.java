@@ -183,7 +183,7 @@ public final class Utils {
 
     Set<Integer> tasksOfExec = plan.getChannelsOfExecutor(exec);
     for (int i = 0; i < noOfTasks; i++) {
-      if (tasksOfExec.contains(i + total)) {
+      if (tasksOfExec != null && tasksOfExec.contains(i + total)) {
         out.add(i + total);
       }
     }

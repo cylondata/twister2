@@ -36,8 +36,8 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.MultiMessageDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -124,11 +124,9 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
    * to the main task of the executor and we go from there
    */
   @Override
-  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
-    MessageHeader header = currentMessage.getHeader();
-
+  public boolean receiveMessage(MessageHeader header, Object object) {
     // we always receive to the main task
-    int messageDestId = currentMessage.getHeader().getDestinationIdentifier();
+    int messageDestId = header.getDestinationIdentifier();
     // check weather this message is for a sub task
     if (!isLast()
         && partialReceiver != null) {
@@ -264,9 +262,9 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource
+    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
         = new HashMap<>();
-    Map<Integer, Queue<ChannelMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
@@ -277,7 +275,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
           new ArrayBlockingQueue<Pair<Object, OutMessage>>(
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      serializerMap.put(s, new MultiMessageSerializer(new KryoSerializer(), executor));
+      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor));
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -289,11 +287,11 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     Set<Integer> execs = router.receivingExecutors();
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, ChannelMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<Pair<Object, ChannelMessage>>(capacity);
+      Queue<Pair<Object, InMessage>> pendingReceiveMessages =
+          new ArrayBlockingQueue<>(capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
-      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<ChannelMessage>(capacity));
-      deSerializerMap.put(e, new MultiMessageDeserializer(new KryoSerializer(), executor));
+      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<InMessage>(capacity));
+      deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), executor));
     }
 
     Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
@@ -303,7 +301,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     }
 
     delegete.init(cfg, t, rcvDataType, keyType, keyType, taskPlan, ed,
-        router.receivingExecutors(), router.isLastReceiver(), this,
+        router.receivingExecutors(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
   }

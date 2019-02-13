@@ -35,8 +35,6 @@ public class DirectRouter {
   private Map<Integer, List<Integer>> upstream;
   // receiving executors
   private Set<Integer> receiveExecutors;
-  /// tasks of this executor
-  private Set<Integer> thisExecutorTasks;
 
   /**
    * Create a direct router
@@ -52,20 +50,22 @@ public class DirectRouter {
     this.internalSendTasks = new HashMap<>();
 
     Set<Integer> myTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
-    for (int i = 0; i < srscs.size(); i++) {
-      // for each source we have a fixed target
-      int src = srscs.get(i);
-      int tar = dest.get(i);
-      if (myTasks.contains(src)) {
-        // okay the destination is in the same executor
-        if (myTasks.contains(tar)) {
-          Set<Integer> set = new HashSet<>();
-          set.add(tar);
-          internalSendTasks.put(src, set);
-        } else {
-          Set<Integer> set = new HashSet<>();
-          set.add(tar);
-          externalSendTasks.put(src, set);
+    if (myTasks != null) {
+      for (int i = 0; i < srscs.size(); i++) {
+        // for each source we have a fixed target
+        int src = srscs.get(i);
+        int tar = dest.get(i);
+        if (myTasks.contains(src)) {
+          // okay the destination is in the same executor
+          if (myTasks.contains(tar)) {
+            Set<Integer> set = new HashSet<>();
+            set.add(tar);
+            internalSendTasks.put(src, set);
+          } else {
+            Set<Integer> set = new HashSet<>();
+            set.add(tar);
+            externalSendTasks.put(src, set);
+          }
         }
       }
     }
@@ -90,7 +90,6 @@ public class DirectRouter {
         }
       }
     }
-    this.thisExecutorTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
   }
 
   public Set<Integer> receivingExecutors() {
@@ -109,7 +108,8 @@ public class DirectRouter {
   public boolean isLastReceiver() {
     for (int t : destination) {
       // now check if destination is in this worker
-      if (taskPlan.getTasksOfThisExecutor().contains(t)) {
+      Set<Integer> tasksOfThisExecutor = taskPlan.getTasksOfThisExecutor();
+      if (tasksOfThisExecutor != null && tasksOfThisExecutor.contains(t)) {
         return true;
       }
     }

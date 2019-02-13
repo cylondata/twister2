@@ -106,12 +106,16 @@ public class BBroadcastExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Iterator<Object> object) {
-      count++;
-      if (count % jobParameters.getPrintInterval() == 0) {
+//      if (count % jobParameters.getPrintInterval() == 0) {
+//        LOG.log(Level.INFO, String.format("%d Received message to %d - %d",
+//            workerId, target, count));
+//      }
+      while (object.hasNext()) {
+        count++;
+
         LOG.log(Level.INFO, String.format("%d Received message to %d - %d",
             workerId, target, count));
-      }
-      while (object.hasNext()) {
+
         experimentData.setTaskId(target);
 
         experimentData.setOutput(object.next());

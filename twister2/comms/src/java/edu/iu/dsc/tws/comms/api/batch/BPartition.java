@@ -65,8 +65,7 @@ public class BPartition {
     }
 
     this.partition = new DataFlowPartition(comm.getChannel(), sources, targets,
-        finalRcvr, new PartitionPartialReceiver(),
-        DataFlowPartition.PartitionStratergy.DIRECT, dataType);
+        finalRcvr, new PartitionPartialReceiver(), dataType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
