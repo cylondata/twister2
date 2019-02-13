@@ -71,7 +71,7 @@ public class DataFileReadSource extends BaseSource implements Collector {
   private int numberOfCenters;
   private int dimension;
 
-  private FileReader fileReader;
+  private DataFileReader fileReader;
 
   private DataObject<double[][]> centroids = null;
 
@@ -96,7 +96,7 @@ public class DataFileReadSource extends BaseSource implements Collector {
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
     fileSystem = cfg.getStringValue(DataObjectConstants.ARGS_FILE_SYSTEM);
-    fileReader = new FileReader(config, fileSystem);
+    fileReader = new DataFileReader(config, fileSystem);
     fileDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
     dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DIMENSIONS));
     numberOfCenters = Integer.parseInt(cfg.getStringValue(DataObjectConstants.

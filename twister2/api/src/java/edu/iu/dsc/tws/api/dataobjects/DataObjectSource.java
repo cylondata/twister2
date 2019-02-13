@@ -45,9 +45,9 @@ public class DataObjectSource extends BaseSource {
         int count = 0;
         while (!inputSplit.reachedEnd()) {
           String value = inputSplit.nextRecord(null);
-          if (value != null) {                        //Bug here...
-            LOG.fine("We read value: " + value); //First index reads more value than for
-            //example 100,index 0 reads 51 & 1 reads 49.
+          if (value != null) {                     //Bug here...
+            //LOG.info("We read value: " + value); //First index reads more value than for
+            //example 100, task index 0 reads 51 & 1 reads 49
             context.write("direct", value);
             count += 1;
             totalCount += 1;
@@ -71,7 +71,6 @@ public class DataObjectSource extends BaseSource {
     String datainputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
     ExecutionRuntime runtime = (ExecutionRuntime)
         cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    String outDir = cfg.getStringValue(DataObjectConstants.ARGS_OUTPUT_DIRECTORY);
 
     boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
     if (!shared) {

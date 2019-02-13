@@ -83,14 +83,6 @@ public class KMeansJobMain {
     boolean shared =
         Boolean.parseBoolean(cmd.getOptionValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM));
 
-    // we we are a shared file system, lets generate data at the client
-    /*if (shared) {
-      KMeansDataGenerator.generateData(
-          "txt", new Path(dataDirectory), numFiles, dsize, 100, dimension);
-      KMeansDataGenerator.generateData(
-          "txt", new Path(centroidDirectory), numFiles, csize, 100, dimension);
-    }*/
-
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
 
@@ -110,8 +102,6 @@ public class KMeansJobMain {
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("KMeans-job");
-    //jobBuilder.setWorkerClass(KMeansDataParallelWorker.class.getName());
-    //jobBuilder.setWorkerClass(KMeansCentroidParallelWorker.class.getName());
     jobBuilder.setWorkerClass(KMeansJob.class.getName());
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);

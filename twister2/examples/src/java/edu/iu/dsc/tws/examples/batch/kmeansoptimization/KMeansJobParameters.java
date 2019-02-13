@@ -74,9 +74,16 @@ public final class KMeansJobParameters {
    * Task parallelism value
    */
   private int parallelismValue;
-  private int numberOfClusters;
-  private String filesystem;
 
+  /**
+   * Number of clusters
+   */
+  private int numberOfClusters;
+
+  /**
+   * Represents file system "local" or "hdfs"
+   */
+  private String filesystem;
 
   private KMeansJobParameters(int workers) {
     this.workers = workers;
