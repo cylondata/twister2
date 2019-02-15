@@ -47,9 +47,37 @@ public abstract class BaseTSet<T> implements TSet<T> {
    */
   protected int parallel = 4;
   /**
+   * Defines if the TSet is Mutable or not
+   */
+  private boolean isMutable = false;
+  /**
    * The configuration
    */
   protected Config config;
+
+  /**
+   * Possible Types of state in a TSet
+   */
+  private enum StateType {
+    /**
+     * Local state which is updated and maintained by each parallel task
+     */
+    LOCAL,
+    /**
+     * Distributed state is when each task has only access to a subset of the whole data
+     * for example if the data set has N points and T tasks each task will access N/T points
+     */
+    DISTRIBUTED,
+    /**
+     * Replicated state is state that is made available as a whole to each task
+     */
+    REPLICATED
+  }
+
+  /**
+   * The type of the TSet
+   */
+  private StateType stateType = StateType.DISTRIBUTED;
 
   public BaseTSet(Config cfg, TaskGraphBuilder bldr) {
     this.children = new ArrayList<>();
@@ -179,6 +207,22 @@ public abstract class BaseTSet<T> implements TSet<T> {
     }
   }
 
+  public boolean isMutable() {
+    return isMutable;
+  }
+
+  public void setMutable(boolean mutable) {
+    isMutable = mutable;
+  }
+
+  public StateType getStateType() {
+    return stateType;
+  }
+
+  public void setStateType(StateType stateType) {
+    this.stateType = stateType;
+  }
+
   public abstract boolean baseBuild();
 
   static <T> boolean isKeyedInput(BaseTSet<T> parent) {
@@ -263,18 +307,21 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   protected Class getType() {
-    TypeToken<T> typeToken = new TypeToken<T>(getClass()) { };
+    TypeToken<T> typeToken = new TypeToken<T>(getClass()) {
+    };
     return typeToken.getRawType();
   }
 
   /**
    * Build the connection
+   *
    * @param connection connection
    */
   abstract void buildConnection(ComputeConnection connection);
 
   /**
    * Override the parallelism
+   *
    * @return if overide, return value, otherwise -1
    */
   protected int overrideParallelism() {
@@ -283,6 +330,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   /**
    * Override the parallelism if operations require differently
+   *
    * @return new parallelism
    */
   protected <K> int calculateParallelism(BaseTSet<K> parent) {
