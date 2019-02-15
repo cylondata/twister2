@@ -31,8 +31,11 @@ public class UnifiedDeserializer implements MessageDeSerializer {
 
   private KryoSerializer serializer;
 
+  private MessageType dataType;
+
   public UnifiedDeserializer(KryoSerializer kryoSerializer, int exec, MessageType dataType) {
     this.serializer = kryoSerializer;
+    this.dataType = dataType;
     LOG.fine("Initializing serializer on worker: " + exec);
   }
 

@@ -54,6 +54,7 @@ public class UnifiedSerializer extends BaseSerializer {
   public UnifiedSerializer(KryoSerializer serializer, int executor, MessageType dataType) {
     super(serializer, executor);
     this.serializer = serializer;
+    this.dataType = dataType;
     LOG.fine("Initializing serializer on worker: " + executor);
   }
 
@@ -68,8 +69,7 @@ public class UnifiedSerializer extends BaseSerializer {
    */
   public boolean serializeSingleMessage(Object payload,
                                 OutMessage sendMessage, DataBuffer targetBuffer) {
-    MessageType type = sendMessage.getDataType();
-    return serializeData(payload, sendMessage.getSerializationState(), targetBuffer, type);
+    return serializeData(payload, sendMessage.getSerializationState(), targetBuffer);
   }
 
   /**
@@ -78,16 +78,15 @@ public class UnifiedSerializer extends BaseSerializer {
    * @param payload the message that needs to be built
    * @param state the state object of the message
    * @param targetBuffer the data targetBuffer to which the built message needs to be copied
-   * @param messageType the type of the message data
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
   private boolean serializeData(Object payload, SerializeState state,
-                                DataBuffer targetBuffer, MessageType messageType) {
+                                DataBuffer targetBuffer) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
-      int dataLength = DataSerializer.serializeData(payload, messageType, state, serializer);
+      int dataLength = DataSerializer.serializeData(payload, dataType, state, serializer);
       state.setCurretHeaderLength(dataLength);
 
       // add the header bytes to the total bytes
@@ -108,7 +107,7 @@ public class UnifiedSerializer extends BaseSerializer {
     }
 
     boolean completed = DataSerializer.copyDataToBuffer(payload,
-        messageType, byteBuffer, state, serializer);
+        dataType, byteBuffer, state, serializer);
     // now set the size of the buffer
     targetBuffer.setSize(byteBuffer.position());
 

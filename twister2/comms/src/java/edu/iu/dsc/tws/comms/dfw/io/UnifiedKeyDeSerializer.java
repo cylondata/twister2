@@ -34,9 +34,15 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
 
   private KryoSerializer serializer;
 
+  private MessageType keyType;
+
+  private MessageType dataType;
+
   public UnifiedKeyDeSerializer(KryoSerializer kryoSerializer, int exec,
                                 MessageType keyType, MessageType dataType) {
     this.serializer = kryoSerializer;
+    this.keyType = keyType;
+    this.dataType = dataType;
     LOG.fine("Initializing serializer on worker: " + exec);
   }
 
