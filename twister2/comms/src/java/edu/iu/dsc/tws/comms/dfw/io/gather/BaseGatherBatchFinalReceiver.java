@@ -35,6 +35,7 @@ public abstract class BaseGatherBatchFinalReceiver extends BaseGatherBatchReceiv
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;

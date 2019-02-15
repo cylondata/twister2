@@ -25,10 +25,12 @@ public enum MessageType {
   DOUBLE(true),
   OBJECT,
   EMPTY,
-  SHORT(true);
+  SHORT(true),
+  CUSTOM;
 
   private boolean isMultiMessageType;
   private boolean isPrimitive;
+  private String customPacker;
 
   MessageType() {
     this(false, false);
@@ -59,5 +61,21 @@ public enum MessageType {
    */
   public boolean isMultiMessageType() {
     return this.isMultiMessageType;
+  }
+
+  /**
+   * Specify a custom data packer
+   * @return a custom data packer
+   */
+  public String getCustomPacker() {
+    return customPacker;
+  }
+
+  /**
+   * Set the custom data packer
+   * @param customPacker set the custom packer
+   */
+  public void setCustomPacker(String customPacker) {
+    this.customPacker = customPacker;
   }
 }

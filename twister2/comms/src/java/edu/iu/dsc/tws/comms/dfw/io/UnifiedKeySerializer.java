@@ -12,50 +12,31 @@
 package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.nio.ByteBuffer;
+import java.util.Queue;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
-/**
- * Builds the message and copies it into data buffers.The structure of the message depends on the
- * type of message that is sent, for example if it is a keyed message or not.
- *
- * The main structure of the built message is |Header|Body|.
- *
- * The header has the following structure
- * |source|flags|destinationID|numberOfMessages|,
- * source - source of the message
- * flags - message flags
- * destinationId - where the message is sent
- * numberOfMessages - number of messages
- *
- * Header can be followed by 0 or more messages, each message will have the following structure
- * |length(integer)|message body|
- *
- * For a keyed message the message body consists of two parts
- * |key|body|
- *
- * For some keys we need to send the length of the key, i.e. byte arrays and objects. In that case
- * key consists of two parts
- * |key length(integer)|actual key|
- *
- * For other cases such as integer or double keys, we know the length of the key, so we only send
- * the key.
- */
-public class UnifiedSerializer extends BaseSerializer {
-  private static final Logger LOG = Logger.getLogger(UnifiedSerializer.class.getName());
+public class UnifiedKeySerializer extends BaseSerializer {
+  private static final Logger LOG = Logger.getLogger(UnifiedKeySerializer.class.getName());
 
-
-  public UnifiedSerializer(KryoSerializer serializer, int executor) {
+  public UnifiedKeySerializer(KryoSerializer serializer, int executor) {
     super(serializer, executor);
+
     this.serializer = serializer;
     LOG.fine("Initializing serializer on worker: " + executor);
   }
 
+  @Override
+  public void init(Config cfg, Queue<DataBuffer> buffers, boolean k) {
+    this.sendBuffers = buffers;
+  }
 
   /**
    * Builds the body of the message. Based on the message type different build methods are called
@@ -66,30 +47,36 @@ public class UnifiedSerializer extends BaseSerializer {
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
   public boolean serializeSingleMessage(Object payload,
-                                OutMessage sendMessage, DataBuffer targetBuffer) {
+                                         OutMessage sendMessage, DataBuffer targetBuffer) {
     MessageType type = sendMessage.getDataType();
-    return serializeData(payload, sendMessage.getSerializationState(), targetBuffer, type);
+    Tuple tuple = (Tuple) payload;
+    return serializeKeyedData(tuple.getValue(), tuple.getKey(),
+        sendMessage.getSerializationState(), targetBuffer, type, tuple.getKeyType());
   }
 
   /**
-   * Helper method that builds the body of the message for regular messages.
+   * Helper method that builds the body of the message for keyed messages.
    *
    * @param payload the message that needs to be built
+   * @param key the key associated with the message
    * @param state the state object of the message
    * @param targetBuffer the data targetBuffer to which the built message needs to be copied
    * @param messageType the type of the message data
+   * @param keyType the type of the message key
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
-  private boolean serializeData(Object payload, SerializeState state,
-                                DataBuffer targetBuffer, MessageType messageType) {
+  private boolean serializeKeyedData(Object payload, Object key, SerializeState state,
+                                     DataBuffer targetBuffer, MessageType messageType,
+                                     MessageType keyType) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
+      int keyLength = KeySerializer.serializeKey(key,
+          keyType, state, serializer);
       // okay we need to serialize the data
-      int dataLength = DataSerializer.serializeData(payload, messageType, state, serializer);
-      state.setCurretHeaderLength(dataLength);
-
-      // add the header bytes to the total bytes
+      int dataLength = DataSerializer.serializeData(payload,
+          messageType, state, serializer);
+      state.setCurretHeaderLength(dataLength + keyLength);
       state.setPart(SerializeState.Part.HEADER);
     }
 
@@ -98,7 +85,16 @@ public class UnifiedSerializer extends BaseSerializer {
       if (buildSubMessageHeader(targetBuffer, state.getCurretHeaderLength())) {
         return false;
       }
-      state.setPart(SerializeState.Part.BODY);
+      state.setPart(SerializeState.Part.KEY);
+    }
+
+    if (state.getPart() == SerializeState.Part.KEY) {
+      // this call will copy the key length to buffer as well
+      boolean complete = KeySerializer.copyKeyToBuffer(key,
+          keyType, targetBuffer.getByteBuffer(), state, serializer);
+      if (complete) {
+        state.setPart(SerializeState.Part.BODY);
+      }
     }
 
     // now we can serialize the body
@@ -106,6 +102,7 @@ public class UnifiedSerializer extends BaseSerializer {
       return false;
     }
 
+    // now lets copy the actual data
     boolean completed = DataSerializer.copyDataToBuffer(payload,
         messageType, byteBuffer, state, serializer);
     // now set the size of the buffer
