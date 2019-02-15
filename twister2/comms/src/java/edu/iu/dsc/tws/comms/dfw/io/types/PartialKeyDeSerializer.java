@@ -99,7 +99,7 @@ public final class PartialKeyDeSerializer {
   public static int readFromBuffer(InMessage currentMessage, int currentLocation,
                                    DataBuffer buffer, int currentObjectLength,
                                    KryoSerializer serializer) {
-    int startIndex = currentMessage.getUnPkCurrentIndex();
+    int startIndex = currentMessage.getUnPkCurrentBytes();
     switch (currentMessage.getDataType()) {
       case INTEGER:
         return deserializeInteger(currentMessage, buffer, currentLocation);
@@ -141,12 +141,12 @@ public final class PartialKeyDeSerializer {
       case CHAR:
         return valsRead;
       case BYTE:
-        int i5 = valsRead + msg.getUnPkCurrentIndex();
-        msg.addUnPkCurrentIndex(valsRead);
+        int i5 = valsRead + msg.getUnPkCurrentBytes();
+        msg.addUnPkCurrentBytes(valsRead);
         return i5;
       case OBJECT:
-        int i6 = valsRead + msg.getUnPkCurrentIndex();
-        msg.addUnPkCurrentIndex(valsRead);
+        int i6 = valsRead + msg.getUnPkCurrentBytes();
+        msg.addUnPkCurrentBytes(valsRead);
         return i6;
       default:
         break;

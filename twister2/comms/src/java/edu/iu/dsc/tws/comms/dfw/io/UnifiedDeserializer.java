@@ -93,7 +93,8 @@ public class UnifiedDeserializer implements MessageDeSerializer {
         // read the values from the buffer
         int valsRead = PartialDataDeserializer.readFromBuffer(currentMessage, currentLocation,
             buffer, currentObjectLength, serializer);
-        int totalBytesRead = PartialDataDeserializer.totalBytesRead(currentMessage, valsRead);
+        int totalBytesRead = currentMessage.addUnPkCurrentBytes(valsRead);
+
         currentLocation += valsRead;
         remaining = remaining - valsRead;
         // okay we are done with this object

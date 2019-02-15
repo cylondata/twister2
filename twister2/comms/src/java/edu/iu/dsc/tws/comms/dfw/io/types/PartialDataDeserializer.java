@@ -24,21 +24,25 @@ public final class PartialDataDeserializer {
   public static int readFromBuffer(InMessage currentMessage, int currentLocation,
                                    DataBuffer buffer, int currentObjectLength,
                                    KryoSerializer serializer) {
-    int startIndex = currentMessage.getUnPkCurrentIndex();
+    int startIndex = currentMessage.getUnPkCurrentBytes();
     switch (currentMessage.getDataType()) {
       case INTEGER:
+        startIndex = startIndex / Integer.BYTES;
         int[] val = (int[]) currentMessage.getDeserializingObject();
         return PartialDataDeserializer.deserializeInteger(buffer, currentObjectLength,
             val, startIndex, currentLocation);
       case LONG:
+        startIndex = startIndex / Long.BYTES;
         long[] longVal = (long[]) currentMessage.getDeserializingObject();
         return PartialDataDeserializer.deserializeLong(buffer, currentObjectLength,
             longVal, startIndex, currentLocation);
       case DOUBLE:
+        startIndex = startIndex / Double.BYTES;
         double[] doubleVal = (double[]) currentMessage.getDeserializingObject();
         return PartialDataDeserializer.deserializeDouble(buffer, currentObjectLength,
             doubleVal, startIndex, currentLocation);
       case SHORT:
+        startIndex = startIndex / Short.BYTES;
         short[] shortVal = (short[]) currentMessage.getDeserializingObject();
         return PartialDataDeserializer.deserializeShort(buffer, currentObjectLength,
             shortVal, startIndex, currentLocation);
@@ -101,32 +105,32 @@ public final class PartialDataDeserializer {
   public static int totalBytesRead(InMessage msg, int valsRead) {
     switch (msg.getDataType()) {
       case INTEGER:
-        int i = valsRead + msg.getUnPkCurrentIndex() * Integer.BYTES;
-        msg.addUnPkCurrentIndex(valsRead / Integer.BYTES);
+        int i = valsRead + msg.getUnPkCurrentBytes() * Integer.BYTES;
+        msg.addUnPkCurrentBytes(valsRead / Integer.BYTES);
         return i;
       case DOUBLE:
-        int i1 = valsRead + msg.getUnPkCurrentIndex() * Double.BYTES;
-        msg.addUnPkCurrentIndex(valsRead / Double.BYTES);
+        int i1 = valsRead + msg.getUnPkCurrentBytes() * Double.BYTES;
+        msg.addUnPkCurrentBytes(valsRead / Double.BYTES);
         return i1;
       case LONG:
-        int i2 = valsRead + msg.getUnPkCurrentIndex() * Long.BYTES;
-        msg.addUnPkCurrentIndex(valsRead / Long.BYTES);
+        int i2 = valsRead + msg.getUnPkCurrentBytes() * Long.BYTES;
+        msg.addUnPkCurrentBytes(valsRead / Long.BYTES);
         return i2;
       case SHORT:
-        int i3 = valsRead + msg.getUnPkCurrentIndex() * Short.BYTES;
-        msg.addUnPkCurrentIndex(valsRead / Short.BYTES);
+        int i3 = valsRead + msg.getUnPkCurrentBytes() * Short.BYTES;
+        msg.addUnPkCurrentBytes(valsRead / Short.BYTES);
         return i3;
       case CHAR:
-        int i4 = valsRead + msg.getUnPkCurrentIndex() * Character.BYTES;
-        msg.addUnPkCurrentIndex(valsRead / Character.BYTES);
+        int i4 = valsRead + msg.getUnPkCurrentBytes() * Character.BYTES;
+        msg.addUnPkCurrentBytes(valsRead / Character.BYTES);
         return i4;
       case BYTE:
-        int i5 = valsRead + msg.getUnPkCurrentIndex();
-        msg.addUnPkCurrentIndex(valsRead);
+        int i5 = valsRead + msg.getUnPkCurrentBytes();
+        msg.addUnPkCurrentBytes(valsRead);
         return i5;
       case OBJECT:
-        int i6 = valsRead + msg.getUnPkCurrentIndex();
-        msg.addUnPkCurrentIndex(valsRead);
+        int i6 = valsRead + msg.getUnPkCurrentBytes();
+        msg.addUnPkCurrentBytes(valsRead);
         return i6;
       default:
         break;

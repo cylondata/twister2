@@ -369,12 +369,13 @@ public class InMessage {
     unPkBuffers++;
   }
 
-  public int getUnPkCurrentIndex() {
+  public int getUnPkCurrentBytes() {
     return unPkCurrentIndex;
   }
 
-  public void addUnPkCurrentIndex(int index) {
+  public int addUnPkCurrentBytes(int index) {
     unPkCurrentIndex = unPkCurrentIndex + index;
+    return unPkCurrentIndex;
   }
 
   public void setUnPkCurrentIndex(int unPkCurrentIndex) {
