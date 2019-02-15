@@ -49,8 +49,9 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 public class UnifiedSerializer extends BaseSerializer {
   private static final Logger LOG = Logger.getLogger(UnifiedSerializer.class.getName());
 
+  private MessageType dataType;
 
-  public UnifiedSerializer(KryoSerializer serializer, int executor) {
+  public UnifiedSerializer(KryoSerializer serializer, int executor, MessageType dataType) {
     super(serializer, executor);
     this.serializer = serializer;
     LOG.fine("Initializing serializer on worker: " + executor);

@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
@@ -30,7 +31,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
 
   private KryoSerializer serializer;
 
-  public UnifiedDeserializer(KryoSerializer kryoSerializer, int exec) {
+  public UnifiedDeserializer(KryoSerializer kryoSerializer, int exec, MessageType dataType) {
     this.serializer = kryoSerializer;
     LOG.fine("Initializing serializer on worker: " + exec);
   }

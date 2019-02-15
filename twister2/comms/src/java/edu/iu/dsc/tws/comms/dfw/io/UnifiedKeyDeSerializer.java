@@ -20,6 +20,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
@@ -33,7 +34,8 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
 
   private KryoSerializer serializer;
 
-  public UnifiedKeyDeSerializer(KryoSerializer kryoSerializer, int exec) {
+  public UnifiedKeyDeSerializer(KryoSerializer kryoSerializer, int exec,
+                                MessageType keyType, MessageType dataType) {
     this.serializer = kryoSerializer;
     LOG.fine("Initializing serializer on worker: " + exec);
   }

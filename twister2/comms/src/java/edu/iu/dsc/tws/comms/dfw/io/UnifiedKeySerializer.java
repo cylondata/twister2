@@ -26,7 +26,8 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 public class UnifiedKeySerializer extends BaseSerializer {
   private static final Logger LOG = Logger.getLogger(UnifiedKeySerializer.class.getName());
 
-  public UnifiedKeySerializer(KryoSerializer serializer, int executor) {
+  public UnifiedKeySerializer(KryoSerializer serializer, int executor,
+                              MessageType keyType, MessageType dataType) {
     super(serializer, executor);
 
     this.serializer = serializer;

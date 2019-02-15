@@ -38,6 +38,8 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -282,7 +284,12 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
           new ArrayBlockingQueue<Pair<Object, OutMessage>>(
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor));
+      if (isKeyed) {
+        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(), executor,
+            keyType, dataType));
+      } else {
+        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor, dataType));
+      }
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -298,7 +305,12 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
-      deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), executor));
+      if (isKeyed) {
+        deSerializerMap.put(e, new UnifiedKeyDeSerializer(new KryoSerializer(),
+            executor, keyType, dataType));
+      } else {
+        deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), executor, dataType));
+      }
     }
 
     Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
