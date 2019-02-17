@@ -11,11 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-//Note: is a new type is added make sure to update the MessageTypeUtils and
-// to update edu.iu.dsc.tws.data.memory.utils.DataMessageType
-// todo above comment might be invalid
 public enum MessageType {
-
   INTEGER(true),
   CHAR(true),
   BYTE,
@@ -30,7 +26,8 @@ public enum MessageType {
 
   private boolean isMultiMessageType;
   private boolean isPrimitive;
-  private String customPacker;
+  private DataPacker dataPacker;
+  private KeyPacker keyPacker;
 
   MessageType() {
     this(false, false);
@@ -67,15 +64,31 @@ public enum MessageType {
    * Specify a custom data packer
    * @return a custom data packer
    */
-  public String getCustomPacker() {
-    return customPacker;
+  public DataPacker getDataPacker() {
+    return dataPacker;
   }
 
   /**
    * Set the custom data packer
    * @param customPacker set the custom packer
    */
-  public void setCustomPacker(String customPacker) {
-    this.customPacker = customPacker;
+  public void setCustomPacker(DataPacker customPacker) {
+    this.dataPacker = customPacker;
+  }
+
+  /**
+   * Get the key packer associated with this type
+   * @return the key packer
+   */
+  public KeyPacker getKeyPacker() {
+    return keyPacker;
+  }
+
+  /**
+   * Set the key packer associated with this type
+   * @param keyPacker key packer
+   */
+  public void setKeyPacker(KeyPacker keyPacker) {
+    this.keyPacker = keyPacker;
   }
 }

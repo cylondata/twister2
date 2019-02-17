@@ -138,6 +138,10 @@ public final class DFWIOUtils {
   }
 
   public static DataPacker createPacker(MessageType dataType) {
+    if (dataType == MessageType.CUSTOM) {
+      return dataType.getDataPacker();
+    }
+
     if (dataType == MessageType.INTEGER) {
       return new IntegerDataPacker();
     } else if (dataType == MessageType.LONG) {
@@ -155,6 +159,10 @@ public final class DFWIOUtils {
   }
 
   public static KeyPacker createKeyPacker(MessageType dataType) {
+    if (dataType == MessageType.CUSTOM) {
+      return dataType.getKeyPacker();
+    }
+
     if (dataType == MessageType.INTEGER) {
       return new IntegerKeyPacker();
     } else if (dataType == MessageType.LONG) {
