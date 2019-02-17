@@ -17,25 +17,22 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
-import edu.iu.dsc.tws.comms.dfw.io.types.PartialDataDeserializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class UnifiedDeserializer implements MessageDeSerializer {
   private static final Logger LOG = Logger.getLogger(UnifiedDeserializer.class.getName());
 
-  private KryoSerializer serializer;
-
-  private MessageType dataType;
+  private DataPacker dataPacker;
 
   public UnifiedDeserializer(KryoSerializer kryoSerializer, int exec, MessageType dataType) {
-    this.serializer = kryoSerializer;
-    this.dataType = dataType;
+    dataPacker = DFWIOUtils.createPacker(dataType);
     LOG.fine("Initializing serializer on worker: " + exec);
   }
 
@@ -84,15 +81,17 @@ public class UnifiedDeserializer implements MessageDeSerializer {
         currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
         remaining = buffer.getSize() - Integer.BYTES - 16;
         currentLocation += Integer.BYTES;
-        PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);
+        Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
+        currentMessage.setDeserializingObject(value);
+        currentMessage.setUnPkCurrentBytes(0);
         currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
       }
 
 
       while (remaining > 0) {
         // read the values from the buffer
-        int valsRead = PartialDataDeserializer.readFromBuffer(currentMessage, currentLocation,
-            buffer, currentObjectLength, serializer);
+        int valsRead = dataPacker.readDataFromBuffer(currentMessage, currentLocation,
+            buffer, currentObjectLength);
         int totalBytesRead = currentMessage.addUnPkCurrentBytes(valsRead);
 
         currentLocation += valsRead;
@@ -113,7 +112,10 @@ public class UnifiedDeserializer implements MessageDeSerializer {
           remaining = remaining - Integer.BYTES;
           currentLocation += Integer.BYTES;
 
-          PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);
+          Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
+          currentMessage.setDeserializingObject(value);
+          currentMessage.setUnPkCurrentBytes(0);
+
           currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
         } else {
           // we have to break here as we cannot read further

@@ -14,10 +14,10 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 /**
@@ -51,10 +51,15 @@ public class UnifiedSerializer extends BaseSerializer {
 
   private MessageType dataType;
 
+  private DataPacker packer;
+
   public UnifiedSerializer(KryoSerializer serializer, int executor, MessageType dataType) {
     super(serializer, executor);
     this.serializer = serializer;
     this.dataType = dataType;
+
+    packer = DFWIOUtils.createPacker(dataType);
+
     LOG.fine("Initializing serializer on worker: " + executor);
   }
 
@@ -86,7 +91,7 @@ public class UnifiedSerializer extends BaseSerializer {
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
-      int dataLength = DataSerializer.serializeData(payload, dataType, state, serializer);
+      int dataLength = packer.packData(payload, state);
       state.setCurretHeaderLength(dataLength);
 
       // add the header bytes to the total bytes
@@ -106,8 +111,7 @@ public class UnifiedSerializer extends BaseSerializer {
       return false;
     }
 
-    boolean completed = DataSerializer.copyDataToBuffer(payload,
-        dataType, byteBuffer, state, serializer);
+    boolean completed = packer.writeDataToBuffer(payload, byteBuffer, state);
     // now set the size of the buffer
     targetBuffer.setSize(byteBuffer.position());
 

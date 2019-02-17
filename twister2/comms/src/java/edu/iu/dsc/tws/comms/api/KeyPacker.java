@@ -13,41 +13,43 @@ package edu.iu.dsc.tws.comms.api;
 
 import java.nio.ByteBuffer;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
-/**
- * The data packer interface. An implementation class should be stateless.
- */
-public interface DataPacker {
-
+public interface KeyPacker {
   /**
-   * Pack the data and return the size of the data in bytes once packed
+   * Pack the key and return the size of the data in bytes once packed
    *
-   * @param data the data (can be Integer, Object etc)
+   * @param key the key (can be Integer, Object etc)
    * @param state state
    * @return the size of the packed data in bytes
    */
-  int packData(Object data, SerializeState state);
-
+  int packKey(Object key, SerializeState state);
 
   /**
    * Transfer the data to the buffer
-   * @param data the data
+   * @param key the key
    * @param targetBuffer target buffer
    * @param state this can be used to keep the sate about the packing object
    * @return true if all the data is packed
    */
-  boolean writeDataToBuffer(Object data,
-                        ByteBuffer targetBuffer, SerializeState state);
+  boolean writeKeyToBuffer(Object key,
+                           ByteBuffer targetBuffer, SerializeState state);
 
   /**
-   * Initialize the object that we are going to create
-   * @param length byte length
-   * @return the object created
+   * Initialize the key
+   * @param message the message
+   * @param buffer the data buffer
+   * @param location the current location of the buffer
+   * @return keyLength and readBytes
    */
-  Object initializeUnPackDataObject(int length);
+  Pair<Integer, Integer> getKeyLength(InMessage message, DataBuffer buffer, int location);
+
+
+  Object initializeUnPackKeyObject(int size);
 
   /**
    * Read the data from the buffer
@@ -57,7 +59,8 @@ public interface DataPacker {
    * @param currentObjectLength the current object length
    * @return the number of bytes read
    */
-  int readDataFromBuffer(InMessage currentMessage, int currentLocation,
-                         DataBuffer buffer, int currentObjectLength);
-}
+  int readKeyFromBuffer(InMessage currentMessage, int currentLocation,
+                        DataBuffer buffer, int currentObjectLength);
 
+  boolean isKeyHeaderRequired();
+}

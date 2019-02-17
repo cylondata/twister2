@@ -19,30 +19,28 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataPacker;
+import edu.iu.dsc.tws.comms.api.KeyPacker;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
-import edu.iu.dsc.tws.comms.dfw.io.types.PartialDataDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.types.PartialKeyDeSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class UnifiedKeyDeSerializer implements MessageDeSerializer {
   private static final Logger LOG = Logger.getLogger(UnifiedKeyDeSerializer.class.getName());
 
-  private KryoSerializer serializer;
+  private DataPacker dataPacker;
 
-  private MessageType keyType;
-
-  private MessageType dataType;
+  private KeyPacker keyPacker;
 
   public UnifiedKeyDeSerializer(KryoSerializer kryoSerializer, int exec,
                                 MessageType keyType, MessageType dataType) {
-    this.serializer = kryoSerializer;
-    this.keyType = keyType;
-    this.dataType = dataType;
+    dataPacker = DFWIOUtils.createPacker(dataType);
+    keyPacker = DFWIOUtils.createKeyPacker(keyType);
+
     LOG.fine("Initializing serializer on worker: " + exec);
   }
 
@@ -96,7 +94,7 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
 
       if (currentKeyLength == -1) {
         // we assume we can read the key length from here
-        Pair<Integer, Integer> keyLength = PartialKeyDeSerializer.createKey(
+        Pair<Integer, Integer> keyLength = keyPacker.getKeyLength(
             currentMessage, buffer, currentLocation);
         remaining = remaining - keyLength.getRight();
         currentLocation += keyLength.getRight();
@@ -105,19 +103,24 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
         currentObjectLength = currentObjectLength - keyLength.getLeft();
         currentKeyLength = keyLength.getLeft();
 
-        PartialKeyDeSerializer.createKeyObject(currentMessage, keyLength.getLeft());
-        PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);
+        Object keyValue = keyPacker.initializeUnPackKeyObject(keyLength.getLeft());
+        currentMessage.setDeserializingKey(keyValue);
+        currentMessage.setUnPkCurrentBytes(0);
+
+        Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
+        currentMessage.setDeserializingObject(value);
+        currentMessage.setUnPkCurrentBytes(0);
+
         currentMessage.setUnPkCurrentKeyLength(currentKeyLength);
         currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
         // we are going to read the key first
         currentMessage.setReadingKey(true);
       }
 
-
       while (remaining > 0) {
         if (currentMessage.isReadingKey()) {
-          int valsRead = PartialKeyDeSerializer.readFromBuffer(currentMessage, currentLocation,
-              buffer, currentKeyLength, serializer);
+          int valsRead = keyPacker.readKeyFromBuffer(currentMessage, currentLocation,
+              buffer, currentKeyLength);
           int totalBytesRead = currentMessage.addUnPkCurrentBytes(valsRead);
           currentLocation += valsRead;
           remaining = remaining - valsRead;
@@ -131,8 +134,8 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
 
         if (!currentMessage.isReadingKey()) {
           // read the values from the buffer
-          int valsRead = PartialDataDeserializer.readFromBuffer(currentMessage, currentLocation,
-              buffer, currentObjectLength, serializer);
+          int valsRead = dataPacker.readDataFromBuffer(currentMessage, currentLocation,
+              buffer, currentObjectLength);
           int totalBytesRead = currentMessage.addUnPkCurrentBytes(valsRead);
           currentLocation += valsRead;
           remaining = remaining - valsRead;
@@ -147,14 +150,18 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
             break;
           }
 
-          if (remaining >= Integer.BYTES
-              + PartialKeyDeSerializer.keyLengthHeaderSize(currentMessage)) {
+          int bytesToReadKey = 0;
+          if (keyPacker.isKeyHeaderRequired()) {
+            bytesToReadKey += Integer.BYTES;
+          }
+
+          if (remaining >= Integer.BYTES + bytesToReadKey) {
             currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
             remaining = remaining - Integer.BYTES;
             currentLocation += Integer.BYTES;
 
             // we assume we can read the key length from here
-            Pair<Integer, Integer> keyLength = PartialKeyDeSerializer.createKey(
+            Pair<Integer, Integer> keyLength = keyPacker.getKeyLength(
                 currentMessage, buffer, currentLocation);
             remaining = remaining - keyLength.getRight();
             currentLocation += keyLength.getRight();
@@ -163,8 +170,14 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
             currentObjectLength = currentObjectLength - keyLength.getLeft();
             currentKeyLength = keyLength.getLeft();
 
-            PartialKeyDeSerializer.createKeyObject(currentMessage, keyLength.getLeft());
-            PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);
+            Object keyValue = keyPacker.initializeUnPackKeyObject(keyLength.getLeft());
+            currentMessage.setDeserializingKey(keyValue);
+            currentMessage.setUnPkCurrentBytes(0);
+
+            Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
+            currentMessage.setDeserializingObject(value);
+            currentMessage.setUnPkCurrentBytes(0);
+
             currentMessage.setUnPkCurrentKeyLength(currentKeyLength);
             currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
             // we are going to read the key first

@@ -16,26 +16,26 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataPacker;
+import edu.iu.dsc.tws.comms.api.KeyPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.types.KeySerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class UnifiedKeySerializer extends BaseSerializer {
   private static final Logger LOG = Logger.getLogger(UnifiedKeySerializer.class.getName());
 
-  private MessageType keyType;
+  private DataPacker dataPacker;
 
-  private MessageType dataType;
+  private KeyPacker keyPacker;
 
   public UnifiedKeySerializer(KryoSerializer serializer, int executor,
                               MessageType keyType, MessageType dataType) {
     super(serializer, executor);
-    this.keyType = keyType;
-    this.dataType = dataType;
     this.serializer = serializer;
+    dataPacker = DFWIOUtils.createPacker(dataType);
+    keyPacker = DFWIOUtils.createKeyPacker(keyType);
     LOG.fine("Initializing serializer on worker: " + executor);
   }
 
@@ -73,11 +73,9 @@ public class UnifiedKeySerializer extends BaseSerializer {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
-      int keyLength = KeySerializer.serializeKey(key,
-          keyType, state, serializer);
+      int keyLength = keyPacker.packKey(key, state);
       // okay we need to serialize the data
-      int dataLength = DataSerializer.serializeData(payload,
-          dataType, state, serializer);
+      int dataLength = dataPacker.packData(payload, state);
       state.setCurretHeaderLength(dataLength + keyLength);
       state.setPart(SerializeState.Part.HEADER);
     }
@@ -92,8 +90,7 @@ public class UnifiedKeySerializer extends BaseSerializer {
 
     if (state.getPart() == SerializeState.Part.KEY) {
       // this call will copy the key length to buffer as well
-      boolean complete = KeySerializer.copyKeyToBuffer(key,
-          keyType, targetBuffer.getByteBuffer(), state, serializer);
+      boolean complete = keyPacker.writeKeyToBuffer(key, targetBuffer.getByteBuffer(), state);
       if (complete) {
         state.setPart(SerializeState.Part.BODY);
       }
@@ -105,8 +102,7 @@ public class UnifiedKeySerializer extends BaseSerializer {
     }
 
     // now lets copy the actual data
-    boolean completed = DataSerializer.copyDataToBuffer(payload,
-        dataType, byteBuffer, state, serializer);
+    boolean completed = dataPacker.writeDataToBuffer(payload, byteBuffer, state);
     // now set the size of the buffer
     targetBuffer.setSize(byteBuffer.position());
 

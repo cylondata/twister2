@@ -373,13 +373,13 @@ public class InMessage {
     return unPkCurrentIndex;
   }
 
-  public int addUnPkCurrentBytes(int index) {
-    unPkCurrentIndex = unPkCurrentIndex + index;
+  public int addUnPkCurrentBytes(int bytes) {
+    unPkCurrentIndex = unPkCurrentIndex + bytes;
     return unPkCurrentIndex;
   }
 
-  public void setUnPkCurrentIndex(int unPkCurrentIndex) {
-    this.unPkCurrentIndex = unPkCurrentIndex;
+  public void setUnPkCurrentBytes(int unPkCurrentBytes) {
+    this.unPkCurrentIndex = unPkCurrentBytes;
   }
 
   public void resetUnPk() {
