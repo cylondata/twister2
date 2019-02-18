@@ -137,7 +137,7 @@ The user has to specify the task scheduler as "user-defined" with the correspond
 twister2.streaming.taskscheduler: "user-defined"
 
 #User-defined Streaming Task Scheduler Class
-twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.UserDefinedTaskScheduler"
+twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"
 ```
 
 \`\`

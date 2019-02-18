@@ -47,11 +47,8 @@ import edu.iu.dsc.tws.tsched.utils.TaskVertexParser;
  */
 public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
-  private static final Logger LOG = Logger.getLogger(
-                                                  DataLocalityBatchTaskScheduler.class.getName());
-
-  //Represents the task schedule plan Id
-  private static int taskSchedulePlanId = 0;
+  private static final Logger LOG
+      = Logger.getLogger(DataLocalityBatchTaskScheduler.class.getName());
 
   //Represents global task Id
   private static int gTaskId = 0;
@@ -89,12 +86,9 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
   @Override
   public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
 
-    Map<Integer, List<InstanceId>> containerInstanceMap;
-
     TaskSchedulePlan taskSchedulePlan;
 
-    //TaskSchedulePlan.ContainerPlan taskContainerPlan;
-
+    Map<Integer, List<InstanceId>> containerInstanceMap;
     Map<Integer, TaskSchedulePlan.ContainerPlan> containerPlans = new LinkedHashMap<>();
 
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
@@ -104,14 +98,12 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     for (Set<Vertex> vertexSet : taskVertexList) {
       if (vertexSet.size() > 1) {
         containerInstanceMap = dataLocalityBatchSchedulingAlgorithm(vertexSet,
-                workerPlan.getNumberOfWorkers(), workerPlan, this.config);
+            workerPlan.getNumberOfWorkers(), workerPlan);
       } else {
         Vertex vertex = vertexSet.iterator().next();
         containerInstanceMap = dataLocalityBatchSchedulingAlgorithm(vertex,
-                workerPlan.getNumberOfWorkers(), workerPlan, this.config);
+            workerPlan.getNumberOfWorkers(), workerPlan);
       }
-
-      //Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
 
       TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
               this.instanceRAM, this.instanceCPU, this.instanceDisk);
@@ -165,11 +157,6 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
                   + "\tDisk:" + containerDiskValue + "\tCpu:" + containerCpuValue);
         }
 
-        /*TaskSchedulePlan.ContainerPlan taskContainerPlan =
-                new TaskSchedulePlan.ContainerPlan(containerId,
-                        new HashSet<>(taskInstancePlanMap.values()), containerResource);
-        containerPlans.add(taskContainerPlan);*/
-
         TaskSchedulePlan.ContainerPlan taskContainerPlan;
         if (containerPlans.containsKey(containerId)) {
           taskContainerPlan = containerPlans.get(containerId);
@@ -182,10 +169,10 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
           containerPlans.put(containerId, taskContainerPlan);
         }
       }
-      //taskSchedulePlanList.add(new TaskSchedulePlan(taskSchedulePlanId, containerPlans));
-      //taskSchedulePlanId++;
     }
 
+    //Represents the task schedule plan Id
+    int taskSchedulePlanId = 0;
     taskSchedulePlan = new TaskSchedulePlan(taskSchedulePlanId, new HashSet<>(
             containerPlans.values()));
 
@@ -197,7 +184,6 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
       Set<TaskSchedulePlan.TaskInstancePlan> taskInstancePlans
               = containerPlan.getTaskInstances();
-      //int containerId = containerPlan.getRequiredResource().getId();
       LOG.fine("Container Index (Schedule Method):" + integer);
       for (TaskSchedulePlan.TaskInstancePlan ip : taskInstancePlans) {
         LOG.fine("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
@@ -211,8 +197,8 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
    * This method is primarily responsible for generating the container and task instance map which
    * is based on the task graph, its configuration, and the allocated worker plan.
    */
-  private static Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
-      Vertex taskVertex, int numberOfContainers, WorkerPlan workerPlan, Config config) {
+  private Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
+      Vertex taskVertex, int numberOfContainers, WorkerPlan workerPlan) {
 
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     TaskAttributes taskAttributes = new TaskAttributes();
@@ -246,13 +232,12 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
         List<DataTransferTimeCalculator> cal = findBestWorkerNode(taskVertex, workerPlanMap);
 
         /* This loop allocate the task instances to the respective container, before allocation
-          it will check whether the container has reached maximum task instance size which is
-          able to hold. */
+        it will check whether the container has reached maximum task instance size which is
+        able to hold. */
 
         for (int i = 0; i < totalNumberOfInstances; i++) {
           int maxContainerTaskObjectSize = 0;
           if (maxContainerTaskObjectSize <= maxTaskInstancesPerContainer) {
-            //containerIndex = Integer.parseInt(cal.get(i).getNodeName().trim());
             containerIndex = Integer.parseInt(cal.get(i).getNodeName());
 
             LOG.fine("Worker Node Allocation for task:" + taskName + "(" + i + ")"
@@ -260,7 +245,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
             dataAwareAllocation.get(containerIndex).add(
                     new InstanceId(taskVertex.getName(), gTaskId, i));
-            maxContainerTaskObjectSize++;
+            ++maxContainerTaskObjectSize;
           }
         }
         gTaskId++;
@@ -287,11 +272,10 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
    * @param taskVertexSet
    * @param numberOfContainers
    * @param workerPlan
-   * @param config
-   * @return
+   * @return Map
    */
-  private static Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
-      Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan, Config config) {
+  private Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
+      Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan) {
 
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     TaskAttributes taskAttributes = new TaskAttributes();
@@ -358,7 +342,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
   /**
    * It calculates the distance between the data nodes and the worker nodes.
    */
-  private static Map<String, List<DataTransferTimeCalculator>> distanceCalculation(
+  private Map<String, List<DataTransferTimeCalculator>> distanceCalculation(
       List<String> datanodesList, WorkerPlan workers, int taskIndex) {
 
     Map<String, List<DataTransferTimeCalculator>> workerPlanMap = new HashMap<>();
@@ -378,16 +362,16 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
           workerBandwidth = (double) worker.getProperty("bandwidth");
           workerLatency = (double) worker.getProperty("latency");
         } else {
-          workerBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
-          workerLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
+          workerBandwidth = TaskSchedulerContext.containerInstanceBandwidth(config);
+          workerLatency = TaskSchedulerContext.containerInstanceLatency(config);
         }
 
         DataTransferTimeCalculator calculateDataTransferTime =
             new DataTransferTimeCalculator(nodesList, calculateDistance);
 
         //Right now using the default configuration values
-        datanodeBandwidth = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT;
-        datanodeLatency = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT;
+        datanodeBandwidth = TaskSchedulerContext.datanodeInstanceBandwidth(config);
+        datanodeLatency = TaskSchedulerContext.datanodeInstanceLatency(config);
 
         //Calculate the distance between worker nodes and data nodes.
         calculateDistance = Math.abs((2 * workerBandwidth * workerLatency)
@@ -410,7 +394,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
    * This method finds the worker node which has better network parameters (bandwidth/latency)
    * or it will take lesser time for the data transfer if there is any.
    */
-  private static List<DataTransferTimeCalculator> findBestWorkerNode(Vertex vertex, Map<String,
+  private List<DataTransferTimeCalculator> findBestWorkerNode(Vertex vertex, Map<String,
       List<DataTransferTimeCalculator>> workerPlanMap) {
 
     Set<Map.Entry<String, List<DataTransferTimeCalculator>>> entries = workerPlanMap.entrySet();
@@ -437,113 +421,5 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       nse.printStackTrace();
     }
     return cal;
-  }
-
-
-  /**
-   * This is the base method for the data locality aware task scheduling for scheduling the batch
-   * task instances. It retrieves the task vertex set of the task graph and send the set to the data
-   * locality aware scheduling algorithm to allocate the batch task instances which are closer
-   * to the data nodes.
-   */
-  public List<TaskSchedulePlan> scheduleBatch(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
-
-    Map<Integer, List<InstanceId>> containerInstanceMap;
-
-    Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
-
-    List<TaskSchedulePlan> taskSchedulePlanList = new ArrayList<>();
-
-    List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(graph);
-
-    for (Set<Vertex> vertexSet : taskVertexList) {
-      if (vertexSet.size() > 1) {
-        containerInstanceMap = dataLocalityBatchSchedulingAlgorithm(vertexSet,
-            workerPlan.getNumberOfWorkers(), workerPlan, this.config);
-      } else {
-        Vertex vertex = vertexSet.iterator().next();
-        containerInstanceMap = dataLocalityBatchSchedulingAlgorithm(vertex,
-            workerPlan.getNumberOfWorkers(), workerPlan, this.config);
-      }
-
-      Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
-
-      TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
-          this.instanceRAM, this.instanceCPU, this.instanceDisk);
-
-      Map<Integer, Map<InstanceId, Double>> instancesRamMap = instanceMapCalculation.
-          getInstancesRamMapInContainer(containerInstanceMap, taskVertexSet);
-
-      Map<Integer, Map<InstanceId, Double>> instancesDiskMap = instanceMapCalculation.
-          getInstancesDiskMapInContainer(containerInstanceMap, taskVertexSet);
-
-      Map<Integer, Map<InstanceId, Double>> instancesCPUMap = instanceMapCalculation.
-          getInstancesCPUMapInContainer(containerInstanceMap, taskVertexSet);
-
-      for (int containerId : containerInstanceMap.keySet()) {
-
-        double containerRAMValue = TaskSchedulerContext.containerRamPadding(config);
-        double containerDiskValue = TaskSchedulerContext.containerDiskPadding(config);
-        double containerCpuValue = TaskSchedulerContext.containerCpuPadding(config);
-
-        List<InstanceId> taskInstanceIds = containerInstanceMap.get(containerId);
-        Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
-
-        for (InstanceId id : taskInstanceIds) {
-          double instanceRAMValue = instancesRamMap.get(containerId).get(id);
-          double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
-          double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
-
-          Resource instanceResource = new Resource(instanceRAMValue, instanceDiskValue,
-              instanceCPUValue);
-
-          taskInstancePlanMap.put(id, new TaskSchedulePlan.TaskInstancePlan(
-              id.getTaskName(), id.getTaskId(), id.getTaskIndex(), instanceResource));
-
-          containerRAMValue += instanceRAMValue;
-          containerDiskValue += instanceDiskValue;
-          containerCpuValue += instanceDiskValue;
-        }
-
-        Worker worker = workerPlan.getWorker(containerId);
-        Resource containerResource;
-
-        if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
-          containerResource = new Resource((double) worker.getRam(),
-                  (double) worker.getDisk(), (double) worker.getCpu());
-          LOG.fine("Worker (if loop):" + containerId + "\tRam:" + worker.getRam()
-                  + "\tDisk:" + worker.getDisk() + "\tCpu:" + worker.getCpu());
-        } else {
-          containerResource = new Resource(containerRAMValue, containerDiskValue,
-                  containerCpuValue);
-          LOG.fine("Worker (else loop):" + containerId + "\tRam:" + containerRAMValue
-                  + "\tDisk:" + containerDiskValue + "\tCpu:" + containerCpuValue);
-        }
-
-        TaskSchedulePlan.ContainerPlan taskContainerPlan =
-            new TaskSchedulePlan.ContainerPlan(containerId,
-                new HashSet<>(taskInstancePlanMap.values()), containerResource);
-        containerPlans.add(taskContainerPlan);
-      }
-      taskSchedulePlanList.add(new TaskSchedulePlan(taskSchedulePlanId, containerPlans));
-      taskSchedulePlanId++;
-    }
-
-    //To print the schedule plan list
-    for (TaskSchedulePlan taskSchedulePlan : taskSchedulePlanList) {
-      Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-          = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-        Integer integer = entry.getKey();
-        TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-        Set<TaskSchedulePlan.TaskInstancePlan> taskContainerPlan = containerPlan.getTaskInstances();
-        LOG.fine("Container Index (Schedule Batch Method):" + integer);
-        for (TaskSchedulePlan.TaskInstancePlan ip : taskContainerPlan) {
-          LOG.fine("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
-              + "\tTask Name:" + ip.getTaskName() + "\tContainer Id:" + integer);
-        }
-      }
-    }
-    return taskSchedulePlanList;
   }
 }

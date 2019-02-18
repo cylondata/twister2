@@ -46,24 +46,31 @@ import edu.iu.dsc.tws.tsched.utils.TaskScheduleUtils;
  */
 public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
 
-  private static final Logger LOG = Logger.getLogger(
-                                                    FirstFitStreamingTaskScheduler.class.getName());
+  private static final Logger LOG =
+      Logger.getLogger(FirstFitStreamingTaskScheduler.class.getName());
 
+  /**
+   * Default size of the resource value
+   */
   private Resource defaultResourceValue;
+  /**
+   * Maximum size of the container resource
+   */
   private Resource maxContainerResourceValue;
 
+  /**
+   * Padding percentage for ram, cpu,disk
+   */
   private int paddingPercentage;
+  /**
+   * Number of containers to be created
+   */
   private int numContainers;
-  private int defaultNoOfTaskInstances;
 
-  private Double instanceRAM;
-  private Double instanceDisk;
-  private Double instanceCPU;
   private Config config;
 
   private Set<Vertex> taskVertexSet = new HashSet<>();
   private TaskAttributes taskAttributes = new TaskAttributes();
-  private WorkerPlan workerplan = new WorkerPlan();
 
   /**
    * This method initialize the config values received from the user and assign the default
@@ -71,19 +78,20 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
    */
   @Override
   public void initialize(Config cfg) {
-
     this.config = cfg;
-    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
-    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
-    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
+
+    double instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
+    double instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
+    double instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
+
     this.paddingPercentage = TaskSchedulerContext.containerPaddingPercentage(this.config);
-    this.defaultResourceValue = new Resource(instanceRAM, this.instanceDisk, this.instanceCPU);
-    this.defaultNoOfTaskInstances = TaskSchedulerContext.defaultTaskInstancesPerContainer(
+    this.defaultResourceValue = new Resource(instanceRAM, instanceDisk, instanceCPU);
+    int defaultNoOfTaskInstances = TaskSchedulerContext.defaultTaskInstancesPerContainer(
         this.config);
 
     instanceRAM = this.defaultResourceValue.getRam() * defaultNoOfTaskInstances;
-    this.instanceDisk = this.defaultResourceValue.getDisk() * defaultNoOfTaskInstances;
-    this.instanceCPU = this.defaultResourceValue.getCpu() * defaultNoOfTaskInstances;
+    instanceDisk = this.defaultResourceValue.getDisk() * defaultNoOfTaskInstances;
+    instanceCPU = this.defaultResourceValue.getCpu() * defaultNoOfTaskInstances;
 
     this.maxContainerResourceValue = new Resource(
         (double) Math.round(TaskScheduleUtils.increaseBy(instanceRAM, paddingPercentage)),
@@ -102,8 +110,6 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
   /**
    * This method set the size of the container, instance default resource, container padding,
    * ram map, disk map, and cpu map values.
-   * @param previousTaskPlan
-   * @return
    */
   private TaskSchedulePlanBuilder newTaskSchedulingPlanBuilder(TaskSchedulePlan previousTaskPlan) {
     return new TaskSchedulePlanBuilder(1, previousTaskPlan)
@@ -118,14 +124,10 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
   /**
    * This is the base method for the first fit task scheduling. It invokes the taskscheduleplan
    * builder to allocate the task instances into the containers.
-   * @param dataFlowTaskGraph
-   * @param workerPlan
-   * @return
    */
   @Override
   public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
     this.taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
-    this.workerplan = workerPlan;
     TaskSchedulePlanBuilder taskSchedulePlanBuilder = newTaskSchedulingPlanBuilder(null);
     try {
       taskSchedulePlanBuilder = FirstFitFTaskSchedulingAlgorithm(taskSchedulePlanBuilder);
@@ -139,9 +141,6 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
    * This method is internal to this task scheduling algorithm which retrieves the parallel task map
    * for the task vertex set and send the taskschedule plan builder object (with assigned default
    * values) and parallel task map for the task instances allocation.
-   * @param taskSchedulePlanBuilder
-   * @return
-   * @throws TaskSchedulerException
    */
   private TaskSchedulePlanBuilder FirstFitFTaskSchedulingAlgorithm(
       TaskSchedulePlanBuilder taskSchedulePlanBuilder) throws TaskSchedulerException {
@@ -153,16 +152,11 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
   /**
    * This method retrieve the sorted array list of ram requirements map and allocate the task
    * instances available in the map.
-   * @param taskSchedulePlanBuilder
-   * @param parallelTaskMap
-   * @throws TaskSchedulerException
    */
   private void assignInstancesToContainers(TaskSchedulePlanBuilder taskSchedulePlanBuilder,
                                            Map<String, Integer> parallelTaskMap)
-                                           throws TaskSchedulerException {
-
+      throws TaskSchedulerException {
     ArrayList<RequiredRam> ramRequirements = getSortedRAMInstances(parallelTaskMap.keySet());
-
     for (RequiredRam ramRequirement : ramRequirements) {
       String taskName = ramRequirement.getTaskName();
       int numberOfInstances = parallelTaskMap.get(taskName);
@@ -175,8 +169,6 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
   /**
    * This method sort the task instances in an increasing order based on the required ram
    * configuration values.
-   * @param taskNameSet
-   * @return
    */
   private ArrayList<RequiredRam> getSortedRAMInstances(Set<String> taskNameSet) {
 
@@ -189,7 +181,6 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
           this.maxContainerResourceValue, this.paddingPercentage);
       ramRequirements.add(new RequiredRam(taskName, resource.getRam()));
     }
-
     ramRequirements.sort(Collections.reverseOrder());
     return ramRequirements;
   }
@@ -197,9 +188,6 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
   /**
    * This method first increment the number of container if the value is zero. Then, it allocates
    * the task instances into the container which is based on the container Id score value.
-   * @param taskSchedulePlanBuilder
-   * @param taskName
-   * @throws TaskSchedulerException
    */
   private void firstFitInstanceAllocation(TaskSchedulePlanBuilder taskSchedulePlanBuilder,
                                           String taskName) throws TaskSchedulerException {

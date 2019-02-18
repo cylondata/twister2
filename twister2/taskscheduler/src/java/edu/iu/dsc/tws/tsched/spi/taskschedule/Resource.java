@@ -49,7 +49,7 @@ public class Resource {
   public boolean equals(Object o) {
     if (o instanceof Resource) {
       Resource r = (Resource) o;
-      return (this.getCpu() == r.getCpu())
+      return (this.getCpu().equals(r.getCpu()))
           && (this.getRam().equals(r.getRam()))
           && (this.getDisk().equals(r.getDisk()));
     } else {

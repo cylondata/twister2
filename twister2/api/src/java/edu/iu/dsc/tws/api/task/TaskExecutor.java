@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
+import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
 /**
  * The task executor API, this class can be used to create an execution plan and execute
@@ -82,11 +82,17 @@ public class TaskExecutor {
    * @return the data set
    */
   public ExecutionPlan plan(DataFlowTaskGraph graph) {
-    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
-    roundRobinTaskScheduler.initialize(config);
+
+    //RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
+    //roundRobinTaskScheduler.initialize(config);
+
+    TaskScheduler taskScheduler = new TaskScheduler();
+    taskScheduler.initialize(config);
 
     WorkerPlan workerPlan = createWorkerPlan();
-    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
+
+    //TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
+    TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator);

@@ -31,9 +31,8 @@ public class DataTransferTimeCalculator implements Comparable<DataTransferTimeCa
     this.dataNode = datanode;
   }
 
-  public DataTransferTimeCalculator setNodeName(String nodename) {
+  public void setNodeName(String nodename) {
     this.nodeName = nodename;
-    return this;
   }
 
   public DataTransferTimeCalculator(String nodename, double requiredDatatransferTime) {
@@ -67,9 +66,8 @@ public class DataTransferTimeCalculator implements Comparable<DataTransferTimeCa
     return dataTransferTime;
   }
 
-  public DataTransferTimeCalculator setRequiredDataTransferTime(Double requiredDatatransferTime) {
+  public void setRequiredDataTransferTime(Double requiredDatatransferTime) {
     this.dataTransferTime = requiredDatatransferTime;
-    return this;
   }
 
   @Override

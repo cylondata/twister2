@@ -13,20 +13,24 @@ package edu.iu.dsc.tws.tsched.utils;
 
 import java.util.Map;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 
 /**
  * This is the util class for the task scheduler to get the resource value of task instance and
- * validate the minimum value of the task instance ram value. And,
+ * validate the minimum value of the task instance ram value.
  */
+@SuppressWarnings("ALL")
 public final class TaskScheduleUtils {
 
-  private static final Double MIN_RAM_PER_INSTANCE =
-      TaskSchedulerContext.TWISTER2_TASK_INSTANCE_RAM_DEFAULT;
+  private Config config;
+  private static double minRamPerInstance;
 
-  private TaskScheduleUtils() {
+  private TaskScheduleUtils(Config cfg) {
+    this.config = cfg;
+    this.minRamPerInstance = TaskSchedulerContext.taskInstanceRam(config);
   }
 
   /**
@@ -37,7 +41,7 @@ public final class TaskScheduleUtils {
    * @param defaultInstanceResource
    * @param maxContainerResource
    * @param paddingPercentage
-   * @return
+   * @return Resource
    */
   public static Resource getResourceRequirement(String taskName,
                                                 Map<String, Double> taskRamMap,
@@ -46,21 +50,9 @@ public final class TaskScheduleUtils {
                                                 int paddingPercentage) {
 
     double instanceRam = defaultInstanceResource.getRam();
-    double instanceDisk = defaultInstanceResource.getDisk();
-    double instanceCpu = defaultInstanceResource.getCpu();
-
     if (taskRamMap.containsKey(taskName)) {
       instanceRam = taskRamMap.get(taskName);
-      instanceDisk = taskRamMap.get(taskName);
-      instanceCpu = taskRamMap.get(taskName);
     }
-
-    //In future, it will be validated for the task instance disk and cpu values.
-
-    /*assertIsValidInstance(defaultInstanceResource.cloneWithRam(
-        instanceRam, instanceDisk, instanceCpu),
-        MIN_RAM_PER_INSTANCE, maxContainerResource, paddingPercentage);
-    return defaultInstanceResource.cloneWithRam(instanceRam, instanceDisk, instanceCpu);*/
 
     assertIsValidInstance(defaultInstanceResource.cloneWithRam(instanceRam),
         maxContainerResource, paddingPercentage);
@@ -81,15 +73,15 @@ public final class TaskScheduleUtils {
                                             Resource maxContainerResources,
                                             int paddingPercentage) throws TaskSchedulerException {
 
-    if (instanceResources.getRam() < (double) TaskScheduleUtils.MIN_RAM_PER_INSTANCE) {
+    if (instanceResources.getRam() < (double) TaskScheduleUtils.minRamPerInstance) {
       throw new TaskSchedulerException(String.format(
           "Instance requires ram %s which is less than the minimum ram per instance of %s",
-          instanceResources.getRam(), TaskScheduleUtils.MIN_RAM_PER_INSTANCE));
+          instanceResources.getRam(), TaskScheduleUtils.minRamPerInstance));
     }
 
-    /*To increase the task instance ram value which is up to the padding percentage specified in the
-    configuration file. After padding the task instance ram value, if it reaches beyond the
-    maximum container value, then it will throw the exception.*/
+    /* To increase the task instance ram value which is up to the padding percentage specified in
+    the configuration file. After padding the task instance ram value, if it reaches beyond the
+    maximum container value, then it will throw the exception. */
 
     double instanceRam = Math.round(TaskScheduleUtils.increaseBy(
         instanceResources.getRam(), paddingPercentage));
@@ -100,7 +92,7 @@ public final class TaskScheduleUtils {
           instanceRam, maxContainerResources.getRam()));
     }
 
-    /*To increase the task instance disk value which is up to the padding percentage specified in
+    /* To increase the task instance disk value which is up to the padding percentage specified in
      the configuration file. After padding the task instance ram value, if it reaches beyond the
      maximum container value, then it will throw the exception.*/
 
@@ -113,9 +105,9 @@ public final class TaskScheduleUtils {
           instanceDisk, maxContainerResources.getDisk()));
     }
 
-    /*To increase the task instance cpu value which is up to the padding percentage specified in the
-    configuration file. After padding the task instance cpu value, if it reaches beyond the
-    maximum container value, then it will throw the exception.*/
+    /* To increase the task instance cpu value which is up to the padding percentage specified in
+    the configuration file. After padding the task instance cpu value, if it reaches beyond the
+    maximum container value, then it will throw the exception. */
 
     double instanceCpu = Math.round(TaskScheduleUtils.increaseBy(
         instanceResources.getCpu(), paddingPercentage));

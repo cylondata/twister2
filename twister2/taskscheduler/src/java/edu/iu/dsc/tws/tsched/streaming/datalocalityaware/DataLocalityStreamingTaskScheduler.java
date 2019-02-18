@@ -48,9 +48,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
   private static final Logger LOG = Logger.getLogger(
                                                 DataLocalityStreamingTaskScheduler.class.getName());
 
-  //Represents task schedule plan Id
-  private static int taskSchedulePlanId = 0;
-
   //Represents the global task index value
   private static int globalTaskIndex = 0;
 
@@ -64,7 +61,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
   private Double instanceCPU;
 
   //Represents task config object
-  private Config cfg;
+  private Config config;
 
   //Allocated workers list
   private static List<Integer> allocatedWorkers = new ArrayList<>();
@@ -74,11 +71,11 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
    * cpu values from the task scheduler context.
    */
   @Override
-  public void initialize(Config config) {
-    this.cfg = config;
-    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(cfg);
-    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(cfg);
-    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(cfg);
+  public void initialize(Config cfg) {
+    this.config = cfg;
+    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
+    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
+    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
   }
 
   /**
@@ -92,11 +89,10 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
 
-    //Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
     Map<Integer, List<InstanceId>> containerInstanceMap = dataLocalityAwareSchedulingAlgorithm(
-            taskVertexSet, workerPlan.getNumberOfWorkers(), workerPlan, this.cfg);
+        taskVertexSet, workerPlan.getNumberOfWorkers(), workerPlan);
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
             this.instanceRAM, this.instanceCPU, this.instanceDisk);
@@ -115,9 +111,9 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
     for (int containerId : containerInstanceMap.keySet()) {
 
-      double containerRAMValue = TaskSchedulerContext.containerRamPadding(cfg);
-      double containerDiskValue = TaskSchedulerContext.containerDiskPadding(cfg);
-      double containerCpuValue = TaskSchedulerContext.containerCpuPadding(cfg);
+      double containerRAMValue = TaskSchedulerContext.containerRamPadding(config);
+      double containerDiskValue = TaskSchedulerContext.containerDiskPadding(config);
+      double containerCpuValue = TaskSchedulerContext.containerCpuPadding(config);
 
       List<InstanceId> taskInstanceIds = containerInstanceMap.get(containerId);
       Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
@@ -158,6 +154,8 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
                       new HashSet<>(taskInstancePlanMap.values()), containerResource);
       containerPlans.add(taskContainerPlan);
     }
+    //Represents task schedule plan Id
+    int taskSchedulePlanId = 0;
     return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
   }
 
@@ -165,8 +163,8 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
    * This method is primarily responsible for generating the container and task instance map which
    * is based on the task graph, its configuration, and the allocated worker plan.
    */
-  public static Map<Integer, List<InstanceId>> dataLocalityAwareSchedulingAlgorithm(
-      Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan, Config config) {
+  private Map<Integer, List<InstanceId>> dataLocalityAwareSchedulingAlgorithm(
+      Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan) {
 
     TaskAttributes taskAttributes = new TaskAttributes();
 
@@ -210,7 +208,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
           int totalTaskInstances = vertex.getParallelism();
           int maxContainerTaskObjectSize = 0;
 
-          List<DataTransferTimeCalculator> calList = calculationList(index, config, vertex,
+          List<DataTransferTimeCalculator> calList = calculationList(index, vertex,
                   workerPlan, allocationMap, containerIndex, instancesPerContainer);
 
           /* This loop allocate the task instances to the respective container, before allocation
@@ -248,13 +246,11 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     return allocationMap;
   }
 
-  private static List<DataTransferTimeCalculator> calculationList(int index, Config config,
-                                                                  Vertex vertex,
-                                                                  WorkerPlan workerPlan,
-                                                                  Map<Integer,
-                                                                      List<InstanceId>> aMap,
-                                                                  int containerIndex,
-                                                                  int maxTaskInstPerContainer) {
+  private List<DataTransferTimeCalculator> calculationList(int index, Vertex vertex,
+                                                           WorkerPlan workerPlan,
+                                                           Map<Integer, List<InstanceId>> aMap,
+                                                           int containerIndex,
+                                                           int maxTaskInstPerContainer) {
 
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
 
@@ -298,7 +294,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
    * It calculates the distance between the data nodes and the worker node which is based on
    * the available bandwidth, latency, and the file size.
    */
-  private static Map<String, List<DataTransferTimeCalculator>> distanceCalculation(
+  private Map<String, List<DataTransferTimeCalculator>> distanceCalculation(
       List<String> datanodesList, WorkerPlan workers, int index,
       List<Integer> assignedWorkers) {
 
@@ -326,16 +322,16 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
             workerBandwidth = (double) worker.getProperty("bandwidth");
             workerLatency = (double) worker.getProperty("latency");
           } else {
-            workerBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
-            workerLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
+            workerBandwidth = TaskSchedulerContext.containerInstanceBandwidth(config);
+            workerLatency = TaskSchedulerContext.containerInstanceLatency(config);
           }
 
           DataTransferTimeCalculator calculateDataTransferTime =
               new DataTransferTimeCalculator(nodesList, calculateDistance);
 
           //Right now using the default configuration values
-          datanodeBandwidth = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT;
-          datanodeLatency = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT;
+          datanodeBandwidth = TaskSchedulerContext.datanodeInstanceBandwidth(config);
+          datanodeLatency = TaskSchedulerContext.datanodeInstanceLatency(config);
 
           //Calculate the distance between worker nodes and data nodes.
           calculateDistance = Math.abs((2 * workerBandwidth * workerLatency)
@@ -366,13 +362,13 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
               workerBandwidth = (double) worker.getProperty("bandwidth");
               workerLatency = (double) worker.getProperty("latency");
             } else {
-              workerBandwidth = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_BANDWIDTH_DEFAULT;
-              workerLatency = TaskSchedulerContext.TWISTER2_CONTAINER_INSTANCE_LATENCY_DEFAULT;
+              workerBandwidth = TaskSchedulerContext.containerInstanceBandwidth(config);
+              workerLatency = TaskSchedulerContext.containerInstanceLatency(config);
             }
 
             //Right now using the default configuration values
-            datanodeBandwidth = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_BANDWIDTH_DEFAULT;
-            datanodeLatency = TaskSchedulerContext.TWISTER2_DATANODE_INSTANCE_LATENCY_DEFAULT;
+            datanodeBandwidth = TaskSchedulerContext.datanodeInstanceBandwidth(config);
+            datanodeLatency = TaskSchedulerContext.datanodeInstanceLatency(config);
 
             //Calculate the distance between worker nodes and data nodes.
             calculateDistance = Math.abs((2 * workerBandwidth * workerLatency)
@@ -396,7 +392,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
   /**
    * This method chooses the data node which takes minimal data transfer time.
    */
-  private static List<DataTransferTimeCalculator> findBestWorkerNode(Vertex vertex, Map<String,
+  private List<DataTransferTimeCalculator> findBestWorkerNode(Vertex vertex, Map<String,
       List<DataTransferTimeCalculator>> workerPlanMap) {
 
     Set<Map.Entry<String, List<DataTransferTimeCalculator>>> entries = workerPlanMap.entrySet();
@@ -423,11 +419,11 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
   }
 
 
-  private static Map<Integer, List<InstanceId>> allocate(List<DataTransferTimeCalculator> calList,
-                                                         int maxTaskInstancesPerContainer,
-                                                         Map<Integer, List<InstanceId>>
+  private Map<Integer, List<InstanceId>> allocate(List<DataTransferTimeCalculator> calList,
+                                                  int maxTaskInstancesPerContainer,
+                                                  Map<Integer, List<InstanceId>>
                                                                  dataLocalityAwareAllocationMap,
-                                                         Vertex vertex) {
+                                                  Vertex vertex) {
     int containerIndex;
     int maxContainerTaskObjectSize = 0;
     int totalTaskInstances = vertex.getParallelism();
