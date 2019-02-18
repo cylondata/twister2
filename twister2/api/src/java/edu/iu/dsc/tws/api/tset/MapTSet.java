@@ -24,7 +24,6 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.ops.MapOp;
 import edu.iu.dsc.tws.common.config.Config;
@@ -35,8 +34,8 @@ public class MapTSet<T, P> extends BaseTSet<T> {
   private MapFunction<P, T> mapFn;
 
   public MapTSet(Config cfg, TaskGraphBuilder builder,
-                 BaseTSet<P> parent, MapFunction<P, T> mapFunc, TaskExecutor executor) {
-    super(cfg, builder, executor);
+                 BaseTSet<P> parent, MapFunction<P, T> mapFunc) {
+    super(cfg, builder);
     this.parent = parent;
     this.mapFn = mapFunc;
   }

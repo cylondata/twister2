@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.api.tset;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
 import edu.iu.dsc.tws.common.config.Config;
@@ -33,8 +32,8 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
   private FlatMapFunction<P, T> mapFn;
 
   public FlatMapTSet(Config cfg, TaskGraphBuilder bldr,
-                     BaseTSet<P> parent, FlatMapFunction<P, T> mapFunc, TaskExecutor executor) {
-    super(cfg, bldr, executor);
+                     BaseTSet<P> parent, FlatMapFunction<P, T> mapFunc) {
+    super(cfg, bldr);
     this.parent = parent;
     this.mapFn = mapFunc;
   }

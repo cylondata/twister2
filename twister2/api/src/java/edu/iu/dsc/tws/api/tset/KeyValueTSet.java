@@ -13,13 +13,12 @@ package edu.iu.dsc.tws.api.tset;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class KeyValueTSet<T, K> extends BaseTSet<T> {
-  public KeyValueTSet(Config cfg, TaskGraphBuilder bldr, TaskExecutor executor) {
-    super(cfg, bldr, executor);
+  public KeyValueTSet(Config cfg, TaskGraphBuilder bldr) {
+    super(cfg, bldr);
   }
 
   Class<? super T> getClassT() {

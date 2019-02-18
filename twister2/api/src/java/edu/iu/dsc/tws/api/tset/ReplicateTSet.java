@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -22,9 +21,8 @@ public class ReplicateTSet<T> extends BaseTSet<T> {
 
   private int replications;
 
-  public ReplicateTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt, int reps,
-                       TaskExecutor executor) {
-    super(cfg, bldr, executor);
+  public ReplicateTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt, int reps) {
+    super(cfg, bldr);
     this.parent = prnt;
     this.name = "clone-" + parent.getName();
     this.replications = reps;

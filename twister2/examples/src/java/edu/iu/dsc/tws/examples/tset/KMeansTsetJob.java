@@ -54,7 +54,7 @@ public class KMeansTsetJob extends TaskWorker implements Serializable {
         throw new RuntimeException("Failed to create input data:", ioe);
       }
     }
-    TSetBuilder builder = TSetBuilder.newBuilder(config, taskExecutor);
+    TSetBuilder builder = TSetBuilder.newBuilder(config);
     builder.setMode(OperationMode.BATCH);
     TSet<double[][]> points = builder.createSource(new PointsSource()).cache();
     TSet<double[][]> centers = builder.createSource(new CenterSource()).cache();

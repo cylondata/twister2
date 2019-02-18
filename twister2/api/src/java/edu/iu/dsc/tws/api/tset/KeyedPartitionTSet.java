@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
 import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
@@ -27,9 +26,8 @@ public class KeyedPartitionTSet<T, K> extends KeyValueTSet<T, K> {
   private Selector<T, K> selector;
 
   public KeyedPartitionTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-                            PartitionFunction<K> parFn, Selector<T, K> selc,
-                            TaskExecutor executor) {
-    super(cfg, bldr, executor);
+                            PartitionFunction<K> parFn, Selector<T, K> selc) {
+    super(cfg, bldr);
     this.parent = prnt;
     this.partitionFunction = parFn;
     this.selector = selc;

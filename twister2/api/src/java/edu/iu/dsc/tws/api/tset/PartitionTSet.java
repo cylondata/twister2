@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -23,8 +22,8 @@ public class PartitionTSet<T> extends BaseTSet<T> {
   private PartitionFunction<T> partitionFunction;
 
   public PartitionTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-                            PartitionFunction<T> parFn, TaskExecutor executor) {
-    super(cfg, bldr, executor);
+                       PartitionFunction<T> parFn) {
+    super(cfg, bldr);
     this.parent = prnt;
     this.partitionFunction = parFn;
     this.name = "partition-" + parent.getName();

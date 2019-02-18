@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
@@ -22,9 +21,8 @@ public class SinkTSet<T> extends BaseTSet<T> {
 
   private BaseTSet<T> parent;
 
-  public SinkTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt, Sink<T> s,
-                  TaskExecutor executor) {
-    super(cfg, bldr, executor);
+  public SinkTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt, Sink<T> s) {
+    super(cfg, bldr);
     this.sink = s;
     this.parent = prnt;
     this.name = "sink-" + parent.getName();

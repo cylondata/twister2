@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
@@ -25,8 +24,8 @@ public class CacheTSet<T> extends BaseTSet<T> {
   private BaseTSet<T> parent;
   private DataObject<T> datapoints = null;
 
-  public CacheTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt, TaskExecutor taskExecutor) {
-    super(cfg, bldr, taskExecutor);
+  public CacheTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt) {
+    super(cfg, bldr);
     this.parent = prnt;
     this.name = "cache-" + parent.getName();
     datapoints = new DataObjectImpl<>(config);
