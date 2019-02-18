@@ -20,10 +20,7 @@ import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class IntegerDataPacker implements DataPacker {
-  private KryoSerializer kryoSerializer;
-
   public IntegerDataPacker() {
-    this.kryoSerializer = new KryoSerializer();
   }
 
   @Override

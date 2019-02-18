@@ -17,13 +17,9 @@ import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class DoublePacker implements DataPacker {
-  private KryoSerializer kryoSerializer;
-
   public DoublePacker() {
-    this.kryoSerializer = new KryoSerializer();
   }
 
   @Override
