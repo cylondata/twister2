@@ -1,0 +1,74 @@
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.examples.tset;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.api.tset.Source;
+import edu.iu.dsc.tws.api.tset.TSet;
+import edu.iu.dsc.tws.api.tset.TSetBuilder;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGenerator;
+import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansJobParameters;
+import edu.iu.dsc.tws.task.graph.OperationMode;
+
+public class KMeansTsetJob extends TaskWorker implements Serializable {
+  private static final Logger LOG = Logger.getLogger(KMeansTsetJob.class.getName());
+
+  @Override
+  public void execute() {
+    LOG.log(Level.INFO, "TSet worker starting: " + workerId);
+
+    KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(config);
+
+    int parallelismValue = kMeansJobParameters.getParallelismValue();
+    int dimension = kMeansJobParameters.getDimension();
+    int numFiles = kMeansJobParameters.getNumFiles();
+    int dsize = kMeansJobParameters.getDsize();
+    int csize = kMeansJobParameters.getCsize();
+    int iterations = kMeansJobParameters.getIterations();
+
+    String dinputDirectory = kMeansJobParameters.getDatapointDirectory();
+    String cinputDirectory = kMeansJobParameters.getCentroidDirectory();
+
+    if (workerId == 0) {
+      try {
+        KMeansDataGenerator.generateData(
+            "txt", new Path(dinputDirectory), numFiles, dsize, 100, dimension);
+        KMeansDataGenerator.generateData(
+            "txt", new Path(cinputDirectory), numFiles, csize, 100, dimension);
+      } catch (IOException ioe) {
+        throw new RuntimeException("Failed to create input data:", ioe);
+      }
+    }
+    TSetBuilder builder = TSetBuilder.newBuilder(config, taskExecutor);
+    builder.setMode(OperationMode.BATCH);
+    TSet<double[][]> points = builder.createSource(new Source<double[][]>() {
+      @Override
+      public boolean hasNext() {
+        return false;
+      }
+
+      @Override
+      public double[][] next() {
+        return new double[0][];
+      }
+    });
+
+    points.cache();
+
+  }
+}

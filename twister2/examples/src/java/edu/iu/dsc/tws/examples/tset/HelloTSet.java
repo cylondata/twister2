@@ -27,13 +27,12 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class HelloTSet extends TaskWorker implements Serializable {
   private static final long serialVersionUID = -2;
   @Override
   public void execute() {
-    TSetBuilder builder = TSetBuilder.newBuilder(config);
+    TSetBuilder builder = TSetBuilder.newBuilder(config, taskExecutor);
     TSet<int[]> source = builder.createSource(new Source<int[]>() {
 
       private int count = 0;
@@ -64,8 +63,6 @@ public class HelloTSet extends TaskWorker implements Serializable {
       System.out.println(Arrays.toString(value));
       return false;
     });
-
-    builder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph graph = builder.build();
 
     ExecutionPlan executionPlan = taskExecutor.plan(graph);
