@@ -141,6 +141,12 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   @Override
+  public DirectTset<T> direct() {
+    DirectTset<T> direct = new DirectTset<>(config, builder, this, taskExecutor);
+    return direct;
+  }
+
+  @Override
   public ReduceTSet<T> reduce(ReduceFunction<T> reduceFn) {
     ReduceTSet<T> reduce = new ReduceTSet<T>(config, builder, this, reduceFn, taskExecutor);
     children.add(reduce);
@@ -208,7 +214,11 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public TSet<T> cache() {
-    throw new UnsupportedOperationException("Caching not supported for TSet " + this.getType());
+    DirectTset<T> direct = new DirectTset<>(config, builder, this, taskExecutor);
+    children.add(direct);
+    CacheTSet<T> cacheTSet = new CacheTSet<>(config, builder, direct, taskExecutor);
+    direct.children.add(cacheTSet);
+    return cacheTSet;
   }
 
   @Override

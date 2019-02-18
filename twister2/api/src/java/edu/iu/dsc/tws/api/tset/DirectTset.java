@@ -11,30 +11,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import java.util.Random;
-
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 
-public class SourceTSet<T> extends BaseTSet<T> {
-  private Source<T> source;
+public class DirectTset<T> extends BaseTSet<T> {
+  private BaseTSet<T> parent;
 
-  public SourceTSet(Config cfg, TaskGraphBuilder bldr, Source<T> src, TaskExecutor executor) {
-    super(cfg, bldr, executor);
-    this.source = src;
-    this.name = "source-" + new Random(System.nanoTime()).nextInt(10);
+  public DirectTset(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt, TaskExecutor taskExecutor) {
+    super(cfg, bldr, taskExecutor);
+    this.parent = prnt;
+    this.name = "direct-" + parent.getName();
   }
 
   @Override
   public boolean baseBuild() {
-    builder.addSource(getName(), new SourceOp<T>(source), parallel);
-    return true;
+    return false;
   }
 
   @Override
   void buildConnection(ComputeConnection connection) {
+    DataType dataType = getDataType(getType());
+
+    connection.direct(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
 }

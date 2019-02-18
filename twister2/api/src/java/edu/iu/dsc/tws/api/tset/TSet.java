@@ -19,6 +19,7 @@ package edu.iu.dsc.tws.api.tset;
 public interface TSet<T> {
   /**
    * Set the parallelism for this set
+   *
    * @param parallelism parallelism
    * @return this set
    */
@@ -66,6 +67,13 @@ public interface TSet<T> {
   <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn);
 
   /**
+   * Direct operation
+   *
+   * @return this TSet
+   */
+  TSet<T> direct();
+
+  /**
    * Reduce operation on the data
    *
    * @param reduceFn the reduce function
@@ -105,6 +113,7 @@ public interface TSet<T> {
 
   /**
    * Select a set of values
+   *
    * @param partitionFunction partition function
    * @param selector the selector
    * @param <K> the type for partitioning
@@ -114,6 +123,7 @@ public interface TSet<T> {
 
   /**
    * Create a cloned dataset
+   *
    * @return the cloned set
    */
   ReplicateTSet<T> replicate(int replications);
@@ -132,6 +142,7 @@ public interface TSet<T> {
 
   /**
    * Executes TSet and saves any generated data as a in-memory data object
+   *
    * @return the resulting TSet
    */
   TSet<T> cache();
