@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
@@ -137,8 +138,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       Worker worker = workerPlan.getWorker(containerId);
       Resource containerResource;
 
-      /*Create the container resource value which is based on the worker values received from the
-      worker plan */
+      //Create the container resource value based on the worker plan
       if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
         containerResource = new Resource((double) worker.getRam(),
             (double) worker.getDisk(), (double) worker.getCpu());
@@ -165,7 +165,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
    * the task in a round robin fashion.
    */
   private static Map<Integer, List<InstanceId>> roundRobinSchedulingAlgorithm(
-      Set<Vertex> taskVertexSet, int numberOfContainers) {
+      Set<Vertex> taskVertexSet, int numberOfContainers) throws ScheduleException {
 
     TaskAttributes taskAttributes = new TaskAttributes();
     Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();

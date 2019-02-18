@@ -57,7 +57,6 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
    * Maximum size of the container resource
    */
   private Resource maxContainerResourceValue;
-
   /**
    * Padding percentage for ram, cpu,disk
    */

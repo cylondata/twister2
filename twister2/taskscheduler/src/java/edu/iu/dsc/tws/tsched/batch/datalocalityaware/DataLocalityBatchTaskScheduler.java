@@ -91,8 +91,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     Map<Integer, List<InstanceId>> containerInstanceMap;
     Map<Integer, TaskSchedulePlan.ContainerPlan> containerPlans = new LinkedHashMap<>();
 
-    Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
-
+    LinkedHashSet<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(graph);
 
     for (Set<Vertex> vertexSet : taskVertexList) {
@@ -173,23 +172,8 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
     //Represents the task schedule plan Id
     int taskSchedulePlanId = 0;
-    taskSchedulePlan = new TaskSchedulePlan(taskSchedulePlanId, new HashSet<>(
-            containerPlans.values()));
-
-    //To print the taskschedule plan list
-    Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-            = taskSchedulePlan.getContainersMap();
-    for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
-      Integer integer = entry.getKey();
-      TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-      Set<TaskSchedulePlan.TaskInstancePlan> taskInstancePlans
-              = containerPlan.getTaskInstances();
-      LOG.fine("Container Index (Schedule Method):" + integer);
-      for (TaskSchedulePlan.TaskInstancePlan ip : taskInstancePlans) {
-        LOG.fine("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
-                + "\tTask Name:" + ip.getTaskName() + "\tContainer Index:" + integer);
-      }
-    }
+    taskSchedulePlan = new TaskSchedulePlan(
+        taskSchedulePlanId, new HashSet<>(containerPlans.values()));
     return taskSchedulePlan;
   }
 
