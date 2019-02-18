@@ -58,26 +58,80 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   // the router to calculate the tasks
   private InvertedBinaryTreeRouter router;
 
+  /**
+   * The final receiver
+   */
   private MessageReceiver finalReceiver;
 
+  /**
+   * The partial receiver
+   */
   private MessageReceiver partialReceiver;
 
+  /**
+   * The index to be used for multi gathers
+   */
   private int index;
 
+  /**
+   * Path to use for multi gathers
+   */
   private int pathToUse;
 
-  private ChannelDataFlowOperation delegete;
+  /**
+   * The delegate with operations
+   */
+  private ChannelDataFlowOperation delegate;
+
+  /**
+   * Task plan
+   */
   private TaskPlan instancePlan;
-  private int executor;
+
+  /**
+   * Data type
+   */
   private MessageType dataType;
+
+  /**
+   * Keep type
+   */
   private MessageType keyType;
+
+  /**
+   * Receive data type
+   */
   private MessageType rcvDataType;
+
+  /**
+   * Weather we are keyed
+   */
   private boolean isKeyed;
+
+  /**
+   * Routing parameters for sends
+   */
   private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
+
+  /**
+   * Routing parameters for partial sends
+   */
   private Table<Integer, Integer, RoutingParameters> partialRoutingParamCache
       = HashBasedTable.create();
+
+  /**
+   * Lock for synchronization
+   */
   private Lock lock = new ReentrantLock();
+
+  /**
+   * Partial lock
+   */
   private Lock partialLock = new ReentrantLock();
+
+  /**
+   * The edge to be used
+   */
   private int edge;
 
   public DataFlowGather(TWSChannel channel, Set<Integer> sources, int destination,
@@ -114,11 +168,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     this.isKeyed = keyed;
     this.rcvDataType = rcvDType;
     this.edge = edge;
-    this.delegete = new ChannelDataFlowOperation(channel);
-  }
-
-  protected boolean isLast() {
-    return router.isLastReceiver();
+    this.delegate = new ChannelDataFlowOperation(channel);
   }
 
   /**
@@ -129,8 +179,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   public boolean receiveMessage(MessageHeader header, Object object) {
     // we always receive to the main task
     // check weather this message is for a sub task
-    if (!isLast()
-        && partialReceiver != null) {
+    if (!router.isLastReceiver() && partialReceiver != null) {
       return partialReceiver.onMessage(header.getSourceId(),
           DataFlowContext.DEFAULT_DESTINATION,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
@@ -211,8 +260,8 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     return router.isLastReceiver();
   }
 
-  public boolean receiveSendInternally(int source, int target, int path, int flags,
-                                       Object message) {
+  public boolean receiveSendInternally(int source, int target,
+                                       int path, int flags, Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
       return finalReceiver.onMessage(source, path, target, flags, message);
@@ -229,30 +278,33 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    return delegete.sendMessage(source, message, pathToUse, flags,
+    return delegate.sendMessage(source, message, pathToUse, flags,
         sendRoutingParameters(source, pathToUse));
   }
 
   @Override
   public boolean send(int source, Object message, int flags, int target) {
-    return delegete.sendMessage(source, message, target, flags,
+    return delegate.sendMessage(source, message, target, flags,
         sendRoutingParameters(source, target));
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags, int target) {
-    return delegete.sendMessagePartial(source, message, target, flags,
+    return delegate.sendMessagePartial(source, message, target, flags,
         partialSendRoutingParameters(source, target));
   }
 
-
   /**
-   * Initialize
+   * Configure the operation
+   * @param cfg configuration
+   * @param t type
+   * @param taskPlan task plan
+   * @param ed edge
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int ed) {
     this.dataType = t;
     this.instancePlan = taskPlan;
-    this.executor = taskPlan.getThisExecutor();
+    int executor = taskPlan.getThisExecutor();
     this.edge = ed;
     // we only have one path
     this.router = new InvertedBinaryTreeRouter(cfg, taskPlan, destination, sources, index);
@@ -290,7 +342,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
-    int receiveExecutorsSize = receivingExecutors().size();
+    int receiveExecutorsSize = router.receivingExecutors().size();
     if (receiveExecutorsSize == 0) {
       receiveExecutorsSize = 1;
     }
@@ -316,7 +368,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
       partialSendRoutingParameters(s, pathToUse);
     }
 
-    delegete.init(cfg, t, rcvDataType, keyType, keyType, taskPlan, ed,
+    delegate.init(cfg, t, rcvDataType, keyType, keyType, taskPlan, ed,
         router.receivingExecutors(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
@@ -325,24 +377,20 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean sendPartial(int source, Object message, int flags) {
     // now what we need to do
-    return delegete.sendMessagePartial(source, message, pathToUse, flags,
+    return delegate.sendMessagePartial(source, message, pathToUse, flags,
         partialSendRoutingParameters(source, pathToUse));
   }
 
   public boolean isComplete() {
-    boolean done = delegete.isComplete();
-    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+    boolean done = delegate.isComplete();
+    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegate, lock, finalReceiver,
         partialLock, partialReceiver);
     return done && !needsFurtherProgress;
   }
 
   @Override
   public boolean isDelegateComplete() {
-    return delegete.isComplete();
-  }
-
-  protected Set<Integer> receivingExecutors() {
-    return router.receivingExecutors();
+    return delegate.isComplete();
   }
 
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
@@ -351,10 +399,9 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean progress() {
-    return OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+    return OperationUtils.progressReceivers(delegate, lock, finalReceiver,
         partialLock, partialReceiver);
   }
-
 
   @Override
   public void close() {
@@ -366,7 +413,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
       finalReceiver.close();
     }
 
-    delegete.close();
+    delegate.close();
   }
 
   @Override

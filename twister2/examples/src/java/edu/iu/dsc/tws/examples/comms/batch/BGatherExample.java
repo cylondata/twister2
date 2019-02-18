@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BGather;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
@@ -114,7 +115,13 @@ public class BGatherExample extends BenchWorker {
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
       while (it.hasNext()) {
         Object object = it.next();
-        experimentData.setOutput(object);
+        if (object instanceof Tuple) {
+          LOG.log(Level.INFO, String.format("%d received %d", target,
+              (Integer) ((Tuple) object).getKey()));
+          experimentData.setOutput(((Tuple) object).getValue());
+        } else {
+          LOG.severe("Un-expected data: " + object.getClass());
+        }
         try {
           verify();
         } catch (VerificationException e) {

@@ -359,7 +359,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
       }
     }
 
-    delegete.init(cfg, t, receiveType, keyType, receiveKeyType, taskPlan, edge,
+    delegete.init(cfg, dataType, receiveType, keyType, receiveKeyType, taskPlan, edge,
         router.receivingExecutors(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
