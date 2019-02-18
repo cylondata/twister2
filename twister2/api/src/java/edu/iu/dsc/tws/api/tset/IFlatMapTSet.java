@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.ops.IterableFlatMapOp;
 import edu.iu.dsc.tws.common.config.Config;
@@ -22,8 +23,9 @@ public class IFlatMapTSet<T, P> extends BaseTSet<T> {
   private IterableFlatMapFunction<P, T> mapFn;
 
   public IFlatMapTSet(Config cfg, TaskGraphBuilder bldr,
-                     BaseTSet<P> parent, IterableFlatMapFunction<P, T> mapFunc) {
-    super(cfg, bldr);
+                      BaseTSet<P> parent, IterableFlatMapFunction<P, T> mapFunc,
+                      TaskExecutor executor) {
+    super(cfg, bldr, executor);
     this.parent = parent;
     this.mapFn = mapFunc;
   }

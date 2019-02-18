@@ -129,4 +129,11 @@ public interface TSet<T> {
    * Build this tset
    */
   void build();
+
+  /**
+   * Executes TSet and saves any generated data as a in-memory data object
+   * @return the resulting TSet
+   */
+  TSet<T> cache();
+
 }

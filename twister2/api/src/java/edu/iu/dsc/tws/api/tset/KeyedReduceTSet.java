@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
@@ -30,10 +31,10 @@ public class KeyedReduceTSet<T, K> extends KeyValueTSet<T, K> {
 
   public KeyedReduceTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
                          ReduceFunction<T> rFn, PartitionFunction<K> parFn,
-                         Selector<T, K> selec) {
-    super(cfg, bldr);
+                         Selector<T, K> selec, TaskExecutor executor) {
+    super(cfg, bldr, executor);
     this.parent = prnt;
-    this.reduceFn =  rFn;
+    this.reduceFn = rFn;
     this.partitionFunction = parFn;
     this.selector = selec;
     this.name = "keyed-reduce-" + parent.getName();

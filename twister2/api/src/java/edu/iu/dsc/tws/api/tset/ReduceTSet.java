@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.common.config.Config;
@@ -23,8 +24,8 @@ public class ReduceTSet<T> extends BaseTSet<T> {
   private BaseTSet<T> parent;
 
   public ReduceTSet(Config cfg, TaskGraphBuilder bldr,
-                    BaseTSet<T> prnt, ReduceFunction<T> rFn) {
-    super(cfg, bldr);
+                    BaseTSet<T> prnt, ReduceFunction<T> rFn, TaskExecutor executor) {
+    super(cfg, bldr, executor);
     this.reduceFn = rFn;
     this.parent = prnt;
     this.name = "reduce-" + parent.getName();

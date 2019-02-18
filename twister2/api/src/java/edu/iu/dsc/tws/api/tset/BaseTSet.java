@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import com.google.common.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -36,6 +37,11 @@ public abstract class BaseTSet<T> implements TSet<T> {
    * The builder to use to building the task graph
    */
   protected TaskGraphBuilder builder;
+
+  /**
+   * Reference to the task executor to be used
+   */
+  protected TaskExecutor taskExecutor;
 
   /**
    * Name of the data set
@@ -79,10 +85,11 @@ public abstract class BaseTSet<T> implements TSet<T> {
    */
   private StateType stateType = StateType.DISTRIBUTED;
 
-  public BaseTSet(Config cfg, TaskGraphBuilder bldr) {
+  public BaseTSet(Config cfg, TaskGraphBuilder bldr, TaskExecutor taskExecutor) {
     this.children = new ArrayList<>();
     this.builder = bldr;
     this.config = cfg;
+    this.taskExecutor = taskExecutor;
   }
 
   public String getName() {
@@ -107,62 +114,64 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    MapTSet<P, T> set = new MapTSet<P, T>(config, builder, this, mapFn);
+    MapTSet<P, T> set = new MapTSet<P, T>(config, builder, this, mapFn, taskExecutor);
     children.add(set);
     return set;
   }
 
   @Override
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, builder, this, mapFn);
+    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, builder, this, mapFn, taskExecutor);
     children.add(set);
     return set;
   }
 
   @Override
   public <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
-    IMapTSet<P, T> set = new IMapTSet<>(config, builder, this, mapFn);
+    IMapTSet<P, T> set = new IMapTSet<>(config, builder, this, mapFn, taskExecutor);
     children.add(set);
     return set;
   }
 
   @Override
   public <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, builder, this, mapFn);
+    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, builder, this, mapFn, taskExecutor);
     children.add(set);
     return set;
   }
 
   @Override
   public ReduceTSet<T> reduce(ReduceFunction<T> reduceFn) {
-    ReduceTSet<T> reduce = new ReduceTSet<T>(config, builder, this, reduceFn);
+    ReduceTSet<T> reduce = new ReduceTSet<T>(config, builder, this, reduceFn, taskExecutor);
     children.add(reduce);
     return reduce;
   }
 
   public PartitionTSet<T> partition(PartitionFunction<T> partitionFn) {
-    PartitionTSet<T> partition = new PartitionTSet<>(config, builder, this, partitionFn);
+    PartitionTSet<T> partition = new PartitionTSet<>(config, builder, this, partitionFn,
+        taskExecutor);
     children.add(partition);
     return partition;
   }
 
   @Override
   public GatherTSet<T> gather() {
-    GatherTSet<T> gather = new GatherTSet<>(config, builder, this);
+    GatherTSet<T> gather = new GatherTSet<>(config, builder, this, taskExecutor);
     children.add(gather);
     return gather;
   }
 
   @Override
   public AllReduceTSet<T> allReduce(ReduceFunction<T> reduceFn) {
-    AllReduceTSet<T> reduce = new AllReduceTSet<T>(config, builder, this, reduceFn);
+    AllReduceTSet<T> reduce = new AllReduceTSet<T>(config, builder, this, reduceFn,
+        taskExecutor);
     children.add(reduce);
     return reduce;
   }
 
   @Override
   public AllGatherTSet<T> allGather() {
-    AllGatherTSet<T> gather = new AllGatherTSet<>(config, builder, this);
+    AllGatherTSet<T> gather = new AllGatherTSet<>(config, builder, this, taskExecutor);
     children.add(gather);
     return gather;
   }
@@ -171,14 +180,14 @@ public abstract class BaseTSet<T> implements TSet<T> {
   public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
                                        Selector<T, K> selector) {
     GroupedTSet<T, K> groupedTSet = new GroupedTSet<>(config, builder, this,
-        partitionFunction, selector);
+        partitionFunction, selector, taskExecutor);
     children.add(groupedTSet);
     return groupedTSet;
   }
 
   @Override
   public SinkTSet<T> sink(Sink<T> sink) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, builder, this, sink);
+    SinkTSet<T> sinkTSet = new SinkTSet<>(config, builder, this, sink, taskExecutor);
     children.add(sinkTSet);
     return sinkTSet;
   }
@@ -191,9 +200,15 @@ public abstract class BaseTSet<T> implements TSet<T> {
       throw new RuntimeException(msg);
     }
 
-    ReplicateTSet<T> cloneTSet = new ReplicateTSet<>(config, builder, this, replications);
+    ReplicateTSet<T> cloneTSet = new ReplicateTSet<>(config, builder, this, replications,
+        taskExecutor);
     children.add(cloneTSet);
     return cloneTSet;
+  }
+
+  @Override
+  public TSet<T> cache() {
+    throw new UnsupportedOperationException("Caching not supported for TSet " + this.getType());
   }
 
   @Override

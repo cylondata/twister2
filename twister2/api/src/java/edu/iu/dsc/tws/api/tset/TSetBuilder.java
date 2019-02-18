@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.api.tset;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -43,10 +44,16 @@ public final class TSetBuilder {
    */
   private TaskGraphBuilder builder;
 
-  private TSetBuilder(Config cfg) {
+  /**
+   * Reference to the task executor to be used
+   */
+  protected TaskExecutor taskExecutor;
+
+  private TSetBuilder(Config cfg, TaskExecutor taskExecutor) {
     this.config = cfg;
     this.sources = new ArrayList<>();
     this.builder = TaskGraphBuilder.newBuilder(cfg);
+    this.taskExecutor = taskExecutor;
   }
 
   /**
@@ -55,8 +62,8 @@ public final class TSetBuilder {
    * @param cfg configuration
    * @return the builder
    */
-  public static TSetBuilder newBuilder(Config cfg) {
-    return new TSetBuilder(cfg);
+  public static TSetBuilder newBuilder(Config cfg, TaskExecutor taskExecutor) {
+    return new TSetBuilder(cfg, taskExecutor);
   }
 
   public TSetBuilder setMode(OperationMode mode) {
@@ -65,7 +72,8 @@ public final class TSetBuilder {
   }
 
   public <T> TSet<T> createSource(Source<T> source) {
-    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, builder, source);
+    builder.setMode(opMode);
+    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, builder, source, taskExecutor);
     sources.add(tSourceTSet);
     return tSourceTSet;
   }
