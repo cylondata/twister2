@@ -50,12 +50,12 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
       }
 
       sourcesFinished = isSourcesFinished(target);
-      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
+      if (!sourcesFinished && !(dataFlowOperation.isDelegateComplete()
           && messages.get(target).isEmpty())) {
         needsFurtherProgress = true;
       }
 
-      if (sourcesFinished && dataFlowOperation.isDelegeteComplete()) {
+      if (sourcesFinished && dataFlowOperation.isDelegateComplete()) {
         batchDone.put(target, true);
         //TODO: check if we can simply remove the data, that is use messages.remove()
         bulkReceiver.receive(target, new ReduceIterator(messages.get(target)));

@@ -399,7 +399,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return done && !needsFurtherProgress;
   }
 
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     return delegete.isComplete();
   }
 

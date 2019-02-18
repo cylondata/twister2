@@ -276,7 +276,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     return delegate.isComplete();
   }
 

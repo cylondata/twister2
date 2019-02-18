@@ -211,8 +211,6 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
                                        Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
-//      LOG.info(String.format("%d Calling directly final receiver %d",
-//          instancePlan.getThisExecutor(), source));
       return finalReceiver.onMessage(source, path, target, flags, message);
     } else {
       return partialReceiver.onMessage(source, path, target, flags, message);
@@ -341,7 +339,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     return delegete.isComplete();
   }
 
@@ -350,7 +348,6 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     boolean done = delegete.isComplete();
     boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
         partialLock, partialReceiver);
-//    LOG.log(Level.INFO, String.format("Done %b needsFurther %b", done, needsFurtherProgress));
     return done && !needsFurtherProgress;
   }
 

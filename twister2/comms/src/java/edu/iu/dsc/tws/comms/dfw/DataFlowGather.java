@@ -62,9 +62,9 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
 
   private MessageReceiver partialReceiver;
 
-  private int index = 0;
+  private int index;
 
-  private int pathToUse = DataFlowContext.DEFAULT_DESTINATION;
+  private int pathToUse;
 
   private ChannelDataFlowOperation delegete;
   private TaskPlan instancePlan;
@@ -128,7 +128,6 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean receiveMessage(MessageHeader header, Object object) {
     // we always receive to the main task
-    int messageDestId = header.getDestinationIdentifier();
     // check weather this message is for a sub task
     if (!isLast()
         && partialReceiver != null) {
@@ -145,61 +144,67 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   }
 
   private RoutingParameters partialSendRoutingParameters(int source, int path) {
-    RoutingParameters routingParameters = new RoutingParameters();
-    // get the expected routes
-    Map<Integer, Set<Integer>> internalRoutes = router.getInternalSendTasks(source);
-    if (internalRoutes == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
+    if (partialRoutingParamCache.contains(source, path)) {
+      return partialRoutingParamCache.get(source, path);
+    } else {
+      RoutingParameters routingParameters = new RoutingParameters();
+      // get the expected routes
+      Map<Integer, Set<Integer>> internalRoutes = router.getInternalSendTasks(source);
+      if (internalRoutes == null) {
+        throw new RuntimeException("Un-expected message from source: " + source);
+      }
 
-    Set<Integer> sourceInternalRouting = internalRoutes.get(source);
-    if (sourceInternalRouting != null) {
-      routingParameters.addInternalRoutes(sourceInternalRouting);
-    }
+      Set<Integer> sourceInternalRouting = internalRoutes.get(source);
+      if (sourceInternalRouting != null) {
+        routingParameters.addInternalRoutes(sourceInternalRouting);
+      }
 
-    // get the expected routes
-    Map<Integer, Set<Integer>> externalRoutes =
-        router.getExternalSendTasksForPartial(source);
-    if (externalRoutes == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
+      // get the expected routes
+      Map<Integer, Set<Integer>> externalRoutes =
+          router.getExternalSendTasksForPartial(source);
+      if (externalRoutes == null) {
+        throw new RuntimeException("Un-expected message from source: " + source);
+      }
 
-    Set<Integer> sourceRouting = externalRoutes.get(source);
-    if (sourceRouting != null) {
-      routingParameters.addExternalRoutes(sourceRouting);
-    }
+      Set<Integer> sourceRouting = externalRoutes.get(source);
+      if (sourceRouting != null) {
+        routingParameters.addExternalRoutes(sourceRouting);
+      }
 
-    routingParameters.setDestinationId(router.destinationIdentifier(source, path));
-    return routingParameters;
+      routingParameters.setDestinationId(router.destinationIdentifier(source, path));
+      partialRoutingParamCache.put(source, path, routingParameters);
+      return routingParameters;
+    }
   }
 
   private RoutingParameters sendRoutingParameters(int source, int path) {
-    RoutingParameters routingParameters = new RoutingParameters();
+    if (routingParamCache.contains(source, path)) {
+      return routingParamCache.get(source, path);
+    } else {
+      RoutingParameters routingParameters = new RoutingParameters();
 
-    // get the expected routes
-    Map<Integer, Set<Integer>> internalRouting = router.getInternalSendTasks(source);
-    if (internalRouting == null) {
-      throw new RuntimeException("Un-expected message from source: " + source);
-    }
+      // get the expected routes
+      Map<Integer, Set<Integer>> internalRouting = router.getInternalSendTasks(source);
+      if (internalRouting == null) {
+        throw new RuntimeException("Un-expected message from source: " + source);
+      }
 
-    // we are going to add source if we are the main executor
-    if (router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-        DataFlowContext.DEFAULT_DESTINATION) == source) {
-      routingParameters.addInteranlRoute(source);
-    }
+      // we are going to add source if we are the main executor
+      if (router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+          DataFlowContext.DEFAULT_DESTINATION) == source) {
+        routingParameters.addInteranlRoute(source);
+      }
 
-    // we should not have the route for main task to outside at this point
-    Set<Integer> sourceInternalRouting = internalRouting.get(source);
-    if (sourceInternalRouting != null) {
-      routingParameters.addInternalRoutes(sourceInternalRouting);
-    }
-    try {
+      // we should not have the route for main task to outside at this point
+      Set<Integer> sourceInternalRouting = internalRouting.get(source);
+      if (sourceInternalRouting != null) {
+        routingParameters.addInternalRoutes(sourceInternalRouting);
+      }
+
       routingParameters.setDestinationId(router.destinationIdentifier(source, path));
-    } catch (RuntimeException e) {
-      LOG.info(String.format("%d exception %d %d %d %s",
-          executor, index, pathToUse, destination, router.getDestinationIdentifiers()));
+      routingParamCache.put(source, path, routingParameters);
+      return routingParameters;
     }
-    return routingParameters;
   }
 
   private boolean isLastReceiver() {
@@ -250,8 +255,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
     this.executor = taskPlan.getThisExecutor();
     this.edge = ed;
     // we only have one path
-    this.router = new InvertedBinaryTreeRouter(cfg, taskPlan,
-        destination, sources, index);
+    this.router = new InvertedBinaryTreeRouter(cfg, taskPlan, destination, sources, index);
 
     // initialize the receive
     if (this.partialReceiver != null && !isLastReceiver()) {
@@ -333,7 +337,7 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     return delegete.isComplete();
   }
 

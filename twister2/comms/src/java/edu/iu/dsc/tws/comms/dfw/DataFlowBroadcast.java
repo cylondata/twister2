@@ -346,7 +346,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     return delegate.isComplete();
   }
 

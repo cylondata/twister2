@@ -17,7 +17,6 @@ import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class IntegerDataPacker implements DataPacker {
   public IntegerDataPacker() {

@@ -178,6 +178,10 @@ public final class DFWIOUtils {
     }
     return null;
   }
+
+  public static boolean containsFlag(int flags, int flag) {
+    return (flags & flag) == flag;
+  }
 }
 
 
