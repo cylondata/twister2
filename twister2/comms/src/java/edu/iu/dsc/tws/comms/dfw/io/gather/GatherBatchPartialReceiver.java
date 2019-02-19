@@ -52,15 +52,18 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
         }
         continue;
       }
+      // now check weather we have the messages for this source
+      Map<Integer, Queue<Object>> map = messages.get(target);
+      Map<Integer, Boolean> finishedForTarget = finished.get(target);
+      Map<Integer, Integer> countMap = counts.get(target);
+
       boolean canProgress = true;
       while (canProgress) {
-        // now check weather we have the messages for this source
-        Map<Integer, Queue<Object>> map = messages.get(target);
-        Map<Integer, Boolean> finishedForTarget = finished.get(target);
-        Map<Integer, Integer> countMap = counts.get(target);
         boolean found = true;
         boolean allFinished = true;
         boolean moreThanOne = false;
+        boolean allZero = true;
+
         for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           if (e.getValue().size() == 0 && !finishedForTarget.get(e.getKey())) {
             found = false;
@@ -78,7 +81,6 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
         if (!found && moreThanOne) {
           needsFurtherProgress = true;
         }
-        boolean allZero = true;
 
         if (found) {
           List<Object> out = new ArrayList<>();
@@ -106,7 +108,8 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
               flags = MessageFlags.LAST;
             }
           }
-          if (dataFlowOperation.sendPartial(target, out, flags, destination)) {
+          if (out.size() > 0
+              && dataFlowOperation.sendPartial(target, out, flags, destination)) {
             for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
               Queue<Object> value = e.getValue();
               if (value.size() > 0) {
@@ -137,6 +140,7 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
           } else {
             needsFurtherProgress = true;
           }
+          batchDone.put(target, true);
           break;
         }
       }

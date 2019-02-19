@@ -128,7 +128,10 @@ public abstract class BaseSerializer implements MessageSerializer {
     MessageHeader.Builder builder = MessageHeader.newBuilder(sendMessage.getSource(),
         sendMessage.getEdge(), numMessages);
     builder.destination(sendMessage.getPath());
-    channelMessage.setHeader(builder.build());
+    builder.flags(sendMessage.getFlags());
+    MessageHeader header = builder.build();
+    channelMessage.setHeader(header);
+    sendMessage.setHeader(header);
   }
 
   /**
