@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -150,14 +151,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private ProgressionTracker sendProgressTracker;
 
   /**
-   * Receive communicationProgress tracker
-   */
-  private ProgressionTracker receiveProgressTracker;
-
-  /**
    * Deserialize communicationProgress track
    */
-  private ProgressionTracker deserializeProgressTracker;
+  private ProgressionTracker receiveProgressTracker;
 
   private AtomicInteger externalSendsPending = new AtomicInteger(0);
 
@@ -244,10 +240,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     sendProgressTracker = new ProgressionTracker(sendItems);
 
     Set<Integer> receiveItems = pendingReceiveMessagesPerSource.keySet();
-    receiveProgressTracker = new ProgressionTracker(receiveItems);
-
     Set<Integer> desrializeItems = pendingReceiveDeSerializations.keySet();
-    deserializeProgressTracker = new ProgressionTracker(desrializeItems);
+    Set<Integer> items = new HashSet<>(receiveItems);
+    items.addAll(desrializeItems);
+
+    receiveProgressTracker = new ProgressionTracker(items);
   }
 
   /**
@@ -400,20 +397,20 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       }
     }
 
-    if (deserializeProgressTracker.canProgress()) {
-      int deserializeId = deserializeProgressTracker.next();
-      if (deserializeId != Integer.MIN_VALUE) {
-        receiveDeserializeProgress(
-            pendingReceiveDeSerializations.get(deserializeId), deserializeId);
-        deserializeProgressTracker.finish(deserializeId);
-      }
-    }
-
     if (receiveProgressTracker.canProgress()) {
-      int receiveId = receiveProgressTracker.next();
-      if (receiveId != Integer.MIN_VALUE) {
-        receiveProgress(pendingReceiveMessagesPerSource.get(receiveId));
-        receiveProgressTracker.finish(receiveId);
+      int deserializeId = receiveProgressTracker.next();
+      if (deserializeId != Integer.MIN_VALUE) {
+        Queue<InMessage> msgQueue = pendingReceiveDeSerializations.get(deserializeId);
+        if (msgQueue != null) {
+          receiveDeserializeProgress(msgQueue, deserializeId);
+        }
+
+        Queue<Pair<Object, InMessage>> pendingReceiveMessages =
+            pendingReceiveMessagesPerSource.get(deserializeId);
+        if (pendingReceiveMessages != null) {
+          receiveProgress(pendingReceiveMessages);
+        }
+        receiveProgressTracker.finish(deserializeId);
       }
     }
   }
