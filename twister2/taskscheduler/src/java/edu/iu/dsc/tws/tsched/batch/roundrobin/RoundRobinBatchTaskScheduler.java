@@ -93,11 +93,10 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
 
     //To retrieve the batch task instances(it may be single task vertex or a batch of task vertices)
     List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(dataFlowTaskGraph);
-
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
-    for (Set<Vertex> vertexSet : taskVertexList) {
 
-      // Based on the size of the task vertex list, it will invoke the respective methods
+    for (Set<Vertex> vertexSet : taskVertexList) {
+      //Based on the size of the task vertex list, it will invoke the respective methods
       if (vertexSet.size() > 1) {
         containerInstanceMap = roundRobinBatchSchedulingAlgorithm(vertexSet,
             workerPlan.getNumberOfWorkers());
@@ -107,8 +106,8 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
             workerPlan.getNumberOfWorkers());
       }
 
-      TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
-          this.instanceRAM, this.instanceCPU, this.instanceDisk);
+      TaskInstanceMapCalculation instanceMapCalculation =
+          new TaskInstanceMapCalculation(this.instanceRAM, this.instanceCPU, this.instanceDisk);
 
       Map<Integer, Map<InstanceId, Double>> instancesRamMap =
           instanceMapCalculation.getInstancesRamMapInContainer(containerInstanceMap,
@@ -135,8 +134,8 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
           double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
           double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
 
-          Resource instanceResource = new Resource(instanceRAMValue,
-              instanceDiskValue, instanceCPUValue);
+          Resource instanceResource = new Resource(instanceRAMValue, instanceDiskValue,
+              instanceCPUValue);
 
           taskInstancePlanMap.put(id, new TaskSchedulePlan.TaskInstancePlan(
               id.getTaskName(), id.getTaskId(), id.getTaskIndex(), instanceResource));
@@ -151,7 +150,6 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
 
         if (worker != null && worker.getCpu() > 0
             && worker.getDisk() > 0 && worker.getRam() > 0) {
-
           containerResource = new Resource((double) worker.getRam(),
               (double) worker.getDisk(), (double) worker.getCpu());
           LOG.fine("Worker (if loop):" + containerId + "\tRam:" + worker.getRam()
@@ -174,13 +172,6 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
         }
       }
     }
-
-    //TODO:Verify this condition
-    //Represents the task schedule plan Id
-    /*int taskSchedulePlanId = 0;
-    taskSchedulePlan = new TaskSchedulePlan(taskSchedulePlanId, new HashSet<>(
-        containerPlans.values()));
-    return taskSchedulePlan;*/
     return new TaskSchedulePlan(0, new HashSet<>(containerPlans.values()));
   }
 

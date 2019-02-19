@@ -97,19 +97,10 @@ public class TaskSchedulePlanBuilder {
     this.id = jobId;
   }
 
-  //This method will be used for the fault tolerance.
-  public TaskSchedulePlan getPreviousTaskSchedulePlan() {
-    return previousTaskSchedulePlan;
-  }
-
   public TaskSchedulePlanBuilder setPreviousTaskSchedulePlan(TaskSchedulePlan
                                                                  previousTaskschedulePlan) {
     this.previousTaskSchedulePlan = previousTaskschedulePlan;
     return this;
-  }
-
-  public Resource getInstanceDefaultResourceValue() {
-    return instanceDefaultResourceValue;
   }
 
   public TaskSchedulePlanBuilder setInstanceDefaultResourceValue(Resource
@@ -128,10 +119,6 @@ public class TaskSchedulePlanBuilder {
       int reqContainerPadding) {
     this.requestedContainerPadding = reqContainerPadding;
     return this;
-  }
-
-  public void setNumContainers(int numContainers) {
-    this.numberOfContainers = numContainers;
   }
 
   public TaskSchedulePlanBuilder updateNumContainers(int numOfContainers) {

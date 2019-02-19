@@ -88,7 +88,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new LinkedHashSet<>();
 
     //To get the vertex set from the taskgraph
-    Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
+    Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
 
     //Allocate the task instances into the logical containers.
     Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
@@ -142,12 +142,8 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
         containerResource = new Resource((double) worker.getRam(),
             (double) worker.getDisk(), (double) worker.getCpu());
-        LOG.fine("Worker (if loop):" + containerId + "\tRam:" + worker.getRam()
-            + "\tDisk:" + worker.getDisk() + "\tCpu:" + worker.getCpu());
       } else {
         containerResource = new Resource(containerRAMValue, containerDiskValue, containerCpuValue);
-        LOG.fine("Worker (else loop):" + containerId + "\tRam:" + containerRAMValue
-            + "\tDisk:" + containerDiskValue + "\tCpu:" + containerCpuValue);
       }
 
       //Schedule the task instance plan into the task container plan.

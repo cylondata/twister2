@@ -109,20 +109,16 @@ public class TaskScheduler implements ITaskScheduler {
     try {
       taskSchedulerClass = ClassLoader.getSystemClassLoader().loadClass(className);
       Object newInstance = taskSchedulerClass.newInstance();
-
       LOG.info("Task Scheduler Class:%%%%%%%" + taskSchedulerClass);
-
-      method = taskSchedulerClass.getMethod("initialize", Config.class);
+      method = taskSchedulerClass.getMethod("initialize", new Class<?>[]{Config.class});
       method.invoke(newInstance, config);
-
       method = taskSchedulerClass.getMethod("schedule",
               new Class<?>[]{DataFlowTaskGraph.class, WorkerPlan.class});
       taskSchedulePlan = (TaskSchedulePlan) method.invoke(newInstance, dataFlowTaskGraph,
               workerPlan);
-
     } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException
             | InstantiationException | ClassNotFoundException e) {
-      e.printStackTrace();
+      throw new RuntimeException("Exception Occured:" + e);
     }
 
     if (taskSchedulePlan != null) {
@@ -133,9 +129,9 @@ public class TaskScheduler implements ITaskScheduler {
         TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
         Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
                 = containerPlan.getTaskInstances();
-        LOG.info("Task Details for Container Id:" + integer);
+        LOG.fine("Task Details for Container Id:" + integer);
         for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.info("Task Id:" + ip.getTaskId()
+          LOG.fine("Task Id:" + ip.getTaskId()
                   + "\tTask Index" + ip.getTaskIndex()
                   + "\tTask Name:" + ip.getTaskName());
         }
