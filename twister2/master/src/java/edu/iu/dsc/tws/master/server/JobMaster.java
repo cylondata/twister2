@@ -128,11 +128,6 @@ public class JobMaster {
   private IJobTerminator jobTerminator;
 
   /**
-   * Number of workers expected
-   */
-  private int numberOfWorkers;
-
-  /**
    * NodeInfo object for Job Master
    * location of Job Master
    */
@@ -202,8 +197,6 @@ public class JobMaster {
     this.masterPort = port;
     this.clusterScaler = clusterScaler;
 
-    this.numberOfWorkers = job.getNumberOfWorkers();
-
     this.jobID = UUID.randomUUID().toString();
     this.dashboardHost = JobMasterContext.dashboardHost(config);
     if (dashboardHost == null) {
@@ -262,7 +255,7 @@ public class JobMaster {
     workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver,
         JobMasterContext.jobMasterAssignsWorkerIDs(config));
 
-    barrierMonitor = new BarrierMonitor(numberOfWorkers, rrServer);
+    barrierMonitor = new BarrierMonitor(workerMonitor, rrServer);
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
 
@@ -436,7 +429,8 @@ public class JobMaster {
       dashClient.jobStateChange(JobState.COMPLETED);
     }
 
-    LOG.info("All " + numberOfWorkers + " workers have completed. JobMaster is stopping.");
+    LOG.info("All " + workerMonitor.getNumberOfWorkers()
+        + " workers have completed. JobMaster is stopping.");
     jobCompleted = true;
     looper.wakeup();
 
