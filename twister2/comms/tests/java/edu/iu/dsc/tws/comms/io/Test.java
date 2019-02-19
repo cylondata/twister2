@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessageReleaseCallback;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
-import edu.iu.dsc.tws.comms.dfw.OutMessage;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -112,7 +111,7 @@ public class Test {
     message.setKeyType(MessageType.SHORT);
     MessageHeader header = multiMessageDeserializer.buildHeader(message.getBuffers().get(0), 0);
     message.setHeader(header);
-    System.out.println(String.format("%d %d %d", header.getLength(),
+    System.out.println(String.format("%d %d %d", header.getNumberTuples(),
         header.getSourceId(), header.getEdge()));
     Object d = multiMessageDeserializer.build(message, 0);
     List list = (List) d;
@@ -134,9 +133,9 @@ public class Test {
     channelMessage.setKeyType(MessageType.INTEGER);
 
     int di = -1;
-    OutMessage sendMessage = new OutMessage(source, channelMessage, 0,
-        di, 0, 0, null, null);
-    multiMessageSerializer.build(object, sendMessage);
+//    OutMessage sendMessage = new OutMessage(source, channelMessage, 0,
+//        di, 0, 0, null, null);
+//    multiMessageSerializer.build(object, sendMessage);
 
     return channelMessage;
   }

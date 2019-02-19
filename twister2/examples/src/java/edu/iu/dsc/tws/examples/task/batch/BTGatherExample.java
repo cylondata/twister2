@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
@@ -57,8 +58,8 @@ public class BTGatherExample extends BenchTaskWorker {
         while (itr.hasNext()) {
           Object data = itr.next();
           numberOfElements++;
-          if (count % jobParameters.getPrintInterval() == 0) {
-            experimentData.setOutput(data);
+          if (data instanceof Tuple) {
+            experimentData.setOutput(((Tuple) data).getValue());
             try {
               verify(OperationNames.GATHER);
             } catch (VerificationException e) {

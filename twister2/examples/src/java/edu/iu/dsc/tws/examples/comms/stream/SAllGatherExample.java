@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SAllGather;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
@@ -106,23 +107,26 @@ public class SAllGatherExample extends BenchWorker {
     }
 
     @Override
-    public boolean receive(int target, Iterator<Object> it) {
+    public boolean receive(int target, Iterator<Object> itr) {
       count++;
       if (count == expected) {
         LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
         gatherDone = true;
       }
-      Object object = it.next();
-      experimentData.setOutput(object);
-      experimentData.setWorkerId(workerId);
-      experimentData.setNumOfWorkers(jobParameters.getContainers());
+      Object value = itr.next();
+      if (value instanceof Tuple) {
+        Object data = ((Tuple) value).getValue();
+        experimentData.setOutput(data);
+        experimentData.setWorkerId(workerId);
+        experimentData.setNumOfWorkers(jobParameters.getContainers());
 
-      try {
-        if (workerId == 0) {
-          verify();
+        try {
+          if (workerId == 0) {
+            verify();
+          }
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
         }
-      } catch (VerificationException e) {
-        LOG.info("Exception Message : " + e.getMessage());
       }
       return true;
     }

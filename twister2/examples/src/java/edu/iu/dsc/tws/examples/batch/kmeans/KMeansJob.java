@@ -113,6 +113,7 @@ public class KMeansJob extends TaskWorker {
       DataObject<double[][]> dataSet = taskExecutor.getOutput(graph, plan, "sink");
       DataPartition<double[][]> values = dataSet.getPartitions()[0];
       centroid = values.getConsumer().next();
+      LOG.log(Level.INFO, String.format("%d iteration done %d", workerId, i));
     }
 
     //To write the final value into the local file system or hdfs
@@ -133,6 +134,7 @@ public class KMeansJob extends TaskWorker {
       int endIndex = startIndex + datapoints.length / context.getParallelism();
       int dim = Integer.parseInt(config.getStringValue("dim"));
 
+      LOG.info("Start index and end index:" + startIndex + "\t" + endIndex);
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim, startIndex, endIndex);
       double[][] kMeansCenters = kMeansCalculator.calculate();
       context.writeEnd("all-reduce", kMeansCenters);

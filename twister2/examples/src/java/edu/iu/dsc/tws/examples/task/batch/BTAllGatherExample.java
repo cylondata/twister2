@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
@@ -56,18 +57,21 @@ public class BTAllGatherExample extends BenchTaskWorker {
         int totalValues = 0;
         Iterator<Object> itr = (Iterator<Object>) message.getContent();
         while (itr.hasNext()) {
-          Object data = itr.next();
-          numberOfElements++;
-          if (data instanceof int[]) {
-            totalValues += ((int[]) data).length;
-          }
-          if (count % jobParameters.getPrintInterval() == 0) {
-            Object object = message.getContent();
-            experimentData.setOutput(data);
-            try {
-              verify(OperationNames.ALLGATHER);
-            } catch (VerificationException e) {
-              LOG.info("Exception Message : " + e.getMessage());
+          Object value = itr.next();
+          if (value instanceof Tuple) {
+            Object data = ((Tuple) value).getValue();
+            numberOfElements++;
+            if (data instanceof int[]) {
+              totalValues += ((int[]) data).length;
+            }
+            if (count % jobParameters.getPrintInterval() == 0) {
+              Object object = message.getContent();
+              experimentData.setOutput(data);
+              try {
+                verify(OperationNames.ALLGATHER);
+              } catch (VerificationException e) {
+                LOG.info("Exception Message : " + e.getMessage());
+              }
             }
           }
         }

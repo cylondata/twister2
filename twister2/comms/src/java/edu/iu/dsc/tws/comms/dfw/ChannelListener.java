@@ -17,7 +17,7 @@ public interface ChannelListener {
    *
    * @param id the rank from which the receive happens
    */
-  void onReceiveComplete(int id, int stream, DataBuffer message);
+  void onReceiveComplete(int id, int stream, DataBuffer message, boolean free);
 
   /**
    * After a send is complete this function gets called
@@ -26,13 +26,4 @@ public interface ChannelListener {
    * @param message message
    */
   void onSendComplete(int id, int stream, ChannelMessage message);
-
-  /**
-   * If the receive buffers need to be cleaned this function will be called
-   * Once called this method will free a receive buffer by copying its content to a local
-   * variable
-   *
-   * @param id the rank from which the receive happens
-   */
-  void freeReceiveBuffers(int id, int stream);
 }

@@ -56,7 +56,7 @@ public class TSetFileAccessExample extends BaseTSetWorker {
             jobParameters.getTaskStages().get(0));
 
     textSource.partition(new OneToOnePartitioner<>()).sink(
-        new FileSink<String>(new TextOutputWriter(
+        new FileSink<>(new TextOutputWriter(
             FileSystem.WriteMode.OVERWRITE,
             new Path(output)))).setParallelism(
                 jobParameters.getTaskStages().get(0));

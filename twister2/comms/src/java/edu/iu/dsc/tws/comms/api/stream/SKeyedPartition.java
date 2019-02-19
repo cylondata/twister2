@@ -53,7 +53,7 @@ public class SKeyedPartition {
     this.destinationSelector = destSelector;
     this.partition = new DataFlowPartition(comm.getChannel(), sources, targets, rcvr,
         new PartitionPartialReceiver(),
-        DataFlowPartition.PartitionStratergy.DIRECT, dataType, keyType);
+        dataType, keyType);
 
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());

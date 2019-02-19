@@ -124,6 +124,8 @@ public abstract class BenchWorker implements IWorker {
       // we should communicationProgress the communication directive
       progressCommunication();
     }
+
+    LOG.log(Level.INFO,  workerId + " FINISHED PROGRESS");
   }
 
   protected abstract void progressCommunication();

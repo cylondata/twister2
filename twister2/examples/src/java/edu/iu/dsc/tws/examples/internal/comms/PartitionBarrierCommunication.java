@@ -101,8 +101,7 @@ public class PartitionBarrierCommunication implements IWorker {
       }
     }
     partition = new DataFlowPartition(network,
-        sources, dests, new FinalPartitionReciver(), new PartitionPartialReceiver(),
-        DataFlowPartition.PartitionStratergy.DIRECT);
+        sources, dests, new FinalPartitionReciver(), new PartitionPartialReceiver());
     partition.init(cfg, MessageType.BYTE, taskPlan, 0);
 
     for (int i = 0; i < noOfTasksPerExecutor; i++) {

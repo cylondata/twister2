@@ -45,12 +45,13 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 public class BarrierMonitor implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(BarrierMonitor.class.getName());
 
-  private int numberOfWorkers;
+  private WorkerMonitor workerMonitor;
+  private int numberOfWorkersOnBarrier;
   private HashMap<Integer, RequestID> waitList;
   private RRServer rrServer;
 
-  public BarrierMonitor(int numberOfWorkers, RRServer rrServer) {
-    this.numberOfWorkers = numberOfWorkers;
+  public BarrierMonitor(WorkerMonitor workerMonitor, RRServer rrServer) {
+    this.workerMonitor = workerMonitor;
     this.rrServer = rrServer;
     waitList = new HashMap<>();
   }
@@ -62,17 +63,21 @@ public class BarrierMonitor implements MessageHandler {
       JobMasterAPI.BarrierRequest barrierRequest = (JobMasterAPI.BarrierRequest) message;
 
       // log first and last workers messages as INFO, others as FINE
+      // numberOfWorkers in a job may change during job execution
+      // numberOfWorkersOnBarrier is assigned the value of numberOfWorkers in the job
+      // when the first barrier message received
       if (waitList.size() == 0) {
-        LOG.fine("BarrierRequest message received from the first worker:\n" + barrierRequest);
-      } else if (waitList.size() == (numberOfWorkers - 1)) {
-        LOG.fine("BarrierRequest message received from the last worker:\n" + barrierRequest);
+        numberOfWorkersOnBarrier = workerMonitor.getNumberOfWorkers();
+        LOG.info("BarrierRequest message received from the first worker:\n" + barrierRequest);
+      } else if (waitList.size() == (numberOfWorkersOnBarrier - 1)) {
+        LOG.info("BarrierRequest message received from the last worker:\n" + barrierRequest);
       } else {
         LOG.fine("BarrierRequest message received:\n" + barrierRequest);
       }
 
       waitList.put(barrierRequest.getWorkerID(), requestID);
 
-      if (waitList.size() == numberOfWorkers) {
+      if (waitList.size() == numberOfWorkersOnBarrier) {
         sendBarrierResponseToWaitList();
       }
 
@@ -99,5 +104,6 @@ public class BarrierMonitor implements MessageHandler {
     }
 
     waitList.clear();
+    numberOfWorkersOnBarrier = 0;
   }
 }

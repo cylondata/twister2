@@ -43,7 +43,7 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
     for (int target : messages.keySet()) {
       if (batchDone.get(target)) {
         if (!isEmptySent.get(target)) {
-          if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(target,
+          if (dataFlowOperation.isDelegateComplete() && dataFlowOperation.sendPartial(target,
               new byte[0], MessageFlags.END, destination)) {
             isEmptySent.put(target, true);
           } else {
@@ -130,7 +130,7 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
             needsFurtherProgress = true;
           }
         }
-        if (dataFlowOperation.isDelegeteComplete() && allFinished && allZero) {
+        if (dataFlowOperation.isDelegateComplete() && allFinished && allZero) {
           if (dataFlowOperation.sendPartial(target, new byte[0],
               MessageFlags.END, destination)) {
             isEmptySent.put(target, true);

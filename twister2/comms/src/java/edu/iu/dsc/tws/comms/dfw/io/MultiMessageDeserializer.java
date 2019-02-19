@@ -67,7 +67,7 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
     if (header == null) {
       throw new RuntimeException("Header must be built before the message");
     }
-    while (readLength < header.getLength()) {
+    while (readLength < header.getNumberTuples()) {
       List<DataBuffer> messageBuffers = new ArrayList<>();
       DataBuffer dataBuffer = buffers.get(bufferIndex);
       ByteBuffer byteBuffer = dataBuffer.getByteBuffer();
@@ -115,7 +115,7 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
     if (header == null) {
       throw new RuntimeException("Header must be built before the message");
     }
-    while (readLength < header.getLength()) {
+    while (readLength < header.getNumberTuples()) {
       List<DataBuffer> messageBuffers = new ArrayList<>();
       DataBuffer dataBuffer = buffers.get(bufferIndex);
       ByteBuffer byteBuffer = dataBuffer.getByteBuffer();
@@ -150,7 +150,7 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
 
   private Object getSingleDataBuffers(ChannelMessage channelMessage,
                                       List<DataBuffer> message, int length) {
-    MessageType type = channelMessage.getType();
+    MessageType type = channelMessage.getDataType();
 
     if (!keyed) {
       return DataDeserializer.getAsByteArray(message,
@@ -193,7 +193,7 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
    * @return the built message object
    */
   private Object buildMessage(ChannelMessage channelMessage, List<DataBuffer> message, int length) {
-    MessageType type = channelMessage.getType();
+    MessageType type = channelMessage.getDataType();
     if (keyed) {
       Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(channelMessage.getKeyType(),
           message, serializer);
@@ -208,7 +208,7 @@ public class MultiMessageDeserializer implements MessageDeSerializer {
             serializer, type);
       }
       return new Tuple(keyPair.getValue(), data,
-          channelMessage.getKeyType(), channelMessage.getType());
+          channelMessage.getKeyType(), channelMessage.getDataType());
     } else {
       return DataDeserializer.deserializeData(message, length, serializer, type);
     }

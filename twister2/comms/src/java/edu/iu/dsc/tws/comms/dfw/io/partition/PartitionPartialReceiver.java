@@ -229,6 +229,8 @@ public class PartitionPartialReceiver implements MessageReceiver {
           progressAttempts = 0;
           continue;
         }
+//        LOG.log(Level.INFO, String.format("%d PR Sending to %d -> %d",
+//            executor, representSource, e.getKey()));
         // if we send this list successfully
         if (operation.sendPartial(representSource, send, 0, e.getKey())) {
           // lets remove from ready list and clear the list
@@ -251,7 +253,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
           needsFurtherProgress = true;
         }
       }
-      if (operation.isDelegeteComplete() && !needsFurtherProgress
+      if (operation.isDelegateComplete() && !needsFurtherProgress
           && onFinishedSources.equals(thisWorkerSources)
           && readyToSend.isEmpty()) {
         for (int source : thisWorkerSources) {

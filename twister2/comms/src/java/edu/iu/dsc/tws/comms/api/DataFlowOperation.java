@@ -80,7 +80,7 @@ public interface DataFlowOperation {
     return false;
   }
 
-  default boolean isDelegeteComplete() {
+  default boolean isDelegateComplete() {
     return false;
   }
 
