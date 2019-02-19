@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.allgather.AllGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.allgather.AllGatherStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchPartialReceiver;
@@ -57,6 +58,8 @@ public class DataFlowAllGather implements DataFlowOperation {
 
   private boolean streaming;
 
+  private MessageType dataType;
+
   public DataFlowAllGather(TWSChannel chnl,
                            Set<Integer> sources, Set<Integer> destination, int middleTask,
                            BulkReceiver finalRecv,
@@ -77,7 +80,7 @@ public class DataFlowAllGather implements DataFlowOperation {
    */
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     this.executor = instancePlan.getThisExecutor();
-
+    this.dataType = type;
     broadcast = new DataFlowBroadcast(channel, middleTask,
         destinations, new BCastReceiver(finalReceiver));
     broadcast.init(config, MessageType.OBJECT, instancePlan, broadCastEdge);
@@ -93,7 +96,8 @@ public class DataFlowAllGather implements DataFlowOperation {
     }
 
     gather = new DataFlowGather(channel, sources, middleTask,
-        finalRecvr, partialReceiver, 0, 0, config, type, instancePlan, gatherEdge);
+        finalRecvr, partialReceiver, 0, 0, config, instancePlan, true, type, type,
+        MessageType.INTEGER, edge);
     gather.init(config, type, instancePlan, gatherEdge);
   }
 
@@ -104,7 +108,8 @@ public class DataFlowAllGather implements DataFlowOperation {
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    return gather.send(source, message, flags);
+    Tuple tuple = new Tuple(source, message, MessageType.INTEGER, dataType);
+    return gather.send(source, tuple, flags);
   }
 
   @Override
