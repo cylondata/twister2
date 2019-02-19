@@ -204,6 +204,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public TSet<T> cache() {
+    // todo: why cant we add a single cache tset here?
     DirectTset<T> direct = new DirectTset<>(config, builder, this);
     children.add(direct);
     CacheTSet<T> cacheTSet = new CacheTSet<>(config, builder, direct);
