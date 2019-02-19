@@ -55,7 +55,7 @@ import io.kubernetes.client.util.Watch;
 public class UploaderForJob extends Thread {
   private static final Logger LOG = Logger.getLogger(UploaderForJob.class.getName());
 
-  public static final long MAX_WAIT_TIME_FOR_POD_START = 100 * 1000L; // in seconds
+  public static final long MAX_WAIT_TIME_FOR_POD_START = 300 * 1000L; // in seconds
 
   private CoreV1Api coreApi;
   private ApiClient apiClient;
