@@ -253,7 +253,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
           needsFurtherProgress = true;
         }
       }
-      if (operation.isDelegeteComplete() && !needsFurtherProgress
+      if (operation.isDelegateComplete() && !needsFurtherProgress
           && onFinishedSources.equals(thisWorkerSources)
           && readyToSend.isEmpty()) {
         for (int source : thisWorkerSources) {

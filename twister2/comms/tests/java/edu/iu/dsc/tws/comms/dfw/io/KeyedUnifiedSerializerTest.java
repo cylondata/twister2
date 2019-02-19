@@ -102,7 +102,8 @@ public class KeyedUnifiedSerializerTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null);
 
-    UnifiedSerializer serializer = new UnifiedSerializer(new KryoSerializer(), 0);
+    UnifiedKeySerializer serializer = new UnifiedKeySerializer(
+        new KryoSerializer(), 0, type, type);
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -112,7 +113,8 @@ public class KeyedUnifiedSerializerTest {
       messages.add(ch);
     }
 
-    UnifiedDeserializer deserializer = new UnifiedDeserializer(new KryoSerializer(), 0);
+    UnifiedKeyDeSerializer deserializer = new UnifiedKeyDeSerializer(
+        new KryoSerializer(), 0, type, type);
     deserializer.init(Config.newBuilder().build(), true);
 
     MessageHeader header = deserializer.buildHeader(
@@ -251,7 +253,8 @@ public class KeyedUnifiedSerializerTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null);
 
-    UnifiedSerializer serializer = new UnifiedSerializer(new KryoSerializer(), 0);
+    UnifiedKeySerializer serializer = new UnifiedKeySerializer(
+        new KryoSerializer(), 0, type, type);
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -262,7 +265,8 @@ public class KeyedUnifiedSerializerTest {
       messages.add(ch);
     }
 
-    UnifiedDeserializer deserializer = new UnifiedDeserializer(new KryoSerializer(), 0);
+    UnifiedKeyDeSerializer deserializer = new UnifiedKeyDeSerializer(new KryoSerializer(), 0,
+        type, type);
     deserializer.init(Config.newBuilder().build(), true);
 
     MessageHeader header = deserializer.buildHeader(

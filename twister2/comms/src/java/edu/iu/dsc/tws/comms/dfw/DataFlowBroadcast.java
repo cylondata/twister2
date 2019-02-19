@@ -222,7 +222,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
           new ArrayBlockingQueue<Pair<Object, OutMessage>>(
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor));
+      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor, type));
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -238,7 +238,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
-      deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), executor));
+      deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), executor, type));
     }
 
     calculateRoutingParameters();
@@ -346,7 +346,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     return delegate.isComplete();
   }
 

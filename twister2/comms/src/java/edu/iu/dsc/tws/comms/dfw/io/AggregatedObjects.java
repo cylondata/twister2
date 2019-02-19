@@ -14,10 +14,7 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Buffered object to be used for sending coalesced data
- */
-public class BufferedObjects {
+public class AggregatedObjects {
   private int source;
 
   private int destination;
@@ -26,7 +23,7 @@ public class BufferedObjects {
 
   private int flag = 0;
 
-  public BufferedObjects(int source, int destination) {
+  public AggregatedObjects(int source, int destination) {
     this.source = source;
     this.destination = destination;
   }

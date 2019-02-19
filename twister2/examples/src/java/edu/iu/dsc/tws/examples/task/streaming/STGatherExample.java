@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
@@ -58,8 +59,8 @@ public class STGatherExample extends BenchTaskWorker {
           Iterator<?> itr = (Iterator<?>) object;
           while (itr.hasNext()) {
             Object res = itr.next();
-            if (res instanceof int[]) {
-              int[] a = (int[]) res;
+            if (res instanceof Tuple) {
+              int[] a = (int[]) ((Tuple) res).getValue();
               experimentData.setOutput(a);
               LOG.info("Message Gathered : " + Arrays.toString(a));
             }

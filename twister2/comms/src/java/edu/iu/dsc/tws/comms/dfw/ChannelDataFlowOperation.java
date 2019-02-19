@@ -165,10 +165,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     this.channel = channel;
   }
 
-
-  /**
-   * init method
-   */
   public void init(Config cfg, MessageType messageType, MessageType rcvDataType,
                    MessageType kType, MessageType rcvKeyType, TaskPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
@@ -219,9 +215,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     initProgressTrackers();
   }
 
-  /**
-   * init method
-   */
   public void init(Config cfg, MessageType messageType, TaskPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
                    ChannelReceiver msgReceiver,
@@ -296,7 +289,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   protected boolean sendMessagePartial(int source, Object message, int target,
                                     int flags, RoutingParameters routingParameters) {
-//    LOG.log(Level.INFO, String.format("%d Partial send %d -> %d", executor, source, target));
     // for partial sends we use minus value to find the correct queue
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);

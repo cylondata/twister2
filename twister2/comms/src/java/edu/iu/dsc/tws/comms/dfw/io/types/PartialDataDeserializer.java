@@ -24,21 +24,25 @@ public final class PartialDataDeserializer {
   public static int readFromBuffer(InMessage currentMessage, int currentLocation,
                                    DataBuffer buffer, int currentObjectLength,
                                    KryoSerializer serializer) {
-    int startIndex = currentMessage.getUnPkCurrentIndex();
+    int startIndex = currentMessage.getUnPkCurrentBytes();
     switch (currentMessage.getDataType()) {
       case INTEGER:
+        startIndex = startIndex / Integer.BYTES;
         int[] val = (int[]) currentMessage.getDeserializingObject();
         return PartialDataDeserializer.deserializeInteger(buffer, currentObjectLength,
             val, startIndex, currentLocation);
       case LONG:
+        startIndex = startIndex / Long.BYTES;
         long[] longVal = (long[]) currentMessage.getDeserializingObject();
         return PartialDataDeserializer.deserializeLong(buffer, currentObjectLength,
             longVal, startIndex, currentLocation);
       case DOUBLE:
+        startIndex = startIndex / Double.BYTES;
         double[] doubleVal = (double[]) currentMessage.getDeserializingObject();
         return PartialDataDeserializer.deserializeDouble(buffer, currentObjectLength,
             doubleVal, startIndex, currentLocation);
       case SHORT:
+        startIndex = startIndex / Short.BYTES;
         short[] shortVal = (short[]) currentMessage.getDeserializingObject();
         return PartialDataDeserializer.deserializeShort(buffer, currentObjectLength,
             shortVal, startIndex, currentLocation);
@@ -62,71 +66,57 @@ public final class PartialDataDeserializer {
     }
   }
 
-  public static void createDataObject(InMessage currentMessage, int length) {
+  public static Object createDataObject(InMessage currentMessage, int length) {
     switch (currentMessage.getDataType()) {
       case INTEGER:
-        int[] value = new int[length / Integer.BYTES];
-        currentMessage.setDeserializingObject(value);
-        break;
+        return new int[length / Integer.BYTES];
       case LONG:
-        long[] longValue = new long[length / Long.BYTES];
-        currentMessage.setDeserializingObject(longValue);
-        break;
+        return new long[length / Long.BYTES];
       case DOUBLE:
-        double[] doubleValue = new double[length / Double.BYTES];
-        currentMessage.setDeserializingObject(doubleValue);
-        break;
+        return new double[length / Double.BYTES];
       case SHORT:
-        short[] shortValue = new short[length / Short.BYTES];
-        currentMessage.setDeserializingObject(shortValue);
-        break;
+        return new short[length / Short.BYTES];
       case CHAR:
-        char[] charValue = new char[length / Character.BYTES];
-        currentMessage.setDeserializingObject(charValue);
-        break;
+        return new char[length / Character.BYTES];
       case BYTE:
-        byte[] byteValue = new byte[length];
-        currentMessage.setDeserializingObject(byteValue);
-        break;
+        return new byte[length];
       case OBJECT:
-        byte[] objectValue = new byte[length];
-        currentMessage.setDeserializingObject(objectValue);
-        break;
+        return new byte[length];
       default:
         break;
     }
-    currentMessage.setUnPkCurrentIndex(0);
+    return null;
   }
 
   public static int totalBytesRead(InMessage msg, int valsRead) {
     switch (msg.getDataType()) {
       case INTEGER:
-        int i = valsRead + msg.getUnPkCurrentIndex() * Integer.BYTES;
-        msg.addUnPkCurrentIndex(valsRead / Integer.BYTES);
+        int i = valsRead + msg.getUnPkCurrentBytes() * Integer.BYTES;
+        msg.addUnPkCurrentBytes(valsRead / Integer.BYTES);
         return i;
       case DOUBLE:
-        int i1 = valsRead + msg.getUnPkCurrentIndex() * Double.BYTES;
-        msg.addUnPkCurrentIndex(valsRead / Double.BYTES);
+        int i1 = valsRead + msg.getUnPkCurrentBytes() * Double.BYTES;
+        msg.addUnPkCurrentBytes(valsRead / Double.BYTES);
         return i1;
       case LONG:
-        int i2 = valsRead + msg.getUnPkCurrentIndex() * Long.BYTES;
-        msg.addUnPkCurrentIndex(valsRead / Long.BYTES);
+        int i2 = valsRead + msg.getUnPkCurrentBytes() * Long.BYTES;
+        msg.addUnPkCurrentBytes(valsRead / Long.BYTES);
         return i2;
       case SHORT:
-        int i3 = valsRead + msg.getUnPkCurrentIndex() * Short.BYTES;
-        msg.addUnPkCurrentIndex(valsRead / Short.BYTES);
+        int i3 = valsRead + msg.getUnPkCurrentBytes() * Short.BYTES;
+        msg.addUnPkCurrentBytes(valsRead / Short.BYTES);
         return i3;
       case CHAR:
-        int i4 = valsRead + msg.getUnPkCurrentIndex() * Character.BYTES;
-        msg.addUnPkCurrentIndex(valsRead / Character.BYTES);
+        int i4 = valsRead + msg.getUnPkCurrentBytes() * Character.BYTES;
+        msg.addUnPkCurrentBytes(valsRead / Character.BYTES);
         return i4;
       case BYTE:
-        int i5 = valsRead + msg.getUnPkCurrentIndex();
-        msg.addUnPkCurrentIndex(valsRead);
+        int i5 = valsRead + msg.getUnPkCurrentBytes();
+        msg.addUnPkCurrentBytes(valsRead);
         return i5;
       case OBJECT:
-        int i6 = valsRead + msg.getUnPkCurrentIndex();
-        msg.addUnPkCurrentIndex(valsRead);
+        int i6 = valsRead + msg.getUnPkCurrentBytes();
+        msg.addUnPkCurrentBytes(valsRead);
         return i6;
       default:
         break;
@@ -134,7 +124,7 @@ public final class PartialDataDeserializer {
     return 0;
   }
 
-  private static int deserializeInteger(DataBuffer buffers, int byteLength,
+  public static int deserializeInteger(DataBuffer buffers, int byteLength,
                                          int[] value, int startIndex, int bufferLocation) {
     int noOfInts = byteLength / Integer.BYTES;
     int bytesRead = 0;
@@ -153,7 +143,7 @@ public final class PartialDataDeserializer {
     return bytesRead;
   }
 
-  private static int deserializeLong(DataBuffer buffers, int byteLength,
+  public static int deserializeLong(DataBuffer buffers, int byteLength,
                                        long[] value, int startIndex, int bufferLocation) {
     int noOfLongs = byteLength / Long.BYTES;
     int bytesRead = 0;
@@ -172,7 +162,7 @@ public final class PartialDataDeserializer {
     return bytesRead;
   }
 
-  private static int deserializeDouble(DataBuffer buffers, int byteLength,
+  public static int deserializeDouble(DataBuffer buffers, int byteLength,
                                     double[] value, int startIndex, int bufferLocation) {
     int noOfLongs = byteLength / Double.BYTES;
     int bytesRead = 0;
@@ -191,7 +181,7 @@ public final class PartialDataDeserializer {
     return bytesRead;
   }
 
-  private static int deserializeShort(DataBuffer buffers, int byteLength,
+  public static int deserializeShort(DataBuffer buffers, int byteLength,
                                       short[] value, int startIndex, int bufferLocation) {
     int noOfLongs = byteLength / Short.BYTES;
     int bytesRead = 0;

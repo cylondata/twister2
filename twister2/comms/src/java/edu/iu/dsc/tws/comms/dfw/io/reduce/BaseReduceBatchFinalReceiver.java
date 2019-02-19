@@ -99,7 +99,7 @@ public abstract class BaseReduceBatchFinalReceiver extends ReduceBatchReceiver {
         allFinished = false;
       }
 
-      if (!dataFlowOperation.isDelegeteComplete()) {
+      if (!dataFlowOperation.isDelegateComplete()) {
         allFinished = false;
         needsFurtherProgress = true;
       }
