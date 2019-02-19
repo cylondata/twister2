@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -151,12 +152,15 @@ public abstract class BenchWorker implements IWorker {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
+      Timing.defineFlag("M_SEND", jobParameters.getIterations());
+      Timing.markMili("ALL_SEND");
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
         int flag = 0;
         if (i == jobParameters.getIterations() - 1) {
           flag = MessageFlags.LAST;
         }
+        Timing.markMili("M_SEND");
         sendMessages(task, inputData, flag);
       }
       LOG.info(String.format("%d Done sending", workerId));
