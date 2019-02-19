@@ -15,9 +15,24 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.DataPacker;
+import edu.iu.dsc.tws.comms.api.KeyPacker;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
+import edu.iu.dsc.tws.comms.dfw.io.types.ByteKeyPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.BytePacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.DoubleKeyPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.DoublePacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.IntegerDataPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.IntegerKeyPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.LongKeyPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.LongPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.ObjectKeyPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.ShortKeyPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.ShortPacker;
 import static edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer.HEADER_SIZE;
 
 public final class DFWIOUtils {
@@ -120,6 +135,52 @@ public final class DFWIOUtils {
     copy.addOverFlowBuffers(channelMessage.getOverflowBuffers());
 
     return copy;
+  }
+
+  public static DataPacker createPacker(MessageType dataType) {
+    if (dataType == MessageType.CUSTOM) {
+      return dataType.getDataPacker();
+    }
+
+    if (dataType == MessageType.INTEGER) {
+      return new IntegerDataPacker();
+    } else if (dataType == MessageType.LONG) {
+      return new LongPacker();
+    } else if (dataType == MessageType.SHORT) {
+      return new ShortPacker();
+    } else if (dataType == MessageType.DOUBLE) {
+      return new DoublePacker();
+    } else if (dataType == MessageType.BYTE) {
+      return new BytePacker();
+    } else if (dataType == MessageType.OBJECT) {
+      return new ObjectPacker();
+    }
+    return null;
+  }
+
+  public static KeyPacker createKeyPacker(MessageType dataType) {
+    if (dataType == MessageType.CUSTOM) {
+      return dataType.getKeyPacker();
+    }
+
+    if (dataType == MessageType.INTEGER) {
+      return new IntegerKeyPacker();
+    } else if (dataType == MessageType.LONG) {
+      return new LongKeyPacker();
+    } else if (dataType == MessageType.SHORT) {
+      return new ShortKeyPacker();
+    } else if (dataType == MessageType.DOUBLE) {
+      return new DoubleKeyPacker();
+    } else if (dataType == MessageType.BYTE) {
+      return new ByteKeyPacker();
+    } else if (dataType == MessageType.OBJECT) {
+      return new ObjectKeyPacker();
+    }
+    return null;
+  }
+
+  public static boolean containsFlag(int flags, int flag) {
+    return (flags & flag) == flag;
   }
 }
 

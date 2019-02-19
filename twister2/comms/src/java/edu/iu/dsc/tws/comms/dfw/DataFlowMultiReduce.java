@@ -119,10 +119,10 @@ public class DataFlowMultiReduce implements DataFlowOperation {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     boolean isDone = true;
     for (DataFlowReduce reduce : reduceMap.values()) {
-      isDone = isDone && reduce.isDelegeteComplete();
+      isDone = isDone && reduce.isDelegateComplete();
       if (!isDone) {
         //No need to check further if we already have one false
         return false;

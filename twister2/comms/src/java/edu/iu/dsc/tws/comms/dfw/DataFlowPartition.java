@@ -39,6 +39,8 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.PartitionRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -322,7 +324,12 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
           new ArrayBlockingQueue<Pair<Object, OutMessage>>(
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor));
+      if (isKeyed) {
+        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(), executor,
+            keyType, dataType));
+      } else {
+        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor, dataType));
+      }
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -338,7 +345,12 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
               capacity);
       pendingReceiveMessagesPerSource.put(ex, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<InMessage>(capacity));
-      deSerializerMap.put(ex, new UnifiedDeserializer(new KryoSerializer(), executor));
+      if (isKeyed) {
+        deSerializerMap.put(ex, new UnifiedKeyDeSerializer(new KryoSerializer(),
+            executor, keyType, dataType));
+      } else {
+        deSerializerMap.put(ex, new UnifiedDeserializer(new KryoSerializer(), executor, dataType));
+      }
     }
 
     for (int src : srcs) {
@@ -347,7 +359,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
       }
     }
 
-    delegete.init(cfg, t, receiveType, keyType, receiveKeyType, taskPlan, edge,
+    delegete.init(cfg, dataType, receiveType, keyType, receiveKeyType, taskPlan, edge,
         router.receivingExecutors(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
@@ -387,7 +399,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return done && !needsFurtherProgress;
   }
 
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     return delegete.isComplete();
   }
 

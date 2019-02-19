@@ -142,7 +142,7 @@ public class DirectBatchFinalReceiver implements MessageReceiver {
     lock.lock();
     try {
       for (int target : finishedTargets) {
-        if (operation.isDelegeteComplete()) {
+        if (operation.isDelegateComplete()) {
           Iterator<Map.Entry<Integer, List<Object>>> it = targetMessages.entrySet().iterator();
           while (it.hasNext()) {
             Map.Entry<Integer, List<Object>> e = it.next();

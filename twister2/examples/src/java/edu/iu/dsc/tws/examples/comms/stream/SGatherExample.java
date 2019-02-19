@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SGather;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
@@ -107,7 +108,14 @@ public class SGatherExample extends BenchWorker {
     @Override
     public boolean receive(int target, Iterator<Object> object) {
       while (object.hasNext()) {
-        experimentData.setOutput(object.next());
+        Object data = object.next();
+        if (data instanceof Tuple) {
+          LOG.log(Level.INFO, String.format("%d received %d", target,
+              (Integer) ((Tuple) data).getKey()));
+          experimentData.setOutput(((Tuple) data).getValue());
+        } else {
+          LOG.severe("Un-expected data: " + data.getClass());
+        }
       }
       count += 1;
 

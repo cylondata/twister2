@@ -54,14 +54,10 @@ public final class PartialKeyDeSerializer {
       case OBJECT:
         keyLength = buffers.getByteBuffer().getInt(location);
         readBytes = Integer.BYTES;
-        byte[] b = new byte[keyLength];
-        message.setDeserializingKey(b);
         break;
       case BYTE:
         keyLength = buffers.getByteBuffer().getInt(location);
         readBytes = Integer.BYTES;
-        byte[] bytes = new byte[keyLength];
-        message.setDeserializingKey(bytes);
         break;
       default:
         break;
@@ -70,36 +66,32 @@ public final class PartialKeyDeSerializer {
     return new ImmutablePair<>(keyLength, readBytes);
   }
 
-  public static void createKeyObject(InMessage currentMessage, int length) {
-    switch (currentMessage.getDataType()) {
+  public static Object createKeyObject(MessageType messageType, int length) {
+    switch (messageType) {
       case INTEGER:
-        break;
+        return null;
       case LONG:
-        break;
+        return null;
       case DOUBLE:
-        break;
+        return null;
       case SHORT:
-        break;
+        return null;
       case CHAR:
-        break;
+        return null;
       case BYTE:
-        byte[] byteValue = new byte[length];
-        currentMessage.setDeserializingKey(byteValue);
-        break;
+        return new byte[length];
       case OBJECT:
-        byte[] objectValue = new byte[length];
-        currentMessage.setDeserializingKey(objectValue);
-        break;
+        return new byte[length];
       default:
         break;
     }
-    currentMessage.setUnPkCurrentIndex(0);
+    return null;
   }
 
   public static int readFromBuffer(InMessage currentMessage, int currentLocation,
                                    DataBuffer buffer, int currentObjectLength,
                                    KryoSerializer serializer) {
-    int startIndex = currentMessage.getUnPkCurrentIndex();
+    int startIndex = currentMessage.getUnPkCurrentBytes();
     switch (currentMessage.getDataType()) {
       case INTEGER:
         return deserializeInteger(currentMessage, buffer, currentLocation);
@@ -141,12 +133,12 @@ public final class PartialKeyDeSerializer {
       case CHAR:
         return valsRead;
       case BYTE:
-        int i5 = valsRead + msg.getUnPkCurrentIndex();
-        msg.addUnPkCurrentIndex(valsRead);
+        int i5 = valsRead + msg.getUnPkCurrentBytes();
+        msg.addUnPkCurrentBytes(valsRead);
         return i5;
       case OBJECT:
-        int i6 = valsRead + msg.getUnPkCurrentIndex();
-        msg.addUnPkCurrentIndex(valsRead);
+        int i6 = valsRead + msg.getUnPkCurrentBytes();
+        msg.addUnPkCurrentBytes(valsRead);
         return i6;
       default:
         break;
