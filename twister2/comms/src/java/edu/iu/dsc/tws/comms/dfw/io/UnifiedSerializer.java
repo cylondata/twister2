@@ -108,6 +108,8 @@ public class UnifiedSerializer extends BaseSerializer {
 
     // now we can serialize the body
     if (state.getPart() != SerializeState.Part.BODY) {
+      // now set the size of the buffer
+      targetBuffer.setSize(byteBuffer.position());
       return false;
     }
 

@@ -44,7 +44,6 @@ public class BytePacker implements DataPacker {
   public int readDataFromBuffer(InMessage currentMessage, int currentLocation,
                                 DataBuffer buffer, int currentObjectLength) {
     int startIndex = currentMessage.getUnPkCurrentBytes();
-    startIndex = startIndex / Integer.BYTES;
     byte[] val = (byte[]) currentMessage.getDeserializingObject();
     return PartialDataDeserializer.deserializeByte(buffer, currentObjectLength,
         val, startIndex, currentLocation);
