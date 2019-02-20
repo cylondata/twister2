@@ -12,23 +12,20 @@
 package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.api.stream.SReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
@@ -78,27 +75,6 @@ public class SReduceExample extends BenchWorker {
     }
   }
 
-  private class ReduceFunctionImpl implements ReduceFunction {
-
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-
-    }
-
-    @Override
-    public Object reduce(Object t1, Object t2) {
-      int[] v1 = (int[]) t1;
-      int[] v2 = (int[]) t2;
-      int[] v3 = new int[v1.length];
-
-      for (int i = 0; i < v1.length; i++) {
-        v3[i] = v1[i] + v2[i];
-      }
-      return v3;
-    }
-  }
-
-
   @Override
   protected void progressCommunication() {
     reduce.progress();
@@ -107,7 +83,7 @@ public class SReduceExample extends BenchWorker {
   @Override
   protected boolean sendMessages(int task, Object data, int flag) {
     while (!reduce.reduce(task, data, flag)) {
-      // lets wait a litte and try again
+      // lets wait a little and try again
       reduce.progress();
     }
     return true;
@@ -130,13 +106,30 @@ public class SReduceExample extends BenchWorker {
 
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
+      Timing.defineFlag(TIMING_MESSAGE_RECV, jobParameters.getIterations(), workerId == 0);
     }
 
     @Override
     public boolean receive(int target, Object object) {
+      Timing.markMili(TIMING_MESSAGE_RECV, workerId == 0);
       count++;
       LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
       if (count == expected) {
+        Timing.markMili(TIMING_ALL_RECV, workerId == 0);
+        resultsRecorder.recordColumn(
+            "Total Time",
+            Timing.averageDiff(TIMING_ALL_SEND, TIMING_ALL_RECV, workerId == 0)
+        );
+        resultsRecorder.recordColumn(
+            "Average Time",
+            Timing.averageDiff(TIMING_MESSAGE_SEND, TIMING_MESSAGE_RECV, workerId == 0)
+        );
+        resultsRecorder.writeToCSV();
+
+        LOG.info("Total time for all iterations : "
+            + Timing.averageDiff(TIMING_ALL_SEND, TIMING_ALL_RECV, workerId == 0));
+        LOG.info("Average time for reduce : "
+            + Timing.averageDiff(TIMING_MESSAGE_SEND, TIMING_MESSAGE_RECV, workerId == 0));
         reduceDone = true;
       }
       experimentData.setOutput(object);

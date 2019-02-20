@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.examples.comms.stream.SKeyedPartitionExample;
 import edu.iu.dsc.tws.examples.comms.stream.SKeyedReduceExample;
 import edu.iu.dsc.tws.examples.comms.stream.SPartitionExample;
 import edu.iu.dsc.tws.examples.comms.stream.SReduceExample;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class ExampleMain {
@@ -62,6 +63,7 @@ public class ExampleMain {
     options.addOption(Utils.createOption(Constants.ARGS_DATA_TYPE, true, "Data", false));
     options.addOption(Utils.createOption(Constants.ARGS_INIT_ITERATIONS, true, "Data", false));
     options.addOption(Constants.ARGS_VERIFY, false, "verify");
+    options.addOption(Utils.createOption(BenchmarkMetadata.ARG_BENCHMARK_METADATA, true, "Benchmark Metadata", false));
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
@@ -113,6 +115,12 @@ public class ExampleMain {
       intItr = cmd.getOptionValue(Constants.ARGS_INIT_ITERATIONS);
     }
 
+    boolean runBenchmark = cmd.hasOption(BenchmarkMetadata.ARG_BENCHMARK_METADATA);
+    String benchmarkMetadata = null;
+    if (runBenchmark) {
+      benchmarkMetadata = cmd.getOptionValue(BenchmarkMetadata.ARG_BENCHMARK_METADATA);
+    }
+
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.put(Constants.ARGS_ITR, Integer.toString(itr));
@@ -129,6 +137,10 @@ public class ExampleMain {
     jobConfig.put(Constants.ARGS_INIT_ITERATIONS, intItr);
     jobConfig.put(Constants.ARGS_VERIFY, verify);
     jobConfig.put(Constants.ARGS_STREAM, stream);
+    jobConfig.put(BenchmarkMetadata.ARG_RUN_BENCHMARK, runBenchmark);
+    if (runBenchmark) {
+      jobConfig.put(BenchmarkMetadata.ARG_BENCHMARK_METADATA, benchmarkMetadata);
+    }
 
     // build the job
     if (!stream) {
