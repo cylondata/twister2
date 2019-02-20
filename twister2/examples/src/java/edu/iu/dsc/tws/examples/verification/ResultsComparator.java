@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.verification;
 
-import java.util.Map;
+public interface ResultsComparator<D> {
 
-public interface ResultsGenerator<INPUT, OUTPUT> {
-  OUTPUT generateResults(INPUT input, Map<String, Object> args);
+  boolean compare(D d1, D d2);
+
 }

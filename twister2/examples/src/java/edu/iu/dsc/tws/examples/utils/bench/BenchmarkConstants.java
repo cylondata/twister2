@@ -9,10 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.verification;
+package edu.iu.dsc.tws.examples.utils.bench;
 
-import java.util.Map;
+public final class BenchmarkConstants {
 
-public interface ResultsGenerator<INPUT, OUTPUT> {
-  OUTPUT generateResults(INPUT input, Map<String, Object> args);
+  public static final String TIMING_MESSAGE_SEND = "M_SEND";
+  public static final String TIMING_MESSAGE_RECV = "M_RECV";
+  public static final String TIMING_ALL_SEND = "ALL_SEND";
+  public static final String TIMING_ALL_RECV = "ALL_RECV";
+
+  public static final String COLUMN_TOTAL_TIME = "Total Time";
+  public static final String COLUMN_AVERAGE_TIME = "Average Time";
+
+  private BenchmarkConstants() {
+
+  }
 }

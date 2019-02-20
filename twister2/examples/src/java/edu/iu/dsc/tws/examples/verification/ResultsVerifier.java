@@ -11,30 +11,43 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.verification;
 
+import java.util.Map;
 import java.util.logging.Logger;
 
-public class ResultsVerifier<I, O extends Comparable<O>> {
+public class ResultsVerifier<I, O> {
 
   private static final Logger LOG = Logger.getLogger(ResultsVerifier.class.getName());
 
   private I input;
   private ResultsGenerator<I, O> resultsGenerator;
+  private ResultsComparator<O> resultsComparator;
+
+  public ResultsVerifier(I input,
+                         ResultsGenerator<I, O> resultsGenerator,
+                         ResultsComparator<O> resultsComparator) {
+    this.input = input;
+    this.resultsGenerator = resultsGenerator;
+    this.resultsComparator = resultsComparator;
+  }
 
   public ResultsVerifier(I input, ResultsGenerator<I, O> resultsGenerator) {
     this.input = input;
     this.resultsGenerator = resultsGenerator;
+
+    //use default comparator. Only good for objects with equal overridden
+    this.resultsComparator = Object::equals;
   }
 
-  public boolean verify(O generatedOutput) {
-    O expectedOutput = this.resultsGenerator.generateResults(this.input);
-    int comparison = expectedOutput.compareTo(generatedOutput);
-    if (comparison != 0) {
+  public boolean verify(O generatedOutput, Map<String, Object> args) {
+    O expectedOutput = this.resultsGenerator.generateResults(this.input, args);
+    boolean equal = this.resultsComparator.compare(expectedOutput, generatedOutput);
+    if (!equal) {
       LOG.info("Results verification failed!"
           + "\n\tExpected : " + expectedOutput.toString()
           + "\n\tFound : " + generatedOutput.toString());
     } else {
       LOG.info("Results are verified!");
     }
-    return comparison == 0;
+    return equal;
   }
 }

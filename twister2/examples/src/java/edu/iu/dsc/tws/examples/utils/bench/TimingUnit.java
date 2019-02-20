@@ -13,11 +13,13 @@ package edu.iu.dsc.tws.examples.utils.bench;
 
 public enum TimingUnit {
 
-  MILLI_SECONDS(0), NANO_SECONDS(1);
+  MILLI_SECONDS(0, "ms"), NANO_SECONDS(1, "ns");
   private int unit;
+  private String label;
 
-  TimingUnit(int unit) {
+  TimingUnit(int unit, String label) {
     this.unit = unit;
+    this.label = label;
   }
 
   public long getTime() {
@@ -26,5 +28,9 @@ public enum TimingUnit {
     } else {
       return System.nanoTime();
     }
+  }
+
+  public String getLabel() {
+    return this.label;
   }
 }

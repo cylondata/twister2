@@ -9,10 +9,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.verification;
+package edu.iu.dsc.tws.examples.verification.comparators;
 
-import java.util.Map;
+import java.util.Arrays;
 
-public interface ResultsGenerator<INPUT, OUTPUT> {
-  OUTPUT generateResults(INPUT input, Map<String, Object> args);
+import edu.iu.dsc.tws.examples.verification.ResultsComparator;
+
+public final class IntArrayComparator implements ResultsComparator<int[]> {
+
+  private static final IntArrayComparator INSTANCE = new IntArrayComparator();
+
+  private IntArrayComparator() {
+
+  }
+
+  public static IntArrayComparator getInstance() {
+    return INSTANCE;
+  }
+
+
+  @Override
+  public boolean compare(int[] d1, int[] d2) {
+    return Arrays.equals(d1, d2);
+  }
 }

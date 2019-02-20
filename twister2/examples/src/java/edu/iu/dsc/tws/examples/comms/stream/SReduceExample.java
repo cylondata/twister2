@@ -25,9 +25,12 @@ import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.api.stream.SReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
-import edu.iu.dsc.tws.examples.verification.IntArrayWrapper;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_RECV;
 
 public class SReduceExample extends BenchWorker {
 
@@ -37,7 +40,7 @@ public class SReduceExample extends BenchWorker {
 
   private boolean reduceDone = false;
 
-  private ResultsVerifier<IntArrayWrapper, IntArrayWrapper> resultsVerifier;
+  private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -67,14 +70,15 @@ public class SReduceExample extends BenchWorker {
     reduceDone = !taskPlan.getChannelsOfExecutor(workerId).contains(target);
 
     //generating the expected results at the end
-    this.resultsVerifier = new ResultsVerifier<>(inputDataArray, arrayWrapper -> {
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (array, args) -> {
       int sourcesCount = jobParameters.getTaskStages().get(0);
-      int[] outArray = new int[arrayWrapper.getSize()];
-      for (int i = 0; i < arrayWrapper.getSize(); i++) {
-        outArray[i] = arrayWrapper.getArray()[i] * sourcesCount;
+      int[] outArray = new int[array.length];
+      for (int i = 0; i < array.length; i++) {
+        outArray[i] = array[i] * sourcesCount;
       }
-      return IntArrayWrapper.wrap(outArray);
-    });
+      return outArray;
+    }, IntArrayComparator.getInstance());
 
     // now initialize the workers
     for (int t : tasksOfExecutor) {
@@ -121,29 +125,15 @@ public class SReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
-      Timing.markMili(TIMING_MESSAGE_RECV, workerId == 0);
+      Timing.mark(TIMING_MESSAGE_RECV, workerId == 0);
       LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
 
-      verifyResults(resultsVerifier, IntArrayWrapper.wrap(object));
+      verifyResults(resultsVerifier, object, null);
 
       if (++count == expected) {
-        Timing.markMili(TIMING_ALL_RECV, workerId == 0);
-        resultsRecorder.recordColumn(
-            "Total Time",
-            Timing.averageDiff(TIMING_ALL_SEND, TIMING_ALL_RECV, workerId == 0)
-        );
-        resultsRecorder.recordColumn(
-            "Average Time",
-            Timing.averageDiff(TIMING_MESSAGE_SEND, TIMING_MESSAGE_RECV, workerId == 0)
-        );
+        Timing.mark(TIMING_ALL_RECV, workerId == 0);
+        BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0);
         resultsRecorder.writeToCSV();
-
-        LOG.info("Total time for all iterations : "
-            + Timing.averageDiff(TIMING_ALL_SEND, TIMING_ALL_RECV, workerId == 0));
-
-        LOG.info("Average time for reduce : "
-            + Timing.averageDiff(TIMING_MESSAGE_SEND, TIMING_MESSAGE_RECV, workerId == 0));
-
         reduceDone = true;
       }
       experimentData.setOutput(object);

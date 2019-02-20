@@ -31,20 +31,17 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
-import edu.iu.dsc.tws.examples.verification.IntArrayWrapper;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_SEND;
 
 public abstract class BenchWorker implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(BenchWorker.class.getName());
-
-  protected static final String TIMING_MESSAGE_SEND = "M_SEND";
-  protected static final String TIMING_MESSAGE_RECV = "M_RECV";
-  protected static final String TIMING_ALL_SEND = "ALL_SEND";
-  protected static final String TIMING_ALL_RECV = "ALL_RECV";
 
   protected int workerId;
 
@@ -67,7 +64,7 @@ public abstract class BenchWorker implements IWorker {
   protected ExperimentData experimentData;
 
   //for verification
-  protected IntArrayWrapper inputDataArray;
+  protected int[] inputDataArray;
   private boolean verified = true;
 
   //to capture benchmark results
@@ -77,6 +74,8 @@ public abstract class BenchWorker implements IWorker {
   public void execute(Config cfg, int workerID,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
+
+    Timing.setDefaultTimingUnit(TimingUnit.MILLI_SECONDS);
 
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
@@ -113,10 +112,10 @@ public abstract class BenchWorker implements IWorker {
     }
     //todo above will be removed
 
-    this.inputDataArray = IntArrayWrapper.wrap(generateData());
+    this.inputDataArray = generateData();
 
     //todo below will be removed
-    experimentData.setInput(this.inputDataArray.getArray());
+    experimentData.setInput(this.inputDataArray);
     experimentData.setTaskStages(jobParameters.getTaskStages());
     experimentData.setIterations(jobParameters.getIterations());
     //todo above will be removed
@@ -171,9 +170,10 @@ public abstract class BenchWorker implements IWorker {
   /**
    * This method will verify results and append the output to the results recorder
    */
-  protected void verifyResults(ResultsVerifier resultsVerifier, Comparable results) {
+  protected void verifyResults(ResultsVerifier resultsVerifier, Object results,
+                               Map<String, Object> args) {
     if (jobParameters.isDoVerify()) {
-      verified = verified && resultsVerifier.verify(results);
+      verified = verified && resultsVerifier.verify(results, args);
       //this will record verification failed if any of the iteration fails to verify
       this.resultsRecorder.recordColumn("Verified", verified);
     } else {
@@ -199,15 +199,15 @@ public abstract class BenchWorker implements IWorker {
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
-      Timing.markMili(TIMING_ALL_SEND, this.timingCondition);
+      Timing.mark(TIMING_ALL_SEND, this.timingCondition);
 
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
         int flag = (i == jobParameters.getIterations() - 1) ? MessageFlags.LAST : 0;
 
-        Timing.markMili(TIMING_MESSAGE_SEND, this.timingCondition);
+        Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
 
-        sendMessages(task, inputDataArray.getArray(), flag);
+        sendMessages(task, inputDataArray, flag);
       }
 
       LOG.info(String.format("%d Done sending", workerId));
