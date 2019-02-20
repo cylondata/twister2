@@ -41,4 +41,9 @@ public final class IntArrayWrapper implements Comparable<IntArrayWrapper> {
   public int compareTo(IntArrayWrapper o) {
     return Arrays.equals(array, o.array) ? 0 : -1;
   }
+
+  @Override
+  public String toString() {
+    return Arrays.toString(this.array);
+  }
 }

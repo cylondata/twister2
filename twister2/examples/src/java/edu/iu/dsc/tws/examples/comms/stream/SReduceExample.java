@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.examples.verification.IntArrayWrapper;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 
 public class SReduceExample extends BenchWorker {
+
   private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
 
   private SReduce reduce;
@@ -60,13 +61,10 @@ public class SReduceExample extends BenchWorker {
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
-    if (tasksOfExecutor.size() == 0) {
-      sourcesDone = true;
-    }
 
-    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-      reduceDone = true;
-    }
+    sourcesDone = tasksOfExecutor.size() == 0;
+
+    reduceDone = !taskPlan.getChannelsOfExecutor(workerId).contains(target);
 
     //generating the expected results at the end
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, arrayWrapper -> {
@@ -108,6 +106,7 @@ public class SReduceExample extends BenchWorker {
   }
 
   public class FinalSingularReceiver implements SingularReceiver {
+
     private int count = 0;
     private int expected;
 
@@ -123,12 +122,11 @@ public class SReduceExample extends BenchWorker {
     @Override
     public boolean receive(int target, Object object) {
       Timing.markMili(TIMING_MESSAGE_RECV, workerId == 0);
-      count++;
       LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
 
       verifyResults(resultsVerifier, IntArrayWrapper.wrap(object));
 
-      if (count == expected) {
+      if (++count == expected) {
         Timing.markMili(TIMING_ALL_RECV, workerId == 0);
         resultsRecorder.recordColumn(
             "Total Time",
@@ -149,28 +147,7 @@ public class SReduceExample extends BenchWorker {
         reduceDone = true;
       }
       experimentData.setOutput(object);
-//      try {
-//        verify();
-//      } catch (VerificationException e) {
-//        LOG.info("Exception Message : " + e.getMessage());
-//      }
       return true;
     }
   }
-
-//  public void verify() throws VerificationException {
-//    boolean doVerify = jobParameters.isDoVerify();
-//    boolean isVerified = false;
-//    if (doVerify) {
-//      LOG.info("Verifying results ...");
-//      ExperimentVerification experimentVerification
-//          = new ExperimentVerification(experimentData, OperationNames.REDUCE);
-//      isVerified = experimentVerification.isVerified();
-//      if (isVerified) {
-//        LOG.info("Results generated from the experiment are verified.");
-//      } else {
-//        throw new VerificationException("Results do not match");
-//      }
-//    }
-//  }
 }

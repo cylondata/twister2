@@ -27,12 +27,13 @@ public class ResultsVerifier<I, O extends Comparable<O>> {
 
   public boolean verify(O generatedOutput) {
     O expectedOutput = this.resultsGenerator.generateResults(this.input);
-    int comparison = this.resultsGenerator.generateResults(this.input)
-        .compareTo(generatedOutput);
+    int comparison = expectedOutput.compareTo(generatedOutput);
     if (comparison != 0) {
-      LOG.info("Generated output and expected output doesn't match. "
-          + "Expected : " + expectedOutput.toString()
-          + "\nFound : " + generatedOutput.toString());
+      LOG.info("Results verification failed!"
+          + "\n\tExpected : " + expectedOutput.toString()
+          + "\n\tFound : " + generatedOutput.toString());
+    } else {
+      LOG.info("Results are verified!");
     }
     return comparison == 0;
   }
