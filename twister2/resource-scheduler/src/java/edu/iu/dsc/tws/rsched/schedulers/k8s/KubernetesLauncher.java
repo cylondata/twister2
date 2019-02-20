@@ -186,13 +186,15 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
    */
   private boolean startJobMasterOnClient(JobAPI.Job job) {
 
-    String hostAdress = null;
-    try {
-      hostAdress = InetAddress.getLocalHost().getHostAddress();
-    } catch (UnknownHostException e) {
-      LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
-      return false;
-    }
+//    String hostAdress = null;
+//    try {
+//      hostAdress = InetAddress.getLocalHost().getHostAddress();
+//    } catch (UnknownHostException e) {
+//      LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+//      return false;
+//    }
+
+    String hostAdress = RequestObjectBuilder.getJobMasterIP();
 
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(hostAdress, null, null);
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
