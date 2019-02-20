@@ -186,13 +186,22 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
    */
   private boolean startJobMasterOnClient(JobAPI.Job job) {
 
-//    String hostAdress = null;
-//    try {
-//      hostAdress = InetAddress.getLocalHost().getHostAddress();
-//    } catch (UnknownHostException e) {
-//      LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
-//      return false;
-//    }
+    // get Dashboard IP address from dashboard service name
+    String dashAddress = JobMasterContext.dashboardHost(config);
+
+    // if dashboard address is a Kubernetes service name
+    // get the IP address for the service name by querying Kubernetes master
+    if (dashAddress.endsWith("svc.cluster.local")) {
+      String dashIP = getDashboardIP(dashAddress);
+      String dashURL = "http://" + dashIP;
+      if (dashIP == null) {
+        LOG.warning("Could not get Dashboard server IP address from dashboard service name: "
+            + dashAddress + " will not connect to Dashboard. *****");
+        dashURL = null;
+      }
+      config = JobMasterContext.updateDashboardHost(config, dashURL);
+      LOG.info("Dashboard server HTTP URL: " + dashURL);
+    }
 
     String hostAdress = RequestObjectBuilder.getJobMasterIP();
 
@@ -204,6 +213,30 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     jobMaster.startJobMasterBlocking();
 
     return true;
+  }
+
+  /**
+   * if dashboard address is a Kubernetes service name
+   * get the IP address from service name by querying Kubernetes master
+   * @param dashAddress
+   * @return
+   */
+  private String getDashboardIP(String dashAddress) {
+    // first get dashboard service name from dashboard address
+
+    // delete "http://" at the beginning if exist
+    String dashServiceName = dashAddress;
+    int prefixIndex = dashAddress.indexOf("://");
+    if (prefixIndex != -1) {
+      int serviceNameStartIndex = prefixIndex + 3;
+      dashServiceName = dashAddress.substring(serviceNameStartIndex);
+    }
+
+    // remove all suffixes starting with dot
+    int dotIndex = dashServiceName.indexOf(".");
+    dashServiceName = dashServiceName.substring(0, dotIndex);
+
+    return controller.getServiceIP(dashServiceName);
   }
 
   /**
