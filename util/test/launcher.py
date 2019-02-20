@@ -69,7 +69,6 @@ for test in data['tests']:
         print("Running twister2 job with following args...")
         print(args)
         subprocess.run(args, env=existing_env)
-        break
 
 # exec("def hello(arg1):\n\tprint(arg1)")
 # eval("hello('Yoho')")

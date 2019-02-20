@@ -11,52 +11,55 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.utils.bench;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class Timing {
 
-  private static Map<String, List<Long>> timestamps = new HashMap<>();
-
-  private static int onWkr = -1;
-  private static int thisWkr = -2;
+  private static volatile Map<String, List<Long>> timestamps = new ConcurrentHashMap<>();
 
   private Timing() {
   }
 
-  public static void activate(int onWorker, int thisWorker) {
-    Timing.onWkr = onWorker;
-    Timing.thisWkr = thisWorker;
+  /**
+   * This method will allocate initial capacity required for array list
+   */
+  public static void defineFlag(String flag, int size, boolean accept) {
+    if (accept) {
+      timestamps.put(flag, new ArrayList<>(size));
+    }
   }
 
-  public static void defineFlag(String flag, int size) {
-    timestamps.put(flag, new ArrayList<>(size));
+  public static void mark(String flag, TimingUnit unit, boolean accept) {
+    if (accept) {
+      timestamps.computeIfAbsent(flag, s -> new ArrayList<>())
+          .add(unit.getTime());
+    }
   }
 
-  public static synchronized void mark(String flag, TimingUnit unit) {
-    timestamps.computeIfAbsent(flag, s -> new ArrayList<>())
-        .add(unit.getTime());
+  public static void markMili(String flag, boolean accept) {
+    mark(flag, TimingUnit.MILLI_SECONDS, accept);
   }
 
-  public static synchronized void markMili(String flag) {
-    mark(flag, TimingUnit.MILLI_SECONDS);
-  }
-
-  public static synchronized void markNano(String flag) {
-    mark(flag, TimingUnit.NANO_SECONDS);
+  public static void markNano(String flag, boolean accept) {
+    mark(flag, TimingUnit.NANO_SECONDS, accept);
   }
 
   private static void verifyTwoFlags(String flagA, String flagB) {
     if (timestamps.get(flagA).size() != timestamps.get(flagB).size()) {
-      throw new RuntimeException("Collected data for two flags mismatches");
+      throw new RuntimeException(
+          "Collected data for two flags mismatches. FlagA : " + timestamps.get(flagA).size()
+              + " , FlagB : " + timestamps.get(flagB).size()
+      );
     }
   }
 
-  public static long averageDiff(String flagA, String flagB) {
-    if (onWkr != thisWkr) {
+  public static double averageDiff(String flagA, String flagB, boolean accept) {
+    if (!accept) {
       return -1;
     }
     verifyTwoFlags(flagA, flagB);
@@ -64,16 +67,19 @@ public final class Timing {
     List<Long> flagALongs = timestamps.get(flagA);
     List<Long> flagBLongs = timestamps.get(flagB);
 
-    long totalDiffs = 0;
+    BigDecimal totalDiffs = BigDecimal.ZERO;
     for (int i = 0; i < flagALongs.size(); i++) {
-      totalDiffs = flagBLongs.get(i) - flagALongs.get(i);
+      totalDiffs = BigDecimal.valueOf(flagBLongs.get(i))
+          .subtract(BigDecimal.valueOf(flagALongs.get(i)));
     }
 
-    return totalDiffs / flagALongs.size();
+    return totalDiffs.divide(
+        BigDecimal.valueOf(flagALongs.size())
+    ).doubleValue();
   }
 
-  public static List<Long> diffs(String flagA, String flagB) {
-    if (onWkr != thisWkr) {
+  public static List<Long> diffs(String flagA, String flagB, boolean accept) {
+    if (!accept) {
       return Collections.emptyList();
     }
     verifyTwoFlags(flagA, flagB);

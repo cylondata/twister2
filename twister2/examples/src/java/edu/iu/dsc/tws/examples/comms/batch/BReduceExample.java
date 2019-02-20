@@ -40,7 +40,6 @@ public class BReduceExample extends BenchWorker {
 
   @Override
   protected void execute() {
-    Timing.activate(0, workerId);
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
         jobParameters.getTaskStages(), workerList);
 
@@ -104,24 +103,21 @@ public class BReduceExample extends BenchWorker {
 
   public class FinalSingularReceiver implements SingularReceiver {
 
-    private int iterations = 0;
-
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
-      Timing.defineFlag("M_RECV", jobParameters.getIterations());
     }
 
     @Override
     public boolean receive(int target, Object object) {
-      Timing.markMili("M_RECV");
+      Timing.markMili(TIMING_ALL_RECV, workerId == 0);
+      resultsRecorder.recordColumn("Total Time", Timing.averageDiff(
+          TIMING_ALL_SEND,
+          TIMING_ALL_RECV,
+          workerId == 0
+      ));
       experimentData.setOutput(object);
       LOG.info("Reduced value : " + Arrays.toString((int[]) object));
       reduceDone = true;
-      this.iterations++;
-      LOG.info("Iterations : " + iterations + " out of " + jobParameters.getIterations());
-      if (this.iterations == jobParameters.getIterations()) {
-        LOG.info("Average Latency : " + Timing.averageDiff("M_SEND", "M_RECV"));
-      }
       try {
         verify();
       } catch (VerificationException e) {
