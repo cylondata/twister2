@@ -39,6 +39,8 @@ class Node:
     def get_code(self, command):
         if self.parent is None:
             return command
+        elif self.flag is None:
+            return self.parent.get_code(command='')
         else:
             new_command = "{} -{} {}".format(command, self.flag, self.value)
             return self.parent.get_code(command=new_command)
