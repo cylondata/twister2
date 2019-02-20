@@ -55,6 +55,7 @@ public class BTAllGatherExample extends BenchTaskWorker {
       if (message.getContent() instanceof Iterator) {
         int numberOfElements = 0;
         int totalValues = 0;
+        LOG.info(String.format("%d received gather %d", context.getWorkerId(), context.taskId()));
         Iterator<Object> itr = (Iterator<Object>) message.getContent();
         while (itr.hasNext()) {
           Object value = itr.next();

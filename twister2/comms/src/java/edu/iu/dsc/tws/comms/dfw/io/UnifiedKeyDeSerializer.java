@@ -36,10 +36,13 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
 
   private KeyPacker keyPacker;
 
+  private int workerId;
+
   public UnifiedKeyDeSerializer(KryoSerializer kryoSerializer, int exec,
                                 MessageType keyType, MessageType dataType) {
     dataPacker = DFWIOUtils.createPacker(dataType);
     keyPacker = DFWIOUtils.createKeyPacker(keyType);
+    this.workerId = exec;
 
     LOG.fine("Initializing serializer on worker: " + exec);
   }
@@ -84,11 +87,12 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
 
       if (currentMessage.getUnPkBuffers() == 0) {
         currentLocation = 16;
+        remaining = remaining - 16;
       }
 
       if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {
         currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-        remaining = buffer.getSize() - Integer.BYTES - 16;
+        remaining = remaining - Integer.BYTES;
         currentLocation += Integer.BYTES;
       }
 
@@ -107,14 +111,18 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
         currentMessage.setDeserializingKey(keyValue);
         currentMessage.setUnPkCurrentBytes(0);
 
-        Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
-        currentMessage.setDeserializingObject(value);
-        currentMessage.setUnPkCurrentBytes(0);
+        try {
+          Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
+          currentMessage.setDeserializingObject(value);
+          currentMessage.setUnPkCurrentBytes(0);
 
-        currentMessage.setUnPkCurrentKeyLength(currentKeyLength);
-        currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
-        // we are going to read the key first
-        currentMessage.setReadingKey(true);
+          currentMessage.setUnPkCurrentKeyLength(currentKeyLength);
+          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
+          // we are going to read the key first
+          currentMessage.setReadingKey(true);
+        } catch (NegativeArraySizeException e) {
+          throw new RuntimeException("Exec " + workerId, e);
+        }
       }
 
       while (remaining > 0) {
