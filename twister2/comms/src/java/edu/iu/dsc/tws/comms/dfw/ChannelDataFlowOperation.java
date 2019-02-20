@@ -455,14 +455,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private void sendProgress(Queue<Pair<Object, OutMessage>> pendingSendMessages, int sendId) {
     boolean canProgress = true;
 
-//    StringBuilder s = new StringBuilder();
-//    for (Map.Entry<Integer, Queue<DataBuffer>> e : receiveBuffers.entrySet()) {
-//      s.append(e.getKey()).append(": ").append(e.getValue().size());
-//    }
-//
-//    LOG.log(Level.INFO, String.format("%d SEND PROGRESS sendBuffers: %d recvBuffers: %s",
-//        executor, sendBuffers.size(), s.toString()));
-
     while (pendingSendMessages.size() > 0 && canProgress) {
       // take out pending messages
       Pair<Object, OutMessage> pair = pendingSendMessages.peek();
@@ -513,9 +505,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         } else {
           break;
         }
-      }/* else {
-        LOG.info(String.format("%d CANNOT SENT INTERNALLY", executor));
-      }*/
+      }
     }
   }
 
