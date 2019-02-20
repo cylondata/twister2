@@ -40,6 +40,12 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   public boolean runExecution() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
+    if (nodes.size() == 0) {
+      LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
+          + "have more workers than tasks", workerId));
+      return true;
+    }
+
     // initialize finished
     // initFinishedInstances();
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
