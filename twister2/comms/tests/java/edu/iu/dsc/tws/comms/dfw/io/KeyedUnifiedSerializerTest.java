@@ -96,6 +96,19 @@ public class KeyedUnifiedSerializerTest {
         (byte[]) ((Tuple) data).getValue());
   }
 
+  @Test
+  public void testBuildIntegerMessage() {
+    int numBuffers = 4;
+    int size = 1000;
+    MessageType type = MessageType.INTEGER;
+    Object data = createData(80, type);
+    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
+    Assert.assertEquals((int) deserializedData.getKey(), (int) ((Tuple) data).getKey());
+    Assert.assertArrayEquals((int[]) deserializedData.getValue(),
+        (int[]) ((Tuple) data).getValue());
+  }
+
   private InMessage singleValueCase(int numBuffers, int size, MessageType type, Object data) {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
 
@@ -139,6 +152,29 @@ public class KeyedUnifiedSerializerTest {
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
       Object o = createData(800, MessageType.INTEGER);
+      data.add(o);
+    }
+
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.INTEGER);
+    List<Object> result = (List<Object>) inMessage.getDeserializedData();
+    for (int i = 0; i < result.size(); i++) {
+      Tuple exp = (Tuple) result.get(i);
+      Tuple d = (Tuple) data.get(i);
+
+      Assert.assertEquals((int) exp.getKey(), (int) ((Tuple) d).getKey());
+      Assert.assertArrayEquals((int[]) exp.getValue(),
+          (int[]) ((Tuple) d).getValue());
+    }
+  }
+
+  @SuppressWarnings("Unchecked")
+  @Test
+  public void testBuildListIntMessage() {
+    int numBuffers = 16;
+    int size = 1000;
+    List<Object> data = new ArrayList<>();
+    for (int i = 0; i < 4; i++) {
+      Object o = createData(80, MessageType.INTEGER);
       data.add(o);
     }
 
