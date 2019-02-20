@@ -43,8 +43,8 @@ public class LongKeyPacker implements KeyPacker {
   @Override
   public int readKeyFromBuffer(InMessage currentMessage, int currentLocation,
                                DataBuffer buffer, int currentObjectLength) {
-    return PartialKeyDeSerializer.readFromBuffer(currentMessage, currentLocation, buffer,
-        currentObjectLength, null);
+    return PartialKeyDeSerializer.readFromBuffer(currentMessage, MessageType.LONG,
+        currentLocation, buffer, currentObjectLength, null);
   }
 
   @Override
