@@ -26,9 +26,8 @@ import edu.iu.dsc.tws.comms.api.stream.SReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
-import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.verification.IntArrayWrapper;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 
 public class SReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
@@ -36,6 +35,8 @@ public class SReduceExample extends BenchWorker {
   private SReduce reduce;
 
   private boolean reduceDone = false;
+
+  private ResultsVerifier<IntArrayWrapper, IntArrayWrapper> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -66,6 +67,16 @@ public class SReduceExample extends BenchWorker {
     if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
       reduceDone = true;
     }
+
+    //generating the expected results at the end
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray, arrayWrapper -> {
+      int sourcesCount = jobParameters.getTaskStages().get(0);
+      int[] outArray = new int[arrayWrapper.getSize()];
+      for (int i = 0; i < arrayWrapper.getSize(); i++) {
+        outArray[i] = arrayWrapper.getArray()[i] * sourcesCount;
+      }
+      return IntArrayWrapper.wrap(outArray);
+    });
 
     // now initialize the workers
     for (int t : tasksOfExecutor) {
@@ -114,6 +125,9 @@ public class SReduceExample extends BenchWorker {
       Timing.markMili(TIMING_MESSAGE_RECV, workerId == 0);
       count++;
       LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
+
+      verifyResults(resultsVerifier, IntArrayWrapper.wrap(object));
+
       if (count == expected) {
         Timing.markMili(TIMING_ALL_RECV, workerId == 0);
         resultsRecorder.recordColumn(
@@ -128,34 +142,35 @@ public class SReduceExample extends BenchWorker {
 
         LOG.info("Total time for all iterations : "
             + Timing.averageDiff(TIMING_ALL_SEND, TIMING_ALL_RECV, workerId == 0));
+
         LOG.info("Average time for reduce : "
             + Timing.averageDiff(TIMING_MESSAGE_SEND, TIMING_MESSAGE_RECV, workerId == 0));
+
         reduceDone = true;
       }
       experimentData.setOutput(object);
-
-      try {
-        verify();
-      } catch (VerificationException e) {
-        LOG.info("Exception Message : " + e.getMessage());
-      }
+//      try {
+//        verify();
+//      } catch (VerificationException e) {
+//        LOG.info("Exception Message : " + e.getMessage());
+//      }
       return true;
     }
   }
 
-  public void verify() throws VerificationException {
-    boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
-    if (doVerify) {
-      LOG.info("Verifying results ...");
-      ExperimentVerification experimentVerification
-          = new ExperimentVerification(experimentData, OperationNames.REDUCE);
-      isVerified = experimentVerification.isVerified();
-      if (isVerified) {
-        LOG.info("Results generated from the experiment are verified.");
-      } else {
-        throw new VerificationException("Results do not match");
-      }
-    }
-  }
+//  public void verify() throws VerificationException {
+//    boolean doVerify = jobParameters.isDoVerify();
+//    boolean isVerified = false;
+//    if (doVerify) {
+//      LOG.info("Verifying results ...");
+//      ExperimentVerification experimentVerification
+//          = new ExperimentVerification(experimentData, OperationNames.REDUCE);
+//      isVerified = experimentVerification.isVerified();
+//      if (isVerified) {
+//        LOG.info("Results generated from the experiment are verified.");
+//      } else {
+//        throw new VerificationException("Results do not match");
+//      }
+//    }
+//  }
 }
