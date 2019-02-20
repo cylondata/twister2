@@ -83,6 +83,8 @@ public class UnifiedKeySerializer extends BaseSerializer {
     if (state.getPart() == SerializeState.Part.HEADER) {
       // first we need to copy the data size to buffer
       if (buildSubMessageHeader(targetBuffer, state.getCurretHeaderLength())) {
+        // now set the size of the buffer
+        targetBuffer.setSize(byteBuffer.position());
         return false;
       }
       state.setPart(SerializeState.Part.KEY);
@@ -90,7 +92,9 @@ public class UnifiedKeySerializer extends BaseSerializer {
 
     if (state.getPart() == SerializeState.Part.KEY) {
       // this call will copy the key length to buffer as well
-      boolean complete = keyPacker.writeKeyToBuffer(key, targetBuffer.getByteBuffer(), state);
+      boolean complete = keyPacker.writeKeyToBuffer(key, byteBuffer, state);
+      // now set the size of the buffer
+      targetBuffer.setSize(byteBuffer.position());
       if (complete) {
         state.setPart(SerializeState.Part.BODY);
       }
@@ -98,6 +102,8 @@ public class UnifiedKeySerializer extends BaseSerializer {
 
     // now we can serialize the body
     if (state.getPart() != SerializeState.Part.BODY) {
+      // now set the size of the buffer
+      targetBuffer.setSize(byteBuffer.position());
       return false;
     }
 

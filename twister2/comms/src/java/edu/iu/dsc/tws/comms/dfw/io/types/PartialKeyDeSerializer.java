@@ -88,11 +88,12 @@ public final class PartialKeyDeSerializer {
     return null;
   }
 
-  public static int readFromBuffer(InMessage currentMessage, int currentLocation,
+  public static int readFromBuffer(InMessage currentMessage, MessageType dataType,
+                                   int currentLocation,
                                    DataBuffer buffer, int currentObjectLength,
                                    KryoSerializer serializer) {
     int startIndex = currentMessage.getUnPkCurrentBytes();
-    switch (currentMessage.getDataType()) {
+    switch (dataType) {
       case INTEGER:
         return deserializeInteger(currentMessage, buffer, currentLocation);
       case LONG:

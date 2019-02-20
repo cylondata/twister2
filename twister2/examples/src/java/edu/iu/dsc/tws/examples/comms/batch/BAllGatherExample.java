@@ -107,6 +107,7 @@ public class BAllGatherExample extends BenchWorker {
     @Override
     public boolean receive(int target, Iterator<Object> itr) {
       gatherDone = true;
+      LOG.info(String.format("%d received gather %d", workerId, target));
       while (itr.hasNext()) {
         Object value = itr.next();
         if (value instanceof Tuple) {

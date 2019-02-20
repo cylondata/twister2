@@ -43,8 +43,8 @@ public class ShortKeyPacker implements KeyPacker {
   @Override
   public int readKeyFromBuffer(InMessage currentMessage, int currentLocation,
                                DataBuffer buffer, int currentObjectLength) {
-    return PartialKeyDeSerializer.readFromBuffer(currentMessage, currentLocation, buffer,
-        currentObjectLength, null);
+    return PartialKeyDeSerializer.readFromBuffer(currentMessage, MessageType.SHORT,
+        currentLocation, buffer, currentObjectLength, null);
   }
 
   @Override
