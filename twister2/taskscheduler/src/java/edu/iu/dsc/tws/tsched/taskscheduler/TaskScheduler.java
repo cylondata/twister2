@@ -109,7 +109,7 @@ public class TaskScheduler implements ITaskScheduler {
     try {
       taskSchedulerClass = ClassLoader.getSystemClassLoader().loadClass(className);
       Object newInstance = taskSchedulerClass.newInstance();
-      LOG.info("Task Scheduler Class:%%%%%%%" + taskSchedulerClass);
+      LOG.info("%%%% Task Scheduler Class:%%%%" + taskSchedulerClass);
       method = taskSchedulerClass.getMethod("initialize", new Class<?>[]{Config.class});
       method.invoke(newInstance, config);
       method = taskSchedulerClass.getMethod("schedule",
@@ -118,7 +118,7 @@ public class TaskScheduler implements ITaskScheduler {
               workerPlan);
     } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException
             | InstantiationException | ClassNotFoundException e) {
-      throw new RuntimeException("Exception Occured:" + e);
+      throw new RuntimeException("Task Schedule Plan Not Able to Generate:" + e);
     }
 
     if (taskSchedulePlan != null) {
@@ -129,9 +129,9 @@ public class TaskScheduler implements ITaskScheduler {
         TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
         Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
                 = containerPlan.getTaskInstances();
-        LOG.fine("Task Details for Container Id:" + integer);
+        LOG.info("Task Details for Container Id:" + integer);
         for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.fine("Task Id:" + ip.getTaskId()
+          LOG.info("Task Id:" + ip.getTaskId()
                   + "\tTask Index" + ip.getTaskIndex()
                   + "\tTask Name:" + ip.getTaskName());
         }

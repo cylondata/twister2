@@ -140,8 +140,8 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
 
       //Create the container resource value based on the worker plan
       if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
-        containerResource = new Resource((double) worker.getRam(),
-            (double) worker.getDisk(), (double) worker.getCpu());
+        containerResource = new Resource((double) worker.getRam(), (double) worker.getDisk(),
+            (double) worker.getCpu());
       } else {
         containerResource = new Resource(containerRAMValue, containerDiskValue, containerCpuValue);
       }

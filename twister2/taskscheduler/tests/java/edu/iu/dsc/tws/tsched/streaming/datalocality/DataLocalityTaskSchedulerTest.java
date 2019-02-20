@@ -9,37 +9,44 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.streaming.roundrobin;
+package edu.iu.dsc.tws.tsched.streaming.datalocality;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler;
 
-public class RoundRobinTaskSchedulerTest {
+public class DataLocalityTaskSchedulerTest {
   @Test
   public void testUniqueSchedules() {
-    int parallel = 256;
+    int parallel = 2;
     DataFlowTaskGraph graph = createGraph(parallel);
-    RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
-    scheduler.initialize(Config.newBuilder().build());
+    DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
 
+    Config config = getConfig();
+
+    //Config cfg = Config.newBuilder().build().
+    scheduler.initialize(config);
     WorkerPlan workerPlan = createWorkPlan(parallel);
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 2; i++) {
       TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan);
 
@@ -56,9 +63,10 @@ public class RoundRobinTaskSchedulerTest {
 
   @Test
   public void testUniqueSchedules2() {
-    int parallel = 256;
+    int parallel = 2;
     DataFlowTaskGraph graph = createGraph(parallel);
-    RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
+    DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
+    //TaskScheduler scheduler = new TaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
 
     WorkerPlan workerPlan = createWorkPlan(parallel);
@@ -81,7 +89,7 @@ public class RoundRobinTaskSchedulerTest {
 
 
   private boolean containerEquals(TaskSchedulePlan.ContainerPlan p1,
-                                 TaskSchedulePlan.ContainerPlan p2) {
+                                  TaskSchedulePlan.ContainerPlan p2) {
     if (p1.getContainerId() != p2.getContainerId()) {
       return false;
     }
@@ -98,10 +106,23 @@ public class RoundRobinTaskSchedulerTest {
     return true;
   }
 
+  private Config getConfig() {
+
+    String twister2Home = System.getProperty(SchedulerContext.TWISTER_2_HOME);
+    String configDir = "/home/kannan/twister2/twister2/taskscheduler/tests/conf/";
+    String clusterType = "standalone";
+
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    return Config.newBuilder().putAll(config).build();
+  }
+
   private WorkerPlan createWorkPlan(int workers) {
     WorkerPlan plan = new WorkerPlan();
     for (int i = 0; i < workers; i++) {
-      plan.addWorker(new Worker(i));
+      Worker w = new Worker(i);
+      w.addProperty("bandwidth", 1000.0);
+      w.addProperty("latency", 0.1);
+      plan.addWorker(w);
     }
     return plan;
   }
@@ -116,24 +137,80 @@ public class RoundRobinTaskSchedulerTest {
 
   private DataFlowTaskGraph createGraph(int parallel) {
     TestSource ts = new TestSource();
-    TestSink testSink = new TestSink();
+    TestSink1 testSink1 = new TestSink1();
+    TestSink2 testSink2 = new TestSink2();
+    TestMerge testMerge = new TestMerge();
+    TestFinal testFinal = new TestFinal();
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
-    builder.addSource("source", ts, parallel);
-    ComputeConnection c = builder.addSink("sink", testSink, 1);
-    c.reduce("source", "edge", Op.SUM, DataType.INTEGER);
+    GraphBuilder builder = GraphBuilder.newBuilder();
+    builder.addSource("source", ts);
+    builder.setParallelism("source", parallel);
+
+    builder.addSink("sink1", testSink1);
+    builder.setParallelism("sink1", parallel);
+
+    /*builder.addSink("sink2", testSink2);
+    builder.setParallelism("sink2", parallel);
+
+    builder.addSink("merge", testMerge);
+    builder.setParallelism("merge", parallel);
+
+    builder.addSink("final", testFinal);
+    builder.setParallelism("final", parallel);*/
+
+    builder.connect("source", "sink1", "partition-edge1", OperationNames.PARTITION);
+   /* builder.connect("sink1", "sink2", "partition-edge2", OperationNames.PARTITION);
+    builder.connect("sink1", "merge", "partition-edge3", OperationNames.PARTITION);
+    builder.connect("sink2", "final", "partition-edge4", OperationNames.PARTITION);
+    builder.connect("merge", "final", "partition-edge5", OperationNames.PARTITION);*/
+
+    builder.operationMode(OperationMode.STREAMING);
+
+    List<String> sourceInputDataset = new ArrayList<>();
+    sourceInputDataset.add("dataset1.txt");
+
+    builder.addConfiguration("source", "inputdataset", sourceInputDataset);
     return builder.build();
   }
 
   public static class TestSource extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
+
     @Override
     public void execute() {
     }
   }
 
-  public static class TestSink extends BaseSink {
+  public static class TestSink1 extends BaseSink {
     private static final long serialVersionUID = -254264903510284748L;
+
+    @Override
+    public boolean execute(IMessage message) {
+      return false;
+    }
+  }
+
+  public static class TestSink2 extends BaseSink {
+    private static final long serialVersionUID = -254264903510284748L;
+
+    @Override
+    public boolean execute(IMessage message) {
+      return false;
+    }
+  }
+
+  public static class TestMerge extends BaseSink {
+    private static final long serialVersionUID = -254264903510284748L;
+
+    @Override
+    public boolean execute(IMessage message) {
+      return false;
+    }
+  }
+
+  public static class TestFinal extends BaseSink {
+    private static final long serialVersionUID = -254264903510284748L;
+
     @Override
     public boolean execute(IMessage message) {
       return false;

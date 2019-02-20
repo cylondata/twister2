@@ -9,32 +9,30 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.streaming.roundrobin;
+package edu.iu.dsc.tws.tsched.taskscheduler;
 
 import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class RoundRobinTaskSchedulerTest {
+public class TaskSchedulerTest {
   @Test
   public void testUniqueSchedules() {
-    int parallel = 256;
+    int parallel = 2;
     DataFlowTaskGraph graph = createGraph(parallel);
-    RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
+    TaskScheduler scheduler = new TaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
 
     WorkerPlan workerPlan = createWorkPlan(parallel);
@@ -58,7 +56,7 @@ public class RoundRobinTaskSchedulerTest {
   public void testUniqueSchedules2() {
     int parallel = 256;
     DataFlowTaskGraph graph = createGraph(parallel);
-    RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
+    TaskScheduler scheduler = new TaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
 
     WorkerPlan workerPlan = createWorkPlan(parallel);
@@ -81,7 +79,7 @@ public class RoundRobinTaskSchedulerTest {
 
 
   private boolean containerEquals(TaskSchedulePlan.ContainerPlan p1,
-                                 TaskSchedulePlan.ContainerPlan p2) {
+                                  TaskSchedulePlan.ContainerPlan p2) {
     if (p1.getContainerId() != p2.getContainerId()) {
       return false;
     }
@@ -101,7 +99,10 @@ public class RoundRobinTaskSchedulerTest {
   private WorkerPlan createWorkPlan(int workers) {
     WorkerPlan plan = new WorkerPlan();
     for (int i = 0; i < workers; i++) {
-      plan.addWorker(new Worker(i));
+      Worker w = new Worker(i);
+      w.addProperty("bandwidth", 1000.0);
+      w.addProperty("latency", 0.1);
+      plan.addWorker(w);
     }
     return plan;
   }
@@ -118,15 +119,20 @@ public class RoundRobinTaskSchedulerTest {
     TestSource ts = new TestSource();
     TestSink testSink = new TestSink();
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
-    builder.addSource("source", ts, parallel);
-    ComputeConnection c = builder.addSink("sink", testSink, 1);
-    c.reduce("source", "edge", Op.SUM, DataType.INTEGER);
+    GraphBuilder builder = GraphBuilder.newBuilder();
+    builder.addSource("source", ts);
+    builder.setParallelism("source", 2);
+
+    builder.addSink("sink1", testSink);
+    builder.setParallelism("sink1", 2);
+
+    builder.operationMode(OperationMode.BATCH);
     return builder.build();
   }
 
   public static class TestSource extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
+
     @Override
     public void execute() {
     }
@@ -134,6 +140,7 @@ public class RoundRobinTaskSchedulerTest {
 
   public static class TestSink extends BaseSink {
     private static final long serialVersionUID = -254264903510284748L;
+
     @Override
     public boolean execute(IMessage message) {
       return false;

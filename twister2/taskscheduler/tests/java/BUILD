@@ -9,6 +9,7 @@ java_library(
         "//twister2/comms/src/java:comms-java",
         "//twister2/common/src/java:common-java",
         "//twister2/task/src/main/java:task-java",
+        "//twister2/taskscheduler/src/java:taskscheduler-java",
         "//twister2/api/src/java:api-java",
         "//twister2/proto:proto-java",
         "//twister2/data/src/main/java:data-java",
@@ -39,7 +40,9 @@ java_library(
 
 java_tests(
     test_classes = [
+        "edu.iu.dsc.tws.tsched.taskscheduler.TaskSchedulerTest",
         "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskSchedulerTest",
+        "edu.iu.dsc.tws.tsched.streaming.datalocality.DataLocalityTaskSchedulerTest",
     ],
     runtime_deps = [
         ":tsched-tests",
@@ -48,7 +51,9 @@ java_tests(
 
 java_tests_debug(
     test_classes = [
+        "edu.iu.dsc.tws.tsched.taskscheduler.TaskSchedulerTest",
         "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskSchedulerTest",
+        "edu.iu.dsc.tws.tsched.streaming.datalocality.DataLocalityTaskSchedulerTest",
     ],
     runtime_deps = [
         ":tsched-tests",
