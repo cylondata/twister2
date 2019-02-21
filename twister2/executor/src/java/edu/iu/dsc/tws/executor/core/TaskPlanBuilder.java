@@ -24,11 +24,13 @@
 package edu.iu.dsc.tws.executor.core;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -50,6 +52,14 @@ public final class TaskPlanBuilder {
     Map<Integer, Set<Integer>> containersToTasks = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToTasks = new HashMap<>();
 
+    // we need to sort to keep the order
+    workerInfoList.sort(new Comparator<JobMasterAPI.WorkerInfo>() {
+      @Override
+      public int compare(JobMasterAPI.WorkerInfo o1, JobMasterAPI.WorkerInfo o2) {
+        return o1.getWorkerID() - o2.getWorkerID();
+      }
+    });
+
     for (TaskSchedulePlan.ContainerPlan c : cPlanList) {
       Set<TaskSchedulePlan.TaskInstancePlan> tSet = c.getTaskInstances();
       Set<Integer> instances = new HashSet<>();
@@ -61,7 +71,7 @@ public final class TaskPlanBuilder {
       containersToTasks.put(c.getContainerId(), instances);
     }
 
-    Map<String, List<JobMasterAPI.WorkerInfo>> containersPerNode = new HashMap<>();
+    Map<String, List<JobMasterAPI.WorkerInfo>> containersPerNode = new TreeMap<>();
     for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
       String name = Integer.toString(workerInfo.getWorkerID());
       List<JobMasterAPI.WorkerInfo> containerList;
