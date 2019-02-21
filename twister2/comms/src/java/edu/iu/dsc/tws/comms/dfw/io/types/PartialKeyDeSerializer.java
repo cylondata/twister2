@@ -113,7 +113,7 @@ public final class PartialKeyDeSerializer {
         // at the end we switch to the actual object
         if (value == currentObjectLength) {
           Object kryoValue = serializer.deserialize(objectVal);
-          currentMessage.setDeserializingObject(kryoValue);
+          currentMessage.setDeserializingKey(kryoValue);
         }
         return value;
       default:
