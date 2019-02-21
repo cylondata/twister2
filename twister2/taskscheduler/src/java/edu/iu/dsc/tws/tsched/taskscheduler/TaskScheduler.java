@@ -77,7 +77,7 @@ public class TaskScheduler implements ITaskScheduler {
       this.schedulingType = TaskSchedulerContext.streamingTaskSchedulingMode(config);
     }
 
-    LOG.info("Task Scheduling Type:" + schedulingType + "(" + "streaming task" + ")");
+    LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "streaming task" + ")");
 
     return generateTaskSchedulePlan(TaskSchedulerContext.streamingTaskSchedulingClass(config));
   }
@@ -95,7 +95,7 @@ public class TaskScheduler implements ITaskScheduler {
       this.schedulingType = TaskSchedulerContext.batchTaskSchedulingMode(config);
     }
 
-    LOG.info("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
+    LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
 
     return generateTaskSchedulePlan(TaskSchedulerContext.batchTaskSchedulingClass(config));
   }
@@ -129,9 +129,9 @@ public class TaskScheduler implements ITaskScheduler {
         TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
         Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
                 = containerPlan.getTaskInstances();
-        LOG.info("Task Details for Container Id:" + integer);
+        LOG.fine("Task Details for Container Id:" + integer);
         for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.info("Task Id:" + ip.getTaskId()
+          LOG.fine("Task Id:" + ip.getTaskId()
                   + "\tTask Index" + ip.getTaskIndex()
                   + "\tTask Name:" + ip.getTaskName());
         }

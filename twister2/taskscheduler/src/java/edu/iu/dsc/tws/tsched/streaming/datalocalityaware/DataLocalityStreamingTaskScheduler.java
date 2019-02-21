@@ -71,7 +71,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
    */
   @Override
   public void initialize(Config cfg) {
-    LOG.info("Config Values Are" + cfg);
     this.config = cfg;
     this.instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
     this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
@@ -86,6 +85,9 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
    */
   @Override
   public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
+
+    //Represents task schedule plan Id
+    int taskSchedulePlanId = 0;
 
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
 
@@ -150,8 +152,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
               new HashSet<>(taskInstancePlanMap.values()), containerResource);
       containerPlans.add(taskContainerPlan);
     }
-    //Represents task schedule plan Id
-    int taskSchedulePlanId = 0;
     return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
   }
 
@@ -165,7 +165,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     TaskAttributes taskAttributes = new TaskAttributes();
 
     //Maximum task instances can be accommodated to the container
-    int instancesPerContainer = TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
+    int instancesPerContainer = TaskSchedulerContext.defaultTaskInstancesPerContainer(this.config);
 
     //Total container capacity
     int containerCapacity = instancesPerContainer * numberOfContainers;
@@ -241,12 +241,13 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     datanodes. Else, if the index values is greater than 0, check the container has reached
     the maximum task instances per container. If it is yes, then calculationList the container to
     the allocatedWorkers list which will not be considered for the next scheduling cycle.*/
+
     if (index == 0) {
       datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
       workerPlanMap = distanceCalculation(datanodesList, workerPlan, index, allocatedWorkers);
       dataTransferTimeCalculatorList = findBestWorkerNode(workerPlanMap);
 
-    } else if (index > 0) {
+    } else {
       datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
       Worker worker = workerPlan.getWorker(containerIndex);
       if (aMap.get(containerIndex).size() >= maxTaskInstPerContainer) {
