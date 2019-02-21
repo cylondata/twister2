@@ -25,6 +25,9 @@ public class Tuple {
 
   private MessageType contentType;
 
+  public Tuple() {
+  }
+
   public Tuple(Object k, Object data,
                MessageType keyType, MessageType dataType) {
     this.key = k;
@@ -51,5 +54,17 @@ public class Tuple {
 
   public MessageType getContentType() {
     return contentType;
+  }
+
+  public void setKey(Object key) {
+    this.key = key;
+  }
+
+  public void setValue(Object value) {
+    this.value = value;
+  }
+
+  public void setContentType(MessageType contentType) {
+    this.contentType = contentType;
   }
 }

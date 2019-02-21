@@ -24,24 +24,27 @@ public class BufferedObjects {
 
   private List<Object> dataList = new ArrayList<>();
 
-  private List<Integer> flagList = new ArrayList<>();
+  private int flag = 0;
 
   public BufferedObjects(int source, int destination) {
     this.source = source;
     this.destination = destination;
   }
 
-  public void add(int flag, Object data) {
-    dataList.add(data);
-    flagList.add(flag);
+  public boolean add(int dataFlag, Object data) {
+    if (flag == dataFlag) {
+      dataList.add(data);
+      return true;
+    }
+    return false;
   }
 
   public int size() {
     return dataList.size();
   }
 
-  public int getFlag(int index) {
-    return flagList.get(index);
+  public int getFlag() {
+    return flag;
   }
 
   public Object getData(int index) {

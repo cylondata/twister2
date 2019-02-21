@@ -31,12 +31,20 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public abstract class BenchWorker implements IWorker {
+
   private static final Logger LOG = Logger.getLogger(BenchWorker.class.getName());
+
+  protected static final String TIMING_MESSAGE_SEND = "M_SEND";
+  protected static final String TIMING_MESSAGE_RECV = "M_RECV";
+  protected static final String TIMING_ALL_SEND = "ALL_SEND";
+  protected static final String TIMING_ALL_RECV = "ALL_RECV";
 
   private Lock lock = new ReentrantLock();
 
@@ -62,12 +70,21 @@ public abstract class BenchWorker implements IWorker {
 
   protected Object inputData;
 
+  protected BenchmarkResultsRecorder resultsRecorder;
+
   @Override
   public void execute(Config cfg, int workerID,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
+
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
+
+    this.resultsRecorder = new BenchmarkResultsRecorder(
+        cfg,
+        workerID == 0
+    );
+
     this.config = cfg;
     this.workerId = workerID;
     try {
@@ -124,7 +141,7 @@ public abstract class BenchWorker implements IWorker {
       progressCommunication();
     }
 
-    LOG.log(Level.INFO,  workerId + " FINISHED PROGRESS");
+    LOG.log(Level.INFO, workerId + " FINISHED PROGRESS");
   }
 
   protected abstract void progressCommunication();
@@ -146,19 +163,29 @@ public abstract class BenchWorker implements IWorker {
   protected class MapWorker implements Runnable {
     private int task;
 
+    private boolean timingCondition = false;
+
     public MapWorker(int task) {
       this.task = task;
+      this.timingCondition = workerId == 0 && task == 0;
+      Timing.defineFlag(
+          TIMING_MESSAGE_SEND,
+          jobParameters.getIterations(),
+          this.timingCondition
+      );
     }
 
     @Override
     public void run() {
       LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
+      Timing.markMili(TIMING_ALL_SEND, this.timingCondition);
       for (int i = 0; i < jobParameters.getIterations(); i++) {
         // lets generate a message
         int flag = 0;
         if (i == jobParameters.getIterations() - 1) {
           flag = MessageFlags.LAST;
         }
+        Timing.markMili(TIMING_MESSAGE_SEND, this.timingCondition);
         sendMessages(task, inputData, flag);
       }
       LOG.info(String.format("%d Done sending", workerId));

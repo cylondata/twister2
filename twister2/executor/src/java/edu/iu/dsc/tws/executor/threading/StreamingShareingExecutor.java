@@ -32,8 +32,8 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     if (nodes.size() == 0) {
-      LOG.log(Level.WARNING,
-          String.format("[%d] We have zero nodes assigned for execution", workerId));
+      LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
+          + "have more workers than tasks", workerId));
       return false;
     }
 

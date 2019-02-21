@@ -167,8 +167,8 @@ public class DataFlowMultiGather implements DataFlowOperation {
     int count = 0;
     for (int dest : destinations) {
       GatherFinalReceiver finalRcvr = new GatherFinalReceiver(dest);
-      GatherPartialReceiver partialRcvr = null;
-      DataFlowGather gather = null;
+      GatherPartialReceiver partialRcvr;
+      DataFlowGather gather;
       if (partialReceiver != null) {
         partialRcvr = new GatherPartialReceiver(dest);
         gather = new DataFlowGather(channel, sources, dest,
@@ -201,10 +201,10 @@ public class DataFlowMultiGather implements DataFlowOperation {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     boolean isDone = true;
     for (DataFlowGather gather : gatherMap.values()) {
-      isDone = isDone && gather.isDelegeteComplete();
+      isDone = gather.isDelegateComplete();
       if (!isDone) {
         //No need to check further if we already have one false
         return false;
@@ -218,7 +218,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
     boolean isDone = true;
 
     for (DataFlowGather gather : gatherMap.values()) {
-      isDone = isDone && gather.isComplete();
+      isDone = gather.isComplete();
       if (!isDone) {
         //No need to check further if we already have one false
         return false;
