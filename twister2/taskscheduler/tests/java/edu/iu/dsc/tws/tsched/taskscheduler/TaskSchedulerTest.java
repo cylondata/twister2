@@ -17,6 +17,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -33,11 +34,11 @@ public class TaskSchedulerTest {
     int parallel = 2;
     DataFlowTaskGraph graph = createGraph(parallel);
     TaskScheduler scheduler = new TaskScheduler();
-    scheduler.initialize(Config.newBuilder().build());
-
+    Config config = getConfig();
+    scheduler.initialize(config);
     WorkerPlan workerPlan = createWorkPlan(parallel);
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 2; i++) {
       TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan);
 
@@ -51,32 +52,6 @@ public class TaskSchedulerTest {
       }
     }
   }
-
-  @Test
-  public void testUniqueSchedules2() {
-    int parallel = 256;
-    DataFlowTaskGraph graph = createGraph(parallel);
-    TaskScheduler scheduler = new TaskScheduler();
-    scheduler.initialize(Config.newBuilder().build());
-
-    WorkerPlan workerPlan = createWorkPlan(parallel);
-    TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
-
-    WorkerPlan workerPlan2 = createWorkPlan2(parallel);
-    for (int i = 0; i < 1000; i++) {
-      TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
-
-      Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
-
-      Map<Integer, TaskSchedulePlan.ContainerPlan> map2 = plan2.getContainersMap();
-      for (TaskSchedulePlan.ContainerPlan containerPlan : plan1.getContainers()) {
-        TaskSchedulePlan.ContainerPlan p2 = map2.get(containerPlan.getContainerId());
-
-        Assert.assertTrue(containerEquals(containerPlan, p2));
-      }
-    }
-  }
-
 
   private boolean containerEquals(TaskSchedulePlan.ContainerPlan p1,
                                   TaskSchedulePlan.ContainerPlan p2) {
@@ -107,27 +82,29 @@ public class TaskSchedulerTest {
     return plan;
   }
 
-  private WorkerPlan createWorkPlan2(int workers) {
-    WorkerPlan plan = new WorkerPlan();
-    for (int i = workers - 1; i >= 0; i--) {
-      plan.addWorker(new Worker(i));
-    }
-    return plan;
-  }
-
   private DataFlowTaskGraph createGraph(int parallel) {
     TestSource ts = new TestSource();
     TestSink testSink = new TestSink();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", ts);
-    builder.setParallelism("source", 2);
+    builder.setParallelism("source", parallel);
 
     builder.addSink("sink1", testSink);
-    builder.setParallelism("sink1", 2);
+    builder.setParallelism("sink1", parallel);
 
-    builder.operationMode(OperationMode.BATCH);
+    builder.operationMode(OperationMode.STREAMING);
     return builder.build();
+  }
+
+  private Config getConfig() {
+
+    String twister2Home = "/home/kannan/twister2/bazel-bin/scripts/package/twister2-0.1.0";
+    String configDir = "/home/kannan/twister2/twister2/taskscheduler/tests/conf/";
+    String clusterType = "standalone";
+
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    return Config.newBuilder().putAll(config).build();
   }
 
   public static class TestSource extends BaseSource {
