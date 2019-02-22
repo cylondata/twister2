@@ -211,9 +211,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
               dataAwareAllocationMap.get(containerIndex).add(new InstanceId(vertex.getName(),
                   globalTaskIndex, i));
               ++maxContainerTaskObjectSize;
-            } else {
-              LOG.warning("Worker:" + containerIndex + "reached max task objects:"
-                  + maxContainerTaskObjectSize);
             }
           }
           globalTaskIndex++;

@@ -194,7 +194,6 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     }
 
     for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
-
       Map<String, List<DataTransferTimeCalculator>> workerPlanMap;
       String taskName = aTaskEntrySet.getKey();
 

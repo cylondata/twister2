@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.streaming.datalocality;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.tsched.batch.datalocality;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,18 +39,18 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-import edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler;
 
-public class DataLocalityTaskSchedulerTest {
+public class DataLocalityBatchTaskSchedulerTest {
   @Test
   public void testUniqueSchedules() {
     int parallel = 50;
 
     DataFlowTaskGraph graph = createGraph(parallel);
-    DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
+    DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
     Config config = getConfig();
     scheduler.initialize(config);
     WorkerPlan workerPlan = createWorkPlan(parallel);
@@ -62,7 +74,7 @@ public class DataLocalityTaskSchedulerTest {
   public void testUniqueSchedules2() {
     int parallel = 50;
     DataFlowTaskGraph graph = createGraph(parallel);
-    DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
+    DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
     Config config = getConfig();
     scheduler.initialize(config);
     WorkerPlan workerPlan = createWorkPlan(parallel);

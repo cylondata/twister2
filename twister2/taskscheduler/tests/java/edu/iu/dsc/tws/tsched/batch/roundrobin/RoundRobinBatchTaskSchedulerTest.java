@@ -9,10 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.streaming.roundrobin;
+package edu.iu.dsc.tws.tsched.batch.roundrobin;
 
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,19 +30,17 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class RoundRobinTaskSchedulerTest {
+public class RoundRobinBatchTaskSchedulerTest {
 
-  private static final Logger LOG = Logger.getLogger(RoundRobinTaskSchedulerTest.class.getName());
   @Test
   public void testUniqueSchedules() {
-    int parallel = 256;
+    int parallel = 2;
     DataFlowTaskGraph graph = createGraph(parallel);
-    RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
+    RoundRobinBatchTaskScheduler scheduler = new RoundRobinBatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
-
     WorkerPlan workerPlan = createWorkPlan(parallel);
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 1; i++) {
       TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan);
 
@@ -52,7 +49,6 @@ public class RoundRobinTaskSchedulerTest {
       Map<Integer, TaskSchedulePlan.ContainerPlan> map2 = plan2.getContainersMap();
       for (TaskSchedulePlan.ContainerPlan containerPlan : plan1.getContainers()) {
         TaskSchedulePlan.ContainerPlan p2 = map2.get(containerPlan.getContainerId());
-        LOG.info("container plans:" + containerPlan + "\t" + p2);
         Assert.assertTrue(containerEquals(containerPlan, p2));
       }
     }
@@ -60,16 +56,16 @@ public class RoundRobinTaskSchedulerTest {
 
   @Test
   public void testUniqueSchedules2() {
-    int parallel = 256;
+    int parallel = 2;
     DataFlowTaskGraph graph = createGraph(parallel);
-    RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
+    RoundRobinBatchTaskScheduler scheduler = new RoundRobinBatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
-
     WorkerPlan workerPlan = createWorkPlan(parallel);
+
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
 
     WorkerPlan workerPlan2 = createWorkPlan2(parallel);
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 1; i++) {
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
 
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
@@ -126,7 +122,7 @@ public class RoundRobinTaskSchedulerTest {
     builder.addSource("source", ts, parallel);
     ComputeConnection c = builder.addSink("sink", testSink, 1);
     c.reduce("source", "edge", Op.SUM, DataType.INTEGER);
-    builder.setMode(OperationMode.STREAMING);
+    builder.setMode(OperationMode.BATCH);
     return builder.build();
   }
 
