@@ -18,11 +18,10 @@ import edu.iu.dsc.tws.common.config.TokenSub;
 public final class HdfsDataContext extends Context {
 
   private static final String HDFS_URL = "twister2.hdfs.url";
-  private static final String HDFS_URL_DEFAULT = "hdfs://kannan-Precision-5820-Tower-X-Series:9000";
+  private static final String HDFS_URL_DEFAULT = "hdfs://hostname.iu.edu:9000//";
 
   public static final String HADOOP_HOME = "twister2.hadoop.home";
-  //public static final String HADOOP_HOME_DEFAULT = "${HADOOP_HOME}";
-  public static final String HADOOP_HOME_DEFAULT = "/home/kannan/hadoop-2.9.1";
+  public static final String HADOOP_HOME_DEFAULT = "${HADOOP_HOME}";
 
   private static final String HDFS_CLASS = "twister2.hdfs.class";
   private static final String HDFS_CLASS_DEFAULT = "org.apache.hadoop.hdfs.DistributedFileSystem";
@@ -31,16 +30,14 @@ public final class HdfsDataContext extends Context {
   private static final String HDFS_IMPLEMENTATION_KEY_DEFAULT = "fs.hdfs.impl";
 
   private static final String HDFS_CONFIG_DIRECTORY = "twister2.hdfs.config.directory";
-  /*private static final String HDFS_CONFIG_DIRECTORY_DEFAULT
-      = "$HADOOP_HOME/etc/hadoop/core-site.xml";*/
-  private static final String HDFS_CONFIG_DIRECTORY_DEFAULT =
-      "/home/kannan/hadoop-2.9.1/etc/hadoop/core-site.xml";
+  private static final String HDFS_CONFIG_DIRECTORY_DEFAULT
+      = "$HADOOP_HOME/etc/hadoop/core-site.xml";
 
   private static final String HDFS_DATA_DIRECTORY = "twister2.hdfs.data.directory";
-  private static final String HDFS_DATA_DIRECTORY_DEFAULT = "/user/kannan/";
+  private static final String HDFS_DATA_DIRECTORY_DEFAULT = "/user/";
 
   private static final String HDFS_NAMENODE_NAME = "twister2.hdfs.namenode";
-  private static final String HDFS_NAMENODE_DEFAULT = "kannan-Precision-5820-Tower-X-Series";
+  private static final String HDFS_NAMENODE_DEFAULT = "hostname.iu.edu";
 
   private static final String HDFS_NAMENODE_PORT = "twister2.hdfs.namenode.port";
   private static final Integer HDFS_NAMENODE_PORT_DEFAULT = 9000;
