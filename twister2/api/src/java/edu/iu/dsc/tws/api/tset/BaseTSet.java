@@ -136,6 +136,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   @Override
   public DirectTset<T> direct() {
     DirectTset<T> direct = new DirectTset<>(config, builder, this);
+    children.add(direct);
     return direct;
   }
 
