@@ -22,6 +22,8 @@ import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 public class CacheTSet<T> extends BaseTSet<T> {
 
   private BaseTSet<T> parent;
+  // todo: This dataobject should bind to the executor, I think! because tsets would not be
+  //  visible to the executor
   private DataObject<T> datapoints = null;
 
   public CacheTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt) {
@@ -31,6 +33,9 @@ public class CacheTSet<T> extends BaseTSet<T> {
     datapoints = new DataObjectImpl<>(config);
 
   }
+
+  // todo: operations like map is different on a cached tset, because map will be done on data in
+  //  the execution runtime, rather than a source task
 
   @Override
   public boolean baseBuild() {
@@ -53,7 +58,7 @@ public class CacheTSet<T> extends BaseTSet<T> {
 
     @Override
     public boolean add(T value) {
-      datapoints.addPartition(new EntityPartition<T>(0, value));
+      datapoints.addPartition(new EntityPartition<T>(0, value)); //
       return true;
     }
 
