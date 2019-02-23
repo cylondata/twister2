@@ -436,8 +436,9 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   @Override
   public void finish(int source) {
     // first we need to call finish on the partial receivers
-    if (partialReceiver != null) {
-      partialReceiver.onFinish(source);
+    while (!send(source, new byte[0], MessageFlags.END)) {
+      // lets progress until finish
+      progress();
     }
   }
 

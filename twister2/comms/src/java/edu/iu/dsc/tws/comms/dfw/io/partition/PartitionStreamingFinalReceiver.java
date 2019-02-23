@@ -18,9 +18,9 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 public class PartitionStreamingFinalReceiver implements MessageReceiver {
@@ -28,9 +28,12 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   private Map<Integer, Queue<Object>> messages = new HashMap<>();
 
   // the receiver
-  private BulkReceiver receiver;
+  private SingularReceiver receiver;
 
-  public PartitionStreamingFinalReceiver(BulkReceiver receiver) {
+  // the receiving indexes for the target
+  private Map<Integer, Integer> receivingIndexes = new HashMap<>();
+
+  public PartitionStreamingFinalReceiver(SingularReceiver receiver) {
     this.receiver = receiver;
   }
 
@@ -40,6 +43,7 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
     int sendPendingMax = DataFlowContext.sendPendingMax(cfg);
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       messages.put(e.getKey(), new ArrayBlockingQueue<>(sendPendingMax));
+      receivingIndexes.put(e.getKey(), 0);
     }
     this.receiver.init(cfg, expectedIds.keySet());
   }
@@ -58,14 +62,28 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
       Integer target = e.getKey();
       Queue<Object> inComingMessages = e.getValue();
       Object msg = inComingMessages.peek();
-      if (msg != null) {
-        if (msg instanceof List) {
-          boolean offer = receiver.receive(target, ((List<Object>) msg).iterator());
+
+      if (msg != null && msg instanceof List) {
+        int startIndex = receivingIndexes.get(e.getKey());
+        for (int i = startIndex; i < ((List) msg).size(); i++) {
+          boolean offer = receiver.receive(target, ((List) msg).get(i));
           if (offer) {
-            inComingMessages.poll();
+            receivingIndexes.put(e.getKey(), i + 1);
           } else {
             needsFurtherProgress = true;
           }
+        }
+        // we have to reset to 0
+        if (startIndex == ((List) msg).size()) {
+          inComingMessages.poll();
+          receivingIndexes.put(e.getKey(), 0);
+        }
+      } else if (msg != null) {
+        boolean offer = receiver.receive(target, msg);
+        if (offer) {
+          inComingMessages.poll();
+        } else {
+          needsFurtherProgress = true;
         }
       }
     }
