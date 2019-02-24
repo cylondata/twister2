@@ -124,7 +124,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
       List<Object> targetMsgList = targetMessages.get(target);
       if (targetMsgList == null) {
-        throw new RuntimeException(String.format("%d target not exisits %d %s", executor, target,
+        throw new RuntimeException(String.format("%d target not exists %d %s", executor, target,
             operation.getTaskPlan()));
       }
       if (object instanceof List) {
