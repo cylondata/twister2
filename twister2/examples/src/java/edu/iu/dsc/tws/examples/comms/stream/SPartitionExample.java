@@ -12,18 +12,16 @@
 package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.api.stream.SPartition;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 
@@ -52,8 +50,7 @@ public class SPartitionExample extends BenchWorker {
 
     // create the communication
     partition = new SPartition(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, new PartitionStreamingFinalReceiver(new PartitionReceiver()),
-        new LoadBalanceSelector());
+        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -84,7 +81,7 @@ public class SPartitionExample extends BenchWorker {
     return true;
   }
 
-  public class PartitionReceiver implements BulkReceiver {
+  public class PartitionReceiver implements SingularReceiver {
     private int count = 0;
     private int expected;
 
@@ -95,11 +92,8 @@ public class SPartitionExample extends BenchWorker {
     }
 
     @Override
-    public boolean receive(int target, Iterator<Object> it) {
-      while (it.hasNext()) {
-        Object object = it.next();
-        count += 1;
-      }
+    public boolean receive(int target, Object it) {
+      count += 1;
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, count, expected));
       //Since this is a streaming example we will simply stop after a number of messages are
