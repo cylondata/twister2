@@ -25,8 +25,8 @@ package edu.iu.dsc.tws.rsched.schedulers.mesos;
 
 import java.net.Inet4Address;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+//import java.util.ArrayList;
+//import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -42,7 +42,6 @@ import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
-//import edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 
@@ -57,8 +56,6 @@ public class MesosDockerWorker {
   private static int workerId = 0;
 
   public static void main(String[] args) throws Exception {
-
-    //Thread.sleep(1000);
 
     //gets the docker home directory
     //String homeDir = System.getenv("HOME");
@@ -76,17 +73,15 @@ public class MesosDockerWorker {
         "/persistent-volume/logs", "worker" + workerId);
     logger.initLogging();
 
+    LOG.info("WORKER ID :::::::::::" + workerId);
     Map<String, Integer> additionalPorts =
         MesosWorkerUtils.generateAdditionalPorts(config, startingPort);
 
     MesosWorkerController workerController = null;
-    List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<>();
 
     JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
         + jobName + ".job");
     try {
-
-
 
       JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, resourceIndex);
 
@@ -94,18 +89,10 @@ public class MesosDockerWorker {
           Inet4Address.getLocalHost().getHostAddress(), 2023, workerId, computeResource,
           additionalPorts);
 
-      LOG.info("Initializing with zookeeper");
-      workerController.initializeWithZooKeeper();
-      LOG.info("Waiting for all workers to join");
-      workerInfoList = workerController.getAllWorkers();
-      LOG.info("Everyone has joined");
-      //container.execute(worker.config, id, null, workerController, null);
-
     } catch (Exception e) {
       LOG.severe("Error " + e.getMessage());
     }
-
-
+    //find the jobmaster
     ZKJobMasterFinder finder = new ZKJobMasterFinder(config);
     finder.initialize();
 
@@ -123,17 +110,17 @@ public class MesosDockerWorker {
     String jobMasterPortStr = jobMasterIPandPort.substring(jobMasterIPandPort.lastIndexOf(":") + 1);
     int jobMasterPort = Integer.parseInt(jobMasterPortStr);
     String jobMasterIP = jobMasterIPandPort.substring(0, jobMasterIPandPort.lastIndexOf(":"));
-    LOG.info("JobMaster IP..: " + jobMasterIP);
-    LOG.info("Worker ID..: " + workerId);
-    StringBuilder outputBuilder = new StringBuilder();
-    int workerCount = workerController.getNumberOfWorkers();
+    //LOG.info("JobMaster IP..: " + jobMasterIP);
+    //LOG.info("Worker ID..: " + workerId);
+    //StringBuilder outputBuilder = new StringBuilder();
+    //int workerCount = workerController.getNumberOfWorkers();
+    int workerCount = job.getNumberOfWorkers();
     LOG.info("Worker Count..: " + workerCount);
 
-
+    LOG.info(workerController.getWorkerInfo().toString());
    //start job master client
     worker.startJobMasterAgent(workerController.getWorkerInfo(), jobMasterIP, jobMasterPort,
         workerCount);
-
 
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
@@ -141,7 +128,7 @@ public class MesosDockerWorker {
     startWorker(workerController, null);
 
     try {
-      Thread.sleep(2000);
+      Thread.sleep(3000);
     } catch (InterruptedException e) {
       LOG.info("sleep exception" + e.getMessage());
     }
@@ -151,7 +138,6 @@ public class MesosDockerWorker {
 
   public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
-
 
     JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/" + jobName + ".job");
     String workerClass = job.getWorkerClassName();
@@ -181,7 +167,7 @@ public class MesosDockerWorker {
 //    AllocatedResources resourcePlan = MesosWorkerUtils.createAllocatedResources("mesos",
 //        workerID, job);
     //resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config), workerID);
-    worker.execute(config, workerId, workerController,
+    worker.execute(config, workerId, jobMasterAgent.getJMWorkerController(),
         pv, volatileVolume);
   }
 
@@ -207,34 +193,5 @@ public class MesosDockerWorker {
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method
   }
-
-/* //mpi master has the id equals to 1
-    //id==0 is job master
-    if (workerId == 1) {
-
-      Writer writer = new BufferedWriter(new OutputStreamWriter(
-          new FileOutputStream("/twister2/hostFile", true)));
-      for (int i = 1; i < workerCount; i++) {
-        writer.write(workerInfoList.get(i).getWorkerIP()
-            + "\n");
-        LOG.info("Host IP..: " + workerInfoList.get(i).getWorkerIP());
-      }
-      writer.close();
-      LOG.info("Before mpirun");
-      //mpi command to run
-      String[] command = {"mpirun", "-allow-run-as-root", "-npernode",
-          "1", "--mca", "btl_tcp_if_include", "eth0",
-          "--hostfile", "/twister2/hostFile", "java", "-cp",
-          "twister2-job/libexamples-java.jar",
-          "edu.iu.dsc.tws.examples.internal.rsched.BasicMpiJob", ">mpioutfile"};
-
-      LOG.info("command:" + String.join(" ", command));
-      //run the mpi command
-      ProcessUtils.runSyncProcess(false, command, outputBuilder,
-          new File("."), true);
-      workerController.close();
-      LOG.info("Job DONE");
-
-    }*/
 
 }
