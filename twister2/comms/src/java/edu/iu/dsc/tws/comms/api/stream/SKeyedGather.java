@@ -73,10 +73,10 @@ public class SKeyedGather {
       edges.add(comm.nextEdge());
     }
 
-    this.keyedGather = new DataFlowMultiGather(comm.getChannel(), sources, targets,
+    this.keyedGather = new DataFlowMultiGather(comm.getConfig(), comm.getChannel(),
+        plan, sources, targets,
         new GatherMultiStreamingFinalReceiver(rcvr),
         new GatherMultiStreamingPartialReceiver(), edges, keyType, dataType);
-    this.keyedGather.init(comm.getConfig(), dataType, plan);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, targets);
 
