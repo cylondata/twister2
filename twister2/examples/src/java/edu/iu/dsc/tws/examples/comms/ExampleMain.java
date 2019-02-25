@@ -52,6 +52,7 @@ public class ExampleMain {
     options.addOption(Constants.ARGS_WORKERS, true, "Workers");
     options.addOption(Constants.ARGS_SIZE, true, "Size");
     options.addOption(Constants.ARGS_ITR, true, "Iteration");
+    options.addOption(Constants.ARGS_WARMPU_ITR, true, "Warmup Iterations");
     options.addOption(Utils.createOption(Constants.ARGS_OPERATION, true, "Operation", true));
     options.addOption(Constants.ARGS_STREAM, false, "Stream");
     options.addOption(Utils.createOption(Constants.ARGS_TASK_STAGES, true, "Throughput mode", true));
@@ -74,11 +75,15 @@ public class ExampleMain {
     boolean verify = cmd.hasOption(Constants.ARGS_VERIFY);
     int size = 1;
     int itr = 1;
+    int warmUpItr = 0;
     if (cmd.hasOption(Constants.ARGS_SIZE)) {
       size = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_SIZE));
     }
     if (cmd.hasOption(Constants.ARGS_ITR)) {
       itr = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_ITR));
+    }
+    if (cmd.hasOption(Constants.ARGS_WARMPU_ITR)) {
+      warmUpItr = Integer.valueOf(cmd.getOptionValue(Constants.ARGS_WARMPU_ITR));
     }
     String threads = "true";
     if (cmd.hasOption(Constants.ARGS_THREADS)) {
@@ -124,6 +129,7 @@ public class ExampleMain {
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.put(Constants.ARGS_ITR, Integer.toString(itr));
+    jobConfig.put(Constants.ARGS_WARMPU_ITR, Integer.toString(warmUpItr));
     jobConfig.put(Constants.ARGS_OPERATION, operation);
     jobConfig.put(Constants.ARGS_SIZE, Integer.toString(size));
     jobConfig.put(Constants.ARGS_WORKERS, Integer.toString(workers));

@@ -9,28 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.utils.bench;
+package edu.iu.dsc.tws.examples.verification;
 
-public enum TimingUnit {
+import java.util.Map;
 
-  MILLI_SECONDS(0, "ms"), NANO_SECONDS(1, "ns");
-  private int unit;
-  private String label;
-
-  TimingUnit(int unit, String label) {
-    this.unit = unit;
-    this.label = label;
-  }
-
-  public long getTime() {
-    if (unit == 0) {
-      return System.currentTimeMillis();
-    } else {
-      return System.nanoTime();
-    }
-  }
-
-  public String getLabel() {
-    return this.label;
-  }
+public interface ResultsGenerator<INPUT, OUTPUT> {
+  OUTPUT generateResults(INPUT input, Map<String, Object> args);
 }

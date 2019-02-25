@@ -30,6 +30,8 @@ import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 
 public class BReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BReduceExample.class.getName());
@@ -109,7 +111,7 @@ public class BReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
-      Timing.markMili(TIMING_ALL_RECV, workerId == 0);
+      Timing.mark(TIMING_ALL_RECV, workerId == 0);
       resultsRecorder.recordColumn("Total Time", Timing.averageDiff(
           TIMING_ALL_SEND,
           TIMING_ALL_RECV,

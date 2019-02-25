@@ -4,26 +4,29 @@ import subprocess
 import base64
 
 from tree.node import Node
+from util.config_parser import parse_configs
 from util.file_iterator import process_directory
 from values.array import handle_array_arg
+from values.fixed import handle_fixed_arg
 from values.none import handle_none_arg
 from values.steps import handle_step_arg
 
 value_handlers = {
     "steps": handle_step_arg,
     "array": handle_array_arg,
-    "none": handle_none_arg
+    "none": handle_none_arg,
+    "fixed": handle_fixed_arg
 }
 
-process_directory('/home/chathura/Code/twister2/util/test')
+config_files = []
+process_directory('/home/chathura/Code/twister2/util/test', config_files)
 
-with open('tests/base.json') as f:
-    data = json.load(f)
+configs = parse_configs(config_files)
 
-jar_root_dir = data['jarRootDir']
-t2_bin = data['t2Bin']
+jar_root_dir = configs["base"]['jarRootDir']
+t2_bin = configs["base"]['t2Bin']
 
-for test in data['tests']:
+for test in configs['tests']:
     test_id = test['id']
     jar_dir = jar_root_dir
     if test['directory']['relativeToRoot']:
@@ -69,7 +72,3 @@ for test in data['tests']:
         print("Running twister2 job with following args...")
         print(args)
         subprocess.run(args, env=existing_env)
-
-# exec("def hello(arg1):\n\tprint(arg1)")
-# eval("hello('Yoho')")
-# print(data['tests'][0])

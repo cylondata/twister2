@@ -24,6 +24,8 @@ public class JobParameters {
 
   private int iterations;
 
+  private int warmupIterations;
+
   private String operation;
 
   private int containers;
@@ -114,6 +116,10 @@ public class JobParameters {
     this.stream = stream;
   }
 
+  public int getWarmupIterations() {
+    return warmupIterations;
+  }
+
   public static JobParameters build(Config cfg) {
     int iterations = Integer.parseInt(cfg.getStringValue(Constants.ARGS_ITR));
     int size = Integer.parseInt(cfg.getStringValue(Constants.ARGS_SIZE));
@@ -129,6 +135,7 @@ public class JobParameters {
     int intItr = Integer.parseInt(cfg.getStringValue(Constants.ARGS_INIT_ITERATIONS));
     boolean doVerify = cfg.getBooleanValue(Constants.ARGS_VERIFY);
     boolean stream = cfg.getBooleanValue(Constants.ARGS_STREAM);
+    int warmupItr = cfg.getIntegerValue(Constants.ARGS_WARMPU_ITR, 0);
 
     String[] stages = taskStages.split(",");
     List<Integer> taskList = new ArrayList<>();
@@ -150,6 +157,7 @@ public class JobParameters {
     jobParameters.initIterations = intItr;
     jobParameters.doVerify = doVerify;
     jobParameters.stream = stream;
+    jobParameters.warmupIterations = warmupItr;
     return jobParameters;
   }
 
