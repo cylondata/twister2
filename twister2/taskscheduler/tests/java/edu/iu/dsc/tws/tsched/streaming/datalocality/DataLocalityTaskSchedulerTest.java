@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTa
 public class DataLocalityTaskSchedulerTest {
   @Test
   public void testUniqueSchedules() {
-    int parallel = 50;
+    int parallel = 16;
 
     DataFlowTaskGraph graph = createGraph(parallel);
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
@@ -60,7 +60,7 @@ public class DataLocalityTaskSchedulerTest {
 
   @Test
   public void testUniqueSchedules2() {
-    int parallel = 50;
+    int parallel = 16;
     DataFlowTaskGraph graph = createGraph(parallel);
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
     Config config = getConfig();
@@ -143,19 +143,18 @@ public class DataLocalityTaskSchedulerTest {
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", ts);
-    builder.setParallelism("source", 5);
+    builder.setParallelism("source", 2);
 
     builder.addSink("sink1", testSink1);
-    builder.setParallelism("sink1", 5);
+    builder.setParallelism("sink1", 2);
 
     builder.addSink("sink2", testSink2);
-    builder.setParallelism("sink2", 5);
+    builder.setParallelism("sink2", 2);
 
     builder.addSink("merge", testMerge);
-    builder.setParallelism("merge", 5);
-
+    builder.setParallelism("merge", 2);
     builder.addSink("final", testFinal);
-    builder.setParallelism("final", 5);
+    builder.setParallelism("final", 2);
 
     builder.connect("source", "sink1", "partition-edge1", OperationNames.PARTITION);
     builder.connect("sink1", "sink2", "partition-edge2", OperationNames.PARTITION);

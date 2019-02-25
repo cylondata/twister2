@@ -52,7 +52,6 @@ public class RoundRobinTaskSchedulerTest {
       Map<Integer, TaskSchedulePlan.ContainerPlan> map2 = plan2.getContainersMap();
       for (TaskSchedulePlan.ContainerPlan containerPlan : plan1.getContainers()) {
         TaskSchedulePlan.ContainerPlan p2 = map2.get(containerPlan.getContainerId());
-        LOG.info("container plans:" + containerPlan + "\t" + p2);
         Assert.assertTrue(containerEquals(containerPlan, p2));
       }
     }
