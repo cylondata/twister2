@@ -1,7 +1,7 @@
 from tree.node import Node
 
 
-def handle_none_arg(arg, root: Node):
+def handle_none_arg(arg, root):
     arg_id = arg['id']
     optional = arg['optional']
 

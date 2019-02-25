@@ -1,7 +1,7 @@
 from tree.node import Node
 
 
-def handle_array_arg(arg, root: Node):
+def handle_array_arg(arg, root):
     arg_id = arg['id']
     optional = arg['optional']
     val_array = arg['values']['array']
