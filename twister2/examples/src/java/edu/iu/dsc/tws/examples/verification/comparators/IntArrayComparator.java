@@ -9,28 +9,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.utils.bench;
+package edu.iu.dsc.tws.examples.verification.comparators;
 
-public enum TimingUnit {
+import java.util.Arrays;
 
-  MILLI_SECONDS(0, "ms"), NANO_SECONDS(1, "ns");
-  private int unit;
-  private String label;
+import edu.iu.dsc.tws.examples.verification.ResultsComparator;
 
-  TimingUnit(int unit, String label) {
-    this.unit = unit;
-    this.label = label;
+public final class IntArrayComparator implements ResultsComparator<int[]> {
+
+  private static final IntArrayComparator INSTANCE = new IntArrayComparator();
+
+  private IntArrayComparator() {
+
   }
 
-  public long getTime() {
-    if (unit == 0) {
-      return System.currentTimeMillis();
-    } else {
-      return System.nanoTime();
-    }
+  public static IntArrayComparator getInstance() {
+    return INSTANCE;
   }
 
-  public String getLabel() {
-    return this.label;
+
+  @Override
+  public boolean compare(int[] d1, int[] d2) {
+    return Arrays.equals(d1, d2);
   }
 }

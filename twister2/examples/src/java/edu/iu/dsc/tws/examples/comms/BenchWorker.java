@@ -14,8 +14,6 @@ package edu.iu.dsc.tws.examples.comms;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,20 +31,17 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_SEND;
 
 public abstract class BenchWorker implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(BenchWorker.class.getName());
-
-  protected static final String TIMING_MESSAGE_SEND = "M_SEND";
-  protected static final String TIMING_MESSAGE_RECV = "M_RECV";
-  protected static final String TIMING_ALL_SEND = "ALL_SEND";
-  protected static final String TIMING_ALL_RECV = "ALL_RECV";
-
-  private Lock lock = new ReentrantLock();
 
   protected int workerId;
 
@@ -60,7 +55,7 @@ public abstract class BenchWorker implements IWorker {
 
   protected Communicator communicator;
 
-  protected Map<Integer, Boolean> finishedSources = new ConcurrentHashMap<>();
+  protected final Map<Integer, Boolean> finishedSources = new ConcurrentHashMap<>();
 
   protected boolean sourcesDone = false;
 
@@ -68,14 +63,19 @@ public abstract class BenchWorker implements IWorker {
 
   protected ExperimentData experimentData;
 
-  protected Object inputData;
+  //for verification
+  protected int[] inputDataArray;
+  private boolean verified = true;
 
+  //to capture benchmark results
   protected BenchmarkResultsRecorder resultsRecorder;
 
   @Override
   public void execute(Config cfg, int workerID,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
+
+    Timing.setDefaultTimingUnit(TimingUnit.MILLI_SECONDS);
 
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);
@@ -93,24 +93,32 @@ public abstract class BenchWorker implements IWorker {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
       return;
     }
+
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(cfg, workerID,
         jobParameters.getTaskStages(), workerList);
+
     // create the channel
     channel = Network.initializeChannel(config, workerController);
     // create the communicator
     communicator = new Communicator(cfg, channel);
-    //collect experiment data
+
+    //todo collect experiment data : will be removed
     experimentData = new ExperimentData();
     if (jobParameters.isStream()) {
       experimentData.setOperationMode(OperationMode.STREAMING);
     } else {
       experimentData.setOperationMode(OperationMode.BATCH);
     }
-    inputData = generateData();
-    experimentData.setInput(inputData);
+    //todo above will be removed
+
+    this.inputDataArray = generateData();
+
+    //todo below will be removed
+    experimentData.setInput(this.inputDataArray);
     experimentData.setTaskStages(jobParameters.getTaskStages());
     experimentData.setIterations(jobParameters.getIterations());
+    //todo above will be removed
 
     // now lets execute
     execute();
@@ -120,7 +128,7 @@ public abstract class BenchWorker implements IWorker {
     try {
       workerController.waitOnBarrier();
     } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      LOG.log(Level.SEVERE, timeoutException, () -> timeoutException.getMessage());
     }
     // let allows the specific example to close
     close();
@@ -131,7 +139,6 @@ public abstract class BenchWorker implements IWorker {
   protected abstract void execute();
 
   protected void progress() {
-    int count = 0;
     // we need to progress the communication
 
     while (!isDone()) {
@@ -141,7 +148,7 @@ public abstract class BenchWorker implements IWorker {
       progressCommunication();
     }
 
-    LOG.log(Level.INFO, workerId + " FINISHED PROGRESS");
+    LOG.info(() -> workerId + " FINISHED PROGRESS");
   }
 
   protected abstract void progressCommunication();
@@ -156,14 +163,28 @@ public abstract class BenchWorker implements IWorker {
   protected void finishCommunication(int src) {
   }
 
-  protected Object generateData() {
+  protected int[] generateData() {
     return DataGenerator.generateIntData(jobParameters.getSize());
+  }
+
+  /**
+   * This method will verify results and append the output to the results recorder
+   */
+  protected void verifyResults(ResultsVerifier resultsVerifier, Object results,
+                               Map<String, Object> args) {
+    if (jobParameters.isDoVerify()) {
+      verified = verified && resultsVerifier.verify(results, args);
+      //this will record verification failed if any of the iteration fails to verify
+      this.resultsRecorder.recordColumn("Verified", verified);
+    } else {
+      this.resultsRecorder.recordColumn("Verified", "Not Performed");
+    }
   }
 
   protected class MapWorker implements Runnable {
     private int task;
 
-    private boolean timingCondition = false;
+    private boolean timingCondition;
 
     public MapWorker(int task) {
       this.task = task;
@@ -177,29 +198,32 @@ public abstract class BenchWorker implements IWorker {
 
     @Override
     public void run() {
-      LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
-      Timing.markMili(TIMING_ALL_SEND, this.timingCondition);
-      for (int i = 0; i < jobParameters.getIterations(); i++) {
+      LOG.info(() -> "Starting map worker: " + workerId + " task: " + task);
+
+      for (int i = 0; i < jobParameters.getIterations()
+          + jobParameters.getWarmupIterations(); i++) {
         // lets generate a message
-        int flag = 0;
-        if (i == jobParameters.getIterations() - 1) {
-          flag = MessageFlags.LAST;
+        int flag = (i == jobParameters.getIterations() - 1) ? MessageFlags.LAST : 0;
+
+        if (i == jobParameters.getWarmupIterations()) {
+          Timing.mark(TIMING_ALL_SEND, this.timingCondition);
         }
-        Timing.markMili(TIMING_MESSAGE_SEND, this.timingCondition);
-        sendMessages(task, inputData, flag);
-      }
-      LOG.info(String.format("%d Done sending", workerId));
-      lock.lock();
-      boolean allDone = true;
-      finishedSources.put(task, true);
-      for (Map.Entry<Integer, Boolean> e : finishedSources.entrySet()) {
-        if (!e.getValue()) {
-          allDone = false;
+
+        if (i >= jobParameters.getWarmupIterations()) {
+          Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
         }
+
+        sendMessages(task, inputDataArray, flag);
       }
-      finishCommunication(task);
-      sourcesDone = allDone;
-      lock.unlock();
+
+      LOG.info(() -> String.format("%d Done sending", workerId));
+
+      synchronized (finishedSources) {
+        finishedSources.put(task, true);
+        boolean allDone = !finishedSources.values().contains(false);
+        finishCommunication(task);
+        sourcesDone = allDone;
+      }
     }
   }
 }

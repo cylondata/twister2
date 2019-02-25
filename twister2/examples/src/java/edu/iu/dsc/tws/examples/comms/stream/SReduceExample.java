@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -25,17 +24,22 @@ import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.api.stream.SReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
-import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_RECV;
 
 public class SReduceExample extends BenchWorker {
+
   private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
 
   private SReduce reduce;
 
   private boolean reduceDone = false;
+
+  private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -52,20 +56,32 @@ public class SReduceExample extends BenchWorker {
     // create the communication
     reduce = new SReduce(communicator, taskPlan, sources, target, MessageType.INTEGER,
         new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
-        new FinalSingularReceiver(jobParameters.getIterations()));
+        new FinalSingularReceiver(
+            jobParameters.getIterations(),
+            jobParameters.getWarmupIterations()
+        )
+    );
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
-    if (tasksOfExecutor.size() == 0) {
-      sourcesDone = true;
-    }
 
-    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-      reduceDone = true;
-    }
+    sourcesDone = tasksOfExecutor.size() == 0;
+
+    reduceDone = !taskPlan.getChannelsOfExecutor(workerId).contains(target);
+
+    //generating the expectedIterations results at the end
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (array, args) -> {
+      int sourcesCount = jobParameters.getTaskStages().get(0);
+      int[] outArray = new int[array.length];
+      for (int i = 0; i < array.length; i++) {
+        outArray[i] = array[i] * sourcesCount;
+      }
+      return outArray;
+    }, IntArrayComparator.getInstance());
 
     // now initialize the workers
     for (int t : tasksOfExecutor) {
@@ -97,11 +113,14 @@ public class SReduceExample extends BenchWorker {
   }
 
   public class FinalSingularReceiver implements SingularReceiver {
-    private int count = 0;
-    private int expected;
 
-    public FinalSingularReceiver(int expected) {
-      this.expected = expected;
+    private int count = 0;
+    private int expectedIterations;
+    private int warmupIterations = 0;
+
+    public FinalSingularReceiver(int expectedIterations, int warmupIterations) {
+      this.expectedIterations = expectedIterations;
+      this.warmupIterations = warmupIterations;
     }
 
     @Override
@@ -111,51 +130,22 @@ public class SReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
-      Timing.markMili(TIMING_MESSAGE_RECV, workerId == 0);
       count++;
-      LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
-      if (count == expected) {
-        Timing.markMili(TIMING_ALL_RECV, workerId == 0);
-        resultsRecorder.recordColumn(
-            "Total Time",
-            Timing.averageDiff(TIMING_ALL_SEND, TIMING_ALL_RECV, workerId == 0)
-        );
-        resultsRecorder.recordColumn(
-            "Average Time",
-            Timing.averageDiff(TIMING_MESSAGE_SEND, TIMING_MESSAGE_RECV, workerId == 0)
-        );
-        resultsRecorder.writeToCSV();
+      if (count > this.warmupIterations) {
+        Timing.mark(TIMING_MESSAGE_RECV, workerId == 0);
+      }
 
-        LOG.info("Total time for all iterations : "
-            + Timing.averageDiff(TIMING_ALL_SEND, TIMING_ALL_RECV, workerId == 0));
-        LOG.info("Average time for reduce : "
-            + Timing.averageDiff(TIMING_MESSAGE_SEND, TIMING_MESSAGE_RECV, workerId == 0));
+      LOG.info(() -> String.format("Target %d received count %d", target, count));
+
+      verifyResults(resultsVerifier, object, null);
+
+      if (count == expectedIterations + warmupIterations) {
+        Timing.mark(TIMING_ALL_RECV, workerId == 0);
+        BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0);
+        resultsRecorder.writeToCSV();
         reduceDone = true;
       }
-      experimentData.setOutput(object);
-
-      try {
-        verify();
-      } catch (VerificationException e) {
-        LOG.info("Exception Message : " + e.getMessage());
-      }
       return true;
-    }
-  }
-
-  public void verify() throws VerificationException {
-    boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
-    if (doVerify) {
-      LOG.info("Verifying results ...");
-      ExperimentVerification experimentVerification
-          = new ExperimentVerification(experimentData, OperationNames.REDUCE);
-      isVerified = experimentVerification.isVerified();
-      if (isVerified) {
-        LOG.info("Results generated from the experiment are verified.");
-      } else {
-        throw new VerificationException("Results do not match");
-      }
     }
   }
 }

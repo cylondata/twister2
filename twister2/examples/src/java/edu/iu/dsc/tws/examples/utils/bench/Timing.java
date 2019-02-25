@@ -21,8 +21,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class Timing {
 
   private static volatile Map<String, List<Long>> timestamps = new ConcurrentHashMap<>();
+  private static volatile Map<String, TimingUnit> timingUnitMap = new ConcurrentHashMap<>();
+
+  private static TimingUnit defaultTimingUnit;
 
   private Timing() {
+  }
+
+  public static void setDefaultTimingUnit(TimingUnit defaultTimingUnit) {
+    Timing.defaultTimingUnit = defaultTimingUnit;
   }
 
   /**
@@ -34,11 +41,26 @@ public final class Timing {
     }
   }
 
-  public static void mark(String flag, TimingUnit unit, boolean accept) {
+  private static void mark(String flag, TimingUnit unit, boolean accept) {
     if (accept) {
       timestamps.computeIfAbsent(flag, s -> new ArrayList<>())
           .add(unit.getTime());
+      TimingUnit previousUnit = timingUnitMap.put(flag, unit);
+      if (previousUnit != null && !previousUnit.equals(unit)) {
+        throw new RuntimeException("Flag " + flag + " was marked with a different timing unit");
+      }
     }
+  }
+
+  public static TimingUnit getTimingUnitForFlag(String flag) {
+    return timingUnitMap.get(flag);
+  }
+
+  public static void mark(String flag, boolean accept) {
+    if (defaultTimingUnit == null) {
+      throw new RuntimeException("Default timing unit is not specified");
+    }
+    mark(flag, defaultTimingUnit, accept);
   }
 
   public static void markMili(String flag, boolean accept) {
@@ -54,6 +76,15 @@ public final class Timing {
       throw new RuntimeException(
           "Collected data for two flags mismatches. FlagA : " + timestamps.get(flagA).size()
               + " , FlagB : " + timestamps.get(flagB).size()
+      );
+    }
+
+    if (!timingUnitMap.get(flagA).equals(timingUnitMap.get(flagB))) {
+      throw new RuntimeException(
+          "Data has been collected with two different timing units. "
+              + flagA + " : " + timingUnitMap.get(flagA).getLabel() + " , "
+              + flagB + " : " + timingUnitMap.get(flagB).getLabel()
+
       );
     }
   }

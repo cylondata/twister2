@@ -11,8 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.stream;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,16 +27,21 @@ import edu.iu.dsc.tws.comms.api.stream.SAllGather;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
-import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.ListOfIntArraysComparator;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
 
 public class SAllGatherExample extends BenchWorker {
-  private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(SAllGatherExample.class.getName());
 
   private SAllGather gather;
 
   private boolean gatherDone = false;
+
+  private ResultsVerifier<int[], List<int[]>> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -65,6 +72,14 @@ public class SAllGatherExample extends BenchWorker {
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
     }
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (dataArray, args) -> {
+      List<int[]> listOfArrays = new ArrayList<>();
+      for (int i = 0; i < noOfSourceTasks; i++) {
+        listOfArrays.add(dataArray);
+      }
+      return listOfArrays;
+    }, ListOfIntArraysComparator.getInstance());
 
     // now initialize the workers
     for (int t : tasksOfExecutor) {
@@ -108,43 +123,31 @@ public class SAllGatherExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Iterator<Object> itr) {
-      count++;
-      if (count == expected) {
+      Timing.mark(BenchmarkConstants.TIMING_MESSAGE_RECV, workerId == 0 && target == 0);
+      if (++count == expected) {
+        Timing.mark(TIMING_ALL_RECV, workerId == 0 && target == 0);
+        BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0
+            && target == 0);
+        resultsRecorder.writeToCSV();
         LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
         gatherDone = true;
       }
-      Object value = itr.next();
-      if (value instanceof Tuple) {
-        Object data = ((Tuple) value).getValue();
-        experimentData.setOutput(data);
-        experimentData.setWorkerId(workerId);
-        experimentData.setNumOfWorkers(jobParameters.getContainers());
-
-        try {
-          if (workerId == 0) {
-            verify();
+      //only do if verification is necessary, since this affects timing
+      if (jobParameters.isDoVerify()) {
+        List<int[]> dataReceived = new ArrayList<>();
+        while (itr.hasNext()) {
+          Object data = itr.next();
+          if (data instanceof Tuple) {
+            LOG.log(Level.INFO, String.format("%d received %d", target,
+                (Integer) ((Tuple) data).getKey()));
+            dataReceived.add((int[]) ((Tuple) data).getValue());
+          } else {
+            LOG.severe("Un-expected data: " + data.getClass());
           }
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
         }
+        verifyResults(resultsVerifier, dataReceived, null);
       }
       return true;
-    }
-  }
-
-  public void verify() throws VerificationException {
-    boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
-    if (doVerify) {
-      LOG.info("Verifying results ...");
-      ExperimentVerification experimentVerification
-          = new ExperimentVerification(experimentData, OperationNames.ALLGATHER);
-      isVerified = experimentVerification.isVerified();
-      if (isVerified) {
-        LOG.info("Results generated from the experiment are verified.");
-      } else {
-        throw new VerificationException("Results do not match");
-      }
     }
   }
 }
