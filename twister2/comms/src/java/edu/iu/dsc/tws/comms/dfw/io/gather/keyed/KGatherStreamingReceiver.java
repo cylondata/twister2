@@ -188,7 +188,6 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
 
     if (!sendList.isEmpty()) {
       if (dataFlowOperation.sendPartial(representSource, sendList, flags, target)) {
-        System.out.println("Sent Partial executor : " + executor + "size" + sendList.size());
         sendList = new ArrayList<>();
         flags = 0;
       } else {
