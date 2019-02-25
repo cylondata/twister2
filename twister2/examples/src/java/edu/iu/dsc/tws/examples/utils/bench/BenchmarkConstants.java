@@ -11,26 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.utils.bench;
 
-public enum TimingUnit {
+public final class BenchmarkConstants {
 
-  MILLI_SECONDS(0, "ms"), NANO_SECONDS(1, "ns");
-  private int unit;
-  private String label;
+  public static final String TIMING_MESSAGE_SEND = "M_SEND";
+  public static final String TIMING_MESSAGE_RECV = "M_RECV";
+  public static final String TIMING_ALL_SEND = "ALL_SEND";
+  public static final String TIMING_ALL_RECV = "ALL_RECV";
 
-  TimingUnit(int unit, String label) {
-    this.unit = unit;
-    this.label = label;
-  }
+  public static final String COLUMN_TOTAL_TIME = "Total Time";
+  public static final String COLUMN_AVERAGE_TIME = "Average Time";
 
-  public long getTime() {
-    if (unit == 0) {
-      return System.currentTimeMillis();
-    } else {
-      return System.nanoTime();
-    }
-  }
+  private BenchmarkConstants() {
 
-  public String getLabel() {
-    return this.label;
   }
 }

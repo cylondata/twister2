@@ -44,6 +44,7 @@ twister2.worker.ping.interval: 10000
 # twister2 job master port number
 # default value is 11111
 twister2.job.master.port: 11011
+#twister2.job.master.port: 2023
 
 # worker to job master response wait time in milliseconds
 # this is for messages that wait for a response from the job master

@@ -24,25 +24,25 @@ import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 
-public class BKeyedPartition {
+public class BSortedKeyedPartition {
   private DataFlowPartition partition;
 
   private DestinationSelector destinationSelector;
 
-  public BKeyedPartition(Communicator comm, TaskPlan plan,
-                         Set<Integer> sources, Set<Integer> destinations,
-                         MessageType dataType, MessageType keyType,
-                         BulkReceiver rcvr, DestinationSelector destSelector) {
+  public BSortedKeyedPartition(Communicator comm, TaskPlan plan,
+                         Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
+                         MessageType keyType, BulkReceiver rcvr,
+                         DestinationSelector destSelector, Comparator<Object> comparator) {
     this.destinationSelector = destSelector;
     String shuffleDir = comm.getPersistentDirectory();
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
-        new DPartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
+        new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
         new PartitionPartialReceiver(), dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
 
-  public BKeyedPartition(Communicator comm, TaskPlan plan,
+  public BSortedKeyedPartition(Communicator comm, TaskPlan plan,
                          Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
                          MessageType keyType, MessageType recvDataType,
                          MessageType recvKeyType, BulkReceiver rcvr,
@@ -53,23 +53,6 @@ public class BKeyedPartition {
     this.partition = new DataFlowPartition(comm.getConfig(), comm.getChannel(), plan,
         sources, destinations,
         new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
-        new PartitionPartialReceiver(), dataType, keyType, recvKeyType,
-        recvDataType, e);
-    this.partition.init(comm.getConfig(), dataType, plan, e);
-    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
-  }
-
-  public BKeyedPartition(Communicator comm, TaskPlan plan,
-                         Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
-                         MessageType keyType, MessageType recvDataType,
-                         MessageType recvKeyType, BulkReceiver rcvr,
-                         DestinationSelector destSelector) {
-    this.destinationSelector = destSelector;
-    String shuffleDir = comm.getPersistentDirectory();
-    int e = comm.nextEdge();
-    this.partition = new DataFlowPartition(comm.getConfig(), comm.getChannel(), plan,
-        sources, destinations,
-        new DPartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
         new PartitionPartialReceiver(), dataType, keyType, recvKeyType,
         recvDataType, e);
     this.partition.init(comm.getConfig(), dataType, plan, e);

@@ -1,0 +1,37 @@
+{
+  "id": "reduce_base",
+  "parent": "communication_base",
+  "resultsFile": "comms_reduce.csv",
+  "args": [
+    {
+      "id": "op",
+      "name": "Operation",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "\"reduce\""
+      }
+    },
+    {
+      "id": "stream",
+      "name": "Stream",
+      "optional": true,
+      "values": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "stages",
+      "name": "Stages",
+      "optional": false,
+      "values": {
+        "type": "array",
+        "array": [
+          "4,1",
+          "8,1",
+          "16,1"
+        ]
+      }
+    }
+  ]
+}

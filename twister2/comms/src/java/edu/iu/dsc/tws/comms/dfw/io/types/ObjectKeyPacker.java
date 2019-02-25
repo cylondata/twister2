@@ -20,12 +20,20 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class ObjectKeyPacker implements KeyPacker {
+  private KryoSerializer serializer;
+
+  public ObjectKeyPacker() {
+    serializer = new KryoSerializer();
+  }
+
   @Override
   public int packKey(Object key, SerializeState state) {
     if (state.getKey() == null) {
-      state.setKey((byte[]) key);
+      byte[] serialize = serializer.serialize(key);
+      state.setKey(serialize);
     }
     return state.getKey().length;
   }
@@ -47,7 +55,7 @@ public class ObjectKeyPacker implements KeyPacker {
   public int readKeyFromBuffer(InMessage currentMessage, int currentLocation,
                                DataBuffer buffer, int currentObjectLength) {
     return PartialKeyDeSerializer.readFromBuffer(currentMessage, MessageType.OBJECT,
-        currentLocation, buffer, currentObjectLength, null);
+        currentLocation, buffer, currentObjectLength, serializer);
   }
 
   @Override
