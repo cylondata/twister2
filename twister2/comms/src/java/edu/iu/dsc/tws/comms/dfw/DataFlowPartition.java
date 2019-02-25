@@ -295,13 +295,8 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
     LOG.log(Level.FINE, String.format("%d done adding internal/external routing",
         taskPlan.getThisExecutor()));
-    if (this.finalReceiver != null && isLastReceiver()) {
-      this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
-    }
-    if (this.partialReceiver != null) {
-      this.partialReceiver.init(cfg, this, receiveExpectedTaskIds());
-    }
-
+    this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
+    this.partialReceiver.init(cfg, this, router.partialExpectedTaskIds());
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
@@ -435,10 +430,12 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-    // first we need to call finish on the partial receivers
-    while (!send(source, new byte[0], MessageFlags.END)) {
-      // lets progress until finish
-      progress();
+    for (int dest : destinations) {
+      // first we need to call finish on the partial receivers
+      while (!send(source, new byte[0], MessageFlags.END, dest)) {
+        // lets progress until finish
+        progress();
+      }
     }
   }
 
@@ -518,10 +515,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   public boolean receiveMessage(MessageHeader header, Object object) {
     return finalReceiver.onMessage(header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
         header.getDestinationIdentifier(), header.getFlags(), object);
-  }
-
-  protected boolean isLastReceiver() {
-    return true;
   }
 
   public Set<Integer> getSources() {

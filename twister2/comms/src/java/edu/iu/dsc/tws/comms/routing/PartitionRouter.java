@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class PartitionRouter {
   private static final Logger LOG = Logger.getLogger(PartitionRouter.class.getName());
@@ -35,6 +36,8 @@ public class PartitionRouter {
   private Set<Integer> receiveExecutors;
   private Set<Integer> thisExecutorTasks;
 
+  private Map<Integer, List<Integer>> partialReceives;
+
   /**
    * Create a direct router
    */
@@ -43,6 +46,7 @@ public class PartitionRouter {
 
     this.externalSendTasks = new HashMap<>();
     this.internalSendTasks = new HashMap<>();
+    this.partialReceives = new HashMap<>();
 
     Set<Integer> myTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
     for (int src : srscs) {
@@ -74,8 +78,7 @@ public class PartitionRouter {
 
     // we are going to receive from all the sources
     this.upstream = new HashMap<>();
-    List<Integer> sources = new ArrayList<>();
-    sources.addAll(srscs);
+    List<Integer> sources = new ArrayList<>(srscs);
     for (int dest : dests) {
       if (myTasks.contains(dest)) {
         this.upstream.put(dest, sources);
@@ -87,6 +90,12 @@ public class PartitionRouter {
     receiveExecutors.remove(taskPlan.getThisExecutor());
 
     this.thisExecutorTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
+
+    List<Integer> thisSources = new ArrayList<>(
+        TaskPlanUtils.getTasksOfThisWorker(taskPlan, srscs));
+    for (int dest : dests) {
+      partialReceives.put(dest, thisSources);
+    }
   }
 
   public Set<Integer> receivingExecutors() {
@@ -97,6 +106,10 @@ public class PartitionRouter {
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     // check if this executor contains
     return upstream;
+  }
+
+  public Map<Integer, List<Integer>> partialExpectedTaskIds() {
+    return partialReceives;
   }
 
   public boolean isLastReceiver() {

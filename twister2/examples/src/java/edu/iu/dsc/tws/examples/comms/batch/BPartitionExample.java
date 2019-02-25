@@ -53,7 +53,7 @@ public class BPartitionExample extends BenchWorker {
 
     // create the communication
     partition = new BPartition(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector(), true);
+        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector(), false);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);

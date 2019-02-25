@@ -74,13 +74,12 @@ public class SKeyedReduce {
       edges.add(comm.nextEdge());
     }
 
-    this.keyedReduce = new DataFlowMultiReduce(comm.getChannel(), sources, targets,
+    this.keyedReduce = new DataFlowMultiReduce(comm.getConfig(), comm.getChannel(),
+        plan, sources, targets,
         new ReduceMultiStreamingFinalReceiver(fnc, rcvr),
         new ReduceMultiStreamingPartialReceiver(fnc), edges, keyType, dataType);
-    this.keyedReduce.init(comm.getConfig(), dataType, plan);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, targets);
-
   }
 
   /**

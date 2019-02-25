@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -24,6 +25,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 /**
  * This class is the abstract class that all keyed receivers extend. This provides all the basic
@@ -97,12 +99,17 @@ public abstract class KeyedReceiver implements MessageReceiver {
    */
   protected boolean isFinalBatchReceiver = false;
 
+  protected int representSource;
+
+  protected Set<Integer> thisSources;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     this.dataFlowOperation = op;
     this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
     this.limitPerKey = 100; //TODO: use config to init this
     this.keyLimit = 10; //TODO: use config to init this
+    this.thisSources = TaskPlanUtils.getTasksOfThisWorker(op.getTaskPlan(), op.getSources());
 
     for (Map.Entry<Integer, List<Integer>> expectedIdPerTarget : expectedIds.entrySet()) {
       Map<Integer, Boolean> finishedPerTarget = new HashMap<>();
@@ -121,7 +128,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
   }
 
   @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
+  public boolean onMessage(int src, int path, int target, int flags, Object object) {
     // add the object to the map
     boolean added;
 
@@ -134,7 +141,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
     Map<Integer, Boolean> finishedMessages = finishedSources.get(target);
 
     if ((flags & MessageFlags.END) == MessageFlags.END) {
-      finishedMessages.put(source, true);
+      finishedMessages.put(src, true);
       if (!isFinalBatchReceiver && isSourcesFinished(target)) {
         return moveMessagesToSendQueue(target, messages.get(target));
       }
@@ -146,11 +153,12 @@ public abstract class KeyedReceiver implements MessageReceiver {
           + " object which is not of type Tuple or List for target %d", executor, target));
     }
 
+    representSource = src;
     added = offerMessage(target, object);
 
     if (added) {
       if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
-        finishedMessages.put(source, true);
+        finishedMessages.put(representSource, true);
         //TODO: the finish of the move may not happen for LAST flags since the method to move
         //TODO: may return false
         if (!isFinalBatchReceiver && isSourcesFinished(target)) {
@@ -423,13 +431,16 @@ public abstract class KeyedReceiver implements MessageReceiver {
   protected boolean finishProgress(boolean needsFurtherProgress, int target) {
 
     boolean needsProgress = needsFurtherProgress;
-    if (dataFlowOperation.sendPartial(target, new byte[0],
-        MessageFlags.END, destination)) {
-      isEmptySent.put(target, true);
-    } else {
-      needsProgress = true;
+    for (int i : thisSources) {
+      if (dataFlowOperation.sendPartial(i, new byte[0],
+          MessageFlags.END, target)) {
+        isEmptySent.put(target, true);
+      } else {
+        needsProgress = true;
+        break;
+      }
+      batchDone.put(target, true);
     }
-    batchDone.put(target, true);
     return needsProgress;
   }
 
@@ -467,7 +478,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
         flags = MessageFlags.LAST;
       }
 
-      if (dataFlowOperation.sendPartial(target, current, flags, destination)) {
+      if (dataFlowOperation.sendPartial(representSource, current, flags, target)) {
         targetSendQueue.poll();
       } else {
         canProgress = false;

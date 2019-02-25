@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -148,12 +147,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
       List<Object> dests = destinationMessages.get(target);
 
       if ((flags & MessageFlags.END) == MessageFlags.END) {
-        if (onFinishedSources.contains(src)) {
-          LOG.log(Level.WARNING,
-              String.format("%d Duplicate finish from source id %d", this.executor, src));
-        } else {
-          onFinishedSources.add(src);
-        }
+        onFinishedSources.add(src);
         return true;
       }
 

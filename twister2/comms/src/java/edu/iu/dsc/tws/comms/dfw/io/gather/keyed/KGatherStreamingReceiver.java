@@ -68,16 +68,6 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
   }
 
   /**
-   * Called from the progress method to perform the communication calls to send the queued messages
-   *
-   * @param needsFurtherProgress current state of needsFurtherProgress value
-   * @param sourcesFinished specifies if the sources have completed
-   * @param target the target(which is a source in this instance) from which the messages are sent
-   * @param targetSendQueue the data structure that contains all the message data
-   * @return true if further progress is needed or false otherwise
-   */
-
-  /**
    * saves the given message (or messages if the object is a list) into the messages data structure
    * if possible and rejects the message if the whole message cannot be added to the messages
    * data structure.
@@ -197,7 +187,7 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
     }
 
     if (!sendList.isEmpty()) {
-      if (dataFlowOperation.sendPartial(target, sendList, flags, destination)) {
+      if (dataFlowOperation.sendPartial(representSource, sendList, flags, target)) {
         System.out.println("Sent Partial executor : " + executor + "size" + sendList.size());
         sendList = new ArrayList<>();
         flags = 0;
