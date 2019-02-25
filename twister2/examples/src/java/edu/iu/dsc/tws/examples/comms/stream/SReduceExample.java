@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -57,7 +56,11 @@ public class SReduceExample extends BenchWorker {
     // create the communication
     reduce = new SReduce(communicator, taskPlan, sources, target, MessageType.INTEGER,
         new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
-        new FinalSingularReceiver(jobParameters.getIterations()));
+        new FinalSingularReceiver(
+            jobParameters.getIterations(),
+            jobParameters.getWarmupIterations()
+        )
+    );
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -69,7 +72,7 @@ public class SReduceExample extends BenchWorker {
 
     reduceDone = !taskPlan.getChannelsOfExecutor(workerId).contains(target);
 
-    //generating the expected results at the end
+    //generating the expectedIterations results at the end
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (array, args) -> {
       int sourcesCount = jobParameters.getTaskStages().get(0);
@@ -112,10 +115,12 @@ public class SReduceExample extends BenchWorker {
   public class FinalSingularReceiver implements SingularReceiver {
 
     private int count = 0;
-    private int expected;
+    private int expectedIterations;
+    private int warmupIterations = 0;
 
-    public FinalSingularReceiver(int expected) {
-      this.expected = expected;
+    public FinalSingularReceiver(int expectedIterations, int warmupIterations) {
+      this.expectedIterations = expectedIterations;
+      this.warmupIterations = warmupIterations;
     }
 
     @Override
@@ -125,18 +130,21 @@ public class SReduceExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Object object) {
-      Timing.mark(TIMING_MESSAGE_RECV, workerId == 0);
-      LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
+      count++;
+      if (count > this.warmupIterations) {
+        Timing.mark(TIMING_MESSAGE_RECV, workerId == 0);
+      }
+
+      LOG.info(() -> String.format("Target %d received count %d", target, count));
 
       verifyResults(resultsVerifier, object, null);
 
-      if (++count == expected) {
+      if (count == expectedIterations + warmupIterations) {
         Timing.mark(TIMING_ALL_RECV, workerId == 0);
         BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0);
         resultsRecorder.writeToCSV();
         reduceDone = true;
       }
-      experimentData.setOutput(object);
       return true;
     }
   }

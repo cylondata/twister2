@@ -42,11 +42,11 @@ public class ResultsVerifier<I, O> {
     O expectedOutput = this.resultsGenerator.generateResults(this.input, args);
     boolean equal = this.resultsComparator.compare(expectedOutput, generatedOutput);
     if (!equal) {
-      LOG.info("Results verification failed!"
+      LOG.info(() -> "Results verification failed!"
           + "\n\tExpected : " + expectedOutput.toString()
           + "\n\tFound : " + generatedOutput.toString());
     } else {
-      LOG.info("Results are verified!");
+      LOG.info(() -> "Results are verified!");
     }
     return equal;
   }

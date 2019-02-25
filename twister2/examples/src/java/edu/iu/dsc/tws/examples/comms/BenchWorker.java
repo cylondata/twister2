@@ -128,7 +128,7 @@ public abstract class BenchWorker implements IWorker {
     try {
       workerController.waitOnBarrier();
     } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      LOG.log(Level.SEVERE, timeoutException, () -> timeoutException.getMessage());
     }
     // let allows the specific example to close
     close();
@@ -148,7 +148,7 @@ public abstract class BenchWorker implements IWorker {
       progressCommunication();
     }
 
-    LOG.log(Level.INFO, workerId + " FINISHED PROGRESS");
+    LOG.info(() -> workerId + " FINISHED PROGRESS");
   }
 
   protected abstract void progressCommunication();
@@ -198,19 +198,25 @@ public abstract class BenchWorker implements IWorker {
 
     @Override
     public void run() {
-      LOG.log(Level.INFO, "Starting map worker: " + workerId + " task: " + task);
-      Timing.mark(TIMING_ALL_SEND, this.timingCondition);
+      LOG.info(() -> "Starting map worker: " + workerId + " task: " + task);
 
-      for (int i = 0; i < jobParameters.getIterations(); i++) {
+      for (int i = 0; i < jobParameters.getIterations()
+          + jobParameters.getWarmupIterations(); i++) {
         // lets generate a message
         int flag = (i == jobParameters.getIterations() - 1) ? MessageFlags.LAST : 0;
 
-        Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
+        if (i == jobParameters.getWarmupIterations()) {
+          Timing.mark(TIMING_ALL_SEND, this.timingCondition);
+        }
+
+        if (i >= jobParameters.getWarmupIterations()) {
+          Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
+        }
 
         sendMessages(task, inputDataArray, flag);
       }
 
-      LOG.info(String.format("%d Done sending", workerId));
+      LOG.info(() -> String.format("%d Done sending", workerId));
 
       synchronized (finishedSources) {
         finishedSources.put(task, true);
