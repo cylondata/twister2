@@ -124,7 +124,7 @@ public class MesosWorkerController implements IWorkerController {
         new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers,
             nodeInfo, computeResource);
 
-    zkWorkerController.initializet(workerIdd);
+//    zkWorkerController.initializet(workerIdd);
     long duration = System.currentTimeMillis() - startTime;
     LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerInfo()
         + " took: " + duration + "ms");
