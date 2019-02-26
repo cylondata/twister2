@@ -49,9 +49,9 @@ public class KMeansTsetJob extends TaskWorker implements Serializable {
     if (workerId == 0) {
       try {
         KMeansDataGenerator.generateData(
-            "txt", new Path(dinputDirectory), numFiles, dsize, 100, dimension);
+            "txt", new Path(dinputDirectory), numFiles, dsize, 100, dimension, config);
         KMeansDataGenerator.generateData(
-            "txt", new Path(cinputDirectory), numFiles, csize, 100, dimension);
+            "txt", new Path(cinputDirectory), numFiles, csize, 100, dimension, config);
       } catch (IOException ioe) {
         throw new RuntimeException("Failed to create input data:", ioe);
       }
