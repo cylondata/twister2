@@ -82,11 +82,17 @@ public class TaskExecutor {
    * @return the data set
    */
   public ExecutionPlan plan(DataFlowTaskGraph graph) {
+
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
+    //TaskScheduler taskScheduler = new TaskScheduler();
+    //taskScheduler.initialize(config);
+
     WorkerPlan workerPlan = createWorkerPlan();
+
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
+    //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator);
