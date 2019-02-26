@@ -1,7 +1,7 @@
 load("//tools:rules/java_tests.bzl", "java_tests")
 
 java_library(
-    name = "tsched-tests",
+    name = "examples-tests",
     srcs = glob(["**/*.java"]),
     deps = [
         "//third_party:com_github_jnr_jffi_native",
@@ -12,6 +12,7 @@ java_library(
         "//twister2/common/src/java:common-java",
         "//twister2/comms/src/java:comms-java",
         "//twister2/data/src/main/java:data-java",
+        "//twister2/examples/src/java:examples-java",
         "//twister2/proto:proto-java",
         "//twister2/resource-scheduler/src/java:resource-scheduler-java",
         "//twister2/task/src/main/java:task-java",
@@ -47,27 +48,19 @@ java_library(
 
 java_tests(
     test_classes = [
-        "edu.iu.dsc.tws.tsched.taskscheduler.TaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.streaming.datalocality.DataLocalityTaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.batch.datalocality.DataLocalityBatchTaskSchedulerTest",
+        "edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGeneratorTest",
     ],
     runtime_deps = [
-        ":tsched-tests",
+        ":examples-tests",
     ],
 )
 
 java_tests_debug(
     size = "enormous",
     test_classes = [
-        "edu.iu.dsc.tws.tsched.taskscheduler.TaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.streaming.datalocality.DataLocalityTaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.batch.datalocality.DataLocalityBatchTaskSchedulerTest",
+        "edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGeneratorTest",
     ],
     runtime_deps = [
-        ":tsched-tests",
+        ":examples-tests",
     ],
 )

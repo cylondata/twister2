@@ -26,8 +26,7 @@ import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 
 /**
  * This class is to find out the location of the datanodes corresponding to the input file names.
- * It establishes the connection with the HDFS through HDFSConnector and retrieve the location
- * of the input file name.
+ * It retrieve the location of the input file(s) using the HDFSUtils class.
  */
 public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
 
@@ -36,107 +35,77 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
   private Config config;
   private HdfsUtils hdfsUtils;
   private String datasetName;
-  private List<String> inputFileList = new ArrayList<>();
 
   public DataNodeLocatorUtils(Config cfg) {
     this.config = cfg;
   }
 
-  //TODO: It could be modified to get all the vertexes of the task graph
-  //TODO: return the map which stores the vertex name -> datanodes list.
-
   /**
-   * This method receives the input data list for each vertex and find the location
-   * of the datanodes in the HDFS and returns the data node list.
-   *
-   * @param inputList
-   * @return datanodeList
+   * This method receives the input data list for each vertex and find the location of the
+   * datanodes in the HDFS and returns the data node list.
    */
-  public List<String> findDataNodesLocation(List<String> inputList) {
-
-    HadoopFileSystem hadoopFileSystem = null;
+  public List<String> findDataNodesLocation(List<String> inputFileList) {
 
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
     hdfsUtils = new HdfsUtils(config);
-    this.inputFileList = inputList;
-
-    try {
-      hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
-    }
+    HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
 
     List<String> dataNodes = new ArrayList<>();
-
-    for (int i = 0; i < this.inputFileList.size(); i++) {
-      this.datasetName = this.inputFileList.get(i);
-      String[] fName = new String[0];
-
-      if (this.inputFileList.size() == 1) {
-        fName = new String[this.inputFileList.size()];
-        fName[0] = this.inputFileList.get(i);
-      } else if (this.inputFileList.size() > 1) {
-        fName = new String[this.inputFileList.size() - 1];
-        fName[0] = this.inputFileList.get(i);
+    for (int i = 0; i < inputFileList.size(); i++) {
+      this.datasetName = inputFileList.get(i);
+      String[] fName;
+      if (inputFileList.size() == 1) {
+        fName = new String[1];
+        fName[0] = inputFileList.get(i);
+      } else {
+        fName = new String[inputFileList.size() - 1];
+        fName[0] = inputFileList.get(i);
       }
 
       try {
         Path path = new Path(datasetName);
-        assert hadoopFileSystem != null;
         FileStatus fileStatus = hadoopFileSystem.getFileStatus(path);
         if (!fileStatus.getPath().isNullOrEmpty()) {
-
           String fileURL = fileStatus.getPath().toString();
           String datanodeName = hdfsUtils.getDFSCK(fName);
-
           dataNodes.add(datanodeName);
           LOG.fine("HDFS URL:" + fileURL + "\tDataNode:" + datanodeName);
         }
-      } catch (IOException e) {
-        e.printStackTrace();
+      } catch (IOException ioe) {
+        throw new RuntimeException("IO Exception occured:", ioe);
       } catch (NullPointerException npe) {
-        npe.printStackTrace();
+        throw new RuntimeException("Datanode not able to retrieve:", npe);
       }
     }
     return dataNodes;
   }
 
   /**
-   * This method receives the input file name of a vertex and find the location
-   * of the datanodes in the HDFS and returns the data node list.
+   * This method receives the input file name of a vertex and find the location of the datanodes
+   * in the HDFS and returns the data node list.
    *
-   * @param inputFileName
-   * @return datanodeList
+   * @return datanodes list
    */
   public List<String> findDataNodesLocation(String inputFileName) {
-
-    HadoopFileSystem hadoopFileSystem = null;
 
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
     hdfsUtils = new HdfsUtils(config);
-
-    try {
-      hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
-    }
+    HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
 
     List<String> dataNodes = new ArrayList<>();
-    String[] fName = new String[0];
-    fName[0] = datasetName;
-
     try {
-      Path path = new Path(datasetName);
+      Path path = new Path(inputFileName);
       FileStatus fileStatus = hadoopFileSystem.getFileStatus(path);
       if (!fileStatus.getPath().isNullOrEmpty()) {
         String fileURL = fileStatus.getPath().toString();
+        String[] fName = {inputFileName};
         String datanodeName = hdfsUtils.getDFSCK(fName);
         LOG.fine("HDFS URL:" + fileURL + "\tDataNode:" + datanodeName);
       }
-    } catch (java.io.IOException e) {
-      e.printStackTrace();
+    } catch (IOException ioe) {
+      throw new RuntimeException("IO Exception occured:", ioe);
     }
     return dataNodes;
   }
