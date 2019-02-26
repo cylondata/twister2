@@ -36,6 +36,7 @@ public class MesosWorkerController implements IWorkerController {
   private String jobName;
   private JobAPI.Job job;
   private String workerIp;
+  private int workerIdd;
   private int workerPort;
   private int numberOfWorkers;
   private int containerPerWorker;
@@ -49,6 +50,7 @@ public class MesosWorkerController implements IWorkerController {
     this.job = job;
     this.workerIp = ip;
     this.workerPort = port;
+    workerIdd = workerID;
     numberOfWorkers = MesosContext.numberOfContainers(config) - 1;
     containerPerWorker = MesosContext.containerPerWorker(config);
     workerList = new ArrayList<>();
@@ -64,6 +66,7 @@ public class MesosWorkerController implements IWorkerController {
     this.job = job;
     this.workerIp = ip;
     this.workerPort = port;
+    workerIdd = workerID;
     numberOfWorkers = MesosContext.numberOfContainers(config) - 1;
     containerPerWorker = MesosContext.containerPerWorker(config);
     workerList = new ArrayList<>();
@@ -94,8 +97,11 @@ public class MesosWorkerController implements IWorkerController {
 
   @Override
   public int getNumberOfWorkers() {
-    return zkWorkerController.getNumberOfWorkers();
+    return job.getNumberOfWorkers();
   }
+//  public int getNumberOfWorkers() {
+//    return zkWorkerController.getNumberOfWorkers();
+//  }
 
   @Override
   public List<JobMasterAPI.WorkerInfo> getJoinedWorkers() {
@@ -118,7 +124,7 @@ public class MesosWorkerController implements IWorkerController {
         new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers,
             nodeInfo, computeResource);
 
-    zkWorkerController.initialize();
+    zkWorkerController.initialize(workerIdd);
     long duration = System.currentTimeMillis() - startTime;
     LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerInfo()
         + " took: " + duration + "ms");

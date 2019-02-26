@@ -11,7 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.utils;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.file.Paths;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class ResourceSchedulerUtils {
@@ -73,5 +79,45 @@ public final class ResourceSchedulerUtils {
     }
 
     return true;
+  }
+
+  public static String getHostIP() {
+    String hostIP = ResourceSchedulerUtils.getOutgoingHostIP();
+
+    if (hostIP != null) {
+      return hostIP;
+    }
+
+    // if the host is not connected to Internet, it returns null
+    // get address from localhost
+    try {
+      return InetAddress.getLocalHost().getHostAddress();
+    } catch (UnknownHostException e) {
+      LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
+      return null;
+    }
+  }
+
+  /**
+   * get the IP address of the host machine
+   * a machine may have multiple IP addresses
+   * we want the IP address that is reachable from outside
+   * we don't want 127.xxx
+   * implementation is based on the suggestion from:
+   * stackoverflow.com/questions/9481865/getting-the-ip-address-of-the-current-machine-using-java
+   *
+   * this only works if the host is connected to outside Internet
+   *
+   * @return hostIP address tha is used to communicate with outside world
+   */
+  public static String getOutgoingHostIP() {
+
+    try (Socket socket = new Socket()) {
+      socket.connect(new InetSocketAddress("google.com", 80));
+      return socket.getLocalAddress().getHostAddress();
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Could not connect to google.com to get localHost IP.", e);
+      return null;
+    }
   }
 }

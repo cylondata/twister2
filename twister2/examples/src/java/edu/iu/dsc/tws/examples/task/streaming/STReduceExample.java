@@ -52,6 +52,7 @@ public class STReduceExample extends BenchTaskWorker {
     @Override
     public boolean execute(IMessage message) {
       count++;
+      LOG.info(String.format("%d received message %d", context.getWorkerId(), count));
       if (count % jobParameters.getPrintInterval() == 0) {
         Object object = message.getContent();
         experimentData.setOutput(object);

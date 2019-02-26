@@ -96,13 +96,27 @@ public class KeyedUnifiedSerializerTest {
         (byte[]) ((Tuple) data).getValue());
   }
 
+  @Test
+  public void testBuildIntegerMessage() {
+    int numBuffers = 4;
+    int size = 1000;
+    MessageType type = MessageType.INTEGER;
+    Object data = createData(80, type);
+    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
+    Assert.assertEquals((int) deserializedData.getKey(), (int) ((Tuple) data).getKey());
+    Assert.assertArrayEquals((int[]) deserializedData.getValue(),
+        (int[]) ((Tuple) data).getValue());
+  }
+
   private InMessage singleValueCase(int numBuffers, int size, MessageType type, Object data) {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
 
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null);
 
-    UnifiedSerializer serializer = new UnifiedSerializer(new KryoSerializer(), 0);
+    UnifiedKeySerializer serializer = new UnifiedKeySerializer(
+        new KryoSerializer(), 0, type, type);
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -112,7 +126,8 @@ public class KeyedUnifiedSerializerTest {
       messages.add(ch);
     }
 
-    UnifiedDeserializer deserializer = new UnifiedDeserializer(new KryoSerializer(), 0);
+    UnifiedKeyDeSerializer deserializer = new UnifiedKeyDeSerializer(
+        new KryoSerializer(), 0, type, type);
     deserializer.init(Config.newBuilder().build(), true);
 
     MessageHeader header = deserializer.buildHeader(
@@ -149,6 +164,36 @@ public class KeyedUnifiedSerializerTest {
       Assert.assertEquals((int) exp.getKey(), (int) ((Tuple) d).getKey());
       Assert.assertArrayEquals((int[]) exp.getValue(),
           (int[]) ((Tuple) d).getValue());
+    }
+  }
+
+  @SuppressWarnings("Unchecked")
+  @Test
+  public void testBuildListIntMessage() {
+    int numBuffers = 128;
+    int size = 1000;
+
+    for (int j = 1; j < 128; j++) {
+      List<Object> data = new ArrayList<>();
+      for (int i = 0; i < j; i++) {
+        Object o = createData(80, MessageType.INTEGER);
+        data.add(o);
+      }
+
+      InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.INTEGER);
+      try {
+        List<Object> result = (List<Object>) inMessage.getDeserializedData();
+        for (int i = 0; i < result.size(); i++) {
+          Tuple exp = (Tuple) result.get(i);
+          Tuple d = (Tuple) data.get(i);
+
+          Assert.assertEquals((int) exp.getKey(), (int) ((Tuple) d).getKey());
+          Assert.assertArrayEquals((int[]) exp.getValue(),
+              (int[]) ((Tuple) d).getValue());
+        }
+      } catch (NullPointerException e) {
+        Assert.fail("j = " + j);
+      }
     }
   }
 
@@ -246,12 +291,43 @@ public class KeyedUnifiedSerializerTest {
     }
   }
 
-  private InMessage listValueCase(int numBuffers, int size, List<Object> data, MessageType type) {
+  @SuppressWarnings("Unchecked")
+  @Test
+  public void testBuildLargeListIntegerByteMessage() {
+    int numBuffers = 128;
+    int size = 1000;
+    List<Object> data = new ArrayList<>();
+    for (int i = 0; i < 128; i++) {
+      Object o = createData(320, MessageType.BYTE, MessageType.INTEGER);
+      data.add(o);
+    }
+
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.BYTE,
+        MessageType.INTEGER);
+    List<Object> result = (List<Object>) inMessage.getDeserializedData();
+    for (int i = 0; i < result.size(); i++) {
+      Tuple deserializedData = (Tuple) result.get(i);
+      Tuple d = (Tuple) data.get(i);
+
+      Assert.assertEquals(deserializedData.getKey(), d.getKey());
+      Assert.assertArrayEquals((byte[]) deserializedData.getValue(),
+          (byte[]) ((Tuple) d).getValue());
+    }
+  }
+
+  private InMessage listValueCase(int numBuffers, int size, List<Object> data,
+                                  MessageType type) {
+    return listValueCase(numBuffers, size, data, type, type);
+  }
+
+  private InMessage listValueCase(int numBuffers, int size, List<Object> data,
+                                  MessageType type, MessageType keyType) {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null);
 
-    UnifiedSerializer serializer = new UnifiedSerializer(new KryoSerializer(), 0);
+    UnifiedKeySerializer serializer = new UnifiedKeySerializer(
+        new KryoSerializer(), 0, keyType, type);
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -262,14 +338,15 @@ public class KeyedUnifiedSerializerTest {
       messages.add(ch);
     }
 
-    UnifiedDeserializer deserializer = new UnifiedDeserializer(new KryoSerializer(), 0);
+    UnifiedKeyDeSerializer deserializer = new UnifiedKeyDeSerializer(new KryoSerializer(), 0,
+        keyType, type);
     deserializer.init(Config.newBuilder().build(), true);
 
     MessageHeader header = deserializer.buildHeader(
         messages.get(0).getBuffers().get(0), 1);
     InMessage inMessage = new InMessage(0, type,
         null, header);
-    inMessage.setKeyType(type);
+    inMessage.setKeyType(keyType);
     for (ChannelMessage channelMessage : messages) {
       for (DataBuffer dataBuffer : channelMessage.getBuffers()) {
         inMessage.addBufferAndCalculate(dataBuffer);
@@ -279,37 +356,67 @@ public class KeyedUnifiedSerializerTest {
     return inMessage;
   }
 
-  private Object createData(int size, MessageType type) {
-    if (type == MessageType.INTEGER) {
+  private Object createData(int size, MessageType dataType) {
+    return createData(size, dataType, dataType);
+  }
+
+  private Object createData(int size, MessageType dataType, MessageType keyType) {
+    Object data = createDataObject(size, dataType);
+    Object key = createKeyObject(keyType);
+    return new Tuple(key, data, keyType, dataType);
+  }
+
+  private Object createDataObject(int size, MessageType dataType) {
+    if (dataType == MessageType.INTEGER) {
       int[] vals = new int[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
-      return new Tuple(1, vals, MessageType.INTEGER, MessageType.INTEGER);
-    } else if (type == MessageType.LONG) {
+      return vals;
+    } else if (dataType == MessageType.LONG) {
       long[] vals = new long[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
-      return new Tuple(1L, vals, MessageType.LONG, MessageType.LONG);
-    } else if (type == MessageType.DOUBLE) {
+      return vals;
+    } else if (dataType == MessageType.DOUBLE) {
       double[] vals = new double[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
-      return new Tuple(1.0, vals, MessageType.DOUBLE, MessageType.DOUBLE);
-    } else if (type == MessageType.SHORT) {
+      return vals;
+    } else if (dataType == MessageType.SHORT) {
       short[] vals = new short[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (short) i;
       }
-      return new Tuple((short) 1, vals, MessageType.SHORT, MessageType.SHORT);
-    } else if (type == MessageType.BYTE) {
+      return vals;
+    } else if (dataType == MessageType.BYTE) {
       byte[] vals = new byte[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (byte) i;
       }
-      return new Tuple(new byte[]{0, 0, 0, 0}, vals, MessageType.BYTE, MessageType.BYTE);
+      return vals;
+    } else {
+      return null;
+    }
+  }
+
+  private Object createKeyObject(MessageType dataType) {
+    if (dataType == MessageType.INTEGER) {
+      return 1;
+    } else if (dataType == MessageType.LONG) {
+      return 1L;
+    } else if (dataType == MessageType.DOUBLE) {
+      return 1.0;
+    } else if (dataType == MessageType.SHORT) {
+      return (short) 1;
+    } else if (dataType == MessageType.BYTE) {
+      byte[] vals = new byte[8];
+      for (int i = 0; i < vals.length; i++) {
+        vals[i] = (byte) i;
+      }
+      return vals;
     } else {
       return null;
     }

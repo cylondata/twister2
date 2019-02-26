@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.rsched.schedulers.mesos.master;
 
 import java.io.File;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.master.IJobTerminator;
@@ -19,6 +20,7 @@ import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 public class JobTerminator implements IJobTerminator {
+  public static final Logger LOG = Logger.getLogger(JobTerminator.class.getName());
   private Config config;
   private String frameworkId;
   public JobTerminator(Config cfg, String frameworkId) {
@@ -26,8 +28,27 @@ public class JobTerminator implements IJobTerminator {
     this.frameworkId = frameworkId;
   }
   @Override
-  //mesos needs framworkd Id to kill it
+  //mesos needs frameworkd Id to kill it
   public boolean terminateJob(String jobName) {
+
+//    MesosController.schedulerDriver.killTask(Protos.TaskID.newBuilder()
+//        .setValue(Integer.toString(2)).build());
+//
+
+//    String frameworkKillCommand2 = "curl -d frameworkId="
+//        + frameworkId
+//        + " -X POST http://"
+//        + MesosContext.getMesosMasterHost(config) + ":5050/";
+//    ProcessUtils.runSyncProcess(false,
+//        frameworkKillCommand2.split(" "), new StringBuilder(),
+//        new File("."), true);
+//
+//    try {
+//      Thread.sleep(10000);
+//    } catch (InterruptedException e) {
+//
+//    }
+
     String frameworkKillCommand = "curl -XPOST http://"
         + MesosContext.getMesosMasterHost(config) + ":5050/master/teardown -d frameworkId="
         + frameworkId;

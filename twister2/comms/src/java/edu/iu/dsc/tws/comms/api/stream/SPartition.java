@@ -16,11 +16,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
 
 /**
  * Streaming Partition Operation
@@ -50,11 +51,11 @@ public class SPartition {
    */
   public SPartition(Communicator comm, TaskPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
-                    MessageReceiver rcvr,
+                    SingularReceiver rcvr,
                     DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
-    this.partition = new DataFlowPartition(comm.getChannel(), sources, targets, rcvr,
-        new PartitionPartialReceiver(), dataType);
+    this.partition = new DataFlowPartition(comm.getChannel(), sources, targets,
+        new PartitionStreamingFinalReceiver(rcvr), new PartitionPartialReceiver(), dataType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }

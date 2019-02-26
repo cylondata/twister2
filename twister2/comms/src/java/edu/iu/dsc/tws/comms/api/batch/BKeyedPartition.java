@@ -44,19 +44,6 @@ public class BKeyedPartition {
 
   public BKeyedPartition(Communicator comm, TaskPlan plan,
                          Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
-                         MessageType keyType, BulkReceiver rcvr,
-                         DestinationSelector destSelector, Comparator<Object> comparator) {
-    this.destinationSelector = destSelector;
-    String shuffleDir = comm.getPersistentDirectory();
-    this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
-        new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
-        new PartitionPartialReceiver(), dataType, keyType);
-    this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
-  }
-
-  public BKeyedPartition(Communicator comm, TaskPlan plan,
-                         Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
                          MessageType keyType, MessageType recvDataType,
                          MessageType recvKeyType, BulkReceiver rcvr,
                          DestinationSelector destSelector, Comparator<Object> comparator) {

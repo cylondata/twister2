@@ -193,12 +193,13 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
           DataFlowContext.sendPendingMax(config)));
       pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
-      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), taskPlan.getThisExecutor()));
+      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(),
+          taskPlan.getThisExecutor(), type));
     }
 
     for (int tar : targets) {
       MessageDeSerializer messageDeSerializer = new UnifiedDeserializer(new KryoSerializer(),
-          taskPlan.getThisExecutor());
+          taskPlan.getThisExecutor(), type);
       deSerializerMap.put(tar, messageDeSerializer);
     }
 
@@ -275,7 +276,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     return delegate.isComplete();
   }
 

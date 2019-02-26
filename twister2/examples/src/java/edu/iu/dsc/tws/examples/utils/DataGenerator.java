@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.data.fs.Path;
  * 2. We can generate in a common location shared by workers, such as HDFS or NFS
  */
 public final class DataGenerator {
+
   private DataGenerator() {
   }
 

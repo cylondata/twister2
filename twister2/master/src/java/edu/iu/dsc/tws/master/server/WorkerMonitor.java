@@ -58,12 +58,18 @@ public class WorkerMonitor implements MessageHandler {
   private DashboardClient dashClient;
   private IDriver driver;
 
+  /**
+   * numberOfWorkers in the job is tracked by this variable
+   * all other classes in job master should get the upto-date numberOfWorkers from this variable
+   * if is updated in the case of scale up and down
+   */
+  private int numberOfWorkers;
+
   // this is used to assign next ID to newly registering worker,
   // when job master assigns workerIDs
   private int nextWorkerID = 0;
 
   private boolean jobMasterAssignsWorkerIDs;
-  private int numberOfWorkers;
 
   private TreeMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
@@ -80,6 +86,10 @@ public class WorkerMonitor implements MessageHandler {
 
     workers = new TreeMap<>();
     waitList = new HashMap<>();
+  }
+
+  public int getNumberOfWorkers() {
+    return numberOfWorkers;
   }
 
   /**
