@@ -71,4 +71,9 @@ for test in configs['tests']:
         args.extend(["-bmeta", base64.b64encode(json.dumps(meta).encode("utf-8"))])
         print("Running twister2 job with following args...")
         print(args)
-        subprocess.run(args, env=existing_env)
+        # subprocess.run(args, env=existing_env)
+        p = subprocess.Popen(args, stdout=subprocess.PIPE, bufsize=1, env=existing_env)
+        for line in iter(p.stdout.readline, b''):
+            print(line)
+        p.stdout.close()
+        p.wait()

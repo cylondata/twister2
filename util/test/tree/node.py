@@ -31,7 +31,7 @@ class Node:
         if len(self.temp_children) != 0:
             for temp_child in self.temp_children:
                 self.__make_my_child(temp_child)
-            self.temp_children.clear()
+            del self.temp_children[:]
         else:
             for child in self.children:
                 child.finalize_iteration()
