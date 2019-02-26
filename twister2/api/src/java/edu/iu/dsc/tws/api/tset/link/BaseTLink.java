@@ -85,27 +85,37 @@ public abstract class BaseTLink<T> implements TLink<T> {
 
   @Override
   public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    return null;
+    MapTSet<P, T> set = new MapTSet<P, T>(config, builder, this, mapFn);
+    children.add(set);
+    return set;
   }
 
   @Override
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    return null;
+    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, builder, this, mapFn);
+    children.add(set);
+    return set;
   }
 
   @Override
   public <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
-    return null;
+    IMapTSet<P, T> set = new IMapTSet<>(config, builder, this, mapFn);
+    children.add(set);
+    return set;
   }
 
   @Override
   public <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    return null;
+    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, builder, this, mapFn);
+    children.add(set);
+    return set;
   }
 
   @Override
   public SinkTSet<T> sink(Sink<T> sink) {
-    return null;
+    SinkTSet<T> sinkTSet = new SinkTSet<>(config, builder, this, sink);
+    children.add(sinkTSet);
+    return sinkTSet;
   }
 
   @Override
