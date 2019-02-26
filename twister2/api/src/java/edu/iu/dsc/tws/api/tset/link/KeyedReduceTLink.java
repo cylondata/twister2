@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
 import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
@@ -75,8 +76,8 @@ public class KeyedReduceTLink<T, K> extends KeyValueTLink<T, K> {
   }
 
   public void buildConnection(ComputeConnection connection) {
-    DataType keyType = getDataType(getClassK());
-    DataType dataType = getDataType(getClassT());
+    DataType keyType = TSetUtils.getDataType(getClassK());
+    DataType dataType = TSetUtils.getDataType(getClassT());
     connection.keyedReduce(parent.getName(), Constants.DEFAULT_EDGE,
         new ReduceOpFunction<>(reduceFn), keyType, dataType,
         new TaskPartitionFunction<K>(partitionFunction), new TaskKeySelectorImpl<>(selector));

@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
@@ -59,7 +60,7 @@ public class ReplicateTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
 
   @Override
   public void buildConnection(ComputeConnection connection) {
-    DataType dataType = getDataType(getType());
+    DataType dataType = TSetUtils.getDataType(getType());
 
     connection.broadcast(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }

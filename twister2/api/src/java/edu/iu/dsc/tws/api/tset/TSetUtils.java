@@ -74,7 +74,7 @@ public final class TSetUtils {
     }
   }
 
-  static DataType getDataType(Class type) {
+  public static DataType getDataType(Class type) {
     if (type == int[].class) {
       return DataType.INTEGER;
     } else if (type == double[].class) {
@@ -92,7 +92,7 @@ public final class TSetUtils {
     }
   }
 
-  static DataType getKeyType(Class type) {
+  public static DataType getKeyType(Class type) {
     if (type == Integer.class) {
       return DataType.INTEGER;
     } else if (type == Double.class) {

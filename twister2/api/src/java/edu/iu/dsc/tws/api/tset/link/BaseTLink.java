@@ -129,42 +129,6 @@ public abstract class BaseTLink<T> implements TLink<T> {
     }
   }
 
-  protected static DataType getDataType(Class type) {
-    if (type == int[].class) {
-      return DataType.INTEGER;
-    } else if (type == double[].class) {
-      return DataType.DOUBLE;
-    } else if (type == short[].class) {
-      return DataType.SHORT;
-    } else if (type == byte[].class) {
-      return DataType.BYTE;
-    } else if (type == long[].class) {
-      return DataType.LONG;
-    } else if (type == char[].class) {
-      return DataType.CHAR;
-    } else {
-      return DataType.OBJECT;
-    }
-  }
-
-  protected static DataType getKeyType(Class type) {
-    if (type == Integer.class) {
-      return DataType.INTEGER;
-    } else if (type == Double.class) {
-      return DataType.DOUBLE;
-    } else if (type == Short.class) {
-      return DataType.SHORT;
-    } else if (type == Byte.class) {
-      return DataType.BYTE;
-    } else if (type == Long.class) {
-      return DataType.LONG;
-    } else if (type == Character.class) {
-      return DataType.CHAR;
-    } else {
-      return DataType.OBJECT;
-    }
-  }
-
   protected Class getType() {
     TypeToken<T> typeToken = new TypeToken<T>(getClass()) {
     };

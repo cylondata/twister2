@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
 import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
 import edu.iu.dsc.tws.common.config.Config;
@@ -73,8 +74,8 @@ public class KeyedGatherTLink<T, K> extends KeyValueTLink<T, K> {
   }
 
   public void buildConnection(ComputeConnection connection) {
-    DataType keyType = getDataType(getClassK());
-    DataType dataType = getDataType(getClassT());
+    DataType keyType = TSetUtils.getDataType(getClassK());
+    DataType dataType = TSetUtils.getDataType(getClassT());
     connection.keyedGather(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
         new TaskPartitionFunction<>(partitionFunction), new TaskKeySelectorImpl<>(selector));
   }

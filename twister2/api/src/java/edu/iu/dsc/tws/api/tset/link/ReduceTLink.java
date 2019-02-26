@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -58,7 +59,7 @@ public class ReduceTLink<T> extends BaseTLink<T> {
 
   @Override
   public void buildConnection(ComputeConnection connection) {
-    DataType dataType = getDataType(getType());
+    DataType dataType = TSetUtils.getDataType(getType());
 
     connection.reduce(parent.getName(), Constants.DEFAULT_EDGE,
         new ReduceOpFunction<T>(getReduceFn()), dataType);

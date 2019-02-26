@@ -26,7 +26,10 @@ package edu.iu.dsc.tws.api.tset.link;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.BaseTSet;
+import edu.iu.dsc.tws.api.tset.Constants;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 
 public class DirectTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
   private BaseTSet<T> parent;
@@ -44,8 +47,7 @@ public class DirectTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
 
   @Override
   public void buildConnection(ComputeConnection connection) {
-//    DataType dataType = getDataType(getType());
-//
-//    connection.direct(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+    DataType dataType = TSetUtils.getDataType(getType());
+    connection.direct(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
 }
