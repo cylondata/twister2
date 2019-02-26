@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.SinkTSet;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
 
 public abstract class BaseTLink<T> implements TLink<T> {
 
