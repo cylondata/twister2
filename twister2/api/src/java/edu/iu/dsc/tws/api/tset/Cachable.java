@@ -9,23 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.api.tset;
 
 /**
- * Collector for map function
- *
- * @param <T> input type
+ * All Tsets that are cachable need to implement this interface
+ * This interface defines the methods that other classes can use to
+ * access the cached data
  */
-public interface  Collector<T> {
-  /**
-   * Collect the record
-   *
-   * @param record this will be sent
-   */
-  void collect(T record);
-
-  /**
-   * Close the collector
-   */
-  void close();
+public interface Cachable {
 }

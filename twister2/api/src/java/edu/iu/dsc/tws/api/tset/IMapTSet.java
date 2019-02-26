@@ -12,27 +12,27 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.ops.IterableMapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
 public class IMapTSet<T, P> extends BaseTSet<T> {
-  private BaseTSet<P> parent;
+  private BaseTLink<P> parent;
 
   private IterableMapFunction<P, T> mapFn;
 
   public IMapTSet(Config cfg, TaskGraphBuilder builder,
-                  BaseTSet<P> parent, IterableMapFunction<P, T> mapFunc, TaskExecutor executor) {
-    super(cfg, builder, executor);
+                  BaseTLink<P> parent, IterableMapFunction<P, T> mapFunc) {
+    super(cfg, builder);
     this.parent = parent;
     this.mapFn = mapFunc;
   }
 
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
-    boolean isIterable = isIterableInput(parent, builder.getMode());
-    boolean keyed = isKeyedInput(parent);
+    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getMode());
+    boolean keyed = TSetUtils.isKeyedInput(parent);
     int p = calculateParallelism(parent);
 
     ComputeConnection connection = builder.addCompute(generateName("i-map", parent),
@@ -42,6 +42,6 @@ public class IMapTSet<T, P> extends BaseTSet<T> {
   }
 
   @Override
-  void buildConnection(ComputeConnection connection) {
+  public void buildConnection(ComputeConnection connection) {
   }
 }

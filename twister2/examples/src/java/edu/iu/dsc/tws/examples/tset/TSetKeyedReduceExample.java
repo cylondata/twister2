@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.IdentitySelector;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
+import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
@@ -33,7 +34,7 @@ public class TSetKeyedReduceExample extends BaseTSetWorker {
     // set the parallelism of source to task stage 0
     TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
-    TSet<int[]> reduce = source.groupBy(new LoadBalancePartitioner<>(), new IdentitySelector<>()).
+    TLink<int[]> reduce = source.groupBy(new LoadBalancePartitioner<>(), new IdentitySelector<>()).
         keyedReduce((t1, t2) -> {
           int[] val = new int[t1.length];
           for (int i = 0; i < t1.length; i++) {

@@ -13,14 +13,7 @@ package edu.iu.dsc.tws.examples.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.IdentitySelector;
-import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public class TSetKeyedGatherExample extends BaseTSetWorker {
@@ -31,11 +24,10 @@ public class TSetKeyedGatherExample extends BaseTSetWorker {
     super.execute();
 
     // set the parallelism of source to task stage 0
-    TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
+    /*TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
     TSet<int[]> reduce = source.groupBy(new LoadBalancePartitioner<>(), new IdentitySelector<>()).
         setParallelism(10);
-
     reduce.sink(new Sink<int[]>() {
       @Override
       public boolean add(int[] value) {
@@ -52,7 +44,7 @@ public class TSetKeyedGatherExample extends BaseTSetWorker {
       public void prepare(TSetContext context) {
       }
     });
-
+*/
     DataFlowTaskGraph graph = tSetBuilder.build();
     ExecutionPlan executionPlan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, executionPlan);

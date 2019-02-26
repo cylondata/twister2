@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.OneToOnePartitioner;
+import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
@@ -32,7 +33,7 @@ public class TSetPartitionExample extends BaseTSetWorker {
     // set the parallelism of source to task stage 0
     TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
-    TSet<int[]> partition = source.partition(new OneToOnePartitioner<>());
+    TLink<int[]> partition = source.partition(new OneToOnePartitioner<>());
 
     partition.sink(new Sink<int[]>() {
       @Override

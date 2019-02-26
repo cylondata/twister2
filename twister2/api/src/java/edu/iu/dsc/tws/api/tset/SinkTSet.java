@@ -12,19 +12,18 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
 
 public class SinkTSet<T> extends BaseTSet<T> {
   private Sink<T> sink;
 
-  private BaseTSet<T> parent;
+  private BaseTLink<T> parent;
 
-  public SinkTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt, Sink<T> s,
-                  TaskExecutor executor) {
-    super(cfg, bldr, executor);
+  public SinkTSet(Config cfg, TaskGraphBuilder bldr, BaseTLink<T> prnt, Sink<T> s) {
+    super(cfg, bldr);
     this.sink = s;
     this.parent = prnt;
     this.name = "sink-" + parent.getName();
@@ -32,8 +31,8 @@ public class SinkTSet<T> extends BaseTSet<T> {
 
   @Override
   public boolean baseBuild() {
-    boolean isIterable = isIterableInput(parent, builder.getMode());
-    boolean keyed = isKeyedInput(parent);
+    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getMode());
+    boolean keyed = TSetUtils.isKeyedInput(parent);
     // lets override the parallelism
     int p = calculateParallelism(parent);
 
@@ -44,7 +43,7 @@ public class SinkTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  void buildConnection(ComputeConnection connection) {
+  public void buildConnection(ComputeConnection connection) {
 
   }
 }

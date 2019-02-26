@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
@@ -31,7 +32,7 @@ public class TSetReplicateExample extends BaseTSetWorker {
     // set the parallelism of source to task stage 0
     TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
-    TSet<int[]> replicate = source.replicate(10);
+    ReplicateTLink<int[]> replicate = source.replicate(10);
 
     replicate.sink(new Sink<int[]>() {
       @Override

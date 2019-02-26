@@ -11,24 +11,29 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import com.google.common.reflect.TypeToken;
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 
-import edu.iu.dsc.tws.api.task.TaskExecutor;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
+/**
+ * All classes that are part of the TSet API need to implement this interface if they are
+ * included in the execution graph
+ */
+public interface TBase<T> {
 
-public abstract class KeyValueTSet<T, K> extends BaseTSet<T> {
-  public KeyValueTSet(Config cfg, TaskGraphBuilder bldr, TaskExecutor executor) {
-    super(cfg, bldr, executor);
-  }
+  /**
+   * Build this tset
+   */
+  void build();
 
-  Class<? super T> getClassT() {
-    return new TypeToken<T>(getClass()) {
-    }.getRawType();
-  }
+  /**
+   * method to be called to build self
+   * @return
+   */
+  boolean baseBuild();
 
-  Class<? super K> getClassK() {
-    return new TypeToken<K>(getClass()) {
-    }.getRawType();
-  }
+  /**
+   * Build the connection
+   *
+   * @param connection connection
+   */
+  void buildConnection(ComputeConnection connection);
 }

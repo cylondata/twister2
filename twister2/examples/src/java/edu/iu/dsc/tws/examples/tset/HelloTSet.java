@@ -19,10 +19,12 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
+import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -49,9 +51,16 @@ public class HelloTSet extends TaskWorker implements Serializable {
       }
     }).setName("Source");
 
-    TSet<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
+    TLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
+    TSet<int[]> mapedPartition = partitioned.map(new MapFunction<int[], int[]>() {
+      @Override
+      public int[] map(int[] ints) {
+        return new int[0];
+      }
+    });
 
-    TSet<int[]> reduce = partitioned.reduce((t1, t2) -> {
+
+    TLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {
         ret[i] = t1[i] + t2[i];

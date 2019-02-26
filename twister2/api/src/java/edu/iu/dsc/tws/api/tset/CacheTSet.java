@@ -11,43 +11,55 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import java.util.Random;
-
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.ops.SourceOp;
+import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 
-public class SourceTSet<T> extends BaseTSet<T> {
-  private Source<T> source;
+public class CacheTSet<T> extends BaseTSet<T> {
+
+  private BaseTLink<T> parent;
+  // todo: This dataobject should bind to the executor, I think! because tsets would not be
+  //  visible to the executor
   private DataObject<T> datapoints = null;
 
-  public SourceTSet(Config cfg, TaskGraphBuilder bldr, Source<T> src, TaskExecutor executor) {
+  public CacheTSet(Config cfg, TaskGraphBuilder bldr, BaseTLink<T> prnt) {
     super(cfg, bldr);
-    this.source = src;
-    this.name = "source-" + new Random(System.nanoTime()).nextInt(10);
+    this.parent = prnt;
+    this.name = "cache-" + parent.getName();
     datapoints = new DataObjectImpl<>(config);
+
   }
+
+  // todo: operations like map is different on a cached tset, because map will be done on data in
+  //  the execution runtime, rather than a source task
 
   @Override
   public boolean baseBuild() {
-    builder.addSource(getName(), new SourceOp<T>(source), parallel);
+    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getMode());
+    boolean keyed = TSetUtils.isKeyedInput(parent);
+    // lets override the parallelism
+    int p = calculateParallelism(parent);
+    ComputeConnection connection = builder.addSink(getName(),
+        new SinkOp<T>(new CacheSink(), isIterable, keyed), p);
+    parent.buildConnection(connection);
     return true;
   }
 
   @Override
   public void buildConnection(ComputeConnection connection) {
+
   }
 
   private class CacheSink implements Sink<T> {
 
     @Override
     public boolean add(T value) {
-      datapoints.addPartition(new EntityPartition<T>(0, value));
+      datapoints.addPartition(new EntityPartition<T>(0, value)); //
       return true;
     }
 

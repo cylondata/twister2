@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.tset;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.TSet;
+import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
@@ -29,7 +30,7 @@ public class TSetReduceExample extends BaseTSetWorker {
     // set the parallelism of source to task stage 0
     TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
-    TSet<int[]> reduce = source.reduce((t1, t2) -> {
+    TLink<int[]> reduce = source.reduce((t1, t2) -> {
       int[] val = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {
         val[i] = t1[i] + t2[i];

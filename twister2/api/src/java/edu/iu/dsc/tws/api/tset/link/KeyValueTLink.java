@@ -21,41 +21,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.api.tset.link;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import com.google.common.reflect.TypeToken;
+
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.ops.MapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class MapTSet<T, P> extends BaseTSet<T> {
-  private BaseTLink<P> parent;
 
-  private MapFunction<P, T> mapFn;
-
-  public MapTSet(Config cfg, TaskGraphBuilder builder,
-                 BaseTLink<P> parent, MapFunction<P, T> mapFunc) {
-    super(cfg, builder);
-    this.parent = parent;
-    this.mapFn = mapFunc;
+public abstract class KeyValueTLink<T, K> extends BaseTLink<T> {
+  public KeyValueTLink(Config cfg, TaskGraphBuilder bldr) {
+    super(cfg, bldr);
   }
 
-  @SuppressWarnings("unchecked")
-  public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getMode());
-    boolean keyed = TSetUtils.isKeyedInput(parent);
-    int p = calculateParallelism(parent);
-
-    ComputeConnection connection = builder.addCompute(generateName("map", parent),
-        new MapOp<P, T>(mapFn, isIterable, keyed), p);
-
-    parent.buildConnection(connection);
-    return true;
+  Class<? super T> getClassT() {
+    return new TypeToken<T>(getClass()) {
+    }.getRawType();
   }
 
-  @Override
-  public void buildConnection(ComputeConnection connection) {
-
+  Class<? super K> getClassK() {
+    return new TypeToken<K>(getClass()) {
+    }.getRawType();
   }
 }

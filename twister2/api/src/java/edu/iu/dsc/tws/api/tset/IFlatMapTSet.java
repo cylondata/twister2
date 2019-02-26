@@ -12,28 +12,27 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.ops.IterableFlatMapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
 public class IFlatMapTSet<T, P> extends BaseTSet<T> {
-  private BaseTSet<P> parent;
+  private BaseTLink<P> parent;
 
   private IterableFlatMapFunction<P, T> mapFn;
 
   public IFlatMapTSet(Config cfg, TaskGraphBuilder bldr,
-                      BaseTSet<P> parent, IterableFlatMapFunction<P, T> mapFunc,
-                      TaskExecutor executor) {
-    super(cfg, bldr, executor);
+                      BaseTLink<P> parent, IterableFlatMapFunction<P, T> mapFunc) {
+    super(cfg, bldr);
     this.parent = parent;
     this.mapFn = mapFunc;
   }
 
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
-    boolean isIterable = isIterableInput(parent, builder.getMode());
-    boolean keyed = isKeyedInput(parent);
+    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getMode());
+    boolean keyed = TSetUtils.isKeyedInput(parent);
 
     // lets override the parallelism
     int p = calculateParallelism(parent);
@@ -45,7 +44,7 @@ public class IFlatMapTSet<T, P> extends BaseTSet<T> {
   }
 
   @Override
-  void buildConnection(ComputeConnection connection) {
+  public void buildConnection(ComputeConnection connection) {
   }
 }
 
