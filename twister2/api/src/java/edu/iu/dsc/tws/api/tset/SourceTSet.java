@@ -15,6 +15,7 @@ import java.util.Random;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 import edu.iu.dsc.tws.common.config.Config;
 
@@ -25,6 +26,22 @@ public class SourceTSet<T> extends BaseTSet<T> {
     super(cfg, bldr);
     this.source = src;
     this.name = "source-" + new Random(System.nanoTime()).nextInt(10);
+  }
+
+  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
+    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    children.add(direct);
+    MapTSet<P, T> set = new MapTSet<P, T>(config, builder, direct, mapFn);
+    children.add(set);
+    return set;
+  }
+
+  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
+    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    children.add(direct);
+    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, builder, direct, mapFn);
+    children.add(set);
+    return set;
   }
 
   @Override
