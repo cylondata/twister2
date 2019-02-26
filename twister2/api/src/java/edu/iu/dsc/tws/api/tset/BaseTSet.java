@@ -63,7 +63,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   /**
    * Possible Types of state in a TSet
    */
-  private enum StateType {
+  public enum StateType {
     /**
      * Local state which is updated and maintained by each parallel task
      */

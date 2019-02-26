@@ -34,7 +34,7 @@ public class HelloTSet extends TaskWorker implements Serializable {
   private static final long serialVersionUID = -2;
   @Override
   public void execute() {
-    TSetBuilder builder = TSetBuilder.newBuilder(config, taskExecutor);
+    TSetBuilder builder = TSetBuilder.newBuilder(config);
     TSet<int[]> source = builder.createSource(new Source<int[]>() {
 
       private int count = 0;

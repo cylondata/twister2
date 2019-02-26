@@ -45,7 +45,6 @@ public class KeyedReduceTLink<T, K> extends KeyValueTLink<T, K> {
 
   private Selector<T, K> selector;
 
-
   public KeyedReduceTLink(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
                           ReduceFunction<T> rFn, PartitionFunction<K> parFn,
                           Selector<T, K> selec) {

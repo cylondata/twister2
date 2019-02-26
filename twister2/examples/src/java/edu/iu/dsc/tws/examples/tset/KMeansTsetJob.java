@@ -54,21 +54,40 @@ public class KMeansTsetJob extends TaskWorker implements Serializable {
         throw new RuntimeException("Failed to create input data:", ioe);
       }
     }
-    TSetBuilder builder = TSetBuilder.newBuilder(config, taskExecutor);
+    TSetBuilder builder = TSetBuilder.newBuilder(config);
     builder.setMode(OperationMode.BATCH);
-    TSet<double[][]> points = builder.createSource(new Source<double[][]>() {
-      @Override
-      public boolean hasNext() {
-        return false;
-      }
+    TSet<double[][]> points = builder.createSource(new PointsSource()).cache();
+    TSet<double[][]> centers = builder.createSource(new CenterSource()).cache();
 
-      @Override
-      public double[][] next() {
-        return new double[0][];
-      }
-    });
+    for (int i = 0; i < iterations; i++) {
+//      TSet<double[][]> KmeansTSet = points.map( )
+    }
+  }
 
-    points.cache();
+  public class PointsSource implements Source<double[][]> {
+    @Override
+    public boolean hasNext() {
+      return false;
+    }
 
+    @Override
+    public double[][] next() {
+      return new double[0][];
+    }
+  }
+
+
+  public class CenterSource implements Source<double[][]> {
+
+    @Override
+    public boolean hasNext() {
+      return false;
+    }
+
+    @Override
+    public double[][] next() {
+      return new double[0][];
+    }
   }
 }
+

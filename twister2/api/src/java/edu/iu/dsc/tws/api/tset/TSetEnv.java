@@ -28,7 +28,7 @@ public class TSetEnv {
   public TSetEnv(Config config, TaskExecutor taskExecutor) {
     this.config = config;
     this.taskExecutor = taskExecutor;
-    this.tSetBuilder = TSetBuilder.newBuilder(config, taskExecutor);
+    this.tSetBuilder = TSetBuilder.newBuilder(config);
   }
 
   public Config getConfig() {

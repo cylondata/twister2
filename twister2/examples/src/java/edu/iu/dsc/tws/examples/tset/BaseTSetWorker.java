@@ -38,7 +38,7 @@ public class BaseTSetWorker extends TaskWorker implements Serializable {
 
   @Override
   public void execute() {
-    tSetBuilder = TSetBuilder.newBuilder(config, taskExecutor);
+    tSetBuilder = TSetBuilder.newBuilder(config);
     jobParameters = JobParameters.build(config);
 
     experimentData = new ExperimentData();

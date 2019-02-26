@@ -28,7 +28,6 @@ import com.google.common.reflect.TypeToken;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 
-
 public abstract class KeyValueTLink<T, K> extends BaseTLink<T> {
   public KeyValueTLink(Config cfg, TaskGraphBuilder bldr) {
     super(cfg, bldr);

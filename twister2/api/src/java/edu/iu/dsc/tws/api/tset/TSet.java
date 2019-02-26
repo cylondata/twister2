@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.tset.link.TLink;
 public interface TSet<T> extends TBase<T> {
   /**
    * Set the parallelism for this set
+   *
    * @param parallelism parallelism
    * @return this set
    */
@@ -79,6 +80,7 @@ public interface TSet<T> extends TBase<T> {
 
   /**
    * Select a set of values
+   *
    * @param partitionFunction partition function
    * @param selector the selector
    * @param <K> the type for partitioning
@@ -88,12 +90,14 @@ public interface TSet<T> extends TBase<T> {
 
   /**
    * Create a cloned dataset
+   *
    * @return the cloned set
    */
   ReplicateTLink<T> replicate(int replications);
 
   /**
    * Executes TSet and saves any generated data as a in-memory data object
+   *
    * @return the resulting TSet
    */
   TSet<T> cache();
