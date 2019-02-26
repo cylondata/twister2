@@ -42,9 +42,9 @@ public class TaskSchedulePlan {
 
   public Resource getMaxContainerResources() {
 
-    Double maxCpu = 0.0;
-    Double maxRam = 0.0;
-    Double maxDisk = 0.0;
+    double maxCpu = 0.0;
+    double maxRam = 0.0;
+    double maxDisk = 0.0;
 
     for (ContainerPlan containerPlan : getContainers()) {
       Resource containerResource =
@@ -56,7 +56,7 @@ public class TaskSchedulePlan {
     return new Resource(maxRam, maxDisk, maxCpu);
   }
 
-  public int getTaskSchedulePlanId() {
+  private int getTaskSchedulePlanId() {
     return jobId;
   }
 
@@ -187,6 +187,7 @@ public class TaskSchedulePlan {
     private final int containerId;
     private final Set<TaskInstancePlan> taskInstances;
     private final Resource requiredResource;
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private final Optional<Resource> scheduledResource;
 
     public ContainerPlan(int id, Set<TaskInstancePlan> instances, Resource requiredResource) {
@@ -212,11 +213,11 @@ public class TaskSchedulePlan {
       return taskInstances;
     }
 
-    public Resource getRequiredResource() {
+    private Resource getRequiredResource() {
       return requiredResource;
     }
 
-    public Optional<Resource> getScheduledResource() {
+    private Optional<Resource> getScheduledResource() {
       return scheduledResource;
     }
 
@@ -241,9 +242,9 @@ public class TaskSchedulePlan {
     public int hashCode() {
       int result = containerId;
       result = 31 * result + getTaskInstances().hashCode();
-      result = 31 * result + getRequiredResource().hashCode(); //Check this later
+      result = 31 * result + getRequiredResource().hashCode();
       if (scheduledResource.isPresent()) {
-        result = 31 * result + getScheduledResource().get().hashCode();
+        result = (31 * result) + getScheduledResource().get().hashCode();
       }
       return result;
     }

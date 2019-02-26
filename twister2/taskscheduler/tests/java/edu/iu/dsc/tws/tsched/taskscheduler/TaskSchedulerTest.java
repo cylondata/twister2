@@ -9,41 +9,36 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched.streaming.roundrobin;
+package edu.iu.dsc.tws.tsched.taskscheduler;
 
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class RoundRobinTaskSchedulerTest {
-
-  private static final Logger LOG = Logger.getLogger(RoundRobinTaskSchedulerTest.class.getName());
+public class TaskSchedulerTest {
   @Test
   public void testUniqueSchedules() {
-    int parallel = 256;
+    int parallel = 2;
     DataFlowTaskGraph graph = createGraph(parallel);
-    RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
-    scheduler.initialize(Config.newBuilder().build());
-
+    TaskScheduler scheduler = new TaskScheduler();
+    Config config = getConfig();
+    scheduler.initialize(config);
     WorkerPlan workerPlan = createWorkPlan(parallel);
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 2; i++) {
       TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan);
 
@@ -52,36 +47,11 @@ public class RoundRobinTaskSchedulerTest {
       Map<Integer, TaskSchedulePlan.ContainerPlan> map2 = plan2.getContainersMap();
       for (TaskSchedulePlan.ContainerPlan containerPlan : plan1.getContainers()) {
         TaskSchedulePlan.ContainerPlan p2 = map2.get(containerPlan.getContainerId());
-        Assert.assertTrue(containerEquals(containerPlan, p2));
-      }
-    }
-  }
-
-  @Test
-  public void testUniqueSchedules2() {
-    int parallel = 256;
-    DataFlowTaskGraph graph = createGraph(parallel);
-    RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
-    scheduler.initialize(Config.newBuilder().build());
-
-    WorkerPlan workerPlan = createWorkPlan(parallel);
-    TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
-
-    WorkerPlan workerPlan2 = createWorkPlan2(parallel);
-    for (int i = 0; i < 1000; i++) {
-      TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
-
-      Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
-
-      Map<Integer, TaskSchedulePlan.ContainerPlan> map2 = plan2.getContainersMap();
-      for (TaskSchedulePlan.ContainerPlan containerPlan : plan1.getContainers()) {
-        TaskSchedulePlan.ContainerPlan p2 = map2.get(containerPlan.getContainerId());
 
         Assert.assertTrue(containerEquals(containerPlan, p2));
       }
     }
   }
-
 
   private boolean containerEquals(TaskSchedulePlan.ContainerPlan p1,
                                   TaskSchedulePlan.ContainerPlan p2) {
@@ -104,15 +74,10 @@ public class RoundRobinTaskSchedulerTest {
   private WorkerPlan createWorkPlan(int workers) {
     WorkerPlan plan = new WorkerPlan();
     for (int i = 0; i < workers; i++) {
-      plan.addWorker(new Worker(i));
-    }
-    return plan;
-  }
-
-  private WorkerPlan createWorkPlan2(int workers) {
-    WorkerPlan plan = new WorkerPlan();
-    for (int i = workers - 1; i >= 0; i--) {
-      plan.addWorker(new Worker(i));
+      Worker w = new Worker(i);
+      w.addProperty("bandwidth", 1000.0);
+      w.addProperty("latency", 0.1);
+      plan.addWorker(w);
     }
     return plan;
   }
@@ -121,12 +86,25 @@ public class RoundRobinTaskSchedulerTest {
     TestSource ts = new TestSource();
     TestSink testSink = new TestSink();
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
-    builder.addSource("source", ts, parallel);
-    ComputeConnection c = builder.addSink("sink", testSink, 1);
-    c.reduce("source", "edge", Op.SUM, DataType.INTEGER);
-    builder.setMode(OperationMode.STREAMING);
+    GraphBuilder builder = GraphBuilder.newBuilder();
+    builder.addSource("source", ts);
+    builder.setParallelism("source", parallel);
+
+    builder.addSink("sink1", testSink);
+    builder.setParallelism("sink1", parallel);
+
+    builder.operationMode(OperationMode.STREAMING);
     return builder.build();
+  }
+
+  private Config getConfig() {
+
+    String twister2Home = "/home/kannan/twister2/bazel-bin/scripts/package/twister2-0.1.0";
+    String configDir = "/home/kannan/twister2/twister2/taskscheduler/tests/conf/";
+    String clusterType = "standalone";
+
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    return Config.newBuilder().putAll(config).build();
   }
 
   public static class TestSource extends BaseSource {

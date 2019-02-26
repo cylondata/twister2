@@ -14,9 +14,11 @@ package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
@@ -28,6 +30,9 @@ import edu.iu.dsc.tws.data.fs.Path;
  * 2. We can generate in a common location shared by workers, such as HDFS or NFS
  */
 public final class KMeansDataGenerator {
+
+  private static final Logger LOG = Logger.getLogger(KMeansDataGenerator.class.getName());
+
   private KMeansDataGenerator() {
   }
 
@@ -41,20 +46,21 @@ public final class KMeansDataGenerator {
    * @param sizeMargin size will be varied about this much
    */
   public static void generateData(String type, Path directory, int numOfFiles, int sizeOfFile,
-                                  int sizeMargin, int dimension) throws IOException {
+                                  int sizeMargin, int dimension, Config cfg)
+      throws IOException {
     if ("csv".equals(type)) {
-      generateCSV(directory, numOfFiles, sizeOfFile, sizeMargin, dimension);
+      generateCSV(directory, numOfFiles, sizeOfFile, sizeMargin, dimension, cfg);
     } else if ("txt".equals(type)) {
-      generateText(directory, numOfFiles, sizeOfFile, sizeMargin, dimension);
+      generateText(directory, numOfFiles, sizeOfFile, sizeMargin, dimension, cfg);
     } else {
       throw new RuntimeException("Unsupported data gen type: " + type);
     }
   }
 
   private static void generateText(Path directory, int numOfFiles, int sizeOfFile,
-                                   int sizeMargin, int dimension) throws IOException {
+                                   int sizeMargin, int dimension, Config config)
+      throws IOException {
     FileSystem fs = FileSystem.get(directory.toUri());
-
     for (int i = 0; i < numOfFiles; i++) {
       FSDataOutputStream outputStream = fs.create(new Path(directory,
           generateRandom(10) + ".txt"));
@@ -66,7 +72,6 @@ public final class KMeansDataGenerator {
   }
 
   private static String generatePoints(int numPoints, int dimension, int seedValue) {
-
     StringBuilder datapoints = new StringBuilder();
     Random r = new Random(seedValue);
     for (int i = 0; i < numPoints; i++) {
@@ -90,15 +95,14 @@ public final class KMeansDataGenerator {
    * @param directory the path of the directory
    */
   private static void generateCSV(Path directory, int numOfFiles, int sizeOfFile,
-                                  int sizeMargin, int dimension) throws IOException {
+                                  int sizeMargin, int dimension, Config config) throws IOException {
     FileSystem fs = FileSystem.get(directory.toUri());
     Random random = new Random(System.currentTimeMillis());
-
     for (int i = 0; i < numOfFiles; i++) {
       FSDataOutputStream outputStream = fs.create(new Path(directory,
           generateRandom(10) + ".csv"));
       PrintWriter pw = new PrintWriter(outputStream);
-      String points = generatePoints(sizeOfFile, 2, sizeMargin);
+      String points = generatePoints(sizeOfFile, dimension, sizeMargin);
       pw.print(points);
       pw.close();
     }
