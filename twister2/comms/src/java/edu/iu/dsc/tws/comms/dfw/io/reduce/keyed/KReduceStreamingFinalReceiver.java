@@ -49,7 +49,7 @@ public class KReduceStreamingFinalReceiver extends KReduceStreamingReceiver {
 
       Queue<Object> targetSendQueue = sendQueue.get(target);
       sourcesFinished = isSourcesFinished(target);
-      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
+      if (!sourcesFinished && !(dataFlowOperation.isDelegateComplete()
           && messages.get(target).isEmpty())) {
         needsFurtherProgress = true;
       }
@@ -61,7 +61,7 @@ public class KReduceStreamingFinalReceiver extends KReduceStreamingReceiver {
         }
       }
 
-      if (sourcesFinished && dataFlowOperation.isDelegeteComplete()
+      if (sourcesFinished && dataFlowOperation.isDelegateComplete()
           && targetSendQueue.isEmpty()) {
         batchDone.put(target, true);
       }

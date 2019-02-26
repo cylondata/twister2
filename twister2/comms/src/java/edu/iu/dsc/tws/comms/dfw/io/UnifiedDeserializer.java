@@ -16,33 +16,28 @@ import java.util.List;
 import java.util.Queue;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
-import edu.iu.dsc.tws.comms.dfw.io.types.PartialDataDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.types.PartialKeyDeSerializer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class UnifiedDeserializer implements MessageDeSerializer {
   private static final Logger LOG = Logger.getLogger(UnifiedDeserializer.class.getName());
 
-  private KryoSerializer serializer;
+  private DataPacker dataPacker;
 
-  private boolean keyed;
-
-  public UnifiedDeserializer(KryoSerializer kryoSerializer, int exec) {
-    this.serializer = kryoSerializer;
+  public UnifiedDeserializer(KryoSerializer kryoSerializer, int exec, MessageType dataType) {
+    dataPacker = DFWIOUtils.createPacker(dataType);
     LOG.fine("Initializing serializer on worker: " + exec);
   }
 
   @Override
   public void init(Config cfg, boolean k) {
-    this.keyed = k;
   }
 
   /**
@@ -77,146 +72,54 @@ public class UnifiedDeserializer implements MessageDeSerializer {
 
       // if we are at the begining
       int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
-      int currentKeyLength = currentMessage.getUnPkCurrentKeyLength();
 
       if (currentMessage.getUnPkBuffers() == 0) {
         currentLocation = 16;
       }
 
-      if (keyed) {
-        if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {
-          currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-          remaining = buffer.getSize() - Integer.BYTES - 16;
-          currentLocation += Integer.BYTES;
-        }
-
-        if (currentKeyLength == -1) {
-          // we assume we can read the key length from here
-          Pair<Integer, Integer> keyLength = PartialKeyDeSerializer.createKey(
-              currentMessage, buffer, currentLocation);
-          remaining = remaining - keyLength.getRight();
-          currentLocation += keyLength.getRight();
-
-          // we have to set the current object length
-          currentObjectLength = currentObjectLength - keyLength.getLeft();
-          currentKeyLength = keyLength.getLeft();
-
-          PartialKeyDeSerializer.createKeyObject(currentMessage, keyLength.getLeft());
-          PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);
-          currentMessage.setUnPkCurrentKeyLength(currentKeyLength);
-          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
-          // we are going to read the key first
-          currentMessage.setReadingKey(true);
-        }
-      } else {
-        if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {
-          currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-          remaining = buffer.getSize() - Integer.BYTES - 16;
-          currentLocation += Integer.BYTES;
-          PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);
-          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
-        }
+      if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {
+        currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
+        remaining = buffer.getSize() - Integer.BYTES - 16;
+        currentLocation += Integer.BYTES;
+        Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
+        currentMessage.setDeserializingObject(value);
+        currentMessage.setUnPkCurrentBytes(0);
+        currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
       }
 
 
       while (remaining > 0) {
-        if (!keyed) {
-          // read the values from the buffer
-          int valsRead = PartialDataDeserializer.readFromBuffer(currentMessage, currentLocation,
-              buffer, currentObjectLength, serializer);
-          int totalBytesRead = PartialDataDeserializer.totalBytesRead(currentMessage, valsRead);
-          currentLocation += valsRead;
-          remaining = remaining - valsRead;
-          // okay we are done with this object
-          if (totalBytesRead == currentObjectLength) {
-            // lets add the object
-            currentMessage.addCurrentObject();
-            // lets reset to read the next
-            currentMessage.resetUnPk();
-          } else {
-            // lets break the inner while loop
-            break;
-          }
+        // read the values from the buffer
+        int valsRead = dataPacker.readDataFromBuffer(currentMessage, currentLocation,
+            buffer, currentObjectLength);
+        int totalBytesRead = currentMessage.addUnPkCurrentBytes(valsRead);
 
-          if (remaining >= Integer.BYTES) {
-            currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-            remaining = remaining - Integer.BYTES;
-            currentLocation += Integer.BYTES;
-
-            PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);
-            currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
-          } else {
-            // we have to break here as we cannot read further
-            break;
-          }
+        currentLocation += valsRead;
+        remaining = remaining - valsRead;
+        // okay we are done with this object
+        if (totalBytesRead == currentObjectLength) {
+          // lets add the object
+          currentMessage.addCurrentObject();
+          // lets reset to read the next
+          currentMessage.resetUnPk();
         } else {
-          if (currentMessage.isReadingKey()) {
-            int valsRead = PartialKeyDeSerializer.readFromBuffer(currentMessage, currentLocation,
-                buffer, currentKeyLength, serializer);
-            int totalBytesRead = PartialKeyDeSerializer.totalBytesRead(currentMessage, valsRead);
-            currentLocation += valsRead;
-            remaining = remaining - valsRead;
+          // lets break the inner while loop
+          break;
+        }
 
-            if (totalBytesRead == currentKeyLength) {
-              currentMessage.resetUnPkKey();
-            } else {
-              break;
-            }
-          }
+        if (remaining >= Integer.BYTES) {
+          currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
+          remaining = remaining - Integer.BYTES;
+          currentLocation += Integer.BYTES;
 
-          if (!currentMessage.isReadingKey()) {
-            // read the values from the buffer
-            int valsRead = PartialDataDeserializer.readFromBuffer(currentMessage, currentLocation,
-                buffer, currentObjectLength, serializer);
-            int totalBytesRead = PartialDataDeserializer.totalBytesRead(currentMessage, valsRead);
-            currentLocation += valsRead;
-            remaining = remaining - valsRead;
-            // okay we are done with this object
-            if (totalBytesRead == currentObjectLength) {
-              // lets add the object
-              currentMessage.addCurrentKeyedObject();
-              // lets reset to read the next
-              currentMessage.resetUnPk();
-            } else {
-              // lets break the inner while loop
-              break;
-            }
+          Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
+          currentMessage.setDeserializingObject(value);
+          currentMessage.setUnPkCurrentBytes(0);
 
-            if (remaining >= Integer.BYTES
-                + PartialKeyDeSerializer.keyLengthHeaderSize(currentMessage)) {
-              currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-              remaining = remaining - Integer.BYTES;
-              currentLocation += Integer.BYTES;
-
-              // we assume we can read the key length from here
-              Pair<Integer, Integer> keyLength = PartialKeyDeSerializer.createKey(
-                  currentMessage, buffer, currentLocation);
-              remaining = remaining - keyLength.getRight();
-              currentLocation += keyLength.getRight();
-
-              // we have to set the current object length
-              currentObjectLength = currentObjectLength - keyLength.getLeft();
-              currentKeyLength = keyLength.getLeft();
-
-              PartialKeyDeSerializer.createKeyObject(currentMessage, keyLength.getLeft());
-              PartialDataDeserializer.createDataObject(currentMessage, currentObjectLength);
-              currentMessage.setUnPkCurrentKeyLength(currentKeyLength);
-              currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
-              // we are going to read the key first
-              currentMessage.setReadingKey(true);
-            } else if (remaining >= Integer.BYTES) {
-              currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-              remaining = remaining - Integer.BYTES;
-              currentLocation += Integer.BYTES;
-
-              currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
-              currentMessage.setUnPkCurrentKeyLength(-1);
-              currentMessage.setReadingKey(true);
-            } else {
-              // we have to break here as we cannot read further
-              break;
-            }
-          }
+          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
+        } else {
+          // we have to break here as we cannot read further
+          break;
         }
       }
 

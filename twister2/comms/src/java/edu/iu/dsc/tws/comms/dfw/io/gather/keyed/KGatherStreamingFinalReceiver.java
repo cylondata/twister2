@@ -63,7 +63,7 @@ public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
 
       Queue<Object> targetSendQueue = sendQueue.get(target);
       sourcesFinished = isSourcesFinished(target);
-      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
+      if (!sourcesFinished && !(dataFlowOperation.isDelegateComplete()
           && messages.get(target).isEmpty())) {
         needsFurtherProgress = true;
       }
@@ -77,7 +77,7 @@ public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
         bulkReceiver.receive(target, results.iterator());
       }
 
-      if (sourcesFinished && dataFlowOperation.isDelegeteComplete()
+      if (sourcesFinished && dataFlowOperation.isDelegateComplete()
           && targetSendQueue.isEmpty()) {
         batchDone.put(target, true);
       }

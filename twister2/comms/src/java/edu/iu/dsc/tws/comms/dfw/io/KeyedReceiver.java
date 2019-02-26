@@ -355,7 +355,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
   protected boolean checkIfEmptyIsSent(int target) {
     boolean isSent = true;
     if (!isEmptySent.get(target)) {
-      if (dataFlowOperation.isDelegeteComplete() && dataFlowOperation.sendPartial(target,
+      if (dataFlowOperation.isDelegateComplete() && dataFlowOperation.sendPartial(target,
           new byte[0], MessageFlags.END, destination)) {
         isEmptySent.put(target, true);
       } else {
@@ -387,7 +387,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
       Queue<Object> targetSendQueue = sendQueue.get(target);
       sourcesFinished = isSourcesFinished(target);
 
-      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
+      if (!sourcesFinished && !(dataFlowOperation.isDelegateComplete()
           && messages.get(target).isEmpty() && targetSendQueue.isEmpty())) {
         needsFurtherProgress = true;
       }
@@ -404,7 +404,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
         needsFurtherProgress = true;
       }
 
-      if (dataFlowOperation.isDelegeteComplete() && sourcesFinished && isAllQueuesEmpty) {
+      if (dataFlowOperation.isDelegateComplete() && sourcesFinished && isAllQueuesEmpty) {
         needsFurtherProgress = finishProgress(needsFurtherProgress, target);
       }
     }

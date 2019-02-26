@@ -194,7 +194,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
 
     private Map<Integer, Boolean> finished = new HashMap<>();
 
-    private boolean strm = false;
+    private boolean strm;
 
     BCastReceiver(SingularReceiver reduceRcvr, boolean strm) {
       this.singularReceiver = reduceRcvr;

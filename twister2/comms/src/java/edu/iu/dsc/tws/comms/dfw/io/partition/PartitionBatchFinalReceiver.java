@@ -146,7 +146,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       for (Map.Entry<Integer, Set<Integer>> entry : onFinishedSources.entrySet()) {
         Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(entry.getKey());
 
-        if (operation.isDelegeteComplete()
+        if (operation.isDelegateComplete()
             && onFinishedSrcsTarget.equals(sources)) {
           Iterator<Map.Entry<Integer, List<Object>>> it = targetMessages.entrySet().iterator();
           while (it.hasNext()) {

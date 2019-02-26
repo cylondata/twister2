@@ -60,7 +60,7 @@ public class Communicator {
     } else {
       this.persistentDirectory = persDir;
     }
-    LOG.log(Level.INFO, String.format("Using the persistent directory %s", persistentDirectory));
+    LOG.log(Level.FINE, String.format("Using the persistent directory %s", persistentDirectory));
     this.edgeGenerator = new EdgeGenerator(0);
     this.idGenerator = new TaskIdGenerator(100000000);
   }

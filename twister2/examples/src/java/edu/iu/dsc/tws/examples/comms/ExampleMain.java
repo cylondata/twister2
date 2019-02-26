@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.examples.comms.stream.SKeyedPartitionExample;
 import edu.iu.dsc.tws.examples.comms.stream.SKeyedReduceExample;
 import edu.iu.dsc.tws.examples.comms.stream.SPartitionExample;
 import edu.iu.dsc.tws.examples.comms.stream.SReduceExample;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class ExampleMain {
@@ -51,6 +52,7 @@ public class ExampleMain {
     options.addOption(Constants.ARGS_WORKERS, true, "Workers");
     options.addOption(Constants.ARGS_SIZE, true, "Size");
     options.addOption(Constants.ARGS_ITR, true, "Iteration");
+    options.addOption(Constants.ARGS_WARMPU_ITR, true, "Warmup Iterations");
     options.addOption(Utils.createOption(Constants.ARGS_OPERATION, true, "Operation", true));
     options.addOption(Constants.ARGS_STREAM, false, "Stream");
     options.addOption(Utils.createOption(Constants.ARGS_TASK_STAGES, true, "Throughput mode", true));
@@ -62,6 +64,7 @@ public class ExampleMain {
     options.addOption(Utils.createOption(Constants.ARGS_DATA_TYPE, true, "Data", false));
     options.addOption(Utils.createOption(Constants.ARGS_INIT_ITERATIONS, true, "Data", false));
     options.addOption(Constants.ARGS_VERIFY, false, "verify");
+    options.addOption(Utils.createOption(BenchmarkMetadata.ARG_BENCHMARK_METADATA, true, "Benchmark Metadata", false));
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
@@ -72,11 +75,15 @@ public class ExampleMain {
     boolean verify = cmd.hasOption(Constants.ARGS_VERIFY);
     int size = 1;
     int itr = 1;
+    int warmUpItr = 0;
     if (cmd.hasOption(Constants.ARGS_SIZE)) {
       size = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_SIZE));
     }
     if (cmd.hasOption(Constants.ARGS_ITR)) {
       itr = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_ITR));
+    }
+    if (cmd.hasOption(Constants.ARGS_WARMPU_ITR)) {
+      warmUpItr = Integer.valueOf(cmd.getOptionValue(Constants.ARGS_WARMPU_ITR));
     }
     String threads = "true";
     if (cmd.hasOption(Constants.ARGS_THREADS)) {
@@ -113,9 +120,16 @@ public class ExampleMain {
       intItr = cmd.getOptionValue(Constants.ARGS_INIT_ITERATIONS);
     }
 
+    boolean runBenchmark = cmd.hasOption(BenchmarkMetadata.ARG_BENCHMARK_METADATA);
+    String benchmarkMetadata = null;
+    if (runBenchmark) {
+      benchmarkMetadata = cmd.getOptionValue(BenchmarkMetadata.ARG_BENCHMARK_METADATA);
+    }
+
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.put(Constants.ARGS_ITR, Integer.toString(itr));
+    jobConfig.put(Constants.ARGS_WARMPU_ITR, Integer.toString(warmUpItr));
     jobConfig.put(Constants.ARGS_OPERATION, operation);
     jobConfig.put(Constants.ARGS_SIZE, Integer.toString(size));
     jobConfig.put(Constants.ARGS_WORKERS, Integer.toString(workers));
@@ -129,6 +143,10 @@ public class ExampleMain {
     jobConfig.put(Constants.ARGS_INIT_ITERATIONS, intItr);
     jobConfig.put(Constants.ARGS_VERIFY, verify);
     jobConfig.put(Constants.ARGS_STREAM, stream);
+    jobConfig.put(BenchmarkMetadata.ARG_RUN_BENCHMARK, runBenchmark);
+    if (runBenchmark) {
+      jobConfig.put(BenchmarkMetadata.ARG_BENCHMARK_METADATA, benchmarkMetadata);
+    }
 
     // build the job
     if (!stream) {

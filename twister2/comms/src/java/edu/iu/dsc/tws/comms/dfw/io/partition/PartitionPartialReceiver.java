@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.dfw.io.partition;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -81,11 +83,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
   private int representSource;
 
   /**
-   * Tracks if the representSource is already set
-   */
-  private boolean representSourceIsSet;
-
-  /**
    * The lock for excluding onMessage and communicationProgress
    */
   private Lock lock = new ReentrantLock();
@@ -116,8 +113,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
     highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
     executor = op.getTaskPlan().getThisExecutor();
     TaskPlan taskPlan = op.getTaskPlan();
-    thisWorkerSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan,
-        ((DataFlowPartition) op).getSources());
+    thisWorkerSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, op.getSources());
     for (int s : thisWorkerSources) {
       finishedDestinations.put(s, new HashSet<>());
     }
@@ -148,42 +144,31 @@ public class PartitionPartialReceiver implements MessageReceiver {
   public boolean onMessage(int src, int path, int target, int flags, Object object) {
     lock.lock();
     try {
-      if (!representSourceIsSet) {
-        this.representSource = src;
-      }
-
+      this.representSource = src;
       List<Object> dests = destinationMessages.get(target);
 
-      int size = dests.size();
-      if (size > highWaterMark) {
+      if ((flags & MessageFlags.END) == MessageFlags.END) {
+        if (onFinishedSources.contains(src)) {
+          LOG.log(Level.WARNING,
+              String.format("%d Duplicate finish from source id %d", this.executor, src));
+        } else {
+          onFinishedSources.add(src);
+        }
+        return true;
+      }
+
+      if (dests.size() > highWaterMark) {
         return false;
       }
 
-      if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-        dests.add(object);
-        if (readyToSend.isEmpty()) {
-          operation.sendPartial(representSource, new ArrayList<>(dests), 0, target);
-        } else {
-          Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
-          while (it.hasNext()) {
-            Map.Entry<Integer, List<Object>> e = it.next();
-            List<Object> send = new ArrayList<>(e.getValue());
-
-            // if we send this list successfully
-            if (operation.sendPartial(representSource, send, 0, e.getKey())) {
-              // lets remove from ready list and clear the list
-              e.getValue().clear();
-              it.remove();
-            }
-          }
-          operation.sendPartial(representSource, new ArrayList<>(dests), 0, target);
-        }
+      if (object instanceof List) {
+        dests.addAll((Collection<?>) object);
       } else {
         dests.add(object);
-        if (dests.size() > lowWaterMark) {
-          swapToReady(target, dests);
-        }
+      }
 
+      if (dests.size() > lowWaterMark) {
+        swapToReady(target, dests);
       }
     } finally {
       lock.unlock();
@@ -229,8 +214,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
           progressAttempts = 0;
           continue;
         }
-//        LOG.log(Level.INFO, String.format("%d PR Sending to %d -> %d",
-//            executor, representSource, e.getKey()));
         // if we send this list successfully
         if (operation.sendPartial(representSource, send, 0, e.getKey())) {
           // lets remove from ready list and clear the list
@@ -253,7 +236,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
           needsFurtherProgress = true;
         }
       }
-      if (operation.isDelegeteComplete() && !needsFurtherProgress
+      if (operation.isDelegateComplete() && !needsFurtherProgress
           && onFinishedSources.equals(thisWorkerSources)
           && readyToSend.isEmpty()) {
         for (int source : thisWorkerSources) {

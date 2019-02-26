@@ -26,9 +26,12 @@ import edu.iu.dsc.tws.comms.api.batch.BReduce;
 import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 
 public class BReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BReduceExample.class.getName());
@@ -101,12 +104,19 @@ public class BReduceExample extends BenchWorker {
   }
 
   public class FinalSingularReceiver implements SingularReceiver {
+
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override
     public boolean receive(int target, Object object) {
+      Timing.mark(TIMING_ALL_RECV, workerId == 0);
+      resultsRecorder.recordColumn("Total Time", Timing.averageDiff(
+          TIMING_ALL_SEND,
+          TIMING_ALL_RECV,
+          workerId == 0
+      ));
       experimentData.setOutput(object);
       LOG.info("Reduced value : " + Arrays.toString((int[]) object));
       reduceDone = true;

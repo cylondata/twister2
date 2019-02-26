@@ -26,7 +26,7 @@ public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
 
   // max length for the user provided Twister2 job name
-  private static final int MAX_JOB_NAME_LENGTH = 50;
+  private static final int MAX_JOB_NAME_LENGTH = 45;
 
   private KubernetesUtils() {
   }

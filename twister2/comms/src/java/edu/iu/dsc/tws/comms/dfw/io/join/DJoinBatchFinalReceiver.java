@@ -267,7 +267,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
    * @return true if all messages have been received and false otherwise
    */
   private boolean checkIfFinished(int target) {
-    return operationLeft.isDelegeteComplete() && operationRight.isDelegeteComplete()
+    return operationLeft.isDelegateComplete() && operationRight.isDelegateComplete()
         && onFinishedSourcesLeft.get(target).equals(sources)
         && onFinishedSourcesRight.get(target).equals(sources);
   }
