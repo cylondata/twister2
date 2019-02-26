@@ -29,10 +29,10 @@ public class TaskInstanceMapCalculation {
 
   private static final Logger LOG = Logger.getLogger(TaskInstanceMapCalculation.class.getName());
 
-  private static final double DEFAULT_DISK_PADDING_PER_CONTAINER = 12;
-  private static final double DEFAULT_RAM_PADDING_PER_CONTAINER = 2;
+  private static final double DEFAULT_DISK_PADDING_PER_CONTAINER = 12.0;
+  private static final double DEFAULT_RAM_PADDING_PER_CONTAINER = 2.0;
   private static final double NOT_SPECIFIED_NUMBER_VALUE = -1;
-  private static final double DEFAULT_CPU_PADDING_PER_CONTAINER = 1;
+  private static final double DEFAULT_CPU_PADDING_PER_CONTAINER = 1.0;
 
   private final Double instanceRAM;
   private final Double instanceDisk;
@@ -47,60 +47,19 @@ public class TaskInstanceMapCalculation {
     taskAttributes = new TaskAttributes();
   }
 
-  private static int getLargestContainerSize(Map<Integer,
-      List<InstanceId>> instancesAllocation) {
-    int max = 0;
-    for (List<InstanceId> instances : instancesAllocation.values()) {
-      if (instances.size() > max) {
-        max = instances.size();
-      }
-    }
-    LOG.info("Maximum container value is:\t" + max);
-    return max;
-  }
-
   private static double getContainerCpuValue(Map<Integer, List<InstanceId>> instancesAllocation) {
-
-      /*List<JobAPI.Config.KeyValue> jobConfig= job.getJobConfig().getKvsList();
-      double defaultContainerCpu =
-             DEFAULT_CPU_PADDING_PER_CONTAINER + getLargestContainerSize(instancesAllocation);
-
-      String cpuHint = JobUtils.getConfigWithDefault(
-              jobConfig, com.tws.api.Config.TOPOLOGY_CONTAINER_CPU_REQUESTED,
-              Double.toString(defaultContainerCpu)); */
-
-    //These two lines will be once the actual job description file is created.
-    String cpuHint = "0.6";
+    String cpuHint = "0.2";
     return Double.parseDouble(cpuHint);
   }
 
   private static Double getContainerDiskValue(Map<Integer, List<InstanceId>> instancesAllocation) {
-
-      /*ByteAmount defaultContainerDisk = instanceDiskDefault
-                .multiply(getLargestContainerSize(instancesAllocation))
-                .plus(DEFAULT_DISK_PADDING_PER_CONTAINER);
-
-      List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
-       return JobUtils.getConfigWithDefault(jobConfig,
-                com.tws.api.Config.JOB_CONTAINER_DISK_REQUESTED,
-                defaultContainerDisk); */
-
-    //These two lines will be once the actual job description file is created.
-    Long containerDiskValue = 100L;
-    return containerDiskValue.doubleValue();
+    String containerDiskValue = "1000.0";
+    return Double.parseDouble(containerDiskValue);
   }
 
   private static Double getContainerRamValue(Map<Integer, List<InstanceId>> instancesAllocation) {
-
-        /*List<JobAPI.Config.KeyValue> jobConfig = job.getJobConfig().getKvsList();
-        return JobUtils.getConfigWithDefault(
-                jobConfig, com.tws.api.Config.JOB_CONTAINER_RAM_REQUESTED,
-                NOT_SPECIFIED_NUMBER_VALUE);*/
-
-    //These two lines will be once the actual job description file is created.
-    Long containerRAMValue = 10L;
-    //return ByteAmount.fromGigabytes (containerRAMValue);
-    return containerRAMValue.doubleValue();
+    String containerRamValue = "1000.0";
+    return Double.parseDouble(containerRamValue);
   }
 
   /**
@@ -114,7 +73,7 @@ public class TaskInstanceMapCalculation {
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Set<Vertex> taskVertexSet) {
 
     Map<String, Double> ramMap = taskAttributes.getTaskRamMap(taskVertexSet);
-    Map<Integer, Map<InstanceId, Double>> instancesRamContainerMap = new HashMap<>();
+    HashMap<Integer, Map<InstanceId, Double>> instancesRamContainerMap = new HashMap<>();
 
     for (int containerId : containerInstanceAllocationMap.keySet()) {
       Double usedRamValue = 0.0;
@@ -139,7 +98,7 @@ public class TaskInstanceMapCalculation {
       if (instancesAllocationSize != 0) {
         Double instanceRequiredRam = instanceRAM;
         if (!containerRamValue.equals(NOT_SPECIFIED_NUMBER_VALUE)) {
-          Double remainingRam = containerRamValue - DEFAULT_RAM_PADDING_PER_CONTAINER
+          double remainingRam = containerRamValue - DEFAULT_RAM_PADDING_PER_CONTAINER
               - usedRamValue;
           instanceRequiredRam = remainingRam / instancesAllocationSize;
         }
@@ -164,7 +123,7 @@ public class TaskInstanceMapCalculation {
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Set<Vertex> taskVertexSet) {
 
     Map<String, Double> diskMap = taskAttributes.getTaskDiskMap(taskVertexSet);
-    Map<Integer, Map<InstanceId, Double>> instancesDiskContainerMap = new HashMap<>();
+    HashMap<Integer, Map<InstanceId, Double>> instancesDiskContainerMap = new HashMap<>();
 
     for (int containerId : containerInstanceAllocationMap.keySet()) {
       Double usedDiskValue = 0.0;
@@ -187,9 +146,9 @@ public class TaskInstanceMapCalculation {
       Double containerDiskValue = getContainerDiskValue(containerInstanceAllocationMap);
       int instancesAllocationSize = instancesToBeCalculated.size();
       if (instancesAllocationSize != 0) {
-        Double instanceRequiredDisk = 0.0;
+        double instanceRequiredDisk = 0.0;
         if (!containerDiskValue.equals(NOT_SPECIFIED_NUMBER_VALUE)) {
-          Double remainingDisk = containerDiskValue - DEFAULT_DISK_PADDING_PER_CONTAINER
+          double remainingDisk = containerDiskValue - DEFAULT_DISK_PADDING_PER_CONTAINER
               - usedDiskValue;
           instanceRequiredDisk = remainingDisk / instancesAllocationSize;
         }
@@ -213,7 +172,7 @@ public class TaskInstanceMapCalculation {
       Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Set<Vertex> taskVertexSet) {
 
     Map<String, Double> taskCpuMap = taskAttributes.getTaskCPUMap(taskVertexSet);
-    Map<Integer, Map<InstanceId, Double>> instancesCpuContainerMap = new HashMap<>();
+    HashMap<Integer, Map<InstanceId, Double>> instancesCpuContainerMap = new HashMap<>();
 
     for (int containerId : containerInstanceAllocationMap.keySet()) {
       Double usedCPUValue = 0.0;
@@ -238,7 +197,7 @@ public class TaskInstanceMapCalculation {
       if (instancesAllocationSize != 0) {
         Double instanceRequiredCpu = 0.0;
         if (!containerCpuValue.equals(NOT_SPECIFIED_NUMBER_VALUE)) {
-          Double remainingCpu = containerCpuValue - DEFAULT_CPU_PADDING_PER_CONTAINER
+          double remainingCpu = containerCpuValue - DEFAULT_CPU_PADDING_PER_CONTAINER
               - usedCPUValue;
           instanceRequiredCpu = remainingCpu / instancesAllocationSize;
         }

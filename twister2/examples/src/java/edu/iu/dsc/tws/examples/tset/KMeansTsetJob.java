@@ -17,6 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.api.tset.CachedTSet;
+import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBuilder;
@@ -47,9 +49,9 @@ public class KMeansTsetJob extends TaskWorker implements Serializable {
     if (workerId == 0) {
       try {
         KMeansDataGenerator.generateData(
-            "txt", new Path(dinputDirectory), numFiles, dsize, 100, dimension);
+            "txt", new Path(dinputDirectory), numFiles, dsize, 100, dimension, config);
         KMeansDataGenerator.generateData(
-            "txt", new Path(cinputDirectory), numFiles, csize, 100, dimension);
+            "txt", new Path(cinputDirectory), numFiles, csize, 100, dimension, config);
       } catch (IOException ioe) {
         throw new RuntimeException("Failed to create input data:", ioe);
       }
@@ -60,7 +62,13 @@ public class KMeansTsetJob extends TaskWorker implements Serializable {
     TSet<double[][]> centers = builder.createSource(new CenterSource()).cache();
 
     for (int i = 0; i < iterations; i++) {
-//      TSet<double[][]> KmeansTSet = points.map( )
+      TSet<double[][]> kmeansTSet = ((CachedTSet<double[][]>) points).map(
+          new MapFunction<double[][], double[][]>() {
+            @Override
+            public double[][] map(double[][] doubles) {
+              return new double[0][];
+            }
+          });
     }
   }
 

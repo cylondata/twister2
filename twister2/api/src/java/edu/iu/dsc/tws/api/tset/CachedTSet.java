@@ -20,14 +20,14 @@ import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 
-public class CacheTSet<T> extends BaseTSet<T> {
+public class CachedTSet<T> extends BaseTSet<T> {
 
   private BaseTLink<T> parent;
   // todo: This dataobject should bind to the executor, I think! because tsets would not be
   //  visible to the executor
   private DataObject<T> datapoints = null;
 
-  public CacheTSet(Config cfg, TaskGraphBuilder bldr, BaseTLink<T> prnt) {
+  public CachedTSet(Config cfg, TaskGraphBuilder bldr, BaseTLink<T> prnt) {
     super(cfg, bldr);
     this.parent = prnt;
     this.name = "cache-" + parent.getName();
@@ -50,6 +50,20 @@ public class CacheTSet<T> extends BaseTSet<T> {
     return true;
   }
 
+  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
+    TSetBuilder cacheBuilder = TSetBuilder.newBuilder(config);
+    cacheBuilder.setMode(builder.getMode());
+    SourceTSet<T> cacheSource = (SourceTSet<T>) cacheBuilder.createSource(new CacheSource());
+    return cacheSource.map(mapFn);
+  }
+
+  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
+    TSetBuilder cacheBuilder = TSetBuilder.newBuilder(config);
+    cacheBuilder.setMode(builder.getMode());
+    SourceTSet<T> cacheSource = (SourceTSet<T>) cacheBuilder.createSource(new CacheSource());
+    return cacheSource.flatMap(mapFn);
+  }
+
   @Override
   public void buildConnection(ComputeConnection connection) {
 
@@ -66,6 +80,19 @@ public class CacheTSet<T> extends BaseTSet<T> {
     @Override
     public void close() {
 
+    }
+  }
+
+  private class CacheSource implements Source<T> {
+
+    @Override
+    public boolean hasNext() {
+      return false;
+    }
+
+    @Override
+    public T next() {
+      return null;
     }
   }
 }

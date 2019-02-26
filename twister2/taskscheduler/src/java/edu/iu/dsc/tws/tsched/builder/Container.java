@@ -50,10 +50,6 @@ public class Container {
     return taskInstances;
   }
 
-  public void setTaskInstances(HashSet<TaskSchedulePlan.TaskInstancePlan> taskInstances) {
-    this.taskInstances = taskInstances;
-  }
-
   public Resource getResource() {
     return resource;
   }
@@ -62,19 +58,10 @@ public class Container {
     this.resource = resource;
   }
 
-  public int getPaddingPercentage() {
-    return paddingPercentage;
-  }
-
-  public void setPaddingPercentage(int paddingPercentage) {
-    this.paddingPercentage = paddingPercentage;
-  }
-
   /**
    * It will add the task instance plan to the container if the required and available resource
    * meets the requirements. It will call @assertHasSpace to validate that whether the resource
    * satisfies the required value.
-   *
    * @param taskInstancePlan
    * @throws TaskSchedulerException
    */

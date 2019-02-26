@@ -59,6 +59,10 @@ public final class TSetBuilder {
     return new TSetBuilder(cfg);
   }
 
+  public OperationMode getOpMode() {
+    return opMode;
+  }
+
   public TSetBuilder setMode(OperationMode mode) {
     this.opMode = mode;
     return this;

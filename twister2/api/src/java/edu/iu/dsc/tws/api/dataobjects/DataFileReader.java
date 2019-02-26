@@ -39,8 +39,7 @@ public class DataFileReader {
    * -dimensional array for the later processing.
    */
   public double[][] readCentroids(String fileName, int dimension, int numberOfClusters) {
-    double[][] centroids = readCentroids(fileName, dimension, numberOfClusters, fileSystem);
-    return centroids;
+    return readCentroids(fileName, dimension, numberOfClusters, fileSystem);
   }
 
   /**

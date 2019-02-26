@@ -178,7 +178,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
     // todo: why cant we add a single cache tset here?
     DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
     children.add(direct);
-    CacheTSet<T> cacheTSet = new CacheTSet<T>(config, builder, direct);
+    CachedTSet<T> cacheTSet = new CachedTSet<T>(config, builder, direct);
     direct.getChildren().add(cacheTSet);
     return cacheTSet;
   }
