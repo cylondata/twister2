@@ -105,8 +105,8 @@ public final class Timing {
     }
 
     //using SOUTs to bypass logging levels
-    System.out.println(String.format("Total time [%s - %s] = %s",
-        flagA, flagB, totalDiffs.toString()));
+    System.out.println(String.format("Total time [%s - %s] = %s%s",
+        flagA, flagB, totalDiffs.toString(), timingUnitMap.get(flagA).getLabel()));
     System.out.println(String.format("Taking average for %d events", flagALongs.size()));
 
     return totalDiffs.divide(
