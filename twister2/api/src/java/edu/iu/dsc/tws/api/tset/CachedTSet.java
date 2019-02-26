@@ -20,14 +20,14 @@ import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 
-public class CacheTSet<T> extends BaseTSet<T> {
+public class CachedTSet<T> extends BaseTSet<T> {
 
   private BaseTLink<T> parent;
   // todo: This dataobject should bind to the executor, I think! because tsets would not be
   //  visible to the executor
   private DataObject<T> datapoints = null;
 
-  public CacheTSet(Config cfg, TaskGraphBuilder bldr, BaseTLink<T> prnt) {
+  public CachedTSet(Config cfg, TaskGraphBuilder bldr, BaseTLink<T> prnt) {
     super(cfg, bldr);
     this.parent = prnt;
     this.name = "cache-" + parent.getName();
