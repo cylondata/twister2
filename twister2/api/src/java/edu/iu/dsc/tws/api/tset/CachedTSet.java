@@ -90,7 +90,13 @@ public class CachedTSet<T> extends BaseTSet<T> {
 
     @Override
     public boolean hasNext() {
-      return (current < count) ? datapoints.getPartitions(current).getConsumer().hasNext() : false;
+      boolean hasNext = (current < count) ? datapoints.getPartitions(current)
+          .getConsumer().hasNext() : false;
+
+      while (++current < count && !hasNext) {
+        hasNext = datapoints.getPartitions(current).getConsumer().hasNext();
+      }
+      return hasNext;
     }
 
     @Override
