@@ -44,6 +44,30 @@ public class SourceTSet<T> extends BaseTSet<T> {
     return set;
   }
 
+  public <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
+    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    children.add(direct);
+    IMapTSet<P, T> set = new IMapTSet<>(config, builder, direct, mapFn);
+    children.add(set);
+    return set;
+  }
+
+  public <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
+    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    children.add(direct);
+    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, builder, direct, mapFn);
+    children.add(set);
+    return set;
+  }
+
+  public SinkTSet<T> sink(Sink<T> sink) {
+    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    children.add(direct);
+    SinkTSet<T> sinkTSet = new SinkTSet<>(config, builder, direct, sink);
+    children.add(sinkTSet);
+    return sinkTSet;
+  }
+
   @Override
   public boolean baseBuild() {
     builder.addSource(getName(), new SourceOp<T>(source), parallel);

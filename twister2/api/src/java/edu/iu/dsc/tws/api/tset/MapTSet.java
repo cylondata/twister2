@@ -26,6 +26,7 @@ package edu.iu.dsc.tws.api.tset;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.MapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
@@ -39,6 +40,46 @@ public class MapTSet<T, P> extends BaseTSet<T> {
     super(cfg, builder);
     this.parent = parent;
     this.mapFn = mapFunc;
+  }
+
+  public <P> MapTSet<P, T> map(MapFunction<T, P> mFn) {
+    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    children.add(direct);
+    MapTSet<P, T> set = new MapTSet<P, T>(config, builder, direct, mFn);
+    children.add(set);
+    return set;
+  }
+
+  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mFn) {
+    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    children.add(direct);
+    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, builder, direct, mFn);
+    children.add(set);
+    return set;
+  }
+
+  public <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mFn) {
+    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    children.add(direct);
+    IMapTSet<P, T> set = new IMapTSet<>(config, builder, direct, mFn);
+    children.add(set);
+    return set;
+  }
+
+  public <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mFn) {
+    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    children.add(direct);
+    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, builder, direct, mFn);
+    children.add(set);
+    return set;
+  }
+
+  public SinkTSet<T> sink(Sink<T> sink) {
+    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    children.add(direct);
+    SinkTSet<T> sinkTSet = new SinkTSet<>(config, builder, direct, sink);
+    children.add(sinkTSet);
+    return sinkTSet;
   }
 
   @SuppressWarnings("unchecked")

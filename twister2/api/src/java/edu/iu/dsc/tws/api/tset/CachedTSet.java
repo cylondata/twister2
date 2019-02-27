@@ -84,15 +84,24 @@ public class CachedTSet<T> extends BaseTSet<T> {
   }
 
   private class CacheSource implements Source<T> {
+    //TODO: need to check this codes logic developed now just based on the data object API
+    private int count = datapoints.getPartitions().length;
+    private int current = 0;
 
     @Override
     public boolean hasNext() {
-      return false;
+      boolean hasNext = (current < count) ? datapoints.getPartitions(current)
+          .getConsumer().hasNext() : false;
+
+      while (++current < count && !hasNext) {
+        hasNext = datapoints.getPartitions(current).getConsumer().hasNext();
+      }
+      return hasNext;
     }
 
     @Override
     public T next() {
-      return null;
+      return datapoints.getPartitions(current).getConsumer().next();
     }
   }
 }
