@@ -169,9 +169,8 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
   @Override
   public FileStatus[] listStatus(final Path f) throws IOException {
     final org.apache.hadoop.fs.FileStatus[] hadoopFiles =
-        this.fileSystem.listStatus(toHadoopPath(f));
+        this.hadoopFileSystem.listStatus(toHadoopPath(f));
     final FileStatus[] files = new FileStatus[hadoopFiles.length];
-
     for (int i = 0; i < files.length; i++) {
       files[i] = new HadoopFileStatus(hadoopFiles[i]);
     }

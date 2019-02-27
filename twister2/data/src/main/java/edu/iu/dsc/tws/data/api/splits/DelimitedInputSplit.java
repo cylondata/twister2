@@ -14,12 +14,15 @@ package edu.iu.dsc.tws.data.api.splits;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 
 public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
+
+  private static final Logger LOG = Logger.getLogger(DelimitedInputSplit.class.getName());
 
   // The charset used to convert strings to bytes
   private String charsetName = "UTF-8";
@@ -62,6 +65,8 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   private transient boolean end;
 
   private long offset = -1;
+
+  private Config config;
 
   /**
    * Constructs a split with host information.
@@ -150,6 +155,8 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   public void configure(Config parameters) {
     super.configure(parameters);
 
+    this.config = parameters;
+
     // the if() clauses are to prevent the configure() method from
     // overwriting the values set by the setters
     if (Arrays.equals(delimiter, new byte[]{'\n'})) {
@@ -166,8 +173,8 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
    * and positions the stream at the correct position, making sure that any partial
    * record at the beginning is skipped.
    */
-  public void open() throws IOException {
-    super.open();
+  public void open(Config cfg) throws IOException {
+    super.open(cfg);
     initBuffers();
 
     this.offset = splitStart;
