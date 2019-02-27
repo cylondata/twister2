@@ -28,11 +28,9 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
-import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGenerator;
@@ -60,22 +58,24 @@ public class KMeansTsetEnvJob extends TSetBaseWorker implements Serializable {
 
     if (workerId == 0) {
       try {
-        KMeansDataGenerator.generateData(
-            "txt", new Path(dinputDirectory), numFiles, dsize, 100, dimension);
-        KMeansDataGenerator.generateData(
-            "txt", new Path(cinputDirectory), numFiles, csize, 100, dimension);
+        KMeansDataGenerator.generateData("txt", new Path(dinputDirectory), numFiles, dsize,
+            100, dimension, executionEnv.getConfig());
+        KMeansDataGenerator.generateData("txt", new Path(cinputDirectory), numFiles, csize,
+            100, dimension, executionEnv.getConfig());
       } catch (IOException ioe) {
         throw new RuntimeException("Failed to create input data:", ioe);
       }
     }
-    TSetBuilder builder = TSetBuilder.newBuilder(config);
-    builder.setMode(OperationMode.BATCH);
-    TSet<double[][]> points = builder.createSource(new PointsSource()).cache();
-    TSet<double[][]> centers = builder.createSource(new CenterSource()).cache();
+//    TSetBuilder builder = TSetBuilder.newBuilder(config);
+    executionEnv.setMode(OperationMode.BATCH);
+    TSet<double[][]> points = executionEnv.createSource(new PointsSource()).cache();
+//    TSet<double[][]> centers = executionEnv.createSource(new CenterSource()).cache();
 
-    for (int i = 0; i < iterations; i++) {
-//      TSet<double[][]> KmeansTSet = points.map( )
-    }
+
+
+//    for (int i = 0; i < iterations; i++) {
+////      TSet<double[][]> KmeansTSet = points.map( )
+//    }
   }
 
   public class PointsSource implements Source<double[][]> {
