@@ -152,6 +152,8 @@ public class InMessage {
    */
   private ReceivedState receivedState;
 
+  private int workerId;
+
   public InMessage(int originatingId, MessageType messageType,
                    ChannelMessageReleaseCallback releaseListener,
                    MessageHeader header) {
@@ -164,6 +166,21 @@ public class InMessage {
     if (header.getNumberTuples() > 0) {
       deserializedData = new ArrayList<>();
     }
+  }
+
+  public InMessage(int originatingId, MessageType messageType,
+                   ChannelMessageReleaseCallback releaseListener,
+                   MessageHeader header, int workerId) {
+    this.releaseListener = releaseListener;
+    this.originatingId = originatingId;
+    this.complete = false;
+    this.dataType = messageType;
+    this.receivedState = ReceivedState.INIT;
+    this.header = header;
+    if (header.getNumberTuples() > 0) {
+      deserializedData = new ArrayList<>();
+    }
+    this.workerId = workerId;
   }
 
   public void setDataType(MessageType dataType) {
@@ -214,7 +231,10 @@ public class InMessage {
       remaining = remaining - Integer.BYTES - 16;
       currentLocation += Integer.BYTES;
     } else if (bufferCurrentObjectLength == -1) {
-      bufferCurrentObjectLength = buffer.getByteBuffer().getInt(0);
+      bufferCurrentObjectLength = buffer.getByteBuffer().getInt(4);
+      remaining = remaining - 2 * Integer.BYTES;
+      currentLocation += 2 * Integer.BYTES;
+    } else {
       remaining = remaining - Integer.BYTES;
       currentLocation += Integer.BYTES;
     }
@@ -235,27 +255,29 @@ public class InMessage {
 
       // if we have seen all, lets break
       if (Math.abs(expectedObjects) == bufferSeenObjects) {
+        if (remaining > 0) {
+          throw new RuntimeException(String.format("%d -> %d Something wrong, a buffer "
+              + "cannot have leftover: %d expected %d addedBuffers %d",
+              originatingId, workerId, remaining, expectedObjects, addedBuffers));
+        }
         complete = true;
         break;
       }
 
       // we can read another object
       if (remaining >= Integer.BYTES) {
-        try {
-          bufferCurrentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-          bufferPreviousReadForObject = 0;
-          currentLocation += Integer.BYTES;
-          remaining = remaining - Integer.BYTES;
-        } catch (IndexOutOfBoundsException e) {
-          LOG.info(String.format("Exception remaining %d size %d currentLoc %d", remaining,
-              buffer.getSize(), currentLocation));
-          throw e;
-        }
-      } else {
+        bufferCurrentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
+        bufferPreviousReadForObject = 0;
+        currentLocation += Integer.BYTES;
+        remaining = remaining - Integer.BYTES;
+      } else if (remaining == 0) {
         // we need to break, we set the length to -1 because we need to read the length
         // in next buffer
         bufferCurrentObjectLength = -1;
         break;
+      } else {
+        throw new RuntimeException(String.format("%d Something wrong, a buffer "
+            + "cannot have leftover: %d", workerId, remaining));
       }
     }
     buffers.add(buffer);

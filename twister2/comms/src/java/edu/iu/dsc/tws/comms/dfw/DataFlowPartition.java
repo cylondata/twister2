@@ -264,6 +264,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int ed) {
     this.edge = ed;
     this.thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
+    this.executor = taskPlan.getThisExecutor();
     LOG.log(Level.FINE, String.format("%d setup loadbalance routing %s %s",
         taskPlan.getThisExecutor(), sources, destinations));
     this.thisTasks = taskPlan.getTasksOfThisExecutor();

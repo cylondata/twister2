@@ -29,6 +29,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -130,10 +133,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    * Pending deserialization
    */
   private Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations;
+
   /**
-   * Non grouped current messages
+   * Non grouped current messages, workerId, source, inMessage
    */
-  private Map<Integer, InMessage> currentMessages = new HashMap<>();
+  private Table<Integer, Integer, InMessage> currentMessages = HashBasedTable.create();
 
   /**
    * These are the workers from which we receive messages
@@ -326,7 +330,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     byteBuffer.position(buffer.getSize());
     byteBuffer.flip();
 
-    InMessage currentMessage = currentMessages.get(id);
+    // we have the source of the message at 0th position as an integer
+    int source = byteBuffer.getInt(0);
+    InMessage currentMessage = currentMessages.get(id, source);
     if (currentMessage == null) {
       MessageHeader header = messageDeSerializer.get(id).buildHeader(buffer, e);
 
@@ -334,7 +340,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       if (isKeyed) {
         currentMessage.setKeyType(receiveKeyType);
       }
-      currentMessages.put(id, currentMessage);
+      currentMessages.put(id, source, currentMessage);
 //      LOG.info(String.format("%d number of messages %d", executor, header.getNumberTuples()));
       // we add the message immediately to the deserialization as we can deserialize partially
       Queue<InMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
@@ -346,7 +352,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     buffersReceived++;
     if (currentMessage.addBufferAndCalculate(buffer)) {
       completedReceives++;
-      currentMessages.remove(id);
+      currentMessages.remove(id, source);
     }
 //    LOG.info(String.format("%d completed recvs %d buffers %d", executor,
 //        completedReceives, buffersReceived));
@@ -682,7 +688,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   }
 
   private void freeReceiveBuffers(int id) {
-    InMessage currentMessage = currentMessages.get(id);
+    InMessage currentMessage = currentMessages.get(id, 0);
     if (currentMessage == null) {
       return;
     }
