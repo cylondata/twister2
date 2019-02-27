@@ -32,10 +32,13 @@ public class DataSource<T, O extends InputSplit<T>> extends DataObjectImpl<T> {
 
   private O[] splits;
 
-  public DataSource(Config config, InputPartitioner<T, O> input, int numSplits) {
-    super(config);
+  private Config config;
+
+  public DataSource(Config cfg, InputPartitioner<T, O> input, int numSplits) {
+    super(cfg);
     this.input = input;
-    this.input.configure(config);
+    this.input.configure(cfg);
+    this.config = cfg;
     try {
       this.splits = this.input.createInputSplits(numSplits);
     } catch (Exception e) {
@@ -48,7 +51,8 @@ public class DataSource<T, O extends InputSplit<T>> extends DataObjectImpl<T> {
     InputSplit<T> split = assigner.getNextInputSplit("localhost", id);
     if (split != null) {
       try {
-        split.open();
+        //split.open();
+        split.open(config);
       } catch (IOException e) {
         throw new RuntimeException("Failed to open split", e);
       }

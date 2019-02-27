@@ -246,6 +246,35 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
     }
   }
 
+  public void open(Config cfg) throws IOException {
+    this.splitStart = getStart();
+    this.splitLength = getLength();
+    this.config = cfg;
+
+    LOG.log(Level.INFO, "Opening input split " + getPath() + " ["
+        + splitStart + "," + splitLength + "]");
+
+    // open the split in an asynchronous thread
+    //final InputSplitOpenThread isot = new InputSplitOpenThread(this, this.openTimeout);
+    final InputSplitOpenThread isot = new InputSplitOpenThread(this, this.openTimeout, config);
+    isot.start();
+
+    try {
+      this.stream = isot.waitForCompletion();
+      //TODO L3: Check the need to input stream wrapper ( ex for decoding ).
+      // This is not an initial requirement
+      //this.stream = decorateInputStream(this.stream, fileSplit);
+    } catch (Throwable t) {
+      throw new IOException("Error opening the Input Split " + getPath()
+          + " [" + splitStart + "," + splitLength + "]: " + t.getMessage(), t);
+    }
+
+    // get FSDataInputStream
+    if (this.splitStart != 0) {
+      this.stream.seek(this.splitStart);
+    }
+  }
+
   /**
    * Obtains a DataInputStream in an thread that is not interrupted.
    * This is a necessary hack around the problem that the HDFS client is very
@@ -263,12 +292,22 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
 
     private volatile boolean aborted;
 
+    private Config config;
+
     public InputSplitOpenThread(FileInputSplit split, long timeout) {
       super("Transient InputSplit Opener");
       setDaemon(true);
 
       this.split = split;
       this.timeout = timeout;
+    }
+
+    public InputSplitOpenThread(FileInputSplit split, long timeout, Config cfg) {
+      super("Transient InputSplit Opener");
+      setDaemon(true);
+      this.split = split;
+      this.timeout = timeout;
+      this.config = cfg;
     }
 
     @Override

@@ -75,7 +75,8 @@ public class DataObjectSource extends BaseSource {
     boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
     if (!shared) {
       this.source = runtime.createInput(cfg, context,
-          new LocalTextInputPartitioner(new Path(datainputDirectory), context.getParallelism()));
+          new LocalTextInputPartitioner(new Path(datainputDirectory),
+              context.getParallelism(), config));
     } else {
       this.source = runtime.createInput(cfg, context,
           new SharedTextInputPartitioner(new Path(datainputDirectory)));

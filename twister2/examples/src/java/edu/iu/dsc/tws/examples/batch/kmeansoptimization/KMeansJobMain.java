@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,7 +33,7 @@ public class KMeansJobMain {
 
   private static final Logger LOG = Logger.getLogger(KMeansJobMain.class.getName());
 
-  public static void main(String[] args) throws ParseException, IOException {
+  public static void main(String[] args) throws ParseException {
     LOG.log(Level.INFO, "KMeans Clustering Job");
 
     // first load the configurations from command line and config files
