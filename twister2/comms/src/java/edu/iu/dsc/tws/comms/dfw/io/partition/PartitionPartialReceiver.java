@@ -106,6 +106,8 @@ public class PartitionPartialReceiver implements MessageReceiver {
    */
   private int progressAttempts = 0;
 
+  private boolean representSourceSet = false;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
@@ -143,7 +145,11 @@ public class PartitionPartialReceiver implements MessageReceiver {
   public boolean onMessage(int src, int path, int target, int flags, Object object) {
     lock.lock();
     try {
-      this.representSource = src;
+      if (!representSourceSet) {
+        this.representSource = src;
+        representSourceSet = true;
+      }
+
       List<Object> dests = destinationMessages.get(target);
 
       if ((flags & MessageFlags.END) == MessageFlags.END) {
