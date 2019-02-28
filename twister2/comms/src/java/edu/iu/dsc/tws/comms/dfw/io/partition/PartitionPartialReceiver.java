@@ -147,6 +147,10 @@ public class PartitionPartialReceiver implements MessageReceiver {
       List<Object> dests = destinationMessages.get(target);
 
       if ((flags & MessageFlags.END) == MessageFlags.END) {
+        for (Map.Entry<Integer, List<Object>> e : destinationMessages.entrySet()) {
+          swapToReady(e.getKey(), e.getValue());
+        }
+
         onFinishedSources.add(src);
         return true;
       }
