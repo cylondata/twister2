@@ -327,6 +327,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
     // we have the source of the message at 0th position as an integer
     int source = byteBuffer.getInt(0);
+    LOG.info(String.format("%d got message from %d - %d", executor, id, source));
     InMessage currentMessage = currentMessages.get(id, source);
     if (currentMessage == null) {
       MessageHeader header = messageDeSerializer.get(id).buildHeader(buffer, e);

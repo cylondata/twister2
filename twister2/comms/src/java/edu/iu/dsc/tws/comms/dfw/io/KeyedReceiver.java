@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -125,7 +126,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
       batchDone.put(expectedIdPerTarget.getKey(), false);
       isEmptySent.put(expectedIdPerTarget.getKey(), false);
       sendQueue.put(expectedIdPerTarget.getKey(),
-          new ArrayDeque<Object>());
+          new ConcurrentLinkedDeque<Object>());
     }
   }
 
