@@ -35,8 +35,10 @@ common_deps_files = [
     "@log4j_log4j//jar",
     "@org_apache_htrace_htrace_core4//jar",
     "@org_apache_hadoop_hadoop_hdfs_client//jar",
+    "@com_fasterxml_jackson_core_jackson_databind//:com_fasterxml_jackson_core_jackson_databind",
     "//third_party:harp_collective",
     "//twister2/compatibility/storm:twister2-storm",
+
 ]
 
 t2_java_lib(
