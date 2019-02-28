@@ -103,6 +103,8 @@ public abstract class KeyedReceiver implements MessageReceiver {
 
   protected Set<Integer> thisSources;
 
+  protected boolean representSourceSet = false;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     this.dataFlowOperation = op;
@@ -153,7 +155,11 @@ public abstract class KeyedReceiver implements MessageReceiver {
           + " object which is not of type Tuple or List for target %d", executor, target));
     }
 
-    representSource = src;
+    if (!representSourceSet) {
+      representSource = src;
+      representSourceSet = true;
+    }
+
     added = offerMessage(target, object);
 
     if (added) {
