@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.api.tset;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
 import edu.iu.dsc.tws.common.config.Config;
@@ -32,7 +31,7 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
 
   private FlatMapFunction<P, T> mapFn;
 
-  public FlatMapTSet(Config cfg, TaskGraphBuilder bldr, BaseTLink<P> parent,
+  public FlatMapTSet(Config cfg, TSetBuilder bldr, BaseTLink<P> parent,
                      FlatMapFunction<P, T> mapFunc) {
     super(cfg, bldr);
     this.parent = parent;
@@ -41,13 +40,13 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
 
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getMode());
+    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
 
     int p = calculateParallelism(parent);
     String newName = generateName("flat-map", parent);
 
-    ComputeConnection connection = builder.addCompute(newName,
+    ComputeConnection connection = builder.getTaskGraphBuilder().addCompute(newName,
         new FlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;

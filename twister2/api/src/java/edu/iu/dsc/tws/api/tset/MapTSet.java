@@ -24,7 +24,6 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.MapOp;
@@ -35,41 +34,40 @@ public class MapTSet<T, P> extends BaseTSet<T> {
 
   private MapFunction<P, T> mapFn;
 
-  public MapTSet(Config cfg, TaskGraphBuilder builder,
-                 BaseTLink<P> parent, MapFunction<P, T> mapFunc) {
+  public MapTSet(Config cfg, TSetBuilder builder, BaseTLink<P> parent, MapFunction<P, T> mapFunc) {
     super(cfg, builder);
     this.parent = parent;
     this.mapFn = mapFunc;
   }
 
-  public <P> MapTSet<P, T> map(MapFunction<T, P> mFn) {
+  public <P1> MapTSet<P1, T> map(MapFunction<T, P1> mFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
     children.add(direct);
-    MapTSet<P, T> set = new MapTSet<P, T>(config, builder, direct, mFn);
+    MapTSet<P1, T> set = new MapTSet<P1, T>(config, builder, direct, mFn);
     children.add(set);
     return set;
   }
 
-  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mFn) {
+  public <P1> FlatMapTSet<P1, T> flatMap(FlatMapFunction<T, P1> mFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
     children.add(direct);
-    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, builder, direct, mFn);
+    FlatMapTSet<P1, T> set = new FlatMapTSet<P1, T>(config, builder, direct, mFn);
     children.add(set);
     return set;
   }
 
-  public <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mFn) {
+  public <P1> IMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
     children.add(direct);
-    IMapTSet<P, T> set = new IMapTSet<>(config, builder, direct, mFn);
+    IMapTSet<P1, T> set = new IMapTSet<>(config, builder, direct, mFn);
     children.add(set);
     return set;
   }
 
-  public <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mFn) {
+  public <P1> IFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
     children.add(direct);
-    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, builder, direct, mFn);
+    IFlatMapTSet<P1, T> set = new IFlatMapTSet<>(config, builder, direct, mFn);
     children.add(set);
     return set;
   }
@@ -84,12 +82,12 @@ public class MapTSet<T, P> extends BaseTSet<T> {
 
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getMode());
+    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     int p = calculateParallelism(parent);
 
-    ComputeConnection connection = builder.addCompute(generateName("map", parent),
-        new MapOp<P, T>(mapFn, isIterable, keyed), p);
+    ComputeConnection connection = builder.getTaskGraphBuilder().addCompute(generateName("map",
+        parent), new MapOp<>(mapFn, isIterable, keyed), p);
 
     parent.buildConnection(connection);
     return true;

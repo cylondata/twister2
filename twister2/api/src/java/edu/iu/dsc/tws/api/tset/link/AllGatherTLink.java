@@ -24,9 +24,9 @@
 package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
+import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.data.api.DataType;
 public class AllGatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
   private BaseTSet<T> parent;
 
-  public AllGatherTLink(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt) {
+  public AllGatherTLink(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt) {
     super(cfg, bldr);
     this.parent = prnt;
     this.name = "all-gather-" + parent.getName();

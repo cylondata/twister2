@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
@@ -40,7 +39,9 @@ public abstract class BaseTSet<T> implements TSet<T> {
   /**
    * The builder to use to building the task graph
    */
-  protected TaskGraphBuilder builder;
+//  protected TaskGraphBuilder builder;
+
+  protected TSetBuilder builder;
 
   /**
    * Name of the data set
@@ -84,9 +85,15 @@ public abstract class BaseTSet<T> implements TSet<T> {
    */
   private StateType stateType = StateType.DISTRIBUTED;
 
-  public BaseTSet(Config cfg, TaskGraphBuilder bldr) {
+//  public BaseTSet(Config cfg, TaskGraphBuilder bldr) {
+//    this.children = new ArrayList<>();
+//    this.builder = bldr;
+//    this.config = cfg;
+//  }
+
+  public BaseTSet(Config cfg, TSetBuilder tSetBuilder) {
     this.children = new ArrayList<>();
-    this.builder = bldr;
+    this.builder = tSetBuilder;
     this.config = cfg;
   }
 

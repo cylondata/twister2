@@ -24,11 +24,11 @@
 package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
+import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
 import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
@@ -42,7 +42,7 @@ public class KeyedGatherTLink<T, K> extends KeyValueTLink<T, K> {
 
   private Selector<T, K> selector;
 
-  public KeyedGatherTLink(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
+  public KeyedGatherTLink(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt,
                           PartitionFunction<K> parFn, Selector<T, K> selc) {
     super(cfg, bldr);
     this.parent = prnt;
