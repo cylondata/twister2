@@ -95,8 +95,8 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
         taskPlan.getThisExecutor(), thisSources));
     this.thisTasks = taskPlan.getTasksOfThisExecutor();
     this.router = new PartitionRouter(taskPlan, sources, destinations);
-    Map<Integer, Set<Integer>> internal = router.getInternalSendTasks(0);
-    Map<Integer, Set<Integer>> external = router.getExternalSendTasks(0);
+    Map<Integer, Set<Integer>> internal = router.getInternalSendTasks();
+    Map<Integer, Set<Integer>> external = router.getExternalSendTasks();
     this.instancePlan = taskPlan;
     this.type = t;
     this.edgeValue = edge;
@@ -250,13 +250,9 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
       routingParameters.addExternalRoute(route);
     }
     routingParameters.setDestinationId(route);
-//    LOG.info(String.format("%d Eending to %d: %d %s",
-//        instancePlan.getThisExecutor(), index, route, destinationIndex));
 
     index = (index + 1) % destinations.size();
     destinationIndex.put(source, index);
-//    LOG.info(String.format("%d EEending to %d: %d %s",
-//        instancePlan.getThisExecutor(), index, route, destinationIndex));
     return routingParameters;
   }
 
@@ -264,11 +260,6 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
                                        Object message) {
     // okay this must be for the
     return finalReceiver.onMessage(source, path, target, flags, message);
-  }
-
-  @Override
-  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
-    return true;
   }
 
   protected Set<Integer> receivingExecutors() {
@@ -285,8 +276,7 @@ public class DataFlowLoadBalance implements DataFlowOperation, ChannelReceiver {
 
   public boolean receiveMessage(MessageHeader header, Object object) {
     return finalReceiver.onMessage(header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
-        router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-            DataFlowContext.DEFAULT_DESTINATION), header.getFlags(), object);
+        router.mainTaskOfExecutor(), header.getFlags(), object);
   }
 
   protected boolean isLastReceiver() {

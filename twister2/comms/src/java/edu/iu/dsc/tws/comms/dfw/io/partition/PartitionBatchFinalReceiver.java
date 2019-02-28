@@ -91,6 +91,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       onFinishedSources.put(d, new HashSet<>());
     }
 
+    this.receiver.init(cfg, expectedIds.keySet());
     LOG.log(Level.INFO, String.format("%d Expected ids %s", executor, expectedIds));
   }
 

@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.TaskPlan;
@@ -34,7 +33,6 @@ public class PartitionRouter {
   // task -> (path -> tasks)
   private Map<Integer, List<Integer>> upstream;
   private Set<Integer> receiveExecutors;
-  private Set<Integer> thisExecutorTasks;
 
   private Map<Integer, List<Integer>> partialReceives;
 
@@ -89,8 +87,6 @@ public class PartitionRouter {
     // we are not interested in our own
     receiveExecutors.remove(taskPlan.getThisExecutor());
 
-    this.thisExecutorTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
-
     List<Integer> thisSources = new ArrayList<>(
         TaskPlanUtils.getTasksOfThisWorker(taskPlan, srscs));
     for (int dest : dests) {
@@ -99,7 +95,6 @@ public class PartitionRouter {
   }
 
   public Set<Integer> receivingExecutors() {
-    LOG.log(Level.FINE, taskPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
     return receiveExecutors;
   }
 
@@ -112,37 +107,17 @@ public class PartitionRouter {
     return partialReceives;
   }
 
-  public boolean isLastReceiver() {
-    // now check if destination is in this task
-    return true;
-  }
-
-  public Map<Integer, Set<Integer>> getInternalSendTasks(int source) {
+  public Map<Integer, Set<Integer>> getInternalSendTasks() {
     // return a routing
     return internalSendTasks;
   }
 
-  public Map<Integer, Set<Integer>> getExternalSendTasks(int source) {
+  public Map<Integer, Set<Integer>> getExternalSendTasks() {
     return externalSendTasks;
   }
 
-  public Map<Integer, Set<Integer>> getExternalSendTasksForPartial(int source) {
-    return null;
-  }
-
-  public int mainTaskOfExecutor(int executor, int path) {
+  public int mainTaskOfExecutor() {
     return -1;
-  }
-
-  /**
-   * The destination id is the destination itself
-   */
-  public int destinationIdentifier(int source, int path) {
-    return 0;
-  }
-
-  public Map<Integer, Integer> getPathAssignedToTasks() {
-    return null;
   }
 
   private static Set<Integer> getExecutorsHostingTasks(TaskPlan plan, Set<Integer> tasks) {
