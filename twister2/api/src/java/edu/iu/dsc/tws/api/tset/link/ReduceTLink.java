@@ -38,14 +38,6 @@ public class ReduceTLink<T> extends BaseTLink<T> {
 
   private BaseTSet<T> parent;
 
-//  public ReduceTLink(Config cfg, TaskGraphBuilder bldr,
-//                     BaseTSet<T> prnt, ReduceFunction<T> rFn) {
-//    super(cfg, bldr);
-//    this.reduceFn = rFn;
-//    this.parent = prnt;
-//    this.name = "reduce-" + parent.getName();
-//  }
-
   public ReduceTLink(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt, ReduceFunction<T> rFn) {
     super(cfg, bldr);
     this.reduceFn = rFn;
@@ -58,7 +50,6 @@ public class ReduceTLink<T> extends BaseTLink<T> {
     return parent.getName();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public boolean baseBuild() {
     return true;
@@ -69,7 +60,7 @@ public class ReduceTLink<T> extends BaseTLink<T> {
     DataType dataType = TSetUtils.getDataType(getType());
 
     connection.reduce(parent.getName(), Constants.DEFAULT_EDGE,
-        new ReduceOpFunction<T>(getReduceFn()), dataType);
+        new ReduceOpFunction<>(getReduceFn()), dataType);
   }
 
   public ReduceFunction<T> getReduceFn() {

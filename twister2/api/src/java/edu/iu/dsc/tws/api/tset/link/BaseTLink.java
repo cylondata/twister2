@@ -66,7 +66,7 @@ public abstract class BaseTLink<T> implements TLink<T> {
   @Override
   public TLink<T> setName(String n) {
     this.name = n;
-    return null;
+    return this;
   }
 
   public String getName() {

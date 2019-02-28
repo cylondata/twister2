@@ -36,7 +36,7 @@ public class SinkTSet<T> extends BaseTSet<T> {
     int p = calculateParallelism(parent);
 
     ComputeConnection connection = builder.getTaskGraphBuilder().addSink(getName(),
-        new SinkOp<T>(sink, isIterable, keyed), p);
+        new SinkOp<>(sink, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }

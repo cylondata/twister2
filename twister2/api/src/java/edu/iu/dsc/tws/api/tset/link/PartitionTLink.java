@@ -37,14 +37,6 @@ public class PartitionTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
 
   private PartitionFunction<T> partitionFunction;
 
-//  public PartitionTLink(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-//                        PartitionFunction<T> parFn) {
-//    super(cfg, bldr);
-//    this.parent = prnt;
-//    this.partitionFunction = parFn;
-//    this.name = "partition-" + parent.getName();
-//  }
-
   public PartitionTLink(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt,
                         PartitionFunction<T> parFn) {
     super(cfg, bldr);
