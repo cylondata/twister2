@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
-public class DirectTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
+public class DirectTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
   private BaseTSet<T> parent;
 
   public DirectTLink(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt) {

@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.data.api.DataType;
  *
  * @param <T> type of data
  */
-public class AllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
+public class AllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
   private ReduceFunction<T> reduceFn;
 
   private BaseTSet<T> parent;

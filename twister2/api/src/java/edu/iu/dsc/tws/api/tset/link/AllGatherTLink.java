@@ -36,7 +36,7 @@ import edu.iu.dsc.tws.data.api.DataType;
  *
  * @param <T> type of data
  */
-public class AllGatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
+public class AllGatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
   private BaseTSet<T> parent;
 
   public AllGatherTLink(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt) {
