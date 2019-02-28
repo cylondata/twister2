@@ -16,6 +16,7 @@ t2_java_lib(
         "//twister2/proto:proto-java",
         "//twister2/resource-scheduler/src/java:resource-scheduler-java",
         "//twister2/task/src/main/java:task-java",
+        "//twister2/master/src/java:master-java",
         "//twister2/taskscheduler/src/java:taskscheduler-java",
         "@com_google_guava_guava//jar",
         "@com_google_protobuf_protobuf_java//jar",
