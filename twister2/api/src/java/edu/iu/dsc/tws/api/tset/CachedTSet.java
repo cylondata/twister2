@@ -44,8 +44,8 @@ public class CachedTSet<T> extends BaseTSet<T> {
     boolean keyed = TSetUtils.isKeyedInput(parent);
     // lets override the parallelism
     int p = calculateParallelism(parent);
-    ComputeConnection connection = builder.addSink(getName(),
-        new SinkOp<T>(new CacheSink(), isIterable, keyed), p);
+    ComputeConnection connection = builder.addSink(getName(), new SinkOp<>(new CacheSink(),
+        isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }
@@ -73,6 +73,7 @@ public class CachedTSet<T> extends BaseTSet<T> {
 
     @Override
     public boolean add(T value) {
+      // todo every time add is called, a new partition will be made! how to handle that?
       datapoints.addPartition(new EntityPartition<T>(0, value)); //
       return true;
     }

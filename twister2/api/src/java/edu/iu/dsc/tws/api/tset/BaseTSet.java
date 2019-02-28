@@ -119,7 +119,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public ReduceTLink<T> reduce(ReduceFunction<T> reduceFn) {
-    ReduceTLink<T> reduce = new ReduceTLink<T>(config, builder, this, reduceFn);
+    ReduceTLink<T> reduce = new ReduceTLink<>(config, builder, this, reduceFn);
     children.add(reduce);
     return reduce;
   }
@@ -139,7 +139,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
-    AllReduceTLink<T> reduce = new AllReduceTLink<T>(config, builder, this, reduceFn);
+    AllReduceTLink<T> reduce = new AllReduceTLink<>(config, builder, this, reduceFn);
     children.add(reduce);
     return reduce;
   }
@@ -178,7 +178,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
     // todo: why cant we add a single cache tset here?
     DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
     children.add(direct);
-    CachedTSet<T> cacheTSet = new CachedTSet<T>(config, builder, direct);
+    CachedTSet<T> cacheTSet = new CachedTSet<>(config, builder, direct);
     direct.getChildren().add(cacheTSet);
     return cacheTSet;
   }

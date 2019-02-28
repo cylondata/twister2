@@ -43,8 +43,8 @@ public class TSetEnv {
     this.tSetBuilder.setMode(mode);
   }
 
-  public TSetBuilder getTSetBuilder(){
-    return  tSetBuilder;
+  public TSetBuilder getTSetBuilder() {
+    return tSetBuilder;
   }
 
   public void run() { // todo: is this the best name? or should this be a method in the tset?
