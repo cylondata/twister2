@@ -43,11 +43,6 @@ public class InMessage {
   private Queue<DataBuffer> buffers = new LinkedBlockingQueue<>();
 
   /**
-   * The overflow buffers created
-   */
-  private Queue<DataBuffer> overFlowBuffers = new LinkedBlockingQueue<>();
-
-  /**
    * We call this to release the buffers
    */
   private ChannelMessageReleaseCallback releaseListener;
@@ -65,7 +60,7 @@ public class InMessage {
   /**
    * Keep whether we have all the buffers added
    */
-  protected boolean complete = false;
+  protected boolean complete;
 
   /**
    * Message type
@@ -256,9 +251,11 @@ public class InMessage {
       // if we have seen all, lets break
       if (Math.abs(expectedObjects) == bufferSeenObjects) {
         if (remaining > 0) {
-          throw new RuntimeException(String.format("%d -> %d Something wrong, a buffer "
-              + "cannot have leftover: %d expected %d addedBuffers %d",
-              originatingId, workerId, remaining, expectedObjects, addedBuffers));
+          String msg = String.format("%d -> %d Something wrong, a buffer "
+                  + "cannot have leftover: %d expected %d addedBuffers %d",
+              originatingId, workerId, remaining, expectedObjects, addedBuffers);
+          LOG.severe("Un-expected error - " + msg);
+          throw new RuntimeException(msg);
         }
         complete = true;
         break;
@@ -276,8 +273,10 @@ public class InMessage {
         bufferCurrentObjectLength = -1;
         break;
       } else {
-        throw new RuntimeException(String.format("%d Something wrong, a buffer "
-            + "cannot have leftover: %d", workerId, remaining));
+        String msg = String.format("%d Something wrong, a buffer "
+            + "cannot have leftover: %d", workerId, remaining);
+        LOG.severe("Un-expected error - " + msg);
+        throw new RuntimeException(msg);
       }
     }
     buffers.add(buffer);
@@ -353,14 +352,6 @@ public class InMessage {
 
   public void setDeserializingKey(Object deserializingKey) {
     this.deserializingKey = deserializingKey;
-  }
-
-  public void addOverFlowBuffer(DataBuffer buffer) {
-    overFlowBuffers.offer(buffer);
-  }
-
-  public int getBufferSeenObjects() {
-    return bufferSeenObjects;
   }
 
   public int getUnPkCurrentObjectLength() {
