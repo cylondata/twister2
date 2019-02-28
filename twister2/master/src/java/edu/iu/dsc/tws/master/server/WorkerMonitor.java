@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -71,7 +71,7 @@ public class WorkerMonitor implements MessageHandler {
 
   private boolean jobMasterAssignsWorkerIDs;
 
-  private TreeMap<Integer, WorkerWithState> workers;
+  private ConcurrentSkipListMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
 
   public WorkerMonitor(JobMaster jobMaster, RRServer rrServer, DashboardClient dashClient,
@@ -84,7 +84,7 @@ public class WorkerMonitor implements MessageHandler {
     this.numberOfWorkers = job.getNumberOfWorkers();
     this.jobMasterAssignsWorkerIDs = jobMasterAssignsWorkerIDs;
 
-    workers = new TreeMap<>();
+    workers = new ConcurrentSkipListMap<>();
     waitList = new HashMap<>();
   }
 
