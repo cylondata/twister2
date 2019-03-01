@@ -468,7 +468,7 @@ public final class MPIWorker {
    * last method to call to close the worker
    */
   private void closeWorker() {
-    LOG.log(Level.INFO, "Workers done... ");
+    LOG.log(Level.INFO, String.format("Worker finished executing - %d", wInfo.getWorkerID()));
     // send worker completed message to the Job Master and finish
     // Job master will delete the StatefulSet object
     masterClient.sendWorkerCompletedMessage();

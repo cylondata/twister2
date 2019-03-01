@@ -272,11 +272,6 @@ public class DataFlowGather implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
-    return true;
-  }
-
-  @Override
   public boolean send(int source, Object message, int flags) {
     return delegate.sendMessage(source, message, pathToUse, flags,
         sendRoutingParameters(source, pathToUse));

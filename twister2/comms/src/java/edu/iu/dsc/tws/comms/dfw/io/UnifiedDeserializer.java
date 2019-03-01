@@ -75,11 +75,15 @@ public class UnifiedDeserializer implements MessageDeSerializer {
 
       if (currentMessage.getUnPkBuffers() == 0) {
         currentLocation = 16;
+        remaining = remaining - 16;
+      } else {
+        currentLocation = 4;
+        remaining = remaining - 4;
       }
 
       if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {
         currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-        remaining = buffer.getSize() - Integer.BYTES - 16;
+        remaining = remaining - Integer.BYTES;
         currentLocation += Integer.BYTES;
         Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
         currentMessage.setDeserializingObject(value);

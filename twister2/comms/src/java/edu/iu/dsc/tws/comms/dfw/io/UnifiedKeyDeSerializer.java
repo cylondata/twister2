@@ -88,6 +88,9 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
       if (currentMessage.getUnPkBuffers() == 0) {
         currentLocation = 16;
         remaining = remaining - 16;
+      } else {
+        currentLocation = 4;
+        remaining = remaining - 4;
       }
 
       if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {
