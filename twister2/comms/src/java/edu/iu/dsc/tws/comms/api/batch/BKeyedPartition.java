@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 
 public class BKeyedPartition {
@@ -34,9 +35,8 @@ public class BKeyedPartition {
                          MessageType dataType, MessageType keyType,
                          BulkReceiver rcvr, DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
-    String shuffleDir = comm.getPersistentDirectory();
     this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
-        new DPartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
+        new PartitionBatchFinalReceiver(rcvr),
         new PartitionPartialReceiver(), dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());

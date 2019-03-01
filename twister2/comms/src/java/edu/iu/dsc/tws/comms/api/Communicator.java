@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,7 +46,7 @@ public class Communicator {
   /**
    * The directory to use for persisting any operations
    */
-  private String persistentDirectory = "/tmp";
+  private String persistentDirectory;
 
   public Communicator(Config cfg, TWSChannel ch) {
     this(cfg, ch, null);
@@ -63,6 +64,15 @@ public class Communicator {
     LOG.log(Level.FINE, String.format("Using the persistent directory %s", persistentDirectory));
     this.edgeGenerator = new EdgeGenerator(0);
     this.idGenerator = new TaskIdGenerator(100000000);
+  }
+
+  protected Communicator(Config config, TWSChannel channel, EdgeGenerator edgeGenerator,
+                      TaskIdGenerator idGenerator, String persistentDirectory) {
+    this.channel = channel;
+    this.config = config;
+    this.edgeGenerator = edgeGenerator;
+    this.idGenerator = idGenerator;
+    this.persistentDirectory = persistentDirectory;
   }
 
   public TWSChannel getChannel() {
@@ -90,5 +100,16 @@ public class Communicator {
    */
   public void close() {
     channel.close();
+  }
+
+  /**
+   * Create a communicator with new configuration
+   * @param newConfig the new configuration
+   * @return communicator
+   */
+  public Communicator newWithConfig(Map<String, Object> newConfig) {
+    return new Communicator(
+        Config.newBuilder().putAll(config).putAll(newConfig).build(), channel,
+        edgeGenerator, idGenerator, persistentDirectory);
   }
 }

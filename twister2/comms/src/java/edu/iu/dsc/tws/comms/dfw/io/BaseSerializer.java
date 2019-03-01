@@ -42,9 +42,12 @@ public abstract class BaseSerializer implements MessageSerializer {
    */
   protected KryoSerializer serializer;
 
+  protected int executor;
+
 
   public BaseSerializer(KryoSerializer serializer, int executor) {
     this.serializer = serializer;
+    this.executor = executor;
     LOG.fine("Initializing serializer on worker: " + executor);
   }
 
@@ -56,7 +59,6 @@ public abstract class BaseSerializer implements MessageSerializer {
   @Override
   public Object build(Object data, Object partialBuildObject) {
     OutMessage sendMessage = (OutMessage) partialBuildObject;
-    // we got an already serialized message, lets just return it
     ChannelMessage channelMessage = new ChannelMessage(sendMessage.getSource(),
         sendMessage.getDataType(), MessageDirection.OUT, sendMessage.getReleaseCallback());
     buildHeader(sendMessage, channelMessage, 0);
@@ -93,6 +95,8 @@ public abstract class BaseSerializer implements MessageSerializer {
             buildHeader(sendMessage, channelMessage, -1);
           }
         }
+      } else {
+        buffer.getByteBuffer().putInt(sendMessage.getSource());
       }
 
       // okay we have a body to build and it is not done fully yet
