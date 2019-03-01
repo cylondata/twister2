@@ -371,6 +371,19 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     }
     return false;
   }
+  
+  public boolean containsTaskEdge(TV sourceTaskVertex,
+                                  TV targetTaskVertex, TE taskEdge) {
+    boolean flag = false;
+    for (DirectedEdge<TV, TE> de : directedEdges) {
+      if (vertexComparator.compare(de.sourceTaskVertex, sourceTaskVertex) == 0
+          && vertexComparator.compare(de.targetTaskVertex, targetTaskVertex) == 0
+          && edgeComparator.compare(de.taskEdge, taskEdge) == 0) {
+        flag = true;
+      }
+    }
+    return flag;
+  }
 
   public boolean containsTaskEdge(TV sourceTaskVertex,
                                   TV targetTaskVertex, TE taskEdge) {
