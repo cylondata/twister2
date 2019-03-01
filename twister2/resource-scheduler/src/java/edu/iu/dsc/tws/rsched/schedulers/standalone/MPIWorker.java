@@ -549,15 +549,17 @@ public final class MPIWorker {
         "default", "default");
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, workerId);
     List<String> portNames = SchedulerContext.additionalPorts(cfg);
-    Map<String, Integer> freePorts = new HashMap<>();
+    Map<String, Integer> freePorts;
     if (portNames == null) {
       portNames = new ArrayList<>();
     }
-    portNames.add("__worker__");
+    //portNames.add("__worker__");
     freePorts = NetworkUtils.findFreePorts(portNames);
-    Integer workerPort = freePorts.get("__worker__");
-    freePorts.remove("__worker__");
-
+    //Integer workerPort = freePorts.get("__worker__");
+    //todo temporary using worker id as the worker port
+    Integer workerPort = workerId;
+    //freePorts.remove("__worker__");
+    LOG.severe("Worker info host:" + processName + ":" + workerPort);
     return WorkerInfoUtils.createWorkerInfo(workerId,
         processName, workerPort, nodeInfo, computeResource, freePorts);
   }

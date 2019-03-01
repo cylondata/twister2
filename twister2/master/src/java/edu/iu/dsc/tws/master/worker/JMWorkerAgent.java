@@ -273,6 +273,7 @@ public final class JMWorkerAgent {
 
     boolean registered = registerWorker();
     if (!registered) {
+      this.close();
       throw new RuntimeException("Could not register JobMaster with Dashboard. Exiting .....");
     }
 
