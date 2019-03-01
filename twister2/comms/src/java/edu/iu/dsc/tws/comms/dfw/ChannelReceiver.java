@@ -16,11 +16,13 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 public interface ChannelReceiver {
   /**
    * Receive a fully built message
+   *
    * @param header the header
    * @param object the built message
    * @return true if accepted
    */
   boolean receiveMessage(MessageHeader header, Object object);
+
   /**
    * For partial receives the path and
    * @param source the source
