@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
 import java.util.Queue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
@@ -21,8 +20,6 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
  * Keyed reduce final receiver for streaming  mode
  */
 public class KReduceStreamingFinalReceiver extends KReduceStreamingReceiver {
-  private static final Logger LOG = Logger.getLogger(KReduceStreamingFinalReceiver.class.getName());
-
   /**
    * Final receiver that get the reduced values for the operation
    */
@@ -40,7 +37,7 @@ public class KReduceStreamingFinalReceiver extends KReduceStreamingReceiver {
   @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;
-    boolean sourcesFinished = false;
+    boolean sourcesFinished;
     for (int target : messages.keySet()) {
 
       if (batchDone.get(target)) {
@@ -56,8 +53,10 @@ public class KReduceStreamingFinalReceiver extends KReduceStreamingReceiver {
 
       if (!targetSendQueue.isEmpty()) {
         Object current;
-        while ((current = targetSendQueue.poll()) != null) {
-          singularReceiver.receive(target, current);
+        while ((current = targetSendQueue.peek()) != null) {
+          if (singularReceiver.receive(target, current)) {
+            targetSendQueue.poll();
+          }
         }
       }
 

@@ -22,20 +22,13 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.data.utils.HdfsUtils;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -72,7 +65,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("datalocality-batchexample");
     jobBuilder.setWorkerClass(DataLocalityBatchTaskExample.class.getName());
-    jobBuilder.addComputeResource(1, 512, 2);
+    jobBuilder.addComputeResource(1, 512, 5);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
@@ -94,19 +87,19 @@ public class DataLocalityBatchTaskExample implements IWorker {
     GraphBuilder builder = GraphBuilder.newBuilder();
 
     builder.addSource("source", g);
-    builder.setParallelism("source", 4);
+    builder.setParallelism("source", 2);
 
     builder.addSource("sink1", m);
-    builder.setParallelism("sink1", 3);
+    builder.setParallelism("sink1", 2);
 
     builder.addSink("sink2", r);
-    builder.setParallelism("sink2", 3);
+    builder.setParallelism("sink2", 2);
 
     builder.addSink("merge", m1);
-    builder.setParallelism("merge", 3);
+    builder.setParallelism("merge", 2);
 
     builder.addSink("final", f);
-    builder.setParallelism("final", 4);
+    builder.setParallelism("final", 2);
 
     //Task graph Structure
     /**   Source
@@ -132,7 +125,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     builder.connect("merge", "final", "partition-edge5",
             OperationNames.PARTITION);
 
-    builder.operationMode(OperationMode.BATCH);
+    builder.operationMode(OperationMode.STREAMING);
 
     builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
     builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
@@ -156,13 +149,14 @@ public class DataLocalityBatchTaskExample implements IWorker {
     builder.addConfiguration("sink2", "outputdataset2", sinkOutputDataset2);
 
     DataFlowTaskGraph graph = builder.build();
-    List<JobMasterAPI.WorkerInfo> workerList = null;
+    List<JobMasterAPI.WorkerInfo> workerList;
     try {
       workerList = workerController.getAllWorkers();
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
       return;
     }
+
     WorkerPlan workerPlan = createWorkerPlan(workerList);
 
     //Assign the "datalocalityaware" or "roundrobin" scheduling mode in config file.
@@ -190,15 +184,15 @@ public class DataLocalityBatchTaskExample implements IWorker {
       }
     }
 
-    TWSChannel network = Network.initializeChannel(config, workerController);
+    /*TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
           workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network, OperationMode.BATCH);
-    executor.execute();
+    executor.execute();*/
   }
 
-  public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
+  private WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
     for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
       Worker w = new Worker(workerInfo.getWorkerID());
@@ -241,8 +235,6 @@ public class DataLocalityBatchTaskExample implements IWorker {
     private int count = 0;
     private Config config;
     private String outputFile;
-    private String inputFile;
-    private HdfsUtils hdfsUtils = null;
 
     @Override
     public boolean execute(IMessage message) {
@@ -261,12 +253,11 @@ public class DataLocalityBatchTaskExample implements IWorker {
       for (Map.Entry<String, Object> entry : configs.entrySet()) {
         if (entry.getKey().contains("outputdataset")) {
           List<String> outputFiles = (List<String>) entry.getValue();
-          for (int i = 0; i < outputFiles.size(); i++) {
-            this.outputFile = outputFiles.get(i);
+          for (String outputFile1 : outputFiles) {
+            this.outputFile = outputFile1;
             LOG.info("Output File(s):" + this.outputFile);
           }
         }
-        hdfsUtils = new HdfsUtils(config, outputFile);
       }
     }
   }

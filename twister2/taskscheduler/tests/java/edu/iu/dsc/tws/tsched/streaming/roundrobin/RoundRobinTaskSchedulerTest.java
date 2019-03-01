@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.tsched.streaming.roundrobin;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,11 +26,14 @@ import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class RoundRobinTaskSchedulerTest {
+
+  private static final Logger LOG = Logger.getLogger(RoundRobinTaskSchedulerTest.class.getName());
   @Test
   public void testUniqueSchedules() {
     int parallel = 256;
@@ -48,7 +52,6 @@ public class RoundRobinTaskSchedulerTest {
       Map<Integer, TaskSchedulePlan.ContainerPlan> map2 = plan2.getContainersMap();
       for (TaskSchedulePlan.ContainerPlan containerPlan : plan1.getContainers()) {
         TaskSchedulePlan.ContainerPlan p2 = map2.get(containerPlan.getContainerId());
-
         Assert.assertTrue(containerEquals(containerPlan, p2));
       }
     }
@@ -81,7 +84,7 @@ public class RoundRobinTaskSchedulerTest {
 
 
   private boolean containerEquals(TaskSchedulePlan.ContainerPlan p1,
-                                 TaskSchedulePlan.ContainerPlan p2) {
+                                  TaskSchedulePlan.ContainerPlan p2) {
     if (p1.getContainerId() != p2.getContainerId()) {
       return false;
     }
@@ -122,16 +125,21 @@ public class RoundRobinTaskSchedulerTest {
     builder.addSource("source", ts, parallel);
     ComputeConnection c = builder.addSink("sink", testSink, 1);
     c.reduce("source", "edge", Op.SUM, DataType.INTEGER);
+    builder.setMode(OperationMode.STREAMING);
     return builder.build();
   }
 
   public static class TestSource extends BaseSource {
+    private static final long serialVersionUID = -254264903510284748L;
+
     @Override
     public void execute() {
     }
   }
 
   public static class TestSink extends BaseSink {
+    private static final long serialVersionUID = -254264903510284748L;
+
     @Override
     public boolean execute(IMessage message) {
       return false;

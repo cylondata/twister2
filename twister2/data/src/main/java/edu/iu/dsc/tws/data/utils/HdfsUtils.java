@@ -29,8 +29,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
@@ -50,7 +48,6 @@ import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 public class HdfsUtils {
 
   private static final Logger LOG = Logger.getLogger(HdfsUtils.class.getName());
-  private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
   private Config config;
   private String fileName;
@@ -66,17 +63,18 @@ public class HdfsUtils {
 
   /**
    * This method create and return the file system respective to the configuration file.
+   *
    * @return hadoopFileSystem
    */
   public HadoopFileSystem createHDFSFileSystem() {
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
     conf.set("fs.defaultFS", HdfsDataContext.getHdfsUrlDefault(config));
-    HadoopFileSystem hadoopFileSystem = null;
+    HadoopFileSystem hadoopFileSystem;
     try {
       hadoopFileSystem = new HadoopFileSystem(conf, org.apache.hadoop.fs.FileSystem.get(conf));
     } catch (IOException ioe) {
-      ioe.printStackTrace();
+      throw new RuntimeException("Hadoop File System Creation Error:", ioe);
     }
     return hadoopFileSystem;
   }
@@ -84,58 +82,44 @@ public class HdfsUtils {
   public Path getPath() {
     String directoryString = HdfsDataContext.getHdfsUrlDefault(this.config) + "/" + this.fileName;
     Path path = new Path(directoryString);
-    LOG.fine("Directory String Is:" + directoryString + "\tpath:" + path);
     return path;
   }
 
 
   /**
    * This method is used to locate the datanode location of the input file name.
-   * @param fName
+   *
    * @return datanodeName
    */
-  public String getDFSCK(String[] fName) {
+  public String getDFSCK(String[] fName) throws IOException {
 
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-
     ByteArrayOutputStream bStream = new ByteArrayOutputStream();
     PrintStream out = new PrintStream(bStream, true);
-    StringBuilder stringBuilder = new StringBuilder();
 
     String datanodeName = null;
-    try {
-      InetSocketAddress namenodeAddress =
-          new InetSocketAddress(HdfsDataContext.getHdfsNamenodeDefault(config),
-              HdfsDataContext.getHdfsNamenodePortDefault(config));
-      DFSClient dfsClient = new DFSClient(namenodeAddress, conf);
-      ClientProtocol nameNode = dfsClient.getNamenode();
-      DatanodeInfo[] datanodeReport =
-          nameNode.getDatanodeReport(HdfsConstants.DatanodeReportType.ALL);
-      for (DatanodeInfo di : datanodeReport) {
-        datanodeName = di.getHostName();
-      }
-      //It will be enabled later...!
-      //run(new DFSck(conf, out), fName);
-      //out.println();
-    } catch (Exception e) {
-      e.printStackTrace();
+    InetSocketAddress namenodeAddress = new InetSocketAddress(
+        HdfsDataContext.getHdfsNamenodeDefault(config),
+        HdfsDataContext.getHdfsNamenodePortDefault(config));
+    DFSClient dfsClient = new DFSClient(namenodeAddress, conf);
+    ClientProtocol nameNode = dfsClient.getNamenode();
+    DatanodeInfo[] datanodeReport =
+        nameNode.getDatanodeReport(HdfsConstants.DatanodeReportType.ALL);
+    for (DatanodeInfo di : datanodeReport) {
+      datanodeName = di.getHostName();
     }
+    //It will be enabled later...!
+    //run(new DFSck(conf, out), fName);
+    //out.println();
     return datanodeName;
   }
 
   /**
    * To get the length of the filename.
-   * @param fName
-   * @return
    */
   public int getLengthOfFile(String fName) {
     int length = 0;
-
-    //String inputFileName = HdfsDataContext.getHdfsDataDirectory(config) + "/" + fName;
-    //String directoryString = HdfsDataContext.getHdfsUrlDefault(config) + inputFileName;
-    //Path path = new Path(directoryString);
-
     Path path = new Path(fName);
     HadoopFileSystem hadoopFileSystem = createHDFSFileSystem();
     try {
@@ -146,8 +130,8 @@ public class HdfsUtils {
           length++;
         }
       }
-    } catch (Exception ee) {
-      ee.printStackTrace();
+    } catch (IOException ee) {
+      throw new RuntimeException("Reading Exception:", ee);
     }
     return length;
   }

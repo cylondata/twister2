@@ -9,9 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.tsched;
+package edu.iu.dsc.tws.tsched.userdefined;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -19,6 +20,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -48,9 +50,6 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
 
   private static final Logger LOG = Logger.getLogger(UserDefinedTaskScheduler.class.getName());
 
-  //Represents the task schedule plan Id
-  private static int taskSchedulePlanId = 0;
-
   //Represents the task instance ram
   private Double instanceRAM;
 
@@ -63,61 +62,12 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
   //Config object
   private Config config;
 
-  /**
-   * This method retrieves the parallel task map and the total number of task instances for the task
-   * vertex set. Then, it will allocate the instances into the number of containers allocated for
-   * the task in a round robin fashion.
-   */
-  private static Map<Integer, List<InstanceId>> userDefinedSchedulingAlgorithm(
-          Set<Vertex> taskVertexSet, int numberOfContainers) {
-
-    TaskAttributes taskAttributes = new TaskAttributes();
-    Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();
-
-    for (int i = 0; i < numberOfContainers; i++) {
-      roundrobinAllocation.put(i, new ArrayList<>());
-    }
-
-    try {
-      Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
-      int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
-      if (numberOfContainers < totalTaskInstances) {
-        int globalTaskIndex = 0;
-        for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-          String task = e.getKey();
-          int numberOfInstances = e.getValue();
-          int containerIndex;
-          for (int i = 0; i < numberOfInstances; i++) {
-            containerIndex = i % numberOfContainers;
-            roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
-          }
-          globalTaskIndex++;
-        }
-      }
-
-      //To print the allocation map
-      for (Map.Entry<Integer, List<InstanceId>> entry : roundrobinAllocation.entrySet()) {
-        Integer integer = entry.getKey();
-        List<InstanceId> instanceIds = entry.getValue();
-        LOG.fine("Container Index:" + integer);
-        for (InstanceId instanceId : instanceIds) {
-          LOG.fine("Task Instance Details:"
-                  + "\t Task Name:" + instanceId.getTaskName()
-                  + "\t Task id:" + instanceId.getTaskId()
-                  + "\t Task index:" + instanceId.getTaskIndex());
-        }
-      }
-    } catch (NullPointerException ne) {
-      ne.printStackTrace();
-    }
-    return roundrobinAllocation;
+  public UserDefinedTaskScheduler() {
   }
 
   /**
    * This method initialize the task instance values with the values specified in the task config
    * object.
-   *
-   * @param cfg
    */
   @Override
   public void initialize(Config cfg) {
@@ -131,12 +81,12 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
    * This is the base method which receives the dataflow taskgraph and the worker plan to allocate
    * the task instances to the appropriate workers with their required ram, disk, and cpu values.
    *
-   * @param dataFlowTaskGraph
-   * @param workerPlan
-   * @return
+   * @return TaskSchedulePlan
    */
   @Override
   public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
+
+    int taskSchedulePlanId = 0;
 
     //Allocate the task instances into the containers/workers
     Set<TaskSchedulePlan.ContainerPlan> containerPlans = new LinkedHashSet<>();
@@ -146,22 +96,22 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
 
     //Allocate the task instances into the logical containers.
     Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
-            userDefinedSchedulingAlgorithm(taskVertexSet, workerPlan.getNumberOfWorkers());
+        userDefinedSchedulingAlgorithm(taskVertexSet, workerPlan.getNumberOfWorkers());
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
-            this.instanceRAM, this.instanceCPU, this.instanceDisk);
+        this.instanceRAM, this.instanceCPU, this.instanceDisk);
 
     Map<Integer, Map<InstanceId, Double>> instancesRamMap =
-            instanceMapCalculation.getInstancesRamMapInContainer(roundRobinContainerInstanceMap,
-                    taskVertexSet);
+        instanceMapCalculation.getInstancesRamMapInContainer(roundRobinContainerInstanceMap,
+            taskVertexSet);
 
     Map<Integer, Map<InstanceId, Double>> instancesDiskMap =
-            instanceMapCalculation.getInstancesDiskMapInContainer(roundRobinContainerInstanceMap,
-                    taskVertexSet);
+        instanceMapCalculation.getInstancesDiskMapInContainer(roundRobinContainerInstanceMap,
+            taskVertexSet);
 
     Map<Integer, Map<InstanceId, Double>> instancesCPUMap =
-            instanceMapCalculation.getInstancesCPUMapInContainer(roundRobinContainerInstanceMap,
-                    taskVertexSet);
+        instanceMapCalculation.getInstancesCPUMapInContainer(roundRobinContainerInstanceMap,
+            taskVertexSet);
 
     for (int containerId : roundRobinContainerInstanceMap.keySet()) {
 
@@ -179,10 +129,10 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
         double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
 
         Resource instanceResource = new Resource(instanceRAMValue,
-                instanceDiskValue, instanceCPUValue);
+            instanceDiskValue, instanceCPUValue);
 
         taskInstancePlanMap.put(id, new TaskSchedulePlan.TaskInstancePlan(id.getTaskName(),
-                id.getTaskId(), id.getTaskIndex(), instanceResource));
+            id.getTaskId(), id.getTaskIndex(), instanceResource));
 
         containerRAMValue += instanceRAMValue;
         containerDiskValue += instanceDiskValue;
@@ -192,28 +142,80 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
       Worker worker = workerPlan.getWorker(containerId);
       Resource containerResource;
 
-      /*Create the container resource value which is based on the worker values received from the
-      worker plan */
+      //Create the container resource value based on the worker plan
       if (worker != null && worker.getCpu() > 0 && worker.getDisk() > 0 && worker.getRam() > 0) {
         containerResource = new Resource((double) worker.getRam(),
-                (double) worker.getDisk(), (double) worker.getCpu());
+            (double) worker.getDisk(), (double) worker.getCpu());
         LOG.fine("Worker (if loop):" + containerId + "\tRam:" + worker.getRam()
-                + "\tDisk:" + worker.getDisk() + "\tCpu:" + worker.getCpu());
+            + "\tDisk:" + worker.getDisk() + "\tCpu:" + worker.getCpu());
       } else {
         containerResource = new Resource(containerRAMValue, containerDiskValue, containerCpuValue);
         LOG.fine("Worker (else loop):" + containerId + "\tRam:" + containerRAMValue
-                + "\tDisk:" + containerDiskValue + "\tCpu:" + containerCpuValue);
+            + "\tDisk:" + containerDiskValue + "\tCpu:" + containerCpuValue);
       }
 
       //Schedule the task instance plan into the task container plan.
       TaskSchedulePlan.ContainerPlan taskContainerPlan =
-              new TaskSchedulePlan.ContainerPlan(containerId,
-                      new HashSet<>(taskInstancePlanMap.values()), containerResource);
+          new TaskSchedulePlan.ContainerPlan(containerId,
+              new HashSet<>(taskInstancePlanMap.values()), containerResource);
       containerPlans.add(taskContainerPlan);
     }
-
-    //In future, taskSchedulePlanId will be replaced with the JobId or Task Graph Id.
     return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
   }
-}
 
+  /**
+   * This method retrieves the parallel task map and the total number of task instances for the task
+   * vertex set. Then, it will allocate the instances into the number of containers allocated for
+   * the task in a round robin fashion.
+   */
+  private static Map<Integer, List<InstanceId>> userDefinedSchedulingAlgorithm(
+      Set<Vertex> taskVertexSet, int numberOfContainers) {
+
+    TaskAttributes taskAttributes = new TaskAttributes();
+    Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();
+
+    for (int i = 0; i < numberOfContainers; i++) {
+      roundrobinAllocation.put(i, new ArrayList<>());
+    }
+
+    TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
+    orderedTaskSet.addAll(taskVertexSet);
+    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+
+    int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
+    if (numberOfContainers < totalTaskInstances) {
+      int globalTaskIndex = 0;
+      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+        String task = e.getKey();
+        int numberOfInstances = e.getValue();
+        int containerIndex;
+        for (int i = 0; i < numberOfInstances; i++) {
+          containerIndex = i % numberOfContainers;
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
+        }
+        globalTaskIndex++;
+      }
+    }
+
+    //To print the allocation map
+    for (Map.Entry<Integer, List<InstanceId>> entry : roundrobinAllocation.entrySet()) {
+      Integer integer = entry.getKey();
+      List<InstanceId> instanceIds = entry.getValue();
+      LOG.fine("Container Index:" + integer);
+      for (InstanceId instanceId : instanceIds) {
+        LOG.fine("Task Instance Details:"
+            + "\t Task Name:" + instanceId.getTaskName()
+            + "\t Task id:" + instanceId.getTaskId()
+            + "\t Task index:" + instanceId.getTaskIndex());
+      }
+    }
+    return roundrobinAllocation;
+  }
+
+  private static class VertexComparator implements Comparator<Vertex> {
+    @Override
+    public int compare(Vertex o1, Vertex o2) {
+      return o1.getName().compareTo(o2.getName());
+    }
+  }
+}

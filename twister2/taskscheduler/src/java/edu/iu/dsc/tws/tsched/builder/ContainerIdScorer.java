@@ -28,10 +28,6 @@ public class ContainerIdScorer implements Scorer<Container> {
     this(0, 0, sortAscending);
   }
 
-  public ContainerIdScorer(Integer firstId, Integer maxId) {
-    this(firstId, maxId, true);
-  }
-
   private ContainerIdScorer(Integer firstId, Integer maxId, boolean sortAscending) {
     this.sortAscending = sortAscending;
     this.firstId = firstId;
