@@ -60,7 +60,11 @@ public final class KMeansDataGenerator {
   private static void generateText(Path directory, int numOfFiles, int sizeOfFile,
                                    int sizeMargin, int dimension, Config config)
       throws IOException {
-    FileSystem fs = FileSystem.get(directory.toUri());
+    FileSystem fs = FileSystem.get(directory.toUri(), config);
+    if (fs.exists(directory)) {
+      LOG.info("%%% Deleting Directory:%%%" + directory);
+      fs.delete(directory, true);
+    }
     for (int i = 0; i < numOfFiles; i++) {
       FSDataOutputStream outputStream = fs.create(new Path(directory,
           generateRandom(10) + ".txt"));
@@ -96,8 +100,11 @@ public final class KMeansDataGenerator {
    */
   private static void generateCSV(Path directory, int numOfFiles, int sizeOfFile,
                                   int sizeMargin, int dimension, Config config) throws IOException {
-    FileSystem fs = FileSystem.get(directory.toUri());
-    Random random = new Random(System.currentTimeMillis());
+
+    FileSystem fs = FileSystem.get(directory.toUri(), config);
+    if (fs.exists(directory)) {
+      fs.delete(directory, true);
+    }
     for (int i = 0; i < numOfFiles; i++) {
       FSDataOutputStream outputStream = fs.create(new Path(directory,
           generateRandom(10) + ".csv"));

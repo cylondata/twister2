@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -107,6 +106,8 @@ public class PartitionPartialReceiver implements MessageReceiver {
    */
   private int progressAttempts = 0;
 
+  private boolean representSourceSet = false;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
@@ -144,16 +145,19 @@ public class PartitionPartialReceiver implements MessageReceiver {
   public boolean onMessage(int src, int path, int target, int flags, Object object) {
     lock.lock();
     try {
-      this.representSource = src;
+      if (!representSourceSet) {
+        this.representSource = src;
+        representSourceSet = true;
+      }
+
       List<Object> dests = destinationMessages.get(target);
 
       if ((flags & MessageFlags.END) == MessageFlags.END) {
-        if (onFinishedSources.contains(src)) {
-          LOG.log(Level.WARNING,
-              String.format("%d Duplicate finish from source id %d", this.executor, src));
-        } else {
-          onFinishedSources.add(src);
+        for (Map.Entry<Integer, List<Object>> e : destinationMessages.entrySet()) {
+          swapToReady(e.getKey(), e.getValue());
         }
+
+        onFinishedSources.add(src);
         return true;
       }
 

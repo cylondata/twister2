@@ -57,7 +57,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
 
   private MessageType keyType;
 
-  public DataFlowMultiReduce(TWSChannel chnl,
+  public DataFlowMultiReduce(Config config, TWSChannel chnl, TaskPlan instancePlan,
                              Set<Integer> sources, Set<Integer> destination,
                              MultiMessageReceiver finalRecv,
                              MultiMessageReceiver partialRecv, Set<Integer> es,
@@ -71,6 +71,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     this.reduceMap = new HashMap<>();
     this.keyType = kType;
     this.dataType = dType;
+    init(config, dataType, instancePlan);
   }
 
   @Override
@@ -177,10 +178,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     return String.valueOf(edges.toArray()[0]);
   }
 
-  /**
-   * Initialize
-   */
-  public void init(Config config, MessageType type, TaskPlan instancePlan) {
+  private void init(Config config, MessageType type, TaskPlan instancePlan) {
     executor = instancePlan.getThisExecutor();
     this.taskPlan = instancePlan;
     this.dataType = type;

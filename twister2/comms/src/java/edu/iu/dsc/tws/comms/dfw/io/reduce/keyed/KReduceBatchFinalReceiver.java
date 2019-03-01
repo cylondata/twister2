@@ -15,18 +15,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
-/**
- * Created by pulasthi on 9/20/18.
- */
 public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
-  private static final Logger LOG = Logger.getLogger(KReduceBatchFinalReceiver.class.getName());
-
   /**
    * Final receiver that get the reduced values for the operation
    */
@@ -43,7 +37,7 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
   @SuppressWarnings({"unchecked", "rawtypes"})
   public boolean progress() {
     boolean needsFurtherProgress = false;
-    boolean sourcesFinished = false;
+    boolean sourcesFinished;
     for (int target : messages.keySet()) {
       if (batchDone.get(target)) {
         continue;

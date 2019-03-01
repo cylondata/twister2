@@ -11,11 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.dataobjects;
 
-import java.io.File;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.DataPartition;
@@ -45,16 +45,8 @@ public class DataFileReadSource extends BaseSource implements Collector {
 
   @Override
   public void execute() {
-    LOG.info("Context Task Index:" + context.taskIndex());
-    File[] files = new File(fileDirectory).listFiles();
-    String fileName = null;
-    if (files != null) {
-      for (File file : files) {
-        fileName = file.getName();
-      }
-    }
-    centroid = fileReader.readCentroids(fileDirectory + "/" + fileName,
-        dimension, numberOfCenters);
+    LOG.info("Context Task Index:" + context.taskIndex() + "file directory:" + fileDirectory);
+    centroid = fileReader.readCentroids(new Path(fileDirectory), dimension);
     centroids.addPartition(new EntityPartition<>(0, centroid));
   }
 

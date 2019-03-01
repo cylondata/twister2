@@ -56,7 +56,8 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
   private MessageType keyType;
 
-  public DataFlowMultiGather(TWSChannel chnl, Set<Integer> sources, Set<Integer> destination,
+  public DataFlowMultiGather(Config config, TWSChannel chnl, TaskPlan instancePlan,
+                             Set<Integer> sources, Set<Integer> destination,
                              MultiMessageReceiver finalRecv, MultiMessageReceiver partialRecv,
                              Set<Integer> es, MessageType kType,
                              MessageType dType) {
@@ -69,6 +70,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
     this.partialReceiver = partialRecv;
     this.dataType = dType;
     this.keyType = kType;
+    init(config, dType, instancePlan);
   }
 
   @Override
@@ -152,10 +154,8 @@ public class DataFlowMultiGather implements DataFlowOperation {
     return String.valueOf(edges.toArray()[0]);
   }
 
-  /**
-   * Initialize
-   */
-  public void init(Config config, MessageType dType, TaskPlan instancePlan) {
+
+  private void init(Config config, MessageType dType, TaskPlan instancePlan) {
     executor = instancePlan.getThisExecutor();
     this.dataType = dType;
     this.plan = instancePlan;

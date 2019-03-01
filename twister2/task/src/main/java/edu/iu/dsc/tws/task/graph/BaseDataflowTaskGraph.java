@@ -99,7 +99,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   public boolean addTaskEdge(TV taskVertex1, TV taskVertex2, TE taskEdge) {
     if (taskEdge == null) {
       throw new NullPointerException();
-    } else if (containsTaskEdge(taskEdge)) {
+    } else if (containsTaskEdge(taskVertex1, taskVertex2, taskEdge)) {
       return false;
     }
 
@@ -154,7 +154,6 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     boolean flag = false;
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (edgeComparator.compare(de.taskEdge, taskEdge) == 0) {
-        //flag = true;
         throw new RuntimeException("Duplicate task edges found for the task edge:" + taskEdge);
       }
     }
@@ -371,6 +370,20 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
       }
     }
     return false;
+  }
+
+  public boolean containsTaskEdge(TV sourceTaskVertex,
+                                  TV targetTaskVertex, TE taskEdge) {
+    boolean flag = false;
+    for (DirectedEdge<TV, TE> de : directedEdges) {
+      if (vertexComparator.compare(de.sourceTaskVertex, sourceTaskVertex) == 0
+          && vertexComparator.compare(de.targetTaskVertex, targetTaskVertex) == 0
+          && edgeComparator.compare(de.taskEdge, taskEdge) == 0) {
+        flag = true;
+      }
+    }
+    LOG.info("Flag Value is:" + flag);
+    return flag;
   }
 
   /**

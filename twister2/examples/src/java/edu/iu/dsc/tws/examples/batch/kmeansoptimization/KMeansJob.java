@@ -47,6 +47,7 @@ public class KMeansJob extends TaskWorker {
     LOG.log(Level.INFO, "Task worker starting: " + workerId);
 
     KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(config);
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
     int parallelismValue = kMeansJobParameters.getParallelismValue();
     int dimension = kMeansJobParameters.getDimension();
@@ -63,16 +64,14 @@ public class KMeansJob extends TaskWorker {
 
     if (workerId == 0) {
       try {
-        KMeansDataGenerator.generateData(
-            "txt", new Path(dinputDirectory), numFiles, dsize, 100, dimension, config);
-        KMeansDataGenerator.generateData(
-            "txt", new Path(cinputDirectory), numFiles, csize, 100, dimension, config);
+        KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
+            numFiles, dsize, 100, dimension, config);
+        KMeansDataGenerator.generateData("txt", new Path(cinputDirectory),
+            numFiles, csize, 100, dimension, config);
       } catch (IOException ioe) {
         throw new RuntimeException("Failed to create input data:", ioe);
       }
     }
-
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
     /** First Graph to partition and read the partitioned data points **/
     DataObjectSource sourceTask = new DataObjectSource();
@@ -85,6 +84,13 @@ public class KMeansJob extends TaskWorker {
 
     DataFlowTaskGraph dataFlowTaskGraph1 = taskGraphBuilder.build();
     ExecutionPlan plan1 = taskExecutor.plan(dataFlowTaskGraph1);
+
+    //Sleep to generate the input data in the file system.
+    try {
+      Thread.sleep(10000);
+    } catch (InterruptedException ie) {
+      throw new RuntimeException("Interuppted:", ie);
+    }
     taskExecutor.execute(dataFlowTaskGraph1, plan1);
 
     DataObject<double[][]> dataSet1 = taskExecutor.getOutput(dataFlowTaskGraph1, plan1, "sink");

@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
 
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 /**
@@ -66,8 +65,7 @@ public class KMeansCalculator {
    */
   private void findNearestCenter(int dim, double[][] datapoints, double[][] centers) {
 
-    LOG.info("Datapoints received:::"
-        + datapoints.length + "\t" + Arrays.deepToString(datapoints));
+    //LOG.info("Datapoints received:"+ datapoints.length + "\t" + Arrays.deepToString(datapoints));
     for (int i = 0; i < datapoints.length; i++) {
       int minimumCentroid = 0;
       double minValue = 0;

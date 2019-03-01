@@ -24,9 +24,16 @@ public class CommunicationContext extends Context {
   public static final String COMMUNICATION_TYPE = "network.type";
   public static final String MPI_COMMUNICATION_TYPE = "mpi";
   public static final String TCP_COMMUNICATION_TYPE = "tcp";
-  public static final String DEFAULT_COMMUNICATION_TYPE = MPI_COMMUNICATION_TYPE;
   public static final String PERSISTENT_DIRECTORY = "network.ops.persistent.dir";
   public static final String PERSISTENT_DIRECTORY_DEFAULT_VALUE = "${TWISTER2_HOME}/persistent/";
+
+  public static final String TWISTER2_KEYED_REDUCE_OP = "twister2.keyed.reduce.op";
+  public static final String TWISTER2_KEYED_REDUCE_OP_PARTITION = "partition";
+  public static final String TWISTER2_KEYED_REDUCE_OP_REDUCE = "reduce";
+
+  public static final String TWISTER2_KEYED_GATHER_OP = "twister2.keyed.gather.op";
+  public static final String TWISTER2_KEYED_GATHER_OP_PARTITION = "partition";
+  public static final String TWISTER2_KEYED_GATHER_OP_GATHER = "gather";
 
   public static int interNodeDegree(Config cfg, int defaultValue) {
     return cfg.getIntegerValue(INTER_NODE_DEGREE, defaultValue);
@@ -43,5 +50,13 @@ public class CommunicationContext extends Context {
   public static String persistentDirectory(Config cfg) {
     return TokenSub.substitute(cfg, cfg.getStringValue(PERSISTENT_DIRECTORY,
         PERSISTENT_DIRECTORY_DEFAULT_VALUE), Context.substitutions);
+  }
+
+  public static String keyedReduceOp(Config cfg) {
+    return cfg.getStringValue(TWISTER2_KEYED_REDUCE_OP, TWISTER2_KEYED_REDUCE_OP_PARTITION);
+  }
+
+  public static String keyedGatherOp(Config cfg) {
+    return cfg.getStringValue(TWISTER2_KEYED_GATHER_OP, TWISTER2_KEYED_GATHER_OP_PARTITION);
   }
 }
