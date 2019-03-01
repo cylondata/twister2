@@ -100,9 +100,14 @@ public final class Timing {
 
     BigDecimal totalDiffs = BigDecimal.ZERO;
     for (int i = 0; i < flagALongs.size(); i++) {
-      totalDiffs = BigDecimal.valueOf(flagBLongs.get(i))
-          .subtract(BigDecimal.valueOf(flagALongs.get(i)));
+      totalDiffs = totalDiffs.add(BigDecimal.valueOf(flagBLongs.get(i))
+          .subtract(BigDecimal.valueOf(flagALongs.get(i))));
     }
+
+    //using SOUTs to bypass logging levels
+    System.out.println(String.format("Total time [%s - %s] = %s%s",
+        flagA, flagB, totalDiffs.toString(), timingUnitMap.get(flagA).getLabel()));
+    System.out.println(String.format("Taking average for %d events", flagALongs.size()));
 
     return totalDiffs.divide(
         BigDecimal.valueOf(flagALongs.size())

@@ -43,6 +43,8 @@ twister2.job.master.runs.in.client: true
 # if false, workers have their IDs when regitering with the job master
 twister2.job.master.assigns.worker.ids: false
 
+twister2.worker.to.job.master.response.wait.duration: 100000
+
 ###################################################################################
 # WorkerController related config parameters
 ###################################################################################
