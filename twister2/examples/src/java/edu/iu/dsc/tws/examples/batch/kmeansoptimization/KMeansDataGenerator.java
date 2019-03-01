@@ -62,7 +62,6 @@ public final class KMeansDataGenerator {
       throws IOException {
     FileSystem fs = FileSystem.get(directory.toUri(), config);
     if (fs.exists(directory)) {
-      LOG.info("%%% Deleting Directory:%%%" + directory);
       fs.delete(directory, true);
     }
     for (int i = 0; i < numOfFiles; i++) {

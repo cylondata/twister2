@@ -1,5 +1,6 @@
 package edu.iu.dsc.tws.examples.batch.dataflowtest;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
@@ -47,31 +48,23 @@ public class DataflowTestJob1 extends TaskWorker {
     ComputeTask computeTask = new ComputeTask();
 
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+    DataflowJobParameters dataflowJobParameters = new DataflowJobParameters().build(config);
 
-    int parallel = Integer.parseInt(DataObjectConstants.ARGS_PARALLELISM_VALUE);
-    LOG.info("parallelism value:" + parallel);
+    int parallel = dataflowJobParameters.getParallelismValue();
+    int iter = dataflowJobParameters.getIterations();
 
-    builder.addSource("source", sourceTask, 4);
+    builder.addSource("source", sourceTask, parallel);
+    ComputeConnection computeConnection = builder.addCompute("compute", computeTask, parallel);
+    ComputeConnection rc = builder.addSink("sink", reduceTask, parallel);
 
-    /*ComputeConnection computeConnection = builder.addCompute("compute", computeTask, 4);
-    computeConnection.direct("source", "direct", DataType.OBJECT);*/
-
-    ComputeConnection computeConnection = builder.addCompute("compute", computeTask, 4);
     computeConnection.allreduce("source", "all-reduce1", new Aggregator(), DataType.OBJECT);
-
-    ComputeConnection rc = builder.addSink("sink", reduceTask, 4);
-    rc.allreduce("compute", "all-reduce2",
-        new Aggregator(), DataType.OBJECT);
-
+    rc.allreduce("compute", "all-reduce2", new Aggregator1(), DataType.OBJECT);
     builder.setMode(OperationMode.BATCH);
-
     DataFlowTaskGraph graph = builder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
-
     long startTime = System.currentTimeMillis();
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < iter; i++) {
       taskExecutor.execute(graph, plan);
-      LOG.log(Level.INFO, "iteration done:" + i);
     }
     long stopTime = System.currentTimeMillis();
     long executionTime = stopTime - startTime;
@@ -94,7 +87,7 @@ public class DataflowTestJob1 extends TaskWorker {
         double randomValue = r.nextDouble();
         datapoints[i] = randomValue;
       }
-      context.writeEnd("all-reduce", datapoints);
+      context.writeEnd("all-reduce1", datapoints);
     }
 
     public void prepare(Config cfg, TaskContext context) {
@@ -116,12 +109,12 @@ public class DataflowTestJob1 extends TaskWorker {
         Iterator it = (Iterator) message.getContent();
         while (it.hasNext()) {
           count += 1;
-          context.write("all-reduce", it.next());
+          context.write("all-reduce2", it.next());
         }
       }
       LOG.info(String.format("%d %d All-Reduce Received count: %d", context.getWorkerId(),
           context.taskId(), count));
-      context.end("all-reduce");
+      context.end("all-reduce2");
       return true;
     }
   }
@@ -155,15 +148,33 @@ public class DataflowTestJob1 extends TaskWorker {
         double newVal = object11[j] + object21[j];
         object31[j] = newVal;
       }
-
-      //LOG.info("New double value is::::" + Arrays.toString(object31) + "\t" + object31.length);
+      LOG.info("New double value is::::" + Arrays.toString(object31) + "\t" + object31.length);
       return object31;
     }
   }
 
-  public static void main(String[] args) throws ParseException {
-    LOG.log(Level.INFO, "Experiment Job");
+  public class Aggregator1 implements IFunction {
+    private static final long serialVersionUID = -254264120110286748L;
 
+    @Override
+    public Object onMessage(Object object1, Object object2) throws ArrayIndexOutOfBoundsException {
+
+      double[] object11 = (double[]) object1;
+      double[] object21 = (double[]) object2;
+
+      double[] object31 = new double[object11.length];
+
+      for (int j = 0; j < object11.length; j++) {
+        double newVal = object11[j] + object21[j];
+        object31[j] = newVal;
+      }
+      LOG.info("New double value is::::" + Arrays.toString(object31) + "\t" + object31.length);
+      return object31;
+    }
+  }
+
+
+  public static void main(String[] args) throws ParseException {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
@@ -188,6 +199,10 @@ public class DataflowTestJob1 extends TaskWorker {
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
+    jobConfig.put(DataObjectConstants.ARGS_DSIZE, Integer.toString(dsize));
+    jobConfig.put(DataObjectConstants.ARGS_WORKERS, Integer.toString(workers));
+    jobConfig.put(DataObjectConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
+    jobConfig.put(DataObjectConstants.ARGS_ITERATIONS, Integer.toString(iterations));
     jobConfig.putAll(configurations);
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();

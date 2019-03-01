@@ -45,7 +45,6 @@ public class DataFileReadSource extends BaseSource implements Collector {
 
   @Override
   public void execute() {
-    LOG.info("Context Task Index:" + context.taskIndex() + "file directory:" + fileDirectory);
     centroid = fileReader.readCentroids(new Path(fileDirectory), dimension);
     centroids.addPartition(new EntityPartition<>(0, centroid));
   }

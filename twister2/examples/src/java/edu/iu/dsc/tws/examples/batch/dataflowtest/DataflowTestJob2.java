@@ -46,7 +46,7 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class DataflowTestJob2 extends TaskWorker {
 
-  private static final Logger LOG = Logger.getLogger(DataflowTestJob1.class.getName());
+  private static final Logger LOG = Logger.getLogger(DataflowTestJob2.class.getName());
 
   @SuppressWarnings("unchecked")
   @Override
@@ -55,20 +55,19 @@ public class DataflowTestJob2 extends TaskWorker {
     SourceTask sourceTask = new SourceTask();
     ReduceTask reduceTask = new ReduceTask();
 
+    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
     DataflowJobParameters dataflowJobParameters = new DataflowJobParameters().build(config);
+
     int parallel = dataflowJobParameters.getParallelismValue();
     int iter = dataflowJobParameters.getIterations();
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
     builder.addSource("source", sourceTask, parallel);
-
     ComputeConnection rc = builder.addSink("sink", reduceTask, parallel);
     rc.allreduce("source", "all-reduce",
         new Aggregator(), DataType.OBJECT);
-
     builder.setMode(OperationMode.BATCH);
-
     DataFlowTaskGraph graph = builder.build();
+
     ExecutionPlan plan = taskExecutor.plan(graph);
 
     long startTime = System.currentTimeMillis();
