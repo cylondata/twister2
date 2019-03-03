@@ -14,7 +14,9 @@ package edu.iu.dsc.tws.common.net.tcp.request;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -57,6 +59,11 @@ public class RRServer {
   private static final Logger LOG = Logger.getLogger(RRServer.class.getName());
 
   private Server server;
+
+  /**
+   * We keep track of connected channels here to make sure we close them
+   */
+  private List<SocketChannel> connectedChannels = new ArrayList<>();
 
   /**
    * worker channels with workerIDs
@@ -105,7 +112,15 @@ public class RRServer {
    */
   private SocketChannel workerChannelToRegister;
 
+  /**
+   * The loop that executes the selector
+   */
   private Progress loop;
+
+  /**
+   * We keep track of pending send count to determine weather all the sends are completed
+   */
+  private int pendingSendCount = 0;
 
   public RRServer(Config cfg, String host, int port, Progress looper, int serverID,
                   ConnectHandler cHandler) {
@@ -129,7 +144,20 @@ public class RRServer {
   }
 
   public void stopGraceFully(long waitTime) {
-    server.stopGraceFully(waitTime);
+    // now lets wait if there are messages pending
+    long start = System.currentTimeMillis();
+
+    boolean pending;
+    long elapsed;
+    do {
+      loop.loop();
+      pending = server.hasPending();
+      elapsed = System.currentTimeMillis() - start;
+    } while ((pending || pendingSendCount != 0 || connectedChannels.size() > 0)
+        && elapsed < waitTime);
+
+    // after sometime we need to stop
+    stop();
   }
 
   /**
@@ -199,7 +227,7 @@ public class RRServer {
 
     TCPMessage tcpMessage = sendMessage(message, dummyRequestID, channel);
 
-    return tcpMessage == null ? false : true;
+    return tcpMessage != null;
   }
 
   private TCPMessage sendMessage(Message message, RequestID requestID, SocketChannel channel) {
@@ -218,13 +246,18 @@ public class RRServer {
     // pack data
     buffer.put(data);
 
-    return server.send(channel, buffer, capacity, 0);
+    TCPMessage send = server.send(channel, buffer, capacity, 0);
+    if (send != null) {
+      pendingSendCount++;
+    }
+    return send;
   }
 
   private class Handler implements ChannelHandler {
     @Override
     public void onError(SocketChannel channel) {
       workerChannels.remove(channel);
+      connectedChannels.remove(channel);
       connectHandler.onError(channel);
 
       loop.removeAllInterest(channel);
@@ -239,13 +272,14 @@ public class RRServer {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-//      socketChannels.add(channel);
+      connectedChannels.add(channel);
       connectHandler.onConnect(channel, status);
     }
 
     @Override
     public void onClose(SocketChannel channel) {
       workerChannels.remove(channel);
+      connectedChannels.remove(channel);
       connectHandler.onClose(channel);
 
       if (channel.equals(clientChannel)) {
@@ -306,7 +340,7 @@ public class RRServer {
 
     @Override
     public void onSendComplete(SocketChannel channel, TCPMessage writeRequest) {
-
+      pendingSendCount--;
     }
   }
 
