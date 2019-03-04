@@ -1,0 +1,17 @@
+{
+  "id": "many_top_one_base",
+  "parent": "communication_base",
+  "args": [
+    {
+      "id": "stages",
+      "name": "Stages",
+      "optional": false,
+      "values": {
+        "type": "array",
+        "array": [
+          "8,1"
+        ]
+      }
+    }
+  ]
+}
