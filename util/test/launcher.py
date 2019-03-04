@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import base64
+import sys
 
 from tree.node import Node
 from util.config_parser import parse_configs
@@ -19,15 +20,23 @@ value_handlers = {
 }
 
 config_files = []
-process_directory('/home/chathura/Code/twister2/util/test', config_files)
+process_directory(os.path.abspath("./tests"), config_files)
 
 configs = parse_configs(config_files)
 
 jar_root_dir = configs["base"]['jarRootDir']
 t2_bin = configs["base"]['t2Bin']
 
+partial_run = len(sys.argv) > 1
+tests_to_run = []
+if partial_run:
+    tests_to_run = str(sys.argv[1]).split(",")
+
 for test in configs['tests']:
     test_id = test['id']
+    if partial_run and test_id not in tests_to_run:
+        continue
+
     jar_dir = jar_root_dir
     if test['directory']['relativeToRoot']:
         jar_dir += test['directory']['path']
