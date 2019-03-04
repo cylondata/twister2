@@ -252,6 +252,8 @@ public class Client implements SelectHandler {
     channel.clear();
     progress.removeAllInterest(ch);
 
+    LOG.log(Level.SEVERE, "Error on channel " + ch);
+
     try {
       ch.close();
     } catch (IOException e) {
