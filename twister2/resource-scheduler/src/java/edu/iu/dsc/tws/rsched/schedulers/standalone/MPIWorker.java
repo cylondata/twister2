@@ -564,7 +564,7 @@ public final class MPIWorker {
     if (portNames == null) {
       portNames = new ArrayList<>();
     }
-    //portNames.add("__worker__");
+    portNames.add("__worker__");
     Map<String, ServerSocket> socketMap = NetworkUtils.findFreePorts(portNames);
     MPI.COMM_WORLD.barrier();
     AtomicBoolean closedSuccessfully = new AtomicBoolean(true);
