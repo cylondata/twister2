@@ -168,11 +168,13 @@ public class Client implements SelectHandler {
     }
 
     channel.forceFlush();
+    progress.removeAllInterest(socketChannel);
 
     try {
       socketChannel.close();
       // we call the onclose with null value
       channelHandler.onClose(socketChannel);
+      isConnected = false;
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to stop Client", e);
     }
