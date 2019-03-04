@@ -12,7 +12,9 @@
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -84,6 +87,7 @@ public final class MPIWorker {
 
   /**
    * Construct the MPIWorker starter
+   *
    * @param args the main args
    */
   private MPIWorker(String[] args) {
@@ -205,6 +209,7 @@ public final class MPIWorker {
 
   /**
    * Create the resource plan
+   *
    * @return the worker controller
    */
   private IWorkerController createWorkerController(JobAPI.Job job) {
@@ -239,6 +244,7 @@ public final class MPIWorker {
 
   /**
    * Setup the command line options for the MPI process
+   *
    * @return cli options
    */
   private Options setupOptions() {
@@ -321,7 +327,7 @@ public final class MPIWorker {
     int jPort = Integer.parseInt(cmd.getOptionValue("job_master_port"));
 
     LOG.log(Level.FINE, String.format("Initializing process with "
-        + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
+            + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
     Config cfg = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
@@ -351,6 +357,7 @@ public final class MPIWorker {
 
   /**
    * Start the master
+   *
    * @param cfg configuration
    * @param rank mpi rank
    */
@@ -386,6 +393,7 @@ public final class MPIWorker {
 
   /**
    * Start the worker
+   *
    * @param cfg configuration
    * @param rank global rank
    * @param intracomm communication
@@ -426,6 +434,7 @@ public final class MPIWorker {
 
   /**
    * Start the worker
+   *
    * @param cfg configuration
    * @param rank global rank
    * @param intracomm communication
@@ -477,12 +486,13 @@ public final class MPIWorker {
 
   /**
    * create a AllocatedResources
+   *
    * @param cfg configuration
-   * @return  a map of rank to hostname
+   * @return a map of rank to hostname
    */
   public Map<Integer, JobMasterAPI.WorkerInfo> createResourcePlan(Config cfg,
-                                                                         Intracomm intracomm,
-                                                                         JobAPI.Job job) {
+                                                                  Intracomm intracomm,
+                                                                  JobAPI.Job job) {
     try {
       JobMasterAPI.WorkerInfo workerInfo = createWorkerInfo(cfg, intracomm.getRank(), job);
       byte[] workerBytes = workerInfo.toByteArray();
@@ -530,6 +540,7 @@ public final class MPIWorker {
 
   /**
    * Create worker information
+   *
    * @param cfg configuration
    * @param workerId communicator
    * @param job job
@@ -537,7 +548,7 @@ public final class MPIWorker {
    * @throws MPIException if an error occurs
    */
   private JobMasterAPI.WorkerInfo createWorkerInfo(Config cfg, int workerId,
-                                                          JobAPI.Job job) throws MPIException {
+                                                   JobAPI.Job job) throws MPIException {
     String processName;
     try {
       processName = InetAddress.getLocalHost().getHostAddress();
@@ -549,16 +560,28 @@ public final class MPIWorker {
         "default", "default");
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, workerId);
     List<String> portNames = SchedulerContext.additionalPorts(cfg);
-    Map<String, Integer> freePorts;
+    final Map<String, Integer> freePorts = new HashMap<>();
     if (portNames == null) {
       portNames = new ArrayList<>();
     }
-    //portNames.add("__worker__");
-    freePorts = NetworkUtils.findFreePorts(portNames);
-    //Integer workerPort = freePorts.get("__worker__");
-    //todo temporary using worker id as the worker port
-    Integer workerPort = workerId;
-    //freePorts.remove("__worker__");
+    portNames.add("__worker__");
+    Map<String, ServerSocket> socketMap = NetworkUtils.findFreePorts(portNames);
+    MPI.COMM_WORLD.barrier();
+    AtomicBoolean closedSuccessfully = new AtomicBoolean(true);
+    socketMap.forEach((k, v) -> {
+      freePorts.put(k, v.getLocalPort());
+      try {
+        v.close();
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, e, () -> "Couldn't close opened server socket : " + k);
+        closedSuccessfully.set(false);
+      }
+    });
+    if (!closedSuccessfully.get()) {
+      throw new IllegalStateException("Could not release one or more free TCP/IP ports");
+    }
+    Integer workerPort = freePorts.get("__worker__");
+    freePorts.remove("__worker__");
     LOG.severe("Worker info host:" + processName + ":" + workerPort);
     return WorkerInfoUtils.createWorkerInfo(workerId,
         processName, workerPort, nodeInfo, computeResource, freePorts);
@@ -566,6 +589,7 @@ public final class MPIWorker {
 
   /**
    * Initialize the loggers to log into the task local directory
+   *
    * @param cfg the configuration
    * @param workerID worker id
    */
