@@ -40,4 +40,12 @@ public interface ChannelReceiver {
   default boolean handleReceivedChannelMessage(ChannelMessage currentMessage) {
     return true;
   }
+
+  /**
+   * The send has been completed
+   *
+   * @param message the out message
+   */
+  default void sendCompleted(OutMessage message) {
+  }
 }

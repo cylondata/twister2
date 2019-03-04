@@ -248,7 +248,7 @@ public class Server implements SelectHandler {
   @Override
   public void handleError(SelectableChannel ch) {
     SocketAddress channelAddress = ((SocketChannel) ch).socket().getRemoteSocketAddress();
-    LOG.info("Connection is closed: " + channelAddress);
+    LOG.log(Level.FINE, "Connection is closed: " + channelAddress);
 
     BaseNetworkChannel channel = connectedChannels.get(ch);
     if (channel == null) {
