@@ -13,13 +13,15 @@ package edu.iu.dsc.tws.comms.shuffle;
 
 import java.util.List;
 
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+
 /**
  * Represent an open file part.
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class OpenFilePart {
   // the key values read
-  private List<KeyValue> keyValues;
+  private List<Tuple> keyValues;
 
   // the current read offset
   private int readOffSet;
@@ -33,7 +35,7 @@ public class OpenFilePart {
   // the current read index of key values
   private int keyValueIndex = 0;
 
-  OpenFilePart(List<KeyValue> keyValues, int readOffSet, int fileSize, String fileName) {
+  OpenFilePart(List<Tuple> keyValues, int readOffSet, int fileSize, String fileName) {
     this.keyValues = keyValues;
     this.readOffSet = readOffSet;
     this.fileSize = fileSize;
@@ -52,8 +54,8 @@ public class OpenFilePart {
     return fileName;
   }
 
-  public KeyValue next() {
-    KeyValue kv = keyValues.get(keyValueIndex);
+  public Tuple next() {
+    Tuple kv = keyValues.get(keyValueIndex);
     keyValueIndex++;
     return kv;
   }

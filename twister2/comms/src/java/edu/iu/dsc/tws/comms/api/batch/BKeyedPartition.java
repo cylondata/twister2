@@ -44,8 +44,7 @@ public class BKeyedPartition {
 
   public BKeyedPartition(Communicator comm, TaskPlan plan,
                          Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
-                         MessageType keyType, MessageType recvDataType,
-                         MessageType recvKeyType, BulkReceiver rcvr,
+                         MessageType keyType, BulkReceiver rcvr,
                          DestinationSelector destSelector, Comparator<Object> comparator) {
     this.destinationSelector = destSelector;
     String shuffleDir = comm.getPersistentDirectory();
@@ -53,25 +52,8 @@ public class BKeyedPartition {
     this.partition = new DataFlowPartition(comm.getConfig(), comm.getChannel(), plan,
         sources, destinations,
         new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
-        new PartitionPartialReceiver(), dataType, keyType, recvKeyType,
-        recvDataType, e);
-    this.partition.init(comm.getConfig(), dataType, plan, e);
-    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
-  }
-
-  public BKeyedPartition(Communicator comm, TaskPlan plan,
-                         Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
-                         MessageType keyType, MessageType recvDataType,
-                         MessageType recvKeyType, BulkReceiver rcvr,
-                         DestinationSelector destSelector) {
-    this.destinationSelector = destSelector;
-    String shuffleDir = comm.getPersistentDirectory();
-    int e = comm.nextEdge();
-    this.partition = new DataFlowPartition(comm.getConfig(), comm.getChannel(), plan,
-        sources, destinations,
-        new DPartitionBatchFinalReceiver(rcvr, false, shuffleDir, null),
-        new PartitionPartialReceiver(), dataType, keyType, recvKeyType,
-        recvDataType, e);
+        new PartitionPartialReceiver(), dataType, MessageType.BYTE, keyType,
+        keyType, e);
     this.partition.init(comm.getConfig(), dataType, plan, e);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
   }
