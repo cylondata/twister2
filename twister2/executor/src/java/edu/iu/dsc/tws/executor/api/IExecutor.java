@@ -17,15 +17,20 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 public interface IExecutor {
   /**
    * Execute the specific plan
-   * @param cfg
-   * @param plan
-   * @return
+   * @param cfg configuration
+   * @param plan execution plan
+   * @param channel the communication channel
+   * @return true if accepted
    */
   boolean execute(Config cfg, ExecutionPlan plan, TWSChannel channel);
 
   /**
-   * Close an already running execution
-   * @param execution the execution to be stopped
+   * Asynchronously execute a plan, One need to call progress on the execution object returned to
+   * continue the execution
+   * @param cfg configuration
+   * @param plan execution plan
+   * @param channel the communication channel
+   * @return an execution or null if not accepted
    */
-  void stop(ExecutionPlan execution);
+  IExecution iExecute(Config cfg, ExecutionPlan plan, TWSChannel channel);
 }
