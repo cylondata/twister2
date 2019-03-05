@@ -13,10 +13,21 @@ package edu.iu.dsc.tws.executor.api;
 
 public interface IExecution {
   /**
-   * Progress the execution
+   * Wait for execution to complete
    * @return if execution is success
    */
-  boolean progressExecution();
+  boolean waitForCompletion();
+
+  /**
+   * Progress the computation
+   * @return false if the execution is completed or finished
+   */
+  boolean progress();
+
+  /**
+   * Cleanup the execution
+   */
+  void close();
 
   /**
    * Stop a particular execution

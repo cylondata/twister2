@@ -51,7 +51,7 @@ public class Executor {
     // lets start the execution
     IExecutor executor;
     if (operationMode == OperationMode.STREAMING) {
-      executor = new StreamingShareingExecutor(workerId);
+      executor = new StreamingSharingExecutor(workerId);
     } else {
       executor = new BatchSharingExecutor(workerId);
     }
@@ -67,7 +67,7 @@ public class Executor {
     // lets start the execution
     IExecutor executor;
     if (operationMode == OperationMode.STREAMING) {
-      executor = new StreamingShareingExecutor(workerId);
+      executor = new StreamingSharingExecutor(workerId);
     } else {
       executor = new BatchSharingExecutor(workerId);
     }

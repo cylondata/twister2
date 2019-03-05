@@ -21,14 +21,16 @@ import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 
-public class StreamingShareingExecutor extends ThreadSharingExecutor {
-  private static final Logger LOG = Logger.getLogger(StreamingShareingExecutor.class.getName());
+public class StreamingSharingExecutor extends ThreadSharingExecutor {
+  private static final Logger LOG = Logger.getLogger(StreamingSharingExecutor.class.getName());
 
   private int workerId;
 
   private boolean notStopped = true;
 
-  public StreamingShareingExecutor(int workerId) {
+  private boolean cleanUpCalled = false;
+
+  public StreamingSharingExecutor(int workerId) {
     this.workerId = workerId;
   }
 
@@ -111,6 +113,8 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
     for (IParallelOperation op : ops) {
       op.close();
     }
+
+    cleanUpCalled = true;
   }
 
   protected class StreamWorker implements Runnable {
@@ -142,7 +146,7 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
     }
 
     @Override
-    public boolean progressExecution() {
+    public boolean waitForCompletion() {
       // we progress until all the channel finish
       while (notStopped) {
         channel.progress();
@@ -150,6 +154,30 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
 
       cleanUp(nodeMap);
       return true;
+    }
+
+    @Override
+    public boolean progress() {
+      // we progress until all the channel finish
+      if (notStopped) {
+        channel.progress();
+        return true;
+      }
+      return false;
+    }
+
+    @Override
+    public void close() {
+      if (notStopped) {
+        throw new RuntimeException("We need to stop the execution before close");
+      }
+
+      if (!cleanUpCalled) {
+        cleanUp(nodeMap);
+        cleanUpCalled = true;
+      } else {
+        throw new RuntimeException("Close is called on a already closed execution");
+      }
     }
 
     @Override

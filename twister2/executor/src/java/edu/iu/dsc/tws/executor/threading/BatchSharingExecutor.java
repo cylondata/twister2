@@ -32,6 +32,8 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
   private boolean notStopped = true;
 
+  private boolean cleanUpCalled = false;
+
   public BatchSharingExecutor(int workerId) {
     this.workerId = workerId;
   }
@@ -100,6 +102,8 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     for (IParallelOperation op : ops) {
       op.close();
     }
+
+    cleanUpCalled = true;
   }
 
   @Override
@@ -148,7 +152,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
 
     @Override
-    public boolean progressExecution() {
+    public boolean waitForCompletion() {
       // we progress until all the channel finish
       while (notStopped && finishedInstances.size() != nodeMap.size()) {
         channel.progress();
@@ -156,6 +160,30 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
       cleanUp(nodeMap);
       return true;
+    }
+
+    @Override
+    public boolean progress() {
+      // we progress until all the channel finish
+      if (notStopped && finishedInstances.size() != nodeMap.size()) {
+        channel.progress();
+        return true;
+      }
+
+      return false;
+    }
+
+    public void close() {
+      if (notStopped) {
+        throw new RuntimeException("We need to stop the execution before close");
+      }
+
+      if (!cleanUpCalled) {
+        cleanUp(nodeMap);
+        cleanUpCalled = true;
+      } else {
+        throw new RuntimeException("Close is called on a already closed execution");
+      }
     }
 
     @Override

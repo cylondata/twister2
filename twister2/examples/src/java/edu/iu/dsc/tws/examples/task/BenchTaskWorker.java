@@ -86,7 +86,16 @@ public abstract class BenchTaskWorker extends TaskWorker {
         }
       }).start();
     }
-    execution.progressExecution();
+
+    long start = System.currentTimeMillis();
+    while (true) {
+      execution.progress();
+      if (System.currentTimeMillis() - start > 1500) {
+        execution.stop();
+        execution.close();
+        break;
+      }
+    }
   }
 
   public abstract TaskGraphBuilder buildTaskGraph();
