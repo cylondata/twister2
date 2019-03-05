@@ -11,18 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
+import edu.iu.dsc.tws.executor.api.IParallelOperation;
 
 public class StreamingShareingExecutor extends ThreadSharingExecutor {
   private static final Logger LOG = Logger.getLogger(StreamingShareingExecutor.class.getName());
 
   private int workerId;
+
+  private boolean notStopped = true;
 
   public StreamingShareingExecutor(int workerId) {
     this.workerId = workerId;
@@ -37,6 +41,27 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
       return false;
     }
 
+    try {
+      schedulerExecution(nodes);
+
+      progressStreamComm();
+    } finally {
+      notStopped = false;
+      cleanUp(nodes);
+    }
+    return true;
+  }
+
+  /**
+   * Progress the communications
+   */
+  private void progressStreamComm() {
+    while (notStopped) {
+      this.channel.progress();
+    }
+  }
+
+  private void schedulerExecution(Map<Integer, INodeInstance> nodes) {
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
 
@@ -50,20 +75,48 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
       threads.add(t);
       t.start();
     }
-
-    progressStreamComm();
-    return true;
   }
 
   @Override
-  public void stop(ExecutionPlan execution) {
+  public IExecution runIExecution() {
+    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
+    if (nodes.size() == 0) {
+      LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
+          + "have more workers than tasks", workerId));
+      return null;
+    }
+
+    schedulerExecution(nodes);
+
+    return new StreamExecution(nodes);
+  }
+
+  private void cleanUp(Map<Integer, INodeInstance> nodes) {
+    // lets wait for thread to finish
+    for (Thread t : threads) {
+      try {
+        t.join();
+      } catch (InterruptedException ignore) {
+      }
+    }
+
+    // clean up the instances
+    for (INodeInstance node : nodes.values()) {
+      node.close();
+    }
+
+    // lets close the operations
+    List<IParallelOperation> ops = executionPlan.getParallelOperations();
+    for (IParallelOperation op : ops) {
+      op.close();
+    }
   }
 
   protected class StreamWorker implements Runnable {
     @Override
     public void run() {
-      while (true) {
+      while (notStopped) {
         try {
           INodeInstance nodeInstance = tasks.poll();
           if (nodeInstance != null) {
@@ -78,6 +131,30 @@ public class StreamingShareingExecutor extends ThreadSharingExecutor {
           LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
         }
       }
+    }
+  }
+
+  private class StreamExecution implements IExecution {
+    private Map<Integer, INodeInstance> nodeMap;
+
+    StreamExecution(Map<Integer, INodeInstance> nodeMap) {
+      this.nodeMap = nodeMap;
+    }
+
+    @Override
+    public boolean progressExecution() {
+      // we progress until all the channel finish
+      while (notStopped) {
+        channel.progress();
+      }
+
+      cleanUp(nodeMap);
+      return true;
+    }
+
+    @Override
+    public void stop() {
+      notStopped = false;
     }
   }
 }

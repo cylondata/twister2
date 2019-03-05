@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
@@ -128,6 +129,20 @@ public class TaskExecutor {
     Executor executor = new Executor(config, workerID, plan, communicator.getChannel(),
         graph.getOperationMode());
     executor.execute();
+  }
+
+  /**
+   * Execute a plan and a graph. This call blocks until the execution finishes. In case of
+   * streaming, this call doesn't return while for batch computations it returns after
+   * the execution is done.
+   *
+   * @param graph the dataflow graph
+   * @param plan the execution plan
+   */
+  public IExecution iExecute(DataFlowTaskGraph graph, ExecutionPlan plan) {
+    Executor executor = new Executor(config, workerID, plan, communicator.getChannel(),
+        graph.getOperationMode());
+    return executor.iExecute();
   }
 
   /**

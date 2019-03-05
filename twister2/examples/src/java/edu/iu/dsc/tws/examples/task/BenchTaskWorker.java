@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -69,7 +70,23 @@ public abstract class BenchTaskWorker extends TaskWorker {
     buildTaskGraph();
     dataFlowTaskGraph = taskGraphBuilder.build();
     executionPlan = taskExecutor.plan(dataFlowTaskGraph);
-    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
+    IExecution execution = taskExecutor.iExecute(dataFlowTaskGraph, executionPlan);
+
+    // if streaming lets stop after sometime
+    if (jobParameters.isStream()) {
+      new Thread(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            Thread.sleep(1500);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+          execution.stop();
+        }
+      }).start();
+    }
+    execution.progressExecution();
   }
 
   public abstract TaskGraphBuilder buildTaskGraph();

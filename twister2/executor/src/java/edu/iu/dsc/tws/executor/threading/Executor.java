@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.threading;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.IExecutor;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -56,5 +57,21 @@ public class Executor {
     }
 
     return executor.execute(config, executionPlan, channel);
+  }
+
+  /***
+   * Communication Channel must be progressed after the task execution model
+   * is initialized. It must be progressed only after execution is instantiated.
+   * */
+  public IExecution iExecute() {
+    // lets start the execution
+    IExecutor executor;
+    if (operationMode == OperationMode.STREAMING) {
+      executor = new StreamingShareingExecutor(workerId);
+    } else {
+      executor = new BatchSharingExecutor(workerId);
+    }
+
+    return executor.iExecute(config, executionPlan, channel);
   }
 }
