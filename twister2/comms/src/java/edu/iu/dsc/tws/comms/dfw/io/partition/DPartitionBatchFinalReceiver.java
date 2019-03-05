@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
@@ -180,8 +181,12 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       List<Tuple> tuples = (List<Tuple>) object;
       for (Tuple kc : tuples) {
         Object data = kc.getValue();
-        byte[] d = DataSerializer.serialize(data, kryoSerializer);
-
+        byte[] d;
+        if (partition.getReceiveDataType() != MessageType.BYTE) {
+          d = DataSerializer.serialize(data, kryoSerializer);
+        } else {
+          d = (byte[]) data;
+        }
         sortedMerger.add(kc.getKey(), d, d.length);
       }
       int total = totalReceives.get(target);
@@ -190,7 +195,12 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     } else {
       List<Object> contents = (List<Object>) object;
       for (Object kc : contents) {
-        byte[] d = DataSerializer.serialize(kc, kryoSerializer);
+        byte[] d;
+        if (partition.getReceiveDataType() != MessageType.BYTE) {
+          d = DataSerializer.serialize(kc, kryoSerializer);
+        } else {
+          d = (byte[]) kc;
+        }
         sortedMerger.add(d, d.length);
       }
       int total = totalReceives.get(target);
