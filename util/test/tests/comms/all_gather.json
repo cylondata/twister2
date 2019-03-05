@@ -1,6 +1,6 @@
 {
   "id": "comms_all_gather",
-  "parent": "many_top_one_base",
+  "parent": "all_to_all_base",
   "resultsFile": "comms_all_gather.csv",
   "args": [
     {

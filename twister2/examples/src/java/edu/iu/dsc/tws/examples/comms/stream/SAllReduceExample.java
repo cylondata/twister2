@@ -41,6 +41,8 @@ public class SAllReduceExample extends BenchWorker {
 
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
+  private int receiverInWorker0 = -1; //any recv scheduled in worker 0
+
   @Override
   protected void execute() {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
@@ -76,6 +78,10 @@ public class SAllReduceExample extends BenchWorker {
     for (int taskId : targetTasksOfExecutor) {
       if (targets.contains(taskId)) {
         reduceDone = false;
+      }
+
+      if (workerId == 0) {
+        receiverInWorker0 = taskId;
       }
     }
 
@@ -134,7 +140,7 @@ public class SAllReduceExample extends BenchWorker {
     public boolean receive(int target, Object object) {
       count++;
       if (count > this.warmUpIterations) {
-        Timing.mark(TIMING_MESSAGE_RECV, workerId == 0 && target == 0);
+        Timing.mark(TIMING_MESSAGE_RECV, workerId == 0 && target == receiverInWorker0);
       }
 
       verifyResults(resultsVerifier, object, null);
@@ -142,9 +148,9 @@ public class SAllReduceExample extends BenchWorker {
       LOG.info(() -> String.format("Target %d received count %d", target, count));
 
       if (count == expected + warmUpIterations) {
-        Timing.mark(TIMING_ALL_RECV, workerId == 0);
+        Timing.mark(TIMING_ALL_RECV, workerId == 0 && target == receiverInWorker0);
         BenchmarkUtils.markTotalAndAverageTime(resultsRecorder,
-            workerId == 0 && target == 0);
+            workerId == 0 && target == receiverInWorker0);
         resultsRecorder.writeToCSV();
         reduceDone = true;
       }
