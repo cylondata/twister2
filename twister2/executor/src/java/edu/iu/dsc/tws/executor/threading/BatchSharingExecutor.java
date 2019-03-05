@@ -139,6 +139,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
           }
         } catch (Throwable t) {
           LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
+          throw new RuntimeException("Error occurred in execution of task", t);
         }
       }
     }
