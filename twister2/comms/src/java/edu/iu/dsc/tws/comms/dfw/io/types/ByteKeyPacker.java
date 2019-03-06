@@ -27,7 +27,7 @@ public class ByteKeyPacker implements KeyPacker {
     if (state.getKey() == null) {
       state.setKey((byte[]) key);
     }
-    return state.getKey().length;
+    return state.getKey().length + Integer.BYTES;
   }
 
   @Override
