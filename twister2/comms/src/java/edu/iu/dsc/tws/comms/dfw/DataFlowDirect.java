@@ -165,11 +165,6 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     return finalReceiver.onMessage(source, path, target, flags, message);
   }
 
-  @Override
-  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
-    return false;
-  }
-
   protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return this.router.receiveExpectedTaskIds();
   }

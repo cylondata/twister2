@@ -12,17 +12,32 @@
 package edu.iu.dsc.tws.api.tset;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Base class for all the functions in TSet implementation
  */
 public interface TFunction extends Serializable {
+
+  Map<String, Object> INPUT_MAP = new HashMap<>();
+
   /**
    * Prepare the function
    *
    * @param context context
    */
   default void prepare(TSetContext context) {
+    INPUT_MAP.putAll(context.getInputMap());
+  }
 
+  /**
+   * Gets the input value for the given key from the input map
+   *
+   * @param key the key to be retrieved
+   * @return the object associated with the given key, null if the key is not present
+   */
+  default Object getInput(String key) {
+    return INPUT_MAP.get(key);
   }
 }

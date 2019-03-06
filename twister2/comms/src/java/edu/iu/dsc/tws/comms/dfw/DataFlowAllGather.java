@@ -207,7 +207,7 @@ public class DataFlowAllGather implements DataFlowOperation {
     @Override
     public boolean progress() {
       if (strm) {
-        return true;
+        return false;
       } else {
         for (Boolean b : finished.values()) {
           if (!b) {

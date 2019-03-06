@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.api.tset;
 import java.util.Random;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 import edu.iu.dsc.tws.common.config.Config;
@@ -22,7 +21,7 @@ import edu.iu.dsc.tws.common.config.Config;
 public class SourceTSet<T> extends BaseTSet<T> {
   private Source<T> source;
 
-  public SourceTSet(Config cfg, TaskGraphBuilder bldr, Source<T> src) {
+  public SourceTSet(Config cfg, TSetBuilder bldr, Source<T> src) {
     super(cfg, bldr);
     this.source = src;
     this.name = "source-" + new Random(System.nanoTime()).nextInt(10);
@@ -70,7 +69,7 @@ public class SourceTSet<T> extends BaseTSet<T> {
 
   @Override
   public boolean baseBuild() {
-    builder.addSource(getName(), new SourceOp<T>(source), parallel);
+    builder.getTaskGraphBuilder().addSource(getName(), new SourceOp<T>(source), parallel);
     return true;
   }
 

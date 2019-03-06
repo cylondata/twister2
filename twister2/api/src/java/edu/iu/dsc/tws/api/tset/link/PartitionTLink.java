@@ -24,20 +24,20 @@
 package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
-public class PartitionTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
+public class PartitionTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
   private BaseTSet<T> parent;
 
   private PartitionFunction<T> partitionFunction;
 
-  public PartitionTLink(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
+  public PartitionTLink(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt,
                         PartitionFunction<T> parFn) {
     super(cfg, bldr);
     this.parent = prnt;

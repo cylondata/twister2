@@ -89,10 +89,9 @@ public class KeyedReduceCommunication implements IWorker {
     LOG.info("Setting up reduce dataflow operation");
     // this method calls the execute method
     // I think this is wrong
-    reduce = new DataFlowMultiReduce(network,
+    reduce = new DataFlowMultiReduce(cfg, network, taskPlan,
         sources, destinations, new FinalReduceReceive(), new PartialReduceWorker(), destinations,
         MessageType.OBJECT, MessageType.OBJECT);
-    reduce.init(cfg, MessageType.OBJECT, taskPlan);
 
     if (id == 0 || id == 1) {
       for (int i = 0; i < noOfTasksPerExecutor; i++) {

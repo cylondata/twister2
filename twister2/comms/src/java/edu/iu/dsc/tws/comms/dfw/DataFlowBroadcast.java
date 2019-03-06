@@ -164,7 +164,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     for (int i = receiveIndex; i < receiveTasks.size(); i++) {
       if (!finalReceiver.onMessage(
           header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
-          receiveTasks.get(receiveIndex), header.getFlags(), object)) {
+          receiveTasks.get(i), header.getFlags(), object)) {
         done = false;
         allSent = false;
         break;
@@ -304,31 +304,32 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean progress() {
-    boolean partialNeedsProgress = false;
+    boolean partialNeedsProgress;
     boolean needFinishProgress;
     boolean done;
     boolean needReceiveProgress;
-    try {
-      // lets send the finished one
-      needFinishProgress = handleFinish();
+    if (lock.tryLock()) {
+      try {
+        // lets send the finished one
+        needFinishProgress = handleFinish();
 
-      // send the messages to targets
-      needReceiveProgress = receiveProgressMessage();
+        // send the messages to targets
+        needReceiveProgress = receiveProgressMessage();
 
-      delegate.progress();
-      done = delegate.isComplete();
-      if (lock.tryLock()) {
+        delegate.progress();
+        done = delegate.isComplete();
         try {
           partialNeedsProgress = finalReceiver.progress();
         } finally {
           lock.unlock();
         }
+      } catch (Throwable t) {
+        LOG.log(Level.SEVERE, "un-expected error", t);
+        throw new RuntimeException(String.format("%d exception", executor), t);
       }
-    } catch (Throwable t) {
-      LOG.log(Level.SEVERE, "un-expected error", t);
-      throw new RuntimeException(String.format("%d exception", executor), t);
+      return partialNeedsProgress || !done || needFinishProgress || needReceiveProgress;
     }
-    return partialNeedsProgress || !done || needFinishProgress || needReceiveProgress;
+    return true;
   }
 
   private boolean handleFinish() {
@@ -388,40 +389,6 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     // now try to put this into pending
     return pendingSendMessages.offer(
         new ImmutablePair<>(DataFlowContext.EMPTY_OBJECT, sendMessage));
-  }
-
-  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
-    int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-        DataFlowContext.DEFAULT_DESTINATION);
-
-    RoutingParameters routingParameters;
-    if (routingParametersCache.containsKey(src)) {
-      routingParameters = routingParametersCache.get(src);
-    } else {
-      routingParameters = sendRoutingParameters(src, DataFlowContext.DEFAULT_DESTINATION);
-    }
-
-    ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
-        pendingSendMessagesPerSource.get(src);
-
-    // create a send message to keep track of the serialization
-    // at the intial stage the sub-edge is 0
-    int di = -1;
-    if (routingParameters.getExternalRoutes().size() > 0) {
-      di = routingParameters.getDestinationId();
-    }
-    OutMessage sendMessage = new OutMessage(src,
-        currentMessage.getHeader().getEdge(),
-        di, DataFlowContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
-        routingParameters.getInternalRoutes(),
-        routingParameters.getExternalRoutes(), type, null, delegate);
-    sendMessage.getChannelMessages().offer(currentMessage);
-    // this is a complete message
-    sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
-
-    // now try to put this into pending
-    return pendingSendMessages.offer(
-        new ImmutablePair<>(object, sendMessage));
   }
 
   private RoutingParameters sendRoutingParameters(int s, int path) {

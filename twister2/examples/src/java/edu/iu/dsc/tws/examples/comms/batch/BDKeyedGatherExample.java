@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedGather;
 import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.comms.shuffle.KeyValue;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 
@@ -122,15 +122,13 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
     @SuppressWarnings("unchecked")
     public boolean receive(int target, Iterator<Object> it) {
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-//      LOG.info("Final Output Length : " + Iterators.size(it));
 
       if (it == null) {
         return true;
       }
-//      LOG.log(Level.INFO, String.format("%d Received message %d count %d",
-//          workerId, target, Iterators.size(it)));
+
       while (it.hasNext()) {
-        KeyValue<Object, Object> currentPair = (KeyValue) it.next();
+        Tuple<Object, Object> currentPair = (Tuple) it.next();
         Object key = currentPair.getKey();
         int[] data = (int[]) currentPair.getValue();
         LOG.log(Level.INFO, String.format("%d Results : key: %s value sample: %s num vals : %s",

@@ -14,11 +14,38 @@ package edu.iu.dsc.tws.comms.dfw;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 
 public interface ChannelReceiver {
+  /**
+   * Receive a fully built message
+   * @param header the header
+   * @param object the built message
+   * @return true if accepted
+   */
   boolean receiveMessage(MessageHeader header, Object object);
+  /**
+   * For partial receives the path and
+   * @param source the source
+   * @param target target to be sent
+   * @param path the path to be used
+   * @param flags flags
+   * @param message message
+   * @return true if success
+   */
   boolean receiveSendInternally(int source, int target, int path, int flags, Object message);
-  boolean passMessageDownstream(Object object, ChannelMessage currentMessage);
 
+  /**
+   * Handle a partially received buffers
+   * @param currentMessage the message
+   * @return true if accepted
+   */
   default boolean handleReceivedChannelMessage(ChannelMessage currentMessage) {
     return true;
+  }
+
+  /**
+   * The send has been completed
+   *
+   * @param message the out message
+   */
+  default void sendCompleted(OutMessage message) {
   }
 }

@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
@@ -40,7 +39,9 @@ public abstract class BaseTSet<T> implements TSet<T> {
   /**
    * The builder to use to building the task graph
    */
-  protected TaskGraphBuilder builder;
+//  protected TaskGraphBuilder builder;
+
+  protected TSetBuilder builder;
 
   /**
    * Name of the data set
@@ -84,9 +85,15 @@ public abstract class BaseTSet<T> implements TSet<T> {
    */
   private StateType stateType = StateType.DISTRIBUTED;
 
-  public BaseTSet(Config cfg, TaskGraphBuilder bldr) {
+//  public BaseTSet(Config cfg, TaskGraphBuilder bldr) {
+//    this.children = new ArrayList<>();
+//    this.builder = bldr;
+//    this.config = cfg;
+//  }
+
+  public BaseTSet(Config cfg, TSetBuilder tSetBuilder) {
     this.children = new ArrayList<>();
-    this.builder = bldr;
+    this.builder = tSetBuilder;
     this.config = cfg;
   }
 
@@ -119,7 +126,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public ReduceTLink<T> reduce(ReduceFunction<T> reduceFn) {
-    ReduceTLink<T> reduce = new ReduceTLink<T>(config, builder, this, reduceFn);
+    ReduceTLink<T> reduce = new ReduceTLink<>(config, builder, this, reduceFn);
     children.add(reduce);
     return reduce;
   }
@@ -139,7 +146,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
-    AllReduceTLink<T> reduce = new AllReduceTLink<T>(config, builder, this, reduceFn);
+    AllReduceTLink<T> reduce = new AllReduceTLink<>(config, builder, this, reduceFn);
     children.add(reduce);
     return reduce;
   }
@@ -178,7 +185,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
     // todo: why cant we add a single cache tset here?
     DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
     children.add(direct);
-    CachedTSet<T> cacheTSet = new CachedTSet<T>(config, builder, direct);
+    CachedTSet<T> cacheTSet = new CachedTSet<>(config, builder, direct);
     direct.getChildren().add(cacheTSet);
     return cacheTSet;
   }
@@ -252,5 +259,11 @@ public abstract class BaseTSet<T> implements TSet<T> {
         return prefix + "-" + parent.getName();
       }
     }
+  }
+
+  @Override
+  public boolean addInput(String key, TSet<?> input) {
+
+    return false;
   }
 }

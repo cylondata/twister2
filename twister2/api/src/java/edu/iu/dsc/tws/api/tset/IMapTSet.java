@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.ops.IterableMapOp;
 import edu.iu.dsc.tws.common.config.Config;
@@ -22,8 +21,8 @@ public class IMapTSet<T, P> extends BaseTSet<T> {
 
   private IterableMapFunction<P, T> mapFn;
 
-  public IMapTSet(Config cfg, TaskGraphBuilder builder,
-                  BaseTLink<P> parent, IterableMapFunction<P, T> mapFunc) {
+  public IMapTSet(Config cfg, TSetBuilder builder, BaseTLink<P> parent,
+                  IterableMapFunction<P, T> mapFunc) {
     super(cfg, builder);
     this.parent = parent;
     this.mapFn = mapFunc;
@@ -31,12 +30,12 @@ public class IMapTSet<T, P> extends BaseTSet<T> {
 
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getMode());
+    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     int p = calculateParallelism(parent);
 
-    ComputeConnection connection = builder.addCompute(generateName("i-map", parent),
-        new IterableMapOp<>(mapFn, isIterable, keyed), p);
+    ComputeConnection connection = builder.getTaskGraphBuilder().addCompute(generateName("i-map",
+        parent), new IterableMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }

@@ -62,13 +62,17 @@ public class KMeansTsetJob extends TaskWorker implements Serializable {
     TSet<double[][]> centers = builder.createSource(new CenterSource()).cache();
 
     for (int i = 0; i < iterations; i++) {
-      TSet<double[][]> kmeansTSet = ((CachedTSet<double[][]>) points).map(
-          new MapFunction<double[][], double[][]>() {
-            @Override
-            public double[][] map(double[][] doubles) {
-              return new double[0][];
-            }
-          });
+      TSet<double[][]> kmeansTSet = ((CachedTSet<double[][]>) points).map(new KMeansMap());
+      kmeansTSet.addInput("centers", centers);
+    }
+  }
+
+  public class KMeansMap implements MapFunction<double[][], double[][]> {
+
+    @Override
+    public double[][] map(double[][] doubles) {
+      Object centers = getInput("centers");
+      return new double[0][];
     }
   }
 

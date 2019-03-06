@@ -17,10 +17,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class PartitionRouter {
   private static final Logger LOG = Logger.getLogger(PartitionRouter.class.getName());
@@ -33,7 +33,8 @@ public class PartitionRouter {
   // task -> (path -> tasks)
   private Map<Integer, List<Integer>> upstream;
   private Set<Integer> receiveExecutors;
-  private Set<Integer> thisExecutorTasks;
+
+  private Map<Integer, List<Integer>> partialReceives;
 
   /**
    * Create a direct router
@@ -43,6 +44,7 @@ public class PartitionRouter {
 
     this.externalSendTasks = new HashMap<>();
     this.internalSendTasks = new HashMap<>();
+    this.partialReceives = new HashMap<>();
 
     Set<Integer> myTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
     for (int src : srscs) {
@@ -74,8 +76,7 @@ public class PartitionRouter {
 
     // we are going to receive from all the sources
     this.upstream = new HashMap<>();
-    List<Integer> sources = new ArrayList<>();
-    sources.addAll(srscs);
+    List<Integer> sources = new ArrayList<>(srscs);
     for (int dest : dests) {
       if (myTasks.contains(dest)) {
         this.upstream.put(dest, sources);
@@ -86,11 +87,14 @@ public class PartitionRouter {
     // we are not interested in our own
     receiveExecutors.remove(taskPlan.getThisExecutor());
 
-    this.thisExecutorTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
+    List<Integer> thisSources = new ArrayList<>(
+        TaskPlanUtils.getTasksOfThisWorker(taskPlan, srscs));
+    for (int dest : dests) {
+      partialReceives.put(dest, thisSources);
+    }
   }
 
   public Set<Integer> receivingExecutors() {
-    LOG.log(Level.FINE, taskPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
     return receiveExecutors;
   }
 
@@ -99,37 +103,21 @@ public class PartitionRouter {
     return upstream;
   }
 
-  public boolean isLastReceiver() {
-    // now check if destination is in this task
-    return true;
+  public Map<Integer, List<Integer>> partialExpectedTaskIds() {
+    return partialReceives;
   }
 
-  public Map<Integer, Set<Integer>> getInternalSendTasks(int source) {
+  public Map<Integer, Set<Integer>> getInternalSendTasks() {
     // return a routing
     return internalSendTasks;
   }
 
-  public Map<Integer, Set<Integer>> getExternalSendTasks(int source) {
+  public Map<Integer, Set<Integer>> getExternalSendTasks() {
     return externalSendTasks;
   }
 
-  public Map<Integer, Set<Integer>> getExternalSendTasksForPartial(int source) {
-    return null;
-  }
-
-  public int mainTaskOfExecutor(int executor, int path) {
+  public int mainTaskOfExecutor() {
     return -1;
-  }
-
-  /**
-   * The destination id is the destination itself
-   */
-  public int destinationIdentifier(int source, int path) {
-    return 0;
-  }
-
-  public Map<Integer, Integer> getPathAssignedToTasks() {
-    return null;
   }
 
   private static Set<Integer> getExecutorsHostingTasks(TaskPlan plan, Set<Integer> tasks) {

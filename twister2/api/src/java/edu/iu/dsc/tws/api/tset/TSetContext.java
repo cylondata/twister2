@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -42,6 +43,12 @@ public class TSetContext {
   private Map<String, Object> configs;
 
   /**
+   * Inputs that are added to a TSet are stored in this
+   * map to be passed to functions
+   */
+  private Map<String, Object> inputMap;
+
+  /**
    * The worker id this tSet instance belongs to
    */
   private int workerId;
@@ -71,6 +78,7 @@ public class TSetContext {
     this.parallelism = parallelism;
     this.configs = configs;
     this.workerId = wId;
+    this.inputMap = new HashMap<>();
   }
 
   /**
@@ -143,4 +151,44 @@ public class TSetContext {
   public Config getConfig() {
     return config;
   }
+
+  /**
+   * get the complete input map
+   *
+   * @return the current input map
+   */
+  protected Map<String, Object> getInputMap() {
+    return inputMap;
+  }
+
+  /**
+   * Set a new input map
+   *
+   * @param inputMap the map to be set for this context
+   */
+  protected void setInputMap(Map<String, Object> inputMap) {
+    this.inputMap = inputMap;
+  }
+
+  /**
+   * Retrives the input object that corresponds to the given key
+   *
+   * @param key key of the input object
+   * @return the input object if the key is present or null
+   */
+  public Object getInput(String key) {
+    return inputMap.get(key);
+  }
+
+  /**
+   * Adds a input object into the map
+   *
+   * @param key the key to be associated with the input object
+   * @param data the input object
+   */
+  public void addInput(String key, Object data) {
+    inputMap.put(key, data);
+  }
+
+
 }
