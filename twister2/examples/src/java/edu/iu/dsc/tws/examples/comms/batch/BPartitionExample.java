@@ -53,7 +53,7 @@ public class BPartitionExample extends BenchWorker {
 
     // create the communication
     partition = new BPartition(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector(), true);
+        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector(), false);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -90,7 +90,6 @@ public class BPartitionExample extends BenchWorker {
   }
 
   public class PartitionReceiver implements BulkReceiver {
-    private int count = 0;
     private int expected;
 
     @Override
@@ -100,7 +99,7 @@ public class BPartitionExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
+      LOG.log(Level.INFO, String.format("%d Received message to %d count %d expected %d",
           workerId, target, Iterators.size(it), expected));
       partitionDone = true;
       return true;

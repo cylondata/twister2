@@ -75,7 +75,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
       return null;
     } else {
       DirectedEdge<TV, TE> directedEdge =
-          createDirectedDataflowTaskEdge(taskEdge, sourceTaskVertex, targetTaskVertex);
+              createDirectedDataflowTaskEdge(taskEdge, sourceTaskVertex, targetTaskVertex);
       directedEdges.add(directedEdge);
       edges.add(taskEdge);
       return taskEdge;
@@ -99,7 +99,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   public boolean addTaskEdge(TV taskVertex1, TV taskVertex2, TE taskEdge) {
     if (taskEdge == null) {
       throw new NullPointerException();
-    } else if (containsTaskEdge(taskEdge)) {
+    } else if (containsTaskEdge(taskVertex1, taskVertex2, taskEdge)) {
       return false;
     }
 
@@ -107,7 +107,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     validateTaskVertex(taskVertex2);
 
     DirectedEdge<TV, TE> directedEdge =
-        createDirectedDataflowTaskEdge(taskEdge, taskVertex1, taskVertex2);
+            createDirectedDataflowTaskEdge(taskEdge, taskVertex1, taskVertex2);
     edges.add(taskEdge);
     directedEdges.add(directedEdge);
 
@@ -118,7 +118,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
    * This method assign the directed dataflow edge between the source and target task vertex
    */
   private DirectedEdge<TV, TE> createDirectedDataflowTaskEdge(
-      TE taskEdge, TV sourceTaskVertex, TV targetTaskVertex) {
+          TE taskEdge, TV sourceTaskVertex, TV targetTaskVertex) {
 
     DirectedEdge<TV, TE> directedEdge;
 
@@ -138,7 +138,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     Set<TE> ret = new HashSet<>();
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (vertexComparator.compare(de.sourceTaskVertex, sourceTaskVertex) == 0
-          && vertexComparator.compare(de.targetTaskVertex, targetTaskVertex) == 0) {
+              && vertexComparator.compare(de.targetTaskVertex, targetTaskVertex) == 0) {
         ret.add(de.taskEdge);
       }
     }
@@ -154,7 +154,6 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     boolean flag = false;
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (edgeComparator.compare(de.taskEdge, taskEdge) == 0) {
-        //flag = true;
         throw new RuntimeException("Duplicate task edges found for the task edge:" + taskEdge);
       }
     }
@@ -204,7 +203,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     while (it.hasNext()) {
       DirectedEdge<TV, TE> de = it.next();
       if (vertexComparator.compare(de.sourceTaskVertex, sourceVertex) == 0
-          && vertexComparator.compare(de.targetTaskVertex, targetVertex) == 0) {
+              && vertexComparator.compare(de.targetTaskVertex, targetVertex) == 0) {
         it.remove();
       }
     }
@@ -234,7 +233,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     while (it.hasNext()) {
       DirectedEdge<TV, TE> de = it.next();
       if (vertexComparator.compare(taskVertex, de.sourceTaskVertex) == 0
-          || vertexComparator.compare(taskVertex, de.targetTaskVertex) == 0) {
+              || vertexComparator.compare(taskVertex, de.targetTaskVertex) == 0) {
         it.remove();
       }
     }
@@ -265,7 +264,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     while (it.hasNext()) {
       DirectedEdge<TV, TE> de = it.next();
       if (vertexComparator.compare(t, de.sourceTaskVertex) == 0
-          || edgeComparator.compare(de.taskEdge, edge) == 0) {
+              || edgeComparator.compare(de.taskEdge, edge) == 0) {
         return de.targetTaskVertex;
       }
     }
@@ -281,7 +280,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     while (it.hasNext()) {
       DirectedEdge<TV, TE> de = it.next();
       if (vertexComparator.compare(t, de.targetTaskVertex) == 0
-          || edgeComparator.compare(de.taskEdge, edge) == 0) {
+              || edgeComparator.compare(de.taskEdge, edge) == 0) {
         return de.sourceTaskVertex;
       }
     }
@@ -297,7 +296,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     while (it.hasNext()) {
       DirectedEdge<TV, TE> de = it.next();
       if (vertexComparator.compare(taskVertex, de.sourceTaskVertex) == 0
-          || vertexComparator.compare(taskVertex, de.targetTaskVertex) == 0) {
+              || vertexComparator.compare(taskVertex, de.targetTaskVertex) == 0) {
         ret.add(de.taskEdge);
       }
     }
@@ -366,11 +365,23 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
                                   TV targetTaskVertex) {
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (vertexComparator.compare(de.sourceTaskVertex, sourceTaskVertex) == 0
-          && vertexComparator.compare(de.targetTaskVertex, targetTaskVertex) == 0) {
+              && vertexComparator.compare(de.targetTaskVertex, targetTaskVertex) == 0) {
         return true;
       }
     }
     return false;
+  }
+
+  public boolean containsTaskEdge(TV sourceTaskVertex, TV targetTaskVertex, TE taskEdge) {
+    boolean flag = false;
+    for (DirectedEdge<TV, TE> de : directedEdges) {
+      if (vertexComparator.compare(de.sourceTaskVertex, sourceTaskVertex) == 0
+              && vertexComparator.compare(de.targetTaskVertex, targetTaskVertex) == 0
+              && edgeComparator.compare(de.taskEdge, taskEdge) == 0) {
+        flag = true;
+      }
+    }
+    return flag;
   }
 
   /**
@@ -390,7 +401,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
    */
   @Override
   public boolean removeAllTaskVertices(Collection<? extends TV>
-                                           taskVertices) {
+                                               taskVertices) {
     boolean flag = false;
     for (TV taskVertex : taskVertices) {
       flag |= removeTaskVertex(taskVertex);
@@ -441,7 +452,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
       throw new NullPointerException();
     } else {
       throw new IllegalArgumentException(
-          "No task vertex in this task graph: " + taskVertex.toString());
+              "No task vertex in this task graph: " + taskVertex.toString());
     }
   }
 
@@ -455,7 +466,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
       throw new NullPointerException();
     } else {
       throw new IllegalArgumentException(
-          "No task Edge in this task graph: " + taskEdge.toString());
+              "No task Edge in this task graph: " + taskEdge.toString());
     }
   }
 
@@ -543,7 +554,3 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   public void build() {
   }
 }
-
-
-
-

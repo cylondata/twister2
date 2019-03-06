@@ -24,9 +24,9 @@
 package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
+import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -36,10 +36,10 @@ import edu.iu.dsc.tws.data.api.DataType;
  *
  * @param <T> the type of data
  */
-public class GatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
+public class GatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
   private BaseTSet<T> parent;
 
-  public GatherTLink(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt) {
+  public GatherTLink(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt) {
     super(cfg, bldr);
     this.parent = prnt;
     this.name = "gather-" + parent.getName();

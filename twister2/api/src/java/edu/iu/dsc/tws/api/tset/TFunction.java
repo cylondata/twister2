@@ -18,7 +18,6 @@ import java.io.Serializable;
  */
 public interface TFunction extends Serializable {
 
-  
   /**
    * Prepare the function
    *

@@ -16,17 +16,22 @@ import java.util.HashSet;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.CommunicationContext;
 import edu.iu.dsc.tws.comms.api.Communicator;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
+import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchPartialReceiver;
 
 public class BKeyedGather {
-  private DataFlowMultiGather keyedGather;
+  private DataFlowOperation keyedGather;
 
   private DestinationSelector destinationSelector;
 
@@ -40,15 +45,25 @@ public class BKeyedGather {
                       BulkReceiver rcvr, DestinationSelector destSelector, boolean shuffle) {
     this.keyType = kType;
     this.dataType = dType;
-    Set<Integer> edges = new HashSet<>();
-    for (int i = 0; i < destinations.size(); i++) {
-      edges.add(comm.nextEdge());
+    if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_GATHER.equals(
+        CommunicationContext.keyedGatherOp(comm.getConfig()))) {
+      Set<Integer> edges = new HashSet<>();
+      for (int i = 0; i < destinations.size(); i++) {
+        edges.add(comm.nextEdge());
+      }
+      this.keyedGather = new DataFlowMultiGather(comm.getConfig(), comm.getChannel(),
+          plan, sources, destinations,
+          new GatherMultiBatchFinalReceiver(rcvr, shuffle, false, comm.getPersistentDirectory(),
+              null), new GatherMultiBatchPartialReceiver(),
+          edges, kType, dType);
+    } else if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_PARTITION.equals(
+        CommunicationContext.keyedGatherOp(comm.getConfig()))) {
+      this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
+          plan, sources, destinations,
+          new KGatherBatchFinalReceiver(rcvr, 100),
+          new KGatherBatchPartialReceiver(0, 100), dataType, dataType,
+          keyType, keyType, comm.nextEdge());
     }
-    this.keyedGather = new DataFlowMultiGather(comm.getChannel(), sources, destinations,
-        new GatherMultiBatchFinalReceiver(rcvr, shuffle, false, comm.getPersistentDirectory(),
-            null), new GatherMultiBatchPartialReceiver(),
-        edges, kType, dType);
-    this.keyedGather.init(comm.getConfig(), dType, plan);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, destinations);
   }
@@ -60,15 +75,26 @@ public class BKeyedGather {
                       boolean shuffle) {
     this.keyType = kType;
     this.dataType = dType;
-    Set<Integer> edges = new HashSet<>();
-    for (int i = 0; i < destinations.size(); i++) {
-      edges.add(comm.nextEdge());
+    if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_GATHER.equals(
+        CommunicationContext.keyedGatherOp(comm.getConfig()))) {
+      Set<Integer> edges = new HashSet<>();
+
+      for (int i = 0; i < destinations.size(); i++) {
+        edges.add(comm.nextEdge());
+      }
+      this.keyedGather = new DataFlowMultiGather(comm.getConfig(), comm.getChannel(),
+          plan, sources, destinations,
+          new GatherMultiBatchFinalReceiver(rcvr, shuffle, true, comm.getPersistentDirectory(),
+              comparator), new GatherMultiBatchPartialReceiver(), edges,
+          kType, dType);
+    } else if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_PARTITION.equals(
+        CommunicationContext.keyedGatherOp(comm.getConfig()))) {
+      this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
+          plan, sources, destinations,
+          new KGatherBatchFinalReceiver(rcvr, 100),
+          new KGatherBatchPartialReceiver(0, 100), dataType, dataType,
+          keyType, keyType, comm.nextEdge());
     }
-    this.keyedGather = new DataFlowMultiGather(comm.getChannel(), sources, destinations,
-        new GatherMultiBatchFinalReceiver(rcvr, shuffle, true, comm.getPersistentDirectory(),
-            comparator), new GatherMultiBatchPartialReceiver(), edges,
-        kType, dType);
-    this.keyedGather.init(comm.getConfig(), dType, plan);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, destinations);
   }

@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
@@ -27,7 +26,15 @@ public class CachedTSet<T> extends BaseTSet<T> {
   //  visible to the executor
   private DataObject<T> datapoints = null;
 
-  public CachedTSet(Config cfg, TaskGraphBuilder bldr, BaseTLink<T> prnt) {
+//  public CachedTSet(Config cfg, TaskGraphBuilder bldr, BaseTLink<T> prnt) {
+//    super(cfg, bldr);
+//    this.parent = prnt;
+//    this.name = "cache-" + parent.getName();
+//    datapoints = new DataObjectImpl<>(config);
+//
+//  }
+
+  public CachedTSet(Config cfg, TSetBuilder bldr, BaseTLink<T> prnt) {
     super(cfg, bldr);
     this.parent = prnt;
     this.name = "cache-" + parent.getName();
@@ -40,26 +47,26 @@ public class CachedTSet<T> extends BaseTSet<T> {
 
   @Override
   public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getMode());
+    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     // lets override the parallelism
     int p = calculateParallelism(parent);
-    ComputeConnection connection = builder.addSink(getName(),
-        new SinkOp<T>(new CacheSink(), isIterable, keyed), p);
+    ComputeConnection connection = builder.getTaskGraphBuilder().addSink(getName(),
+        new SinkOp<>(new CacheSink(), isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }
 
   public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
     TSetBuilder cacheBuilder = TSetBuilder.newBuilder(config);
-    cacheBuilder.setMode(builder.getMode());
+    cacheBuilder.setMode(builder.getOpMode());
     SourceTSet<T> cacheSource = (SourceTSet<T>) cacheBuilder.createSource(new CacheSource());
     return cacheSource.map(mapFn);
   }
 
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
     TSetBuilder cacheBuilder = TSetBuilder.newBuilder(config);
-    cacheBuilder.setMode(builder.getMode());
+    cacheBuilder.setMode(builder.getOpMode());
     SourceTSet<T> cacheSource = (SourceTSet<T>) cacheBuilder.createSource(new CacheSource());
     return cacheSource.flatMap(mapFn);
   }
@@ -74,6 +81,7 @@ public class CachedTSet<T> extends BaseTSet<T> {
     private int count = 0;
     @Override
     public boolean add(T value) {
+      // todo every time add is called, a new partition will be made! how to handle that?
       datapoints.addPartition(new EntityPartition<T>(count++, value)); //
       return true;
     }

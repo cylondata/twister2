@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.link.KeyedGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
@@ -25,8 +24,8 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
 
   private BaseTSet<T> parent;
 
-  public GroupedTSet(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
-                     PartitionFunction<K> partFn, Selector<T, K> selc) {
+  public GroupedTSet(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt, PartitionFunction<K> partFn,
+                     Selector<T, K> selc) {
     super(cfg, bldr);
     this.partitioner = partFn;
     this.selector = selc;

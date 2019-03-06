@@ -70,7 +70,7 @@ public final class TSetBuilder {
 
   public <T> TSet<T> createSource(Source<T> source) {
     builder.setMode(opMode);
-    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, builder, source);
+    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, this, source);
     sources.add(tSourceTSet);
     return tSourceTSet;
   }
@@ -81,5 +81,9 @@ public final class TSetBuilder {
       set.build();
     }
     return builder.build();
+  }
+
+  public TaskGraphBuilder getTaskGraphBuilder() {
+    return builder;
   }
 }

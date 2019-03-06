@@ -24,12 +24,12 @@
 package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
+import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
@@ -46,7 +46,7 @@ public class KeyedReduceTLink<T, K> extends KeyValueTLink<T, K> {
 
   private Selector<T, K> selector;
 
-  public KeyedReduceTLink(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt,
+  public KeyedReduceTLink(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt,
                           ReduceFunction<T> rFn, PartitionFunction<K> parFn,
                           Selector<T, K> selec) {
     super(cfg, bldr);

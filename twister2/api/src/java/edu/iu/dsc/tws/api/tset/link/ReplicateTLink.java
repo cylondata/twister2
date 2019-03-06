@@ -24,9 +24,9 @@
 package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
+import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -36,7 +36,7 @@ public class ReplicateTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
 
   private int replications;
 
-  public ReplicateTLink(Config cfg, TaskGraphBuilder bldr, BaseTSet<T> prnt, int reps) {
+  public ReplicateTLink(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt, int reps) {
     super(cfg, bldr);
     this.parent = prnt;
     this.name = "clone-" + parent.getName();

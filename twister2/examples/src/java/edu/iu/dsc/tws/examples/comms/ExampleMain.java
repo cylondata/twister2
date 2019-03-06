@@ -160,9 +160,6 @@ public class ExampleMain {
         case "keyedreduce":
           submitJob(config, workers, jobConfig, BKeyedReduceExample.class.getName());
           break;
-        case "pkeyedreduce":
-          submitJob(config, workers, jobConfig, BKeyedPartitionBasedReduceExample.class.getName());
-          break;
         case "partition":
           submitJob(config, workers, jobConfig, BPartitionExample.class.getName());
           break;

@@ -25,36 +25,38 @@ package edu.iu.dsc.tws.comms.utils;
 
 import java.util.Comparator;
 
-import edu.iu.dsc.tws.comms.shuffle.KeyValue;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 public class HeapNode<K, V> implements Comparable<HeapNode<K, V>> {
 
-  public KeyValue<K, V> data;
+  public Tuple<K, V> data;
   public int listNo;
   private Comparator<K> keyComparator;
 
-  public HeapNode(KeyValue<K, V> data, int listNo, Comparator<K> keyComparator) {
+  public HeapNode(Tuple<K, V> data, int listNo, Comparator<K> keyComparator) {
     this.data = data;
     this.listNo = listNo;
     this.keyComparator = keyComparator;
   }
 
-  public KeyValue<K, V> getData() {
+  public Tuple<K, V> getData() {
     return data;
   }
 
   /**
    * Since KeyValue has been wrapped by this class, providing an easy to access method to get key
    */
+  @SuppressWarnings("Unchecked")
   public K getKey() {
-    return this.data.getKey();
+    return (K) this.data.getKey();
   }
 
   /**
    * Since KeyValue has been wrapped by this class, providing and easy to access methods to get value
    */
+  @SuppressWarnings("Unchecked")
   public V getValue() {
-    return this.data.getValue();
+    return (V) this.data.getValue();
   }
 
   @Override
@@ -67,9 +69,9 @@ public class HeapNode<K, V> implements Comparable<HeapNode<K, V>> {
         + '}';
   }
 
-
+  @SuppressWarnings("Unchecked")
   @Override
   public int compareTo(HeapNode<K, V> o) {
-    return this.keyComparator.compare(this.data.getKey(), o.getData().getKey());
+    return this.keyComparator.compare((K) this.data.getKey(), (K) o.getData().getKey());
   }
 }

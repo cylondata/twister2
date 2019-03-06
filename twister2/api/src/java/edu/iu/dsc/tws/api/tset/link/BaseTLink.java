@@ -16,7 +16,6 @@ import java.util.List;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.FlatMapTSet;
 import edu.iu.dsc.tws.api.tset.IFlatMapTSet;
@@ -28,6 +27,7 @@ import edu.iu.dsc.tws.api.tset.MapTSet;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.SinkTSet;
 import edu.iu.dsc.tws.api.tset.TBase;
+import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class BaseTLink<T> implements TLink<T> {
@@ -40,7 +40,7 @@ public abstract class BaseTLink<T> implements TLink<T> {
   /**
    * The builder to use to building the task graph
    */
-  protected TaskGraphBuilder builder;
+  protected TSetBuilder builder;
 
 
   /**
@@ -57,7 +57,7 @@ public abstract class BaseTLink<T> implements TLink<T> {
    */
   protected Config config;
 
-  public BaseTLink(Config cfg, TaskGraphBuilder bldr) {
+  public BaseTLink(Config cfg, TSetBuilder bldr) {
     this.children = new ArrayList<>();
     this.builder = bldr;
     this.config = cfg;
@@ -66,7 +66,7 @@ public abstract class BaseTLink<T> implements TLink<T> {
   @Override
   public TLink<T> setName(String n) {
     this.name = n;
-    return null;
+    return this;
   }
 
   public String getName() {

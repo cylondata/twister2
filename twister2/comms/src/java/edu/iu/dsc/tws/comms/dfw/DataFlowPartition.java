@@ -66,31 +66,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   private PartitionRouter router;
 
   /**
-   * Destination index
-   */
-  private Map<Integer, Integer> destinationIndex;
-
-  /**
-   * Sources
-   */
-  private Set<Integer> thisSources;
-
-  /**
-   * The destinations
-   */
-  private Destinations dests = new Destinations();
-
-  /**
-   * Destinations
-   */
-  private List<Integer> destinationsList;
-
-  /**
-   * This tasks
-   */
-  private Set<Integer> thisTasks;
-
-  /**
    * Final receiver
    */
   private MessageReceiver finalReceiver;
@@ -106,19 +81,9 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   private ChannelDataFlowOperation delegete;
 
   /**
-   * Configuration
-   */
-  private Config config;
-
-  /**
    * Task plan
    */
   private TaskPlan instancePlan;
-
-  /**
-   * Executor ID
-   */
-  private int executor;
 
   /**
    * Receive message type, we can receive messages as just bytes
@@ -171,13 +136,14 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   private int edge;
 
   /**
-   * A place holder for keeping the internal and external destinations
+   * A place holder for keeping the internal destinations
    */
-  @SuppressWarnings("VisibilityModifier")
-  private class Destinations {
-    List<Integer> internal = new ArrayList<>();
-    List<Integer> external = new ArrayList<>();
-  }
+  private List<Integer> internalDestinations = new ArrayList<>();
+
+  /**
+   * A place holder for keeping the external destinations
+   */
+  private List<Integer> externalDestinations = new ArrayList<>();
 
   public DataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
                            MessageReceiver finalRcvr, MessageReceiver partialRcvr,
@@ -202,13 +168,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
                            MessageReceiver partialRcvr) {
     this.sources = srcs;
     this.destinations = dests;
-    this.destinationIndex = new HashMap<>();
-    this.destinationsList = new ArrayList<>(destinations);
     this.delegete = new ChannelDataFlowOperation(channel);
-
-    for (int s : sources) {
-      destinationIndex.put(s, 0);
-    }
 
     this.finalReceiver = finalRcvr;
     this.partialReceiver = partialRcvr;
@@ -231,11 +191,8 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
                            MessageType kType, MessageType rcvKType,
                            int e) {
     this.instancePlan = tPlan;
-    this.config = cfg;
     this.sources = srcs;
     this.destinations = dests;
-    this.destinationIndex = new HashMap<>();
-    this.destinationsList = new ArrayList<>(destinations);
     this.delegete = new ChannelDataFlowOperation(channel);
     this.dataType = dType;
     this.receiveType = rcvType;
@@ -245,11 +202,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
     if (keyType != null) {
       this.isKeyed = true;
-    }
-
-    // sources
-    for (int src : sources) {
-      destinationIndex.put(src, 0);
     }
 
     this.finalReceiver = finalRcvr;
@@ -263,13 +215,14 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int ed) {
     this.edge = ed;
-    this.thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
+
+    Set<Integer> thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
+    int executor = taskPlan.getThisExecutor();
     LOG.log(Level.FINE, String.format("%d setup loadbalance routing %s %s",
         taskPlan.getThisExecutor(), sources, destinations));
-    this.thisTasks = taskPlan.getTasksOfThisExecutor();
     this.router = new PartitionRouter(taskPlan, sources, destinations);
-    Map<Integer, Set<Integer>> internal = router.getInternalSendTasks(0);
-    Map<Integer, Set<Integer>> external = router.getExternalSendTasks(0);
+    Map<Integer, Set<Integer>> internal = router.getInternalSendTasks();
+    Map<Integer, Set<Integer>> external = router.getExternalSendTasks();
     this.instancePlan = taskPlan;
     this.dataType = t;
     if (this.receiveType == null) {
@@ -281,12 +234,12 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     for (int s : thisSources) {
       Set<Integer> integerSetMap = internal.get(s);
       if (integerSetMap != null) {
-        this.dests.internal.addAll(integerSetMap);
+        this.internalDestinations.addAll(integerSetMap);
       }
 
       Set<Integer> integerSetMap1 = external.get(s);
       if (integerSetMap1 != null) {
-        this.dests.external.addAll(integerSetMap1);
+        this.externalDestinations.addAll(integerSetMap1);
       }
       LOG.fine(String.format("%d adding internal/external routing %d",
           taskPlan.getThisExecutor(), s));
@@ -295,13 +248,8 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
     LOG.log(Level.FINE, String.format("%d done adding internal/external routing",
         taskPlan.getThisExecutor()));
-    if (this.finalReceiver != null && isLastReceiver()) {
-      this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
-    }
-    if (this.partialReceiver != null) {
-      this.partialReceiver.init(cfg, this, receiveExpectedTaskIds());
-    }
-
+    this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
+    this.partialReceiver.init(cfg, this, router.partialExpectedTaskIds());
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
@@ -320,10 +268,8 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     }
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
-      ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
-          new ArrayBlockingQueue<Pair<Object, OutMessage>>(
-              DataFlowContext.sendPendingMax(cfg));
-      pendingSendMessagesPerSource.put(s, pendingSendMessages);
+      pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
+          DataFlowContext.sendPendingMax(cfg)));
       if (isKeyed) {
         serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(), executor,
             keyType, dataType));
@@ -340,11 +286,8 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     Set<Integer> execs = router.receivingExecutors();
     for (int ex : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, InMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<>(
-              capacity);
-      pendingReceiveMessagesPerSource.put(ex, pendingReceiveMessages);
-      pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<InMessage>(capacity));
+      pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
+      pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
         deSerializerMap.put(ex, new UnifiedKeyDeSerializer(new KryoSerializer(),
             executor, keyType, dataType));
@@ -435,10 +378,12 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-    // first we need to call finish on the partial receivers
-    while (!send(source, new byte[0], MessageFlags.END)) {
-      // lets progress until finish
-      progress();
+    for (int dest : destinations) {
+      // first we need to call finish on the partial receivers
+      while (!send(source, new byte[0], MessageFlags.END, dest)) {
+        // lets progress until finish
+        progress();
+      }
     }
   }
 
@@ -470,7 +415,7 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     } else {
       RoutingParameters routingParameters = new RoutingParameters();
       routingParameters.setDestinationId(destination);
-      if (dests.external.contains(destination)) {
+      if (externalDestinations.contains(destination)) {
         routingParameters.addExternalRoute(destination);
       } else {
         routingParameters.addInteranlRoute(destination);
@@ -480,15 +425,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     }
   }
 
-  /**
-   * For partial receives the path and
-   * @param source
-   * @param path
-   * @param destination
-   * @param flags
-   * @param message
-   * @return
-   */
   public boolean receiveSendInternally(int source, int path,
                                        int destination, int flags, Object message) {
     // okay this must be for the
@@ -496,11 +432,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
       return finalReceiver.onMessage(source, path, destination, flags, message);
     }
     return partialReceiver.onMessage(source, path, destination, flags, message);
-  }
-
-  @Override
-  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
-    return true;
   }
 
   protected Set<Integer> receivingExecutors() {
@@ -511,17 +442,9 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return router.receiveExpectedTaskIds();
   }
 
-  protected boolean isLast(int source, int path, int taskIdentifier) {
-    return destinations.contains(taskIdentifier);
-  }
-
   public boolean receiveMessage(MessageHeader header, Object object) {
     return finalReceiver.onMessage(header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
         header.getDestinationIdentifier(), header.getFlags(), object);
-  }
-
-  protected boolean isLastReceiver() {
-    return true;
   }
 
   public Set<Integer> getSources() {
@@ -542,4 +465,11 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return dataType;
   }
 
+  public MessageType getReceiveDataType() {
+    return receiveType;
+  }
+
+  public MessageType getReceiveKeyType() {
+    return receiveKeyType;
+  }
 }

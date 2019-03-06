@@ -16,7 +16,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -57,7 +56,8 @@ public class SGatherExample extends BenchWorker {
 
     // create the communication
     gather = new SGather(communicator, taskPlan, sources, target, MessageType.INTEGER,
-        new FinalReduceReceiver(jobParameters.getIterations()));
+        new FinalReduceReceiver(jobParameters.getIterations(),
+            jobParameters.getWarmupIterations()));
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -110,10 +110,12 @@ public class SGatherExample extends BenchWorker {
 
   public class FinalReduceReceiver implements BulkReceiver {
     private int count = 0;
-    private int expected;
+    private int expectedIterations;
+    private int warmupIterations;
 
-    public FinalReduceReceiver(int expected) {
-      this.expected = expected;
+    public FinalReduceReceiver(int expected, int warmupIterations) {
+      this.expectedIterations = expected;
+      this.warmupIterations = warmupIterations;
     }
 
     @Override
@@ -122,7 +124,10 @@ public class SGatherExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Iterator<Object> object) {
-      Timing.mark(TIMING_MESSAGE_RECV, workerId == 0);
+      count++;
+      if (count > this.warmupIterations) {
+        Timing.mark(TIMING_MESSAGE_RECV, workerId == 0);
+      }
 
       //only do if verification is necessary, since this affects timing
       if (jobParameters.isDoVerify()) {
@@ -130,21 +135,21 @@ public class SGatherExample extends BenchWorker {
         while (object.hasNext()) {
           Object data = object.next();
           if (data instanceof Tuple) {
-            LOG.log(Level.INFO, String.format("%d received %d", target,
+            LOG.info(() -> String.format("%d received %d", target,
                 (Integer) ((Tuple) data).getKey()));
             dataReceived.add((int[]) ((Tuple) data).getValue());
           } else {
-            LOG.severe("Un-expected data: " + data.getClass());
+            LOG.severe(() -> "Un-expected data: " + data.getClass());
           }
         }
         verifyResults(resultsVerifier, dataReceived, null);
       }
 
-      if (++count == expected) {
+      if (count == expectedIterations + warmupIterations) {
         Timing.mark(TIMING_ALL_RECV, workerId == 0);
         BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0);
         resultsRecorder.writeToCSV();
-        LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
+        LOG.info(() -> String.format("Target %d received count %d", target, count));
         gatherDone = true;
       }
 

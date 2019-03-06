@@ -24,10 +24,10 @@
 package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.common.config.Config;
@@ -38,8 +38,7 @@ public class ReduceTLink<T> extends BaseTLink<T> {
 
   private BaseTSet<T> parent;
 
-  public ReduceTLink(Config cfg, TaskGraphBuilder bldr,
-                     BaseTSet<T> prnt, ReduceFunction<T> rFn) {
+  public ReduceTLink(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt, ReduceFunction<T> rFn) {
     super(cfg, bldr);
     this.reduceFn = rFn;
     this.parent = prnt;
@@ -51,7 +50,6 @@ public class ReduceTLink<T> extends BaseTLink<T> {
     return parent.getName();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public boolean baseBuild() {
     return true;
@@ -62,7 +60,7 @@ public class ReduceTLink<T> extends BaseTLink<T> {
     DataType dataType = TSetUtils.getDataType(getType());
 
     connection.reduce(parent.getName(), Constants.DEFAULT_EDGE,
-        new ReduceOpFunction<T>(getReduceFn()), dataType);
+        new ReduceOpFunction<>(getReduceFn()), dataType);
   }
 
   public ReduceFunction<T> getReduceFn() {

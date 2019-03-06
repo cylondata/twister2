@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class HelloTSet extends TaskWorker implements Serializable {
   private static final long serialVersionUID = -2;
@@ -51,14 +52,9 @@ public class HelloTSet extends TaskWorker implements Serializable {
       }
     }).setName("Source");
 
-    TLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
-    TSet<int[]> mapedPartition = partitioned.map(new MapFunction<int[], int[]>() {
-      @Override
-      public int[] map(int[] ints) {
-        return new int[0];
-      }
-    });
-
+    TLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>()).setName("part");
+    TSet<int[]> mapedPartition =
+        partitioned.map((MapFunction<int[], int[]>) ints -> new int[0]).setName("Mapped");
 
     TLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];
@@ -71,7 +67,10 @@ public class HelloTSet extends TaskWorker implements Serializable {
     reduce.sink(value -> {
       System.out.println(Arrays.toString(value));
       return false;
-    });
+    }).setName("sink");
+
+    builder.setMode(OperationMode.BATCH);
+
     DataFlowTaskGraph graph = builder.build();
 
     ExecutionPlan executionPlan = taskExecutor.plan(graph);
