@@ -187,7 +187,6 @@ public final class LoggingContext {
       try {
         String formated = String.format(definedFormat, new Date(), "", "", "", "", "", "", "");
       } catch (IllegalArgumentException ilEx) {
-        ilEx.printStackTrace();
         definedFormat = DEFAULT_FORMAT;
       }
     } else {
