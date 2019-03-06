@@ -135,6 +135,7 @@ public class SAllGatherExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       expected = expected * targets.size();
+      warmup = warmup * targets.size();
     }
 
     @Override
@@ -145,13 +146,15 @@ public class SAllGatherExample extends BenchWorker {
             && target == receiverInWorker0);
       }
 
+      LOG.info(() -> String.format("Target %d received count %d", target, count));
+
       if (count == expected + warmup) {
         Timing.mark(TIMING_ALL_RECV, workerId == 0
             && target == receiverInWorker0);
         BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0
             && target == receiverInWorker0);
         resultsRecorder.writeToCSV();
-        LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
+        LOG.info(() -> String.format("Target %d received ALL %d", target, count));
         gatherDone = true;
       }
       //only do if verification is necessary, since this affects timing

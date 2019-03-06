@@ -122,7 +122,7 @@ public class SAllReduceExample extends BenchWorker {
   }
 
   public class FinalSingularReceiver implements SingularReceiver {
-    private final int warmUpIterations;
+    private int warmUpIterations;
     private int count = 0;
     private int expected;
 
@@ -134,6 +134,7 @@ public class SAllReduceExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
       expected = expected * expectedIds.size();
+      warmUpIterations = warmUpIterations * expectedIds.size();
     }
 
     @Override
