@@ -42,7 +42,6 @@ import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
-import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
@@ -596,10 +595,10 @@ public final class MPIWorker {
   private void initLogger(Config cfg, int workerID, String logDirectory) {
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
-    LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
+    // LoggingHelper.setLoggingFormat(LoggingHelper.DEFAULT_FORMAT);
 
     // set logging level
-    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
+    // LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
 
     String persistentJobDir;
     String jobWorkingDirectory = NomadContext.workingDirectory(cfg);

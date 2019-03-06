@@ -263,12 +263,9 @@ public final class JMWorkerAgent {
     // first initialize the client, connect to Job Master
     init();
 
-    Thread jmThread = new Thread() {
-      public void run() {
-        startLooping();
-      }
-    };
+    Thread jmThread = new Thread(this::startLooping);
 
+    jmThread.setName("JM Agent");
     jmThread.start();
 
     boolean registered = registerWorker();
