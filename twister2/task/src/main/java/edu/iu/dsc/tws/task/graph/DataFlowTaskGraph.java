@@ -42,9 +42,9 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   @Override
   public void build() {
     validate();
-    for (DirectedEdge<Vertex, Edge> de : directedEdges) {
-      taskMap.put(de.sourceTaskVertex.getName(), de.sourceTaskVertex);
-      taskMap.put(de.targetTaskVertex.getName(), de.targetTaskVertex);
+    for (DirectedEdge<Vertex, Edge> de : getDirectedEdgesSet()) {
+      taskMap.put(de.getSourceVertex().getName(), de.getSourceVertex());
+      taskMap.put(de.getTargetVertex().getName(), de.getTargetVertex());
     }
   }
 

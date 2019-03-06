@@ -17,6 +17,8 @@ build:darwin --python2_path /usr/bin/python2.7
 build:darwin --java_toolchain=//tools/java:twister2_java_toolchain
 build:darwin --experimental_action_listener=tools/java:compile_java
 build:darwin --strict_java_deps=off
+build:darwin --genrule_strategy=standalone
+build:darwin --spawn_strategy=standalone
 
 # For Ubuntu
 # To use it: bazel build --config=ubuntu

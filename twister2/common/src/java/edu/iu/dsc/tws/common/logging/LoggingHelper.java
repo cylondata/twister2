@@ -19,10 +19,10 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import edu.iu.dsc.tws.common.config.Config;
 
@@ -33,8 +33,9 @@ import edu.iu.dsc.tws.common.config.Config;
  * Credits: com.twitter.heron.common.utils.logging.LoggingHelper
  */
 public final class LoggingHelper {
+
   private static final String FORMAT_PROP_KEY = "java.util.logging.SimpleFormatter.format";
-  public static final String DEFAULT_FORMAT = "[%1$tF %1$tT] [%4$s] %3$s: %5$s %6$s %n";
+  public static final String DEFAULT_FORMAT = "[%1$tF %1$tT] [%4$s] [%7$s] %3$s: %5$s %6$s %n";
 
   private LoggingHelper() {
   }
@@ -94,6 +95,12 @@ public final class LoggingHelper {
     Logger.getLogger("").addHandler(handler);
   }
 
+  /**
+   * Don't use this since, it changes all handlers
+   *
+   * @deprecated Configure handlers in logger.properties
+   */
+  @Deprecated
   public static void setLogLevel(String level) {
     setLogLevel(Level.parse(level));
   }
@@ -105,6 +112,25 @@ public final class LoggingHelper {
     }
 
     rootLogger.setLevel(level);
+  }
+
+  public static void initTwisterFileLogHandler(String logFile,
+                                               String logDir,
+                                               Config config) throws IOException {
+    Logger rootLogger = Logger.getLogger("");
+
+    boolean foundAndInit = false;
+    for (Handler handler : rootLogger.getHandlers()) {
+      if (handler instanceof Twister2FileLogHandler) {
+        ((Twister2FileLogHandler) handler).init(logDir, logFile, config);
+        foundAndInit = true;
+      }
+    }
+    if (!foundAndInit) {
+      Twister2FileLogHandler twister2FileLogHandler = new Twister2FileLogHandler();
+      twister2FileLogHandler.init(logDir, logFile, config);
+      LoggingHelper.addLoggingHandler(twister2FileLogHandler);
+    }
   }
 
   /**
@@ -123,39 +149,17 @@ public final class LoggingHelper {
    * <p>
    * The count must be at least 1.
    *
-   * @param limit the maximum number of bytes to write to any one file
-   * @param count the number of files to use
-   * @param append specifies append mode
    * @throws IOException if there are IO problems opening the files.
    * @throws SecurityException if a security manager exists and if
    * the caller does not have <tt>LoggingPermission("control")</tt>.
    * @throws IllegalArgumentException if {@code limit < 0}, or {@code count < 1}.
    * @throws IllegalArgumentException if pattern is an empty string
+   * @deprecated Use {@link Twister2FileLogHandler} instead
    */
+  @Deprecated
   public static FileHandler getFileHandler(String workerId,
                                            String loggingDir,
-                                           boolean append,
-                                           int limit,
-                                           int count) throws IOException, SecurityException {
-
-    String pattern = loggingDir + "/" + workerId + ".log.%g";
-
-
-    FileHandler fileHandler = new FileHandler(pattern, limit, count, append);
-    fileHandler.setFormatter(new SimpleFormatter());
-    fileHandler.setEncoding(StandardCharsets.UTF_8.toString());
-
-    return fileHandler;
-  }
-
-  /**
-   * this method is called to setup logging parameters
-   * and file handler
-   * @param config
-   * @param logDir
-   * @param logFile
-   */
-  public static void setupLogging(Config config, String logDir, String logFile) {
+                                           Config config) throws IOException, SecurityException {
 
     // get the value of twister2.logging.maximum.size.mb
     // make it MB
@@ -164,21 +168,45 @@ public final class LoggingHelper {
     // get the value of twister2.logging.maximum.files
     int maxFiles = LoggingContext.maxLogFiles(config);
 
+    boolean appendToFile = LoggingContext.appendToFile();
+
+    String pattern = loggingDir + "/" + workerId + ".log.%g";
+
+    FileHandler fileHandler = new FileHandler(pattern, maxFileSize, maxFiles, appendToFile);
+    fileHandler.setFormatter(LoggingContext.getFileLogFormatter());
+    fileHandler.setEncoding(StandardCharsets.UTF_8.toString());
+
+    return fileHandler;
+  }
+
+  private static void updateComponentId(String component) {
+    System.out.println("Setting com Id to " + component);
+    Logger rootLogger = Logger.getLogger("");
+    for (Handler handler : rootLogger.getHandlers()) {
+      Formatter formatter = handler.getFormatter();
+      if (formatter instanceof Twister2LogFormatter) {
+        ((Twister2LogFormatter) formatter).setComponentName(component);
+      }
+    }
+  }
+
+  /**
+   * this method is called to setup logging parameters
+   * and file handler
+   */
+  public static void setupLogging(Config config, String logDir, String logFile) {
+
     // get the value of twister2.logging.redirect.sysouterr
     boolean redirectStdOutAndStdErr = LoggingContext.redirectSysOutErr(config);
 
-    boolean appendToFile = false;
-
     try {
-      String format = LoggingContext.loggingFormat(config);
-      if (format == null) {
-        format = DEFAULT_FORMAT;
-      }
+      String format = LoggingContext.loggingFormat();
+
       LoggingHelper.loggerInit(redirectStdOutAndStdErr, format);
 
-      LoggingHelper.addLoggingHandler(
-          LoggingHelper.getFileHandler(logFile, logDir, appendToFile, maxFileSize, maxFiles));
+      LoggingHelper.initTwisterFileLogHandler(logFile, logDir, config);
 
+      LoggingHelper.updateComponentId(logFile);
     } catch (IOException e) {
       System.err.println("Exception when initializing the Logger. ");
       throw new RuntimeException(e);

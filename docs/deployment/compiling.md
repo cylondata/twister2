@@ -2,9 +2,10 @@
 
 Twister2 relies on the [Bazel build](https://bazel.build/) system to provide a flexible and fast build. Twister2 has been tested on Bazel 0.18.1 version and it is recommended to use it for building.
 
-Twister2 developers are mainly working on Ubuntu 16.04 and Ubuntu 18.04. So it is recommended to use those platforms with the early versions and we would like to expand our system to different platforms in the future.
+Twister2 developers are mainly working on Ubuntu 16.04, Ubuntu 18.04, and MacOS. So it is recommended to use those platforms with the early versions and we would like to expand our system to different platforms in the future.
 
-## Prerequisites
+
+## Linux Prerequisites
 
 Twister2 build needs several software installed on your system.
 
@@ -32,7 +33,7 @@ Twister2 build needs several software installed on your system.
 sudo apt-get install  python-dev python-pip
 ```
 
-1. Installing maven and configure it as follows :
+4. Installing maven and configure it as follows :
 
 ```text
   wget http://mirrors.ibiblio.org/apache/maven/maven-3/3.5.2/binaries/apache-maven-3.5.2-bin.tar.gz
@@ -46,7 +47,7 @@ Extract this to a directory called maven configure the environmental variables
   export MAVEN_HOME PATH
 ```
 
-1. Install bazel 0.18.1
+5. Install bazel 0.18.1
 
    ```bash
    wget https://github.com/bazelbuild/bazel/releases/download/0.18.1/bazel-0.18.1-installer-linux-x86_64.sh
@@ -60,7 +61,7 @@ Extract this to a directory called maven configure the environmental variables
    export PATH=$PATH:~/bin
    ```
 
-## Compiling Twister2
+## Compiling Twister2 on Linux
 
 Now lets get a clone of the source code.
 
@@ -91,6 +92,83 @@ For compiling a specific target such as communications
 
 ```bash
 bazel build --config=ubuntu twister2/comms/src/java:comms-java
+```
+
+## MacOS Prerequisites
+
+Twister2 build needs several software installed on your system.
+
+1. Operating System
+   * Twister2 is tested and known to work on,
+     * MacOS High Sierra (10.13.6)
+
+2. Java
+   * Download Oracle JDK 8 from [http://www.oracle.com/technetwork/java/javase/downloads/index.html](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+   * Install Oracle JDK 8 using jdk-8uxxx-macosx-x64.dmg
+   * Set the following environment variables.
+
+      ```bash
+     JAVA_HOME=$(/usr/libexec/java_home)
+     export JAVA_HOME
+     ```
+3. Install Homebrew
+   
+```bash
+   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
+
+4. Installing maven :
+
+```bash
+  brew install maven
+```
+
+5. Install bazel 0.18.1
+
+   ```bash
+      wget https://github.com/bazelbuild/bazel/releases/download/0.18.1/bazel-0.18.1-installer-darwin-x86_64.sh
+      chmod +x bazel-0.18.1-installer-darwin-x86_64.sh
+      ./bazel-0.18.1-installer-darwin-x86_64.sh –user
+   ```
+
+   Make sure to add the bazel bin to PATH
+
+   ```text
+   export PATH="$PATH:$HOME/bin"
+   ```
+
+## Compiling Twister2 on MacOS
+
+Now lets get a clone of the source code.
+
+```bash
+git clone https://github.com/DSC-SPIDAL/twister2.git
+```
+
+You can compile the Twister2 distribution by using the bazel target as below.
+
+```bash
+cd twister2
+bazel build --config=darwin scripts/package:tarpkgs
+```
+
+This will build twister2 distribution in the file
+
+```bash
+bazel-bin/scripts/package/twister2-client-0.1.0.tar.gz
+```
+
+If you would like to compile the twister2 without building the distribution packages use the command
+
+```bash
+bazel build --config=darwin twister2/...
+```
+
+For compiling a specific target such as communications
+
+```bash
+bazel build --config=darwin twister2/comms/src/java:comms-java
 ```
 
 ## Twister2 Distribution
@@ -134,6 +212,7 @@ When you compile Twister2 it will automatically download and compile OpenMPI 3.1
   ```text
   mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_312/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.1.2
   ```
+
 
 ## FAQ
 
