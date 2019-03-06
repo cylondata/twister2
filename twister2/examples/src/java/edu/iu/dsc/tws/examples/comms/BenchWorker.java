@@ -75,7 +75,7 @@ public abstract class BenchWorker implements IWorker {
                       IWorkerController workerController, IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    Timing.setDefaultTimingUnit(TimingUnit.MILLI_SECONDS);
+    Timing.setDefaultTimingUnit(TimingUnit.NANO_SECONDS);
 
     // create the job parameters
     this.jobParameters = JobParameters.build(cfg);

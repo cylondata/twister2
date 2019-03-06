@@ -9,34 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.shuffle;
+package edu.iu.dsc.tws.executor.api;
 
-public class KeyValue<K, V> {
+public interface IExecution {
+  /**
+   * Wait for execution to complete
+   * @return if execution is success
+   */
+  boolean waitForCompletion();
 
-  private K key;
+  /**
+   * Progress the computation
+   * @return false if the execution is completed or finished
+   */
+  boolean progress();
 
-  private V value;
+  /**
+   * Cleanup the execution
+   */
+  void close();
 
-  public KeyValue(K k, V v) {
-    this.key = k;
-    this.value = v;
-  }
-
-  public K getKey() {
-    return key;
-  }
-
-  public V getValue() {
-    return value;
-  }
-
-  @Override
-  public String toString() {
-    return "KeyValue{"
-        + "key="
-        + key
-        + ", value="
-        + value
-        + '}';
-  }
+  /**
+   * Stop a particular execution
+   */
+  void stop();
 }

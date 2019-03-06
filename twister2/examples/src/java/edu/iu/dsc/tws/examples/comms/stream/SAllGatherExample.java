@@ -39,7 +39,7 @@ public class SAllGatherExample extends BenchWorker {
 
   private SAllGather gather;
 
-  private boolean gatherDone = false;
+  private volatile boolean gatherDone = true;
 
   private ResultsVerifier<int[], List<int[]>> resultsVerifier;
 
@@ -60,17 +60,25 @@ public class SAllGatherExample extends BenchWorker {
     }
     // create the communication
     gather = new SAllGather(communicator, taskPlan, sources, targets,
-        new FinalReduceReceiver(jobParameters.getIterations()),
+        new FinalReduceReceiver(jobParameters.getIterations(),
+            jobParameters.getWarmupIterations()),
         MessageType.OBJECT);
 
-
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> sourceTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
-    for (int t : tasksOfExecutor) {
+    for (int t : sourceTasksOfExecutor) {
       finishedSources.put(t, false);
     }
-    if (tasksOfExecutor.size() == 0) {
+    if (sourceTasksOfExecutor.size() == 0) {
       sourcesDone = true;
+    }
+
+    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+        jobParameters.getTaskStages(), 1);
+    for (int taskId : targetTasksOfExecutor) {
+      if (targets.contains(taskId)) {
+        gatherDone = false;
+      }
     }
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (dataArray, args) -> {
@@ -82,7 +90,7 @@ public class SAllGatherExample extends BenchWorker {
     }, ListOfIntArraysComparator.getInstance());
 
     // now initialize the workers
-    for (int t : tasksOfExecutor) {
+    for (int t : sourceTasksOfExecutor) {
       // the map thread where data is produced
       Thread mapThread = new Thread(new BenchWorker.MapWorker(t));
       mapThread.start();
@@ -111,9 +119,11 @@ public class SAllGatherExample extends BenchWorker {
   public class FinalReduceReceiver implements BulkReceiver {
     private int count = 0;
     private int expected;
+    private int warmup;
 
-    public FinalReduceReceiver(int expected) {
+    public FinalReduceReceiver(int expected, int warmup) {
       this.expected = expected;
+      this.warmup = warmup;
     }
 
     @Override
@@ -123,8 +133,12 @@ public class SAllGatherExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Iterator<Object> itr) {
-      Timing.mark(BenchmarkConstants.TIMING_MESSAGE_RECV, workerId == 0 && target == 0);
-      if (++count == expected) {
+      count++;
+      if (count > this.warmup) {
+        Timing.mark(BenchmarkConstants.TIMING_MESSAGE_RECV, workerId == 0 && target == 0);
+      }
+
+      if (count == expected + warmup) {
         Timing.mark(TIMING_ALL_RECV, workerId == 0 && target == 0);
         BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0
             && target == 0);
