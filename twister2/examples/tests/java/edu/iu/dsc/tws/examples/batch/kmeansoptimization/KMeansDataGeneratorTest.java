@@ -84,6 +84,7 @@ public class KMeansDataGeneratorTest {
               totalCount += 1;
             }
           }
+          Assert.assertEquals(count, dsize / parallelismValue);
           splitCount += 1;
           inputSplit = source.getNextSplit(i);
         } catch (IOException e) {

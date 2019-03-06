@@ -124,8 +124,6 @@ public abstract class FixedInputPartitioner<OT>
         if (acceptFile(file)) {
           files.add(file);
           length += file.getLen();
-          //TODO: implement test for unsplittable
-          //testForUnsplittable(file);
         } else {
           if (logExcludedFiles) {
             LOG.log(Level.INFO, "Directory " + file.getPath().toString()
