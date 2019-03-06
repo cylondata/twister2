@@ -258,6 +258,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
             }
           }
         }
+        progressAttempts++;
         return needsFurtherProgress;
       }
     } finally {

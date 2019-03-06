@@ -12,19 +12,17 @@
 package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.KeyedReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.api.stream.SKeyedPartition;
+import edu.iu.dsc.tws.comms.dfw.io.partition.keyed.KPartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 
@@ -56,7 +54,8 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
 
     // create the communication
     partition = new SKeyedPartition(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, MessageType.INTEGER, new PartitionReceiver(),
+        MessageType.INTEGER, MessageType.INTEGER,
+        new KPartitionStreamingFinalReceiver(new PartitionReceiver()),
         new LoadBalanceSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -88,35 +87,24 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
     return true;
   }
 
-  public class PartitionReceiver implements MessageReceiver {
+  public class PartitionReceiver implements KeyedReceiver {
     private int count = 0;
     private int expected;
 
     @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      expected = expectedIds.keySet().size() * jobParameters.getIterations();
+    public void init(Config cfg, Set<Integer> targets) {
+      expected = targets.size() * jobParameters.getIterations();
     }
 
     @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      if (object instanceof List) {
-        for (Object o : (List) object) {
-          count++;
-        }
-      }
+    public boolean receive(int target, Object key, Object data) {
+      count++;
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, count, expected));
       if (count >= expected) {
         partitionDone = true;
       }
-
       return true;
-    }
-
-    @Override
-    public boolean progress() {
-//      return !partitionDone;
-      return false;
     }
   }
 

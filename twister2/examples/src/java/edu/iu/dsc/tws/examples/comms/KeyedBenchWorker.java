@@ -166,7 +166,6 @@ public abstract class KeyedBenchWorker implements IWorker {
       finishCommunication(task);
       sourcesDone = allDone;
       lock.unlock();
-//      LOG.info(String.format("%d Sources done %s, %b", id, finishedSources, sourcesDone));
     }
   }
 }
