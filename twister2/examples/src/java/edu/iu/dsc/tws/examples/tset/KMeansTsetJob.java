@@ -71,6 +71,7 @@ public class KMeansTsetJob extends TaskWorker implements Serializable {
 
     @Override
     public double[][] map(double[][] doubles) {
+      Object centers = getInput("centers");
       return new double[0][];
     }
   }
