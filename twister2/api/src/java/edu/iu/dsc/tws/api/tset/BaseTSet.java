@@ -253,4 +253,10 @@ public abstract class BaseTSet<T> implements TSet<T> {
       }
     }
   }
+
+  @Override
+  public boolean addInput(String key, TSet<?> input) {
+
+    return false;
+  }
 }

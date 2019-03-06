@@ -17,6 +17,8 @@ import java.io.Serializable;
  * Base class for all the functions in TSet implementation
  */
 public interface TFunction extends Serializable {
+
+  
   /**
    * Prepare the function
    *

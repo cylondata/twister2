@@ -71,9 +71,10 @@ public class CachedTSet<T> extends BaseTSet<T> {
 
   private class CacheSink implements Sink<T> {
 
+    private int count = 0;
     @Override
     public boolean add(T value) {
-      datapoints.addPartition(new EntityPartition<T>(0, value)); //
+      datapoints.addPartition(new EntityPartition<T>(count++, value)); //
       return true;
     }
 

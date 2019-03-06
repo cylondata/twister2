@@ -102,4 +102,12 @@ public interface TSet<T> extends TBase<T> {
    */
   TSet<T> cache();
 
+  /**
+   * Allows users to pass in other TSets as inputs for a TSet
+   * @param key the key used to store the given TSet
+   * @param input the TSet to be added as an input
+   * @return true if the input was added successfully or false otherwise
+   */
+  boolean addInput(String key, TSet<?> input);
+
 }
