@@ -68,9 +68,9 @@ public class BarrierMonitor implements MessageHandler {
       // when the first barrier message received
       if (waitList.size() == 0) {
         numberOfWorkersOnBarrier = workerMonitor.getNumberOfWorkers();
-        LOG.info("BarrierRequest message received from the first worker:\n" + barrierRequest);
+        LOG.fine("BarrierRequest message received from the first worker:\n" + barrierRequest);
       } else if (waitList.size() == (numberOfWorkersOnBarrier - 1)) {
-        LOG.info("BarrierRequest message received from the last worker:\n" + barrierRequest);
+        LOG.fine("BarrierRequest message received from the last worker:\n" + barrierRequest);
       } else {
         LOG.fine("BarrierRequest message received:\n" + barrierRequest);
       }

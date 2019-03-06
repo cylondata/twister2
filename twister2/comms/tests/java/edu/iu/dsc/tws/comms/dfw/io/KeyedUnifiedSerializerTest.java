@@ -109,6 +109,20 @@ public class KeyedUnifiedSerializerTest {
         (int[]) ((Tuple) data).getValue());
   }
 
+  @Test
+  public void testBuildObjectMessage() {
+    int numBuffers = 4;
+    int size = 1000;
+    MessageType type = MessageType.OBJECT;
+    Object data = createData(80, type);
+    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
+    Assert.assertArrayEquals((byte[]) deserializedData.getKey(),
+        (byte[]) ((Tuple) data).getKey());
+    Assert.assertArrayEquals((byte[]) deserializedData.getValue(),
+        (byte[]) ((Tuple) data).getValue());
+  }
+
   private InMessage singleValueCase(int numBuffers, int size, MessageType type, Object data) {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
 
@@ -392,6 +406,12 @@ public class KeyedUnifiedSerializerTest {
       }
       return vals;
     } else if (dataType == MessageType.BYTE) {
+      byte[] vals = new byte[size];
+      for (int i = 0; i < vals.length; i++) {
+        vals[i] = (byte) i;
+      }
+      return vals;
+    } else if (dataType == MessageType.OBJECT) {
       byte[] vals = new byte[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (byte) i;
