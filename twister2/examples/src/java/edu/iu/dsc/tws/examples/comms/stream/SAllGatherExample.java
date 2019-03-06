@@ -43,6 +43,8 @@ public class SAllGatherExample extends BenchWorker {
 
   private ResultsVerifier<int[], List<int[]>> resultsVerifier;
 
+  private int receiverInWorker0 = -1; //any recv scheduled in worker 0
+
   @Override
   protected void execute() {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
@@ -78,6 +80,10 @@ public class SAllGatherExample extends BenchWorker {
     for (int taskId : targetTasksOfExecutor) {
       if (targets.contains(taskId)) {
         gatherDone = false;
+
+        if (workerId == 0) {
+          receiverInWorker0 = taskId;
+        }
       }
     }
 
@@ -129,21 +135,26 @@ public class SAllGatherExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       expected = expected * targets.size();
+      warmup = warmup * targets.size();
     }
 
     @Override
     public boolean receive(int target, Iterator<Object> itr) {
       count++;
       if (count > this.warmup) {
-        Timing.mark(BenchmarkConstants.TIMING_MESSAGE_RECV, workerId == 0 && target == 0);
+        Timing.mark(BenchmarkConstants.TIMING_MESSAGE_RECV, workerId == 0
+            && target == receiverInWorker0);
       }
 
+      LOG.info(() -> String.format("Target %d received count %d", target, count));
+
       if (count == expected + warmup) {
-        Timing.mark(TIMING_ALL_RECV, workerId == 0 && target == 0);
+        Timing.mark(TIMING_ALL_RECV, workerId == 0
+            && target == receiverInWorker0);
         BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0
-            && target == 0);
+            && target == receiverInWorker0);
         resultsRecorder.writeToCSV();
-        LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
+        LOG.info(() -> String.format("Target %d received ALL %d", target, count));
         gatherDone = true;
       }
       //only do if verification is necessary, since this affects timing
