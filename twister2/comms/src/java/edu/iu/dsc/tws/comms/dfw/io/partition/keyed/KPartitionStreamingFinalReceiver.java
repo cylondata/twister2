@@ -16,17 +16,17 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.KeyedReceiver;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.BasePartitionStreamingFinalReceiver;
 
 public class KPartitionStreamingFinalReceiver extends BasePartitionStreamingFinalReceiver
     implements MessageReceiver {
 
-  private KeyedReceiver receiver;
+  private SingularReceiver receiver;
 
-  public KPartitionStreamingFinalReceiver(KeyedReceiver receiver) {
+  public KPartitionStreamingFinalReceiver(SingularReceiver receiver) {
     this.receiver = receiver;
   }
 
@@ -40,7 +40,7 @@ public class KPartitionStreamingFinalReceiver extends BasePartitionStreamingFina
   @Override
   public boolean receive(int target, Object message) {
     if (message instanceof Tuple) {
-      return receiver.receive(target, ((Tuple) message).getKey(), ((Tuple) message).getValue());
+      return receiver.receive(target, message);
     }
     throw new RuntimeException("Expecting a tuple object: " + message.getClass());
   }

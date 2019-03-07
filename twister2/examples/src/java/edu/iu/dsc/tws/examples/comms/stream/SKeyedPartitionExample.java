@@ -17,8 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.KeyedReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.api.stream.SKeyedPartition;
@@ -87,7 +87,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
     return true;
   }
 
-  public class PartitionReceiver implements KeyedReceiver {
+  public class PartitionReceiver implements SingularReceiver {
     private int count = 0;
     private int expected;
 
@@ -97,7 +97,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
     }
 
     @Override
-    public boolean receive(int target, Object key, Object data) {
+    public boolean receive(int target, Object data) {
       count++;
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, count, expected));

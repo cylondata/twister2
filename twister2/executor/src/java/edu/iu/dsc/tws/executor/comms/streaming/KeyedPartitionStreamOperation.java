@@ -18,11 +18,12 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.api.KeyedReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.api.stream.SKeyedPartition;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.keyed.KPartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
@@ -86,21 +87,25 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
     return op.progress() || op.hasPending();
   }
 
-  private class PartitionRecvrImpl implements KeyedReceiver {
+  private class PartitionRecvrImpl implements SingularReceiver {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
 
     }
 
     @Override
-    public boolean receive(int target, Object key, Object data) {
-      TaskMessage msg = new TaskMessage(key, data,
-          edgeGenerator.getStringMapping(communicationEdge), target);
-      BlockingQueue<IMessage> messages = outMessages.get(target);
-      if (messages != null) {
-        if (messages.offer(msg)) {
-          return true;
+    public boolean receive(int target, Object data) {
+      if (data instanceof Tuple) {
+        TaskMessage msg = new TaskMessage(((Tuple) data).getKey(), data,
+            edgeGenerator.getStringMapping(communicationEdge), target);
+        BlockingQueue<IMessage> messages = outMessages.get(target);
+        if (messages != null) {
+          if (messages.offer(msg)) {
+            return true;
+          }
         }
+      } else {
+        throw new RuntimeException("Un-expecte data - " + data.getClass());
       }
       return true;
     }
