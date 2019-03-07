@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.data.api.splits;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -77,15 +76,12 @@ public class TextInputSplit extends DelimitedInputSplit<String> {
       throws IOException {
     //Check if \n is used as delimiter and the end of this line is a \r,
     // then remove \r from the line
-
-    LOG.fine("Bytes are::::::::" + Arrays.toString(bytes));
     int curNumBytes = numBytes;
     if (this.getDelimiter() != null && this.getDelimiter().length == 1
         && this.getDelimiter()[0] == NEW_LINE && readOffset + curNumBytes >= 1
         && bytes[readOffset + curNumBytes - 1] == CARRIAGE_RETURN) {
       curNumBytes -= 1;
     }
-
     return new String(bytes, readOffset, curNumBytes, this.charsetName);
   }
 }

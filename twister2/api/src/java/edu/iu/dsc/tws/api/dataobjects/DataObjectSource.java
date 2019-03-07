@@ -36,7 +36,7 @@ public class DataObjectSource extends BaseSource {
 
   @Override
   public void execute() {
-    LOG.info("Context Task Index:" + context.taskIndex());
+    LOG.fine("Context Task Index:" + context.taskIndex());
     InputSplit<String> inputSplit = source.getNextSplit(context.taskIndex());
     int splitCount = 0;
     int totalCount = 0;
@@ -45,9 +45,7 @@ public class DataObjectSource extends BaseSource {
         int count = 0;
         while (!inputSplit.reachedEnd()) {
           String value = inputSplit.nextRecord(null);
-          if (value != null) {                     //Bug here...
-            //LOG.info("We read value: " + value); //First index reads more value than for
-            //example 100, task index 0 reads 51 & 1 reads 49
+          if (value != null) {
             context.write("direct", value);
             count += 1;
             totalCount += 1;
@@ -55,7 +53,7 @@ public class DataObjectSource extends BaseSource {
         }
         splitCount += 1;
         inputSplit = source.getNextSplit(context.taskIndex());
-        LOG.info("Task index:" + context.taskIndex() + " count: " + count
+        LOG.fine("Task index:" + context.taskIndex() + " count: " + count
             + "split: " + splitCount + " total count: " + totalCount);
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to read the input", e);

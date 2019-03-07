@@ -16,12 +16,16 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.dataobjects.DataFileReadSource;
+import edu.iu.dsc.tws.api.dataobjects.DataObjectSink;
+import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.DataPartition;
@@ -42,82 +46,102 @@ public class KMeansJob extends TaskWorker {
   public void execute() {
     LOG.log(Level.INFO, "Task worker starting: " + workerId);
 
+    KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(config);
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+
+    int parallelismValue = kMeansJobParameters.getParallelismValue();
+    int dimension = kMeansJobParameters.getDimension();
+    int numFiles = kMeansJobParameters.getNumFiles();
+    int dsize = kMeansJobParameters.getDsize();
+    int csize = kMeansJobParameters.getCsize();
+    int iterations = kMeansJobParameters.getIterations();
+
+    String dinputDirectory = kMeansJobParameters.getDatapointDirectory();
+    String cinputDirectory = kMeansJobParameters.getCentroidDirectory();
+
+    double[][] datapoint;
+    double[][] centroid;
+
+    if (workerId == 0) {
+      try {
+        KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
+            numFiles, dsize, 100, dimension, config);
+        KMeansDataGenerator.generateData("txt", new Path(cinputDirectory),
+            numFiles, csize, 100, dimension, config);
+      } catch (IOException ioe) {
+        throw new RuntimeException("Failed to create input data:", ioe);
+      }
+    }
+
+    /** First Graph to partition and read the partitioned data points **/
+    DataObjectSource sourceTask = new DataObjectSource();
+    DataObjectSink sinkTask = new DataObjectSink();
+    taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
+    ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
+        parallelismValue);
+    computeConnection1.direct("source", "direct", DataType.OBJECT);
+    taskGraphBuilder.setMode(OperationMode.BATCH);
+
+    DataFlowTaskGraph dataFlowTaskGraph1 = taskGraphBuilder.build();
+    ExecutionPlan plan1 = taskExecutor.plan(dataFlowTaskGraph1);
+
+    //Sleep to generate the input data in the file system.
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException ie) {
+      throw new RuntimeException("Interuppted:", ie);
+    }
+    taskExecutor.execute(dataFlowTaskGraph1, plan1);
+
+    DataObject<double[][]> dataSet1 = taskExecutor.getOutput(dataFlowTaskGraph1, plan1, "sink");
+    DataPartition<double[][]> values1 = dataSet1.getPartitions()[0];
+    datapoint = values1.getConsumer().next();
+
+    /** Second Graph to read the centroids **/
+    DataFileReadSource task = new DataFileReadSource();
+    taskGraphBuilder.addSource("map", task, parallelismValue);
+    taskGraphBuilder.setMode(OperationMode.BATCH);
+
+    DataFlowTaskGraph dataFlowTaskGraph2 = taskGraphBuilder.build();
+    ExecutionPlan plan2 = taskExecutor.plan(dataFlowTaskGraph2);
+    taskExecutor.execute(dataFlowTaskGraph2, plan2);
+
+    DataObject<double[][]> dataSet2 = taskExecutor.getOutput(dataFlowTaskGraph2, plan2, "map");
+    DataPartition<double[][]> values2 = dataSet2.getPartitions()[0];
+    centroid = values2.getConsumer().next();
+
+    /** Third Graph to do the distance calculation **/
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
 
-    KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(config);
-
-    int parallelismValue = kMeansJobParameters.getParallelismValue();
-
-    TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
-    graphBuilder.addSource("source", kMeansSourceTask, parallelismValue);
-    ComputeConnection computeConnection = graphBuilder.addSink("sink", kMeansAllReduceTask,
+    taskGraphBuilder.addSource("source1", kMeansSourceTask, parallelismValue);
+    ComputeConnection computeConnection = taskGraphBuilder.addSink("sink1", kMeansAllReduceTask,
         parallelismValue);
-    computeConnection.allreduce("source", "all-reduce", new CentroidAggregator(), DataType.OBJECT);
-    graphBuilder.setMode(OperationMode.BATCH);
+    computeConnection.allreduce("source1", "all-reduce", new CentroidAggregator(), DataType.OBJECT);
+    taskGraphBuilder.setMode(OperationMode.BATCH);
 
-    int workers = kMeansJobParameters.getWorkers();
-    int iterations = kMeansJobParameters.getIterations();
-    int noOfPoints = kMeansJobParameters.getNumberOfPoints();
-    int dimension = kMeansJobParameters.getDimension();
-    int dataSeedValue = kMeansJobParameters.getPointsSeedValue();
-    int centroidSeedValue = kMeansJobParameters.getCentroidsSeedValue();
-    int noOfClusters = kMeansJobParameters.getClusters();
+    DataFlowTaskGraph graph = taskGraphBuilder.build();
 
-    String dataPointsFile = kMeansJobParameters.getPointsFile();
-    String centroidFile = kMeansJobParameters.getCentersFile();
-    String fileSystem = kMeansJobParameters.getFileSystem();
-    String inputData = kMeansJobParameters.getDataInput();
-    String outputFile = kMeansJobParameters.getFileName();
-
-    LOG.info("workers:" + workers + "\titeration:" + iterations + "\toutfile:" + outputFile
-        + "\tnumber of datapoints:" + noOfPoints + "\tdimension:" + dimension
-        + "\tnumberofclusters:" + noOfClusters + "\tdatapointsfile:" + dataPointsFile + workerId
-        + "\tcenters file:" + centroidFile + workerId + "\tfilesys:" + fileSystem
-        + "\tparallelism value:" + parallelismValue);
-
-    KMeansFileReader kMeansFileReader = new KMeansFileReader(config, fileSystem);
-    if ("generate".equals(inputData)) {
-      KMeansDataGenerator.generateDataPointsFile(
-          dataPointsFile + workerId, noOfPoints, dimension, dataSeedValue, config,
-          fileSystem);
-      KMeansDataGenerator.generateCentroidFile(
-          centroidFile + workerId, noOfClusters, dimension, centroidSeedValue, config,
-          fileSystem);
-    }
-
-    double[][] dataPoint;
-    double[][] centroid;
-    try {
-      dataPoint = kMeansFileReader.readDataPoints(dataPointsFile + workerId, dimension);
-      centroid = kMeansFileReader.readCentroids(centroidFile + workerId, dimension, noOfClusters);
-    } catch (IOException e) {
-      throw new RuntimeException("Data Points Reading Error:", e);
-    }
-
-    DataFlowTaskGraph graph = graphBuilder.build();
     //Store datapoints and centroids
     DataObject<double[][]> datapoints = new DataObjectImpl<>(config);
     DataObject<double[][]> centroids = new DataObjectImpl<>(config);
 
     for (int i = 0; i < iterations; i++) {
-      datapoints.addPartition(new EntityPartition<>(0, dataPoint));
+
+      datapoints.addPartition(new EntityPartition<>(0, datapoint));
       centroids.addPartition(new EntityPartition<>(0, centroid));
 
       ExecutionPlan plan = taskExecutor.plan(graph);
 
-      taskExecutor.addInput(graph, plan, "source", "points", datapoints);
-      taskExecutor.addInput(graph, plan, "source", "centroids", centroids);
+      taskExecutor.addInput(graph, plan, "source1", "points", datapoints);
+      taskExecutor.addInput(graph, plan, "source1", "centroids", centroids);
       taskExecutor.execute(graph, plan);
 
-      DataObject<double[][]> dataSet = taskExecutor.getOutput(graph, plan, "sink");
+      DataObject<double[][]> dataSet = taskExecutor.getOutput(graph, plan, "sink1");
       DataPartition<double[][]> values = dataSet.getPartitions()[0];
       centroid = values.getConsumer().next();
-      LOG.log(Level.INFO, String.format("%d iteration done %d", workerId, i));
     }
-
-    //To write the final value into the local file system or hdfs
-    KMeansUtils.writeToOutputFile(centroid, outputFile + workerId, config, fileSystem);
+    LOG.info("Final Centroid Values are:" + Arrays.deepToString(centroid));
   }
 
   private static class KMeansSourceTask extends BaseSource implements Receptor {
@@ -129,13 +153,8 @@ public class KMeansJob extends TaskWorker {
 
     @Override
     public void execute() {
-
-      int startIndex = context.taskIndex() * datapoints.length / context.getParallelism();
-      int endIndex = startIndex + datapoints.length / context.getParallelism();
       int dim = Integer.parseInt(config.getStringValue("dim"));
-
-      LOG.info("Start index and end index:" + startIndex + "\t" + endIndex);
-      kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim, startIndex, endIndex);
+      kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
       context.writeEnd("all-reduce", kMeansCenters);
     }
@@ -145,15 +164,15 @@ public class KMeansJob extends TaskWorker {
     public void add(String name, DataObject<?> data) {
       LOG.log(Level.FINE, "Received input: " + name);
       if ("points".equals(name)) {
-        DataPartition<double[][]> dataPoints = (DataPartition<double[][]>)
+        DataPartition<double[][]> dataPointss = (DataPartition<double[][]>)
             data.getPartitions()[0];
-        this.datapoints = dataPoints.getConsumer().next();
+        this.datapoints = dataPointss.getConsumer().next();
       }
 
       if ("centroids".equals(name)) {
-        DataPartition<double[][]> centroids = (DataPartition<double[][]>)
+        DataPartition<double[][]> centroidss = (DataPartition<double[][]>)
             data.getPartitions()[0];
-        this.centroid = centroids.getConsumer().next();
+        this.centroid = centroidss.getConsumer().next();
       }
     }
   }
@@ -166,7 +185,7 @@ public class KMeansJob extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
+      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
           + ":" + context.taskId());
       centroids = (double[][]) message.getContent();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
@@ -176,7 +195,6 @@ public class KMeansJob extends TaskWorker {
           newCentroids[i][j] = newVal;
         }
       }
-      LOG.fine("New Centroid Values:" + Arrays.deepToString(newCentroids));
       return true;
     }
 
@@ -221,5 +239,5 @@ public class KMeansJob extends TaskWorker {
       return newCentroids;
     }
   }
-
 }
+

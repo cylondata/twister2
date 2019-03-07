@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.dataobjects.DataObjectConstants;
 import edu.iu.dsc.tws.common.config.Config;
 
 public final class KMeansJobParameters {
@@ -20,14 +21,44 @@ public final class KMeansJobParameters {
   private static final Logger LOG = Logger.getLogger(KMeansJobParameters.class.getName());
 
   /**
-   * Number of iterations
-   */
-  private int iterations;
-
-  /**
    * Number of Workers
    */
   private int workers;
+
+  /**
+   * Number of datapoints to be generated
+   */
+  private int dsize;
+
+  /**
+   * Number of cluster points to be generated
+   */
+  private int csize;
+
+  /**
+   * Datapoints directory
+   */
+  private String datapointDirectory;
+
+  /**
+   * Centroid directory
+   */
+  private String centroidDirectory;
+
+  /**
+   * Output directory
+   */
+  private String outputDirectory;
+
+  /**
+   * Number of files
+   */
+  private int numFiles;
+
+  /**
+   * type of file system "shared" or "local"
+   */
+  private boolean shared;
 
   /**
    * Dimension of the datapoints and centroids
@@ -35,58 +66,26 @@ public final class KMeansJobParameters {
   private int dimension;
 
   /**
-   * Number of clusters
+   * Number of iterations
    */
-  private int clusters;
-
-  /**
-   * Number of datapoints to be generated
-   */
-  private int numberOfPoints;
-
-  /**
-   * Datapoints file name
-   */
-  private String pointsFile;
-
-  /**
-   * Centroid file name
-   */
-  private String centersFile;
-
-  /**
-   * Filesytem to store the generated data "local" or "hdfs"
-   */
-  private String fileSystem;
-
-  /**
-   * Seed value for the data points random number generation
-   */
-  private int pointsSeedValue;
-
-  /**
-   * Seed value for the centroids random number generation
-   */
-  private int centroidsSeedValue;
-
-  /**
-   * Data input value represents data to be generated or else to read it directly from
-   * the input file and the options may be "generate" or "read"
-   */
-  private String dataInput;
-
-  /**
-   * File Name
-   */
-  private String fileName;
+  private int iterations;
 
   /**
    * Task parallelism value
    */
   private int parallelismValue;
 
-  private KMeansJobParameters(int iterations, int workers) {
-    this.iterations = iterations;
+  /**
+   * Number of clusters
+   */
+  private int numberOfClusters;
+
+  /**
+   * Represents file system "local" or "hdfs"
+   */
+  private String filesystem;
+
+  private KMeansJobParameters(int workers) {
     this.workers = workers;
   }
 
@@ -95,111 +94,100 @@ public final class KMeansJobParameters {
    */
   public static KMeansJobParameters build(Config cfg) {
 
-    String fileName = cfg.getStringValue(KMeansConstants.ARGS_FNAME.trim());
-    String pointFile = cfg.getStringValue(KMeansConstants.ARGS_POINTS.trim());
-    String centerFile = cfg.getStringValue(KMeansConstants.ARGS_CENTERS.trim());
-    String fileSys = cfg.getStringValue(KMeansConstants.ARGS_FILESYSTEM.trim());
-    String dataInput = cfg.getStringValue(KMeansConstants.ARGS_DATA_INPUT.trim());
+    String datapointDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
+    String centroidDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
+    String outputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_OUTPUT_DIRECTORY);
+    String fileSystem = cfg.getStringValue(DataObjectConstants.ARGS_FILE_SYSTEM);
 
-    int workers = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_WORKERS));
-    int iterations = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_ITR));
-    int dim = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_DIMENSIONS));
-    int points = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_NUMBER_OF_POINTS));
+    int workers = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_WORKERS));
+    int dsize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DSIZE));
+    int csize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_CSIZE));
+    int dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DIMENSIONS));
+    int parallelismVal = Integer.parseInt(
+        cfg.getStringValue(DataObjectConstants.ARGS_PARALLELISM_VALUE));
+    int iterations = Integer.parseInt(
+        cfg.getStringValue(DataObjectConstants.ARGS_ITERATIONS));
+    int numFiles = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_NUMBER_OF_FILES));
+    int numberOfClusters = Integer.parseInt(
+        cfg.getStringValue(DataObjectConstants.ARGS_NUMBER_OF_CLUSTERS));
+    boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
 
-    int numberOfClusters = Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_CLUSTERS));
-    int pointsVal =
-        Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_POINTS_SEED_VALUE));
-    int centroidsVal =
-        Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_CENTERS_SEED_VALUE));
-    int parallelismVal =
-        Integer.parseInt(cfg.getStringValue(KMeansConstants.ARGS_PARALLELISM_VALUE));
-
-    KMeansJobParameters jobParameters = new KMeansJobParameters(iterations, workers);
+    KMeansJobParameters jobParameters = new KMeansJobParameters(workers);
 
     jobParameters.workers = workers;
+    jobParameters.dimension = dimension;
+    jobParameters.centroidDirectory = centroidDirectory;
+    jobParameters.datapointDirectory = datapointDirectory;
+    jobParameters.outputDirectory = outputDirectory;
+    jobParameters.numFiles = numFiles;
     jobParameters.iterations = iterations;
-    jobParameters.dimension = dim;
-    jobParameters.numberOfPoints = points;
-
-    jobParameters.fileName = fileName;
-    jobParameters.pointsFile = pointFile;
-    jobParameters.centersFile = centerFile;
-    jobParameters.fileSystem = fileSys;
-    jobParameters.dataInput = dataInput;
-
-    jobParameters.clusters = numberOfClusters;
-    jobParameters.pointsSeedValue = pointsVal;
-    jobParameters.centroidsSeedValue = centroidsVal;
+    jobParameters.dsize = dsize;
+    jobParameters.csize = csize;
+    jobParameters.shared = shared;
     jobParameters.parallelismValue = parallelismVal;
+    jobParameters.filesystem = fileSystem;
+    jobParameters.numberOfClusters = numberOfClusters;
 
     return jobParameters;
   }
 
-  public int getParallelismValue() {
-    return parallelismValue;
+  public int getNumberOfClusters() {
+    return numberOfClusters;
   }
 
-  public int getIterations() {
-    return iterations;
+  public String getFilesystem() {
+    return filesystem;
   }
 
   public int getWorkers() {
     return workers;
   }
 
-  public String getFileName() {
-    return fileName;
+  public int getDsize() {
+    return dsize;
+  }
+
+  public int getCsize() {
+    return csize;
+  }
+
+  public String getDatapointDirectory() {
+    return datapointDirectory;
+  }
+
+  public String getCentroidDirectory() {
+    return centroidDirectory;
+  }
+
+  public String getOutputDirectory() {
+    return outputDirectory;
+  }
+
+  public int getNumFiles() {
+    return numFiles;
+  }
+
+  public boolean isShared() {
+    return shared;
   }
 
   public int getDimension() {
     return dimension;
   }
 
-  public int getClusters() {
-    return clusters;
+  public int getIterations() {
+    return iterations;
   }
 
-  public String getPointsFile() {
-    return pointsFile;
-  }
-
-  public String getCentersFile() {
-    return centersFile;
-  }
-
-  public String getFileSystem() {
-    return fileSystem;
-  }
-
-  public int getPointsSeedValue() {
-    return pointsSeedValue;
-  }
-
-  public int getCentroidsSeedValue() {
-    return centroidsSeedValue;
-  }
-
-  public String getDataInput() {
-    return dataInput;
-  }
-
-  public int getNumberOfPoints() {
-    return numberOfPoints;
+  public int getParallelismValue() {
+    return parallelismValue;
   }
 
   @Override
   public String toString() {
 
-    LOG.fine("workers:" + workers + "\titeration:" + iterations
-        + "\tdimension:" + dimension + "\tnumber of clusters:" + clusters
-        + "\tfilename:" + fileName + "\tdatapoints file:" + pointsFile
-        + "\tcenters file:" + centersFile
-        + "\tfilesys:" + fileSystem + "\tparallelism:" + parallelismValue);
-
     return "JobParameters{"
-        + ", iterations=" + iterations
         + ", workers=" + workers
         + '}';
   }
 }
-

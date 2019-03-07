@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.api.dataobjects;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -72,12 +71,13 @@ public class DataFileReader {
         }
         value++;
       }
-      LOG.info("Centroid value:" + Arrays.deepToString(centroids) + "\t" + value);
     } catch (IOException ioe) {
       throw new RuntimeException("IO Exception Occured");
     } finally {
       try {
-        bufferedReader.close();
+        if (bufferedReader != null) {
+          bufferedReader.close();
+        }
       } catch (IOException e) {
         e.printStackTrace();
       }

@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
+package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.logging.Logger;
 
@@ -31,12 +31,24 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public class TaskGraphBuildTest {
 
-  private static final Logger LOG = Logger.getLogger(TaskGraphBuildTest.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(TaskGraphBuildTest.class.getName());
 
   @Test
   public void testUniqueSchedules1() {
     DataFlowTaskGraph dataFlowTaskGraph = createGraph();
     Assert.assertNotNull(dataFlowTaskGraph);
+    Assert.assertEquals(dataFlowTaskGraph.taskEdgeSet().iterator().next().getName(),
+        TaskConfigurations.DEFAULT_EDGE);
+    Assert.assertEquals(dataFlowTaskGraph.taskEdgeSet().size(), 2);
+  }
+
+  @Test
+  public void testUniqueSchedules2() {
+    DataFlowTaskGraph dataFlowTaskGraph = createGraph();
+
+    Assert.assertEquals(dataFlowTaskGraph.getTaskVertexSet().iterator().next().getName(),
+        TaskConfigurations.DEFAULT_EDGE);
+    Assert.assertEquals(dataFlowTaskGraph.taskEdgeSet().size(), 2);
   }
 
   private DataFlowTaskGraph createGraph() {
@@ -50,10 +62,8 @@ public class TaskGraphBuildTest {
     ComputeConnection computeConnection = taskGraphBuilder.addCompute(
         "compute", testCompute, 4);
     computeConnection.partition("source", TaskConfigurations.DEFAULT_EDGE, DataType.OBJECT);
-    computeConnection.partition("source", TaskConfigurations.DEFAULT_EDGE, DataType.OBJECT);
-    ComputeConnection rc = taskGraphBuilder.addSink("sink", testSink, 4);
+    ComputeConnection rc = taskGraphBuilder.addSink("sink", testSink, 1);
     rc.allreduce("compute", TaskConfigurations.DEFAULT_EDGE, new Aggregator(), DataType.OBJECT);
-
     DataFlowTaskGraph graph = taskGraphBuilder.build();
     return graph;
   }
@@ -66,7 +76,6 @@ public class TaskGraphBuildTest {
 
       double[] object11 = (double[]) object1;
       double[] object21 = (double[]) object2;
-
       double[] object31 = new double[object11.length];
 
       for (int j = 0; j < object11.length; j++) {

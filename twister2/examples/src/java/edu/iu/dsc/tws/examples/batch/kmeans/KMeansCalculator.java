@@ -11,11 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
+import java.util.logging.Logger;
+
 /**
  * This class is responsible for calculating the distance values between the datapoints and the
  * centroid values. The calculated new centroid values are stored in the centerSums array object.
  */
 public class KMeansCalculator {
+
+  private static final Logger LOG = Logger.getLogger(KMeansCalculator.class.getName());
 
   /**
    * Represents the data points to perform the calculation
@@ -37,23 +41,11 @@ public class KMeansCalculator {
    */
   private final int dimension;
 
-  /**
-   * Represents the start index for each task instances
-   */
-  private final int startIndex;
-
-  /**
-   * Represents the end index for each task instances
-   */
-  private final int endIndex;
-
-  public KMeansCalculator(double[][] points, double[][] centres, int dim, int sIndex, int eIndex) {
+  public KMeansCalculator(double[][] points, double[][] centres, int dim) {
     this.points = points;
     this.centroids = centres;
     this.dimension = dim;
     this.centerSums = new double[this.centroids.length][this.centroids[0].length + 1];
-    this.startIndex = sIndex;
-    this.endIndex = eIndex;
   }
 
   /**
@@ -72,7 +64,9 @@ public class KMeansCalculator {
    * values assigned to the centerSums array object.
    */
   private void findNearestCenter(int dim, double[][] datapoints, double[][] centers) {
-    for (int i = startIndex; i < endIndex; i++) {
+
+    //LOG.info("Datapoints received:"+ datapoints.length + "\t" + Arrays.deepToString(datapoints));
+    for (int i = 0; i < datapoints.length; i++) {
       int minimumCentroid = 0;
       double minValue = 0;
       double distance;
