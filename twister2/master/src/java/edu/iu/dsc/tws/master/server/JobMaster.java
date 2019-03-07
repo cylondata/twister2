@@ -52,21 +52,21 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
  * JobMaster class
  * It is started for each Twister2 job
  * It provides:
- *   worker discovery
- *   barrier method
- *   Ping service
- *
+ * worker discovery
+ * barrier method
+ * Ping service
+ * <p>
  * It can be started in two different modes:
- *   Threaded and Blocking
- *
+ * Threaded and Blocking
+ * <p>
  * If the user calls:
- *   startJobMasterThreaded()
+ * startJobMasterThreaded()
  * It starts as a Thread and the call to this method returns
- *
+ * <p>
  * If the user calls:
- *   startJobMasterBlocking()
+ * startJobMasterBlocking()
  * It uses the calling thread and this call does not return unless the JobMaster completes
- *
+ * <p>
  * JobMaster to Dashboard messaging
  * JobMaster reports to Dashboard server when dashboard address is provided in the config
  * If dashboard host address is not provided, it does not try to connect to dashboard server
@@ -175,6 +175,7 @@ public class JobMaster {
 
   /**
    * JobMaster constructor
+   *
    * @param config configuration
    * @param masterAddress master host
    * @param port the port number
@@ -210,6 +211,7 @@ public class JobMaster {
   /**
    * JobMaster constructor to create a job master, the port of job master is read from config
    * file
+   *
    * @param config configuration
    * @param masterAddress master host
    * @param jobTerminator terminator
@@ -332,6 +334,7 @@ public class JobMaster {
       }
     };
 
+    jmThread.setName("JM");
     jmThread.start();
 
     return jmThread;
@@ -400,7 +403,7 @@ public class JobMaster {
         driver.execute(config, scaler, driverMessenger);
       }
     };
-
+    driverThread.setName("driver");
     driverThread.start();
 
     return driverThread;
@@ -441,23 +444,21 @@ public class JobMaster {
 
   /**
    * A job can be terminated in two ways:
-   *   a) successful completion: all workers complete their work and send a COMPLETED message
-   *      to the Job Master. Job master clears all job resources from the cluster and
-   *      informs Dashboard. This is handled in the method: completeJob()
-   *   b) forced killing: user chooses to terminate the job explicitly by executing job kill command
-   *      not all workers successfully complete in this case.
-   *      JobMaster does not get COMPLETED message from all workers.
-   *      So completeJob() method is not called.
-   *      Instead, the JobMaster pod or the JobMaster process in the submitting is deleted.
-   *      ShutDown Hook gets executed.
-   *
-   *      In this case, it can either clear job resources or just send a message to Dashboard
-   *      based on the parameter that is provided when the shut down hook is registered.
-   *      If the job master runs in the client, it should clear resources.
-   *      when the job master runs in the cluster, it should not clear resources.
-   *      The resources should be cleared by the job killing process.
-   *
-   * @param clearJobResourcesOnKill
+   * a) successful completion: all workers complete their work and send a COMPLETED message
+   * to the Job Master. Job master clears all job resources from the cluster and
+   * informs Dashboard. This is handled in the method: completeJob()
+   * b) forced killing: user chooses to terminate the job explicitly by executing job kill command
+   * not all workers successfully complete in this case.
+   * JobMaster does not get COMPLETED message from all workers.
+   * So completeJob() method is not called.
+   * Instead, the JobMaster pod or the JobMaster process in the submitting is deleted.
+   * ShutDown Hook gets executed.
+   * <p>
+   * In this case, it can either clear job resources or just send a message to Dashboard
+   * based on the parameter that is provided when the shut down hook is registered.
+   * If the job master runs in the client, it should clear resources.
+   * when the job master runs in the cluster, it should not clear resources.
+   * The resources should be cleared by the job killing process.
    */
   public void addShutdownHook(boolean clearJobResourcesOnKill) {
     clearResourcesWhenKilled = clearJobResourcesOnKill;

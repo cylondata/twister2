@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -78,7 +79,7 @@ public class FSKeyedMergerTest {
     Set<Integer> set = new HashSet<>();
     while (it.hasNext()) {
       LOG.info("Reading value: " + count);
-      KeyValue val = (KeyValue) it.next();
+      Tuple val = (Tuple) it.next();
       int[] k = (int[]) val.getKey();
       if (set.contains(k[0])) {
         Assert.fail("Duplicate value");

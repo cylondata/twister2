@@ -136,9 +136,13 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
   private int edge;
 
   /**
-   * A place holder for keeping the internal and external destinations
+   * A place holder for keeping the internal destinations
    */
   private List<Integer> internalDestinations = new ArrayList<>();
+
+  /**
+   * A place holder for keeping the external destinations
+   */
   private List<Integer> externalDestinations = new ArrayList<>();
 
   public DataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
@@ -461,4 +465,11 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return dataType;
   }
 
+  public MessageType getReceiveDataType() {
+    return receiveType;
+  }
+
+  public MessageType getReceiveKeyType() {
+    return receiveKeyType;
+  }
 }
