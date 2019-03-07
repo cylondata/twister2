@@ -11,12 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.partition;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
@@ -24,7 +24,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 public abstract class BasePartitionStreamingFinalReceiver {
   private static final Logger LOG = Logger.getLogger(
@@ -33,29 +32,19 @@ public abstract class BasePartitionStreamingFinalReceiver {
   // messages before we have seen a barrier
   private Map<Integer, Queue<Object>> messages = new HashMap<>();
 
-  // the receiving indexes for the target
-  private Map<Integer, Integer> receivingIndexes = new ConcurrentHashMap<>();
-
   /**
    * The lock for excluding onMessage and communicationProgress
    */
   private Lock lock = new ReentrantLock();
 
-  private Map<Integer, Integer> counts = new HashMap<>();
-
-  private int workerId;
 
   public BasePartitionStreamingFinalReceiver() {
   }
 
   public void init(Config cfg, DataFlowOperation operation,
                    Map<Integer, List<Integer>> expectedIds) {
-    int sendPendingMax = DataFlowContext.sendPendingMax(cfg);
-    workerId = operation.getTaskPlan().getThisExecutor();
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-      messages.put(e.getKey(), new ArrayBlockingQueue<>(sendPendingMax));
-      receivingIndexes.put(e.getKey(), 0);
-      counts.put(e.getKey(), 0);
+      messages.put(e.getKey(), new LinkedBlockingQueue<>());
     }
   }
 
@@ -66,17 +55,15 @@ public abstract class BasePartitionStreamingFinalReceiver {
         return true;
       }
 
-      int count = counts.get(target);
       if (object instanceof List) {
-        counts.put(target, ((List) object).size() + count);
+        messages.get(target).addAll((Collection<?>) object);
       } else {
-        counts.put(target, 1 + count);
+        messages.get(target).add(object);
       }
-
-      return messages.get(target).offer(object);
     } finally {
       lock.unlock();
     }
+    return true;
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -88,25 +75,10 @@ public abstract class BasePartitionStreamingFinalReceiver {
       for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
         Integer target = e.getKey();
         Queue<Object> inComingMessages = e.getValue();
-        Object msg = inComingMessages.peek();
 
-        if (msg instanceof List) {
-          int startIndex = receivingIndexes.get(e.getKey());
-          for (int i = startIndex; i < ((List) msg).size(); i++) {
-            boolean offer = receive(target, ((List) msg).get(i));
-            if (offer) {
-              receivingIndexes.put(e.getKey(), i + 1);
-            } else {
-              needsFurtherProgress = true;
-            }
-          }
-          // we have to reset to 0
-          if (startIndex == ((List) msg).size()) {
-            inComingMessages.poll();
-            receivingIndexes.put(e.getKey(), 0);
-          }
-        } else if (msg != null) {
-          boolean offer = receive(target, msg);
+        Object data = inComingMessages.peek();
+        if (data != null) {
+          boolean offer = receive(target, data);
           if (offer) {
             inComingMessages.poll();
           } else {
@@ -114,7 +86,6 @@ public abstract class BasePartitionStreamingFinalReceiver {
           }
         }
       }
-      LOG.info(String.format("%d COUNTS %s", workerId, counts));
       return needsFurtherProgress;
     } finally {
       lock.unlock();
