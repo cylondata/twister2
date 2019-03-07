@@ -45,9 +45,7 @@ public class DataObjectSource extends BaseSource {
         int count = 0;
         while (!inputSplit.reachedEnd()) {
           String value = inputSplit.nextRecord(null);
-          if (value != null) {                     //Bug here...
-            //LOG.info("We read value: " + value); //First index reads more value than for
-            //example 100, task index 0 reads 51 & 1 reads 49
+          if (value != null) {
             context.write("direct", value);
             count += 1;
             totalCount += 1;

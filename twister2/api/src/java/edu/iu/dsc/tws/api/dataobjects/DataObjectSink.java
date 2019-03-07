@@ -39,7 +39,7 @@ public class DataObjectSink extends BaseSink implements Collector {
   @Override
   public boolean execute(IMessage message) {
     Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>) message.getContent();
-    datapoint = new double[dsize + 1][dimension]; //Remove +1 after fixing the bug...
+    datapoint = new double[dsize + 1][dimension];
     int value = 0;
     while (arrayListIterator.hasNext()) {
       String val = String.valueOf(arrayListIterator.next());
