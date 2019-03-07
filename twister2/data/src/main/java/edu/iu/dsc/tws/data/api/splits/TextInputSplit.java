@@ -77,8 +77,6 @@ public class TextInputSplit extends DelimitedInputSplit<String> {
       throws IOException {
     //Check if \n is used as delimiter and the end of this line is a \r,
     // then remove \r from the line
-
-    LOG.fine("Bytes are::::::::" + Arrays.toString(bytes));
     int curNumBytes = numBytes;
     if (this.getDelimiter() != null && this.getDelimiter().length == 1
         && this.getDelimiter()[0] == NEW_LINE && readOffset + curNumBytes >= 1

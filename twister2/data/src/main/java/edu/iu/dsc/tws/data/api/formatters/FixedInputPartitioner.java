@@ -57,6 +57,7 @@ public abstract class FixedInputPartitioner<OT>
 
   @Override
   public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws Exception {
+
     // take the desired number of splits into account
     int curminNumSplits = Math.max(minNumSplits, this.numSplits);
 
@@ -64,10 +65,9 @@ public abstract class FixedInputPartitioner<OT>
     final List<FileInputSplit> inputSplits = new ArrayList<FileInputSplit>(curminNumSplits);
 
     // get all the files that are involved in the splits
-    List<FileStatus> files = new ArrayList<FileStatus>();
-    long totalLength = 0;
+    List<FileStatus> files = new ArrayList<>();
 
-    //final FileSystem fs = path.getFileSystem();
+    long totalLength = 0;
     final FileSystem fs = path.getFileSystem(config);
     final FileStatus pathFile = fs.getFileStatus(path);
 
@@ -79,10 +79,34 @@ public abstract class FixedInputPartitioner<OT>
     }
 
     //Generate the splits
-    int splitNum = 0;
+    final long maxSplitSize = totalLength / curminNumSplits
+        + (totalLength % curminNumSplits == 0 ? 0 : 1);
+
     for (final FileStatus file : files) {
-      //final long len = file.getLen();
-      int totalLines = 10;
+
+      //First Split Calculation
+      final long lineCount = Files.lines(Paths.get(file.getPath().getPath())).count();
+      int splSize = (int) (lineCount / curminNumSplits);
+      long totalbytes = getSplitSize(file.getPath().getPath(), 0, splSize);
+
+      final long len = file.getLen();
+      final long blockSize = file.getBlockSize();
+      final long localminSplitSize;
+
+      if (this.minSplitSize <= blockSize) {
+        localminSplitSize = this.minSplitSize;
+      } else {
+        LOG.log(Level.WARNING, "Minimal split size of " + this.minSplitSize
+            + " is larger than the block size of " + blockSize
+            + ". Decreasing minimal split size to block size.");
+        localminSplitSize = blockSize;
+      }
+
+      final long splitSize = Math.max(localminSplitSize, Math.min(maxSplitSize, blockSize));
+      final long maxBytesForLastSplit = (long) (splitSize * MAX_SPLIT_SIZE_DISCREPANCY);
+      long bytesUnassigned = len;
+
+      int splitNum = 0;
       int position = 0;
       int splitSize = 5;
       int unassignedLines = 10;

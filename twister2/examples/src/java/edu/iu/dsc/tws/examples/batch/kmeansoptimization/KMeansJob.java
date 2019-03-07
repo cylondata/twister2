@@ -87,7 +87,7 @@ public class KMeansJob extends TaskWorker {
 
     //Sleep to generate the input data in the file system.
     try {
-      Thread.sleep(10000);
+      Thread.sleep(100);
     } catch (InterruptedException ie) {
       throw new RuntimeException("Interuppted:", ie);
     }
@@ -96,7 +96,7 @@ public class KMeansJob extends TaskWorker {
     DataObject<double[][]> dataSet1 = taskExecutor.getOutput(dataFlowTaskGraph1, plan1, "sink");
     DataPartition<double[][]> values1 = dataSet1.getPartitions()[0];
     datapoint = values1.getConsumer().next();
-    LOG.info("Partitioned Values Are:%%%%" + Arrays.deepToString(datapoint));
+    //LOG.info("Partitioned Values Are:%%%%" + Arrays.deepToString(datapoint));
 
     /** Second Graph to read the centroids **/
     DataFileReadSource task = new DataFileReadSource();
@@ -110,7 +110,7 @@ public class KMeansJob extends TaskWorker {
     DataObject<double[][]> dataSet2 = taskExecutor.getOutput(dataFlowTaskGraph2, plan2, "map");
     DataPartition<double[][]> values2 = dataSet2.getPartitions()[0];
     centroid = values2.getConsumer().next();
-    LOG.info("%%% Centroid Values Are:%%%%" + Arrays.deepToString(centroid));
+    //LOG.info("%%% Centroid Values Are:%%%%" + Arrays.deepToString(centroid));
 
     /** Third Graph to do the distance calculation **/
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();

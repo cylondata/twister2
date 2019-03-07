@@ -154,7 +154,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   @Override
   public void configure(Config parameters) {
     super.configure(parameters);
-
     this.config = parameters;
 
     // the if() clauses are to prevent the configure() method from
@@ -176,7 +175,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   public void open(Config cfg) throws IOException {
     super.open(cfg);
     initBuffers();
-
     this.offset = splitStart;
     if (this.splitStart != 0) {
       this.stream.seek(offset);
@@ -240,7 +238,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
    */
   private boolean fillBuffer(int fillOffset) throws IOException {
     int maxReadLength = this.readBuffer.length - fillOffset;
-    // special case for reading the whole split.
     if (this.splitLength == FileInputPartitioner.READ_WHOLE_SPLIT_FLAG) {
       int read = this.stream.read(this.readBuffer, fillOffset, maxReadLength);
       if (read == -1) {
@@ -254,7 +251,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
       }
     }
 
-    // else ..
     int toRead;
     if (this.splitLength > 0) {
       // if we have more data, read that

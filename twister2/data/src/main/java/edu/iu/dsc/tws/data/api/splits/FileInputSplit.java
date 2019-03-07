@@ -297,7 +297,6 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
     public InputSplitOpenThread(FileInputSplit split, long timeout) {
       super("Transient InputSplit Opener");
       setDaemon(true);
-
       this.split = split;
       this.timeout = timeout;
     }
@@ -316,7 +315,6 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
         //final FileSystem fs = FileSystem.get(this.split.getPath().toUri());
         final FileSystem fs = FileSystem.get(this.split.getPath().toUri(), config);
         this.fdis = fs.open(this.split.getPath());
-
         // check for canceling and close the stream in that case, because no one will obtain it
         if (this.aborted) {
           final FSDataInputStream f = this.fdis;
