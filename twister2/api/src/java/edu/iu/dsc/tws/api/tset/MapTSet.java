@@ -85,7 +85,7 @@ public class MapTSet<T, P> extends BaseTSet<T> {
     boolean isIterable = TSetUtils.isIterableInput(parent, builder.getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     int p = calculateParallelism(parent);
-
+    mapFn.addInputs(inputMap);
     ComputeConnection connection = builder.getTaskGraphBuilder().addCompute(generateName("map",
         parent), new MapOp<>(mapFn, isIterable, keyed), p);
 

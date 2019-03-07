@@ -45,7 +45,7 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
 
     int p = calculateParallelism(parent);
     String newName = generateName("flat-map", parent);
-
+    mapFn.addInputs(inputMap);
     ComputeConnection connection = builder.getTaskGraphBuilder().addCompute(newName,
         new FlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);

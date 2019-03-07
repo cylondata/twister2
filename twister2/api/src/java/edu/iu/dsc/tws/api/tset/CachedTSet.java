@@ -51,8 +51,10 @@ public class CachedTSet<T> extends BaseTSet<T> {
     boolean keyed = TSetUtils.isKeyedInput(parent);
     // lets override the parallelism
     int p = calculateParallelism(parent);
+    Sink<T> cacheSink = new CacheSink();
+    cacheSink.addInputs(inputMap);
     ComputeConnection connection = builder.getTaskGraphBuilder().addSink(getName(),
-        new SinkOp<>(new CacheSink(), isIterable, keyed), p);
+        new SinkOp<>(cacheSink, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }

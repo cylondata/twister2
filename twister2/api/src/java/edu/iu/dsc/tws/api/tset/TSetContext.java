@@ -81,6 +81,10 @@ public class TSetContext {
     this.inputMap = new HashMap<>();
   }
 
+  public TSetContext() {
+    this.inputMap = new HashMap<>();
+  }
+
   /**
    * The tSet index
    *
@@ -171,6 +175,15 @@ public class TSetContext {
   }
 
   /**
+   * Adds the given map into {@link TSetContext#inputMap}
+   *
+   * @param map the map to be added
+   */
+  protected void addInputMap(Map<String, Object> map) {
+    this.inputMap.putAll(map);
+  }
+
+  /**
    * Retrives the input object that corresponds to the given key
    *
    * @param key key of the input object
@@ -190,5 +203,39 @@ public class TSetContext {
     inputMap.put(key, data);
   }
 
+  public int gettSetIndex() {
+    return tSetIndex;
+  }
 
+  protected void settSetIndex(int tSetIndex) {
+    this.tSetIndex = tSetIndex;
+  }
+
+  public int gettSetId() {
+    return tSetId;
+  }
+
+  protected void settSetId(int tSetId) {
+    this.tSetId = tSetId;
+  }
+
+  public String gettSetName() {
+    return tSetName;
+  }
+
+  protected void settSetName(String tSetName) {
+    this.tSetName = tSetName;
+  }
+
+  protected void setParallelism(int parallelism) {
+    this.parallelism = parallelism;
+  }
+
+  protected void setWorkerId(int workerId) {
+    this.workerId = workerId;
+  }
+
+  protected void setConfig(Config config) {
+    this.config = config;
+  }
 }

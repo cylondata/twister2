@@ -12,7 +12,9 @@
 package edu.iu.dsc.tws.api.tset;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,6 +37,11 @@ public abstract class BaseTSet<T> implements TSet<T> {
    * The children of this set
    */
   protected List<TBase<?>> children;
+
+  /**
+   * Map that keeps the input data objects
+   */
+  protected Map<String, Object> inputMap;
 
   /**
    * The builder to use to building the task graph
@@ -95,6 +102,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
     this.children = new ArrayList<>();
     this.builder = tSetBuilder;
     this.config = cfg;
+    this.inputMap = new HashMap<>();
   }
 
   public String getName() {
@@ -263,7 +271,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public boolean addInput(String key, TSet<?> input) {
-
-    return false;
+    inputMap.put(key, input);
+    return true;
   }
 }

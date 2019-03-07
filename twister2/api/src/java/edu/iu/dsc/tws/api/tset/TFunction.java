@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.tset;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -20,15 +19,22 @@ import java.util.Map;
  */
 public interface TFunction extends Serializable {
 
-  Map<String, Object> INPUT_MAP = new HashMap<>();
+  TSetContext CONTEXT = new TSetContext();
 
   /**
    * Prepare the function
    *
-   * @param context context
+   * @param context CONTEXT
    */
   default void prepare(TSetContext context) {
-    INPUT_MAP.putAll(context.getInputMap());
+    this.CONTEXT.setConfig(context.getConfig());
+    this.CONTEXT.settSetIndex(context.gettSetIndex());
+    this.CONTEXT.settSetId(context.gettSetId());
+    this.CONTEXT.settSetName(context.gettSetName());
+    this.CONTEXT.setParallelism(context.getParallelism());
+    this.CONTEXT.setConfig(context.getConfig());
+    this.CONTEXT.setWorkerId(context.getWorkerId());
+    this.CONTEXT.addInputMap(context.getInputMap());
   }
 
   /**
@@ -38,6 +44,26 @@ public interface TFunction extends Serializable {
    * @return the object associated with the given key, null if the key is not present
    */
   default Object getInput(String key) {
-    return INPUT_MAP.get(key);
+    return CONTEXT.getInputMap().get(key);
+  }
+
+  /**
+   * Adds the given key value pair into the {@link TFunction#CONTEXT} input map
+   *
+   * @param key the key to be added
+   * @param input the value associated with the key
+   */
+  default void addInput(String key, Object input) {
+    CONTEXT.getInputMap().put(key, input);
+  }
+
+  /**
+   * Adds the given map into the input map
+   *
+   * @param map map that contains key, input pairs that need to be added into
+   * the {@link TFunction#CONTEXT} input map
+   */
+  default void addInputs(Map<String, Object> map) {
+    CONTEXT.getInputMap().putAll(map);
   }
 }
