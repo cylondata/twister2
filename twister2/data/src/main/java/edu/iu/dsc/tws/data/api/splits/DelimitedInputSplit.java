@@ -270,8 +270,11 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
       this.overLimit = true;
     }
 
-    int read = this.stream.read(this.readBuffer, fillOffset, toRead);
+    //LineNumberReader numberReader = new LineNumberReader(new InputStreamReader(this.stream));
+    //numberReader.skip(Long.MAX_VALUE);
+    //int noOfLines = numberReader.getLineNumber();
 
+    int read = this.stream.read(this.readBuffer, fillOffset, toRead);
     if (read == -1) {
       this.stream.close();
       this.stream = null;
@@ -285,13 +288,12 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   }
 
   protected final boolean readLine() throws IOException {
+
     if (this.stream == null || this.overLimit) {
       return false;
     }
 
     int countInWrapBuffer = 0;
-
-    // position of matching positions in the delimiter byte array
     int delimPos = 0;
 
     while (true) {
@@ -309,7 +311,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
                 System.arraycopy(this.wrapBuffer, 0, tmp, 0, countInWrapBuffer);
                 this.wrapBuffer = tmp;
               }
-
               // copy readBuffer bytes to wrapBuffer
               System.arraycopy(this.readBuffer, 0, this.wrapBuffer,
                   countInWrapBuffer, countInReadBuffer);
@@ -320,14 +321,13 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
             setResult(this.wrapBuffer, 0, countInWrapBuffer);
             return true;
           } else {
-            return false;
+            return true;
           }
         }
       }
 
       int startPos = this.readPos - delimPos;
       int count;
-
       // Search for next occurence of delimiter in read buffer.
       while (this.readPos < this.limit && delimPos < this.delimiter.length) {
         if ((this.readBuffer[this.readPos]) == this.delimiter[delimPos]) {
@@ -372,7 +372,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
       } else {
         // we reached the end of the readBuffer
         count = this.limit - startPos;
-
         // check against the maximum record length
         if (((long) countInWrapBuffer) + count > this.lineLengthLimit) {
           throw new IOException("The record length exceeded the maximum record length ("
@@ -398,9 +397,9 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
         countInWrapBuffer += bytesToMove;
         // move delimiter chars to the beginning of the readBuffer
         System.arraycopy(this.readBuffer, this.readPos - delimPos, this.readBuffer, 0, delimPos);
-
       }
     }
+
   }
 
   private void setResult(byte[] buffer, int resultOffset, int len) {
