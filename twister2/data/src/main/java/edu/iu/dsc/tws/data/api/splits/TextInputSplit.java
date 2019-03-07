@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.data.api.splits;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -83,7 +82,6 @@ public class TextInputSplit extends DelimitedInputSplit<String> {
         && bytes[readOffset + curNumBytes - 1] == CARRIAGE_RETURN) {
       curNumBytes -= 1;
     }
-
     return new String(bytes, readOffset, curNumBytes, this.charsetName);
   }
 }

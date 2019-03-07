@@ -51,7 +51,6 @@ public class DataSource<T, O extends InputSplit<T>> extends DataObjectImpl<T> {
     InputSplit<T> split = assigner.getNextInputSplit("localhost", id);
     if (split != null) {
       try {
-        //split.open();
         split.open(config);
       } catch (IOException e) {
         throw new RuntimeException("Failed to open split", e);

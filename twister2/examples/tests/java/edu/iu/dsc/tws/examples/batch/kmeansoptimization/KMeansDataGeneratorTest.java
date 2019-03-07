@@ -48,7 +48,7 @@ public class KMeansDataGeneratorTest {
     Config config = getConfig();
 
     int numFiles = 1;
-    int dsize = 100;
+    int dsize = 20;
     int dimension = 2;
 
     String dinputDirectory = "/tmp/testdinput";
