@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.utils.Heap;
 import edu.iu.dsc.tws.comms.utils.HeapNode;
@@ -70,12 +71,12 @@ public class FSKeyedSortedMerger implements Shuffle {
   /**
    * List of bytes in the memory so far
    */
-  private List<KeyValue> recordsInMemory = new ArrayList<>();
+  private List<Tuple> recordsInMemory = new ArrayList<>();
 
   /**
    * The deserialized objects in memory
    */
-  private List<KeyValue> objectsInMemory = new ArrayList<>();
+  private List<Tuple> objectsInMemory = new ArrayList<>();
 
   /**
    * The number of total bytes in each file part written to disk
@@ -150,7 +151,7 @@ public class FSKeyedSortedMerger implements Shuffle {
 
     lock.lock();
     try {
-      recordsInMemory.add(new KeyValue(key, data));
+      recordsInMemory.add(new Tuple(key, data));
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
@@ -179,7 +180,7 @@ public class FSKeyedSortedMerger implements Shuffle {
   /**
    * Wrapper for comparing KeyValue with the user defined comparator
    */
-  private class ComparatorWrapper implements Comparator<KeyValue> {
+  private class ComparatorWrapper implements Comparator<Tuple> {
     private Comparator comparator;
 
     ComparatorWrapper(Comparator com) {
@@ -187,16 +188,16 @@ public class FSKeyedSortedMerger implements Shuffle {
     }
 
     @Override
-    public int compare(KeyValue o1, KeyValue o2) {
+    public int compare(Tuple o1, Tuple o2) {
       return comparator.compare(o1.getKey(), o2.getKey());
     }
   }
 
   private void deserializeObjects() {
     for (int i = 0; i < recordsInMemory.size(); i++) {
-      KeyValue kv = recordsInMemory.get(i);
+      Tuple kv = recordsInMemory.get(i);
       Object o = DataDeserializer.deserialize(dataType, kryoSerializer, (byte[]) kv.getValue());
-      objectsInMemory.add(new KeyValue(kv.getKey(), o));
+      objectsInMemory.add(new Tuple(kv.getKey(), o));
     }
   }
 
@@ -204,7 +205,7 @@ public class FSKeyedSortedMerger implements Shuffle {
    * This method saves the data to file system
    */
   public void run() {
-    List<KeyValue> list;
+    List<Tuple> list;
     lock.lock();
     try {
       // it is time to write
@@ -276,7 +277,7 @@ public class FSKeyedSortedMerger implements Shuffle {
       for (Map.Entry<Integer, OpenFilePart> e : openFiles.entrySet()) {
         OpenFilePart part = e.getValue();
         if (part.hasNext()) {
-          KeyValue keyValue = part.next();
+          Tuple keyValue = part.next();
 
           heap.insert(keyValue, e.getKey());
           numValuesInHeap++;
@@ -294,7 +295,7 @@ public class FSKeyedSortedMerger implements Shuffle {
     }
 
     @Override
-    public KeyValue next() {
+    public Tuple next() {
       // we are reading from in memory
       HeapNode node = heap.extractMin();
       numValuesInHeap--;
@@ -313,7 +314,7 @@ public class FSKeyedSortedMerger implements Shuffle {
           openFiles.put(node.listNo, newPart);
 
           if (newPart.hasNext()) {
-            KeyValue next = newPart.next();
+            Tuple next = newPart.next();
             heap.insert(next, node.listNo);
             numValuesInHeap++;
           }

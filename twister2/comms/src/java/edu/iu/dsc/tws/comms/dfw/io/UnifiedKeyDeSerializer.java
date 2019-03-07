@@ -107,7 +107,7 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
         currentLocation += keyLength.getRight();
 
         // we have to set the current object length
-        currentObjectLength = currentObjectLength - keyLength.getLeft();
+        currentObjectLength = currentObjectLength - keyLength.getLeft() - keyLength.getRight();
         currentKeyLength = keyLength.getLeft();
 
         Object keyValue = keyPacker.initializeUnPackKeyObject(keyLength.getLeft());
@@ -178,7 +178,7 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
             currentLocation += keyLength.getRight();
 
             // we have to set the current object length
-            currentObjectLength = currentObjectLength - keyLength.getLeft();
+            currentObjectLength = currentObjectLength - keyLength.getLeft() - keyLength.getRight();
             currentKeyLength = keyLength.getLeft();
 
             Object keyValue = keyPacker.initializeUnPackKeyObject(keyLength.getLeft());

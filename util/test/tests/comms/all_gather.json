@@ -1,7 +1,7 @@
 {
-  "id": "comms_reduce",
-  "parent": "many_to_one_base",
-  "resultsFile": "comms_reduce.csv",
+  "id": "comms_all_gather",
+  "parent": "all_to_all_base",
+  "resultsFile": "comms_all_gather.csv",
   "args": [
     {
       "id": "op",
@@ -9,7 +9,7 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": "\"reduce\""
+        "value": "\"allgather\""
       }
     }
   ]

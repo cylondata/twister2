@@ -484,6 +484,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             // we are done
             pendingSendMessages.poll();
             channelMessages.poll();
+            // the send is completed, we need to notify
+            receiver.sendCompleted(outMessage);
           }
         } else if (outMessage.getSendState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
           int startOfExternalRouts = chMessage.getAcceptedExternalSends();

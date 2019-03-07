@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.executor.threading;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,11 +21,8 @@ import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 
-public class BatchSharingExecutor extends ThreadSharingExecutor {
-  private static final Logger LOG = Logger.getLogger(BatchSharingExecutor.class.getName());
-
-  // keep track of finished executions
-  private Map<Integer, Boolean> finishedInstances = new ConcurrentHashMap<>();
+public class StreamingSharingExecutor extends ThreadSharingExecutor {
+  private static final Logger LOG = Logger.getLogger(StreamingSharingExecutor.class.getName());
 
   private int workerId;
 
@@ -34,53 +30,68 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
   private boolean cleanUpCalled = false;
 
-  public BatchSharingExecutor(int workerId) {
+  public StreamingSharingExecutor(int workerId) {
     this.workerId = workerId;
   }
 
-  /**
-   * Execution Method for Batch Tasks
-   */
   public boolean runExecution() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     if (nodes.size() == 0) {
       LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
           + "have more workers than tasks", workerId));
-      return true;
+      return false;
     }
 
-    scheduleExecution(nodes);
+    try {
+      schedulerExecution(nodes);
 
-    // we progress until all the channel finish
-    while (finishedInstances.size() != nodes.size()) {
-      channel.progress();
+      progressStreamComm();
+    } finally {
+      notStopped = false;
+      cleanUp(nodes);
     }
-
-    cleanUp(nodes);
     return true;
   }
 
-  private void scheduleExecution(Map<Integer, INodeInstance> nodes) {
-    // initialize finished
-    // initFinishedInstances();
+  /**
+   * Progress the communications
+   */
+  private void progressStreamComm() {
+    while (notStopped) {
+      this.channel.progress();
+    }
+  }
+
+  private void schedulerExecution(Map<Integer, INodeInstance> nodes) {
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
 
-    int curTaskSize = tasks.size();
-    BatchWorker[] workers = new BatchWorker[curTaskSize];
-
-    // prepare the tasks
     for (INodeInstance node : tasks) {
       node.prepare(config);
     }
 
-    for (int i = 0; i < curTaskSize; i++) {
-      workers[i] = new BatchWorker();
-      Thread t = new Thread(workers[i], "Executor-" + i);
+    for (int i = 0; i < numThreads; i++) {
+      Thread t = new Thread(new StreamWorker());
+      t.setName("Thread-" + i);
       threads.add(t);
       t.start();
     }
+  }
+
+  @Override
+  public IExecution runIExecution() {
+    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
+
+    if (nodes.size() == 0) {
+      LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
+          + "have more workers than tasks", workerId));
+      return null;
+    }
+
+    schedulerExecution(nodes);
+
+    return new StreamExecution(nodes);
   }
 
   private void cleanUp(Map<Integer, INodeInstance> nodes) {
@@ -106,35 +117,18 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     cleanUpCalled = true;
   }
 
-  @Override
-  public IExecution runIExecution() {
-    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
-
-    if (nodes.size() == 0) {
-      LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
-          + "have more workers than tasks", workerId));
-      return null;
-    }
-
-    scheduleExecution(nodes);
-    return new BatchExecution(nodes);
-  }
-
-  protected class BatchWorker implements Runnable {
+  protected class StreamWorker implements Runnable {
     @Override
     public void run() {
       while (notStopped) {
         try {
           INodeInstance nodeInstance = tasks.poll();
           if (nodeInstance != null) {
-            boolean needsFurther = nodeInstance.execute();
-            if (!needsFurther) {
-              finishedInstances.put(nodeInstance.getId(), true);
-            } else {
-              // we need to further execute this task
-              tasks.offer(nodeInstance);
-            }
+            nodeInstance.execute();
+            tasks.offer(nodeInstance);
           } else {
+            LOG.log(Level.INFO, "Thread existing as more threads than tasks "
+                + "are been assigned");
             break;
           }
         } catch (Throwable t) {
@@ -145,17 +139,17 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
   }
 
-  private class BatchExecution implements IExecution {
+  private class StreamExecution implements IExecution {
     private Map<Integer, INodeInstance> nodeMap;
 
-    BatchExecution(Map<Integer, INodeInstance> nodeMap) {
+    StreamExecution(Map<Integer, INodeInstance> nodeMap) {
       this.nodeMap = nodeMap;
     }
 
     @Override
     public boolean waitForCompletion() {
       // we progress until all the channel finish
-      while (notStopped && finishedInstances.size() != nodeMap.size()) {
+      while (notStopped) {
         channel.progress();
       }
 
@@ -166,14 +160,14 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     @Override
     public boolean progress() {
       // we progress until all the channel finish
-      if (notStopped && finishedInstances.size() != nodeMap.size()) {
+      if (notStopped) {
         channel.progress();
         return true;
       }
-
       return false;
     }
 
+    @Override
     public void close() {
       if (notStopped) {
         throw new RuntimeException("We need to stop the execution before close");
