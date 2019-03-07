@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
+package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -96,7 +96,6 @@ public class KMeansJob extends TaskWorker {
     DataObject<double[][]> dataSet1 = taskExecutor.getOutput(dataFlowTaskGraph1, plan1, "sink");
     DataPartition<double[][]> values1 = dataSet1.getPartitions()[0];
     datapoint = values1.getConsumer().next();
-    //LOG.info("Partitioned Values Are:%%%%" + Arrays.deepToString(datapoint));
 
     /** Second Graph to read the centroids **/
     DataFileReadSource task = new DataFileReadSource();
@@ -110,7 +109,6 @@ public class KMeansJob extends TaskWorker {
     DataObject<double[][]> dataSet2 = taskExecutor.getOutput(dataFlowTaskGraph2, plan2, "map");
     DataPartition<double[][]> values2 = dataSet2.getPartitions()[0];
     centroid = values2.getConsumer().next();
-    //LOG.info("%%% Centroid Values Are:%%%%" + Arrays.deepToString(centroid));
 
     /** Third Graph to do the distance calculation **/
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
@@ -143,7 +141,7 @@ public class KMeansJob extends TaskWorker {
       DataPartition<double[][]> values = dataSet.getPartitions()[0];
       centroid = values.getConsumer().next();
     }
-    LOG.info("Centroid Values are:" + Arrays.deepToString(centroid));
+    LOG.info("Final Centroid Values are:" + Arrays.deepToString(centroid));
   }
 
   private static class KMeansSourceTask extends BaseSource implements Receptor {
@@ -155,7 +153,6 @@ public class KMeansJob extends TaskWorker {
 
     @Override
     public void execute() {
-      LOG.info("Datapoints received for " + context.taskIndex());
       int dim = Integer.parseInt(config.getStringValue("dim"));
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
@@ -165,7 +162,7 @@ public class KMeansJob extends TaskWorker {
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataObject<?> data) {
-      LOG.log(Level.INFO, "Received input: " + name);
+      LOG.log(Level.FINE, "Received input: " + name);
       if ("points".equals(name)) {
         DataPartition<double[][]> dataPointss = (DataPartition<double[][]>)
             data.getPartitions()[0];
@@ -188,7 +185,7 @@ public class KMeansJob extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
+      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
           + ":" + context.taskId());
       centroids = (double[][]) message.getContent();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
