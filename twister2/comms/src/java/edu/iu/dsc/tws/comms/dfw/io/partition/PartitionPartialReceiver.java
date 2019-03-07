@@ -202,6 +202,8 @@ public class PartitionPartialReceiver implements MessageReceiver {
         }
       }
       progressAttempts = 0;
+    } else {
+      progressAttempts++;
     }
 
     try {
@@ -215,7 +217,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
         if (send.size() == 0) {
           e.getValue().clear();
           it.remove();
-          progressAttempts = 0;
           continue;
         }
         // if we send this list successfully
@@ -223,7 +224,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
           // lets remove from ready list and clear the list
           e.getValue().clear();
           it.remove();
-          progressAttempts = 0;
         } else {
           needsFurtherProgress = true;
         }
@@ -249,7 +249,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
             if (!finishedDestPerSource.contains(dest)) {
               if (operation.sendPartial(source, new byte[1], MessageFlags.END, dest)) {
                 finishedDestPerSource.add(dest);
-                progressAttempts = 0;
               } else {
                 needsFurtherProgress = true;
                 // no point in going further
@@ -264,7 +263,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
       lock.unlock();
     }
 
-    progressAttempts++;
     return needsFurtherProgress;
   }
 

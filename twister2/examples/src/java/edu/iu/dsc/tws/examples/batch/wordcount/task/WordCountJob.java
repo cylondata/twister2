@@ -46,7 +46,7 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 public class WordCountJob extends TaskWorker {
   private static final Logger LOG = Logger.getLogger(WordCountJob.class.getName());
 
-  private static final int NUMBER_MESSAGES = 1000;
+  private static final int NUMBER_MESSAGES = 100;
 
   private static final String EDGE = "reduce-edge";
 
