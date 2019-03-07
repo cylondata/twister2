@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
+import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.api.stream.SKeyedPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.keyed.KPartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.examples.Utils;
@@ -56,7 +56,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
     partition = new SKeyedPartition(communicator, taskPlan, sources, targets,
         MessageType.INTEGER, MessageType.INTEGER,
         new KPartitionStreamingFinalReceiver(new PartitionReceiver()),
-        new LoadBalanceSelector());
+        new HashingSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
