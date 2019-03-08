@@ -69,6 +69,7 @@ public class SourceTSet<T> extends BaseTSet<T> {
 
   @Override
   public boolean baseBuild() {
+    source.addInputs(inputMap);
     builder.getTaskGraphBuilder().addSource(getName(), new SourceOp<T>(source), parallel);
     return true;
   }

@@ -34,7 +34,7 @@ public class IFlatMapTSet<T, P> extends BaseTSet<T> {
 
     // lets override the parallelism
     int p = calculateParallelism(parent);
-
+    mapFn.addInputs(inputMap);
     ComputeConnection connection = builder.getTaskGraphBuilder().addCompute(generateName(
         "i-flat-map", parent), new IterableFlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);

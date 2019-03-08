@@ -34,7 +34,7 @@ public class SinkTSet<T> extends BaseTSet<T> {
     boolean keyed = TSetUtils.isKeyedInput(parent);
     // lets override the parallelism
     int p = calculateParallelism(parent);
-
+    sink.addInputs(inputMap);
     ComputeConnection connection = builder.getTaskGraphBuilder().addSink(getName(),
         new SinkOp<>(sink, isIterable, keyed), p);
     parent.buildConnection(connection);
