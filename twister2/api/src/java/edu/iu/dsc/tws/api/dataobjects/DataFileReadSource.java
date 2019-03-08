@@ -31,22 +31,20 @@ public class DataFileReadSource extends BaseSource implements Collector {
   private static final long serialVersionUID = -1L;
 
   private String fileDirectory;
-  private int numberOfCenters;
   private int dimension;
+  private int datasize;
 
   private DataFileReader fileReader;
-
-  private DataObject<double[][]> centroids = null;
-
-  private double[][] centroid = null;
+  private DataObject<double[][]> dataObject = null;
+  private double[][] datapoints = null;
 
   public DataFileReadSource() {
   }
 
   @Override
   public void execute() {
-    centroid = fileReader.readCentroids(new Path(fileDirectory), dimension);
-    centroids.addPartition(new EntityPartition<>(0, centroid));
+    datapoints = fileReader.readData(new Path(fileDirectory), dimension, datasize);
+    dataObject.addPartition(new EntityPartition<>(0, datapoints));
   }
 
   public void prepare(Config cfg, TaskContext context) {
@@ -55,13 +53,12 @@ public class DataFileReadSource extends BaseSource implements Collector {
     fileReader = new DataFileReader(config, fileSystem);
     fileDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
     dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DIMENSIONS));
-    numberOfCenters = Integer.parseInt(cfg.getStringValue(DataObjectConstants.
-        ARGS_NUMBER_OF_CLUSTERS));
-    centroids = new DataObjectImpl<>(config);
+    datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_CSIZE));
+    dataObject = new DataObjectImpl<>(config);
   }
 
   @Override
   public DataPartition<double[][]> get() {
-    return new EntityPartition<>(context.taskIndex(), centroid);
+    return new EntityPartition<>(context.taskIndex(), datapoints);
   }
 }

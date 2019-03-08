@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.dataobjects;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.Collector;
@@ -25,45 +23,28 @@ import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class DataObjectSink extends BaseSink implements Collector {
+public class DataObjectSink<T> extends BaseSink implements Collector {
 
   private static final Logger LOG = Logger.getLogger(DataObjectSink.class.getName());
 
   private static final long serialVersionUID = -1L;
 
-  private int dsize;
-  private int dimension;
-  private double[][] datapoint;
-  private DataObject<double[][]> datapoints = null;
+  private DataObject<Object> datapoints = null;
 
   @Override
   public boolean execute(IMessage message) {
-    Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>) message.getContent();
-    datapoint = new double[dsize + 1][dimension];
-    int value = 0;
-    while (arrayListIterator.hasNext()) {
-      String val = String.valueOf(arrayListIterator.next());
-      String[] data = val.split(",");
-      for (int i = 0; i < dimension; i++) {
-        datapoint[value][i] = Double.parseDouble(data[i].trim());
-      }
-      value++;
-    }
-    datapoints.addPartition(new EntityPartition<>(0, datapoint));
+    datapoints.addPartition(new EntityPartition<>(context.taskIndex(), message.getContent()));
     return true;
   }
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
-    dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DIMENSIONS));
-    dsize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DSIZE))
-        / context.getParallelism();
     this.datapoints = new DataObjectImpl<>(config);
   }
 
   @Override
-  public DataPartition<double[][]> get() {
-    return new EntityPartition<>(context.taskIndex(), datapoint);
+  public DataPartition<Object> get() {
+    return new EntityPartition<>(context.taskIndex(), datapoints);
   }
 }

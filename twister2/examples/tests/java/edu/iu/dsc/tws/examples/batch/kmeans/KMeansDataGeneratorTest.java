@@ -166,7 +166,7 @@ public class KMeansDataGeneratorTest {
     Assert.assertNotNull(pathFile);
 
     DataFileReader fileReader = new DataFileReader(config, "local");
-    double[][] centroids = fileReader.readCentroids(path, dimension);
+    double[][] centroids = fileReader.readData(path, dimension, csize);
     Assert.assertNotNull(centroids);
   }
 
@@ -198,7 +198,7 @@ public class KMeansDataGeneratorTest {
     Assert.assertNotNull(pathFile);
 
     DataFileReader fileReader = new DataFileReader(config, "hdfs");
-    double[][] centroids = fileReader.readCentroids(path, dimension);
+    double[][] centroids = fileReader.readData(path, dimension, csize);
     Assert.assertNotNull(centroids);
   }
 

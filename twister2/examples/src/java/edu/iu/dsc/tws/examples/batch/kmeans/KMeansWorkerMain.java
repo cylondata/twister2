@@ -29,9 +29,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public class KMeansJobMain {
+public class KMeansWorkerMain {
 
-  private static final Logger LOG = Logger.getLogger(KMeansJobMain.class.getName());
+  private static final Logger LOG = Logger.getLogger(KMeansWorkerMain.class.getName());
 
   public static void main(String[] args) throws ParseException {
     LOG.log(Level.INFO, "KMeans Clustering Job");
@@ -101,7 +101,7 @@ public class KMeansJobMain {
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("KMeans-job");
-    jobBuilder.setWorkerClass(KMeansJob.class.getName());
+    jobBuilder.setWorkerClass(KMeansWorker.class.getName());
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);
 
