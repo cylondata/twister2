@@ -1,6 +1,6 @@
 {
   "id": "comms_reduce",
-  "parent": "many_top_one_base",
+  "parent": "many_to_one_base",
   "resultsFile": "comms_reduce.csv",
   "args": [
     {

@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io.partition;
+package edu.iu.dsc.tws.comms.dfw.io.partition.keyed;
 
 import java.util.List;
 import java.util.Map;
@@ -18,13 +18,15 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.comms.dfw.io.partition.BasePartitionStreamingFinalReceiver;
 
-public class PartitionStreamingFinalReceiver extends BasePartitionStreamingFinalReceiver
+public class KPartitionStreamingFinalReceiver extends BasePartitionStreamingFinalReceiver
     implements MessageReceiver {
-  // the receiver
+
   private SingularReceiver receiver;
 
-  public PartitionStreamingFinalReceiver(SingularReceiver receiver) {
+  public KPartitionStreamingFinalReceiver(SingularReceiver receiver) {
     this.receiver = receiver;
   }
 
@@ -32,21 +34,14 @@ public class PartitionStreamingFinalReceiver extends BasePartitionStreamingFinal
   public void init(Config cfg, DataFlowOperation operation,
                    Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, operation, expectedIds);
-    this.receiver.init(cfg, expectedIds.keySet());
-  }
-
-  @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    return super.onMessage(source, path, target, flags, object);
-  }
-
-  @Override
-  public boolean progress() {
-    return super.progress();
+    receiver.init(cfg, expectedIds.keySet());
   }
 
   @Override
   public boolean receive(int target, Object message) {
-    return receiver.receive(target, message);
+    if (message instanceof Tuple) {
+      return receiver.receive(target, message);
+    }
+    throw new RuntimeException("Expecting a tuple object: " + message.getClass());
   }
 }

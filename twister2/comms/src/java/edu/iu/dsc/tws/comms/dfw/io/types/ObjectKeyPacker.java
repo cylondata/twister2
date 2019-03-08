@@ -35,7 +35,7 @@ public class ObjectKeyPacker implements KeyPacker {
       byte[] serialize = serializer.serialize(key);
       state.setKey(serialize);
     }
-    return state.getKey().length;
+    return state.getKey().length + Integer.BYTES;
   }
 
   @Override

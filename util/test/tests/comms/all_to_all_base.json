@@ -1,5 +1,5 @@
 {
-  "id": "many_to_one_base",
+  "id": "all_to_all_base",
   "parent": "communication_base",
   "args": [
     {
@@ -9,7 +9,7 @@
       "values": {
         "type": "array",
         "array": [
-          "8,1"
+          "8,8"
         ]
       }
     }
