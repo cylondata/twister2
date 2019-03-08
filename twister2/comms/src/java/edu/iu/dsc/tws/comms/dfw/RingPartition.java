@@ -11,7 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -19,18 +27,139 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.utils.OperationUtils;
+import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class RingPartition implements DataFlowOperation {
+  private static final Logger LOG = Logger.getLogger(RingPartition.class.getName());
+
+  /**
+   * Locally merged results
+   */
+  private Map<Integer, List<Object>> merged = new HashMap<>();
+
+  /**
+   * This is the local merger
+   */
+  private MessageReceiver merger;
+
+  /**
+   * Final receiver
+   */
+  private MessageReceiver finalReceiver;
+
+  /**
+   * The actual implementation
+   */
+  private ChannelDataFlowOperation delegate;
+
+  /**
+   * Lock for progressing the communication
+   */
+  private Lock lock = new ReentrantLock();
+
+  /**
+   * Lock for progressing the partial receiver
+   */
+  private Lock partialLock = new ReentrantLock();
+
+  /**
+   * The task plan
+   */
+  private TaskPlan taskPlan;
+
+  /**
+   * A map holding workerId to targets
+   */
+  private Map<Integer, Set<Integer>> workerToTargets = new HashMap<>();
+
+  /**
+   * Targets to workers
+   */
+  private Map<Integer, Integer> targetsToWorkers = new HashMap<>();
+
+  /**
+   * The workers for targets, sorted
+   */
+  private List<Integer> workers;
+
+  /**
+   * The next worker to send the data
+   */
+  private int nextWorker;
+
+  /**
+   * The data type
+   */
+  private MessageType dataType;
+
+  /**
+   * The key type
+   */
+  private MessageType keyType;
+
+  /**
+   * The sources
+   */
+  private Set<Integer> sources;
+
+  /**
+   * The targets
+   */
+  private Set<Integer> targets;
 
   public RingPartition(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> sources,
                            Set<Integer> targets, MessageReceiver finalRcvr,
                            MessageReceiver partialRcvr,
                            MessageType dType, MessageType rcvType,
-                           MessageType kType, MessageType rcvKType,
-                           int e) {
+                           MessageType kType, MessageType rcvKType, int edge) {
+    this.merger = partialRcvr;
+    this.finalReceiver = finalRcvr;
+    this.taskPlan = tPlan;
+    this.dataType = dType;
+    this.keyType = kType;
+    this.sources = sources;
+    this.targets = targets;
 
+    // get the tasks of this executor
+    Set<Integer> targetsOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, targets);
+    Set<Integer> sourcesOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, sources);
+    Map<Integer, List<Integer>> mergerExpectedIds = new HashMap<>();
+    for (int target : targetsOfThisWorker) {
+      mergerExpectedIds.put(target, new ArrayList<>(sourcesOfThisWorker));
+    }
+    // initialize the merger
+    merger.init(cfg, this, mergerExpectedIds);
+
+    // final receivers ids
+    Map<Integer, List<Integer>> finalExpectedIds = new HashMap<>();
+    for (int target : targets) {
+      finalExpectedIds.put(target, new ArrayList<>(sources));
+    }
+    // initialize the final receiver
+    finalReceiver.init(cfg, this, finalExpectedIds);
+
+    // now calculate the worker id to target mapping
+    calculateWorkerIdToTargets();
+
+    // create the delegate
+    this.delegate = new ChannelDataFlowOperation(channel);
   }
 
+  private void calculateWorkerIdToTargets() {
+    for (int t : targets) {
+      int worker = taskPlan.getExecutorForChannel(t);
+      Set<Integer> targets;
+      if (workerToTargets.containsKey(worker)) {
+        targets = workerToTargets.get(worker);
+      } else {
+        targets = new HashSet<>();
+      }
+      targets.add(t);
+      workerToTargets.put(worker, targets);
+      targetsToWorkers.put(t, worker);
+    }
+  }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags) {
@@ -44,7 +173,7 @@ public class RingPartition implements DataFlowOperation {
 
   @Override
   public boolean send(int source, Object message, int flags, int target) {
-    return false;
+    return merger.onMessage(source, 0, target, flags, message);
   }
 
   @Override
@@ -54,7 +183,10 @@ public class RingPartition implements DataFlowOperation {
 
   @Override
   public boolean progress() {
-    return false;
+    // now set the things
+
+
+    return OperationUtils.progressReceivers(delegate, lock, finalReceiver, partialLock, merger);
   }
 
   @Override
@@ -69,11 +201,39 @@ public class RingPartition implements DataFlowOperation {
 
   @Override
   public TaskPlan getTaskPlan() {
-    return null;
+    return taskPlan;
   }
 
   @Override
   public String getUniqueId() {
     return null;
+  }
+
+  @Override
+  public boolean isComplete() {
+    boolean done = delegate.isComplete();
+    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegate, lock, finalReceiver,
+        partialLock, merger);
+    return done && !needsFurtherProgress;
+  }
+
+  @Override
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  @Override
+  public MessageType getDataType() {
+    return dataType;
+  }
+
+  @Override
+  public Set<Integer> getSources() {
+    return sources;
+  }
+
+  @Override
+  public Set<Integer> getTargets() {
+    return targets;
   }
 }
