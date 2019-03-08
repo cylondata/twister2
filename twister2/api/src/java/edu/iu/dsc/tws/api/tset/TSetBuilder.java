@@ -68,9 +68,9 @@ public final class TSetBuilder {
     return this;
   }
 
-  public <T> TSet<T> createSource(Source<T> source) {
+  public <T> TSet<T> createSource(Source<T> source, TSetEnv tSetEnv) {
     builder.setMode(opMode);
-    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, this, source);
+    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, tSetEnv, source);
     sources.add(tSourceTSet);
     return tSourceTSet;
   }

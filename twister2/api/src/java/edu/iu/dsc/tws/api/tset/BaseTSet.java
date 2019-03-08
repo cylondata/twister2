@@ -44,11 +44,9 @@ public abstract class BaseTSet<T> implements TSet<T> {
   protected Map<String, Object> inputMap;
 
   /**
-   * The builder to use to building the task graph
+   * The TSet Env to use for runtime operations of the Tset
    */
-//  protected TaskGraphBuilder builder;
-
-  protected TSetBuilder builder;
+  protected TSetEnv tSetEnv;
 
   /**
    * Name of the data set
@@ -98,9 +96,9 @@ public abstract class BaseTSet<T> implements TSet<T> {
 //    this.config = cfg;
 //  }
 
-  public BaseTSet(Config cfg, TSetBuilder tSetBuilder) {
+  public BaseTSet(Config cfg, TSetEnv tSetEnv) {
     this.children = new ArrayList<>();
-    this.builder = tSetBuilder;
+    this.tSetEnv = tSetEnv;
     this.config = cfg;
     this.inputMap = new HashMap<>();
   }
@@ -127,41 +125,41 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public DirectTLink<T> direct() {
-    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct;
   }
 
   @Override
   public ReduceTLink<T> reduce(ReduceFunction<T> reduceFn) {
-    ReduceTLink<T> reduce = new ReduceTLink<>(config, builder, this, reduceFn);
+    ReduceTLink<T> reduce = new ReduceTLink<T>(config, tSetEnv, this, reduceFn);
     children.add(reduce);
     return reduce;
   }
 
   public PartitionTLink<T> partition(PartitionFunction<T> partitionFn) {
-    PartitionTLink<T> partition = new PartitionTLink<>(config, builder, this, partitionFn);
+    PartitionTLink<T> partition = new PartitionTLink<>(config, tSetEnv, this, partitionFn);
     children.add(partition);
     return partition;
   }
 
   @Override
   public GatherTLink<T> gather() {
-    GatherTLink<T> gather = new GatherTLink<>(config, builder, this);
+    GatherTLink<T> gather = new GatherTLink<>(config, tSetEnv, this);
     children.add(gather);
     return gather;
   }
 
   @Override
   public AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
-    AllReduceTLink<T> reduce = new AllReduceTLink<>(config, builder, this, reduceFn);
+    AllReduceTLink<T> reduce = new AllReduceTLink<>(config, tSetEnv, this, reduceFn);
     children.add(reduce);
     return reduce;
   }
 
   @Override
   public AllGatherTLink<T> allGather() {
-    AllGatherTLink<T> gather = new AllGatherTLink<>(config, builder, this);
+    AllGatherTLink<T> gather = new AllGatherTLink<>(config, tSetEnv, this);
     children.add(gather);
     return gather;
   }
@@ -169,7 +167,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   @Override
   public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
                                        Selector<T, K> selector) {
-    GroupedTSet<T, K> groupedTSet = new GroupedTSet<>(config, builder, this,
+    GroupedTSet<T, K> groupedTSet = new GroupedTSet<>(config, tSetEnv, this,
         partitionFunction, selector);
     children.add(groupedTSet);
     return groupedTSet;
@@ -183,7 +181,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
       throw new RuntimeException(msg);
     }
 
-    ReplicateTLink<T> cloneTSet = new ReplicateTLink<>(config, builder, this, replications);
+    ReplicateTLink<T> cloneTSet = new ReplicateTLink<>(config, tSetEnv, this, replications);
     children.add(cloneTSet);
     return cloneTSet;
   }
@@ -191,9 +189,9 @@ public abstract class BaseTSet<T> implements TSet<T> {
   @Override
   public TSet<T> cache() {
     // todo: why cant we add a single cache tset here?
-    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    CachedTSet<T> cacheTSet = new CachedTSet<>(config, builder, direct);
+    CachedTSet<T> cacheTSet = new CachedTSet<>(config, tSetEnv, direct);
     direct.getChildren().add(cacheTSet);
     return cacheTSet;
   }

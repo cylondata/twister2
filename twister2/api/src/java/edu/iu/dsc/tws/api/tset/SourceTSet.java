@@ -21,48 +21,48 @@ import edu.iu.dsc.tws.common.config.Config;
 public class SourceTSet<T> extends BaseTSet<T> {
   private Source<T> source;
 
-  public SourceTSet(Config cfg, TSetBuilder bldr, Source<T> src) {
-    super(cfg, bldr);
+  public SourceTSet(Config cfg, TSetEnv tSetEnv, Source<T> src) {
+    super(cfg, tSetEnv);
     this.source = src;
     this.name = "source-" + new Random(System.nanoTime()).nextInt(10);
   }
 
   public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    MapTSet<P, T> set = new MapTSet<P, T>(config, builder, direct, mapFn);
+    MapTSet<P, T> set = new MapTSet<P, T>(config, tSetEnv, direct, mapFn);
     children.add(set);
     return set;
   }
 
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, builder, direct, mapFn);
+    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, direct, mapFn);
     children.add(set);
     return set;
   }
 
   public <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IMapTSet<P, T> set = new IMapTSet<>(config, builder, direct, mapFn);
+    IMapTSet<P, T> set = new IMapTSet<>(config, tSetEnv, direct, mapFn);
     children.add(set);
     return set;
   }
 
   public <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, builder, direct, mapFn);
+    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, tSetEnv, direct, mapFn);
     children.add(set);
     return set;
   }
 
   public SinkTSet<T> sink(Sink<T> sink) {
-    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, builder, direct, sink);
+    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, direct, sink);
     children.add(sinkTSet);
     return sinkTSet;
   }
@@ -70,7 +70,8 @@ public class SourceTSet<T> extends BaseTSet<T> {
   @Override
   public boolean baseBuild() {
     source.addInputs(inputMap);
-    builder.getTaskGraphBuilder().addSource(getName(), new SourceOp<T>(source), parallel);
+    tSetEnv.getTSetBuilder().getTaskGraphBuilder().
+        addSource(getName(), new SourceOp<T>(source), parallel);
     return true;
   }
 

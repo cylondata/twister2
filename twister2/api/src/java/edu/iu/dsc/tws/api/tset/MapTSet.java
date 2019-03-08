@@ -34,60 +34,61 @@ public class MapTSet<T, P> extends BaseTSet<T> {
 
   private MapFunction<P, T> mapFn;
 
-  public MapTSet(Config cfg, TSetBuilder builder, BaseTLink<P> parent, MapFunction<P, T> mapFunc) {
-    super(cfg, builder);
+  public MapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent, MapFunction<P, T> mapFunc) {
+    super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
   }
 
   public <P1> MapTSet<P1, T> map(MapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    MapTSet<P1, T> set = new MapTSet<P1, T>(config, builder, direct, mFn);
+    MapTSet<P1, T> set = new MapTSet<P1, T>(config, tSetEnv, direct, mFn);
     children.add(set);
     return set;
   }
 
   public <P1> FlatMapTSet<P1, T> flatMap(FlatMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    FlatMapTSet<P1, T> set = new FlatMapTSet<P1, T>(config, builder, direct, mFn);
+    FlatMapTSet<P1, T> set = new FlatMapTSet<P1, T>(config, tSetEnv, direct, mFn);
     children.add(set);
     return set;
   }
 
   public <P1> IMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IMapTSet<P1, T> set = new IMapTSet<>(config, builder, direct, mFn);
+    IMapTSet<P1, T> set = new IMapTSet<>(config, tSetEnv, direct, mFn);
     children.add(set);
     return set;
   }
 
   public <P1> IFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IFlatMapTSet<P1, T> set = new IFlatMapTSet<>(config, builder, direct, mFn);
+    IFlatMapTSet<P1, T> set = new IFlatMapTSet<>(config, tSetEnv, direct, mFn);
     children.add(set);
     return set;
   }
 
   public SinkTSet<T> sink(Sink<T> sink) {
-    DirectTLink<T> direct = new DirectTLink<>(config, builder, this);
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, builder, direct, sink);
+    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, direct, sink);
     children.add(sinkTSet);
     return sinkTSet;
   }
 
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getOpMode());
+    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     int p = calculateParallelism(parent);
     mapFn.addInputs(inputMap);
-    ComputeConnection connection = builder.getTaskGraphBuilder().addCompute(generateName("map",
-        parent), new MapOp<>(mapFn, isIterable, keyed), p);
+    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
+        addCompute(generateName("map",
+            parent), new MapOp<>(mapFn, isIterable, keyed), p);
 
     parent.buildConnection(connection);
     return true;

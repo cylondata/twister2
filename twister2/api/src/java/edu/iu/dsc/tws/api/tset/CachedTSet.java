@@ -34,8 +34,8 @@ public class CachedTSet<T> extends BaseTSet<T> {
 //
 //  }
 
-  public CachedTSet(Config cfg, TSetBuilder bldr, BaseTLink<T> prnt) {
-    super(cfg, bldr);
+  public CachedTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<T> prnt) {
+    super(cfg, tSetEnv);
     this.parent = prnt;
     this.name = "cache-" + parent.getName();
     datapoints = new DataObjectImpl<>(config);
@@ -47,13 +47,13 @@ public class CachedTSet<T> extends BaseTSet<T> {
 
   @Override
   public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getOpMode());
+    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     // lets override the parallelism
     int p = calculateParallelism(parent);
     Sink<T> cacheSink = new CacheSink();
     cacheSink.addInputs(inputMap);
-    ComputeConnection connection = builder.getTaskGraphBuilder().addSink(getName(),
+    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
         new SinkOp<>(cacheSink, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
@@ -61,15 +61,17 @@ public class CachedTSet<T> extends BaseTSet<T> {
 
   public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
     TSetBuilder cacheBuilder = TSetBuilder.newBuilder(config);
-    cacheBuilder.setMode(builder.getOpMode());
-    SourceTSet<T> cacheSource = (SourceTSet<T>) cacheBuilder.createSource(new CacheSource());
+    cacheBuilder.setMode(tSetEnv.getTSetBuilder().getOpMode());
+    SourceTSet<T> cacheSource = (SourceTSet<T>) cacheBuilder.
+        createSource(new CacheSource(), tSetEnv);
     return cacheSource.map(mapFn);
   }
 
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
     TSetBuilder cacheBuilder = TSetBuilder.newBuilder(config);
-    cacheBuilder.setMode(builder.getOpMode());
-    SourceTSet<T> cacheSource = (SourceTSet<T>) cacheBuilder.createSource(new CacheSource());
+    cacheBuilder.setMode(tSetEnv.getTSetBuilder().getOpMode());
+    SourceTSet<T> cacheSource = (SourceTSet<T>) cacheBuilder.
+        createSource(new CacheSource(), tSetEnv);
     return cacheSource.flatMap(mapFn);
   }
 
@@ -81,6 +83,7 @@ public class CachedTSet<T> extends BaseTSet<T> {
   private class CacheSink implements Sink<T> {
 
     private int count = 0;
+
     @Override
     public boolean add(T value) {
       // todo every time add is called, a new partition will be made! how to handle that?

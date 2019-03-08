@@ -26,7 +26,7 @@ package edu.iu.dsc.tws.api.tset.link;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.TSetBuilder;
+import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -34,8 +34,8 @@ import edu.iu.dsc.tws.data.api.DataType;
 public class DirectTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
   private BaseTSet<T> parent;
 
-  public DirectTLink(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt) {
-    super(cfg, bldr);
+  public DirectTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
+    super(cfg, tSetEnv);
     this.parent = prnt;
     this.name = "direct-" + parent.getName();
   }

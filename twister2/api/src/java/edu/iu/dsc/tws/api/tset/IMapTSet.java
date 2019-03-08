@@ -21,21 +21,22 @@ public class IMapTSet<T, P> extends BaseTSet<T> {
 
   private IterableMapFunction<P, T> mapFn;
 
-  public IMapTSet(Config cfg, TSetBuilder builder, BaseTLink<P> parent,
+  public IMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
                   IterableMapFunction<P, T> mapFunc) {
-    super(cfg, builder);
+    super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
   }
 
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getOpMode());
+    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     int p = calculateParallelism(parent);
     mapFn.addInputs(inputMap);
-    ComputeConnection connection = builder.getTaskGraphBuilder().addCompute(generateName("i-map",
-        parent), new IterableMapOp<>(mapFn, isIterable, keyed), p);
+    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
+        addCompute(generateName("i-map",
+            parent), new IterableMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }

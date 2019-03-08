@@ -31,23 +31,23 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
 
   private FlatMapFunction<P, T> mapFn;
 
-  public FlatMapTSet(Config cfg, TSetBuilder bldr, BaseTLink<P> parent,
+  public FlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
                      FlatMapFunction<P, T> mapFunc) {
-    super(cfg, bldr);
+    super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
   }
 
   @SuppressWarnings("unchecked")
   public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getOpMode());
+    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
 
     int p = calculateParallelism(parent);
     String newName = generateName("flat-map", parent);
     mapFn.addInputs(inputMap);
-    ComputeConnection connection = builder.getTaskGraphBuilder().addCompute(newName,
-        new FlatMapOp<>(mapFn, isIterable, keyed), p);
+    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
+        addCompute(newName, new FlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }

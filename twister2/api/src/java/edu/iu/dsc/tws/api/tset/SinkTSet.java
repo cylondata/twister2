@@ -21,8 +21,8 @@ public class SinkTSet<T> extends BaseTSet<T> {
 
   private BaseTLink<T> parent;
 
-  public SinkTSet(Config cfg, TSetBuilder bldr, BaseTLink<T> prnt, Sink<T> s) {
-    super(cfg, bldr);
+  public SinkTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<T> prnt, Sink<T> s) {
+    super(cfg, tSetEnv);
     this.sink = s;
     this.parent = prnt;
     this.name = "sink-" + parent.getName();
@@ -30,12 +30,12 @@ public class SinkTSet<T> extends BaseTSet<T> {
 
   @Override
   public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getOpMode());
+    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     // lets override the parallelism
     int p = calculateParallelism(parent);
     sink.addInputs(inputMap);
-    ComputeConnection connection = builder.getTaskGraphBuilder().addSink(getName(),
+    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
         new SinkOp<>(sink, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;

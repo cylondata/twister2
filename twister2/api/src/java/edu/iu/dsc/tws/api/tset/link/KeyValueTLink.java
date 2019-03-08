@@ -25,12 +25,12 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.tset.TSetBuilder;
+import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class KeyValueTLink<T, K> extends BaseTLink<T> {
-  public KeyValueTLink(Config cfg, TSetBuilder bldr) {
-    super(cfg, bldr);
+  public KeyValueTLink(Config cfg, TSetEnv tSetEnv) {
+    super(cfg, tSetEnv);
   }
 
   Class<? super T> getClassT() {

@@ -24,9 +24,9 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
 
   private BaseTSet<T> parent;
 
-  public GroupedTSet(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt, PartitionFunction<K> partFn,
+  public GroupedTSet(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt, PartitionFunction<K> partFn,
                      Selector<T, K> selc) {
-    super(cfg, bldr);
+    super(cfg, tSetEnv);
     this.partitioner = partFn;
     this.selector = selc;
     this.parent = prnt;
@@ -34,21 +34,21 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
   }
 
   public KeyedReduceTLink<T, K> keyedReduce(ReduceFunction<T> reduceFn) {
-    KeyedReduceTLink<T, K> reduce = new KeyedReduceTLink<>(config, builder, parent,
+    KeyedReduceTLink<T, K> reduce = new KeyedReduceTLink<>(config, tSetEnv, parent,
         reduceFn, partitioner, selector);
     children.add(reduce);
     return reduce;
   }
 
   public KeyedPartitionTLink<T, K> keyedPartition() {
-    KeyedPartitionTLink<T, K> partition = new KeyedPartitionTLink<>(config, builder,
+    KeyedPartitionTLink<T, K> partition = new KeyedPartitionTLink<>(config, tSetEnv,
         parent, partitioner, selector);
     children.add(partition);
     return partition;
   }
 
   public KeyedGatherTLink<T, K> keyedGather() {
-    KeyedGatherTLink<T, K> gather = new KeyedGatherTLink<>(config, builder, parent,
+    KeyedGatherTLink<T, K> gather = new KeyedGatherTLink<>(config, tSetEnv, parent,
         partitioner, selector);
     children.add(gather);
     return gather;

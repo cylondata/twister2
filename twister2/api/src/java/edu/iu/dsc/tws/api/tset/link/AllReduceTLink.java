@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.TSetBuilder;
+import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.common.config.Config;
@@ -43,8 +43,8 @@ public class AllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
 
   private BaseTSet<T> parent;
 
-  public AllReduceTLink(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt, ReduceFunction<T> rFn) {
-    super(cfg, bldr);
+  public AllReduceTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt, ReduceFunction<T> rFn) {
+    super(cfg, tSetEnv);
     this.reduceFn = rFn;
     this.parent = prnt;
     this.name = "all-reduce-" + parent.getName();

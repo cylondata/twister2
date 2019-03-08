@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.api.tset.BaseTSet;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
-import edu.iu.dsc.tws.api.tset.TSetBuilder;
+import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
 import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
@@ -42,9 +42,9 @@ public class KeyedGatherTLink<T, K> extends KeyValueTLink<T, K> {
 
   private Selector<T, K> selector;
 
-  public KeyedGatherTLink(Config cfg, TSetBuilder bldr, BaseTSet<T> prnt,
+  public KeyedGatherTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt,
                           PartitionFunction<K> parFn, Selector<T, K> selc) {
-    super(cfg, bldr);
+    super(cfg, tSetEnv);
     this.parent = prnt;
     this.partitionFunction = parFn;
     this.selector = selc;

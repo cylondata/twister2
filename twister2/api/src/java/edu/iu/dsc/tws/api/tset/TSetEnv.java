@@ -36,7 +36,7 @@ public class TSetEnv {
   }
 
   public <T> TSet<T> createSource(Source<T> source) {
-    return this.tSetBuilder.createSource(source);
+    return this.tSetBuilder.createSource(source, this);
   }
 
   public void setMode(OperationMode mode) {

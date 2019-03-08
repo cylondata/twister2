@@ -21,22 +21,23 @@ public class IFlatMapTSet<T, P> extends BaseTSet<T> {
 
   private IterableFlatMapFunction<P, T> mapFn;
 
-  public IFlatMapTSet(Config cfg, TSetBuilder bldr, BaseTLink<P> parent,
+  public IFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
                       IterableFlatMapFunction<P, T> mapFunc) {
-    super(cfg, bldr);
+    super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
   }
 
   public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, builder.getOpMode());
+    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
 
     // lets override the parallelism
     int p = calculateParallelism(parent);
     mapFn.addInputs(inputMap);
-    ComputeConnection connection = builder.getTaskGraphBuilder().addCompute(generateName(
-        "i-flat-map", parent), new IterableFlatMapOp<>(mapFn, isIterable, keyed), p);
+    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
+        addCompute(generateName("i-flat-map", parent),
+            new IterableFlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }

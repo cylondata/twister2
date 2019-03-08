@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.tset.MapTSet;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.SinkTSet;
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.api.tset.TSetBuilder;
+import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class BaseTLink<T> implements TLink<T> {
@@ -38,9 +38,9 @@ public abstract class BaseTLink<T> implements TLink<T> {
   protected List<TBase<?>> children;
 
   /**
-   * The builder to use to building the task graph
+   * The TSet Env used for runtime operations
    */
-  protected TSetBuilder builder;
+  protected TSetEnv tSetEnv;
 
 
   /**
@@ -57,9 +57,9 @@ public abstract class BaseTLink<T> implements TLink<T> {
    */
   protected Config config;
 
-  public BaseTLink(Config cfg, TSetBuilder bldr) {
+  public BaseTLink(Config cfg, TSetEnv tSetEnv) {
     this.children = new ArrayList<>();
-    this.builder = bldr;
+    this.tSetEnv = tSetEnv;
     this.config = cfg;
   }
 
@@ -84,35 +84,35 @@ public abstract class BaseTLink<T> implements TLink<T> {
 
   @Override
   public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    MapTSet<P, T> set = new MapTSet<P, T>(config, builder, this, mapFn);
+    MapTSet<P, T> set = new MapTSet<P, T>(config, tSetEnv, this, mapFn);
     children.add(set);
     return set;
   }
 
   @Override
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, builder, this, mapFn);
+    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, this, mapFn);
     children.add(set);
     return set;
   }
 
   @Override
   public <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
-    IMapTSet<P, T> set = new IMapTSet<>(config, builder, this, mapFn);
+    IMapTSet<P, T> set = new IMapTSet<>(config, tSetEnv, this, mapFn);
     children.add(set);
     return set;
   }
 
   @Override
   public <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, builder, this, mapFn);
+    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, tSetEnv, this, mapFn);
     children.add(set);
     return set;
   }
 
   @Override
   public SinkTSet<T> sink(Sink<T> sink) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, builder, this, sink);
+    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink);
     children.add(sinkTSet);
     return sinkTSet;
   }
