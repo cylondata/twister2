@@ -16,22 +16,21 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.fn.OneToOnePartitioner;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public class TSetPartitionExample extends BaseTSetWorker {
   private static final Logger LOG = Logger.getLogger(TSetPartitionExample.class.getName());
 
   @Override
-  public void execute() {
-    super.execute();
+  public void execute(TSetEnv executionEnv) {
+    super.execute(executionEnv);
 
     // set the parallelism of source to task stage 0
-    TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
+    TSet<int[]> source = executionEnv.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
     TLink<int[]> partition = source.partition(new OneToOnePartitioner<>());
 
@@ -52,9 +51,7 @@ public class TSetPartitionExample extends BaseTSetWorker {
       }
     });
 
-    DataFlowTaskGraph graph = tSetBuilder.build();
-    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, executionPlan);
+    executionEnv.run();
   }
 
 }

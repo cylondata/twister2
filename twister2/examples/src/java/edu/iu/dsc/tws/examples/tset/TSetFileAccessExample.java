@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 
 import edu.iu.dsc.tws.api.tset.TSet;
+import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.fn.OneToOnePartitioner;
 import edu.iu.dsc.tws.api.tset.sink.FileSink;
 import edu.iu.dsc.tws.api.tset.sources.FileSource;
@@ -24,13 +25,11 @@ import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.utils.DataGenerator;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 public class TSetFileAccessExample extends BaseTSetWorker {
   @Override
-  public void execute() {
-    super.execute();
+  public void execute(TSetEnv executionEnv) {
+    super.execute(executionEnv);
 
     String inputDirectory = config.getStringValue(Constants.ARGS_FNAME,
         "/tmp/twister2");
@@ -51,7 +50,7 @@ public class TSetFileAccessExample extends BaseTSetWorker {
       }
     }
 
-    TSet<String> textSource = tSetBuilder.createSource(new FileSource<>(
+    TSet<String> textSource = executionEnv.createSource(new FileSource<>(
         new SharedTextInputPartitioner(new Path(input)))).setParallelism(
             jobParameters.getTaskStages().get(0));
 
@@ -61,8 +60,6 @@ public class TSetFileAccessExample extends BaseTSetWorker {
             new Path(output)))).setParallelism(
                 jobParameters.getTaskStages().get(0));
 
-    DataFlowTaskGraph graph = tSetBuilder.build();
-    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, executionPlan);
+    executionEnv.run();
   }
 }

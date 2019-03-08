@@ -13,15 +13,14 @@ package edu.iu.dsc.tws.examples.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.tset.TSetEnv;
 
 public class TSetKeyedGatherExample extends BaseTSetWorker {
   private static final Logger LOG = Logger.getLogger(TSetKeyedReduceExample.class.getName());
 
   @Override
-  public void execute() {
-    super.execute();
+  public void execute(TSetEnv executionEnv) {
+    super.execute(executionEnv);
 
     // set the parallelism of source to task stage 0
     /*TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
@@ -45,9 +44,7 @@ public class TSetKeyedGatherExample extends BaseTSetWorker {
       }
     });
 */
-    DataFlowTaskGraph graph = tSetBuilder.build();
-    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, executionPlan);
+    executionEnv.run();
   }
 
 }

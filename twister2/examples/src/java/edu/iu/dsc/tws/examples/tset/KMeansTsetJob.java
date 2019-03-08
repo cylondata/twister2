@@ -16,23 +16,28 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.api.tset.CachedTSet;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetBuilder;
+import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
+import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGenerator;
 import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansJobParameters;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class KMeansTsetJob extends TaskWorker implements Serializable {
+public class KMeansTsetJob extends TSetBaseWorker implements Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetJob.class.getName());
 
   @Override
-  public void execute() {
+  public void execute(TSetEnv executionEnv) {
     LOG.log(Level.INFO, "TSet worker starting: " + workerId);
+
+    /**
+     * Setting execution mode
+     */
+    executionEnv.setMode(OperationMode.BATCH);
 
     KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(config);
 
@@ -56,10 +61,9 @@ public class KMeansTsetJob extends TaskWorker implements Serializable {
         throw new RuntimeException("Failed to create input data:", ioe);
       }
     }
-    TSetBuilder builder = TSetBuilder.newBuilder(config);
-    builder.setMode(OperationMode.BATCH);
-    TSet<double[][]> points = builder.createSource(new PointsSource()).cache();
-    TSet<double[][]> centers = builder.createSource(new CenterSource()).cache();
+
+    TSet<double[][]> points = executionEnv.createSource(new PointsSource()).cache();
+    TSet<double[][]> centers = executionEnv.createSource(new CenterSource()).cache();
 
     for (int i = 0; i < iterations; i++) {
       TSet<double[][]> kmeansTSet = ((CachedTSet<double[][]>) points).map(new KMeansMap());

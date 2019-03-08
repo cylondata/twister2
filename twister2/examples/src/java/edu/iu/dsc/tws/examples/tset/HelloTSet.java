@@ -18,25 +18,22 @@ import java.util.HashMap;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetBuilder;
+import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
+import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class HelloTSet extends TaskWorker implements Serializable {
+public class HelloTSet extends TSetBaseWorker implements Serializable {
   private static final long serialVersionUID = -2;
   @Override
-  public void execute() {
-    TSetBuilder builder = TSetBuilder.newBuilder(config);
-    TSet<int[]> source = builder.createSource(new Source<int[]>() {
+  public void execute(TSetEnv executionEnv) {
+    TSet<int[]> source = executionEnv.createSource(new Source<int[]>() {
 
       private int count = 0;
 
@@ -69,12 +66,8 @@ public class HelloTSet extends TaskWorker implements Serializable {
       return false;
     }).setName("sink");
 
-    builder.setMode(OperationMode.BATCH);
-
-    DataFlowTaskGraph graph = builder.build();
-
-    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, executionPlan);
+    executionEnv.setMode(OperationMode.BATCH);
+    executionEnv.run();
   }
 
   public static void main(String[] args) {
