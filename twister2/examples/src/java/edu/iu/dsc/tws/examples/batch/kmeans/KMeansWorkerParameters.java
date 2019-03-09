@@ -16,9 +16,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.dataobjects.DataObjectConstants;
 import edu.iu.dsc.tws.common.config.Config;
 
-public final class KMeansJobParameters {
+public final class KMeansWorkerParameters {
 
-  private static final Logger LOG = Logger.getLogger(KMeansJobParameters.class.getName());
+  private static final Logger LOG = Logger.getLogger(KMeansWorkerParameters.class.getName());
 
   /**
    * Number of Workers
@@ -85,14 +85,14 @@ public final class KMeansJobParameters {
    */
   private String filesystem;
 
-  private KMeansJobParameters(int workers) {
+  private KMeansWorkerParameters(int workers) {
     this.workers = workers;
   }
 
   /**
    * This method is to build the job parameters which is based on the configuration value.
    */
-  public static KMeansJobParameters build(Config cfg) {
+  public static KMeansWorkerParameters build(Config cfg) {
 
     String datapointDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
     String centroidDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
@@ -112,7 +112,7 @@ public final class KMeansJobParameters {
         cfg.getStringValue(DataObjectConstants.ARGS_NUMBER_OF_CLUSTERS));
     boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
 
-    KMeansJobParameters jobParameters = new KMeansJobParameters(workers);
+    KMeansWorkerParameters jobParameters = new KMeansWorkerParameters(workers);
 
     jobParameters.workers = workers;
     jobParameters.dimension = dimension;

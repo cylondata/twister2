@@ -45,9 +45,8 @@ public class DataFileReader {
    * array for the later processing. The size of the two-dimensional array should be equal to the
    * number of clusters and the dimension considered for the clustering process.
    */
-  public double[][] readCentroids(Path path, int dimension) {
-    BufferedReader bufferedReader = null;
-    double[][] centroids;
+  public double[][] readData(Path path, int dimension, int datasize) {
+    double[][] datapoints = new double[datasize][dimension];
     final FileStatus pathFile;
     try {
       final FileSystem fs = path.getFileSystem(config);
@@ -59,30 +58,24 @@ public class DataFileReader {
           this.fdis = fs.open(file.getPath());
         }
       }
-      bufferedReader = new BufferedReader(new InputStreamReader(this.fdis));
-      centroids = new double[4][dimension];
+      BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(this.fdis));
       String line;
       int value = 0;
       while ((line = bufferedReader.readLine()) != null) {
         String[] data = line.split(",");
         for (int i = 0; i < data.length - 1; i++) {
-          centroids[value][i] = Double.parseDouble(data[i].trim());
-          centroids[value][i + 1] = Double.parseDouble(data[i + 1].trim());
+          datapoints[value][i] = Double.parseDouble(data[i].trim());
+          datapoints[value][i + 1] = Double.parseDouble(data[i + 1].trim());
         }
         value++;
       }
+      if (bufferedReader != null) {
+        bufferedReader.close();
+      }
     } catch (IOException ioe) {
       throw new RuntimeException("IO Exception Occured");
-    } finally {
-      try {
-        if (bufferedReader != null) {
-          bufferedReader.close();
-        }
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
     }
-    return centroids;
+    return datapoints;
   }
 }
 

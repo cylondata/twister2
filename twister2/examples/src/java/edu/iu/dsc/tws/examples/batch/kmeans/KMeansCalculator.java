@@ -64,8 +64,6 @@ public class KMeansCalculator {
    * values assigned to the centerSums array object.
    */
   private void findNearestCenter(int dim, double[][] datapoints, double[][] centers) {
-
-    //LOG.info("Datapoints received:"+ datapoints.length + "\t" + Arrays.deepToString(datapoints));
     for (int i = 0; i < datapoints.length; i++) {
       int minimumCentroid = 0;
       double minValue = 0;
