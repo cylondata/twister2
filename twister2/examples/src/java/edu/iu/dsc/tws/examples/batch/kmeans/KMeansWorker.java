@@ -108,7 +108,6 @@ public class KMeansWorker extends TaskWorker {
     DataPartition<Object> dataPointsPartition = dataPointsObject.getPartitions()[0];
     datapoint = workerUtils.getDataPoints(
         workerId, dataPointsPartition, dsize, parallelismValue, dimension);
-    LOG.info("Data Points Value::::" + Arrays.deepToString(datapoint));
 
     /* Second Graph to read the centroids **/
     DataFileSource centroidSourceTask = new DataFileSource();
@@ -128,7 +127,6 @@ public class KMeansWorker extends TaskWorker {
     DataPartition<Object> centroidsDataPartition = centroidsDataObject.getPartitions()[0];
     centroid = workerUtils.getCentroids(
         workerId, centroidsDataPartition, csize, parallelismValue, dimension);
-    LOG.info("Centroids Value::::" + Arrays.deepToString(centroid));
 
     /* Third Graph to do the actual calculation **/
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
