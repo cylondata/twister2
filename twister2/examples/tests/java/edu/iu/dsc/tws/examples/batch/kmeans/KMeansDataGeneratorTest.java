@@ -19,7 +19,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.dataobjects.DataFileReadSource;
-import edu.iu.dsc.tws.api.dataobjects.DataFileReader;
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSink;
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
@@ -34,6 +33,7 @@ import edu.iu.dsc.tws.data.fs.FileStatus;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.data.utils.DataFileReader;
 import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;

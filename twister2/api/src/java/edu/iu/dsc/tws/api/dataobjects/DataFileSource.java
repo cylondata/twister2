@@ -26,9 +26,9 @@ import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class DataObjectSource<T> extends BaseSource {
+public class DataFileSource<T> extends BaseSource {
 
-  private static final Logger LOG = Logger.getLogger(DataObjectSource.class.getName());
+  private static final Logger LOG = Logger.getLogger(DataFileSource.class.getName());
 
   private static final long serialVersionUID = -1L;
 
@@ -38,6 +38,7 @@ public class DataObjectSource<T> extends BaseSource {
   public void execute() {
     LOG.fine("Context Task Index:" + context.taskIndex());
     InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
+    int totalCount = 0;
     while (inputSplit != null) {
       try {
         int count = 0;
@@ -46,6 +47,7 @@ public class DataObjectSource<T> extends BaseSource {
           if (value != null) {
             context.write("direct", value);
             count += 1;
+            totalCount += 1;
           }
         }
         inputSplit = source.getNextSplit(context.taskIndex());
@@ -60,19 +62,18 @@ public class DataObjectSource<T> extends BaseSource {
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
 
-    String datainputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
+    String datainputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
     ExecutionRuntime runtime = (ExecutionRuntime)
         cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
 
+    boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
     if (!shared) {
       this.source = runtime.createInput(cfg, context,
           new LocalFixedInputPartitioner(new Path(datainputDirectory),
               context.getParallelism(), config));
     } else {
       this.source = runtime.createInput(cfg, context,
-          new SharedTextInputPartitioner(new Path(datainputDirectory),
-              context.getParallelism(), config));
+          new SharedTextInputPartitioner(new Path(datainputDirectory)));
     }
   }
 }
