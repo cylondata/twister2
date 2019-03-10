@@ -60,18 +60,12 @@ public class CachedTSet<T> extends BaseTSet<T> {
   }
 
   public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    TSetBuilder cacheBuilder = TSetBuilder.newBuilder(config);
-    cacheBuilder.setMode(tSetEnv.getTSetBuilder().getOpMode());
-    SourceTSet<T> cacheSource = (SourceTSet<T>) cacheBuilder.
-        createSource(new CacheSource(), tSetEnv);
+    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
     return cacheSource.map(mapFn);
   }
 
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    TSetBuilder cacheBuilder = TSetBuilder.newBuilder(config);
-    cacheBuilder.setMode(tSetEnv.getTSetBuilder().getOpMode());
-    SourceTSet<T> cacheSource = (SourceTSet<T>) cacheBuilder.
-        createSource(new CacheSource(), tSetEnv);
+    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
     return cacheSource.flatMap(mapFn);
   }
 
