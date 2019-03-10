@@ -12,8 +12,8 @@
 package edu.iu.dsc.tws.comms.dfw;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
@@ -30,7 +31,7 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-public class RingPartition implements DataFlowOperation {
+public class RingPartition implements DataFlowOperation, ChannelReceiver {
   private static final Logger LOG = Logger.getLogger(RingPartition.class.getName());
 
   /**
@@ -71,7 +72,7 @@ public class RingPartition implements DataFlowOperation {
   /**
    * A map holding workerId to targets
    */
-  private Map<Integer, Set<Integer>> workerToTargets = new HashMap<>();
+  private Map<Integer, List<Integer>> workerToTargets = new HashMap<>();
 
   /**
    * Targets to workers
@@ -82,6 +83,11 @@ public class RingPartition implements DataFlowOperation {
    * The workers for targets, sorted
    */
   private List<Integer> workers;
+
+  /**
+   * The target index to send
+   */
+  private int targetIndex;
 
   /**
    * The next worker to send the data
@@ -149,14 +155,14 @@ public class RingPartition implements DataFlowOperation {
   private void calculateWorkerIdToTargets() {
     for (int t : targets) {
       int worker = taskPlan.getExecutorForChannel(t);
-      Set<Integer> targets;
+      List<Integer> ts;
       if (workerToTargets.containsKey(worker)) {
-        targets = workerToTargets.get(worker);
+        ts = workerToTargets.get(worker);
       } else {
-        targets = new HashSet<>();
+        ts = new ArrayList<>();
       }
-      targets.add(t);
-      workerToTargets.put(worker, targets);
+      ts.add(t);
+      workerToTargets.put(worker, ts);
       targetsToWorkers.put(t, worker);
     }
   }
@@ -178,25 +184,55 @@ public class RingPartition implements DataFlowOperation {
 
   @Override
   public boolean sendPartial(int source, Object message, int flags, int target) {
-    return false;
+    List<Object> messages = merged.get(target);
+    if (message == null) {
+      messages = new ArrayList<>();
+      merged.put(target, messages);
+    }
+
+    if (message instanceof List) {
+      messages.addAll((Collection<?>) message);
+    } else {
+      messages.add(message);
+    }
+
+    return true;
   }
 
   @Override
   public boolean progress() {
+    List<Integer> targets = workerToTargets.get(nextWorker);
+
+    for (int i = targetIndex; i < targets.size(); i++) {
+      delegate.sendMessage(0, null, targets.get(i), 0, new RoutingParameters());
+    }
+
     // now set the things
-
-
     return OperationUtils.progressReceivers(delegate, lock, finalReceiver, partialLock, merger);
   }
 
   @Override
   public void close() {
+    if (merged != null) {
+      merger.close();
+    }
 
+    if (finalReceiver != null) {
+      finalReceiver.close();
+    }
+
+    delegate.close();
   }
 
   @Override
   public void clean() {
+    if (merged != null) {
+      merger.clean();
+    }
 
+    if (finalReceiver != null) {
+      finalReceiver.clean();
+    }
   }
 
   @Override
@@ -235,5 +271,17 @@ public class RingPartition implements DataFlowOperation {
   @Override
   public Set<Integer> getTargets() {
     return targets;
+  }
+
+  @Override
+  public boolean receiveMessage(MessageHeader header, Object object) {
+    return false;
+  }
+
+  @Override
+  public boolean receiveSendInternally(int source, int target, int path,
+
+                                       int flags, Object message) {
+    return false;
   }
 }
