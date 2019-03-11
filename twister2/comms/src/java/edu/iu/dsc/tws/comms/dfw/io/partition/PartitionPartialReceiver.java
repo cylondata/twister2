@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 /**
@@ -119,7 +118,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
       finishedDestinations.put(s, new HashSet<>());
     }
 
-    destinations = ((DataFlowPartition) op).getDestinations();
+    destinations = op.getTargets();
     this.operation = op;
 
     // lists to keep track of messages for destinations

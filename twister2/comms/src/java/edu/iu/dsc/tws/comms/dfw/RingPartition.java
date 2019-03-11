@@ -119,7 +119,7 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
   /**
    * The next worker to send the data
    */
-  private int nextWorkerIndex = 0;
+  private int nextWorkerIndex;
 
   /**
    * The data type
@@ -217,6 +217,12 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
 
     // lets calculate the worker as this worker
     nextWorkerIndex = workers.indexOf(thisWorker);
+
+    // put 0 as the target index
+    Set<Integer> targetWorkers = TaskPlanUtils.getWorkersOfTasks(tPlan, targets);
+    for (int t : targetWorkers) {
+      targetIndex.put(t, 0);
+    }
 
     // lets set the represent source here
     if (sourcesOfThisWorker.size() > 0) {
@@ -325,11 +331,7 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
   public boolean sendPartial(int source, Object message, int flags, int target) {
     swapLock.lock();
     try {
-      List<Object> messages = merged.get(target);
-      if (message == null) {
-        messages = new ArrayList<>();
-        merged.put(target, messages);
-      }
+      List<Object> messages = merged.computeIfAbsent(target, k -> new ArrayList<>());
 
       if (message instanceof List) {
         messages.addAll((Collection<?>) message);
@@ -354,11 +356,16 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
       int target = tgts.get(i);
       swapLock.lock();
       try {
-        List<Object> data = readyToSend.get(target);
-        RoutingParameters parameters = targetRoutes.get(target);
-        if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
-          index = i;
-          break;
+        List<Object> mergedData = merged.get(target);
+        if (mergedData != null && mergedData.size() > 0) {
+          swapToReady(target, mergedData);
+
+          List<Object> data = readyToSend.get(target);
+          RoutingParameters parameters = targetRoutes.get(target);
+          if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
+            index = i;
+            break;
+          }
         }
       } finally {
         swapLock.unlock();
