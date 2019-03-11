@@ -59,7 +59,7 @@ public class KMeansDataGeneratorTest {
 
     int parallelismValue = 2;
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    DataObjectSource sourceTask = new DataObjectSource();
+    DataObjectSource sourceTask = new DataObjectSource("direct");
     DataObjectSink sinkTask = new DataObjectSink();
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
@@ -120,7 +120,7 @@ public class KMeansDataGeneratorTest {
 
     int parallelismValue = 2;
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    DataObjectSource sourceTask = new DataObjectSource();
+    DataObjectSource sourceTask = new DataObjectSource("direct");
     DataObjectSink sinkTask = new DataObjectSink();
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,

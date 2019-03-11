@@ -85,7 +85,7 @@ public class KMeansWorker extends TaskWorker {
     }
 
     /* First Graph to partition and read the partitioned data points **/
-    DataObjectSource sourceTask = new DataObjectSource();
+    DataObjectSource sourceTask = new DataObjectSource("direct");
     DataObjectSink sinkTask = new DataObjectSink();
     taskGraphBuilder.addSource("dsource", sourceTask, parallelismValue);
     ComputeConnection firstGraphComputeConnection = taskGraphBuilder.addSink("dsink", sinkTask,
@@ -94,13 +94,6 @@ public class KMeansWorker extends TaskWorker {
     taskGraphBuilder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph datapointsTaskGraph = taskGraphBuilder.build();
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
-
-    //Sleep to generate the input data in the file system (will be removed)
-    try {
-      Thread.sleep(100);
-    } catch (InterruptedException ie) {
-      throw new RuntimeException("Interuppted:", ie);
-    }
     taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
 
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(
@@ -110,7 +103,7 @@ public class KMeansWorker extends TaskWorker {
         workerId, dataPointsPartition, dsize, parallelismValue, dimension);
 
     /* Second Graph to read the centroids **/
-    DataFileSource centroidSourceTask = new DataFileSource();
+    DataFileSource centroidSourceTask = new DataFileSource("direct");
     DataFileSink centroidSinkTask = new DataFileSink();
     taskGraphBuilder.addSource("csource", centroidSourceTask, parallelismValue);
     ComputeConnection secondGraphComputeConnection = taskGraphBuilder.addSink(
@@ -140,7 +133,7 @@ public class KMeansWorker extends TaskWorker {
     DataFlowTaskGraph kmeansTaskGraph = taskGraphBuilder.build();
 
     //Store datapoints and centroids
-    DataObject<Object> datapoints = new DataObjectImpl<>(config);
+    DataObject<double[][]> datapoints = new DataObjectImpl<>(config);
     DataObject<double[][]> centroids = new DataObjectImpl<>(config);
 
     for (int i = 0; i < iterations; i++) {

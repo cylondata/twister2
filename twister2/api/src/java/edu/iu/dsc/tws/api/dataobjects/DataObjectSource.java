@@ -34,9 +34,23 @@ public class DataObjectSource<T> extends BaseSource {
 
   private DataSource<?, ?> source;
 
+  private String edgeName;
+
+  public DataObjectSource(String edgename) {
+    this.edgeName = edgename;
+  }
+
+  public String getEdgeName() {
+    return edgeName;
+  }
+
+  public void setEdgeName(String edgeName) {
+    this.edgeName = edgeName;
+  }
+
   @Override
   public void execute() {
-    LOG.fine("Context Task Index:" + context.taskIndex());
+    LOG.fine("Context Task Index:" + context.taskIndex() + "\t" + getEdgeName());
     InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
     while (inputSplit != null) {
       try {
@@ -44,7 +58,7 @@ public class DataObjectSource<T> extends BaseSource {
         while (!inputSplit.reachedEnd()) {
           Object value = inputSplit.nextRecord(null);
           if (value != null) {
-            context.write("direct", value);
+            context.write(getEdgeName(), value);
             count += 1;
           }
         }
@@ -53,7 +67,7 @@ public class DataObjectSource<T> extends BaseSource {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
       }
     }
-    context.end("direct");
+    context.end(getEdgeName());
   }
 
   @Override

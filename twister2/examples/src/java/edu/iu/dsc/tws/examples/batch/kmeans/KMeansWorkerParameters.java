@@ -76,11 +76,6 @@ public final class KMeansWorkerParameters {
   private int parallelismValue;
 
   /**
-   * Number of clusters
-   */
-  private int numberOfClusters;
-
-  /**
    * Represents file system "local" or "hdfs"
    */
   private String filesystem;
@@ -108,8 +103,6 @@ public final class KMeansWorkerParameters {
     int iterations = Integer.parseInt(
         cfg.getStringValue(DataObjectConstants.ARGS_ITERATIONS));
     int numFiles = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_NUMBER_OF_FILES));
-    int numberOfClusters = Integer.parseInt(
-        cfg.getStringValue(DataObjectConstants.ARGS_NUMBER_OF_CLUSTERS));
     boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
 
     KMeansWorkerParameters jobParameters = new KMeansWorkerParameters(workers);
@@ -126,13 +119,8 @@ public final class KMeansWorkerParameters {
     jobParameters.shared = shared;
     jobParameters.parallelismValue = parallelismVal;
     jobParameters.filesystem = fileSystem;
-    jobParameters.numberOfClusters = numberOfClusters;
 
     return jobParameters;
-  }
-
-  public int getNumberOfClusters() {
-    return numberOfClusters;
   }
 
   public String getFilesystem() {

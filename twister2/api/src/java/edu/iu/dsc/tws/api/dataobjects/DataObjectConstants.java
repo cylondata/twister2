@@ -26,7 +26,6 @@ public class DataObjectConstants {
   public static final String ARGS_CINPUT_DIRECTORY = "cinput";
   public static final String ARGS_OUTPUT_DIRECTORY = "output";
   public static final String ARGS_NUMBER_OF_FILES = "nFiles";
-  public static final String ARGS_NUMBER_OF_CLUSTERS = "clusters";
   public static final String ARGS_FILE_SYSTEM = "filesys";
   public static final String ARGS_ITERATIONS = "iter";
 }
