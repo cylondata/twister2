@@ -358,7 +358,6 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
       }
 
       onFinishedSources.add(source);
-      return true;
     } else if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
       onFinishedSources.add(source);
     }
