@@ -46,7 +46,7 @@ public class TSetContext {
    * Inputs that are added to a TSet are stored in this
    * map to be passed to functions
    */
-  private Map<String, Object> inputMap;
+  private Map<String, TSet<?>> inputMap;
 
   /**
    * The worker id this tSet instance belongs to
@@ -161,7 +161,7 @@ public class TSetContext {
    *
    * @return the current input map
    */
-  protected Map<String, Object> getInputMap() {
+  protected Map<String, TSet<?>> getInputMap() {
     return inputMap;
   }
 
@@ -170,7 +170,7 @@ public class TSetContext {
    *
    * @param inputMap the map to be set for this context
    */
-  protected void setInputMap(Map<String, Object> inputMap) {
+  protected void setInputMap(Map<String, TSet<?>> inputMap) {
     this.inputMap = inputMap;
   }
 
@@ -179,7 +179,7 @@ public class TSetContext {
    *
    * @param map the map to be added
    */
-  protected void addInputMap(Map<String, Object> map) {
+  protected void addInputMap(Map<String, TSet<?>> map) {
     this.inputMap.putAll(map);
   }
 
@@ -199,7 +199,7 @@ public class TSetContext {
    * @param key the key to be associated with the input object
    * @param data the input object
    */
-  public void addInput(String key, Object data) {
+  public void addInput(String key, TSet<?> data) {
     inputMap.put(key, data);
   }
 

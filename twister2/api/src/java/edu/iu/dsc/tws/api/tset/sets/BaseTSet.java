@@ -49,7 +49,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   /**
    * Map that keeps the input data objects
    */
-  protected Map<String, Object> inputMap;
+  protected Map<String, TSet<?>> inputMap;
 
   /**
    * The TSet Env to use for runtime operations of the Tset
@@ -97,12 +97,6 @@ public abstract class BaseTSet<T> implements TSet<T> {
    * The type of the TSet
    */
   private StateType stateType = StateType.DISTRIBUTED;
-
-//  public BaseTSet(Config cfg, TaskGraphBuilder bldr) {
-//    this.children = new ArrayList<>();
-//    this.builder = bldr;
-//    this.config = cfg;
-//  }
 
   public BaseTSet(Config cfg, TSetEnv tSetEnv) {
     this.children = new ArrayList<>();
