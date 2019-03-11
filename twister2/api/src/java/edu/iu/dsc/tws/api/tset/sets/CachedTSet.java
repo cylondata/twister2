@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.api.tset.sets;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
+import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
@@ -32,14 +34,6 @@ public class CachedTSet<T> extends BaseTSet<T> {
   // todo: This dataobject should bind to the executor, I think! because tsets would not be
   //  visible to the executor
   private DataObject<T> datapoints = null;
-
-//  public CachedTSet(Config cfg, TaskGraphBuilder bldr, BaseTLink<T> prnt) {
-//    super(cfg, bldr);
-//    this.parent = prnt;
-//    this.name = "cache-" + parent.getName();
-//    datapoints = new DataObjectImpl<>(config);
-//
-//  }
 
   public CachedTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<T> prnt) {
     super(cfg, tSetEnv);
@@ -74,6 +68,21 @@ public class CachedTSet<T> extends BaseTSet<T> {
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
     SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
     return cacheSource.flatMap(mapFn);
+  }
+
+  public <P1> IMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
+    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
+    return cacheSource.map(mFn);
+  }
+
+  public <P1> IFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
+    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
+    return cacheSource.flatMap(mFn);
+  }
+
+  public SinkTSet<T> sink(Sink<T> sink) {
+    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
+    return cacheSource.sink(sink);
   }
 
   @Override

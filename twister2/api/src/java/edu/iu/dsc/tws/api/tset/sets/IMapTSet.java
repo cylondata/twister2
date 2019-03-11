@@ -13,10 +13,15 @@
 package edu.iu.dsc.tws.api.tset.sets;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.tset.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
+import edu.iu.dsc.tws.api.tset.MapFunction;
+import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.IterableMapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
@@ -30,6 +35,47 @@ public class IMapTSet<T, P> extends BaseTSet<T> {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
+  }
+
+  public <P1> MapTSet<P1, T> map(MapFunction<T, P1> mFn) {
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+    children.add(direct);
+    MapTSet<P1, T> set = new MapTSet<P1, T>(config, tSetEnv, direct, mFn);
+    children.add(set);
+    return set;
+  }
+
+  public <P1> FlatMapTSet<P1, T> flatMap(FlatMapFunction<T, P1> mFn) {
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+    children.add(direct);
+    FlatMapTSet<P1, T> set = new FlatMapTSet<P1, T>(config, tSetEnv, direct, mFn);
+    children.add(set);
+    return set;
+  }
+
+  public <P1> IMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+    children.add(direct);
+    IMapTSet<P1, T> set = new IMapTSet<>(config, tSetEnv, direct, mFn);
+    children.add(set);
+    return set;
+  }
+
+  public <P1> IFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+    children.add(direct);
+    IFlatMapTSet<P1, T> set = new IFlatMapTSet<>(config, tSetEnv, direct, mFn);
+    children.add(set);
+    return set;
+  }
+
+  public SinkTSet<T> sink(Sink<T> sink) {
+    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+    children.add(direct);
+    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, direct, sink);
+    children.add(sinkTSet);
+    tSetEnv.run();
+    return sinkTSet;
   }
 
   @SuppressWarnings("unchecked")
