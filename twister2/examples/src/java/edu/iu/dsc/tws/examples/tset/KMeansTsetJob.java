@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGenerator;
@@ -62,14 +63,17 @@ public class KMeansTsetJob extends TSetBaseWorker implements Serializable {
       }
     }
 
+    //TODO: consider what happens when same execEnv is used to create multiple graphs
     TSet<double[][]> points = executionEnv.createSource(new PointsSource()).cache();
     TSet<double[][]> centers = executionEnv.createSource(new CenterSource()).cache();
 
     for (int i = 0; i < iterations; i++) {
       TSet<double[][]> kmeansTSet = ((CachedTSet<double[][]>) points).map(new KMeansMap());
       kmeansTSet.addInput("centers", centers);
-
+      TLink<double[][]> reduced = kmeansTSet.allReduce((t1, t2) -> t1);
+      centers = reduced.map(new AverageCenters());
     }
+
   }
 
   public class KMeansMap implements MapFunction<double[][], double[][]> {
@@ -78,6 +82,14 @@ public class KMeansTsetJob extends TSetBaseWorker implements Serializable {
     public double[][] map(double[][] doubles) {
       Object centers = CONTEXT.getInput("");
 
+      return new double[0][];
+    }
+  }
+
+  private class AverageCenters implements MapFunction<double[][], double[][]> {
+
+    @Override
+    public double[][] map(double[][] doubles) {
       return new double[0][];
     }
   }
