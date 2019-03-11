@@ -13,13 +13,18 @@ package edu.iu.dsc.tws.comms.dfw;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -28,6 +33,13 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
+import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
@@ -38,6 +50,11 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
    * Locally merged results
    */
   private Map<Integer, List<Object>> merged = new HashMap<>();
+
+  /**
+   * The data ready to be sent
+   */
+  private Map<Integer, List<Object>> readyToSend = new HashMap<>();
 
   /**
    * This is the local merger
@@ -80,19 +97,29 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
   private Map<Integer, Integer> targetsToWorkers = new HashMap<>();
 
   /**
+   * The target routes
+   */
+  private Map<Integer, RoutingParameters> targetRoutes = new HashMap<>();
+
+  /**
    * The workers for targets, sorted
    */
   private List<Integer> workers;
 
   /**
-   * The target index to send
+   * This worker id
    */
-  private int targetIndex;
+  private int thisWorker;
+
+  /**
+   * The target index to send for each worker
+   */
+  private Map<Integer, Integer> targetIndex = new HashMap<>();
 
   /**
    * The next worker to send the data
    */
-  private int nextWorker;
+  private int nextWorkerIndex = 0;
 
   /**
    * The data type
@@ -114,6 +141,37 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
    */
   private Set<Integer> targets;
 
+  /**
+   * The source representing this
+   */
+  private int representSource;
+
+  /**
+   * Weather keyed operation
+   */
+  private boolean isKeyed;
+
+  /**
+   * Lock the data strcutures while swapping
+   */
+  private Lock swapLock = new ReentrantLock();
+
+  /**
+   * Create a ring partition communication
+   *
+   * @param cfg configuration
+   * @param channel channel
+   * @param tPlan task plan
+   * @param sources sources
+   * @param targets targets
+   * @param finalRcvr final receiver
+   * @param partialRcvr partial receiver
+   * @param dType data type
+   * @param rcvType receive data type
+   * @param kType key data type
+   * @param rcvKType receive key type
+   * @param edge the edge
+   */
   public RingPartition(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> sources,
                            Set<Integer> targets, MessageReceiver finalRcvr,
                            MessageReceiver partialRcvr,
@@ -126,6 +184,8 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
     this.keyType = kType;
     this.sources = sources;
     this.targets = targets;
+    // this worker
+    this.thisWorker = tPlan.getThisExecutor();
 
     // get the tasks of this executor
     Set<Integer> targetsOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, targets);
@@ -148,8 +208,71 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
     // now calculate the worker id to target mapping
     calculateWorkerIdToTargets();
 
+    // calculate the workers
+    workers = new ArrayList<>(workerToTargets.keySet());
+    Collections.sort(workers);
+
+    // calculate the routes
+    calculateRoutingParameters();
+
+    // lets calculate the worker as this worker
+    nextWorkerIndex = workers.indexOf(thisWorker);
+
+    // lets set the represent source here
+    if (sourcesOfThisWorker.size() > 0) {
+      representSource = sourcesOfThisWorker.iterator().next();
+    }
+
+    if (keyType != null) {
+      isKeyed = true;
+    }
+
+    // calculate the workers from we are receiving
+    Set<Integer> receiveWorkers = TaskPlanUtils.getWorkersOfTasks(tPlan, sources);
+    receiveWorkers.remove(taskPlan.getThisExecutor());
+
+    Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
+        new HashMap<>();
+    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
+        = new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
+    Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
+
+    for (int s : sources) {
+      // later look at how not to allocate pairs for this each time
+      pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
+          DataFlowContext.sendPendingMax(cfg)));
+      if (isKeyed) {
+        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(), thisWorker,
+            keyType, dataType));
+      } else {
+        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), thisWorker, dataType));
+      }
+    }
+
+    int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
+    int receiveExecutorsSize = receiveWorkers.size();
+    if (receiveExecutorsSize == 0) {
+      receiveExecutorsSize = 1;
+    }
+    for (int ex : receiveWorkers) {
+      int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
+      pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
+      pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
+      if (isKeyed) {
+        deSerializerMap.put(ex, new UnifiedKeyDeSerializer(new KryoSerializer(),
+            thisWorker, keyType, dataType));
+      } else {
+        deSerializerMap.put(ex, new UnifiedDeserializer(
+            new KryoSerializer(), thisWorker, dataType));
+      }
+    }
     // create the delegate
     this.delegate = new ChannelDataFlowOperation(channel);
+    this.delegate.init(cfg, dataType, rcvType, kType, rcvKType, tPlan, edge, receiveWorkers,
+        this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
   }
 
   private void calculateWorkerIdToTargets() {
@@ -164,6 +287,22 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
       ts.add(t);
       workerToTargets.put(worker, ts);
       targetsToWorkers.put(t, worker);
+    }
+  }
+
+  private void calculateRoutingParameters() {
+    this.targetRoutes = new HashMap<>();
+    for (int t : targets) {
+      RoutingParameters routingParameters = new RoutingParameters();
+
+      Integer worker = targetsToWorkers.get(t);
+      if (worker != thisWorker) {
+        routingParameters.addExternalRoute(worker);
+      } else {
+        routingParameters.addInteranlRoute(worker);
+      }
+
+      targetRoutes.put(t, routingParameters);
     }
   }
 
@@ -184,31 +323,61 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean sendPartial(int source, Object message, int flags, int target) {
-    List<Object> messages = merged.get(target);
-    if (message == null) {
-      messages = new ArrayList<>();
-      merged.put(target, messages);
-    }
+    swapLock.lock();
+    try {
+      List<Object> messages = merged.get(target);
+      if (message == null) {
+        messages = new ArrayList<>();
+        merged.put(target, messages);
+      }
 
-    if (message instanceof List) {
-      messages.addAll((Collection<?>) message);
-    } else {
-      messages.add(message);
+      if (message instanceof List) {
+        messages.addAll((Collection<?>) message);
+      } else {
+        messages.add(message);
+      }
+    } finally {
+      swapLock.unlock();
     }
-
     return true;
   }
 
   @Override
   public boolean progress() {
-    List<Integer> targets = workerToTargets.get(nextWorker);
+    int worker = workers.get(nextWorkerIndex);
+    List<Integer> tgts = workerToTargets.get(worker);
 
-    for (int i = targetIndex; i < targets.size(); i++) {
-      delegate.sendMessage(0, null, targets.get(i), 0, new RoutingParameters());
+    // we need to send starting from the previosu
+    int i;
+    int index = targetIndex.get(worker);
+    for (i = index; i < tgts.size(); i++) {
+      int target = tgts.get(i);
+      swapLock.lock();
+      try {
+        List<Object> data = readyToSend.get(target);
+        RoutingParameters parameters = targetRoutes.get(target);
+        if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
+          index = i;
+          break;
+        }
+      } finally {
+        swapLock.unlock();
+      }
     }
+
+    // if we have sent everything reset to 0 and move onto next worker index
+    if (i == tgts.size()) {
+      index = 0;
+      incrementWorkerIndex();
+    }
+    targetIndex.put(nextWorkerIndex, index);
 
     // now set the things
     return OperationUtils.progressReceivers(delegate, lock, finalReceiver, partialLock, merger);
+  }
+
+  private void incrementWorkerIndex() {
+    nextWorkerIndex = (nextWorkerIndex + 1) % workers.size();
   }
 
   @Override
@@ -275,13 +444,24 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean receiveMessage(MessageHeader header, Object object) {
-    return false;
+    return finalReceiver.onMessage(header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
+        header.getDestinationIdentifier(), header.getFlags(), object);
   }
 
   @Override
   public boolean receiveSendInternally(int source, int target, int path,
 
                                        int flags, Object message) {
-    return false;
+    return finalReceiver.onMessage(source, 0, target, flags, message);
+  }
+
+  private void swapToReady(int target, List<Object> data) {
+    if (!readyToSend.containsKey(target)) {
+      readyToSend.put(target, new ArrayList<>(data));
+    } else {
+      List<Object> ready = readyToSend.get(target);
+      ready.addAll(data);
+    }
+    data.clear();
   }
 }
