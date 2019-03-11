@@ -29,12 +29,12 @@ public final class TSetUtils {
   private TSetUtils() {
   }
 
-  static <T> boolean isKeyedInput(BaseTLink<T> parent) {
+  public static <T> boolean isKeyedInput(BaseTLink<T> parent) {
     return parent instanceof KeyedGatherTLink || parent instanceof KeyedReduceTLink
         || parent instanceof KeyedPartitionTLink;
   }
 
-  static <T> boolean isIterableInput(BaseTLink<T> parent, OperationMode mode) {
+  public static <T> boolean isIterableInput(BaseTLink<T> parent, OperationMode mode) {
     if (mode == OperationMode.STREAMING) {
       if (parent instanceof ReduceTLink) {
         return false;

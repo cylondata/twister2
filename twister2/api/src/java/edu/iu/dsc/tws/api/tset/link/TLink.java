@@ -12,16 +12,16 @@
 package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.IFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.IMapTSet;
 import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
-import edu.iu.dsc.tws.api.tset.MapTSet;
 import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.SinkTSet;
 import edu.iu.dsc.tws.api.tset.TBase;
+import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IFlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.MapTSet;
+import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 
 /**
  * Link represents the connections between data Links.

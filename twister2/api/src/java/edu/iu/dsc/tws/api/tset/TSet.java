@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
 import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
 
 /**
  * Twister data set.

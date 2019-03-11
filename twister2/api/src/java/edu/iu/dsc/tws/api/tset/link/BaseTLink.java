@@ -17,17 +17,17 @@ import java.util.List;
 import com.google.common.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.IFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.IMapTSet;
 import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
-import edu.iu.dsc.tws.api.tset.MapTSet;
 import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.SinkTSet;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IFlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.MapTSet;
+import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class BaseTLink<T> implements TLink<T> {
@@ -114,6 +114,7 @@ public abstract class BaseTLink<T> implements TLink<T> {
   public SinkTSet<T> sink(Sink<T> sink) {
     SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink);
     children.add(sinkTSet);
+    tSetEnv.run();
     return sinkTSet;
   }
 
