@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -28,6 +29,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -157,6 +159,21 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
   private Lock swapLock = new ReentrantLock();
 
   /**
+   * we have sent to these destinations
+   */
+  private Map<Integer, Set<Integer>> finishedDestinations = new HashMap<>();
+
+  /**
+   * These sources called onFinished
+   */
+  private Set<Integer> onFinishedSources = new HashSet<>();
+
+  /**
+   * Sources of this worker
+   */
+  private Set<Integer> thisWorkerSources = new HashSet<>();
+
+  /**
    * Create a ring partition communication
    *
    * @param cfg configuration
@@ -199,7 +216,7 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
 
     // final receivers ids
     Map<Integer, List<Integer>> finalExpectedIds = new HashMap<>();
-    for (int target : targets) {
+    for (int target : targetsOfThisWorker) {
       finalExpectedIds.put(target, new ArrayList<>(sources));
     }
     // initialize the final receiver
@@ -231,6 +248,11 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
 
     if (keyType != null) {
       isKeyed = true;
+    }
+
+    thisWorkerSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
+    for (int s : thisWorkerSources) {
+      finishedDestinations.put(s, new HashSet<>());
     }
 
     // calculate the workers from we are receiving
@@ -303,10 +325,11 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
 
       Integer worker = targetsToWorkers.get(t);
       if (worker != thisWorker) {
-        routingParameters.addExternalRoute(worker);
+        routingParameters.addExternalRoute(t);
       } else {
-        routingParameters.addInteranlRoute(worker);
+        routingParameters.addInteranlRoute(t);
       }
+      routingParameters.setDestinationId(t);
 
       targetRoutes.put(t, routingParameters);
     }
@@ -324,6 +347,22 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean send(int source, Object message, int flags, int target) {
+    if ((flags & MessageFlags.END) == MessageFlags.END) {
+      swapLock.lock();
+      try {
+        for (Map.Entry<Integer, List<Object>> e : merged.entrySet()) {
+          swapToReady(e.getKey(), e.getValue());
+        }
+      } finally {
+        swapLock.unlock();
+      }
+
+      onFinishedSources.add(source);
+      return true;
+    } else if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
+      onFinishedSources.add(source);
+    }
+
     return merger.onMessage(source, 0, target, flags, message);
   }
 
@@ -359,12 +398,17 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
         List<Object> mergedData = merged.get(target);
         if (mergedData != null && mergedData.size() > 0) {
           swapToReady(target, mergedData);
+        }
 
-          List<Object> data = readyToSend.get(target);
+        List<Object> data = readyToSend.get(target);
+        if (data != null && data.size() > 0) {
           RoutingParameters parameters = targetRoutes.get(target);
+          LOG.info(() -> String.format("%d sending to %d %s", thisWorker, target, parameters));
           if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
             index = i;
             break;
+          } else {
+            readyToSend.remove(target);
           }
         }
       } finally {
@@ -379,8 +423,28 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
     }
     targetIndex.put(nextWorkerIndex, index);
 
+    if (delegate.isComplete() && onFinishedSources.equals(thisWorkerSources)
+        && readyToSend.isEmpty()) {
+      for (int source : thisWorkerSources) {
+        Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
+        for (int dest : targets) {
+          if (!finishedDestPerSource.contains(dest)) {
+            if (delegate.sendMessage(source, new byte[1], dest,
+                MessageFlags.END, targetRoutes.get(dest))) {
+              finishedDestPerSource.add(dest);
+            } else {
+              // no point in going further
+              break;
+            }
+          }
+        }
+      }
+    }
+
     // now set the things
-    return OperationUtils.progressReceivers(delegate, lock, finalReceiver, partialLock, merger);
+    boolean needProgress = OperationUtils.progressReceivers(delegate, lock,
+        finalReceiver, partialLock, merger);
+    return needProgress;
   }
 
   private void incrementWorkerIndex() {
@@ -470,5 +534,10 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
       ready.addAll(data);
     }
     data.clear();
+  }
+
+  @Override
+  public boolean isDelegateComplete() {
+    return delegate.isComplete();
   }
 }
