@@ -71,7 +71,7 @@ public class KMeansTsetJob extends TSetBaseWorker implements Serializable {
       TSet<double[][]> kmeansTSet = ((CachedTSet<double[][]>) points).map(new KMeansMap());
       kmeansTSet.addInput("centers", centers);
       TLink<double[][]> reduced = kmeansTSet.allReduce((t1, t2) -> t1);
-      centers = reduced.map(new AverageCenters());
+      centers = reduced.map(new AverageCenters()).cache();
     }
 
   }
