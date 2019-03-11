@@ -19,10 +19,10 @@ public abstract class TSetBaseWorker extends TaskWorker implements Serializable 
 
   @Override
   public void execute() {
-    TSetEnv execEnv = new TSetEnv(this.config, this.taskExecutor);
-    execute(execEnv);
+    TwisterContext tc = new TwisterContext(this.config, this.taskExecutor);
+    execute(tc);
   }
 
-  public abstract void execute(TSetEnv executionEnv);
+  public abstract void execute(TwisterContext tc);
 }
 

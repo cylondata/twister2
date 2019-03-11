@@ -31,6 +31,13 @@ public class TSetEnv {
     this.tSetBuilder = TSetBuilder.newBuilder(config);
   }
 
+  public TSetEnv(Config config, TaskExecutor taskExecutor, OperationMode mode) {
+    this.config = config;
+    this.taskExecutor = taskExecutor;
+    this.tSetBuilder = TSetBuilder.newBuilder(config);
+    this.tSetBuilder.setMode(mode);
+  }
+
   public Config getConfig() {
     return config;
   }
