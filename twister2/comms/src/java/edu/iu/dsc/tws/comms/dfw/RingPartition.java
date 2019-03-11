@@ -403,7 +403,6 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
         List<Object> data = readyToSend.get(target);
         if (data != null && data.size() > 0) {
           RoutingParameters parameters = targetRoutes.get(target);
-          LOG.info(() -> String.format("%d sending to %d %s", thisWorker, target, parameters));
           if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
             index = i;
             break;
