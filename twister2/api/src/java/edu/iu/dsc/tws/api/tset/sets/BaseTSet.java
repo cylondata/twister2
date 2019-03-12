@@ -121,7 +121,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   @Override
-  public TSet<T> setName(String n) {
+  public BaseTSet<T> setName(String n) {
     this.name = n;
     return this;
   }

@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
+import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
@@ -88,7 +89,7 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
 
   @Override
   public void buildConnection(ComputeConnection connection) {
-
+    throw new IllegalStateException("Build connections should not be called on a TSet");
   }
 
   @Override
@@ -101,6 +102,18 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
     int curr = datapoints.getPartitionCount();
     datapoints.addPartition(new EntityPartition<T>(curr, value)); //
     return false;
+  }
+
+  @Override
+  public CachedTSet<T> setParallelism(int parallelism) {
+    this.parallel = parallelism;
+    return this;
+  }
+
+  @Override
+  public CachedTSet<T> setName(String n) {
+    this.name = n;
+    return this;
   }
 
   private class CacheSink implements Sink<T> {

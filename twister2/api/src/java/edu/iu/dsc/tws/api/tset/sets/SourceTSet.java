@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
+import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
@@ -86,5 +87,18 @@ public class SourceTSet<T> extends BaseTSet<T> {
 
   @Override
   public void buildConnection(ComputeConnection connection) {
+    throw new IllegalStateException("Build connections should not be called on a TSet");
+  }
+
+  @Override
+  public SourceTSet<T> setParallelism(int parallelism) {
+    this.parallel = parallelism;
+    return this;
+  }
+
+  @Override
+  public SourceTSet<T> setName(String n) {
+    this.name = n;
+    return this;
   }
 }

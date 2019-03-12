@@ -16,6 +16,7 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
+import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.link.KeyedGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
@@ -70,5 +71,18 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
 
   @Override
   public void buildConnection(ComputeConnection connection) {
+    throw new IllegalStateException("Build connections should not be called on a TSet");
+  }
+
+  @Override
+  public GroupedTSet<T, K> setParallelism(int parallelism) {
+    this.parallel = parallelism;
+    return this;
+  }
+
+  @Override
+  public GroupedTSet<T, K> setName(String n) {
+    this.name = n;
+    return this;
   }
 }

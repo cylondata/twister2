@@ -12,12 +12,15 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
+import java.util.Map;
+
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
+import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
@@ -93,6 +96,18 @@ public class MapTSet<T, P> extends BaseTSet<T> {
 
   @Override
   public void buildConnection(ComputeConnection connection) {
+    throw new IllegalStateException("Build connections should not be called on a TSet");
+  }
 
+  @Override
+  public MapTSet<T, P> setParallelism(int parallelism) {
+    this.parallel = parallelism;
+    return this;
+  }
+
+  @Override
+  public MapTSet<T, P> setName(String n) {
+    this.name = n;
+    return this;
   }
 }
