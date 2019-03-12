@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TwisterContext;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGenerator;
 import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansJobParameters;
@@ -49,7 +49,7 @@ public class KMeansTsetEnvJob extends TSetBaseWorker implements Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetEnvJob.class.getName());
 
   @Override
-  public void execute(TSetEnv executionEnv) {
+  public void execute(TwisterContext tc) {
     LOG.log(Level.INFO, "TSet worker starting: " + workerId);
 
     KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(config);
@@ -67,19 +67,17 @@ public class KMeansTsetEnvJob extends TSetBaseWorker implements Serializable {
     if (workerId == 0) {
       try {
         KMeansDataGenerator.generateData("txt", new Path(dinputDirectory), numFiles, dsize,
-            100, dimension, executionEnv.getConfig());
+            100, dimension, tc.getConfig());
         KMeansDataGenerator.generateData("txt", new Path(cinputDirectory), numFiles, csize,
-            100, dimension, executionEnv.getConfig());
+            100, dimension, tc.getConfig());
       } catch (IOException ioe) {
         throw new RuntimeException("Failed to create input data:", ioe);
       }
     }
 //    TSetBuilder builder = TSetBuilder.newBuilder(config);
-    executionEnv.setMode(OperationMode.BATCH);
-    TSet<double[][]> points = executionEnv.createSource(new PointsSource()).cache();
-//    TSet<double[][]> centers = executionEnv.createSource(new CenterSource()).cache();
-
-    executionEnv.run();
+    tc.setMode(OperationMode.BATCH);
+    TSet<double[][]> points = tc.createSource(new PointsSource()).cache();
+//    TSet<double[][]> centers = tc.createSource(new CenterSource()).cache();
 
 
 //    for (int i = 0; i < iterations; i++) {

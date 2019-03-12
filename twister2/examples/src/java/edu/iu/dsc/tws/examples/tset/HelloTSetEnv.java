@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TwisterContext;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.common.config.Config;
@@ -45,8 +45,8 @@ public class HelloTSetEnv extends TSetBaseWorker implements Serializable {
   private static final long serialVersionUID = -2;
 
   @Override
-  public void execute(TSetEnv executionEnv) {
-    TSet<int[]> source = executionEnv.createSource(new Source<int[]>() {
+  public void execute(TwisterContext tc) {
+    TSet<int[]> source = tc.createSource(new Source<int[]>() {
       private static final long serialVersionUID = -1;
 
       private int count = 0;
@@ -86,8 +86,6 @@ public class HelloTSetEnv extends TSetBaseWorker implements Serializable {
       System.out.println(Arrays.toString(value));
       return false;
     });
-
-    executionEnv.run();
   }
 
   public static void main(String[] args) {

@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TwisterContext;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.common.config.Config;
@@ -32,8 +32,8 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 public class HelloTSet extends TSetBaseWorker implements Serializable {
   private static final long serialVersionUID = -2;
   @Override
-  public void execute(TSetEnv executionEnv) {
-    TSet<int[]> source = executionEnv.createSource(new Source<int[]>() {
+  public void execute(TwisterContext tc) {
+    TSet<int[]> source = tc.createSource(new Source<int[]>() {
 
       private int count = 0;
 
@@ -47,7 +47,7 @@ public class HelloTSet extends TSetBaseWorker implements Serializable {
         count++;
         return new int[]{1, 1, 1};
       }
-    }).setName("Source");
+    }, OperationMode.BATCH).setName("Source");
 
     TLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>()).setName("part");
     TSet<int[]> mapedPartition =
@@ -65,9 +65,6 @@ public class HelloTSet extends TSetBaseWorker implements Serializable {
       System.out.println(Arrays.toString(value));
       return false;
     }).setName("sink");
-
-    executionEnv.setMode(OperationMode.BATCH);
-    executionEnv.run();
   }
 
   public static void main(String[] args) {

@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.examples.tset;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TwisterContext;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
@@ -23,11 +23,11 @@ public class TSetAllReduceExample extends BaseTSetWorker {
   private static final Logger LOG = Logger.getLogger(TSetAllReduceExample.class.getName());
 
   @Override
-  public void execute(TSetEnv executionEnv) {
-    super.execute(executionEnv);
+  public void execute(TwisterContext tc) {
+    super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    TSet<int[]> source = executionEnv.createSource(new BaseSource()).setName("Source").
+    TSet<int[]> source = tc.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
     TLink<int[]> reduce = source.allReduce((t1, t2) -> {
       int[] val = new int[t1.length];
@@ -46,8 +46,6 @@ public class TSetAllReduceExample extends BaseTSetWorker {
       }
       return true;
     });
-
-    executionEnv.run();
   }
 
 }

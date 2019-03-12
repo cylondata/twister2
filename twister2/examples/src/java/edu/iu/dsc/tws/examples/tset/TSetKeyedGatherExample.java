@@ -13,14 +13,14 @@ package edu.iu.dsc.tws.examples.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TwisterContext;
 
 public class TSetKeyedGatherExample extends BaseTSetWorker {
   private static final Logger LOG = Logger.getLogger(TSetKeyedReduceExample.class.getName());
 
   @Override
-  public void execute(TSetEnv executionEnv) {
-    super.execute(executionEnv);
+  public void execute(TwisterContext tc) {
+    super.execute(tc);
 
     // set the parallelism of source to task stage 0
     /*TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
@@ -44,7 +44,6 @@ public class TSetKeyedGatherExample extends BaseTSetWorker {
       }
     });
 */
-    executionEnv.run();
   }
 
 }

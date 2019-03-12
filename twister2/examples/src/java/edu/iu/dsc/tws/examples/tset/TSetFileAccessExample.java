@@ -15,7 +15,7 @@ import java.io.File;
 import java.io.IOException;
 
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TwisterContext;
 import edu.iu.dsc.tws.api.tset.fn.OneToOnePartitioner;
 import edu.iu.dsc.tws.api.tset.sink.FileSink;
 import edu.iu.dsc.tws.api.tset.sources.FileSource;
@@ -28,8 +28,8 @@ import edu.iu.dsc.tws.examples.utils.DataGenerator;
 
 public class TSetFileAccessExample extends BaseTSetWorker {
   @Override
-  public void execute(TSetEnv executionEnv) {
-    super.execute(executionEnv);
+  public void execute(TwisterContext tc) {
+    super.execute(tc);
 
     String inputDirectory = config.getStringValue(Constants.ARGS_FNAME,
         "/tmp/twister2");
@@ -50,7 +50,7 @@ public class TSetFileAccessExample extends BaseTSetWorker {
       }
     }
 
-    TSet<String> textSource = executionEnv.createSource(new FileSource<>(
+    TSet<String> textSource = tc.createSource(new FileSource<>(
         new SharedTextInputPartitioner(new Path(input)))).setParallelism(
             jobParameters.getTaskStages().get(0));
 
@@ -59,7 +59,5 @@ public class TSetFileAccessExample extends BaseTSetWorker {
             FileSystem.WriteMode.OVERWRITE,
             new Path(output)))).setParallelism(
                 jobParameters.getTaskStages().get(0));
-
-    executionEnv.run();
   }
 }

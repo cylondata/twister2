@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TwisterContext;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
@@ -36,19 +36,19 @@ public class BaseTSetWorker extends TSetBaseWorker implements Serializable {
   protected static ExperimentData experimentData;
 
   @Override
-  public void execute(TSetEnv executionEnv) {
+  public void execute(TwisterContext tc) {
     jobParameters = JobParameters.build(config);
 
     experimentData = new ExperimentData();
     experimentData.setTaskStages(jobParameters.getTaskStages());
     if (jobParameters.isStream()) {
-      executionEnv.setMode(OperationMode.STREAMING);
+      tc.setMode(OperationMode.STREAMING);
       experimentData.setOperationMode(OperationMode.STREAMING);
       //streaming application doesn't consider iteration as a looping of the action on the
       //same data set. It's rather producing an streaming of data
       experimentData.setIterations(1);
     } else {
-      executionEnv.setMode(OperationMode.BATCH);
+      tc.setMode(OperationMode.BATCH);
       experimentData.setOperationMode(OperationMode.BATCH);
       experimentData.setIterations(jobParameters.getIterations());
     }

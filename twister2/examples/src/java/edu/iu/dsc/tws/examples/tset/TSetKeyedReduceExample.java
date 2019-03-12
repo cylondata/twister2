@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TwisterContext;
 import edu.iu.dsc.tws.api.tset.fn.IdentitySelector;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.link.TLink;
@@ -27,11 +27,11 @@ public class TSetKeyedReduceExample extends BaseTSetWorker {
   private static final Logger LOG = Logger.getLogger(TSetKeyedReduceExample.class.getName());
 
   @Override
-  public void execute(TSetEnv executionEnv) {
-    super.execute(executionEnv);
+  public void execute(TwisterContext tc) {
+    super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    TSet<int[]> source = executionEnv.createSource(new BaseSource()).setName("Source").
+    TSet<int[]> source = tc.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
     TLink<int[]> reduce = source.groupBy(new LoadBalancePartitioner<>(), new IdentitySelector<>()).
         keyedReduce((t1, t2) -> {
@@ -58,8 +58,6 @@ public class TSetKeyedReduceExample extends BaseTSetWorker {
       public void prepare(TSetContext context) {
       }
     });
-
-    executionEnv.run();
   }
 
 }
