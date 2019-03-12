@@ -13,13 +13,13 @@ package edu.iu.dsc.tws.examples.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.TwisterContext;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 
-public class TSetKeyedGatherExample extends BaseTSetWorker {
+public class TSetKeyedGatherExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetKeyedReduceExample.class.getName());
 
   @Override
-  public void execute(TwisterContext tc) {
+  public void execute(TwisterBatchContext tc) {
     super.execute(tc);
 
     // set the parallelism of source to task stage 0

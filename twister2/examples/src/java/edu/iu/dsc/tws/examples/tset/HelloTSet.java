@@ -21,18 +21,17 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
-import edu.iu.dsc.tws.api.tset.TwisterContext;
+import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class HelloTSet extends TSetBaseWorker implements Serializable {
+public class HelloTSet extends TSetBatchWorker implements Serializable {
   private static final long serialVersionUID = -2;
   @Override
-  public void execute(TwisterContext tc) {
+  public void execute(TwisterBatchContext tc) {
     TSet<int[]> source = tc.createSource(new Source<int[]>() {
 
       private int count = 0;
@@ -47,7 +46,7 @@ public class HelloTSet extends TSetBaseWorker implements Serializable {
         count++;
         return new int[]{1, 1, 1};
       }
-    }, OperationMode.BATCH).setName("Source");
+    }).setName("Source");
 
     TLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>()).setName("part");
     TSet<int[]> mapedPartition =

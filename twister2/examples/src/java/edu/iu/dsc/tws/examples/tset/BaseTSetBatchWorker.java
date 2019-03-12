@@ -27,8 +27,8 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 /**
  * We need to keep variable static as this class is serialized
  */
-public class BaseTSetWorker extends TSetBatchWorker implements Serializable {
-  private static final Logger LOG = Logger.getLogger(BaseTSetWorker.class.getName());
+public class BaseTSetBatchWorker extends TSetBatchWorker implements Serializable {
+  private static final Logger LOG = Logger.getLogger(BaseTSetBatchWorker.class.getName());
 
   protected static JobParameters jobParameters;
 
@@ -42,13 +42,9 @@ public class BaseTSetWorker extends TSetBatchWorker implements Serializable {
     experimentData = new ExperimentData();
     experimentData.setTaskStages(jobParameters.getTaskStages());
     if (jobParameters.isStream()) {
-      tc.setMode(OperationMode.STREAMING);
-      experimentData.setOperationMode(OperationMode.STREAMING);
-      //streaming application doesn't consider iteration as a looping of the action on the
-      //same data set. It's rather producing an streaming of data
-      experimentData.setIterations(1);
+      throw new IllegalStateException("This worker does not support streaming, Please use"
+          + "TSetStreamingWorker instead");
     } else {
-      tc.setMode(OperationMode.BATCH);
       experimentData.setOperationMode(OperationMode.BATCH);
       experimentData.setIterations(jobParameters.getIterations());
     }

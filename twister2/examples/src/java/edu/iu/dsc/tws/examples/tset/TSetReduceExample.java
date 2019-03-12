@@ -14,16 +14,16 @@ package edu.iu.dsc.tws.examples.tset;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TwisterContext;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
-public class TSetReduceExample extends BaseTSetWorker {
+public class TSetReduceExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetReduceExample.class.getName());
 
   @Override
-  public void execute(TwisterContext tc) {
+  public void execute(TwisterBatchContext tc) {
     super.execute(tc);
 
     // set the parallelism of source to task stage 0

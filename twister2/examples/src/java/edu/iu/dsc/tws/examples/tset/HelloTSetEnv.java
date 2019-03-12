@@ -33,19 +33,19 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
+import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.TwisterContext;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public class HelloTSetEnv extends TSetBaseWorker implements Serializable {
+public class HelloTSetEnv extends TSetBatchWorker implements Serializable {
   private static final long serialVersionUID = -2;
 
   @Override
-  public void execute(TwisterContext tc) {
+  public void execute(TwisterBatchContext tc) {
     TSet<int[]> source = tc.createSource(new Source<int[]>() {
       private static final long serialVersionUID = -1;
 

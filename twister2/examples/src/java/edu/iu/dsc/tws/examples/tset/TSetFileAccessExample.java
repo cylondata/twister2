@@ -15,7 +15,7 @@ import java.io.File;
 import java.io.IOException;
 
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TwisterContext;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.OneToOnePartitioner;
 import edu.iu.dsc.tws.api.tset.sink.FileSink;
 import edu.iu.dsc.tws.api.tset.sources.FileSource;
@@ -26,9 +26,9 @@ import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.utils.DataGenerator;
 
-public class TSetFileAccessExample extends BaseTSetWorker {
+public class TSetFileAccessExample extends BaseTSetBatchWorker {
   @Override
-  public void execute(TwisterContext tc) {
+  public void execute(TwisterBatchContext tc) {
     super.execute(tc);
 
     String inputDirectory = config.getStringValue(Constants.ARGS_FNAME,

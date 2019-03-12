@@ -37,19 +37,18 @@ import edu.iu.dsc.tws.api.dataobjects.DataObjectConstants;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
-import edu.iu.dsc.tws.api.tset.TwisterContext;
+import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGenerator;
 import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansJobParameters;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class KMeansTsetEnvJob extends TSetBaseWorker implements Serializable {
+public class KMeansTsetEnvJob extends TSetBatchWorker implements Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetEnvJob.class.getName());
 
   @Override
-  public void execute(TwisterContext tc) {
+  public void execute(TwisterBatchContext tc) {
     LOG.log(Level.INFO, "TSet worker starting: " + workerId);
 
     KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(config);
@@ -75,7 +74,6 @@ public class KMeansTsetEnvJob extends TSetBaseWorker implements Serializable {
       }
     }
 //    TSetBuilder builder = TSetBuilder.newBuilder(config);
-    tc.setMode(OperationMode.BATCH);
     TSet<double[][]> points = tc.createSource(new PointsSource()).cache();
 //    TSet<double[][]> centers = tc.createSource(new CenterSource()).cache();
 
