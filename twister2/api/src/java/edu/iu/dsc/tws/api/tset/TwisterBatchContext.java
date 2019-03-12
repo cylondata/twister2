@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.TaskExecutor;
+import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -52,7 +53,7 @@ public class TwisterBatchContext {
    * @param source source function to be used
    * @return SourceTset created
    */
-  public <T> TSet<T> createSource(Source<T> source) {
+  public <T> SourceTSet<T> createSource(Source<T> source) {
     //TODO: how to make sure user sets the correct mode? before using create source, pass in mode
     TSetEnv tSetEnv = new TSetEnv(this.config, this.taskExecutor, this.mode);
     return tSetEnv.createSource(source);

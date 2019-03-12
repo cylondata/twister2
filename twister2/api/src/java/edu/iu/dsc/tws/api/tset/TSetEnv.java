@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.TaskExecutor;
+import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -42,7 +43,7 @@ public class TSetEnv {
     return config;
   }
 
-  public <T> TSet<T> createSource(Source<T> source) {
+  public <T> SourceTSet<T> createSource(Source<T> source) {
     return this.tSetBuilder.createSource(source, this);
   }
 
