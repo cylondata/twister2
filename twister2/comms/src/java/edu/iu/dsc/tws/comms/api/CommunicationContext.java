@@ -35,7 +35,7 @@ public class CommunicationContext extends Context {
   public static final String TWISTER2_KEYED_GATHER_OP_PARTITION = "partition";
   public static final String TWISTER2_KEYED_GATHER_OP_GATHER = "gather";
 
-  public static final String TWISTER2_PARTITION_ALGO_KEY = "twister2.keyed.gather.op";
+  public static final String TWISTER2_PARTITION_ALGO_KEY = "twister2.partition.algorithm";
   public static final String TWISTER2_PARTITION_ALGO_SIMPLE = "simple";
   public static final String TWISTER2_PARTITION_ALGO_RING = "ring";
 
