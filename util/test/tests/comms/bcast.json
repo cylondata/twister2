@@ -1,0 +1,16 @@
+{
+  "id": "comms_bcast",
+  "parent": "one_to_many_base",
+  "resultsFile": "comms_bcast.csv",
+  "args": [
+    {
+      "id": "op",
+      "name": "Operation",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "\"bcast\""
+      }
+    }
+  ]
+}

@@ -23,6 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -89,7 +90,7 @@ public class TaskPlan {
   }
 
   public Set<Integer> getChannelsOfExecutor(int executor) {
-    return executorToChannels.get(executor);
+    return executorToChannels.getOrDefault(executor, Collections.emptySet());
   }
 
   public int getThisExecutor() {

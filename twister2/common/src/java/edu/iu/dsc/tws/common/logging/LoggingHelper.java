@@ -180,7 +180,6 @@ public final class LoggingHelper {
   }
 
   private static void updateComponentId(String component) {
-    System.out.println("Setting com Id to " + component);
     Logger rootLogger = Logger.getLogger("");
     for (Handler handler : rootLogger.getHandlers()) {
       Formatter formatter = handler.getFormatter();
