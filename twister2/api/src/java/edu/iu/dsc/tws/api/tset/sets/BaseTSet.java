@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 import com.google.common.reflect.TypeToken;
 
+import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
@@ -49,7 +50,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   /**
    * Map that keeps the input data objects
    */
-  protected Map<String, TSet<?>> inputMap;
+  protected Map<String, Cacheable<?>> inputMap;
 
   /**
    * The TSet Env to use for runtime operations of the Tset
@@ -274,7 +275,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   @Override
-  public boolean addInput(String key, TSet<?> input) {
+  public boolean addInput(String key, Cacheable<?> input) {
     inputMap.put(key, input);
     return true;
   }

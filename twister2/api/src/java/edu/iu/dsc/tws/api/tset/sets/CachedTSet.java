@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.api.tset.sets;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
@@ -28,7 +29,7 @@ import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 
-public class CachedTSet<T> extends BaseTSet<T> {
+public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
 
   private BaseTLink<T> parent;
   // todo: This dataobject should bind to the executor, I think! because tsets would not be
@@ -90,6 +91,18 @@ public class CachedTSet<T> extends BaseTSet<T> {
 
   }
 
+  @Override
+  public DataObject<T> getData() {
+    return datapoints;
+  }
+
+  @Override
+  public boolean addData(T value) {
+    int curr = datapoints.getPartitionCount();
+    datapoints.addPartition(new EntityPartition<T>(curr, value)); //
+    return false;
+  }
+
   private class CacheSink implements Sink<T> {
 
     private int count = 0;
@@ -97,8 +110,7 @@ public class CachedTSet<T> extends BaseTSet<T> {
     @Override
     public boolean add(T value) {
       // todo every time add is called, a new partition will be made! how to handle that?
-      datapoints.addPartition(new EntityPartition<T>(count++, value)); //
-      return true;
+      return addData(value);
     }
 
     @Override
@@ -109,23 +121,23 @@ public class CachedTSet<T> extends BaseTSet<T> {
 
   private class CacheSource implements Source<T> {
     //TODO: need to check this codes logic developed now just based on the data object API
-    private int count = datapoints.getPartitions().length;
+    private int count = getData().getPartitionCount();
     private int current = 0;
 
     @Override
     public boolean hasNext() {
-      boolean hasNext = (current < count) ? datapoints.getPartitions(current)
+      boolean hasNext = (current < count) ? getData().getPartitions(current)
           .getConsumer().hasNext() : false;
 
       while (++current < count && !hasNext) {
-        hasNext = datapoints.getPartitions(current).getConsumer().hasNext();
+        hasNext = getData().getPartitions(current).getConsumer().hasNext();
       }
       return hasNext;
     }
 
     @Override
     public T next() {
-      return datapoints.getPartitions(current).getConsumer().next();
+      return getData().getPartitions(current).getConsumer().next();
     }
   }
 }

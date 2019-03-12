@@ -53,7 +53,7 @@ public interface TFunction extends Serializable {
    * @param key the key to be added
    * @param input the value associated with the key
    */
-  default void addInput(String key, TSet<?> input) {
+  default void addInput(String key, Cacheable<?> input) {
     CONTEXT.getInputMap().put(key, input);
   }
 
@@ -63,7 +63,7 @@ public interface TFunction extends Serializable {
    * @param map map that contains key, input pairs that need to be added into
    * the {@link TFunction#CONTEXT} input map
    */
-  default void addInputs(Map<String, TSet<?>> map) {
+  default void addInputs(Map<String, Cacheable<?>> map) {
     CONTEXT.getInputMap().putAll(map);
   }
 }

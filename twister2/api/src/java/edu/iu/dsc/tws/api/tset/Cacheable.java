@@ -12,10 +12,26 @@
 
 package edu.iu.dsc.tws.api.tset;
 
+import edu.iu.dsc.tws.dataset.DataObject;
+
 /**
  * All Tsets that are cachable need to implement this interface
  * This interface defines the methods that other classes can use to
  * access the cached data
  */
-public interface Cachable {
+public interface Cacheable<T> {
+
+  /**
+   * retrieve data saved in the TSet
+   * @return dataObject
+   */
+  DataObject<T> getData();
+
+  /**
+   * Add Data to the data object
+   * @param value value to be added
+   * @return true if the data was added successfully or false otherwise
+   */
+  boolean addData(T value);
+
 }

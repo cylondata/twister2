@@ -109,6 +109,6 @@ public interface TSet<T> extends TBase<T> {
    * @param input the TSet to be added as an input
    * @return true if the input was added successfully or false otherwise
    */
-  boolean addInput(String key, TSet<?> input);
+  boolean addInput(String key, Cacheable<?> input);
 
 }
