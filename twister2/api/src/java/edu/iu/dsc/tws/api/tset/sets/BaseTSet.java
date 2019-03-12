@@ -190,7 +190,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   @Override
-  public TSet<T> cache() {
+  public CachedTSet<T> cache() {
     // todo: why cant we add a single cache tset here?
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);

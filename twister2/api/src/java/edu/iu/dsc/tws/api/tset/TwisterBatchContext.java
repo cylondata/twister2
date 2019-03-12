@@ -19,24 +19,22 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
  * Twister context provides the user with the basic functionality that is needed to
  * start a Twister2 application
  */
-public class TwisterContext {
+public class TwisterBatchContext {
 
   private Config config;
 
   private TaskExecutor taskExecutor;
 
-  private OperationMode mode;
+  private final OperationMode mode = OperationMode.BATCH;
 
-  public TwisterContext(Config config, TaskExecutor taskExecutor, OperationMode mode) {
+  public TwisterBatchContext(Config config, TaskExecutor taskExecutor, OperationMode mode) {
     this.config = config;
     this.taskExecutor = taskExecutor;
-    this.mode = mode;
   }
 
-  public TwisterContext(Config config, TaskExecutor taskExecutor) {
+  public TwisterBatchContext(Config config, TaskExecutor taskExecutor) {
     this.config = config;
     this.taskExecutor = taskExecutor;
-    this.mode = OperationMode.STREAMING;
   }
 
   public Config getConfig() {
@@ -47,26 +45,9 @@ public class TwisterContext {
     return mode;
   }
 
-  public void setMode(OperationMode mode) {
-    this.mode = mode;
-  }
-
-  /**
-   * Create source task with the given source and given mode
-   *
-   * @param source source function to be used
-   * @param opMode The Mode of the operation, Streaming or Batch
-   * @return SourceTset created
-   */
-  public <T> TSet<T> createSource(Source<T> source, OperationMode opMode) {
-    //TODO: how to make sure user sets the correct mode? before using create source, pass in mode
-    TSetEnv tSetEnv = new TSetEnv(this.config, this.taskExecutor, opMode);
-    return tSetEnv.createSource(source);
-  }
-
   /**
    * Create source task with the given source, The mode is taken as the mode set
-   * in {@link TwisterContext#mode}
+   * in {@link TwisterBatchContext#mode}
    *
    * @param source source function to be used
    * @return SourceTset created

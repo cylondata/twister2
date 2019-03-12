@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
 import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
 
 /**
@@ -101,7 +102,7 @@ public interface TSet<T> extends TBase<T> {
    *
    * @return the resulting TSet
    */
-  TSet<T> cache();
+  CachedTSet<T> cache();
 
   /**
    * Allows users to pass in other TSets as inputs for a TSet

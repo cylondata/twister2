@@ -15,12 +15,12 @@ import java.io.Serializable;
 
 import edu.iu.dsc.tws.api.task.TaskWorker;
 
-public abstract class TSetBaseWorker extends TaskWorker implements Serializable {
+public abstract class TSetBatchWorker extends TaskWorker implements Serializable {
 
   @Override
   public void execute() {
-    TwisterBatchContext tc = new TwisterBatchContext(this.config, this.taskExecutor);
-    execute(tc);
+    TwisterBatchContext tbc = new TwisterBatchContext(this.config, this.taskExecutor);
+    execute(tbc);
   }
 
   public abstract void execute(TwisterBatchContext tc);

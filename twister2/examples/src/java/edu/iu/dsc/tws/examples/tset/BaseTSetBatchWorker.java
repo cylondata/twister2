@@ -15,9 +15,9 @@ import java.io.Serializable;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.Source;
-import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
+import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.TwisterContext;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 /**
  * We need to keep variable static as this class is serialized
  */
-public class BaseTSetWorker extends TSetBaseWorker implements Serializable {
+public class BaseTSetWorker extends TSetBatchWorker implements Serializable {
   private static final Logger LOG = Logger.getLogger(BaseTSetWorker.class.getName());
 
   protected static JobParameters jobParameters;
@@ -36,7 +36,7 @@ public class BaseTSetWorker extends TSetBaseWorker implements Serializable {
   protected static ExperimentData experimentData;
 
   @Override
-  public void execute(TwisterContext tc) {
+  public void execute(TwisterBatchContext tc) {
     jobParameters = JobParameters.build(config);
 
     experimentData = new ExperimentData();
