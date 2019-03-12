@@ -51,18 +51,18 @@ public class SourceTSet<T> extends BaseTSet<T> {
     return set;
   }
 
-  public <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
+  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IMapTSet<P, T> set = new IMapTSet<>(config, tSetEnv, direct, mapFn);
+    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, direct, mapFn);
     children.add(set);
     return set;
   }
 
-  public <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
+  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, tSetEnv, direct, mapFn);
+    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, direct, mapFn);
     children.add(set);
     return set;
   }

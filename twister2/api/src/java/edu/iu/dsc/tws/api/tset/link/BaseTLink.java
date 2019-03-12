@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
@@ -92,15 +92,15 @@ public abstract class BaseTLink<T> implements TLink<T> {
   }
 
   @Override
-  public <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
-    IMapTSet<P, T> set = new IMapTSet<>(config, tSetEnv, this, mapFn);
+  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
+    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, this, mapFn);
     children.add(set);
     return set;
   }
 
   @Override
-  public <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    IFlatMapTSet<P, T> set = new IFlatMapTSet<>(config, tSetEnv, this, mapFn);
+  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
+    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, this, mapFn);
     children.add(set);
     return set;
   }

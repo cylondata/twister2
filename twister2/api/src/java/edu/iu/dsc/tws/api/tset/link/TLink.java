@@ -18,8 +18,8 @@ import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 
@@ -67,7 +67,7 @@ public interface TLink<T> extends TBase<T> {
    * @param <P> output type
    * @return this set
    */
-  <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mapFn);
+  <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn);
 
   /**
    * Flatmap operation on the data
@@ -76,7 +76,7 @@ public interface TLink<T> extends TBase<T> {
    * @param <P> output type
    * @return this set
    */
-  <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn);
+  <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn);
 
   /**
    * Add a sink

@@ -25,13 +25,13 @@ import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.IterableFlatMapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class IFlatMapTSet<T, P> extends BaseTSet<T> {
+public class IterableFlatMapTSet<T, P> extends BaseTSet<T> {
   private BaseTLink<P> parent;
 
   private IterableFlatMapFunction<P, T> mapFn;
 
-  public IFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                      IterableFlatMapFunction<P, T> mapFunc) {
+  public IterableFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
+                             IterableFlatMapFunction<P, T> mapFunc) {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
@@ -53,18 +53,18 @@ public class IFlatMapTSet<T, P> extends BaseTSet<T> {
     return set;
   }
 
-  public <P1> IMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
+  public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IMapTSet<P1, T> set = new IMapTSet<>(config, tSetEnv, direct, mFn);
+    IterableMapTSet<P1, T> set = new IterableMapTSet<>(config, tSetEnv, direct, mFn);
     children.add(set);
     return set;
   }
 
-  public <P1> IFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
+  public <P1> IterableFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IFlatMapTSet<P1, T> set = new IFlatMapTSet<>(config, tSetEnv, direct, mFn);
+    IterableFlatMapTSet<P1, T> set = new IterableFlatMapTSet<>(config, tSetEnv, direct, mFn);
     children.add(set);
     return set;
   }
@@ -98,13 +98,13 @@ public class IFlatMapTSet<T, P> extends BaseTSet<T> {
   }
 
   @Override
-  public IFlatMapTSet<T, P> setParallelism(int parallelism) {
+  public IterableFlatMapTSet<T, P> setParallelism(int parallelism) {
     this.parallel = parallelism;
     return this;
   }
 
   @Override
-  public IFlatMapTSet<T, P> setName(String n) {
+  public IterableFlatMapTSet<T, P> setName(String n) {
     this.name = n;
     return this;
   }

@@ -71,12 +71,12 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
     return cacheSource.flatMap(mapFn);
   }
 
-  public <P1> IMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
+  public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
     SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
     return cacheSource.map(mFn);
   }
 
-  public <P1> IFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
+  public <P1> IterableFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
     SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
     return cacheSource.flatMap(mFn);
   }
