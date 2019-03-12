@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.RingPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchPartialReceiver;
@@ -58,11 +59,20 @@ public class BKeyedGather {
           edges, kType, dType);
     } else if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_PARTITION.equals(
         CommunicationContext.keyedGatherOp(comm.getConfig()))) {
-      this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
-          plan, sources, destinations,
-          new KGatherBatchFinalReceiver(rcvr, 100),
-          new KGatherBatchPartialReceiver(0, 100), dataType, dataType,
-          keyType, keyType, comm.nextEdge());
+      if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
+          CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
+        this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
+            plan, sources, destinations,
+            new KGatherBatchFinalReceiver(rcvr, 100),
+            new KGatherBatchPartialReceiver(0, 100), dataType, dataType,
+            keyType, keyType, comm.nextEdge());
+      } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
+          CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
+        this.keyedGather = new RingPartition(comm.getConfig(), comm.getChannel(),
+            plan, sources, destinations, new KGatherBatchFinalReceiver(rcvr, 100),
+            new KGatherBatchPartialReceiver(0, 100),
+            dataType, dataType, keyType, keyType, comm.nextEdge());
+      }
     }
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, destinations);
