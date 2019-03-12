@@ -362,13 +362,18 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
       onFinishedSources.add(source);
     }
 
-    return merger.onMessage(source, 0, target, flags, message);
+    return merger.onMessage(source, target, target, flags, message);
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags, int target) {
     swapLock.lock();
     try {
+      if ((flags & MessageFlags.END) == MessageFlags.END) {
+        onFinishedSources.add(source);
+        return true;
+      }
+
       List<Object> messages = merged.computeIfAbsent(target, k -> new ArrayList<>());
 
       if (message instanceof List) {
@@ -537,5 +542,17 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean isDelegateComplete() {
     return delegate.isComplete();
+  }
+
+  @Override
+  public void finish(int source) {
+    Set<Integer> targetsOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(taskPlan, targets);
+    for (int dest : targetsOfThisWorker) {
+      // first we need to call finish on the partial receivers
+      while (!send(source, new int[0], MessageFlags.END, dest)) {
+        // lets progress until finish
+        progress();
+      }
+    }
   }
 }
