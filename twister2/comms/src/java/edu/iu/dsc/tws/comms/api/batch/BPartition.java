@@ -14,12 +14,15 @@ package edu.iu.dsc.tws.comms.api.batch;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.CommunicationContext;
 import edu.iu.dsc.tws.comms.api.Communicator;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.RingPartition;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
@@ -31,7 +34,7 @@ public class BPartition {
   /**
    * The actual operation
    */
-  private DataFlowPartition partition;
+  private DataFlowOperation partition;
 
   /**
    * Destination selector
@@ -64,10 +67,19 @@ public class BPartition {
       finalRcvr = new PartitionBatchFinalReceiver(rcvr);
     }
 
-    this.partition = new DataFlowPartition(comm.getChannel(), sources, targets,
-        finalRcvr, new PartitionPartialReceiver(), dataType);
-    this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
+    if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
+        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
+      DataFlowPartition p = new DataFlowPartition(comm.getChannel(), sources, targets,
+          finalRcvr, new PartitionPartialReceiver(), dataType);
+      p.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+      this.partition = p;
+    } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
+        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
+      this.partition = new RingPartition(comm.getConfig(), comm.getChannel(),
+          plan, sources, targets, finalRcvr, new PartitionPartialReceiver(),
+          dataType, dataType, null, null, comm.nextEdge());
+    }
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
   }
 
   /**
