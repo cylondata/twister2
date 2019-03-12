@@ -25,8 +25,8 @@ import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGenerator;
-import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansJobParameters;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGenerator;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 
 public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetJob.class.getName());
@@ -35,7 +35,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
   public void execute(TwisterBatchContext tc) {
     LOG.log(Level.INFO, "TSet worker starting: " + workerId);
 
-    KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(config);
+    KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
 
     int parallelismValue = kMeansJobParameters.getParallelismValue();
     int dimension = kMeansJobParameters.getDimension();

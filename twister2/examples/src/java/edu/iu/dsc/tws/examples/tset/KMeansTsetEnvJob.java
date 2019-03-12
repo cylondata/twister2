@@ -33,15 +33,15 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.dataobjects.DataObjectConstants;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGenerator;
-import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansJobParameters;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGenerator;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class KMeansTsetEnvJob extends TSetBatchWorker implements Serializable {
@@ -51,7 +51,7 @@ public class KMeansTsetEnvJob extends TSetBatchWorker implements Serializable {
   public void execute(TwisterBatchContext tc) {
     LOG.log(Level.INFO, "TSet worker starting: " + workerId);
 
-    KMeansJobParameters kMeansJobParameters = KMeansJobParameters.build(config);
+    KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
 
     int parallelismValue = kMeansJobParameters.getParallelismValue();
     int dimension = kMeansJobParameters.getDimension();
@@ -128,7 +128,6 @@ public class KMeansTsetEnvJob extends TSetBatchWorker implements Serializable {
     configMap.put(DataObjectConstants.ARGS_DIMENSIONS, Integer.toString(2));
     configMap.put(DataObjectConstants.ARGS_PARALLELISM_VALUE, Integer.toString(1));
     configMap.put(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM, false);
-    configMap.put(DataObjectConstants.ARGS_NUMBER_OF_CLUSTERS, Integer.toString(1));
     configMap.put(DataObjectConstants.ARGS_ITERATIONS, Integer.toString(5));
 
     // build configMap
