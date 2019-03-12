@@ -84,8 +84,8 @@ public class KGatherBatchFinalReceiver extends KeyedReceiver {
     @Override
     public Object next() {
       Object key = keyList.poll();
-      Object value = messageMap.remove(key);
-      return new Tuple(key, ((Queue) value).toArray(),
+      Queue value = messageMap.remove(key);
+      return new Tuple(key, value.iterator(),
           dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
     }
   }
