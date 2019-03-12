@@ -9,16 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
+package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.dataobjects.DataObjectConstants;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 
-public final class KMeansJobParameters {
+public final class KMeansWorkerParameters {
 
-  private static final Logger LOG = Logger.getLogger(KMeansJobParameters.class.getName());
+  private static final Logger LOG = Logger.getLogger(KMeansWorkerParameters.class.getName());
 
   /**
    * Number of Workers
@@ -76,23 +76,18 @@ public final class KMeansJobParameters {
   private int parallelismValue;
 
   /**
-   * Number of clusters
-   */
-  private int numberOfClusters;
-
-  /**
    * Represents file system "local" or "hdfs"
    */
   private String filesystem;
 
-  private KMeansJobParameters(int workers) {
+  private KMeansWorkerParameters(int workers) {
     this.workers = workers;
   }
 
   /**
    * This method is to build the job parameters which is based on the configuration value.
    */
-  public static KMeansJobParameters build(Config cfg) {
+  public static KMeansWorkerParameters build(Config cfg) {
 
     String datapointDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
     String centroidDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
@@ -108,11 +103,9 @@ public final class KMeansJobParameters {
     int iterations = Integer.parseInt(
         cfg.getStringValue(DataObjectConstants.ARGS_ITERATIONS));
     int numFiles = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_NUMBER_OF_FILES));
-    int numberOfClusters = Integer.parseInt(
-        cfg.getStringValue(DataObjectConstants.ARGS_NUMBER_OF_CLUSTERS));
     boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
 
-    KMeansJobParameters jobParameters = new KMeansJobParameters(workers);
+    KMeansWorkerParameters jobParameters = new KMeansWorkerParameters(workers);
 
     jobParameters.workers = workers;
     jobParameters.dimension = dimension;
@@ -126,13 +119,8 @@ public final class KMeansJobParameters {
     jobParameters.shared = shared;
     jobParameters.parallelismValue = parallelismVal;
     jobParameters.filesystem = fileSystem;
-    jobParameters.numberOfClusters = numberOfClusters;
 
     return jobParameters;
-  }
-
-  public int getNumberOfClusters() {
-    return numberOfClusters;
   }
 
   public String getFilesystem() {

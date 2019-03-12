@@ -15,15 +15,21 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.hadoop.conf.Configuration;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigConstants;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
+import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
+import edu.iu.dsc.tws.data.utils.HdfsDataContext;
 
 /**
  * This class is an abstract of the generic file system that will be used in the system
@@ -35,13 +41,17 @@ public abstract class FileSystem implements Serializable {
   private static final Logger LOG = Logger.getLogger(FileSystem.class.getName());
 
   public enum WriteMode {
-    /** Creates the target file only if no file exists at that path already.
-     * Does not overwrite existing files and directories. */
+    /**
+     * Creates the target file only if no file exists at that path already.
+     * Does not overwrite existing files and directories.
+     */
     NO_OVERWRITE,
 
-    /** Creates a new target file regardless of any existing files or directories.
+    /**
+     * Creates a new target file regardless of any existing files or directories.
      * Existing files and directories will be deleted (recursively) automatically before
-     * creating the new file. */
+     * creating the new file.
+     */
     OVERWRITE
   }
 
@@ -65,14 +75,86 @@ public abstract class FileSystem implements Serializable {
   static {
     SUPPORTEDFS.put("file", LocalFileSystem.class.getName());
     //Newly added
+    SUPPORTEDFS.put("hdfs", HadoopFileSystem.class.getName());
+  }
 
+  /**
+   * For hadoop file system
+   */
+  public static FileSystem getFileSystem(URI uri, Config config) throws IOException {
+    FileSystem fs = null;
+    URI asked = uri;
+    URI curUri = uri;
+    if (curUri == null) {
+      throw new IOException("The URI " + curUri.toString() + " is not a vaild URI");
+    }
+    //TODO: check if the sycn is actually needed or can be scoped down
+    synchronized (SYNCHRONIZATION_OBJECT) {
+
+      if (curUri.getScheme() == null) {
+        try {
+          if (defaultScheme == null) {
+            defaultScheme = new URI(ConfigConstants.DEFAULT_FILESYSTEM_SCHEME);
+          }
+
+          curUri = new URI(defaultScheme.getScheme(), null, defaultScheme.getHost(),
+              defaultScheme.getPort(), curUri.getPath(), null, null);
+        } catch (URISyntaxException e) {
+          try {
+            if (defaultScheme.getScheme().equals("file")) {
+              curUri = new URI("file", null,
+                  new Path(new File(curUri.getPath()).getAbsolutePath()).toUri().getPath(), null);
+            }
+          } catch (URISyntaxException ex) {
+            // we tried to repair it, but could not. report the scheme error
+            throw new IOException("The URI '" + curUri.toString() + "' is not valid.");
+          }
+        }
+      }
+
+      if (curUri.getScheme() == null) {
+        throw new IOException("The URI '" + curUri + "' is invalid.\n"
+            + "The fs.default-scheme = " + defaultScheme + ", the requested URI = " + asked
+            + ", and the final URI = " + curUri + ".");
+      }
+      if (curUri.getScheme().equals("file") && curUri.getAuthority() != null
+          && !curUri.getAuthority().isEmpty()) {
+        String supposedUri = "file:///" + curUri.getAuthority() + curUri.getPath();
+
+        throw new IOException("Found local file path with authority '"
+            + curUri.getAuthority() + "' in path '"
+            + curUri.toString()
+            + "'. Hint: Did you forget a slash? (correct path would be '" + supposedUri + "')");
+      }
+
+      //TODO : need to add cache that can save FileSystem Objects and return from cache if available
+      if (!isSupportedScheme(curUri.getScheme())) {
+        //TODO: handle when the system is not supported
+      } else {
+        String fsClass = SUPPORTEDFS.get(curUri.getScheme());
+        if ("hdfs".equals(curUri.getScheme())) {
+          try {
+            fs = instantiateFileSystem(fsClass, config);
+          } catch (NoSuchMethodException e) {
+            throw new RuntimeException("No such method to invoke", e);
+          } catch (InvocationTargetException e) {
+            throw new RuntimeException("Invocation exception occured", e);
+          }
+          fs.initialize(curUri);
+        } else {
+          fs = instantiateFileSystem(fsClass);
+          fs.initialize(curUri);
+        }
+      }
+    }
+    return fs;
   }
 
   /**
    * Returns a unsafe filesystem for the given uri
    */
-  //private static FileSystem getFileSystem(URI uri) throws IOException {
   public static FileSystem getFileSystem(URI uri) throws IOException {
+
     FileSystem fs = null;
     URI asked = uri;
     URI curUri = uri;
@@ -128,7 +210,6 @@ public abstract class FileSystem implements Serializable {
         fs = instantiateFileSystem(fsClass);
         fs.initialize(curUri);
       }
-
     }
     return fs;
   }
@@ -216,6 +297,11 @@ public abstract class FileSystem implements Serializable {
     return getFileSystem(uri);
   }
 
+
+  public static FileSystem get(URI uri, Config config) throws IOException {
+    return getFileSystem(uri, config);
+  }
+
   /**
    * Return a file status object that represents the path.
    *
@@ -242,11 +328,32 @@ public abstract class FileSystem implements Serializable {
    */
   public abstract FSDataInputStream open(Path f) throws IOException;
 
-  //private static FileSystem instantiateFileSystem(String className) throws IOException {
-  public static FileSystem instantiateFileSystem(String className) throws IOException {
+  private static FileSystem instantiateFileSystem(String className) throws IOException {
     try {
       Class<? extends FileSystem> fsClass = getFileSystemByName(className);
       return fsClass.newInstance();
+    } catch (ClassNotFoundException e) {
+      throw new IOException("Could not load file system class '" + className + '\'', e);
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new IOException("Could not instantiate file system class: " + e.getMessage(), e);
+    }
+  }
+
+  private static FileSystem instantiateFileSystem(String className, Config config)
+      throws IOException, NoSuchMethodException, InvocationTargetException {
+
+    Class<?> fileSystemClass;
+    try {
+      Configuration conf = new Configuration(false);
+      conf.addResource(
+          new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
+      conf.set("fs.defaultFS", HdfsDataContext.getHdfsUrlDefault(config));
+      fileSystemClass = ClassLoader.getSystemClassLoader().loadClass(className);
+      Constructor<?> classConstructor = fileSystemClass.getConstructor(
+          org.apache.hadoop.conf.Configuration.class, org.apache.hadoop.fs.FileSystem.class);
+      Object newInstance = classConstructor.newInstance(new Object[]{conf,
+          org.apache.hadoop.fs.FileSystem.get(conf)});
+      return (FileSystem) newInstance;
     } catch (ClassNotFoundException e) {
       throw new IOException("Could not load file system class '" + className + '\'', e);
     } catch (InstantiationException | IllegalAccessException e) {
@@ -304,7 +411,4 @@ public abstract class FileSystem implements Serializable {
   public abstract long getDefaultBlockSize();
 
   public abstract boolean isDistributedFS();
-
-
-
 }

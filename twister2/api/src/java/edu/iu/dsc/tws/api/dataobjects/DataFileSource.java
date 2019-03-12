@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
@@ -33,9 +33,9 @@ import edu.iu.dsc.tws.task.api.TaskContext;
  * to partition the datapoints. Finally, write the partitioned datapoints into their respective
  * edges.
  */
-public class DataObjectSource<T> extends BaseSource {
+public class DataFileSource<T> extends BaseSource {
 
-  private static final Logger LOG = Logger.getLogger(DataObjectSource.class.getName());
+  private static final Logger LOG = Logger.getLogger(DataFileSource.class.getName());
 
   private static final long serialVersionUID = -1L;
 
@@ -49,7 +49,7 @@ public class DataObjectSource<T> extends BaseSource {
    */
   private String edgeName;
 
-  public DataObjectSource(String edgename) {
+  public DataFileSource(String edgename) {
     this.edgeName = edgename;
   }
 
@@ -77,6 +77,7 @@ public class DataObjectSource<T> extends BaseSource {
   public void execute() {
     LOG.fine("Context Task Index:" + context.taskIndex() + "\t" + getEdgeName());
     InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
+    int totalCount = 0;
     while (inputSplit != null) {
       try {
         int count = 0;
@@ -85,10 +86,10 @@ public class DataObjectSource<T> extends BaseSource {
           if (value != null) {
             context.write(getEdgeName(), value);
             count += 1;
+            totalCount += 1;
           }
         }
         inputSplit = source.getNextSplit(context.taskIndex());
-        LOG.info("Task index:" + context.taskIndex() + " count: " + count);
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
       }
@@ -96,22 +97,28 @@ public class DataObjectSource<T> extends BaseSource {
     context.end(getEdgeName());
   }
 
+  /**
+   * Retrieve the data input directory using the DataObjectConstants and the config file.
+   * @param cfg
+   * @param context
+   */
   @Override
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
-    String datainputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
-    int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DSIZE));
+
+    String datainputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
     ExecutionRuntime runtime = (ExecutionRuntime)
         cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+
     boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
     if (!shared) {
       this.source = runtime.createInput(cfg, context,
-          new LocalFixedInputPartitioner(new Path(datainputDirectory),
-              context.getParallelism(), cfg, datasize));
+          new LocalTextInputPartitioner(new Path(datainputDirectory),
+              context.getParallelism(), config));
     } else {
       this.source = runtime.createInput(cfg, context,
           new SharedTextInputPartitioner(new Path(datainputDirectory),
-              context.getParallelism(), cfg));
+              context.getParallelism(), config));
     }
   }
 }
