@@ -11,12 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.dataobjects;
 
-import java.util.logging.Logger;
-
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.utils.DataFileReader;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.DataPartition;
@@ -24,10 +23,11 @@ import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
+/**
+ * This class is responsible for directly reading the data points from the respective filesystem
+ * and add the datapoints into the DataObject.
+ */
 public class DataFileReadSource extends BaseSource implements Collector {
-
-  private static final Logger LOG
-      = Logger.getLogger(DataFileReadSource.class.getName());
 
   private static final long serialVersionUID = -1L;
 
@@ -42,6 +42,10 @@ public class DataFileReadSource extends BaseSource implements Collector {
   public DataFileReadSource() {
   }
 
+  /**
+   * The execute method uses the DataFileReader utils class in the data package to
+   * read the input data points from the respective file system.
+   */
   @Override
   public void execute() {
     datapoints = fileReader.readData(new Path(fileDirectory), dimension, datasize);

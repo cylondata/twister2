@@ -23,7 +23,7 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.dataobjects.DataObjectConstants;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.Utils;

@@ -9,7 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.dataobjects;
+package edu.iu.dsc.tws.data.utils;
+
+/**
+ * The input parameters required to create, partition, and read the input data points.
+ */
 
 public class DataObjectConstants {
 

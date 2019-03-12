@@ -56,7 +56,7 @@ public class KMeansWorkerUtils {
         = (DataObjectImpl<Object>) centroidsPartition.getConsumer().next();
     Iterator<ArrayList> arrayListIterator
         = (Iterator<ArrayList>) dataObject.getPartitions(workerId).getConsumer().next();
-    double[][] datapoint = new double[csize / parallel][dimension];
+    double[][] datapoint = new double[csize / parallel + 1][dimension];
     int value = 0;
     while (arrayListIterator.hasNext()) {
       String val = String.valueOf(arrayListIterator.next());

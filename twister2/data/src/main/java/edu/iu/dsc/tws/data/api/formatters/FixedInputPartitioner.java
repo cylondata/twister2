@@ -12,12 +12,9 @@
 package edu.iu.dsc.tws.data.api.formatters;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -33,6 +30,10 @@ import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
+/**
+ * The fixed input partitioner is really useful if the user exactly knows the number of lines
+ * to be generated or available in the input data file.
+ */
 public abstract class FixedInputPartitioner<OT>
     implements InputPartitioner<OT, FileInputSplit<OT>> {
 
@@ -45,6 +46,7 @@ public abstract class FixedInputPartitioner<OT>
   private static final float MAX_SPLIT_SIZE_DISCREPANCY = 1.1f;
   private long minSplitSize = 0;
   protected FSDataInputStream stream;
+  private int dataSize = 0;
 
   public FixedInputPartitioner(Path filePath) {
     this.filePath = filePath;
@@ -55,12 +57,24 @@ public abstract class FixedInputPartitioner<OT>
     this.config = cfg;
   }
 
+  public FixedInputPartitioner(Path filePath, Config cfg, int datasize) {
+    this.filePath = filePath;
+    this.config = cfg;
+    this.dataSize = datasize;
+  }
+
   @Override
   public void configure(Config parameters) {
     this.config = parameters;
   }
 
 
+  /**
+   * This method create the input splits which is based on the number of lines in the input and the
+   * parallelism value.
+   *
+   * @param minNumSplits Number of minimal input splits, as a hint.
+   */
   @Override
   public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws Exception {
 
@@ -89,11 +103,11 @@ public abstract class FixedInputPartitioner<OT>
         + (totalLength % curminNumSplits == 0 ? 0 : 1);
 
     for (final FileStatus file : files) {
-
       //First Split Calculation
-      final long lineCount = Files.lines(Paths.get(file.getPath().getPath())).count();
+      //To retrieve the total count of the number of the lines in a file.
+      //final long lineCount = Files.lines(Paths.get(file.getPath().getPath())).count();
+      final long lineCount = dataSize;
       int splSize = (int) (lineCount / curminNumSplits);
-      long totalbytes = getSplitSize(file.getPath().getPath(), 0, splSize);
 
       final long len = file.getLen();
       final long blockSize = file.getBlockSize();
@@ -108,10 +122,10 @@ public abstract class FixedInputPartitioner<OT>
         localminSplitSize = blockSize;
       }
 
+      long totalbytes = getSplitSize(fs, file.getPath(), 0, splSize);
       final long splitSize = Math.max(localminSplitSize, Math.min(maxSplitSize, blockSize));
       final long maxBytesForLastSplit = (long) (splitSize * MAX_SPLIT_SIZE_DISCREPANCY);
       long bytesUnassigned = len;
-
       int splitNum = 0;
       int position = 0;
 
@@ -125,10 +139,10 @@ public abstract class FixedInputPartitioner<OT>
           bytesUnassigned -= totalbytes;
         }
         if (bytesUnassigned > 0) {
-          long remainingBytes = getSplitSize(file.getPath().getPath(), splSize, lineCount);
+          long remainingBytes = getSplitSize(fs, file.getPath(), splSize, dataSize);
           String[] hosts = new String[0];
           final FileInputSplit fis
-              = createSplit(splitNum++, file.getPath(), position, remainingBytes, hosts);
+              = createSplit(splitNum++, file.getPath(), position, bytesUnassigned, hosts);
           inputSplits.add(fis);
         }
       } else {
@@ -146,13 +160,16 @@ public abstract class FixedInputPartitioner<OT>
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
 
-  private long getSplitSize(String filename, int start, long end)
+  /**
+   * This method calculate the split size corresponding to the start and end position.
+   */
+  private long getSplitSize(FileSystem fileSystem, Path filename, int start, long end)
       throws IOException {
     int count = start;
     long totalBytes = 0L;
     String line;
     BufferedReader in = new BufferedReader(new InputStreamReader(
-        new FileInputStream(filename), StandardCharsets.UTF_8));
+        fileSystem.open(filename), StandardCharsets.UTF_8));
     byte[] b;
     int currentLine = 1;
     while ((line = in.readLine()) != null) {

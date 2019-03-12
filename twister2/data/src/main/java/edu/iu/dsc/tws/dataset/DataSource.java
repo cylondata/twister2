@@ -36,9 +36,9 @@ public class DataSource<T, O extends InputSplit<T>> extends DataObjectImpl<T> {
 
   public DataSource(Config cfg, InputPartitioner<T, O> input, int numSplits) {
     super(cfg);
+    this.config = cfg;
     this.input = input;
     this.input.configure(cfg);
-    this.config = cfg;
     try {
       this.splits = this.input.createInputSplits(numSplits);
     } catch (Exception e) {

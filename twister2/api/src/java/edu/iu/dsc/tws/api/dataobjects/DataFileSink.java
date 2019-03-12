@@ -23,6 +23,9 @@ import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
+/**
+ * This class receives the message from the DataFileSource and writes the output into the DataObject
+ */
 public class DataFileSink<T> extends BaseSink implements Collector {
 
   private static final Logger LOG = Logger.getLogger(DataFileSink.class.getName());
@@ -31,6 +34,11 @@ public class DataFileSink<T> extends BaseSink implements Collector {
 
   private DataObject<Object> datapoints = null;
 
+  /**
+   * This method add the received message from the Data File Object into the data objects.
+   * @param message
+   * @return
+   */
   @Override
   public boolean execute(IMessage message) {
     datapoints.addPartition(new EntityPartition<>(context.taskIndex(), message.getContent()));

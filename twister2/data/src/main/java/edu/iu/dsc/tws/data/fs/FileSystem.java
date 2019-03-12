@@ -153,7 +153,6 @@ public abstract class FileSystem implements Serializable {
   /**
    * Returns a unsafe filesystem for the given uri
    */
-  //private static FileSystem getFileSystem(URI uri) throws IOException {
   public static FileSystem getFileSystem(URI uri) throws IOException {
 
     FileSystem fs = null;

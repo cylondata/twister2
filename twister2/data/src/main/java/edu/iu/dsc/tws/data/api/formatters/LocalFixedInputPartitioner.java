@@ -26,6 +26,7 @@ public class LocalFixedInputPartitioner extends FixedInputPartitioner<String> {
   private static final Logger LOG = Logger.getLogger(LocalTextInputPartitioner.class.getName());
 
   private int nTasks;
+  private int dataSize;
 
   private OrderedInputSplitAssigner<String> assigner;
 
@@ -34,9 +35,11 @@ public class LocalFixedInputPartitioner extends FixedInputPartitioner<String> {
     this.nTasks = numTasks;
   }
 
-  public LocalFixedInputPartitioner(Path filePath, int numTasks, Config config) {
-    super(filePath, config);
+  public LocalFixedInputPartitioner(Path filePath, int numTasks,
+                                    Config config, int datasize) {
+    super(filePath, config, datasize);
     this.nTasks = numTasks;
+    this.dataSize = datasize;
   }
 
   @Override
