@@ -35,6 +35,10 @@ public class CommunicationContext extends Context {
   public static final String TWISTER2_KEYED_GATHER_OP_PARTITION = "partition";
   public static final String TWISTER2_KEYED_GATHER_OP_GATHER = "gather";
 
+  public static final String TWISTER2_PARTITION_ALGO_KEY = "twister2.partition.algorithm";
+  public static final String TWISTER2_PARTITION_ALGO_SIMPLE = "simple";
+  public static final String TWISTER2_PARTITION_ALGO_RING = "ring";
+
   public static int interNodeDegree(Config cfg, int defaultValue) {
     return cfg.getIntegerValue(INTER_NODE_DEGREE, defaultValue);
   }
@@ -58,5 +62,9 @@ public class CommunicationContext extends Context {
 
   public static String keyedGatherOp(Config cfg) {
     return cfg.getStringValue(TWISTER2_KEYED_GATHER_OP, TWISTER2_KEYED_GATHER_OP_PARTITION);
+  }
+
+  public static String partitionAlgorithm(Config cfg) {
+    return cfg.getStringValue(TWISTER2_PARTITION_ALGO_KEY, TWISTER2_PARTITION_ALGO_RING);
   }
 }

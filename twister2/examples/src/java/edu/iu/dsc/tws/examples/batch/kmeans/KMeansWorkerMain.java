@@ -9,9 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.kmeansoptimization;
+package edu.iu.dsc.tws.examples.batch.kmeans;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,17 +23,17 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.dataobjects.DataObjectConstants;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public class KMeansJobMain {
+public class KMeansWorkerMain {
 
-  private static final Logger LOG = Logger.getLogger(KMeansJobMain.class.getName());
+  private static final Logger LOG = Logger.getLogger(KMeansWorkerMain.class.getName());
 
-  public static void main(String[] args) throws ParseException, IOException {
+  public static void main(String[] args) throws ParseException {
     LOG.log(Level.INFO, "KMeans Clustering Job");
 
     // first load the configurations from command line and config files
@@ -48,7 +47,6 @@ public class KMeansJobMain {
     options.addOption(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM, false, "Shared file system");
     options.addOption(DataObjectConstants.ARGS_DIMENSIONS, true, "dim");
     options.addOption(DataObjectConstants.ARGS_PARALLELISM_VALUE, true, "parallelism");
-    options.addOption(DataObjectConstants.ARGS_NUMBER_OF_CLUSTERS, true, "clusters");
     options.addOption(DataObjectConstants.ARGS_ITERATIONS, true, "iter");
 
     options.addOption(Utils.createOption(DataObjectConstants.ARGS_DINPUT_DIRECTORY,
@@ -70,8 +68,6 @@ public class KMeansJobMain {
     int dimension = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.ARGS_DIMENSIONS));
     int parallelismValue = Integer.parseInt(cmd.getOptionValue(
         DataObjectConstants.ARGS_PARALLELISM_VALUE));
-    int numberOfClusters = Integer.parseInt(cmd.getOptionValue(
-        DataObjectConstants.ARGS_NUMBER_OF_CLUSTERS));
     int iterations = Integer.parseInt(cmd.getOptionValue(
         DataObjectConstants.ARGS_ITERATIONS));
 
@@ -97,12 +93,11 @@ public class KMeansJobMain {
     jobConfig.put(DataObjectConstants.ARGS_DIMENSIONS, Integer.toString(dimension));
     jobConfig.put(DataObjectConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
     jobConfig.put(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM, shared);
-    jobConfig.put(DataObjectConstants.ARGS_NUMBER_OF_CLUSTERS, Integer.toString(numberOfClusters));
     jobConfig.put(DataObjectConstants.ARGS_ITERATIONS, Integer.toString(iterations));
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("KMeans-job");
-    jobBuilder.setWorkerClass(KMeansJob.class.getName());
+    jobBuilder.setWorkerClass(KMeansWorker.class.getName());
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);
 

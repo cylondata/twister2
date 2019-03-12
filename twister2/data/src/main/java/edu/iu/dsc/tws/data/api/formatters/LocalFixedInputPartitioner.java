@@ -19,23 +19,27 @@ import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.api.splits.TextInputSplit;
 import edu.iu.dsc.tws.data.fs.Path;
 
-public class LocalTextInputPartitioner extends FileInputPartitioner<String> {
+public class LocalFixedInputPartitioner extends FixedInputPartitioner<String> {
+
   private static final long serialVersionUID = 1L;
 
   private static final Logger LOG = Logger.getLogger(LocalTextInputPartitioner.class.getName());
 
   private int nTasks;
+  private int dataSize;
 
   private OrderedInputSplitAssigner<String> assigner;
 
-  public LocalTextInputPartitioner(Path filePath, int numTasks) {
+  public LocalFixedInputPartitioner(Path filePath, int numTasks) {
     super(filePath);
     this.nTasks = numTasks;
   }
 
-  public LocalTextInputPartitioner(Path filePath, int numTasks, Config config) {
-    super(filePath, config);
+  public LocalFixedInputPartitioner(Path filePath, int numTasks,
+                                    Config config, int datasize) {
+    super(filePath, config, datasize);
     this.nTasks = numTasks;
+    this.dataSize = datasize;
   }
 
   @Override

@@ -67,7 +67,7 @@ public class Communicator {
   }
 
   protected Communicator(Config config, TWSChannel channel, EdgeGenerator edgeGenerator,
-                      TaskIdGenerator idGenerator, String persistentDirectory) {
+                         TaskIdGenerator idGenerator, String persistentDirectory) {
     this.channel = channel;
     this.config = config;
     this.edgeGenerator = edgeGenerator;
@@ -104,6 +104,7 @@ public class Communicator {
 
   /**
    * Create a communicator with new configuration
+   *
    * @param newConfig the new configuration
    * @return communicator
    */

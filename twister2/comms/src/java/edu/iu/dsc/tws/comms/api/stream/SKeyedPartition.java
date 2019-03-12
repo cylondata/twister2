@@ -56,7 +56,7 @@ public class SKeyedPartition {
         dataType, keyType);
 
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
   }
 
   /**

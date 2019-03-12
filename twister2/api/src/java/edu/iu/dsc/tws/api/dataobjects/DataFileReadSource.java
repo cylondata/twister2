@@ -11,11 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.dataobjects;
 
-import java.io.File;
-import java.util.logging.Logger;
-
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.utils.DataFileReader;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.DataPartition;
@@ -23,39 +23,33 @@ import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
+/**
+ * This class is responsible for directly reading the data points from the respective filesystem
+ * and add the datapoints into the DataObject.
+ */
 public class DataFileReadSource extends BaseSource implements Collector {
-
-  private static final Logger LOG
-      = Logger.getLogger(DataFileReadSource.class.getName());
 
   private static final long serialVersionUID = -1L;
 
   private String fileDirectory;
-  private int numberOfCenters;
   private int dimension;
+  private int datasize;
 
   private DataFileReader fileReader;
-
-  private DataObject<double[][]> centroids = null;
-
-  private double[][] centroid = null;
+  private DataObject<double[][]> dataObject = null;
+  private double[][] datapoints = null;
 
   public DataFileReadSource() {
   }
 
+  /**
+   * The execute method uses the DataFileReader utils class in the data package to
+   * read the input data points from the respective file system.
+   */
   @Override
   public void execute() {
-    LOG.info("Context Task Index:" + context.taskIndex());
-    File[] files = new File(fileDirectory).listFiles();
-    String fileName = null;
-    if (files != null) {
-      for (File file : files) {
-        fileName = file.getName();
-      }
-    }
-    centroid = fileReader.readCentroids(fileDirectory + "/" + fileName,
-        dimension, numberOfCenters);
-    centroids.addPartition(new EntityPartition<>(0, centroid));
+    datapoints = fileReader.readData(new Path(fileDirectory), dimension, datasize);
+    dataObject.addPartition(new EntityPartition<>(0, datapoints));
   }
 
   public void prepare(Config cfg, TaskContext context) {
@@ -64,13 +58,12 @@ public class DataFileReadSource extends BaseSource implements Collector {
     fileReader = new DataFileReader(config, fileSystem);
     fileDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
     dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DIMENSIONS));
-    numberOfCenters = Integer.parseInt(cfg.getStringValue(DataObjectConstants.
-        ARGS_NUMBER_OF_CLUSTERS));
-    centroids = new DataObjectImpl<>(config);
+    datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_CSIZE));
+    dataObject = new DataObjectImpl<>(config);
   }
 
   @Override
   public DataPartition<double[][]> get() {
-    return new EntityPartition<>(context.taskIndex(), centroid);
+    return new EntityPartition<>(context.taskIndex(), datapoints);
   }
 }

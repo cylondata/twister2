@@ -451,10 +451,6 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     return sources;
   }
 
-  public Set<Integer> getDestinations() {
-    return destinations;
-  }
-
   @Override
   public MessageType getKeyType() {
     return keyType;
@@ -471,5 +467,10 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
 
   public MessageType getReceiveKeyType() {
     return receiveKeyType;
+  }
+
+  @Override
+  public Set<Integer> getTargets() {
+    return destinations;
   }
 }

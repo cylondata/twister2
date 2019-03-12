@@ -56,6 +56,8 @@ public abstract class FileInputPartitioner<OT> implements InputPartitioner<OT, F
    */
   protected Path filePath;
 
+  protected Config config;
+
   /**
    * The fraction that the last split may be larger than the others.
    */
@@ -76,9 +78,14 @@ public abstract class FileInputPartitioner<OT> implements InputPartitioner<OT, F
     this.filePath = filePath;
   }
 
+  public FileInputPartitioner(Path filePath, Config cfg) {
+    this.filePath = filePath;
+    this.config = cfg;
+  }
+
   @Override
   public void configure(Config parameters) {
-
+    this.config = parameters;
   }
 
   /**
@@ -105,7 +112,8 @@ public abstract class FileInputPartitioner<OT> implements InputPartitioner<OT, F
     List<FileStatus> files = new ArrayList<FileStatus>();
     long totalLength = 0;
 
-    final FileSystem fs = path.getFileSystem();
+    //final FileSystem fs = path.getFileSystem();
+    final FileSystem fs = path.getFileSystem(config);
     final FileStatus pathFile = fs.getFileStatus(path);
 
     if (pathFile.isDir()) {
@@ -113,7 +121,6 @@ public abstract class FileInputPartitioner<OT> implements InputPartitioner<OT, F
     } else {
       //TODO L3: implement test for unsplittable
       //testForUnsplittable(pathFile);
-
       files.add(pathFile);
       totalLength += pathFile.getLen();
     }

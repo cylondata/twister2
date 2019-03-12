@@ -13,11 +13,15 @@ package edu.iu.dsc.tws.data.api.assigner;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
 public class OrderedInputSplitAssigner<T> implements InputSplitAssigner<T> {
+
+  private static final Logger LOG = Logger.getLogger(OrderedInputSplitAssigner.class.getName());
+
   private InputSplit<T>[] splits;
 
   private int numTasks;
