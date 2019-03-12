@@ -39,7 +39,7 @@ public class BKeyedPartition {
         new PartitionBatchFinalReceiver(rcvr),
         new PartitionPartialReceiver(), dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
   }
 
   public BKeyedPartition(Communicator comm, TaskPlan plan,
@@ -55,7 +55,7 @@ public class BKeyedPartition {
         new PartitionPartialReceiver(), dataType, MessageType.BYTE, keyType,
         keyType, e);
     this.partition.init(comm.getConfig(), dataType, plan, e);
-    this.destinationSelector.prepare(comm, partition.getSources(), partition.getDestinations());
+    this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
   }
 
   public boolean partition(int source, Object key, Object message, int flags) {
