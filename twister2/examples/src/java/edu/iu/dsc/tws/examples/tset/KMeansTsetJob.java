@@ -16,6 +16,7 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
@@ -24,6 +25,7 @@ import edu.iu.dsc.tws.api.tset.TwisterContext;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGenerator;
 import edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansJobParameters;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -64,7 +66,7 @@ public class KMeansTsetJob extends TSetBaseWorker implements Serializable {
 
     for (int i = 0; i < iterations; i++) {
       TSet<double[][]> kmeansTSet = ((CachedTSet<double[][]>) points).map(new KMeansMap());
-      kmeansTSet.addInput("centers", centers);
+      kmeansTSet.addInput("centers", (Cacheable<double[][]>) centers);
       TLink<double[][]> reduced = kmeansTSet.allReduce((t1, t2) -> t1);
       centers = reduced.map(new AverageCenters()).cache();
     }
@@ -75,7 +77,8 @@ public class KMeansTsetJob extends TSetBaseWorker implements Serializable {
 
     @Override
     public double[][] map(double[][] doubles) {
-      Object centers = CONTEXT.getInput("");
+      DataObject<double[][]> centers = (DataObject<double[][]>) CONTEXT.
+          getInput("centers").getData();
 
       return new double[0][];
     }
