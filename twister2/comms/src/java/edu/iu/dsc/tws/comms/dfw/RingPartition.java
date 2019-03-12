@@ -208,7 +208,7 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
     Set<Integer> targetsOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, targets);
     Set<Integer> sourcesOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, sources);
     Map<Integer, List<Integer>> mergerExpectedIds = new HashMap<>();
-    for (int target : targetsOfThisWorker) {
+    for (int target : targets) {
       mergerExpectedIds.put(target, new ArrayList<>(sourcesOfThisWorker));
     }
     // initialize the merger
@@ -362,7 +362,7 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
       onFinishedSources.add(source);
     }
 
-    return merger.onMessage(source, target, target, flags, message);
+    return merger.onMessage(source, 0, target, flags, message);
   }
 
   @Override
@@ -392,13 +392,13 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
     int worker = workers.get(nextWorkerIndex);
     List<Integer> tgts = workerToTargets.get(worker);
 
-    // we need to send starting from the previosu
-    int i;
-    int index = targetIndex.get(worker);
-    for (i = index; i < tgts.size(); i++) {
-      int target = tgts.get(i);
-      swapLock.lock();
-      try {
+    swapLock.lock();
+    try {
+      // we need to send starting from the previosu
+      int i;
+      int index = targetIndex.get(worker);
+      for (i = index; i < tgts.size(); i++) {
+        int target = tgts.get(i);
         List<Object> mergedData = merged.get(target);
         if (mergedData != null && mergedData.size() > 0) {
           swapToReady(target, mergedData);
@@ -408,46 +408,61 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
         if (data != null && data.size() > 0) {
           RoutingParameters parameters = targetRoutes.get(target);
           if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
-            index = i;
             break;
           } else {
             readyToSend.remove(target);
           }
         }
-      } finally {
-        swapLock.unlock();
       }
+      index = i;
+      // if we have sent everything reset to 0 and move onto next worker index
+      if (i == tgts.size()) {
+        index = 0;
+        incrementWorkerIndex();
+      }
+      targetIndex.put(nextWorkerIndex, index);
+    } finally {
+      swapLock.unlock();
     }
 
-    // if we have sent everything reset to 0 and move onto next worker index
-    if (i == tgts.size()) {
-      index = 0;
-      incrementWorkerIndex();
-    }
-    targetIndex.put(nextWorkerIndex, index);
-
-    if (delegate.isComplete() && onFinishedSources.equals(thisWorkerSources)
-        && readyToSend.isEmpty()) {
-      for (int source : thisWorkerSources) {
-        Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
-        for (int dest : targets) {
-          if (!finishedDestPerSource.contains(dest)) {
-            if (delegate.sendMessage(source, new byte[1], dest,
-                MessageFlags.END, targetRoutes.get(dest))) {
-              finishedDestPerSource.add(dest);
-            } else {
-              // no point in going further
-              break;
+    lock.lock();
+    try {
+      if (delegate.isComplete() && onFinishedSources.equals(thisWorkerSources)
+          && readyToSend.isEmpty()) {
+        for (int source : thisWorkerSources) {
+          Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
+          for (int dest : targets) {
+            if (!finishedDestPerSource.contains(dest)) {
+              if (delegate.sendMessage(source, new byte[1], dest,
+                  MessageFlags.END, targetRoutes.get(dest))) {
+                finishedDestPerSource.add(dest);
+                LOG.info(() -> String.format("%d SENT FINISHED %d -> %d",
+                    thisWorker, source, dest));
+              } else {
+                // no point in going further
+                break;
+              }
             }
           }
         }
+      } else {
+        if (readyToSend.isEmpty()) {
+          Map<Integer, Integer> values = new HashMap<>();
+          for (int i : readyToSend.keySet()) {
+            values.put(i, readyToSend.get(i).size());
+          }
+
+          LOG.info(() -> String.format("%d COMPLETE %s %b %b %s", thisWorker, delegate.isComplete(),
+              onFinishedSources.equals(thisWorkerSources), readyToSend.isEmpty(), values));
+        }
       }
+    } finally {
+      lock.unlock();
     }
 
     // now set the things
-    boolean needProgress = OperationUtils.progressReceivers(delegate, lock,
+    return OperationUtils.progressReceivers(delegate, lock,
         finalReceiver, partialLock, merger);
-    return needProgress;
   }
 
   private void incrementWorkerIndex() {

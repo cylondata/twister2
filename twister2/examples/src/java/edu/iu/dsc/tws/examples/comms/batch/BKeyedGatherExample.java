@@ -131,12 +131,15 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
         Object key = currentPair.getKey();
         Iterator<int[]> arrayIterator = (Iterator<int[]>) currentPair.getValue();
         int[] data = new int[0];
-        if (arrayIterator.hasNext()) {
+        int count = 0;
+        while (arrayIterator.hasNext()) {
           data = arrayIterator.next();
+          count++;
         }
-        LOG.log(Level.INFO, String.format("%d Results : key: %s value sample: %s num vals : %s",
+        LOG.log(Level.INFO, String.format(
+            "%d Results : key: %s value sample: %s num vals : %s total: %d",
             workerId, key, Arrays.toString(Arrays.copyOfRange(data,
-                0, Math.min(data.length, 10))), data.length));
+                0, Math.min(data.length, 10))), data.length, count));
       }
       gatherDone = true;
       return true;
