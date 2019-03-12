@@ -14,9 +14,9 @@ package edu.iu.dsc.tws.examples.tset;
 import java.io.File;
 import java.io.IOException;
 
-import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.OneToOnePartitioner;
+import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.api.tset.sink.FileSink;
 import edu.iu.dsc.tws.api.tset.sources.FileSource;
 import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
@@ -50,7 +50,7 @@ public class TSetFileAccessExample extends BaseTSetBatchWorker {
       }
     }
 
-    TSet<String> textSource = tc.createSource(new FileSource<>(
+    SourceTSet<String> textSource = tc.createSource(new FileSource<>(
         new SharedTextInputPartitioner(new Path(input)))).setParallelism(
             jobParameters.getTaskStages().get(0));
 

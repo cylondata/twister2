@@ -14,10 +14,10 @@ package edu.iu.dsc.tws.examples.tset;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
-import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
+import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
@@ -29,9 +29,9 @@ public class TSetAllGatherExample extends BaseTSetBatchWorker {
     super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    TSet<int[]> source = tc.createSource(new BaseSource()).setName("Source").
+    SourceTSet<int[]> source = tc.createSource(new BaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
-    TLink<int[]> gather = source.allGather().setParallelism(10);
+    AllGatherTLink<int[]> gather = source.allGather().setParallelism(10);
     gather.sink(new Sink<int[]>() {
       @Override
       public boolean add(int[] value) {

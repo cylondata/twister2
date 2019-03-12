@@ -24,12 +24,15 @@ import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
-import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class HelloTSet extends TSetBatchWorker implements Serializable {
   private static final long serialVersionUID = -2;
+
   @Override
   public void execute(TwisterBatchContext tc) {
     TSet<int[]> source = tc.createSource(new Source<int[]>() {
@@ -48,11 +51,12 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
       }
     }).setName("Source");
 
-    TLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>()).setName("part");
-    TSet<int[]> mapedPartition =
+    PartitionTLink<int[]> partitioned = source.
+        partition(new LoadBalancePartitioner<>()).setName("part");
+    MapTSet<int[], int[]> mapedPartition =
         partitioned.map((MapFunction<int[], int[]>) ints -> new int[0]).setName("Mapped");
 
-    TLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
+    ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {
         ret[i] = t1[i] + t2[i];
