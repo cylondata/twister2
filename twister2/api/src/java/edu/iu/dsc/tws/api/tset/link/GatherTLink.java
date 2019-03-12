@@ -50,4 +50,15 @@ public class GatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
   public int overrideParallelism() {
     return 1;
   }
+
+  @Override
+  public GatherTLink<T> setName(String n) {
+    super.setName(n);
+    return this;
+  }
+
+  @Override
+  public GatherTLink<T> setParallelism(int parallelism) {
+    return null;
+  }
 }

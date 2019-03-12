@@ -71,4 +71,15 @@ public class KeyedReduceTLink<T, K> extends KeyValueTLink<T, K> {
         new ReduceOpFunction<>(reduceFn), keyType, dataType,
         new TaskPartitionFunction<K>(partitionFunction), new TaskKeySelectorImpl<>(selector));
   }
+
+  @Override
+  public KeyedReduceTLink<T, K> setName(String n) {
+    super.setName(n);
+    return this;
+  }
+
+  @Override
+  public KeyedReduceTLink<T, K> setParallelism(int parallelism) {
+    return null;
+  }
 }

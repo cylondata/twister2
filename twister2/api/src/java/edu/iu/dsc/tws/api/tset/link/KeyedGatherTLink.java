@@ -68,4 +68,15 @@ public class KeyedGatherTLink<T, K> extends KeyValueTLink<T, K> {
     connection.keyedGather(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
         new TaskPartitionFunction<>(partitionFunction), new TaskKeySelectorImpl<>(selector));
   }
+
+  @Override
+  public KeyedGatherTLink<T, K> setName(String n) {
+    super.setName(n);
+    return this;
+  }
+
+  @Override
+  public KeyedGatherTLink<T, K> setParallelism(int parallelism) {
+    return null;
+  }
 }

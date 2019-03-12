@@ -64,4 +64,15 @@ public class KeyedPartitionTLink<T, K> extends KeyValueTLink<T, K> {
     connection.keyedPartition(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
         new TaskPartitionFunction<K>(partitionFunction), new TaskKeySelectorImpl<>(selector));
   }
+
+  @Override
+  public KeyedPartitionTLink<T, K> setName(String n) {
+    super.setName(n);
+    return this;
+  }
+
+  @Override
+  public KeyedPartitionTLink<T, K> setParallelism(int parallelism) {
+    return null;
+  }
 }

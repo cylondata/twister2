@@ -54,4 +54,15 @@ public class PartitionTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
   public PartitionFunction<T> getPartitionFunction() {
     return partitionFunction;
   }
+
+  @Override
+  public PartitionTLink<T> setName(String n) {
+    super.setName(n);
+    return this;
+  }
+
+  @Override
+  public PartitionTLink<T> setParallelism(int parallelism) {
+    return null;
+  }
 }

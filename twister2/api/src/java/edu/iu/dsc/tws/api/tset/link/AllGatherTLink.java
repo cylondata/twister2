@@ -44,4 +44,15 @@ public class AllGatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
     DataType dataType = TSetUtils.getDataType(getType());
     connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
+
+  @Override
+  public BaseTLink<T> setName(String n) {
+    super.setName(n);
+    return this;
+  }
+
+  @Override
+  public AllGatherTLink<T> setParallelism(int parallelism) {
+    return null;
+  }
 }

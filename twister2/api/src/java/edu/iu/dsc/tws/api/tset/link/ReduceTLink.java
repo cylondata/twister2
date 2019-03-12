@@ -60,4 +60,15 @@ public class ReduceTLink<T> extends BaseTLink<T> {
   public int overrideParallelism() {
     return 1;
   }
+
+  @Override
+  public ReduceTLink<T> setName(String n) {
+    super.setName(n);
+    return this;
+  }
+
+  @Override
+  public ReduceTLink<T> setParallelism(int parallelism) {
+    return null;
+  }
 }

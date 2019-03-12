@@ -55,4 +55,15 @@ public class AllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
   public ReduceFunction<T> getReduceFn() {
     return reduceFn;
   }
+
+  @Override
+  public AllReduceTLink<T> setName(String n) {
+    super.setName(n);
+    return this;
+  }
+
+  @Override
+  public AllReduceTLink<T> setParallelism(int parallelism) {
+    return null;
+  }
 }

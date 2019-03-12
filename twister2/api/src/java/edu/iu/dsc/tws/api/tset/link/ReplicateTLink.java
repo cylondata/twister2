@@ -53,4 +53,15 @@ public class ReplicateTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
 
     connection.broadcast(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
+
+  @Override
+  public ReplicateTLink<T> setName(String n) {
+    super.setName(n);
+    return this;
+  }
+
+  @Override
+  public ReplicateTLink<T> setParallelism(int parallelism) {
+    return null;
+  }
 }

@@ -39,4 +39,15 @@ public class DirectTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
     DataType dataType = TSetUtils.getDataType(getType());
     connection.direct(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
+
+  @Override
+  public DirectTLink<T> setName(String n) {
+    super.setName(n);
+    return this;
+  }
+
+  @Override
+  public DirectTLink<T> setParallelism(int parallelism) {
+    return null;
+  }
 }

@@ -64,7 +64,7 @@ public abstract class BaseTLink<T> implements TLink<T> {
   }
 
   @Override
-  public TLink<T> setName(String n) {
+  public BaseTLink<T> setName(String n) {
     this.name = n;
     return this;
   }
@@ -75,11 +75,6 @@ public abstract class BaseTLink<T> implements TLink<T> {
 
   public int getParallelism() {
     return parallel;
-  }
-
-  @Override
-  public TLink<T> setParallelism(int parallelism) {
-    return null;
   }
 
   @Override
