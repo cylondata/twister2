@@ -69,3 +69,11 @@ shuffle.memory.bytes.max: 1024000
 # the maximum number of records kept in memory for operations that goes to dist
 shuffle.memory.records.max: 10240
 
+# the keyed reduce algorithm
+twister2.keyed.reduce.op: "partition"
+
+# the algorithm for gathering data
+twister2.keyed.gather.op: "partition"
+
+# the partitioning algorithm
+twister2.partition.algorithm: "simple"
