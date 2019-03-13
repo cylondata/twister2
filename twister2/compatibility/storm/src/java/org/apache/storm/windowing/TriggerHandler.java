@@ -12,10 +12,14 @@
 
 package org.apache.storm.windowing;
 
-import org.apache.storm.tuple.Tuple;
-
 /**
- * A {@link Window} that contains {@link Tuple} objects.
+ * The callback fired by {@link TriggerPolicy} when the trigger condition is satisfied.
  */
-public interface TupleWindow extends Window<Tuple> {
+public interface TriggerHandler {
+  /**
+   * The code to execute when the {@link TriggerPolicy} condition is satisfied.
+   *
+   * @return true if the window was evaluated with at least one event in the window, false otherwise
+   */
+  boolean onTrigger();
 }

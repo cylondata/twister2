@@ -12,10 +12,21 @@
 
 package org.apache.storm.windowing;
 
-import org.apache.storm.tuple.Tuple;
-
 /**
- * A {@link Window} that contains {@link Tuple} objects.
+ * Watermark event used for tracking progress of time when processing event based ts.
  */
-public interface TupleWindow extends Window<Tuple> {
+public class WaterMarkEvent<T> extends EventImpl<T> {
+  public WaterMarkEvent(long ts) {
+    super(null, ts);
+  }
+
+  @Override
+  public boolean isWatermark() {
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "WaterMarkEvent{} " + super.toString();
+  }
 }
