@@ -45,7 +45,15 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
     this.parent = prnt;
     this.name = "cache-" + parent.getName();
     datapoints = new DataObjectImpl<>(config);
+    this.parallel = 1;
+  }
 
+  public CachedTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<T> prnt, int parallelism) {
+    super(cfg, tSetEnv);
+    this.parent = prnt;
+    this.name = "cache-" + parent.getName();
+    datapoints = new DataObjectImpl<>(config);
+    this.parallel = parallelism;
   }
 
   // todo: operations like map is different on a cached tset, because map will be done on data in
@@ -66,27 +74,27 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
   }
 
   public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
+    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
     return cacheSource.map(mapFn);
   }
 
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
+    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
     return cacheSource.flatMap(mapFn);
   }
 
   public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
+    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
     return cacheSource.map(mFn);
   }
 
   public <P1> IterableFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
+    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
     return cacheSource.flatMap(mFn);
   }
 
   public SinkTSet<T> sink(Sink<T> sink) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource());
+    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
     return cacheSource.sink(sink);
   }
 
@@ -115,12 +123,6 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
     int curr = datapoints.getPartitionCount();
     datapoints.addPartition(new EntityPartition<T>(curr, value)); //
     return false;
-  }
-
-  @Override
-  public CachedTSet<T> setParallelism(int parallelism) {
-    this.parallel = parallelism;
-    return this;
   }
 
   @Override

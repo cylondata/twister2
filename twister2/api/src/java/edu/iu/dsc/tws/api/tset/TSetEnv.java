@@ -43,8 +43,8 @@ public class TSetEnv {
     return config;
   }
 
-  public <T> SourceTSet<T> createSource(Source<T> source) {
-    return this.tSetBuilder.createSource(source, this);
+  public <T> SourceTSet<T> createSource(Source<T> source, int parallelism) {
+    return this.tSetBuilder.createSource(source, parallelism, this);
   }
 
   public void setMode(OperationMode mode) {

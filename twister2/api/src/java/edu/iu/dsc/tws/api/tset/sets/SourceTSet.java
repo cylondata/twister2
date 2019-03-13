@@ -29,16 +29,17 @@ import edu.iu.dsc.tws.common.config.Config;
 public class SourceTSet<T> extends BaseTSet<T> {
   private Source<T> source;
 
-  public SourceTSet(Config cfg, TSetEnv tSetEnv, Source<T> src) {
+  public SourceTSet(Config cfg, TSetEnv tSetEnv, Source<T> src, int parallelism) {
     super(cfg, tSetEnv);
     this.source = src;
     this.name = "source-" + new Random(System.nanoTime()).nextInt(10);
+    this.parallel = parallelism;
   }
 
   public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    MapTSet<P, T> set = new MapTSet<P, T>(config, tSetEnv, direct, mapFn);
+    MapTSet<P, T> set = new MapTSet<P, T>(config, tSetEnv, direct, mapFn, parallel);
     children.add(set);
     return set;
   }
@@ -46,7 +47,7 @@ public class SourceTSet<T> extends BaseTSet<T> {
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, direct, mapFn);
+    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, direct, mapFn, parallel);
     children.add(set);
     return set;
   }
@@ -54,7 +55,7 @@ public class SourceTSet<T> extends BaseTSet<T> {
   public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, direct, mapFn);
+    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, direct, mapFn, parallel);
     children.add(set);
     return set;
   }
@@ -62,7 +63,8 @@ public class SourceTSet<T> extends BaseTSet<T> {
   public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, direct, mapFn);
+    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, direct,
+        mapFn, parallel);
     children.add(set);
     return set;
   }
@@ -70,7 +72,7 @@ public class SourceTSet<T> extends BaseTSet<T> {
   public SinkTSet<T> sink(Sink<T> sink) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, direct, sink);
+    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, direct, sink, parallel);
     children.add(sinkTSet);
     tSetEnv.run();
     return sinkTSet;
@@ -87,12 +89,6 @@ public class SourceTSet<T> extends BaseTSet<T> {
   @Override
   public void buildConnection(ComputeConnection connection) {
     throw new IllegalStateException("Build connections should not be called on a TSet");
-  }
-
-  @Override
-  public SourceTSet<T> setParallelism(int parallelism) {
-    this.parallel = parallelism;
-    return this;
   }
 
   @Override

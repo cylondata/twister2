@@ -69,9 +69,9 @@ public final class TSetBuilder {
     return this;
   }
 
-  public <T> SourceTSet<T> createSource(Source<T> source, TSetEnv tSetEnv) {
+  public <T> SourceTSet<T> createSource(Source<T> source, int parallelism, TSetEnv tSetEnv) {
     builder.setMode(opMode);
-    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, tSetEnv, source);
+    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, tSetEnv, source, parallelism);
     sources.add(tSourceTSet);
     return tSourceTSet;
   }

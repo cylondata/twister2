@@ -14,9 +14,19 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.Constants;
+import edu.iu.dsc.tws.api.tset.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
+import edu.iu.dsc.tws.api.tset.IterableMapFunction;
+import edu.iu.dsc.tws.api.tset.MapFunction;
+import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.MapTSet;
+import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
@@ -39,6 +49,41 @@ public class GatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
     return true;
   }
 
+  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
+    MapTSet<P, T> set = new MapTSet<P, T>(config, tSetEnv, this, mapFn, 1);
+    children.add(set);
+    return set;
+  }
+
+  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
+    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, this, mapFn,
+        1);
+    children.add(set);
+    return set;
+  }
+
+  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
+    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, this,
+        mapFn, 1);
+    children.add(set);
+    return set;
+  }
+
+  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
+    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
+        mapFn, 1);
+    children.add(set);
+    return set;
+  }
+
+  public SinkTSet<T> sink(Sink<T> sink) {
+    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink,
+        1);
+    children.add(sinkTSet);
+    tSetEnv.run();
+    return sinkTSet;
+  }
+
   @Override
   public void buildConnection(ComputeConnection connection) {
     DataType dataType = TSetUtils.getDataType(getType());
@@ -55,10 +100,5 @@ public class GatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
   public GatherTLink<T> setName(String n) {
     super.setName(n);
     return this;
-  }
-
-  @Override
-  public GatherTLink<T> setParallelism(int parallelism) {
-    return null;
   }
 }

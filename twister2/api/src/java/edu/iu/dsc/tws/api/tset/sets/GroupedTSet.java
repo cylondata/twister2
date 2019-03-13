@@ -36,6 +36,17 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
     this.selector = selc;
     this.parent = prnt;
     this.name = "grouped-" + parent.getName();
+    this.parallel = 1;
+  }
+
+  public GroupedTSet(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt, PartitionFunction<K> partFn,
+                     Selector<T, K> selc, int parallelism) {
+    super(cfg, tSetEnv);
+    this.partitioner = partFn;
+    this.selector = selc;
+    this.parent = prnt;
+    this.name = "grouped-" + parent.getName();
+    this.parallel = parallelism;
   }
 
   public KeyedReduceTLink<T, K> keyedReduce(ReduceFunction<T> reduceFn) {
@@ -71,12 +82,6 @@ public class GroupedTSet<T, K> extends BaseTSet<T> {
   @Override
   public void buildConnection(ComputeConnection connection) {
     throw new IllegalStateException("Build connections should not be called on a TSet");
-  }
-
-  @Override
-  public GroupedTSet<T, K> setParallelism(int parallelism) {
-    this.parallel = parallelism;
-    return this;
   }
 
   @Override

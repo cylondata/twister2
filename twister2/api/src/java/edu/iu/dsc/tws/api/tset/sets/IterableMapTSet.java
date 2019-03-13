@@ -18,7 +18,6 @@ import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
@@ -36,6 +35,15 @@ public class IterableMapTSet<T, P> extends BaseTSet<T> {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
+    this.parallel = 1;
+  }
+
+  public IterableMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
+                         IterableMapFunction<P, T> mapFunc, int parallelism) {
+    super(cfg, tSetEnv);
+    this.parent = parent;
+    this.mapFn = mapFunc;
+    this.parallel = parallelism;
   }
 
   public <P1> MapTSet<P1, T> map(MapFunction<T, P1> mFn) {
@@ -95,12 +103,6 @@ public class IterableMapTSet<T, P> extends BaseTSet<T> {
   @Override
   public void buildConnection(ComputeConnection connection) {
     throw new IllegalStateException("Build connections should not be called on a TSet");
-  }
-
-  @Override
-  public TSet<T> setParallelism(int parallelism) {
-    this.parallel = parallelism;
-    return this;
   }
 
   @Override

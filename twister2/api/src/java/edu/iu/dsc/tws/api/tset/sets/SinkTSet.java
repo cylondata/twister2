@@ -25,11 +25,37 @@ public class SinkTSet<T> extends BaseTSet<T> {
 
   private BaseTLink<T> parent;
 
+  /**
+   * Creates SinkTSet with the given parameters, the parallelism of the TSet is taken as 1
+   *
+   * @param cfg config Object
+   * @param tSetEnv The TSetEnv used for execution
+   * @param prnt parent of the Sink TSet
+   * @param s The Sink function to be used
+   */
   public SinkTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<T> prnt, Sink<T> s) {
     super(cfg, tSetEnv);
     this.sink = s;
     this.parent = prnt;
     this.name = "sink-" + parent.getName();
+    this.parallel = 1;
+  }
+
+  /**
+   * Creates SinkTSet with the given parameters
+   *
+   * @param cfg config Object
+   * @param tSetEnv The TSetEnv used for execution
+   * @param prnt parent of the Sink TSet
+   * @param s The Sink function to be used
+   * @param parallelism the parallelism of the sink
+   */
+  public SinkTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<T> prnt, Sink<T> s, int parallelism) {
+    super(cfg, tSetEnv);
+    this.sink = s;
+    this.parent = prnt;
+    this.name = "sink-" + parent.getName();
+    this.parallel = parallelism;
   }
 
   @Override
@@ -37,10 +63,10 @@ public class SinkTSet<T> extends BaseTSet<T> {
     boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     // lets override the parallelism
-    int p = calculateParallelism(parent);
+    //int p = calculateParallelism(parent);
     sink.addInputs(inputMap);
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
-        new SinkOp<>(sink, isIterable, keyed), p);
+        new SinkOp<>(sink, isIterable, keyed), parallel);
     parent.buildConnection(connection);
     return true;
   }
@@ -48,12 +74,6 @@ public class SinkTSet<T> extends BaseTSet<T> {
   @Override
   public void buildConnection(ComputeConnection connection) {
     throw new IllegalStateException("Build connections should not be called on a TSet");
-  }
-
-  @Override
-  public SinkTSet<T> setParallelism(int parallelism) {
-    this.parallel = parallelism;
-    return this;
   }
 
   @Override

@@ -35,6 +35,15 @@ public class MapTSet<T, P> extends BaseTSet<T> {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
+    this.parallel = 1;
+  }
+
+  public MapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
+                 MapFunction<P, T> mapFunc, int parallelism) {
+    super(cfg, tSetEnv);
+    this.parent = parent;
+    this.mapFn = mapFunc;
+    this.parallel = parallelism;
   }
 
   public <P1> MapTSet<P1, T> map(MapFunction<T, P1> mFn) {
@@ -95,12 +104,6 @@ public class MapTSet<T, P> extends BaseTSet<T> {
   @Override
   public void buildConnection(ComputeConnection connection) {
     throw new IllegalStateException("Build connections should not be called on a TSet");
-  }
-
-  @Override
-  public MapTSet<T, P> setParallelism(int parallelism) {
-    this.parallel = parallelism;
-    return this;
   }
 
   @Override

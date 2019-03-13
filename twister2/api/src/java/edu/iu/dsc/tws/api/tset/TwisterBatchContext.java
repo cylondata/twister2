@@ -51,11 +51,12 @@ public class TwisterBatchContext {
    * in {@link TwisterBatchContext#mode}
    *
    * @param source source function to be used
+   * @param parallelism the parallelism of the source task
    * @return SourceTset created
    */
-  public <T> SourceTSet<T> createSource(Source<T> source) {
+  public <T> SourceTSet<T> createSource(Source<T> source, int parallelism) {
     //TODO: how to make sure user sets the correct mode? before using create source, pass in mode
     TSetEnv tSetEnv = new TSetEnv(this.config, this.taskExecutor, this.mode);
-    return tSetEnv.createSource(source);
+    return tSetEnv.createSource(source, parallelism);
   }
 }

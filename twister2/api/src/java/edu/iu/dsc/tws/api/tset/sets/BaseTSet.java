@@ -65,7 +65,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   /**
    * The parallelism of the set
    */
-  protected int parallel = 4;
+  protected int parallel = 1;
   /**
    * Defines if the TSet is Mutable or not
    */
@@ -112,12 +112,6 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   public int getParallelism() {
     return parallel;
-  }
-
-  @Override
-  public TSet<T> setParallelism(int parallelism) {
-    this.parallel = parallelism;
-    return this;
   }
 
   @Override

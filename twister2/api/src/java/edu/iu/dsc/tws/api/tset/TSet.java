@@ -28,14 +28,6 @@ import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
  */
 public interface TSet<T> extends TBase<T> {
   /**
-   * Set the parallelism for this set
-   *
-   * @param parallelism parallelism
-   * @return this set
-   */
-  TSet<T> setParallelism(int parallelism);
-
-  /**
    * Name of the tset
    */
   TSet<T> setName(String name);

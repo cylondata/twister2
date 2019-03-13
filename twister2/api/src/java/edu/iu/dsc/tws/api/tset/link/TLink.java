@@ -11,17 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
-import edu.iu.dsc.tws.api.tset.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.MapFunction;
-import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 
 /**
  * Link represents the connections between data Links.
@@ -33,55 +23,4 @@ public interface TLink<T> extends TBase<T> {
    * Name of the tset
    */
   TLink<T> setName(String name);
-
-  /**
-   * Link the parallelism for this link
-   *
-   * @param parallelism parallelism
-   * @return this link
-   */
-  TLink<T> setParallelism(int parallelism);
-
-  /**
-   * Apply a map function and create a map data set
-   *
-   * @param mapFn map function
-   * @param <P> return type of function
-   * @return this TSet
-   */
-  <P> MapTSet<P, T> map(MapFunction<T, P> mapFn);
-
-  /**
-   * Flatmap on the data
-   *
-   * @param mapFn map function
-   * @param <P> output type
-   * @return this set
-   */
-  <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn);
-
-  /**
-   * Map operation on the data
-   *
-   * @param mapFn map function
-   * @param <P> output type
-   * @return this set
-   */
-  <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn);
-
-  /**
-   * Flatmap operation on the data
-   *
-   * @param mapFn map function
-   * @param <P> output type
-   * @return this set
-   */
-  <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn);
-
-  /**
-   * Add a sink
-   *
-   * @param sink sink function
-   */
-  SinkTSet<T> sink(Sink<T> sink);
 }

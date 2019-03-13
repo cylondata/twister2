@@ -16,18 +16,8 @@ import java.util.List;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.tset.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.MapFunction;
-import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
-import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class BaseTLink<T> implements TLink<T> {
@@ -75,42 +65,6 @@ public abstract class BaseTLink<T> implements TLink<T> {
 
   public int getParallelism() {
     return parallel;
-  }
-
-  @Override
-  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    MapTSet<P, T> set = new MapTSet<P, T>(config, tSetEnv, this, mapFn);
-    children.add(set);
-    return set;
-  }
-
-  @Override
-  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, this, mapFn);
-    children.add(set);
-    return set;
-  }
-
-  @Override
-  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
-    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, this, mapFn);
-    children.add(set);
-    return set;
-  }
-
-  @Override
-  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, this, mapFn);
-    children.add(set);
-    return set;
-  }
-
-  @Override
-  public SinkTSet<T> sink(Sink<T> sink) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
   }
 
   @Override
