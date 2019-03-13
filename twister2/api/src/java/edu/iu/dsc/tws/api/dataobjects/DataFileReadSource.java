@@ -11,15 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.dataobjects;
 
-import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.utils.DataFileReader;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
-import edu.iu.dsc.tws.dataset.DataPartition;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
@@ -27,7 +24,7 @@ import edu.iu.dsc.tws.task.api.TaskContext;
  * This class is responsible for directly reading the data points from the respective filesystem
  * and add the datapoints into the DataObject.
  */
-public class DataFileReadSource extends BaseSource implements Collector {
+public class DataFileReadSource extends BaseSource {
 
   private static final long serialVersionUID = -1L;
 
@@ -39,6 +36,30 @@ public class DataFileReadSource extends BaseSource implements Collector {
   private DataObject<double[][]> dataObject = null;
   private double[][] datapoints = null;
 
+  /**
+   * Edge name to write the partitoned datapoints
+   */
+  private String edgeName;
+
+  public DataFileReadSource(String edgename) {
+    this.edgeName = edgename;
+  }
+
+  /**
+   * Getter property to set the edge name
+   */
+  public String getEdgeName() {
+    return edgeName;
+  }
+
+  /**
+   * Setter property to set the edge name
+   */
+  public void setEdgeName(String edgeName) {
+    this.edgeName = edgeName;
+  }
+
+
   public DataFileReadSource() {
   }
 
@@ -49,7 +70,8 @@ public class DataFileReadSource extends BaseSource implements Collector {
   @Override
   public void execute() {
     datapoints = fileReader.readData(new Path(fileDirectory), dimension, datasize);
-    dataObject.addPartition(new EntityPartition<>(0, datapoints));
+    context.writeEnd(getEdgeName(), datapoints);
+    //dataObject.addPartition(new EntityPartition<>(0, datapoints));
   }
 
   public void prepare(Config cfg, TaskContext context) {
@@ -62,8 +84,8 @@ public class DataFileReadSource extends BaseSource implements Collector {
     dataObject = new DataObjectImpl<>(config);
   }
 
-  @Override
+ /* @Override
   public DataPartition<double[][]> get() {
     return new EntityPartition<>(context.taskIndex(), datapoints);
-  }
+  }*/
 }
