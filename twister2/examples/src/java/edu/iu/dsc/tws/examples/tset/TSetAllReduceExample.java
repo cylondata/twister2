@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
@@ -41,6 +42,7 @@ public class TSetAllReduceExample extends BaseTSetBatchWorker {
     reduce.sink(value -> {
       experimentData.setOutput(value);
       try {
+        LOG.info("Results " + Arrays.toString(value));
         verify(OperationNames.ALLREDUCE);
       } catch (VerificationException e) {
         LOG.info("Exception Message : " + e.getMessage());

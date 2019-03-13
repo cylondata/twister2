@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -52,6 +53,7 @@ public class TSetKeyedReduceExample extends BaseTSetBatchWorker {
       public boolean add(int[] value) {
         experimentData.setOutput(value);
         try {
+          LOG.info("Task Id : " + CONTEXT.getIndex() + " Results " + Arrays.toString(value));
           verify(OperationNames.REDUCE);
         } catch (VerificationException e) {
           LOG.info("Exception Message : " + e.getMessage());

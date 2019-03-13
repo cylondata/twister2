@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -40,6 +41,7 @@ public class TSetGatherExample extends BaseTSetBatchWorker {
       @Override
       public boolean add(int[] value) {
         experimentData.setOutput(value);
+        LOG.info("Results " + Arrays.toString(value));
         try {
           verify(OperationNames.GATHER);
         } catch (VerificationException e) {
