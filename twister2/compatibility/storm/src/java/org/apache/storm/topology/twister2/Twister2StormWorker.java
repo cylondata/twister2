@@ -31,9 +31,9 @@ import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public abstract class Twister2TaskWorker extends TaskWorker {
+public abstract class Twister2StormWorker extends TaskWorker {
 
-  private static final Logger LOG = Logger.getLogger(Twister2TaskWorker.class.getName());
+  private static final Logger LOG = Logger.getLogger(Twister2StormWorker.class.getName());
 
   public abstract StormTopology buildTopology();
 

@@ -120,6 +120,10 @@ public class JobParameters {
     return warmupIterations;
   }
 
+  public int getTotalIterations() {
+    return this.getIterations() + this.getWarmupIterations();
+  }
+
   public static JobParameters build(Config cfg) {
     int iterations = Integer.parseInt(cfg.getStringValue(Constants.ARGS_ITR));
     int size = Integer.parseInt(cfg.getStringValue(Constants.ARGS_SIZE));

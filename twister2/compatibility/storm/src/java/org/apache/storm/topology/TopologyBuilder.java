@@ -198,9 +198,7 @@ public class TopologyBuilder implements Serializable {
 
   public BoltDeclarer setBolt(String id, IWindowedBolt bolt, Number parallelismHint) throws
       IllegalArgumentException {
-    throw new UnsupportedOperationException(
-        "This operation is not supported in twitser2 yet"
-    );
+    return this.createT2Bolt(id, bolt, parallelismHint);
   }
 
   public SpoutDeclarer setSpout(String id, IRichSpout spout) {
