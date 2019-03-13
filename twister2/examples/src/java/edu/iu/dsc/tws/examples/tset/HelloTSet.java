@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.tset;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -31,10 +32,13 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class HelloTSet extends TSetBatchWorker implements Serializable {
+  private static final Logger LOG = Logger.getLogger(HelloTSet.class.getName());
+
   private static final long serialVersionUID = -2;
 
   @Override
   public void execute(TwisterBatchContext tc) {
+    LOG.info("Strating Hello TSet Example");
     TSet<int[]> source = tc.createSource(new Source<int[]>() {
 
       private int count = 0;
@@ -54,7 +58,7 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
     PartitionTLink<int[]> partitioned = source.
         partition(new LoadBalancePartitioner<>()).setName("part");
     MapTSet<int[], int[]> mapedPartition =
-        partitioned.map((MapFunction<int[], int[]>) ints -> new int[0]).setName("Mapped");
+        partitioned.map((MapFunction<int[], int[]>) ints -> ints).setName("Mapped");
 
     ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];
@@ -65,9 +69,12 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
     }).setName("Reduce");
 
     reduce.sink(value -> {
-      System.out.println(Arrays.toString(value));
+      LOG.info("Results " + Arrays.toString(value));
       return false;
     }).setName("sink");
+
+    LOG.info("Ending  Hello TSet Example");
+
   }
 
   public static void main(String[] args) {
