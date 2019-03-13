@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
@@ -27,18 +29,22 @@ public class TSetReduceExample extends BaseTSetBatchWorker {
     super.execute(tc);
 
     // set the parallelism of source to task stage 0
+    List<Integer> taskStages = jobParameters.getTaskStages();
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
     SourceTSet<int[]> source = tc.createSource(new BaseSource()).setName("Source").
-        setParallelism(jobParameters.getTaskStages().get(0));
+        setParallelism(sourceParallelism);
     ReduceTLink<int[]> reduce = source.reduce((t1, t2) -> {
       int[] val = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {
         val[i] = t1[i] + t2[i];
       }
       return val;
-    }).setParallelism(10);
+    });
 
     reduce.sink(value -> {
       experimentData.setOutput(value);
+      LOG.info("Result : " + Arrays.toString(value));
       try {
         verify(OperationNames.REDUCE);
       } catch (VerificationException e) {

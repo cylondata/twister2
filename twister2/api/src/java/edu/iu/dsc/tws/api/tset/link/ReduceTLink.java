@@ -69,6 +69,6 @@ public class ReduceTLink<T> extends BaseTLink<T> {
 
   @Override
   public ReduceTLink<T> setParallelism(int parallelism) {
-    return null;
+    return this;
   }
 }
