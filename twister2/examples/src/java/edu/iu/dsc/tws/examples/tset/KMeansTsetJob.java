@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.tset;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,7 +25,6 @@ import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGenerator;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 
@@ -75,8 +75,8 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
     @Override
     public double[][] map(double[][] doubles) {
-      DataObject<double[][]> centers = (DataObject<double[][]>) CONTEXT.
-          getInput("centers").getData();
+      //TODO: cast needed since the context inputmap can hold many types of TSets, Solution?
+      List<double[][]> centers = (List<double[][]>) CONTEXT.getInput("centers").getData();
       return new double[0][];
     }
   }
