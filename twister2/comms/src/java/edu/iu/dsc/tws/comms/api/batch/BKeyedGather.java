@@ -47,7 +47,7 @@ public class BKeyedGather {
     this.keyType = kType;
     this.dataType = dType;
     if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_GATHER.equals(
-        CommunicationContext.keyedGatherOp(comm.getConfig()))) {
+        CommunicationContext.batchKeyedGatherOp(comm.getConfig()))) {
       Set<Integer> edges = new HashSet<>();
       for (int i = 0; i < destinations.size(); i++) {
         edges.add(comm.nextEdge());
@@ -58,16 +58,16 @@ public class BKeyedGather {
               null), new GatherMultiBatchPartialReceiver(),
           edges, kType, dType);
     } else if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_PARTITION.equals(
-        CommunicationContext.keyedGatherOp(comm.getConfig()))) {
+        CommunicationContext.batchKeyedGatherOp(comm.getConfig()))) {
       if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
-          CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
+          CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
         this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
             plan, sources, destinations,
             new KGatherBatchFinalReceiver(rcvr, 100),
             new KGatherBatchPartialReceiver(0, 100), dataType, dataType,
             keyType, keyType, comm.nextEdge());
       } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
-          CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
+          CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
         this.keyedGather = new RingPartition(comm.getConfig(), comm.getChannel(),
             plan, sources, destinations, new KGatherBatchFinalReceiver(rcvr, 100),
             new KGatherBatchPartialReceiver(0, 100),
@@ -86,7 +86,7 @@ public class BKeyedGather {
     this.keyType = kType;
     this.dataType = dType;
     if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_GATHER.equals(
-        CommunicationContext.keyedGatherOp(comm.getConfig()))) {
+        CommunicationContext.batchKeyedGatherOp(comm.getConfig()))) {
       Set<Integer> edges = new HashSet<>();
 
       for (int i = 0; i < destinations.size(); i++) {
@@ -98,7 +98,7 @@ public class BKeyedGather {
               comparator), new GatherMultiBatchPartialReceiver(), edges,
           kType, dType);
     } else if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_PARTITION.equals(
-        CommunicationContext.keyedGatherOp(comm.getConfig()))) {
+        CommunicationContext.batchKeyedGatherOp(comm.getConfig()))) {
       this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations,
           new KGatherBatchFinalReceiver(rcvr, 100),

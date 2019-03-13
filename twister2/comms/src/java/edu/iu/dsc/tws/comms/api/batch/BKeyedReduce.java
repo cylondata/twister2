@@ -51,7 +51,7 @@ public class BKeyedReduce {
     this.dataType = dType;
 
     if (CommunicationContext.TWISTER2_KEYED_REDUCE_OP_REDUCE.equals(
-        CommunicationContext.keyedReduceOp(comm.getConfig()))) {
+        CommunicationContext.batchKeyedReduceOp(comm.getConfig()))) {
       Set<Integer> edges = new HashSet<>();
       for (int i = 0; i < destinations.size(); i++) {
         edges.add(comm.nextEdge());
@@ -62,7 +62,7 @@ public class BKeyedReduce {
           new ReduceMultiBatchFinalReceiver(fnc, rcvr),
           new ReduceMultiBatchPartialReceiver(fnc), edges, keyType, dataType);
     } else if (CommunicationContext.TWISTER2_KEYED_REDUCE_OP_PARTITION.equals(
-        CommunicationContext.keyedReduceOp(comm.getConfig()))) {
+        CommunicationContext.batchKeyedReduceOp(comm.getConfig()))) {
       this.keyedReduce = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations,
           new KReduceBatchFinalReceiver(fnc, rcvr),

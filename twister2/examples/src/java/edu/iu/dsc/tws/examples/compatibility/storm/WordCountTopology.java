@@ -25,7 +25,7 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.topology.base.BaseRichSpout;
-import org.apache.storm.topology.twister2.Twister2TaskWorker;
+import org.apache.storm.topology.twister2.Twister2StormWorker;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
@@ -40,7 +40,7 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 /**
  * This is a topology that does simple word counts.
  */
-public final class WordCountTopology extends Twister2TaskWorker {
+public final class WordCountTopology extends Twister2StormWorker {
 
   @Override
   public StormTopology buildTopology() {
