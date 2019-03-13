@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.Sink;
@@ -31,8 +32,11 @@ public class TSetKeyedReduceExample extends BaseTSetBatchWorker {
     super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    SourceTSet<int[]> source = tc.createSource(new BaseSource()).setName("Source").
-        setParallelism(jobParameters.getTaskStages().get(0));
+    List<Integer> taskStages = jobParameters.getTaskStages();
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
+    SourceTSet<int[]> source = tc.createSource(new BaseSource(),
+        sourceParallelism).setName("Source");
     KeyedReduceTLink<int[], int[]> reduce = source.
         groupBy(new LoadBalancePartitioner<>(), new IdentitySelector<>()).
           keyedReduce((t1, t2) -> {
@@ -41,7 +45,7 @@ public class TSetKeyedReduceExample extends BaseTSetBatchWorker {
               val[i] = t1[i] + t2[i];
             }
             return val;
-          }).setParallelism(10);
+          });
 
     reduce.sink(new Sink<int[]>() {
       @Override
@@ -58,7 +62,7 @@ public class TSetKeyedReduceExample extends BaseTSetBatchWorker {
       @Override
       public void prepare(TSetContext context) {
       }
-    });
+    }, sinkParallelism);
   }
 
 }

@@ -32,8 +32,8 @@ public class TSetReduceExample extends BaseTSetBatchWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    SourceTSet<int[]> source = tc.createSource(new BaseSource()).setName("Source").
-        setParallelism(sourceParallelism);
+    SourceTSet<int[]> source = tc.createSource(new BaseSource(),
+        sourceParallelism).setName("Source");
     ReduceTLink<int[]> reduce = source.reduce((t1, t2) -> {
       int[] val = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {

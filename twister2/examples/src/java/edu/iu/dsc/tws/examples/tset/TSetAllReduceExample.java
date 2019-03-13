@@ -27,15 +27,16 @@ public class TSetAllReduceExample extends BaseTSetBatchWorker {
     super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    SourceTSet<int[]> source = tc.createSource(new BaseSource()).setName("Source").
-        setParallelism(jobParameters.getTaskStages().get(0));
+    int srcPara = jobParameters.getTaskStages().get(0);
+    int sinkPara = jobParameters.getTaskStages().get(1);
+    SourceTSet<int[]> source = tc.createSource(new BaseSource(), srcPara).setName("Source");
     AllReduceTLink<int[]> reduce = source.allReduce((t1, t2) -> {
       int[] val = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {
         val[i] = t1[i] + t2[i];
       }
       return val;
-    }).setParallelism(10);
+    });
 
     reduce.sink(value -> {
       experimentData.setOutput(value);
@@ -45,7 +46,7 @@ public class TSetAllReduceExample extends BaseTSetBatchWorker {
         LOG.info("Exception Message : " + e.getMessage());
       }
       return true;
-    });
+    }, sinkPara);
   }
 
 }

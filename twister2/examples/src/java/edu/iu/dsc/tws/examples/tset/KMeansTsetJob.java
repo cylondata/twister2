@@ -59,14 +59,14 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     }
 
     //TODO: consider what happens when same execEnv is used to create multiple graphs
-    CachedTSet<double[][]> points = tc.createSource(new PointsSource()).cache();
-    CachedTSet<double[][]> centers = tc.createSource(new CenterSource()).cache();
+    CachedTSet<double[][]> points = tc.createSource(new PointsSource(), parallelismValue).cache();
+    CachedTSet<double[][]> centers = tc.createSource(new CenterSource(), parallelismValue).cache();
 
     for (int i = 0; i < iterations; i++) {
       MapTSet<double[][], double[][]> kmeansTSet = points.map(new KMeansMap());
       kmeansTSet.addInput("centers", centers);
       AllReduceTLink<double[][]> reduced = kmeansTSet.allReduce((t1, t2) -> t1);
-      centers = reduced.map(new AverageCenters()).cache();
+      centers = reduced.map(new AverageCenters(), parallelismValue).cache();
     }
 
   }

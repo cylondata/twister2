@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.Sink;
@@ -29,8 +30,10 @@ public class TSetReplicateExample extends BaseTSetBatchWorker {
     super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    SourceTSet<int[]> source = tc.createSource(new BaseSource()).setName("Source").
-        setParallelism(jobParameters.getTaskStages().get(0));
+    List<Integer> taskStages = jobParameters.getTaskStages();
+    int sourceParallelism = taskStages.get(0);
+    SourceTSet<int[]> source = tc.createSource(new BaseSource(), sourceParallelism).
+        setName("Source");
     ReplicateTLink<int[]> replicate = source.replicate(10);
 
     replicate.sink(new Sink<int[]>() {

@@ -51,13 +51,11 @@ public class TSetFileAccessExample extends BaseTSetBatchWorker {
     }
 
     SourceTSet<String> textSource = tc.createSource(new FileSource<>(
-        new SharedTextInputPartitioner(new Path(input)))).setParallelism(
-            jobParameters.getTaskStages().get(0));
+        new SharedTextInputPartitioner(new Path(input))), jobParameters.getTaskStages().get(0));
 
     textSource.partition(new OneToOnePartitioner<>()).sink(
         new FileSink<>(new TextOutputWriter(
             FileSystem.WriteMode.OVERWRITE,
-            new Path(output)))).setParallelism(
-                jobParameters.getTaskStages().get(0));
+            new Path(output))), jobParameters.getTaskStages().get(0));
   }
 }

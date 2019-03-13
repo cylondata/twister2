@@ -67,7 +67,7 @@ public class HelloTSetEnv extends TSetBatchWorker implements Serializable {
       @Override
       public void prepare(TSetContext context) {
       }
-    }).setName("Source");
+    }, 4).setName("Source");
 
     PartitionTLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
     MapTSet<int[], int[]> mapedPartition = partitioned.map(new MapFunction<int[], int[]>() {
@@ -75,7 +75,7 @@ public class HelloTSetEnv extends TSetBatchWorker implements Serializable {
       public int[] map(int[] ints) {
         return new int[0];
       }
-    });
+    }, 4);
     ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {

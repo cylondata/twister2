@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.Sink;
@@ -30,8 +31,11 @@ public class TSetPartitionExample extends BaseTSetBatchWorker {
     super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    SourceTSet<int[]> source = tc.createSource(new BaseSource()).setName("Source").
-        setParallelism(jobParameters.getTaskStages().get(0));
+    List<Integer> taskStages = jobParameters.getTaskStages();
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
+    SourceTSet<int[]> source = tc.createSource(new BaseSource(),
+        sourceParallelism).setName("Source");
     PartitionTLink<int[]> partition = source.partition(new OneToOnePartitioner<>());
 
     partition.sink(new Sink<int[]>() {
@@ -49,7 +53,7 @@ public class TSetPartitionExample extends BaseTSetBatchWorker {
       @Override
       public void prepare(TSetContext context) {
       }
-    });
+    }, sinkParallelism);
   }
 
 }

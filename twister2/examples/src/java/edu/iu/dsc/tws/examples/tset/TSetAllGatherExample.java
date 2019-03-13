@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.Sink;
@@ -29,9 +30,12 @@ public class TSetAllGatherExample extends BaseTSetBatchWorker {
     super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    SourceTSet<int[]> source = tc.createSource(new BaseSource()).setName("Source").
-        setParallelism(jobParameters.getTaskStages().get(0));
-    AllGatherTLink<int[]> gather = source.allGather().setParallelism(10);
+    List<Integer> taskStages = jobParameters.getTaskStages();
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
+    SourceTSet<int[]> source = tc.createSource(new BaseSource(), sourceParallelism).
+        setName("Source");
+    AllGatherTLink<int[]> gather = source.allGather();
     gather.sink(new Sink<int[]>() {
       @Override
       public boolean add(int[] value) {
@@ -47,7 +51,7 @@ public class TSetAllGatherExample extends BaseTSetBatchWorker {
       @Override
       public void prepare(TSetContext context) {
       }
-    });
+    }, sourceParallelism);
   }
 
 }

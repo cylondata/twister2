@@ -53,12 +53,12 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
         count++;
         return new int[]{1, 1, 1};
       }
-    }).setName("Source");
+    }, 4).setName("Source");
 
     PartitionTLink<int[]> partitioned = source.
         partition(new LoadBalancePartitioner<>()).setName("part");
     MapTSet<int[], int[]> mapedPartition =
-        partitioned.map((MapFunction<int[], int[]>) ints -> ints).setName("Mapped");
+        partitioned.map((MapFunction<int[], int[]>) ints -> ints, 4).setName("Mapped");
 
     ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];
