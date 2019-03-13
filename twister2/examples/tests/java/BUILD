@@ -48,7 +48,8 @@ java_library(
 
 java_tests(
     test_classes = [
-        "edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGeneratorTest",
+        "edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGeneratorTest",
+        "edu.iu.dsc.tws.examples.batch.kmeans.TaskGraphBuildTest",
     ],
     runtime_deps = [
         ":examples-tests",
@@ -58,7 +59,8 @@ java_tests(
 java_tests_debug(
     size = "enormous",
     test_classes = [
-        "edu.iu.dsc.tws.examples.batch.kmeansoptimization.KMeansDataGeneratorTest",
+        "edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGeneratorTest",
+        "edu.iu.dsc.tws.examples.batch.kmeans.TaskGraphBuildTest",
     ],
     runtime_deps = [
         ":examples-tests",

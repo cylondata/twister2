@@ -9,7 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.dataobjects;
+package edu.iu.dsc.tws.data.utils;
+
+/**
+ * The input parameters required to create, partition, and read the input data points.
+ */
 
 public class DataObjectConstants {
 
@@ -26,7 +30,6 @@ public class DataObjectConstants {
   public static final String ARGS_CINPUT_DIRECTORY = "cinput";
   public static final String ARGS_OUTPUT_DIRECTORY = "output";
   public static final String ARGS_NUMBER_OF_FILES = "nFiles";
-  public static final String ARGS_NUMBER_OF_CLUSTERS = "clusters";
   public static final String ARGS_FILE_SYSTEM = "filesys";
   public static final String ARGS_ITERATIONS = "iter";
 }
