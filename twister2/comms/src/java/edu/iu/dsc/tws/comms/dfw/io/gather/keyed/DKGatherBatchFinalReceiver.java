@@ -123,15 +123,16 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
   @Override
   protected boolean sendToTarget(boolean needsFurtherProgress, boolean sourcesFinished, int target,
                                  Queue<Object> targetSendQueue) {
-    int flags = 0;
     Shuffle sortedMerger = sortedMergers.get(target);
     while (!targetSendQueue.isEmpty()) {
       Tuple kc = (Tuple) targetSendQueue.poll();
       Object data = kc.getValue();
       byte[] d = DataSerializer.serialize(data, kryoSerializer);
       sortedMerger.add(kc.getKey(), d, d.length);
-
     }
+
+    //write to disk if overflows
+    sortedMerger.run();
 
     return needsFurtherProgress;
   }

@@ -130,7 +130,11 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
       while (it.hasNext()) {
         Tuple<Object, Object> currentPair = (Tuple) it.next();
         Object key = currentPair.getKey();
-        int[] data = (int[]) currentPair.getValue();
+        Iterator dataIterator = (Iterator) currentPair.getValue();
+        int[] data = new int[0];
+        if (dataIterator.hasNext()) {
+          data = (int[]) dataIterator.next();
+        }
         LOG.log(Level.INFO, String.format("%d Results : key: %s value sample: %s num vals : %s",
             workerId, key, Arrays.toString(Arrays.copyOfRange(data,
                 0, Math.min(data.length, 10))), 1));
