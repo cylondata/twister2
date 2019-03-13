@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -55,6 +56,7 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
     // create the communication
     keyedGather = new BKeyedGather(communicator, taskPlan, sources, targets,
         MessageType.INTEGER, MessageType.INTEGER, new FinalReduceReceiver(),
+        Comparator.comparing(o -> (Integer) o),
         new SimpleKeyBasedSelector(), true);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,

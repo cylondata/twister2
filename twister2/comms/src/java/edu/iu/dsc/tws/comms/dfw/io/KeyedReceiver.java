@@ -136,7 +136,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
     boolean added;
 
     if (messages.get(target) == null) {
-      throw new RuntimeException(String.format("Executor %d, Partial receive error. Receiver did"
+      throw new RuntimeException(String.format("Worker %d, receive error. Receiver did "
           + "not expect messages for this target %d", executor, target));
     }
 
@@ -152,7 +152,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
     }
 
     if (!(object instanceof Tuple) && !(object instanceof List)) {
-      throw new RuntimeException(String.format("Executor %d, Partial receive error. Received"
+      throw new RuntimeException(String.format("Worker %d, receive error. Received"
           + " object which is not of type Tuple or List for target %d", executor, target));
     }
 
