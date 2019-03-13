@@ -10,12 +10,22 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package org.apache.storm.windowing;
+package org.apache.storm.topology;
 
-import org.apache.storm.tuple.Tuple;
+public class FailedException extends RuntimeException {
+  public FailedException() {
+    super();
+  }
 
-/**
- * A {@link Window} that contains {@link Tuple} objects.
- */
-public interface TupleWindow extends Window<Tuple> {
+  public FailedException(String msg) {
+    super(msg);
+  }
+
+  public FailedException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
+
+  public FailedException(Throwable cause) {
+    super(cause);
+  }
 }

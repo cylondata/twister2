@@ -14,6 +14,8 @@ package org.apache.storm.tuple;
 
 import java.util.List;
 
+import org.apache.storm.generated.GlobalStreamId;
+
 /**
  * The tuple is the main data structure in Storm. A tuple is a named list of values,
  * where each value can be any type. Tuples are dynamically typed -- the types of the fields
@@ -23,6 +25,7 @@ import java.util.List;
  * Storm needs to know how to serialize all the values in a tuple. By default, Storm
  * knows how to serialize the primitive types, strings, and byte arrays. If you want to
  * use another type, you'll need to implement and register a serializer for that type.
+ *
  * @see <a href="https://storm.apache.org/documentation/Serialization.html">Storm serialization</a>
  */
 public interface Tuple {
@@ -43,7 +46,7 @@ public interface Tuple {
   Fields getFields();
 
   /**
-   *  Returns the position of the specified field in this tuple.
+   * Returns the position of the specified field in this tuple.
    *
    * @throws IllegalArgumentException - if field does not exist
    */
@@ -221,10 +224,7 @@ public interface Tuple {
   /**
    * Returns the global stream id (component + stream) of this tuple.
    */
-    /*
-    TODO:- One can get this using getSourceStreamId and getSourceComponent
-     GlobalStreamId getSourceGlobalStreamid();
-    */
+  GlobalStreamId getSourceGlobalStreamId();
 
   /**
    * Gets the id of the component that created this tuple.
