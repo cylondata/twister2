@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -95,7 +94,6 @@ public class FSKeyedMerger implements Shuffle {
   private MessageType dataType;
 
   private Lock lock = new ReentrantLock();
-  private Condition notFull = lock.newCondition();
 
   /**
    * The kryo serializer
@@ -135,10 +133,6 @@ public class FSKeyedMerger implements Shuffle {
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
-      if (numOfBytesInMemory > maxBytesToKeepInMemory
-          || recordsInMemory.size() > maxRecordsInMemory) {
-        notFull.signal();
-      }
     } finally {
       lock.unlock();
     }
