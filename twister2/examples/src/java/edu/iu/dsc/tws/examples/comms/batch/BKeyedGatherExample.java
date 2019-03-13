@@ -95,7 +95,11 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return gatherDone && sourcesDone && !keyedGather.hasPending();
+    boolean b = gatherDone && sourcesDone && !keyedGather.hasPending();
+    if (b) {
+      LOG.info(String.format("%d is done", workerId));
+    }
+    return b;
   }
 
   @Override

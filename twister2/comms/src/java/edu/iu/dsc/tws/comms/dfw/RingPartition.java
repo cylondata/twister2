@@ -362,7 +362,12 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
       onFinishedSources.add(source);
     }
 
-    return merger.onMessage(source, 0, target, flags, message);
+    partialLock.lock();
+    try {
+      return merger.onMessage(source, 0, target, flags, message);
+    } finally {
+      partialLock.unlock();
+    }
   }
 
   @Override
@@ -427,8 +432,7 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
 
     lock.lock();
     try {
-      if (delegate.isComplete() && onFinishedSources.equals(thisWorkerSources)
-          && readyToSend.isEmpty()) {
+      if (onFinishedSources.equals(thisWorkerSources) && readyToSend.isEmpty()) {
         for (int source : thisWorkerSources) {
           Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
           for (int dest : targets) {
@@ -436,10 +440,12 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
               if (delegate.sendMessage(source, new byte[1], dest,
                   MessageFlags.END, targetRoutes.get(dest))) {
                 finishedDestPerSource.add(dest);
-                LOG.info(() -> String.format("%d SENT FINISHED %d -> %d",
+                LOG.fine(() -> String.format("%d SENT FINISHED %d -> %d",
                     thisWorker, source, dest));
               } else {
                 // no point in going further
+                LOG.fine(() -> String.format("%d NOT SENT FINISHED %d -> %d",
+                    thisWorker, source, dest));
                 break;
               }
             }
@@ -452,17 +458,18 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
             values.put(i, readyToSend.get(i).size());
           }
 
-          LOG.info(() -> String.format("%d COMPLETE %s %b %b %s", thisWorker, delegate.isComplete(),
+          LOG.fine(() -> String.format("%d COMPLETE %s %b %b %s", thisWorker, delegate.isComplete(),
               onFinishedSources.equals(thisWorkerSources), readyToSend.isEmpty(), values));
         }
       }
+
+      // now set the things
+      return OperationUtils.progressReceivers(delegate, lock,
+          finalReceiver, partialLock, merger);
+
     } finally {
       lock.unlock();
     }
-
-    // now set the things
-    return OperationUtils.progressReceivers(delegate, lock,
-        finalReceiver, partialLock, merger);
   }
 
   private void incrementWorkerIndex() {
@@ -541,7 +548,12 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
   public boolean receiveSendInternally(int source, int target, int path,
 
                                        int flags, Object message) {
-    return finalReceiver.onMessage(source, 0, target, flags, message);
+    lock.lock();
+    try {
+      return finalReceiver.onMessage(source, 0, target, flags, message);
+    } finally {
+      lock.unlock();
+    }
   }
 
   private void swapToReady(int target, List<Object> data) {

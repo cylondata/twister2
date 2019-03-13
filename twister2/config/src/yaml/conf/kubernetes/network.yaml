@@ -70,10 +70,19 @@ shuffle.memory.bytes.max: 1024000
 shuffle.memory.records.max: 10240
 
 # the keyed reduce algorithm
-twister2.keyed.reduce.op: "partition"
+twister2.stream.keyed.reduce.op: "partition"
 
 # the algorithm for gathering data
-twister2.keyed.gather.op: "partition"
+twister2.stream.keyed.gather.op: "partition"
 
 # the partitioning algorithm
-twister2.partition.algorithm: "simple"
+twister2.stream.partition.algorithm: "simple"
+
+# the keyed reduce algorithm
+twister2.batch.keyed.reduce.op: "partition"
+
+# the algorithm for gathering data
+twister2.batch.keyed.gather.op: "partition"
+
+# the partitioning algorithm
+twister2.batch.partition.algorithm: "ring"
