@@ -12,6 +12,9 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
@@ -27,6 +30,7 @@ import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
+import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 
 public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
@@ -92,7 +96,17 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
-  public DataObject<T> getData() {
+  public List<T> getData() {
+    DataPartition<T>[] parts = datapoints.getPartitions();
+    List<T> results = new ArrayList();
+    for (DataPartition<T> part : parts) {
+      results.add(part.getConsumer().next());
+    }
+    return results;
+  }
+
+  @Override
+  public DataObject<T> getDataObject() {
     return datapoints;
   }
 
@@ -133,23 +147,23 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
 
   private class CacheSource implements Source<T> {
     //TODO: need to check this codes logic developed now just based on the data object API
-    private int count = getData().getPartitionCount();
+    private int count = getDataObject().getPartitionCount();
     private int current = 0;
 
     @Override
     public boolean hasNext() {
-      boolean hasNext = (current < count) ? getData().getPartitions(current)
+      boolean hasNext = (current < count) ? getDataObject().getPartitions(current)
           .getConsumer().hasNext() : false;
 
       while (++current < count && !hasNext) {
-        hasNext = getData().getPartitions(current).getConsumer().hasNext();
+        hasNext = getDataObject().getPartitions(current).getConsumer().hasNext();
       }
       return hasNext;
     }
 
     @Override
     public T next() {
-      return getData().getPartitions(current).getConsumer().next();
+      return getDataObject().getPartitions(current).getConsumer().next();
     }
   }
 }

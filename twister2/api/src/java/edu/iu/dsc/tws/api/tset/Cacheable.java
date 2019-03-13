@@ -12,6 +12,8 @@
 
 package edu.iu.dsc.tws.api.tset;
 
+import java.util.List;
+
 import edu.iu.dsc.tws.dataset.DataObject;
 
 /**
@@ -25,7 +27,13 @@ public interface Cacheable<T> {
    * retrieve data saved in the TSet
    * @return dataObject
    */
-  DataObject<T> getData();
+  List<T> getData();
+
+  /**
+   * retrieve data saved in the TSet
+   * @return dataObject
+   */
+  DataObject<T> getDataObject();
 
   /**
    * Add Data to the data object
