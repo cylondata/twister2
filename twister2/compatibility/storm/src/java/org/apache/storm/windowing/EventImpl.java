@@ -12,10 +12,35 @@
 
 package org.apache.storm.windowing;
 
-import org.apache.storm.tuple.Tuple;
+public class EventImpl<T> implements Event<T> {
+  private final T event;
+  private long ts;
 
-/**
- * A {@link Window} that contains {@link Tuple} objects.
- */
-public interface TupleWindow extends Window<Tuple> {
+  EventImpl(T event, long ts) {
+    this.event = event;
+    this.ts = ts;
+  }
+
+  @Override
+  public long getTimestamp() {
+    return ts;
+  }
+
+  @Override
+  public T get() {
+    return event;
+  }
+
+  @Override
+  public boolean isWatermark() {
+    return false;
+  }
+
+  @Override
+  public String toString() {
+    return "EventImpl{"
+        + "event=" + event
+        + ", ts=" + ts
+        + '}';
+  }
 }
