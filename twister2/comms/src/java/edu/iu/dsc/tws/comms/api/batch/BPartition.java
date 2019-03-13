@@ -68,13 +68,13 @@ public class BPartition {
     }
 
     if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
-        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
+        CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
       DataFlowPartition p = new DataFlowPartition(comm.getChannel(), sources, targets,
           finalRcvr, new PartitionPartialReceiver(), dataType);
       p.init(comm.getConfig(), dataType, plan, comm.nextEdge());
       this.partition = p;
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
-        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
+        CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
       this.partition = new RingPartition(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, finalRcvr, new PartitionPartialReceiver(),
           dataType, dataType, null, null, comm.nextEdge());
