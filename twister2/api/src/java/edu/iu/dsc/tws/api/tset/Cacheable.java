@@ -9,23 +9,37 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.api.tset;
 
+import java.util.List;
+
+import edu.iu.dsc.tws.dataset.DataObject;
+
 /**
- * Collector for map function
- *
- * @param <T> input type
+ * All Tsets that are cachable need to implement this interface
+ * This interface defines the methods that other classes can use to
+ * access the cached data
  */
-public interface  Collector<T> {
-  /**
-   * Collect the record
-   *
-   * @param record this will be sent
-   */
-  void collect(T record);
+public interface Cacheable<T> {
 
   /**
-   * Close the collector
+   * retrieve data saved in the TSet
+   * @return dataObject
    */
-  void close();
+  List<T> getData();
+
+  /**
+   * retrieve data saved in the TSet
+   * @return dataObject
+   */
+  DataObject<T> getDataObject();
+
+  /**
+   * Add Data to the data object
+   * @param value value to be added
+   * @return true if the data was added successfully or false otherwise
+   */
+  boolean addData(T value);
+
 }

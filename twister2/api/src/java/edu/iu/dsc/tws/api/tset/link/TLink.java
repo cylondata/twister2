@@ -9,23 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.api.tset.link;
+
+import edu.iu.dsc.tws.api.tset.TBase;
 
 /**
- * Collector for map function
- *
- * @param <T> input type
+ * Link represents the connections between data Links.
+ * This would map to some form of communication patter in the communication layer
  */
-public interface  Collector<T> {
-  /**
-   * Collect the record
-   *
-   * @param record this will be sent
-   */
-  void collect(T record);
+public interface TLink<T> extends TBase<T> {
 
   /**
-   * Close the collector
+   * Name of the tset
    */
-  void close();
+  TLink<T> setName(String name);
 }

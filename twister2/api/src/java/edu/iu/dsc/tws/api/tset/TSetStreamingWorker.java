@@ -11,23 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import com.google.common.reflect.TypeToken;
+import java.io.Serializable;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.task.TaskWorker;
 
-public abstract class KeyValueTSet<T, K> extends BaseTSet<T> {
-  public KeyValueTSet(Config cfg, TaskGraphBuilder bldr) {
-    super(cfg, bldr);
+public abstract class TSetStreamingWorker extends TaskWorker implements Serializable {
+
+  @Override
+  public void execute() {
+    TwisterStreamingContext tsc = new TwisterStreamingContext(this.config, this.taskExecutor);
+    execute(tsc);
   }
 
-  Class<? super T> getClassT() {
-    return new TypeToken<T>(getClass()) {
-    }.getRawType();
-  }
-
-  Class<? super K> getClassK() {
-    return new TypeToken<K>(getClass()) {
-    }.getRawType();
-  }
+  public abstract void execute(TwisterStreamingContext tc);
 }

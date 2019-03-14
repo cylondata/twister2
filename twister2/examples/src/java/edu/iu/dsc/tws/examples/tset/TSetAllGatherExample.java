@@ -11,30 +11,36 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
+import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public class TSetAllGatherExample extends BaseTSetWorker {
+public class TSetAllGatherExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetAllGatherExample.class.getName());
 
   @Override
-  public void execute() {
-    super.execute();
+  public void execute(TwisterBatchContext tc) {
+    super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
-        setParallelism(jobParameters.getTaskStages().get(0));
-    TSet<int[]> gather = source.allGather().setParallelism(10);
+    List<Integer> taskStages = jobParameters.getTaskStages();
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
+    SourceTSet<int[]> source = tc.createSource(new BaseSource(), sourceParallelism).
+        setName("Source");
+    AllGatherTLink<int[]> gather = source.allGather();
     gather.sink(new Sink<int[]>() {
       @Override
       public boolean add(int[] value) {
+        LOG.info("Task Id : " + CONTEXT.getIndex() + " Results " + Arrays.toString(value));
         experimentData.setOutput(value);
         try {
           verify(OperationNames.ALLGATHER);
@@ -47,11 +53,7 @@ public class TSetAllGatherExample extends BaseTSetWorker {
       @Override
       public void prepare(TSetContext context) {
       }
-    });
-
-    DataFlowTaskGraph graph = tSetBuilder.build();
-    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, executionPlan);
+    }, sourceParallelism);
   }
 
 }
