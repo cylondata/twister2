@@ -20,9 +20,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.executes.AllReduceCompute;
 
 public class BTAllReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTAllReduceExample.class.getName());
@@ -35,7 +35,7 @@ public class BTAllReduceExample extends BenchTaskWorker {
 
     String edge = "edge";
     BaseSource g = new SourceBatchTask(edge);
-    BaseSink r = new AllReduceSinkTask();
+    ISink r = new AllReduceSinkTask();
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
@@ -43,16 +43,15 @@ public class BTAllReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class AllReduceSinkTask extends BaseSink {
+  protected static class AllReduceSinkTask extends AllReduceCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
+    public boolean allReduce(int[] content) {
       count++;
       if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        experimentData.setOutput(object);
+        experimentData.setOutput(content);
         try {
           verify(OperationNames.ALLREDUCE);
         } catch (VerificationException e) {
