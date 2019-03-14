@@ -20,15 +20,15 @@ import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.task.api.Closable;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
-import edu.iu.dsc.tws.task.api.ISink;
 
 public class SinkStreamingInstance  implements INodeInstance {
   /**
    * The actual streamingTask executing
    */
-  private ISink streamingTask;
+  private ICompute streamingTask;
 
   /**
    * All the inputs will come through a single queue, otherwise we need to look
@@ -81,7 +81,7 @@ public class SinkStreamingInstance  implements INodeInstance {
    */
   private Map<String, String> inEdges;
 
-  public SinkStreamingInstance(ISink streamingTask, BlockingQueue<IMessage> streamingInQueue,
+  public SinkStreamingInstance(ICompute streamingTask, BlockingQueue<IMessage> streamingInQueue,
                                Config config, String tName, int tId, int tIndex, int parallel,
                                int wId, Map<String, Object> cfgs, Map<String, String> inEdges) {
     this.streamingTask = streamingTask;
