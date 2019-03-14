@@ -11,45 +11,44 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.util.Arrays;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.TSet;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public class TSetAllReduceExample extends BaseTSetWorker {
+public class TSetAllReduceExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetAllReduceExample.class.getName());
 
   @Override
-  public void execute() {
-    super.execute();
+  public void execute(TwisterBatchContext tc) {
+    super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
-        setParallelism(jobParameters.getTaskStages().get(0));
-    TSet<int[]> reduce = source.allReduce((t1, t2) -> {
+    int srcPara = jobParameters.getTaskStages().get(0);
+    int sinkPara = jobParameters.getTaskStages().get(1);
+    SourceTSet<int[]> source = tc.createSource(new BaseSource(), srcPara).setName("Source");
+    AllReduceTLink<int[]> reduce = source.allReduce((t1, t2) -> {
       int[] val = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {
         val[i] = t1[i] + t2[i];
       }
       return val;
-    }).setParallelism(10);
+    });
 
     reduce.sink(value -> {
       experimentData.setOutput(value);
       try {
+        LOG.info("Results " + Arrays.toString(value));
         verify(OperationNames.ALLREDUCE);
       } catch (VerificationException e) {
         LOG.info("Exception Message : " + e.getMessage());
       }
       return true;
-    });
-
-    DataFlowTaskGraph graph = tSetBuilder.build();
-    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, executionPlan);
+    }, sinkPara);
   }
 
 }

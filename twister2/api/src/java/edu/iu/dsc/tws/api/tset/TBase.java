@@ -11,18 +11,29 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import java.io.Serializable;
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 
-import edu.iu.dsc.tws.api.task.TaskWorker;
+/**
+ * All classes that are part of the TSet API need to implement this interface if they are
+ * included in the execution graph
+ */
+public interface TBase<T> {
 
-public abstract class TSetBaseWorker extends TaskWorker implements Serializable {
+  /**
+   * Build this tset
+   */
+  void build();
 
-  @Override
-  public void execute() {
-    TSetEnv execEnv = new TSetEnv(this.config, this.taskExecutor);
-    execute(execEnv);
-  }
+  /**
+   * method to be called to build self
+   * @return
+   */
+  boolean baseBuild();
 
-  public abstract void execute(TSetEnv executionEnv);
+  /**
+   * Build the connection
+   *
+   * @param connection connection
+   */
+  void buildConnection(ComputeConnection connection);
 }
-
