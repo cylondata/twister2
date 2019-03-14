@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.task.api;
 /**
  * The interface that all Sinks need to implement
  */
-public interface ISink extends INode {
+public interface ISink<T> extends INode {
 
-  boolean execute(IMessage message);
+  boolean execute(IMessage<T> message);
 
 }

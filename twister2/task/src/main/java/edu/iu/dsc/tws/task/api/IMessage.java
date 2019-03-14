@@ -14,12 +14,12 @@ package edu.iu.dsc.tws.task.api;
 /**
  * Wrapper interface for all the messages types.
  */
-public interface IMessage {
+public interface IMessage<T> {
   /**
    * Returns the content of the message
    * @return content of the message
    */
-  Object getContent();
+  T getContent();
 
   /**
    * The edge this message is traveling

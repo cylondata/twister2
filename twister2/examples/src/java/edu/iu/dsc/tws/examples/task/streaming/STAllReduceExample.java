@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.sinks.stream.AllReduceSink;
 
 public class STAllReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(STAllReduceExample.class.getName());
@@ -44,15 +45,15 @@ public class STAllReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class AllReduceSinkTask extends BaseSink {
+  protected static class AllReduceSinkTask extends AllReduceSink<int[]> {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
+    public boolean execute(IMessage<int[]> message) {
       count++;
       if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
+        int[] object = message.getContent();
         experimentData.setOutput(object);
         try {
           verify(OperationNames.ALLREDUCE);
