@@ -9,23 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api;
+package edu.iu.dsc.tws.task.api.typed.executes;
 
-/**
- * Wrapper interface for all the messages types.
- */
-public interface IMessage<T> {
-  /**
-   * Returns the content of the message
-   *
-   * @return content of the message
-   */
-  T getContent();
+import edu.iu.dsc.tws.task.api.BaseCompute;
 
-  /**
-   * The edge this message is traveling
-   *
-   * @return the edge identifier
-   */
-  String edge();
+public abstract class AbstractSingleDataCompute<T> extends BaseCompute<T> {
 }

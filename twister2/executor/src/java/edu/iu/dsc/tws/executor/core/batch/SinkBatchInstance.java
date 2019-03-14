@@ -20,16 +20,16 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.task.api.Closable;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
-import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SinkBatchInstance implements INodeInstance {
   /**
    * The actual batchTask executing
    */
-  private ISink batchTask;
+  private ICompute batchTask;
 
   /**
    * All the inputs will come through a single queue, otherwise we need to look
@@ -87,7 +87,8 @@ public class SinkBatchInstance implements INodeInstance {
    */
   private Set<String> inputEdges;
 
-  public SinkBatchInstance(ISink batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
+  public SinkBatchInstance(ICompute batchTask, BlockingQueue<IMessage> batchInQueue,
+                           Config config,
                            String tName, int tId, int tIndex, int parallel, int wId,
                            Map<String, Object> cfgs, Set<String> inEdges) {
     this.batchTask = batchTask;

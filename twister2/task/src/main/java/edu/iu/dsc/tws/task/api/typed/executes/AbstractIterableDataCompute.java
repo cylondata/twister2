@@ -21,10 +21,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.sinks.stream;
+package edu.iu.dsc.tws.task.api.typed.executes;
 
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.task.api.sinks.AbstractIterableDataSink;
+import java.util.Iterator;
 
-public abstract class AllGatherSink<T> extends AbstractIterableDataSink<Tuple<Integer, T>> {
+import edu.iu.dsc.tws.task.api.BaseCompute;
+
+public abstract class AbstractIterableDataCompute<T> extends BaseCompute<Iterator<T>> {
 }

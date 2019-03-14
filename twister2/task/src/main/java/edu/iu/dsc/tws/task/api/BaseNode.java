@@ -11,21 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-/**
- * Wrapper interface for all the messages types.
- */
-public interface IMessage<T> {
-  /**
-   * Returns the content of the message
-   *
-   * @return content of the message
-   */
-  T getContent();
+import edu.iu.dsc.tws.common.config.Config;
 
-  /**
-   * The edge this message is traveling
-   *
-   * @return the edge identifier
-   */
-  String edge();
+public abstract class BaseNode implements INode {
+
+  protected TaskContext context;
+
+  protected Config config;
+
+  @Override
+  public void prepare(Config cfg, TaskContext ctx) {
+    this.config = cfg;
+    this.context = ctx;
+  }
 }

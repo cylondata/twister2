@@ -20,10 +20,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.sinks.stream.AllReduceSink;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.executes.AllReduceCompute;
 
 public class STAllReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(STAllReduceExample.class.getName());
@@ -36,7 +35,7 @@ public class STAllReduceExample extends BenchTaskWorker {
 
     String edge = "edge";
     BaseSource g = new SourceStreamTask(edge);
-    BaseSink r = new AllReduceSinkTask();
+    ISink r = new AllReduceSinkTask();
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
@@ -45,16 +44,16 @@ public class STAllReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class AllReduceSinkTask extends AllReduceSink<int[]> {
+  protected static class AllReduceSinkTask extends AllReduceCompute<int[]> implements ISink {
+
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
-    public boolean execute(IMessage<int[]> message) {
+    public boolean allReduce(int[] content) {
       count++;
       if (count % jobParameters.getPrintInterval() == 0) {
-        int[] object = message.getContent();
-        experimentData.setOutput(object);
+        experimentData.setOutput(content);
         try {
           verify(OperationNames.ALLREDUCE);
         } catch (VerificationException e) {
