@@ -85,4 +85,4 @@ twister2.batch.keyed.reduce.op: "partition"
 twister2.batch.keyed.gather.op: "partition"
 
 # the partitioning algorithm
-twister2.batch.partition.algorithm: "ring"
+twister2.batch.partition.algorithm: "simple"
