@@ -40,4 +40,9 @@ public class DataObjectImpl<T> implements DataObject<T> {
   public DataPartition<T> getPartitions(int partitionId) {
     return partitions.get(partitionId);
   }
+
+  @Override
+  public int getPartitionCount() {
+    return partitions.size();
+  }
 }
