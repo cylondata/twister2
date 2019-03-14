@@ -33,16 +33,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.typed.executes;
+package edu.iu.dsc.tws.task.api.typed;
 
-import edu.iu.dsc.tws.task.api.IMessage;
+import java.util.Iterator;
 
-public abstract class AllReduceCompute<T> extends AbstractSingleDataCompute<T> {
+import edu.iu.dsc.tws.task.api.BaseCompute;
 
-  public abstract boolean allReduce(T content);
-
-  @Override
-  public boolean execute(IMessage<T> content) {
-    return allReduce(content.getContent());
-  }
+public abstract class AbstractIterableDataCompute<T> extends BaseCompute<Iterator<T>> {
 }

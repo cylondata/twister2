@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.typed.executes.AllReduceCompute;
+import edu.iu.dsc.tws.task.api.typed.AllReduceCompute;
 
 public class BTAllReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTAllReduceExample.class.getName());

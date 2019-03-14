@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.typed.executes.AllGatherCompute;
+import edu.iu.dsc.tws.task.api.typed.AllGatherCompute;
 
 public class BTAllGatherExample extends BenchTaskWorker {
 
