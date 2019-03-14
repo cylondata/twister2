@@ -50,7 +50,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 /**
- * This is a basic example of a Storm topology.
+ * This is an example of sliding windows on Twister2
  */
 public final class SlidingWindowTopology extends Twister2StormWorker {
 

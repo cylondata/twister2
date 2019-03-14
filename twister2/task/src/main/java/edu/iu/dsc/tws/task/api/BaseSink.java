@@ -11,16 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-import edu.iu.dsc.tws.common.config.Config;
-
-public abstract class BaseSink implements ISink {
-  protected TaskContext context;
-
-  protected Config config;
-
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    this.context = ctx;
-    this.config = cfg;
-  }
+/**
+ * A {@link BaseCompute} which would be a terminal node of the graph({@link ISink})
+ */
+public abstract class BaseSink<T> extends BaseCompute<T> implements ISink {
 }
