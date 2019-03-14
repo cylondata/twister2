@@ -184,7 +184,7 @@ public class TaskContextImpl implements TaskContext {
 
   /**
    * Get the out edges of this task
-   * @return the output edges
+   * @return the output edges, edge name and task connected to this edge
    */
   public Map<String, String> getOutEdges() {
     return outEdges;
@@ -192,7 +192,7 @@ public class TaskContextImpl implements TaskContext {
 
   /**
    * Get the edge names and the tasks connected using those edges
-   * @return a map with edge, Set<input task>
+   * @return a map with edge, and task connected to this edge
    */
   public Map<String, String> getInputs() {
     return inputs;
