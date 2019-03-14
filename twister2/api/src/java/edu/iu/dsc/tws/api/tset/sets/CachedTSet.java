@@ -21,11 +21,21 @@ import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
+import edu.iu.dsc.tws.api.tset.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
+import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.link.DirectTLink;
+import edu.iu.dsc.tws.api.tset.link.GatherTLink;
+import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
@@ -74,28 +84,82 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
   }
 
   public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
     return cacheSource.map(mapFn);
   }
 
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
     return cacheSource.flatMap(mapFn);
   }
 
   public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
     return cacheSource.map(mFn);
   }
 
   public <P1> IterableFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
     return cacheSource.flatMap(mFn);
   }
 
   public SinkTSet<T> sink(Sink<T> sink) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
     return cacheSource.sink(sink);
+  }
+
+  @Override
+  public DirectTLink<T> direct() {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
+    return cacheSource.direct();
+  }
+
+  @Override
+  public ReduceTLink<T> reduce(ReduceFunction<T> reduceFn) {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
+    return cacheSource.reduce(reduceFn);
+  }
+
+  @Override
+  public PartitionTLink<T> partition(PartitionFunction<T> partitionFn) {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
+    return cacheSource.partition(partitionFn);
+  }
+
+  @Override
+  public GatherTLink<T> gather() {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
+    return cacheSource.gather();
+  }
+
+  @Override
+  public AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
+    return cacheSource.allReduce(reduceFn);
+  }
+
+  @Override
+  public AllGatherTLink<T> allGather() {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
+    return cacheSource.allGather();
+  }
+
+  @Override
+  public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
+                                       Selector<T, K> selector) {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
+    return cacheSource.groupBy(partitionFunction, selector);
+  }
+
+  @Override
+  public ReplicateTLink<T> replicate(int replications) {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(), parallel);
+    return cacheSource.replicate(replications);
+  }
+
+  @Override
+  public CachedTSet<T> cache() {
+    throw new IllegalStateException("Calling Cache on an already cached Object");
   }
 
   @Override
