@@ -30,21 +30,25 @@ import java.util.HashMap;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetBaseWorker;
+import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
+import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public class HelloTSetEnv extends TSetBaseWorker implements Serializable {
+public class HelloTSetEnv extends TSetBatchWorker implements Serializable {
   private static final long serialVersionUID = -2;
 
   @Override
-  public void execute(TSetEnv executionEnv) {
-    TSet<int[]> source = executionEnv.createSource(new Source<int[]>() {
+  public void execute(TwisterBatchContext tc) {
+    TSet<int[]> source = tc.createSource(new Source<int[]>() {
       private static final long serialVersionUID = -1;
 
       private int count = 0;
@@ -63,11 +67,16 @@ public class HelloTSetEnv extends TSetBaseWorker implements Serializable {
       @Override
       public void prepare(TSetContext context) {
       }
-    }).setName("Source");
+    }, 4).setName("Source");
 
-    TSet<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
-
-    TSet<int[]> reduce = partitioned.reduce((t1, t2) -> {
+    PartitionTLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
+    MapTSet<int[], int[]> mapedPartition = partitioned.map(new MapFunction<int[], int[]>() {
+      @Override
+      public int[] map(int[] ints) {
+        return new int[0];
+      }
+    }, 4);
+    ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {
         ret[i] = t1[i] + t2[i];
@@ -79,8 +88,6 @@ public class HelloTSetEnv extends TSetBaseWorker implements Serializable {
       System.out.println(Arrays.toString(value));
       return false;
     });
-
-    executionEnv.run();
   }
 
   public static void main(String[] args) {

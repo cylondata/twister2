@@ -39,4 +39,11 @@ public interface DataObject<T> {
    * @return DataPartition
    */
   DataPartition<T> getPartitions(int partitionId);
+
+  /**
+   * Get the number of partitions currently in the DataObject
+   *
+   * @return the number of partitions
+   */
+  int getPartitionCount();
 }
