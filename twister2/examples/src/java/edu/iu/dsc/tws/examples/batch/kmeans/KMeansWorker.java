@@ -37,8 +37,6 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-//import edu.iu.dsc.tws.api.dataobjects.DataFileReadSource;
-
 /**
  * It is the main class for the K-Means clustering which consists of four main tasks namely
  * generation of datapoints and centroids, partition and read the partitioned data points,
@@ -80,8 +78,8 @@ public class KMeansWorker extends TaskWorker {
     double[][] centroid;
 
     if (workerId == 0) {
-      workerUtils.generateDatapoints(
-          dimension, numFiles, dsize, csize, dinputDirectory, cinputDirectory);
+      workerUtils.generateDatapoints(dimension, numFiles, dsize, csize,
+          dinputDirectory, cinputDirectory);
     }
 
     /* First Graph to partition and read the partitioned data points **/
@@ -102,7 +100,6 @@ public class KMeansWorker extends TaskWorker {
     DataPartition<Object> dataPointsPartition = dataPointsObject.getPartitions()[0];
     datapoint = workerUtils.getDataPoints(dataPointsPartition.getPartitionId(),
         dataPointsPartition, dsize, parallelismValue, dimension);
-    LOG.info("DataPoint Values Are:" + Arrays.deepToString(datapoint));
 
     /* Second Graph to read the centroids **/
     DataFileSource centroidSourceTask = new DataFileSource("direct");
@@ -122,7 +119,6 @@ public class KMeansWorker extends TaskWorker {
     DataPartition<Object> centroidsDataPartition = centroidsDataObject.getPartitions()[0];
     centroid = workerUtils.getCentroids(centroidsDataPartition.getPartitionId(),
         centroidsDataPartition, csize, dimension);
-    LOG.info("Centroid Values Are:" + Arrays.deepToString(centroid));
 
     /* Third Graph to do the actual calculation **/
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();

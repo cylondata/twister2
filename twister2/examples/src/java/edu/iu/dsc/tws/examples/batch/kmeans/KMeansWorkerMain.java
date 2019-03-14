@@ -79,6 +79,10 @@ public class KMeansWorkerMain {
     boolean shared =
         Boolean.parseBoolean(cmd.getOptionValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM));
 
+    /*KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
+    workerUtils.generateDatapoints(
+          dimension, numFiles, dsize, csize, dataDirectory, centroidDirectory);*/
+
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
 
