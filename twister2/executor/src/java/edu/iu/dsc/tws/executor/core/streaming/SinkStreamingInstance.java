@@ -13,17 +13,16 @@ package edu.iu.dsc.tws.executor.core.streaming;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SinkStreamingInstance  implements INodeInstance {
   /**
@@ -77,9 +76,14 @@ public class SinkStreamingInstance  implements INodeInstance {
    */
   private int workerId;
 
+  /**
+   * The input edges
+   */
+  private Map<String, String> inEdges;
+
   public SinkStreamingInstance(ISink streamingTask, BlockingQueue<IMessage> streamingInQueue,
                                Config config, String tName, int tId, int tIndex, int parallel,
-                               int wId, Map<String, Object> cfgs, Set<String> inEdges) {
+                               int wId, Map<String, Object> cfgs, Map<String, String> inEdges) {
     this.streamingTask = streamingTask;
     this.streamingInQueue = streamingInQueue;
     this.config = config;
@@ -89,11 +93,12 @@ public class SinkStreamingInstance  implements INodeInstance {
     this.nodeConfigs = cfgs;
     this.workerId = wId;
     this.taskName = tName;
+    this.inEdges = inEdges;
   }
 
   public void prepare(Config cfg) {
-    streamingTask.prepare(cfg, new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
-        parallelism, workerId, nodeConfigs));
+    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, streamingTaskId, taskName,
+        parallelism, workerId, nodeConfigs, inEdges));
   }
 
   public boolean execute() {
