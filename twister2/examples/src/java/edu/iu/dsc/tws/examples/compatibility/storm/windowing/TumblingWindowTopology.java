@@ -62,7 +62,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 /**
- * This is a basic example of a Storm topology.
+ * This is an example of count based tumbling windows on Twister2
  */
 public final class TumblingWindowTopology extends Twister2StormWorker {
 
@@ -74,7 +74,7 @@ public final class TumblingWindowTopology extends Twister2StormWorker {
     JobConfig jobConfig = new JobConfig();
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("sliding-window-example");
+    jobBuilder.setJobName("tumbling-window-example");
     jobBuilder.setWorkerClass(TumblingWindowTopology.class.getName());
     jobBuilder.setConfig(jobConfig);
     jobBuilder.addComputeResource(1, 512, 1);
