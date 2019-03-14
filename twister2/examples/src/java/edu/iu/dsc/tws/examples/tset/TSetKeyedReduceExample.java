@@ -11,42 +11,49 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.IdentitySelector;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
+import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public class TSetKeyedReduceExample extends BaseTSetWorker {
+public class TSetKeyedReduceExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetKeyedReduceExample.class.getName());
 
   @Override
-  public void execute() {
-    super.execute();
+  public void execute(TwisterBatchContext tc) {
+    super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
-        setParallelism(jobParameters.getTaskStages().get(0));
-    TSet<int[]> reduce = source.groupBy(new LoadBalancePartitioner<>(), new IdentitySelector<>()).
-        keyedReduce((t1, t2) -> {
-          int[] val = new int[t1.length];
-          for (int i = 0; i < t1.length; i++) {
-            val[i] = t1[i] + t2[i];
-          }
-          return val;
-        }).setParallelism(10);
+    List<Integer> taskStages = jobParameters.getTaskStages();
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
+    SourceTSet<int[]> source = tc.createSource(new BaseSource(),
+        sourceParallelism).setName("Source");
+    KeyedReduceTLink<int[], int[]> reduce = source.
+        groupBy(new LoadBalancePartitioner<>(), new IdentitySelector<>()).
+          keyedReduce((t1, t2) -> {
+            int[] val = new int[t1.length];
+            for (int i = 0; i < t1.length; i++) {
+              val[i] = t1[i] + t2[i];
+            }
+            return val;
+          });
 
     reduce.sink(new Sink<int[]>() {
       @Override
       public boolean add(int[] value) {
         experimentData.setOutput(value);
         try {
+          LOG.info("Task Id : " + CONTEXT.getIndex() + " Results " + Arrays.toString(value));
           verify(OperationNames.REDUCE);
         } catch (VerificationException e) {
           LOG.info("Exception Message : " + e.getMessage());
@@ -57,11 +64,7 @@ public class TSetKeyedReduceExample extends BaseTSetWorker {
       @Override
       public void prepare(TSetContext context) {
       }
-    });
-
-    DataFlowTaskGraph graph = tSetBuilder.build();
-    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, executionPlan);
+    }, sinkParallelism);
   }
 
 }

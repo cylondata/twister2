@@ -11,21 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-/**
- * Collector for map function
- *
- * @param <T> input type
- */
-public interface  Collector<T> {
-  /**
-   * Collect the record
-   *
-   * @param record this will be sent
-   */
-  void collect(T record);
+import java.io.Serializable;
 
-  /**
-   * Close the collector
-   */
-  void close();
+import edu.iu.dsc.tws.api.task.TaskWorker;
+
+public abstract class TSetBatchWorker extends TaskWorker implements Serializable {
+
+  @Override
+  public void execute() {
+    TwisterBatchContext tbc = new TwisterBatchContext(this.config, this.taskExecutor);
+    execute(tbc);
+  }
+
+  public abstract void execute(TwisterBatchContext tc);
 }
+

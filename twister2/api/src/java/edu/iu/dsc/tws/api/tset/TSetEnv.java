@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.TaskExecutor;
+import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -31,16 +32,31 @@ public class TSetEnv {
     this.tSetBuilder = TSetBuilder.newBuilder(config);
   }
 
+  public TSetEnv(Config config, TaskExecutor taskExecutor, OperationMode mode) {
+    this.config = config;
+    this.taskExecutor = taskExecutor;
+    this.tSetBuilder = TSetBuilder.newBuilder(config);
+    this.tSetBuilder.setMode(mode);
+  }
+
   public Config getConfig() {
     return config;
   }
 
-  public <T> TSet<T> createSource(Source<T> source) {
-    return this.tSetBuilder.createSource(source);
+  public <T> SourceTSet<T> createSource(Source<T> source, int parallelism) {
+    return this.tSetBuilder.createSource(source, parallelism, this);
   }
 
   public void setMode(OperationMode mode) {
     this.tSetBuilder.setMode(mode);
+  }
+
+  public TSetBuilder getTSetBuilder() {
+    return tSetBuilder;
+  }
+
+  public void settSetBuilder(TSetBuilder tSBuilder) {
+    this.tSetBuilder = tSBuilder;
   }
 
   public void run() { // todo: is this the best name? or should this be a method in the tset?

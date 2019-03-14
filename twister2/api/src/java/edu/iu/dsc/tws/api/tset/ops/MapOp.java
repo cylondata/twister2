@@ -78,7 +78,6 @@ public class MapOp<T, R> implements ICompute {
     this.context = ctx;
     TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
         ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
-
     mapFn.prepare(tSetContext);
   }
 }

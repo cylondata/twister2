@@ -11,59 +11,33 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
+import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.DirectTLink;
+import edu.iu.dsc.tws.api.tset.link.GatherTLink;
+import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
+import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
+import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
+
 /**
  * Twister data set.
  *
  * @param <T> type of the data set
  */
-public interface TSet<T> {
-  /**
-   * Set the parallelism for this set
-   * @param parallelism parallelism
-   * @return this set
-   */
-  TSet<T> setParallelism(int parallelism);
-
+public interface TSet<T> extends TBase<T> {
   /**
    * Name of the tset
    */
   TSet<T> setName(String name);
 
   /**
-   * Apply a map function and create a map data set
+   * Direct operation
    *
-   * @param mapFn map function
-   * @param <P> return type of function
    * @return this TSet
    */
-  <P> MapTSet<P, T> map(MapFunction<T, P> mapFn);
-
-  /**
-   * Flatmap on the data
-   *
-   * @param mapFn map function
-   * @param <P> output type
-   * @return this set
-   */
-  <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn);
-
-  /**
-   * Map operation on the data
-   *
-   * @param mapFn map function
-   * @param <P> output type
-   * @return this set
-   */
-  <P> IMapTSet<P, T> map(IterableMapFunction<T, P> mapFn);
-
-  /**
-   * Flatmap operation on the data
-   *
-   * @param mapFn map function
-   * @param <P> output type
-   * @return this set
-   */
-  <P> IFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn);
+  DirectTLink<T> direct();
 
   /**
    * Reduce operation on the data
@@ -71,7 +45,7 @@ public interface TSet<T> {
    * @param reduceFn the reduce function
    * @return this set
    */
-  TSet<T> reduce(ReduceFunction<T> reduceFn);
+  ReduceTLink<T> reduce(ReduceFunction<T> reduceFn);
 
   /**
    * All reduce operation
@@ -79,7 +53,7 @@ public interface TSet<T> {
    * @param reduceFn reduce function
    * @return this set
    */
-  TSet<T> allReduce(ReduceFunction<T> reduceFn);
+  AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn);
 
   /**
    * Partition the data according the to partition function
@@ -87,24 +61,25 @@ public interface TSet<T> {
    * @param partitionFn partition function
    * @return this set
    */
-  TSet<T> partition(PartitionFunction<T> partitionFn);
+  PartitionTLink<T> partition(PartitionFunction<T> partitionFn);
 
   /**
    * Gather the set of values into a single partition
    *
    * @return this set
    */
-  TSet<T> gather();
+  GatherTLink<T> gather();
 
   /**
    * Gather the set of values into a single partition
    *
    * @return this set
    */
-  TSet<T> allGather();
+  AllGatherTLink<T> allGather();
 
   /**
    * Select a set of values
+   *
    * @param partitionFunction partition function
    * @param selector the selector
    * @param <K> the type for partitioning
@@ -114,19 +89,24 @@ public interface TSet<T> {
 
   /**
    * Create a cloned dataset
+   *
    * @return the cloned set
    */
-  ReplicateTSet<T> replicate(int replications);
+  ReplicateTLink<T> replicate(int replications);
 
   /**
-   * Add a sink
+   * Executes TSet and saves any generated data as a in-memory data object
    *
-   * @param sink sink function
+   * @return the resulting TSet
    */
-  SinkTSet<T> sink(Sink<T> sink);
+  CachedTSet<T> cache();
 
   /**
-   * Build this tset
+   * Allows users to pass in other TSets as inputs for a TSet
+   * @param key the key used to store the given TSet
+   * @param input the TSet to be added as an input
+   * @return true if the input was added successfully or false otherwise
    */
-  void build();
+  boolean addInput(String key, Cacheable<?> input);
+
 }

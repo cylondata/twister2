@@ -9,23 +9,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
 
-/**
- * Collector for map function
- *
- * @param <T> input type
- */
-public interface  Collector<T> {
-  /**
-   * Collect the record
-   *
-   * @param record this will be sent
-   */
-  void collect(T record);
+package edu.iu.dsc.tws.api.tset.link;
 
-  /**
-   * Close the collector
-   */
-  void close();
+import com.google.common.reflect.TypeToken;
+
+import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.common.config.Config;
+
+public abstract class KeyValueTLink<T, K> extends BaseTLink<T> {
+  public KeyValueTLink(Config cfg, TSetEnv tSetEnv) {
+    super(cfg, tSetEnv);
+  }
+
+  Class<? super T> getClassT() {
+    return new TypeToken<T>(getClass()) {
+    }.getRawType();
+  }
+
+  Class<? super K> getClassK() {
+    return new TypeToken<K>(getClass()) {
+    }.getRawType();
+  }
 }
