@@ -28,7 +28,13 @@ import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
+/**
+ * Un sorted merger
+ *
+ * @deprecated This merger can't output data in the expected format Iterator<Tuple<Key,Iterator>>
+ */
 @SuppressWarnings({"unchecked", "rawtypes"})
+@Deprecated
 public class FSKeyedMerger implements Shuffle {
   private static final Logger LOG = Logger.getLogger(FSKeyedMerger.class.getName());
 
@@ -76,7 +82,7 @@ public class FSKeyedMerger implements Shuffle {
   /**
    * The number of total bytes in each file part written to disk
    */
-  private List<Integer> filePartBytes = new ArrayList<>();
+  private List<Long> filePartBytes = new ArrayList<>();
 
   /**
    * Amount of bytes in the memory
@@ -167,7 +173,7 @@ public class FSKeyedMerger implements Shuffle {
       if (numOfBytesInMemory > maxBytesToKeepInMemory
           || recordsInMemory.size() > maxRecordsInMemory) {
         // save the bytes to disk
-        int totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
+        long totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
             numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
         filePartBytes.add(totalSize);
 
