@@ -54,7 +54,7 @@ public class STReduceExample extends BenchTaskWorker {
       if (count % jobParameters.getPrintInterval() == 0) {
         experimentData.setOutput(content);
         try {
-          verify(OperationNames.ALLREDUCE);
+          verify(OperationNames.REDUCE);
         } catch (VerificationException e) {
           LOG.info("Exception Message : " + e.getMessage());
         }

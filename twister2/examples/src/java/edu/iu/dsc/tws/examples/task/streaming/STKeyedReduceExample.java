@@ -47,12 +47,12 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class KeyedReduceSinkTask extends KeyedReduceCompute<Object> implements ISink {
+  protected static class KeyedReduceSinkTask extends KeyedReduceCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
-    public boolean keyedReduce(Tuple<Object, Object> content) {
+    public boolean keyedReduce(Tuple<Object, int[]> content) {
       if (count % jobParameters.getPrintInterval() == 0) {
         Object key = content.getKey();
         Object value = content.getValue();
@@ -68,7 +68,7 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     }
 
     @Override
-    public boolean keyedReduce(Iterator<Tuple<Object, Object>> content) {
+    public boolean keyedReduce(Iterator<Tuple<Object, int[]>> content) {
       return false;
     }
   }

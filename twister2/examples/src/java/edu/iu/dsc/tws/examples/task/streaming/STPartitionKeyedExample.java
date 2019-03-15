@@ -54,9 +54,8 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
 
     @Override
     public boolean keyedPartition(ArrayList<Tuple<Integer, int[]>> content) {
-      ArrayList<?> data = content;
-      for (int i = 0; i < data.size(); i++) {
-        Object value = data.get(i);
+      for (int i = 0; i < content.size(); i++) {
+        Object value = content.get(i);
         experimentData.setOutput(value);
         try {
           verify(OperationNames.KEYED_PARTITION);

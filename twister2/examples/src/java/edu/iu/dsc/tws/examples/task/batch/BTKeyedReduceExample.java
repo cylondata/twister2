@@ -50,22 +50,20 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-
-  protected static class KeyedReduceSinkTask extends KeyedReduceCompute<Object> implements ISink {
+  protected static class KeyedReduceSinkTask extends KeyedReduceCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
+
     @Override
-    public boolean keyedReduce(Tuple<Object, Object> content) {
+    public boolean keyedReduce(Tuple<Object, int[]> content) {
       return false;
     }
 
     @Override
-    public boolean keyedReduce(Iterator<Tuple<Object, Object>> content) {
-
-      Iterator<?> it = content;
-      while (it.hasNext()) {
-        Object value = it.next();
+    public boolean keyedReduce(Iterator<Tuple<Object, int[]>> content) {
+      while (content.hasNext()) {
+        Object value = content.next();
         if (value instanceof ImmutablePair) {
           ImmutablePair<?, ?> l = (ImmutablePair<?, ?>) value;
           Object key = l.getKey();
@@ -78,12 +76,6 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
               LOG.info("Exception Message : " + e.getMessage());
             }
           }
-            /*if (count % jobParameters.getPrintInterval() == 0) {
-              if (val instanceof int[]) {
-                LOG.info("Message Received , Key : " + key + ", Value : "
-                    + Arrays.toString((int[]) val));
-              }
-            }*/
         }
       }
 
