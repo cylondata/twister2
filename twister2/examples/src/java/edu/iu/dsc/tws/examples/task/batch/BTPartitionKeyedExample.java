@@ -45,6 +45,7 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class BKeyedPartitionSinkTask
       extends BPartitionKeyedCompute<Integer, int[]> implements ISink {
 

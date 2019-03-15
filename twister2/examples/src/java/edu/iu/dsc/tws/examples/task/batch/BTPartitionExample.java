@@ -43,10 +43,10 @@ public class BTPartitionExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class PartitionSinkTask extends BPartitionCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
-
 
     @Override
     public boolean partition(Iterator<Tuple<Integer, int[]>> content) {

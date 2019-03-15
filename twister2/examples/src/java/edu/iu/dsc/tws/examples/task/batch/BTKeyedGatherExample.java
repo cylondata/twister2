@@ -15,16 +15,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.KeyedGatherCompute;
 
 public class BTKeyedGatherExample extends BenchTaskWorker {
 
@@ -38,19 +37,47 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
     DataType keyType = DataType.OBJECT;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    BaseSource g = new SourceBatchTask(edge);
-    BaseSink r = new KeyedGatherSinkTask();
+    BaseSource g = new KeyedSourceBatchTask(edge);
+    ISink r = new KeyedGatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class KeyedGatherSinkTask extends BaseSink {
+  protected static class KeyedGatherSinkTask extends KeyedGatherCompute<Object, int[]>
+      implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
+    public boolean keyedGather(Iterator<Tuple<Object, int[]>> content) {
+      while (content.hasNext()) {
+        Tuple<Object, int[]> tuple = content.next();
+        Object key = tuple.getKey();
+        Object value = tuple.getValue();
+        count++;
+        if (count % jobParameters.getPrintInterval() == 0) {
+          if (value instanceof Object[]) {
+            Object[] objects = (Object[]) value;
+            for (int i = 0; i < objects.length; i++) {
+              int[] a = (int[]) objects[i];
+              experimentData.setOutput(a);
+              try {
+                verify(OperationNames.KEYED_GATHER);
+              } catch (VerificationException e) {
+                LOG.info("Exception Message : " + e.getMessage());
+              }
+            }
+          }
+        }
+      }
+      return true;
+    }
+  }
+}
+
+/*@Override
     public boolean execute(IMessage message) {
       Object object = message.getContent();
       LOG.info("Message Keyed-Gather : " + message.getContent()
@@ -77,19 +104,15 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
                       LOG.info("Exception Message : " + e.getMessage());
                     }
                   }
-                  /*LOG.info("Keyed-Gathered Message , Key : " + key + ", Value : "
-                      + Arrays.toString(a));*/
+                  *//*LOG.info("Keyed-Gathered Message , Key : " + key + ", Value : "
+                      + Arrays.toString(a));*//*
                 }
               }
             }
-
-
           }
         }
       }
       count++;
-
       return true;
     }
-  }
-}
+*/

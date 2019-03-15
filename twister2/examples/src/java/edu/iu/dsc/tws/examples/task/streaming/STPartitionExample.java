@@ -42,13 +42,12 @@ public class STPartitionExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-
+  @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class PartitionSinkTask extends SPartitionCompute<int[]> implements ISink {
-    private static final long serialVersionUID = -254264903510284798L;
 
+    private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
     public boolean partition(int[] content) {
       if (count % jobParameters.getPrintInterval() == 0) {

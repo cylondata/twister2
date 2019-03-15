@@ -21,9 +21,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.KeyedGatherCompute;
 
 public class STKeyedGatherExample extends BenchTaskWorker {
 
@@ -35,56 +35,86 @@ public class STKeyedGatherExample extends BenchTaskWorker {
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     DataType keyType = DataType.OBJECT;
-    DataType dataType = DataType.OBJECT;
+    DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseSource g = new KeyedSourceStreamTask(edge);
-    BaseSink r = new KeyedGatherSinkTask();
+    ISink r = new KeyedGatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class KeyedGatherSinkTask extends BaseSink {
+  protected static class KeyedGatherSinkTask extends KeyedGatherCompute<Object, int[]>
+      implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
-      Object object = message.getContent();
-      LOG.info("Message Keyed-Gather : " + message.getContent()
-          + ", Count : " + count);
-      if (object instanceof Iterator) {
-        Iterator<?> it = (Iterator<?>) object;
-        while (it.hasNext()) {
-          Object value = it.next();
-          LOG.info("Value : " + value.getClass().getName());
-          if (value instanceof Tuple) {
-            Tuple l = (Tuple) value;
-            Object key = l.getKey();
-            Object val = l.getValue();
-            LOG.info("Value : " + val.getClass().getName());
-            if (count % jobParameters.getPrintInterval() == 0) {
-              if (val instanceof int[]) {
-                int[] objects = (int[]) val;
-                if (count % jobParameters.getPrintInterval() == 0) {
-                  experimentData.setOutput(objects);
-                  try {
-                    verify(OperationNames.KEYED_GATHER);
-                  } catch (VerificationException e) {
-                    LOG.info("Exception Message : " + e.getMessage());
-                  }
-                }
-                  /*LOG.info("Keyed-Gathered Message , Key : " + key + ", Value : "
-                      + Arrays.toString(a));*/
+    public boolean keyedGather(Iterator<Tuple<Object, int[]>> content) {
+      while (content.hasNext()) {
+        Tuple<Object, int[]> tuple = content.next();
+        Object key = tuple.getKey();
+        Object value = tuple.getValue();
+        count++;
+        if (count % jobParameters.getPrintInterval() == 0) {
+          if (value instanceof Object[]) {
+            Object[] objects = (Object[]) value;
+            for (int i = 0; i < objects.length; i++) {
+              int[] a = (int[]) objects[i];
+              experimentData.setOutput(a);
+              try {
+                verify(OperationNames.KEYED_GATHER);
+              } catch (VerificationException e) {
+                LOG.info("Exception Message : " + e.getMessage());
               }
             }
           }
         }
-
       }
       return true;
     }
-
   }
 }
+
+//  protected static class KeyedGatherSinkTask extends BaseSink {
+//    private static final long serialVersionUID = -254264903510284798L;
+//    private int count = 0;
+//
+//    @Override
+//    public boolean execute(IMessage message) {
+//      Object object = message.getContent();
+//      LOG.info("Message Keyed-Gather : " + message.getContent()
+//          + ", Count : " + count);
+//      if (object instanceof Iterator) {
+//        Iterator<?> it = (Iterator<?>) object;
+//        while (it.hasNext()) {
+//          Object value = it.next();
+//          LOG.info("Value : " + value.getClass().getName());
+//          if (value instanceof Tuple) {
+//            Tuple l = (Tuple) value;
+//            Object key = l.getKey();
+//            Object val = l.getValue();
+//            LOG.info("Value : " + val.getClass().getName());
+//            if (count % jobParameters.getPrintInterval() == 0) {
+//              if (val instanceof int[]) {
+//                int[] objects = (int[]) val;
+//                if (count % jobParameters.getPrintInterval() == 0) {
+//                  experimentData.setOutput(objects);
+//                  try {
+//                    verify(OperationNames.KEYED_GATHER);
+//                  } catch (VerificationException e) {
+//                    LOG.info("Exception Message : " + e.getMessage());
+//                  }
+//                }
+//                  /*LOG.info("Keyed-Gathered Message , Key : " + key + ", Value : "
+//                      + Arrays.toString(a));*/
+//              }
+//            }
+//          }
+//        }
+//
+//      }
+//      return true;
+//    }
+//

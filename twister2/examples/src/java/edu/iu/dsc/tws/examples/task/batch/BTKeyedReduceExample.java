@@ -47,6 +47,7 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class KeyedReduceSinkTask
       extends BKeyedReduceCompute<Object, int[]> implements ISink {
 

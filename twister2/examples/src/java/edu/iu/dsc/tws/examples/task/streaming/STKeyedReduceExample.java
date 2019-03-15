@@ -46,8 +46,10 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class KeyedReduceSinkTask
       extends SKeyedReduceCompute<Object, int[]> implements ISink {
+
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
