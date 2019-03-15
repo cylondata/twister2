@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
@@ -24,25 +23,21 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SAllReduce;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class AllReduceStreamingOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(AllReduceStreamingOperation.class.getName());
-
   protected SAllReduce op;
-
-  private IFunction fn;
 
   public AllReduceStreamingOperation(Config config, Communicator network,
                                      TaskPlan tPlan, IFunction function,
                                      Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
-                                     DataType dataType, String edgeName) {
+                                     Edge edge) {
     super(config, network, tPlan);
     if (sources.size() == 0) {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
@@ -56,11 +51,12 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
       throw new IllegalArgumentException("Operation expects a function");
     }
 
-    this.fn = function;
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
     this.edgeGenerator = e;
-    op = new SAllReduce(channel, taskPlan, sources, dest,
-        Utils.dataTypeToMessageType(dataType), new ReduceFnImpl(fn), new FinalSingularReceive());
-    communicationEdge = e.generate(edgeName);
+    op = new SAllReduce(newComm, taskPlan, sources, dest,
+        Utils.dataTypeToMessageType(edge.getDataType()), new ReduceFnImpl(function),
+        new FinalSingularReceive());
+    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -96,7 +92,7 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Object object) {
-      TaskMessage msg = new TaskMessage(object,
+      TaskMessage msg = new TaskMessage<>(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {

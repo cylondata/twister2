@@ -20,24 +20,36 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BGather;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class GatherBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(GatherBatchOperation.class.getName());
   private BGather op;
 
   public GatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                              Set<Integer> srcs, int dest, EdgeGenerator e,
-                              DataType dataType, String edgeName, boolean shuffle) {
+                              Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+                              Edge edge) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
-    communicationEdge = e.generate(edgeName);
-    op = new BGather(channel, taskPlan, srcs, dest, Utils.dataTypeToMessageType(dataType),
+    communicationEdge = e.generate(edge.getName());
+
+    if (dests.size() > 1) {
+      throw new RuntimeException("Gather can only have one target: " + dests);
+    }
+    Object shuffleProp = edge.getProperty("shuffle");
+    boolean shuffle = false;
+    if (shuffleProp instanceof Boolean && (Boolean) shuffleProp) {
+      shuffle = true;
+    }
+
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    op = new BGather(newComm, taskPlan, srcs, dests.iterator().next(),
+        Utils.dataTypeToMessageType(edge.getDataType()),
         new FinalGatherReceiver(), shuffle);
   }
 
