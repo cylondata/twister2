@@ -11,16 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.typed;
 
-import java.util.ArrayList;
+
+import java.util.Iterator;
 
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.task.api.IMessage;
 
-public abstract class PartitionKeyedCompute<T> extends AbstractListDataCompute<Tuple<Integer, T>> {
+public abstract class KeyedReduceCompute<T> extends AbstractSingleDataCompute<Tuple<Object, T>> {
 
-  public abstract boolean keyedPartition(ArrayList<Tuple<Integer, T>> content);
+  public abstract boolean keyedReduce(Tuple<Object, T> content);
 
-  public boolean execute(IMessage<ArrayList<Tuple<Integer, T>>> content) {
-    return this.keyedPartition(content.getContent());
+  public abstract boolean keyedReduce(Iterator<Tuple<Object, T>> content);
+
+  @Override
+  public boolean execute(IMessage<Tuple<Object, T>> content) {
+    return this.keyedReduce(content.getContent());
   }
 }

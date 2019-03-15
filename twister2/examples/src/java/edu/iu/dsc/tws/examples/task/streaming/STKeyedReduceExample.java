@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -21,9 +22,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.KeyedReduceCompute;
 
 public class STKeyedReduceExample extends BenchTaskWorker {
 
@@ -39,14 +40,40 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseSource g = new KeyedSourceStreamTask(edge);
-    BaseSink r = new KeyedReduceSinkTask();
+    ISink r = new KeyedReduceSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class KeyedReduceSinkTask extends BaseSink {
+  protected static class KeyedReduceSinkTask extends KeyedReduceCompute<Object> implements ISink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean keyedReduce(Tuple<Object, Object> content) {
+      if (count % jobParameters.getPrintInterval() == 0) {
+        Object key = content.getKey();
+        Object value = content.getValue();
+        experimentData.setOutput(value);
+        try {
+          verify(OperationNames.KEYED_REDUCE);
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
+        }
+      }
+      count++;
+      return true;
+    }
+
+    @Override
+    public boolean keyedReduce(Iterator<Tuple<Object, Object>> content) {
+      return false;
+    }
+  }
+
+  /*protected static class KeyedReduceSinkTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -65,15 +92,15 @@ public class STKeyedReduceExample extends BenchTaskWorker {
             LOG.info("Exception Message : " + e.getMessage());
           }
 
-          /*if (value instanceof int[]) {
+          *//*if (value instanceof int[]) {
             LOG.info("Message Received, Key : " + key + ", Value : "
                 + Arrays.toString((int[]) value));
-          }*/
+          }*//*
         }
       }
       count++;
       return true;
     }
-  }
+  }*/
 
 }

@@ -16,11 +16,12 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.PartitionCompute;
 
 public class BTPartitionExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTPartitionExample.class.getName());
@@ -33,18 +34,42 @@ public class BTPartitionExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseSource g = new SourceBatchTask(edge);
-    BaseSink r = new PartitionSinkTask();
+    ISink r = new PartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class PartitionSinkTask extends BaseSink {
+  protected static class PartitionSinkTask extends PartitionCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
+    public boolean partition(int[] content) {
+      return false;
+    }
+
+    @Override
+    public boolean partition(Iterator<Tuple<Integer, int[]>> iterator) {
+      while (iterator.hasNext()) {
+        iterator.next();
+        count++;
+      }
+      if (count % jobParameters.getPrintInterval() == 0) {
+        LOG.info("INstance : " + iterator.getClass().getName());
+        LOG.info("ITr next : " + iterator.hasNext());
+        while (iterator.hasNext()) {
+          Object res = iterator.next();
+          LOG.info("Message Partition Received : " + res.getClass().getName()
+              + ", Count : " + count);
+        }
+      }
+      return true;
+    }
+  }
+
+    /*@Override
     public boolean execute(IMessage message) {
 
       Object object = message.getContent();
@@ -54,7 +79,7 @@ public class BTPartitionExample extends BenchTaskWorker {
           ((Iterator) message.getContent()).next();
           count++;
         }
-        /*if (count % jobParameters.getPrintInterval() == 0) {
+        *//*if (count % jobParameters.getPrintInterval() == 0) {
           Object object = message.getContent();
           experimentData.setOutput(object);
           try {
@@ -62,7 +87,7 @@ public class BTPartitionExample extends BenchTaskWorker {
           } catch (VerificationException e) {
             LOG.info("Exception Message : " + e.getMessage());
           }
-        }*/
+        }*//*
         if (count % jobParameters.getPrintInterval() == 0) {
           LOG.info("Received : " + object.getClass().getName());
           if (object instanceof Iterator<?>) {
@@ -77,9 +102,7 @@ public class BTPartitionExample extends BenchTaskWorker {
           }
         }
       }
-
       return true;
-    }
-  }
+    }*/
 
 }

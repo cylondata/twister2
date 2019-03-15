@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.task.streaming;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -23,7 +22,6 @@ import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.typed.PartitionKeyedCompute;
 
@@ -48,7 +46,30 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
- /* protected static class SKeyedPartitionSinkTask extends BaseSink {
+  protected static class SKeyedPartitionSinkTask extends PartitionKeyedCompute<int[]>
+      implements ISink {
+
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean keyedPartition(ArrayList<Tuple<Integer, int[]>> content) {
+      ArrayList<?> data = content;
+      for (int i = 0; i < data.size(); i++) {
+        Object value = data.get(i);
+        experimentData.setOutput(value);
+        try {
+          verify(OperationNames.KEYED_PARTITION);
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
+        }
+      }
+      count++;
+      return true;
+    }
+  }
+
+  /* protected static class SKeyedPartitionSinkTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -76,40 +97,5 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
       return true;
     }
   }*/
-
-  protected static class SKeyedPartitionSinkTask extends PartitionKeyedCompute<int[]>
-      implements ISink {
-    private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
-
-    @Override
-    public boolean execute(IMessage message) {
-      Object object = message.getContent();
-      if (object instanceof ArrayList) {
-        ArrayList<?> data = (ArrayList<?>) object;
-        for (int i = 0; i < data.size(); i++) {
-          Object value = data.get(i);
-          experimentData.setOutput(value);
-          try {
-            verify(OperationNames.KEYED_PARTITION);
-          } catch (VerificationException e) {
-            LOG.info("Exception Message : " + e.getMessage());
-          }
-        }
-      }
-     /* if (count % jobParameters.getPrintInterval() == 0) {
-        LOG.info(String.format("%d %d Streaming Message Keyed Partition Received count: %d",
-            context.getWorkerId(),
-            context.taskId(), count));
-      }*/
-      count++;
-      return true;
-    }
-
-    @Override
-    public boolean keyedParition(Iterator<Tuple<Integer, int[]>> content) {
-      return false;
-    }
-  }
 
 }

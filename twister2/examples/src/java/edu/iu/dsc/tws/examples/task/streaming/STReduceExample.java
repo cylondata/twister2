@@ -59,13 +59,6 @@ public class STReduceExample extends BenchTaskWorker {
           LOG.info("Exception Message : " + e.getMessage());
         }
       }
-      /*if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        if (object instanceof int[]) {
-          LOG.info("Batch AllReduce Message Received : " + Arrays.toString((int[]) object));
-        }
-      }*/
-
       return true;
     }
   }

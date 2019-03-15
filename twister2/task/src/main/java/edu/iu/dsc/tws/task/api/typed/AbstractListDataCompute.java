@@ -13,14 +13,7 @@ package edu.iu.dsc.tws.task.api.typed;
 
 import java.util.ArrayList;
 
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.BaseCompute;
 
-public abstract class PartitionKeyedCompute<T> extends AbstractListDataCompute<Tuple<Integer, T>> {
-
-  public abstract boolean keyedPartition(ArrayList<Tuple<Integer, T>> content);
-
-  public boolean execute(IMessage<ArrayList<Tuple<Integer, T>>> content) {
-    return this.keyedPartition(content.getContent());
-  }
+public abstract class AbstractListDataCompute<T> extends BaseCompute<ArrayList<T>> {
 }
