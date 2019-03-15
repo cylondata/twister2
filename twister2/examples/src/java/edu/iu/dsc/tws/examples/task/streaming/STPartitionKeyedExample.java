@@ -12,17 +12,20 @@
 package edu.iu.dsc.tws.examples.task.streaming;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.PartitionKeyedCompute;
 
 public class STPartitionKeyedExample extends BenchTaskWorker {
 
@@ -37,14 +40,45 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseSource g = new KeyedSourceStreamTask(edge);
-    BaseSink r = new SKeyedPartitionSinkTask();
+    //BaseSink r = new SKeyedPartitionSinkTask();
+    ISink r = new SKeyedPartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class SKeyedPartitionSinkTask extends BaseSink {
+ /* protected static class SKeyedPartitionSinkTask extends BaseSink {
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      Object object = message.getContent();
+      if (object instanceof ArrayList) {
+        ArrayList<?> data = (ArrayList<?>) object;
+        for (int i = 0; i < data.size(); i++) {
+          Object value = data.get(i);
+          experimentData.setOutput(value);
+          try {
+            verify(OperationNames.KEYED_PARTITION);
+          } catch (VerificationException e) {
+            LOG.info("Exception Message : " + e.getMessage());
+          }
+        }
+      }
+     *//* if (count % jobParameters.getPrintInterval() == 0) {
+        LOG.info(String.format("%d %d Streaming Message Keyed Partition Received count: %d",
+            context.getWorkerId(),
+            context.taskId(), count));
+      }*//*
+      count++;
+      return true;
+    }
+  }*/
+
+  protected static class SKeyedPartitionSinkTask extends PartitionKeyedCompute<int[]>
+      implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -70,6 +104,11 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
       }*/
       count++;
       return true;
+    }
+
+    @Override
+    public boolean keyedParition(Iterator<Tuple<Integer, int[]>> content) {
+      return false;
     }
   }
 
