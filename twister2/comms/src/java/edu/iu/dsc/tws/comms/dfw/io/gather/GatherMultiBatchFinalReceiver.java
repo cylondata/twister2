@@ -24,6 +24,13 @@ import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.DKGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
 
+
+/**
+ * MultiBatch Receiver for gather operation
+ *
+ * @deprecated This class will be removed in Future releases. {@link edu.iu.dsc.tws.comms.api.batch.BKeyedGather} should be modified accordingly once this is removed
+ */
+@Deprecated
 public class GatherMultiBatchFinalReceiver implements MultiMessageReceiver {
 
   /**

@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -128,7 +129,7 @@ public interface DataFlowOperation {
    * @return source set
    */
   default Set<Integer> getSources() {
-    return null;
+    return Collections.emptySet();
   }
 
   /**
@@ -136,6 +137,6 @@ public interface DataFlowOperation {
    * @return target set
    */
   default Set<Integer> getTargets() {
-    return null;
+    return Collections.emptySet();
   }
 }

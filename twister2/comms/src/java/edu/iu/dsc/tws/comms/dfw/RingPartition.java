@@ -190,10 +190,10 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
    * @param edge the edge
    */
   public RingPartition(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> sources,
-                           Set<Integer> targets, MessageReceiver finalRcvr,
-                           MessageReceiver partialRcvr,
-                           MessageType dType, MessageType rcvType,
-                           MessageType kType, MessageType rcvKType, int edge) {
+                       Set<Integer> targets, MessageReceiver finalRcvr,
+                       MessageReceiver partialRcvr,
+                       MessageType dType, MessageType rcvType,
+                       MessageType kType, MessageType rcvKType, int edge) {
     this.merger = partialRcvr;
     this.finalReceiver = finalRcvr;
     this.taskPlan = tPlan;
@@ -394,11 +394,11 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean progress() {
-    int worker = workers.get(nextWorkerIndex);
-    List<Integer> tgts = workerToTargets.get(worker);
-
     swapLock.lock();
     try {
+      int worker = workers.get(nextWorkerIndex);
+      List<Integer> tgts = workerToTargets.get(worker);
+
       // we need to send starting from the previosu
       int i;
       int index = targetIndex.get(worker);
@@ -425,14 +425,15 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
         index = 0;
         incrementWorkerIndex();
       }
-      targetIndex.put(nextWorkerIndex, index);
+      targetIndex.put(worker, index);
     } finally {
       swapLock.unlock();
     }
 
     lock.lock();
     try {
-      if (onFinishedSources.equals(thisWorkerSources) && readyToSend.isEmpty()) {
+      if (onFinishedSources.equals(thisWorkerSources) && delegate.isComplete()
+          && readyToSend.isEmpty() && isMergedEmpty()) {
         for (int source : thisWorkerSources) {
           Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
           for (int dest : targets) {
@@ -440,29 +441,14 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
               if (delegate.sendMessage(source, new byte[1], dest,
                   MessageFlags.END, targetRoutes.get(dest))) {
                 finishedDestPerSource.add(dest);
-                LOG.fine(() -> String.format("%d SENT FINISHED %d -> %d",
-                    thisWorker, source, dest));
               } else {
                 // no point in going further
-                LOG.fine(() -> String.format("%d NOT SENT FINISHED %d -> %d",
-                    thisWorker, source, dest));
                 break;
               }
             }
           }
         }
-      } else {
-        if (readyToSend.isEmpty()) {
-          Map<Integer, Integer> values = new HashMap<>();
-          for (int i : readyToSend.keySet()) {
-            values.put(i, readyToSend.get(i).size());
-          }
-
-          LOG.fine(() -> String.format("%d COMPLETE %s %b %b %s", thisWorker, delegate.isComplete(),
-              onFinishedSources.equals(thisWorkerSources), readyToSend.isEmpty(), values));
-        }
       }
-
       // now set the things
       return OperationUtils.progressReceivers(delegate, lock,
           finalReceiver, partialLock, merger);
@@ -470,6 +456,15 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
     } finally {
       lock.unlock();
     }
+  }
+
+  private boolean isMergedEmpty() {
+    for (List<Object> t : merged.values()) {
+      if (!t.isEmpty()) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private void incrementWorkerIndex() {
@@ -558,7 +553,9 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
 
   private void swapToReady(int target, List<Object> data) {
     if (!readyToSend.containsKey(target)) {
-      readyToSend.put(target, new ArrayList<>(data));
+      if (data.size() > 0) {
+        readyToSend.put(target, new ArrayList<>(data));
+      }
     } else {
       List<Object> ready = readyToSend.get(target);
       ready.addAll(data);

@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.Condition;
+import java.util.NoSuchElementException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -104,7 +104,6 @@ public class FSKeyedSortedMerger implements Shuffle {
   private Comparator<Object> keyComparator;
 
   private Lock lock = new ReentrantLock();
-  private Condition notFull = lock.newCondition();
 
   /**
    * The id of the task
@@ -155,10 +154,6 @@ public class FSKeyedSortedMerger implements Shuffle {
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
-      if (numOfBytesInMemory > maxBytesToKeepInMemory
-          || recordsInMemory.size() > maxRecordsInMemory) {
-        notFull.signal();
-      }
     } finally {
       lock.unlock();
     }
@@ -236,8 +231,64 @@ public class FSKeyedSortedMerger implements Shuffle {
    * This method gives the values
    */
   public Iterator<Object> readIterator() {
-    // lets start with first file
-    return new FSIterator();
+    return new Iterator<Object>() {
+
+      private FSIterator fsIterator = new FSIterator();
+      private Object previousKey = null;
+      private Tuple nextTuple = fsIterator.hasNext() ? fsIterator.next() : null;
+
+      @Override
+      public boolean hasNext() {
+        return nextTuple != null;
+      }
+
+      @Override
+      public Tuple<Object, Iterator> next() {
+        if (!hasNext()) {
+          throw new NoSuchElementException("There are no more keys to iterate");
+        }
+        Object currentKey = nextTuple.getKey();
+        //user is trying to skip keys. For now, we are iterating over them internally
+        if (previousKey != null && previousKey.equals(currentKey)) {
+          //todo replace with an alternative approach
+          while (previousKey.equals(nextTuple.getKey())) {
+            if (fsIterator.hasNext()) {
+              nextTuple = fsIterator.next();
+            } else {
+              throw new NoSuchElementException("There are no more keys to iterate");
+            }
+          }
+          return next();
+        }
+        previousKey = currentKey;
+        Tuple<Object, Iterator> nextValueSet = new Tuple<>();
+        nextValueSet.setKey(currentKey);
+        nextValueSet.setValue(
+            new Iterator<Object>() {
+              @Override
+              public boolean hasNext() {
+                return nextTuple != null && nextTuple.getKey().equals(currentKey);
+              }
+
+              @Override
+              public Object next() {
+                if (this.hasNext()) {
+                  Object returnValue = nextTuple.getValue();
+                  if (fsIterator.hasNext()) {
+                    nextTuple = fsIterator.next();
+                  } else {
+                    nextTuple = null;
+                  }
+                  return returnValue;
+                } else {
+                  throw new NoSuchElementException("There are no more values for key "
+                      + currentKey);
+                }
+              }
+            });
+        return nextValueSet;
+      }
+    };
   }
 
   private class FSIterator implements Iterator<Object> {
