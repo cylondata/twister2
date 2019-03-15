@@ -9,22 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.typed;
-
-
-import java.util.Iterator;
+package edu.iu.dsc.tws.task.api.typed.streaming;
 
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.typed.AbstractSingleDataCompute;
 
-public abstract class KeyedReduceCompute<T> extends AbstractSingleDataCompute<Tuple<Object, T>> {
+public abstract class SKeyedReduceCompute<K, T> extends AbstractSingleDataCompute<Tuple<K, T>> {
 
-  public abstract boolean keyedReduce(Tuple<Object, T> content);
-
-  public abstract boolean keyedReduce(Iterator<Tuple<Object, T>> content);
+  public abstract boolean keyedReduce(Tuple<K, T> content);
 
   @Override
-  public boolean execute(IMessage<Tuple<Object, T>> content) {
+  public boolean execute(IMessage<Tuple<K, T>> content) {
     return this.keyedReduce(content.getContent());
   }
 }

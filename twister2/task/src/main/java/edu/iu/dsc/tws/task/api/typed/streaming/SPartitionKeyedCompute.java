@@ -9,11 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.typed;
+package edu.iu.dsc.tws.task.api.typed.streaming;
 
-import java.util.ArrayList;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.typed.AbstractSingleDataCompute;
 
-import edu.iu.dsc.tws.task.api.BaseCompute;
+public abstract class SPartitionKeyedCompute<K, T> extends AbstractSingleDataCompute<Tuple<K, T>> {
 
-public abstract class AbstractListDataCompute<T> extends BaseCompute<ArrayList<T>> {
+  public abstract boolean keyedPartition(Tuple<K, T> content);
+
+  public boolean execute(IMessage<Tuple<K, T>> content) {
+    return this.keyedPartition(content.getContent());
+  }
 }

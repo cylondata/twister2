@@ -9,16 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.typed;
+package edu.iu.dsc.tws.task.api.typed.batch;
 
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.typed.AbstractIterableDataCompute;
 
-public abstract class PartitionCompute<T> extends AbstractIterableDataCompute<Tuple<Integer, T>> {
-
-  public abstract boolean partition(T content);
+public abstract class BPartitionCompute<T> extends AbstractIterableDataCompute<Tuple<Integer, T>> {
 
   public abstract boolean partition(Iterator<Tuple<Integer, T>> content);
 

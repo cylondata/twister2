@@ -11,19 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.typed.PartitionCompute;
+import edu.iu.dsc.tws.task.api.typed.streaming.SPartitionCompute;
 
 public class STPartitionExample extends BenchTaskWorker {
 
@@ -45,7 +43,7 @@ public class STPartitionExample extends BenchTaskWorker {
   }
 
 
-  protected static class PartitionSinkTask extends PartitionCompute<int[]> implements ISink {
+  protected static class PartitionSinkTask extends SPartitionCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
 
     private int count = 0;
@@ -65,32 +63,5 @@ public class STPartitionExample extends BenchTaskWorker {
       }
       return true;
     }
-
-    @Override
-    public boolean partition(Iterator<Tuple<Integer, int[]>> content) {
-      return false;
-    }
   }
-
-  /*protected static class PartitionSinkTask extends BaseSink {
-    private static final long serialVersionUID = -254264903510284798L;
-
-    private int count = 0;
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    @Override
-    public boolean execute(IMessage message) {
-      if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        experimentData.setOutput(object);
-        try {
-          verify(OperationNames.PARTITION);
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
-        }
-        count += 1;
-      }
-      return true;
-    }
-  }*/
 }

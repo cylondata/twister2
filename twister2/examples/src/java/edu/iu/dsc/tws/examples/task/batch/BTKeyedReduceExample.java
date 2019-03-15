@@ -11,12 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
@@ -27,7 +24,7 @@ import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.typed.KeyedReduceCompute;
+import edu.iu.dsc.tws.task.api.typed.batch.BKeyedReduceCompute;
 
 public class BTKeyedReduceExample extends BenchTaskWorker {
 
@@ -42,7 +39,7 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     DataType keyType = DataType.OBJECT;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    BaseSource g = new SourceBatchTask(edge);
+    BaseSource g = new KeyedSourceBatchTask(edge);
     ISink r = new KeyedReduceSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
@@ -50,91 +47,29 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class KeyedReduceSinkTask extends KeyedReduceCompute<int[]> implements ISink {
+  protected static class KeyedReduceSinkTask
+      extends BKeyedReduceCompute<Object, int[]> implements ISink {
+
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
-
-
-    @Override
-    public boolean keyedReduce(Tuple<Object, int[]> content) {
-      return false;
-    }
 
     @Override
     public boolean keyedReduce(Iterator<Tuple<Object, int[]>> content) {
       while (content.hasNext()) {
-        Object value = content.next();
-        if (value instanceof ImmutablePair) {
-          ImmutablePair<?, ?> l = (ImmutablePair<?, ?>) value;
-          Object key = l.getKey();
-          Object val = l.getValue();
-          if (count % jobParameters.getPrintInterval() == 0) {
-            experimentData.setOutput(val);
-            try {
-              verify(OperationNames.KEYED_REDUCE);
-            } catch (VerificationException e) {
-              LOG.info("Exception Message : " + e.getMessage());
-            }
+        Tuple<Object, int[]> value = content.next();
+        Object key = value.getKey();
+        Object val = value.getValue();
+        if (count % jobParameters.getPrintInterval() == 0) {
+          experimentData.setOutput(val);
+          try {
+            verify(OperationNames.KEYED_REDUCE);
+          } catch (VerificationException e) {
+            LOG.info("Exception Message : " + e.getMessage());
           }
         }
       }
-
-      Tuple tuple = (Tuple) content;
-      if (tuple.getValue() instanceof int[]) {
-        int[] a = (int[]) tuple.getValue();
-        LOG.info("Message Keyed-Reduced : " + tuple.getKey() + ", "
-            + Arrays.toString(a));
-      }
-
       count++;
-
       return true;
     }
   }
-
-  /*protected static class KeyedReduceSinkTask extends BaseSink {
-    private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
-
-    @Override
-    public boolean execute(IMessage message) {
-      Object object = message.getContent();
-      LOG.info("Message received : " + object.getClass().getName());
-      if (object instanceof Iterator) {
-        Iterator<?> it = (Iterator<?>) object;
-        while (it.hasNext()) {
-          Object value = it.next();
-          if (value instanceof ImmutablePair) {
-            ImmutablePair<?, ?> l = (ImmutablePair<?, ?>) value;
-            Object key = l.getKey();
-            Object val = l.getValue();
-            if (count % jobParameters.getPrintInterval() == 0) {
-              experimentData.setOutput(val);
-              try {
-                verify(OperationNames.KEYED_REDUCE);
-              } catch (VerificationException e) {
-                LOG.info("Exception Message : " + e.getMessage());
-              }
-            }
-            *//*if (count % jobParameters.getPrintInterval() == 0) {
-              if (val instanceof int[]) {
-                LOG.info("Message Received , Key : " + key + ", Value : "
-                    + Arrays.toString((int[]) val));
-              }
-            }*//*
-          }
-        }
-      }
-      if (object instanceof Tuple) {
-        Tuple tuple = (Tuple) object;
-        if (tuple.getValue() instanceof int[]) {
-          int[] a = (int[]) tuple.getValue();
-          LOG.info("Message Keyed-Reduced : " + tuple.getKey() + ", "
-              + Arrays.toString(a));
-        }
-      }
-      count++;
-
-      return true;
-    }*/
 }

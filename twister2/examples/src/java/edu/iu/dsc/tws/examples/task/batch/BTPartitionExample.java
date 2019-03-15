@@ -19,9 +19,11 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.typed.PartitionCompute;
+import edu.iu.dsc.tws.task.api.typed.batch.BPartitionCompute;
 
 public class BTPartitionExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTPartitionExample.class.getName());
@@ -41,26 +43,32 @@ public class BTPartitionExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class PartitionSinkTask extends PartitionCompute<int[]> implements ISink {
+  protected static class PartitionSinkTask extends BPartitionCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
-    @Override
-    public boolean partition(int[] content) {
-      return false;
-    }
 
     @Override
-    public boolean partition(Iterator<Tuple<Integer, int[]>> iterator) {
-      while (iterator.hasNext()) {
-        iterator.next();
+    public boolean partition(Iterator<Tuple<Integer, int[]>> content) {
+      while (content.hasNext()) {
+        content.next();
         count++;
       }
+      //TODO:We have to check the verification part
       if (count % jobParameters.getPrintInterval() == 0) {
-        LOG.info("INstance : " + iterator.getClass().getName());
-        LOG.info("ITr next : " + iterator.hasNext());
-        while (iterator.hasNext()) {
-          Object res = iterator.next();
+        experimentData.setOutput(content);
+        try {
+          verify(OperationNames.PARTITION);
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
+        }
+      }
+
+      if (count % jobParameters.getPrintInterval() == 0) {
+        LOG.info("INstance : " + content.getClass().getName());
+        LOG.info("ITr next : " + content.hasNext());
+        while (content.hasNext()) {
+          Object res = content.next();
           LOG.info("Message Partition Received : " + res.getClass().getName()
               + ", Count : " + count);
         }
@@ -68,41 +76,4 @@ public class BTPartitionExample extends BenchTaskWorker {
       return true;
     }
   }
-
-    /*@Override
-    public boolean execute(IMessage message) {
-
-      Object object = message.getContent();
-
-      if (message.getContent() instanceof Iterator) {
-        while (((Iterator) message.getContent()).hasNext()) {
-          ((Iterator) message.getContent()).next();
-          count++;
-        }
-        *//*if (count % jobParameters.getPrintInterval() == 0) {
-          Object object = message.getContent();
-          experimentData.setOutput(object);
-          try {
-            verify(OperationNames.PARTITION);
-          } catch (VerificationException e) {
-            LOG.info("Exception Message : " + e.getMessage());
-          }
-        }*//*
-        if (count % jobParameters.getPrintInterval() == 0) {
-          LOG.info("Received : " + object.getClass().getName());
-          if (object instanceof Iterator<?>) {
-            Iterator<?> itr = (Iterator<?>) object;
-            LOG.info("INstance : " + itr.getClass().getName());
-            LOG.info("ITr next : " + itr.hasNext());
-            while (itr.hasNext()) {
-              Object res = itr.next();
-              LOG.info("Message Partition Received : " + res.getClass().getName()
-                  + ", Count : " + count);
-            }
-          }
-        }
-      }
-      return true;
-    }*/
-
 }

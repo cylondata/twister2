@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.typed.ReduceCompute;
 
@@ -48,22 +47,6 @@ public class BTReduceExample extends BenchTaskWorker {
     private static final long serialVersionUID = -254264903510284798L;
 
     private int count = 0;
-
-    @Override
-    public boolean execute(IMessage message) {
-      count++;
-      LOG.info(String.format("%d received message %d", context.getWorkerId(), count));
-      if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        experimentData.setOutput(object);
-        try {
-          verify(OperationNames.REDUCE);
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
-        }
-      }
-      return true;
-    }
 
     @Override
     public boolean reduce(int[] content) {

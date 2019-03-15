@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.typed.PartitionKeyedCompute;
+import edu.iu.dsc.tws.task.api.typed.batch.BPartitionKeyedCompute;
 
 public class BTPartitionKeyedExample extends BenchTaskWorker {
 
@@ -46,21 +46,26 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
   }
 
   protected static class BKeyedPartitionSinkTask
-      extends PartitionKeyedCompute<int[]> implements ISink {
+      extends BPartitionKeyedCompute<Integer, int[]> implements ISink {
+
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
-    public boolean keyedPartition(ArrayList<Tuple<Integer, int[]>> content) {
-      for (int i = 0; i < content.size(); i++) {
-        Object value = content.get(i);
-        experimentData.setOutput(value);
-        try {
-          verify(OperationNames.KEYED_PARTITION);
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
-        }
+    public boolean keyedPartition(Iterator<Tuple<Integer, int[]>> content) {
+      while (content.hasNext()) {
+        content.next();
+        count++;
       }
+      experimentData.setOutput(content);
+
+      //TODO:We have to check the verification part
+      try {
+        verify(OperationNames.KEYED_PARTITION);
+      } catch (VerificationException e) {
+        LOG.info("Exception Message : " + e.getMessage());
+      }
+
       if (count % jobParameters.getPrintInterval() == 0) {
         LOG.info(String.format("%d %d Batch Message Keyed Partition Received count: %d",
             context.getWorkerId(),

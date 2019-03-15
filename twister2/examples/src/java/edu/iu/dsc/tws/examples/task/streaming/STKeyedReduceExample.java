@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -24,7 +23,7 @@ import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.typed.KeyedReduceCompute;
+import edu.iu.dsc.tws.task.api.typed.streaming.SKeyedReduceCompute;
 
 public class STKeyedReduceExample extends BenchTaskWorker {
 
@@ -47,7 +46,8 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class KeyedReduceSinkTask extends KeyedReduceCompute<int[]> implements ISink {
+  protected static class KeyedReduceSinkTask
+      extends SKeyedReduceCompute<Object, int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -66,41 +66,5 @@ public class STKeyedReduceExample extends BenchTaskWorker {
       count++;
       return true;
     }
-
-    @Override
-    public boolean keyedReduce(Iterator<Tuple<Object, int[]>> content) {
-      return false;
-    }
   }
-
-  /*protected static class KeyedReduceSinkTask extends BaseSink {
-    private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
-
-    @Override
-    public boolean execute(IMessage message) {
-      if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        if (object instanceof Tuple) {
-          Tuple content = (Tuple) object;
-          Object key = content.getKey();
-          Object value = content.getValue();
-          experimentData.setOutput(value);
-          try {
-            verify(OperationNames.KEYED_REDUCE);
-          } catch (VerificationException e) {
-            LOG.info("Exception Message : " + e.getMessage());
-          }
-
-          *//*if (value instanceof int[]) {
-            LOG.info("Message Received, Key : " + key + ", Value : "
-                + Arrays.toString((int[]) value));
-          }*//*
-        }
-      }
-      count++;
-      return true;
-    }
-  }*/
-
 }
