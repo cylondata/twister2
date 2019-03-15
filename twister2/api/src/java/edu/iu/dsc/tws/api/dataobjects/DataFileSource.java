@@ -105,12 +105,11 @@ public class DataFileSource<T> extends BaseSource {
   @Override
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
-
     String datainputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
     ExecutionRuntime runtime = (ExecutionRuntime)
         cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-
     boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
+    int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_CSIZE));
     if (!shared) {
       this.source = runtime.createInput(cfg, context,
           new LocalTextInputPartitioner(new Path(datainputDirectory),

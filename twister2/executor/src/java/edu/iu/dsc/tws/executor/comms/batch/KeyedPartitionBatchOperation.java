@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.Iterator;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -22,7 +21,6 @@ import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
@@ -30,34 +28,32 @@ import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.api.TaskPartitioner;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(KeyedPartitionBatchOperation.class.getName());
-
   private BKeyedPartition op;
 
   private TaskKeySelector selector;
 
   public KeyedPartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                       Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                                      DataType dataType, DataType keyType, String edgeName,
-                                      boolean shuffle,
-                                      TaskPartitioner partitioner, TaskKeySelector selec) {
+                                      Edge edge) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
-    this.selector = selec;
+    this.selector = edge.getSelector();
 
-    DestinationSelector destSelector = null;
-    if (selec != null) {
-      destSelector = new DefaultDestinationSelector(partitioner);
+    DestinationSelector destSelector;
+    if (selector != null) {
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
     } else {
       destSelector = new HashingSelector();
     }
 
-    op = new BKeyedPartition(channel, taskPlan, srcs, dests, Utils.dataTypeToMessageType(dataType),
-        Utils.dataTypeToMessageType(keyType), new PartitionReceiver(), destSelector);
-    communicationEdge = e.generate(edgeName);
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    op = new BKeyedPartition(newComm, taskPlan, srcs, dests,
+        Utils.dataTypeToMessageType(edge.getDataType()),
+        Utils.dataTypeToMessageType(edge.getKeyType()), new PartitionReceiver(), destSelector);
+    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -84,7 +80,7 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage(it,
+      TaskMessage msg = new TaskMessage<>(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
     }

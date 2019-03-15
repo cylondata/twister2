@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
@@ -88,7 +88,6 @@ public class DataObjectSource<T> extends BaseSource {
           }
         }
         inputSplit = source.getNextSplit(context.taskIndex());
-        LOG.info("Task index:" + context.taskIndex() + " count: " + count);
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
       }
@@ -106,8 +105,8 @@ public class DataObjectSource<T> extends BaseSource {
     boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
     if (!shared) {
       this.source = runtime.createInput(cfg, context,
-          new LocalFixedInputPartitioner(new Path(datainputDirectory),
-              context.getParallelism(), cfg, datasize));
+          new LocalTextInputPartitioner(new Path(datainputDirectory),
+              context.getParallelism(), config));
     } else {
       this.source = runtime.createInput(cfg, context,
           new SharedTextInputPartitioner(new Path(datainputDirectory),

@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class PartitionBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(PartitionBatchOperation.class.getName());
@@ -34,12 +35,22 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
   protected BPartition op;
 
   public PartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                                 Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                                 DataType dataType, String edgeName, boolean shuffle) {
+                                 Set<Integer> sources, Set<Integer> targets,
+                                 EdgeGenerator e, Edge edge) {
     super(config, network, tPlan);
+    DataType dataType = edge.getDataType();
+    String edgeName = edge.getName();
+    boolean shuffle = false;
+
+    Object shuffleProp = edge.getProperty("shuffle");
+    if (shuffleProp instanceof Boolean && (Boolean) shuffleProp) {
+      shuffle = true;
+    }
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+
     this.edgeGenerator = e;
     //LOG.info("ParitionOperation Prepare 1");
-    op = new BPartition(channel, taskPlan, srcs, dests,
+    op = new BPartition(newComm, taskPlan, sources, targets,
         Utils.dataTypeToMessageType(dataType), new PartitionReceiver(),
         new LoadBalanceSelector(), shuffle);
     communicationEdge = e.generate(edgeName);
