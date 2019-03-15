@@ -11,11 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
-import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,8 +36,6 @@ public class FSKeyedSortedMergerTest {
 
   private FSKeyedSortedMerger fsMerger;
 
-  private Random random;
-
   private KryoSerializer serializer;
 
   @BeforeClass
@@ -53,8 +50,7 @@ public class FSKeyedSortedMergerTest {
   public void before() throws Exception {
     fsMerger = new FSKeyedSortedMerger(1000, 100, "/tmp",
         "fskeyedsortedmerger", MessageType.INTEGER, MessageType.OBJECT,
-        new KeyComparator(), 0);
-    random = new Random();
+        Comparator.comparingInt(i -> (Integer) i), 0);
     serializer = new KryoSerializer();
   }
 
@@ -74,13 +70,13 @@ public class FSKeyedSortedMergerTest {
 
   @Test
   public void testStart() throws Exception {
-    ByteBuffer buffer = ByteBuffer.allocate(4);
-    for (int i = 0; i < 1000; i++) {
-      buffer.clear();
-      buffer.putInt(i);
-      byte[] serialize = serializer.serialize(i);
-      int[] val = {i};
-      fsMerger.add(val, serialize, serialize.length);
+    int dataLength = 1024;
+    int noOfKeys = 1000;
+    int[] data = new int[dataLength];
+    Arrays.fill(data, 1);
+    byte[] serializedData = serializer.serialize(data);
+    for (int i = 0; i < noOfKeys; i++) {
+      fsMerger.add(i, serializedData, serializedData.length);
       fsMerger.run();
     }
 
@@ -93,16 +89,29 @@ public class FSKeyedSortedMergerTest {
     while (it.hasNext()) {
       LOG.info("Reading value: " + count);
       Tuple val = (Tuple) it.next();
-      int[] k = (int[]) val.getKey();
-      if (k[0] < current) {
+      int k = (int) val.getKey();
+      if (k < current) {
         Assert.fail("Wrong order");
       }
-      LOG.log(Level.INFO, "Key: " + k[0]);
-      current = k[0];
-      if (set.contains(k[0])) {
+      LOG.log(Level.INFO, "Key: " + k);
+      current = k;
+      if (set.contains(k)) {
         Assert.fail("Duplicate value");
       }
-      set.add(k[0]);
+      set.add(k);
+      //data check
+      Iterator dataIt = (Iterator) val.getValue();
+      int dataCount = 0;
+      while (dataIt.hasNext()) {
+        int[] arr = (int[]) dataIt.next();
+        if (arr.length != dataLength) {
+          Assert.fail("Data sizes mismatch");
+        }
+        dataCount++;
+      }
+      if (dataCount != 1) {
+        Assert.fail("Invalid amount of data arrays for key");
+      }
       count++;
     }
     if (count != 1000) {
