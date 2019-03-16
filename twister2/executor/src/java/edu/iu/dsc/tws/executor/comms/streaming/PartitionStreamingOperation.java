@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
@@ -29,26 +28,24 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.api.stream.SPartition;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 /**
  * The streaming operation.
  */
 public class PartitionStreamingOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(PartitionStreamingOperation.class.getName());
-
   private boolean checkpointStarted = false;
 
   protected SPartition op;
 
   public PartitionStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                      Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                                     DataType dataType, String edgeName) {
+                                     Edge edge) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
 
@@ -60,10 +57,12 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
       throw new IllegalArgumentException("Targets should have more than 0 elements");
     }
 
-    op = new SPartition(channel, taskPlan, srcs, dests, Utils.dataTypeToMessageType(dataType),
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    op = new SPartition(newComm, taskPlan, srcs, dests,
+        Utils.dataTypeToMessageType(edge.getDataType()),
         new  PartitionBulkReceiver(),
         new LoadBalanceSelector());
-    communicationEdge = e.generate(edgeName);
+    communicationEdge = e.generate(edge.getName());
   }
 
   public boolean send(int source, IMessage message, int flags) {
@@ -79,7 +78,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
     public boolean receive(int target, Object data) {
       BlockingQueue<IMessage> messages = outMessages.get(target);
 
-      TaskMessage msg = new TaskMessage(data,
+      TaskMessage msg = new TaskMessage<>(data,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return messages.offer(msg);
     }
@@ -123,7 +122,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
           }
 
           if (object instanceof List) {
-            TaskMessage msg = new TaskMessage(object,
+            TaskMessage msg = new TaskMessage<>(object,
                 edgeGenerator.getStringMapping(communicationEdge), target);
 
             messages.offer(msg);

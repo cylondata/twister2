@@ -94,6 +94,23 @@ public class ComputeConnection {
   }
 
   /**
+   * Create a broadcast connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param properties the properties for this connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection broadcast(String parent, String name, DataType dataType,
+                                     Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.BROADCAST, dataType);
+    edge.setProperties(properties);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
    * Create a reduce connection
    *
    * @param parent the parent to connection
@@ -197,6 +214,26 @@ public class ComputeConnection {
   }
 
   /**
+   * Create a reduce connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param function the reduce function
+   * @param dataType the data type
+   * @param properties properties of the connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection reduce(String parent, String name,
+                                  IFunction function, DataType dataType,
+                                  Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.REDUCE, dataType, function);
+    edge.setProperties(properties);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
    * Create a keyed reduce connection
    *
    * @param parent the parent to connection
@@ -238,6 +275,29 @@ public class ComputeConnection {
                                        Op op, DataType keyTpe, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
         new ReduceFn(op, dataType));
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
+   * Create a keyed reduce connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param function the reduce function
+   * @param keyTpe the key data type
+   * @param dataType the data type
+   * @param properties properties of the connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection keyedReduce(String parent, String name,
+                                       IFunction function, DataType keyTpe, DataType dataType,
+                                       TaskPartitioner partitioner, TaskKeySelector selector,
+                                       Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
+        function, partitioner, selector);
+    edge.setProperties(properties);
     inputs.put(parent, edge);
 
     return this;
@@ -286,6 +346,40 @@ public class ComputeConnection {
   }
 
   /**
+   * Create a gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param dataType data type
+   * @return the ComputeConnection
+   */
+  public ComputeConnection gather(String parent, String name, DataType dataType) {
+    Edge edge = new Edge(name, OperationNames.GATHER, dataType);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+
+  /**
+   * Create a gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param dataType data type
+   * @param props map of properties
+   * @return the ComputeConnection
+   */
+  public ComputeConnection gather(String parent, String name, DataType dataType,
+                                  Map<String, Object> props) {
+    Edge edge = new Edge(name, OperationNames.GATHER, dataType);
+    edge.addProperties(props);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
    * Create a keyed gather connection
    *
    * @param parent the parent to connection
@@ -324,34 +418,24 @@ public class ComputeConnection {
   }
 
   /**
-   * Create a gather connection
+   * Create a keyed gather connection
    *
    * @param parent the parent to connection
    * @param name name of the edge
-   * @param dataType data type
+   * @param keyTpe the key data type
+   * @param dataType the data type
+   * @param partitioner the partitioner
+   * @param  selector selector
+   * @param properties properties of the connection
    * @return the ComputeConnection
    */
-  public ComputeConnection gather(String parent, String name, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.GATHER, dataType);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-
-  /**
-   * Create a gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param dataType data type
-   * @param props map of properties
-   * @return the ComputeConnection
-   */
-  public ComputeConnection gather(String parent, String name, DataType dataType,
-                                  Map<String, Object> props) {
-    Edge edge = new Edge(name, OperationNames.GATHER, dataType);
-    edge.addProperties(props);
+  public ComputeConnection keyedGather(String parent, String name,
+                                       DataType keyTpe, DataType dataType,
+                                       TaskPartitioner partitioner, TaskKeySelector selector,
+                                       Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.KEYED_GATHER, dataType, keyTpe,
+        null, partitioner, selector);
+    edge.setProperties(properties);
     inputs.put(parent, edge);
 
     return this;
@@ -546,6 +630,26 @@ public class ComputeConnection {
   }
 
   /**
+   * Create a reduce connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param function the reduce function
+   * @param dataType the data type
+   * @param properties properties of the connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection allreduce(String parent, String name,
+                                     IFunction function, DataType dataType,
+                                     Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.ALLREDUCE, dataType, function);
+    edge.setProperties(properties);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
    * Create a gather connection
    *
    * @param parent the parent to connection
@@ -602,6 +706,24 @@ public class ComputeConnection {
   }
 
   /**
+   * Create a gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param dataType data type
+   * @param properties properties of the connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection allgather(String parent, String name, DataType dataType,
+                                     Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.ALLGATHER, dataType);
+    edge.setProperties(properties);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
    * Create a direct connection between two parallel task sets
    *
    * @param parent the parent to connection
@@ -611,6 +733,24 @@ public class ComputeConnection {
    */
   public ComputeConnection direct(String parent, String name, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.DIRECT, dataType);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
+   * Create a direct connection between two parallel task sets
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param dataType data type
+   * @param properties properties of the connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection direct(String parent, String name, DataType dataType,
+                                  Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.DIRECT, dataType);
+    edge.setProperties(properties);
     inputs.put(parent, edge);
 
     return this;
