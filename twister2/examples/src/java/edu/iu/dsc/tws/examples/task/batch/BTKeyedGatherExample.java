@@ -47,22 +47,19 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
 
   protected static class KeyedGatherSinkTask extends KeyedGatherCompute<Object, int[]>
       implements ISink {
+
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
     public boolean keyedGather(Iterator<Tuple<Object, int[]>> content) {
       while (content.hasNext()) {
-        Tuple<Object, int[]> tuple = content.next();
-        Object key = tuple.getKey();
-        Object value = tuple.getValue();
-        count++;
-        if (count % jobParameters.getPrintInterval() == 0) {
-          if (value instanceof Object[]) {
-            Object[] objects = (Object[]) value;
-            for (int i = 0; i < objects.length; i++) {
-              int[] a = (int[]) objects[i];
-              experimentData.setOutput(a);
+        Object value = content.next();
+        if (value != null) {
+          Object data = ((Tuple) value).getValue();
+          if (data != null) {
+            if (count % jobParameters.getPrintInterval() == 0) {
+              experimentData.setOutput(data);
               try {
                 verify(OperationNames.KEYED_GATHER);
               } catch (VerificationException e) {
@@ -76,43 +73,3 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
     }
   }
 }
-
-/*@Override
-    public boolean execute(IMessage message) {
-      Object object = message.getContent();
-      LOG.info("Message Keyed-Gather : " + message.getContent()
-          + ", Count : " + count);
-      if (object instanceof Iterator) {
-        Iterator<?> it = (Iterator<?>) object;
-        while (it.hasNext()) {
-          Object value = it.next();
-          if (value instanceof ImmutablePair) {
-            ImmutablePair<?, ?> l = (ImmutablePair<?, ?>) value;
-            Object key = l.getKey();
-            Object val = l.getValue();
-            //LOG.info("Value : " + val.getClass().getJobName());
-            if (count % jobParameters.getPrintInterval() == 0) {
-              if (val instanceof Object[]) {
-                Object[] objects = (Object[]) val;
-                for (int i = 0; i < objects.length; i++) {
-                  int[] a = (int[]) objects[i];
-                  if (count % jobParameters.getPrintInterval() == 0) {
-                    experimentData.setOutput(a);
-                    try {
-                      verify(OperationNames.KEYED_GATHER);
-                    } catch (VerificationException e) {
-                      LOG.info("Exception Message : " + e.getMessage());
-                    }
-                  }
-                  *//*LOG.info("Keyed-Gathered Message , Key : " + key + ", Value : "
-                      + Arrays.toString(a));*//*
-                }
-              }
-            }
-          }
-        }
-      }
-      count++;
-      return true;
-    }
-*/
