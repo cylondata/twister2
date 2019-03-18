@@ -21,9 +21,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.GatherCompute;
 
 public class BTGatherExample extends BenchTaskWorker {
 
@@ -37,7 +37,7 @@ public class BTGatherExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseSource g = new SourceBatchTask(edge);
-    BaseSink r = new GatherSinkTask();
+    ISink r = new GatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
@@ -45,38 +45,35 @@ public class BTGatherExample extends BenchTaskWorker {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class GatherSinkTask extends BaseSink {
+  protected static class GatherSinkTask extends GatherCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private static int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
-      if (message.getContent() instanceof Iterator) {
-        int numberOfElements = 0;
-        int totalValues = 0;
-        Iterator<Object> itr = (Iterator<Object>) message.getContent();
-        while (itr.hasNext()) {
-          Object data = itr.next();
+    public boolean gather(Iterator<Tuple<Integer, int[]>> content) {
+      int numberOfElements = 0;
+      int totalValues = 0;
+      while (content.hasNext()) {
+        count++;
+        Tuple<Integer, int[]> value = content.next();
+        if (value != null) {
+          int[] data = value.getValue();
           numberOfElements++;
-          if (data instanceof Tuple) {
-            experimentData.setOutput(((Tuple) data).getValue());
+          if (count % jobParameters.getPrintInterval() == 0) {
+            experimentData.setOutput(data);
             try {
               verify(OperationNames.GATHER);
             } catch (VerificationException e) {
               LOG.info("Exception Message : " + e.getMessage());
             }
           }
-          if (data instanceof int[]) {
-            totalValues += ((int[]) data).length;
-          }
         }
+      }
 
-        /*if (count % jobParameters.getPrintInterval() == 0) {
-          LOG.info("Gathered : " + message.getContent().getClass().getJobName()
-              + " numberOfElements: " + numberOfElements
-              + " total: " + totalValues);
-        }*/
-
+      if (count % jobParameters.getPrintInterval() == 0) {
+        LOG.info("Gathered : " + content.getClass().getTypeName()
+            + " numberOfElements: " + numberOfElements
+            + " total: " + totalValues);
       }
       return true;
     }

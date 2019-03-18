@@ -19,9 +19,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.streaming.SPartitionCompute;
 
 public class STPartitionExample extends BenchTaskWorker {
 
@@ -35,23 +35,23 @@ public class STPartitionExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseSource g = new SourceStreamTask(edge);
-    BaseSink r = new PartitionSinkTask();
+    ISink r = new PartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class PartitionSinkTask extends BaseSink {
-    private static final long serialVersionUID = -254264903510284798L;
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  protected static class PartitionSinkTask extends SPartitionCompute<int[]> implements ISink {
 
+    private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public boolean execute(IMessage message) {
+    public boolean partition(int[] content) {
       if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
+        Object object = content;
         experimentData.setOutput(object);
         try {
           verify(OperationNames.PARTITION);
