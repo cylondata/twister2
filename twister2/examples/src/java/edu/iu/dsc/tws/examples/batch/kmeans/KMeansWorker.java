@@ -37,8 +37,6 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-//import edu.iu.dsc.tws.api.dataobjects.DataFileReadSource;
-
 /**
  * It is the main class for the K-Means clustering which consists of four main tasks namely
  * generation of datapoints and centroids, partition and read the partitioned data points,
@@ -80,8 +78,8 @@ public class KMeansWorker extends TaskWorker {
     double[][] centroid;
 
     if (workerId == 0) {
-      workerUtils.generateDatapoints(
-          dimension, numFiles, dsize, csize, dinputDirectory, cinputDirectory);
+      workerUtils.generateDatapoints(dimension, numFiles, dsize, csize,
+          dinputDirectory, cinputDirectory);
     }
 
     /* First Graph to partition and read the partitioned data points **/
@@ -92,6 +90,7 @@ public class KMeansWorker extends TaskWorker {
         parallelismValue);
     firstGraphComputeConnection.direct("dsource", "direct", DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
+
     DataFlowTaskGraph datapointsTaskGraph = taskGraphBuilder.build();
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
@@ -99,15 +98,15 @@ public class KMeansWorker extends TaskWorker {
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(
         datapointsTaskGraph, firstGraphExecutionPlan, "dsink");
     DataPartition<Object> dataPointsPartition = dataPointsObject.getPartitions()[0];
-    datapoint = workerUtils.getDataPoints(
-        workerId, dataPointsPartition, dsize, parallelismValue, dimension);
+    datapoint = workerUtils.getDataPoints(dataPointsPartition.getPartitionId(),
+        dataPointsPartition, dsize, parallelismValue, dimension);
 
     /* Second Graph to read the centroids **/
     DataFileSource centroidSourceTask = new DataFileSource("direct");
     DataFileSink centroidSinkTask = new DataFileSink();
-    taskGraphBuilder.addSource("csource", centroidSourceTask, parallelismValue);
+    taskGraphBuilder.addSource("csource", centroidSourceTask, 2);
     ComputeConnection secondGraphComputeConnection = taskGraphBuilder.addSink(
-        "csink", centroidSinkTask, parallelismValue);
+        "csink", centroidSinkTask, 2);
     secondGraphComputeConnection.direct("csource", "direct", DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
@@ -118,8 +117,8 @@ public class KMeansWorker extends TaskWorker {
     DataObject<Object> centroidsDataObject = taskExecutor.getOutput(
         centroidsTaskGraph, secondGraphExecutionPlan, "csink");
     DataPartition<Object> centroidsDataPartition = centroidsDataObject.getPartitions()[0];
-    centroid = workerUtils.getCentroids(
-        workerId, centroidsDataPartition, csize, parallelismValue, dimension);
+    centroid = workerUtils.getCentroids(centroidsDataPartition.getPartitionId(),
+        centroidsDataPartition, csize, dimension);
 
     /* Third Graph to do the actual calculation **/
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();

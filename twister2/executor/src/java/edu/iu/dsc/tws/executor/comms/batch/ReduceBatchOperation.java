@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.executor.comms.batch;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
@@ -23,36 +22,35 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BReduce;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class ReduceBatchOperation extends AbstractParallelOperation {
-
-  private static final Logger LOG = Logger.getLogger(ReduceBatchOperation.class.getName());
-
   protected BReduce op;
 
-  public ReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan) {
+  public ReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+                              Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
+                              Edge edge) {
     super(config, network, tPlan);
-  }
-
-  public void prepare(Set<Integer> sources, int dest, EdgeGenerator e,
-                      DataType dataType, IFunction fnc, String edgeName) {
     this.edgeGenerator = e;
-    op = new BReduce(channel, taskPlan, sources, dest,
-        new ReduceFnImpl(fnc),
-        new FinalSingularReceiver(), Utils.dataTypeToMessageType(dataType));
-    communicationEdge = e.generate(edgeName);
+
+    if (dests.size() > 1) {
+      throw new RuntimeException("Reduce can only have one target: " + dests);
+    }
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    op = new BReduce(newComm, taskPlan, sources, dests.iterator().next(),
+        new ReduceFnImpl(edge.getFunction()),
+        new FinalSingularReceiver(), Utils.dataTypeToMessageType(edge.getDataType()));
+    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    //LOG.log(Level.INFO, String.format("Message %s", message.getContent()));
     return op.reduce(source, message.getContent(), flags);
   }
 
@@ -69,7 +67,7 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
   public static class ReduceFnImpl implements ReduceFunction {
     private IFunction fn;
 
-    public ReduceFnImpl(IFunction fn) {
+    ReduceFnImpl(IFunction fn) {
       this.fn = fn;
     }
 
@@ -83,17 +81,14 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
     }
   }
 
-
   public class FinalSingularReceiver implements SingularReceiver {
-    private int count = 0;
-
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override
     public boolean receive(int target, Object object) {
-      TaskMessage msg = new TaskMessage(object,
+      TaskMessage msg = new TaskMessage<>(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
     }

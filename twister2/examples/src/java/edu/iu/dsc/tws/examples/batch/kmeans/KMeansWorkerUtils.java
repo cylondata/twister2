@@ -31,12 +31,12 @@ public class KMeansWorkerUtils {
     this.config = cfg;
   }
 
-  public double[][] getDataPoints(int workerId, DataPartition<Object> dataPointsPartition,
+  public double[][] getDataPoints(int partitionId, DataPartition<Object> dataPointsPartition,
                                   int dsize, int parallel, int dimension) {
     DataObjectImpl<Object> dataObject
         = (DataObjectImpl<Object>) dataPointsPartition.getConsumer().next();
     Iterator<ArrayList> arrayListIterator
-        = (Iterator<ArrayList>) dataObject.getPartitions(workerId).getConsumer().next();
+        = (Iterator<ArrayList>) dataObject.getPartitions(partitionId).getConsumer().next();
     double[][] datapoint = new double[dsize / parallel + 1][dimension];
     int value = 0;
     while (arrayListIterator.hasNext()) {
@@ -51,12 +51,12 @@ public class KMeansWorkerUtils {
   }
 
   public double[][] getCentroids(int workerId, DataPartition<Object> centroidsPartition,
-                                 int csize, int parallel, int dimension) {
+                                 int csize, int dimension) {
     DataObjectImpl<Object> dataObject
         = (DataObjectImpl<Object>) centroidsPartition.getConsumer().next();
+    double[][] datapoint = new double[csize][dimension];
     Iterator<ArrayList> arrayListIterator
         = (Iterator<ArrayList>) dataObject.getPartitions(workerId).getConsumer().next();
-    double[][] datapoint = new double[csize / parallel + 1][dimension];
     int value = 0;
     while (arrayListIterator.hasNext()) {
       String val = String.valueOf(arrayListIterator.next());

@@ -86,7 +86,7 @@ public class KMeansDataGeneratorTest {
     KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
         numFiles, dsize, 100, dimension, config);
 
-    int parallelismValue = 2;
+    int parallelismValue = 1;
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     DataObjectSource sourceTask = new DataObjectSource("direct");
     DataObjectSink sinkTask = new DataObjectSink();
