@@ -21,9 +21,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.streaming.SKeyedReduceCompute;
 
 public class STKeyedReduceExample extends BenchTaskWorker {
 
@@ -39,41 +39,34 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseSource g = new KeyedSourceStreamTask(edge);
-    BaseSink r = new KeyedReduceSinkTask();
+    ISink r = new KeyedReduceSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class KeyedReduceSinkTask extends BaseSink {
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  protected static class KeyedReduceSinkTask
+      extends SKeyedReduceCompute<Object, int[]> implements ISink {
+
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
+    public boolean keyedReduce(Tuple<Object, int[]> content) {
       if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        if (object instanceof Tuple) {
-          Tuple content = (Tuple) object;
-          Object key = content.getKey();
-          Object value = content.getValue();
-          experimentData.setOutput(value);
-          try {
-            verify(OperationNames.KEYED_REDUCE);
-          } catch (VerificationException e) {
-            LOG.info("Exception Message : " + e.getMessage());
-          }
-
-          /*if (value instanceof int[]) {
-            LOG.info("Message Received, Key : " + key + ", Value : "
-                + Arrays.toString((int[]) value));
-          }*/
+        Object key = content.getKey();
+        Object value = content.getValue();
+        experimentData.setOutput(value);
+        try {
+          verify(OperationNames.KEYED_REDUCE);
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
         }
       }
       count++;
       return true;
     }
   }
-
 }
