@@ -9,15 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.streaming.svm.sgd.pegasos;
+package edu.iu.dsc.tws.examples.ml.svm.sgd.pegasos;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.examples.streaming.svm.exceptions.MatrixMultiplicationException;
-import edu.iu.dsc.tws.examples.streaming.svm.exceptions.NullDataSetException;
-import edu.iu.dsc.tws.examples.streaming.svm.math.Initializer;
-import edu.iu.dsc.tws.examples.streaming.svm.math.Matrix;
-import edu.iu.dsc.tws.examples.streaming.svm.sgd.StreamingSGD;
+import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
+import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
+import edu.iu.dsc.tws.examples.ml.svm.math.Initializer;
+import edu.iu.dsc.tws.examples.ml.svm.math.Matrix;
+import edu.iu.dsc.tws.examples.ml.svm.sgd.StreamingSGD;
 
 
 public class StreamingPegasosSGD extends StreamingSGD {

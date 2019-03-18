@@ -9,11 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.streaming.svm.math;
+package edu.iu.dsc.tws.examples.ml.svm.math;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.examples.streaming.svm.exceptions.MatrixMultiplicationException;
+import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 
 
 public final class Matrix {

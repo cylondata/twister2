@@ -9,11 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.streaming.svm.exceptions;
+package edu.iu.dsc.tws.examples.ml.svm.util;
 
-public class MatrixMultiplicationException extends Exception {
+public final class TypeConverter {
+  private TypeConverter() { }
 
-  public MatrixMultiplicationException(String message) {
-    super(message);
-  }
 }

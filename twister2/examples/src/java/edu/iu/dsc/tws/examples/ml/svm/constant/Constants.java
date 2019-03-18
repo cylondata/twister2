@@ -9,32 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.streaming.svm.math;
+package edu.iu.dsc.tws.examples.ml.svm.constant;
 
-import java.util.Random;
+public final class Constants {
 
-public final class Initializer {
+  private Constants() { }
 
-  private Initializer() {
-  }
+  public abstract class SimpleGraphConfig {
 
-  public static double[] initialWeights(int size) {
-    double[] initW = new double[size];
-    Random random = new Random();
-    for (int i = 0; i < size; i++) {
-      initW[i] = random.nextGaussian();
-    }
+    public static final String DATA_EDGE = "data-edge";
 
-    return initW;
-  }
+    public static final String REDUCE_EDGE = "reduce-edge";
 
-  public static double[] initZeros(int size) {
-    double[] initW = new double[size];
-    Random random = new Random();
-    for (int i = 0; i < size; i++) {
-      initW[i] = 0;
-    }
+    public static final String DATASTREAMER_SOURCE = "datastreamer_source";
 
-    return initW;
+    public static final String SVM_COMPUTE = "svm_compute";
+
+    public static final String SVM_REDUCE = "svm_reduce";
   }
 }
