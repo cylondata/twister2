@@ -87,8 +87,7 @@ public class SPartitionExample extends BenchWorker {
 
     @Override
     public void init(Config cfg, Set<Integer> targets) {
-      expected = jobParameters.getTaskStages().get(0)
-          * jobParameters.getIterations() / jobParameters.getTaskStages().get(1);
+      expected = jobParameters.getIterations() * targets.size();
     }
 
     @Override

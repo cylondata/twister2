@@ -13,9 +13,7 @@ package edu.iu.dsc.tws.executor.core.batch;
 
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -23,6 +21,7 @@ import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -108,12 +107,12 @@ public class TaskBatchInstance implements INodeInstance {
   /**
    * Output edges
    */
-  private Set<String> outputEdges = new HashSet<>();
+  private Map<String, String> outputEdges;
 
   /**
    * Input edges
    */
-  private Set<String> inputEdges = new HashSet<>();
+  private Map<String, String> inputEdges;
 
   /**
    * Task context
@@ -134,7 +133,7 @@ public class TaskBatchInstance implements INodeInstance {
   public TaskBatchInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                            BlockingQueue<IMessage> outQueue, Config config, String tName,
                            int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
-                           Set<String> inEdges, Set<String> outEdges) {
+                           Map<String, String> inEdges, Map<String, String> outEdges) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
@@ -153,8 +152,8 @@ public class TaskBatchInstance implements INodeInstance {
 
   public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
-    taskContext = new TaskContext(taskIndex, taskId, taskName, parallelism, workerId,
-        outputCollection, nodeConfigs);
+    taskContext = new TaskContextImpl(taskIndex, taskId, taskName, parallelism, workerId,
+        outputCollection, nodeConfigs, inputEdges, outputEdges);
     task.prepare(cfg, taskContext);
   }
 

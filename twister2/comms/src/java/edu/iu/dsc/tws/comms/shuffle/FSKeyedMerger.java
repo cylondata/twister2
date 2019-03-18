@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -29,7 +28,13 @@ import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
+/**
+ * Un sorted merger
+ *
+ * @deprecated This merger can't output data in the expected format Iterator<Tuple<Key,Iterator>>
+ */
 @SuppressWarnings({"unchecked", "rawtypes"})
+@Deprecated
 public class FSKeyedMerger implements Shuffle {
   private static final Logger LOG = Logger.getLogger(FSKeyedMerger.class.getName());
 
@@ -77,7 +82,7 @@ public class FSKeyedMerger implements Shuffle {
   /**
    * The number of total bytes in each file part written to disk
    */
-  private List<Integer> filePartBytes = new ArrayList<>();
+  private List<Long> filePartBytes = new ArrayList<>();
 
   /**
    * Amount of bytes in the memory
@@ -95,7 +100,6 @@ public class FSKeyedMerger implements Shuffle {
   private MessageType dataType;
 
   private Lock lock = new ReentrantLock();
-  private Condition notFull = lock.newCondition();
 
   /**
    * The kryo serializer
@@ -135,10 +139,6 @@ public class FSKeyedMerger implements Shuffle {
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
-      if (numOfBytesInMemory > maxBytesToKeepInMemory
-          || recordsInMemory.size() > maxRecordsInMemory) {
-        notFull.signal();
-      }
     } finally {
       lock.unlock();
     }
@@ -173,7 +173,7 @@ public class FSKeyedMerger implements Shuffle {
       if (numOfBytesInMemory > maxBytesToKeepInMemory
           || recordsInMemory.size() > maxRecordsInMemory) {
         // save the bytes to disk
-        int totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
+        long totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
             numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
         filePartBytes.add(totalSize);
 

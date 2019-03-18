@@ -34,20 +34,19 @@ public class SBroadcastExample extends BenchWorker {
 
   private SBroadCast bcast;
 
-  private boolean bCastDone;
+  private boolean bCastDone = true;
 
   private int receiverInWorker0 = -1;
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
   protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
     if (jobParameters.getTaskStages().get(0) != 1) {
       LOG.warning("Setting task stages to 1");
       jobParameters.getTaskStages().set(0, 1);
     }
+    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
+        jobParameters.getTaskStages(), workerList);
 
     Set<Integer> targets = new HashSet<>();
     Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);

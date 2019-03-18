@@ -26,10 +26,9 @@ package edu.iu.dsc.tws.task.api;
 /**
  * Base interface for tasks
  */
-public interface ICompute extends INode {
+public interface ICompute<T> extends INode {
   /**
    * Execute with an incoming message
-   * @param content
    */
-  boolean execute(IMessage content);
+  boolean execute(IMessage<T> content);
 }

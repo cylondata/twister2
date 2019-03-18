@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -59,13 +60,18 @@ public final class TSetBuilder {
     return new TSetBuilder(cfg);
   }
 
+  public OperationMode getOpMode() {
+    return opMode;
+  }
+
   public TSetBuilder setMode(OperationMode mode) {
     this.opMode = mode;
     return this;
   }
 
-  public <T> TSet<T> createSource(Source<T> source) {
-    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, builder, source);
+  public <T> SourceTSet<T> createSource(Source<T> source, int parallelism, TSetEnv tSetEnv) {
+    builder.setMode(opMode);
+    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, tSetEnv, source, parallelism);
     sources.add(tSourceTSet);
     return tSourceTSet;
   }
@@ -76,5 +82,9 @@ public final class TSetBuilder {
       set.build();
     }
     return builder.build();
+  }
+
+  public TaskGraphBuilder getTaskGraphBuilder() {
+    return builder;
   }
 }

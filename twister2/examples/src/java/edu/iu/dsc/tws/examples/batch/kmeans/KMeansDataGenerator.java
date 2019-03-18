@@ -9,62 +9,73 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Random;
-import java.util.StringTokenizer;
+import java.util.logging.Logger;
+
+import org.apache.commons.lang3.RandomStringUtils;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
+import edu.iu.dsc.tws.data.fs.FileSystem;
+import edu.iu.dsc.tws.data.fs.Path;
 
 /**
- * This class is to generate the datapoints and centroid values in a random manner and write the
- * datapoints and centroid values in the local filesystem or the distributed filesystem.
+ * Generate a data set
+ * <p>
+ * 1. We can generate in each worker
+ * 2. We can generate in a common location shared by workers, such as HDFS or NFS
  */
-public class KMeansDataGenerator {
+public final class KMeansDataGenerator {
 
-  protected KMeansDataGenerator() {
+  private static final Logger LOG = Logger.getLogger(KMeansDataGenerator.class.getName());
+
+  private KMeansDataGenerator() {
   }
 
   /**
-   * This method generates the datapoints which is based on the which is based on the number of data
-   * points, required dimension, minimum and maximum value for the random points generation.
+   * Generate a data set
+   *
+   * @param type type of file, i.e. csv, text, binary
+   * @param directory the directory to generate
+   * @param numOfFiles number of files to create
+   * @param sizeOfFile size of each file, different types have a different meaning
+   * @param sizeMargin size will be varied about this much
    */
-  public static void generateDataPointsFile(String fileName, int numPoints, int dimension,
-                                            int seedValue, Config config, String fileSys) {
-    String datapoints = buildPoints(numPoints, dimension, seedValue);
-    writeToPointsFile(datapoints, fileName, config, fileSys);
+  public static void generateData(String type, Path directory, int numOfFiles, int sizeOfFile,
+                                  int sizeMargin, int dimension, Config cfg)
+      throws IOException {
+    if ("csv".equals(type)) {
+      generateCSV(directory, numOfFiles, sizeOfFile, sizeMargin, dimension, cfg);
+    } else if ("txt".equals(type)) {
+      generateText(directory, numOfFiles, sizeOfFile, sizeMargin, dimension, cfg);
+    } else {
+      throw new RuntimeException("Unsupported data gen type: " + type);
+    }
   }
 
-  /**
-   * This method generates the datapoints which is based on the which is based on the number of
-   * centroids, required dimension, minimum and maximum value for the random points generation.
-   */
-  public static void generateCentroidFile(String fileName, int numCentroids, int dimension,
-                                          int seedValue, Config config, String fileSys) {
-    String centroids = buildPoints(numCentroids, dimension, seedValue);
-    writeToPointsFile(centroids, fileName, config, fileSys);
+  private static void generateText(Path directory, int numOfFiles, int sizeOfFile,
+                                   int sizeMargin, int dimension, Config config)
+      throws IOException {
+    FileSystem fs = FileSystem.get(directory.toUri(), config);
+    if (fs.exists(directory)) {
+      fs.delete(directory, true);
+    }
+    for (int i = 0; i < numOfFiles; i++) {
+      FSDataOutputStream outputStream = fs.create(new Path(directory,
+          generateRandom(10) + ".txt"));
+      PrintWriter pw = new PrintWriter(outputStream);
+      String points = generatePoints(sizeOfFile, dimension, sizeMargin);
+      pw.print(points);
+      outputStream.sync();
+      pw.close();
+    }
   }
 
-  /**
-   * This method is to build the datapoints/centroid values which is based on the number of
-   * data points, dimension, and their respective seed value.
-   */
-  private static String buildPoints(int numPoints, int dimension, int seedValue) {
-
+  private static String generatePoints(int numPoints, int dimension, int seedValue) {
     StringBuilder datapoints = new StringBuilder();
     Random r = new Random(seedValue);
     for (int i = 0; i < numPoints; i++) {
@@ -72,36 +83,51 @@ public class KMeansDataGenerator {
       for (int j = 0; j < dimension; j++) {
         double randomValue = r.nextDouble();
         line.append(randomValue);
-        if (j != dimension - 1) {
+        if (j == 0) {
           line.append(",").append("\t");
         }
       }
       datapoints.append(line).append("\n");
     }
     return datapoints.toString();
-
   }
 
+
   /**
-   * This method writes the data points into the local filesystem or the distributed file system
-   * which is based on the user preferred value while submitting the job.
+   * Generate a random csv file, we generate a csv with 10 attributes
+   *
+   * @param directory the path of the directory
    */
-  private static void writeToPointsFile(String datapoints, String fileName, Config config,
-                                        String fileSystem) {
-    StringTokenizer stringTokenizer = new StringTokenizer(datapoints, "\n");
-    BufferedWriter bufferedWriter;
-    try {
-      bufferedWriter = KMeansUtils.getBufferedWriter(config, fileName, fileSystem);
-      while (stringTokenizer.hasMoreTokens()) {
-        String out = stringTokenizer.nextToken().trim();
-        bufferedWriter.write(out);
-        bufferedWriter.write("\n");
-      }
-    } catch (IOException ioe) {
-      KMeansUtils.writeClose();
-      throw new RuntimeException("File Writing Exception", ioe);
-    } finally {
-      KMeansUtils.writeClose();
+  private static void generateCSV(Path directory, int numOfFiles, int sizeOfFile,
+                                  int sizeMargin, int dimension, Config config) throws IOException {
+
+    FileSystem fs = FileSystem.get(directory.toUri(), config);
+    if (fs.exists(directory)) {
+      fs.delete(directory, true);
     }
+    for (int i = 0; i < numOfFiles; i++) {
+      FSDataOutputStream outputStream = fs.create(new Path(directory,
+          generateRandom(10) + ".csv"));
+      PrintWriter pw = new PrintWriter(outputStream);
+      String points = generatePoints(sizeOfFile, dimension, sizeMargin);
+      pw.print(points);
+      outputStream.sync();
+      pw.close();
+    }
+  }
+
+  private static String generateCSVLine(int fields) {
+    StringBuilder row = new StringBuilder();
+    for (int i = 0; i < fields - 1; i++) {
+      row.append(generateRandom(4)).append(", ");
+    }
+    row.append(generateRandom(4));
+    return row.toString();
+  }
+
+  private static String generateRandom(int length) {
+    boolean useLetters = true;
+    boolean useNumbers = false;
+    return RandomStringUtils.random(length, useLetters, useNumbers);
   }
 }

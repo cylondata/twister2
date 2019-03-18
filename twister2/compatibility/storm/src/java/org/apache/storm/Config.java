@@ -375,6 +375,28 @@ public class Config extends HashMap<String, Object> {
   public static final String STORMCOMPAT_TOPOLOGY_AUTO_TASK_HOOKS =
       "stormcompat.topology.auto.task.hooks";
 
+  /**
+   * Bolt-specific configuration for windowed bolts to specify the name of the field in the tuple that holds
+   * the message id. This is used to track the windowing boundaries and avoid re-evaluating the windows
+   * during recovery of IStatefulWindowedBolt
+   */
+  public static final String TOPOLOGY_BOLTS_MESSAGE_ID_FIELD_NAME
+      = "topology.bolts.message.id.field.name";
+
+  /**
+   * Topology configuration to specify the checkpoint interval (in millis) at which the topology
+   * state is saved when {@link
+   * org.apache.storm.topology.IStatefulBolt} bolts are involved.
+   */
+  public static final String TOPOLOGY_STATE_CHECKPOINT_INTERVAL
+      = "topology.state.checkpoint.interval.ms";
+
+  /**
+   * The class name of the {@link org.apache.storm.state.StateProvider} implementation. If not specified defaults to {@link
+   * org.apache.storm.state.InMemoryKeyValueStateProvider}. This can be overridden at the component level.
+   */
+  public static final String TOPOLOGY_STATE_PROVIDER = "topology.state.provider";
+
   public static void setDebug(Map conf, boolean isOn) {
     conf.put(Config.TOPOLOGY_DEBUG, isOn);
   }
@@ -499,7 +521,7 @@ public class Config extends HashMap<String, Object> {
 
   /**
    * Set topology optimization
-   * @param isOn
+   *
    * @deprecated we don't have optimization
    */
   @Deprecated

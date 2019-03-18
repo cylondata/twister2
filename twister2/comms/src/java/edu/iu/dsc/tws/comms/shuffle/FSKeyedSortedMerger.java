@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.Condition;
+import java.util.NoSuchElementException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -34,6 +34,11 @@ import edu.iu.dsc.tws.comms.utils.Heap;
 import edu.iu.dsc.tws.comms.utils.HeapNode;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
+/**
+ * Sorted merger implementation
+ * todo add support to handling large values. When tuples have large values, since we are
+ * opening multiple files at the same time, when reading, this implementation overloads heap
+ */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class FSKeyedSortedMerger implements Shuffle {
   private static final Logger LOG = Logger.getLogger(FSKeyedSortedMerger.class.getName());
@@ -79,9 +84,9 @@ public class FSKeyedSortedMerger implements Shuffle {
   private List<Tuple> objectsInMemory = new ArrayList<>();
 
   /**
-   * The number of total bytes in each file part written to disk
+   * Maximum size of a tuple written to disk in each file
    */
-  private List<Integer> filePartBytes = new ArrayList<>();
+  private List<Long> maxTupleSize = new ArrayList<>();
 
   /**
    * Amount of bytes in the memory
@@ -104,7 +109,6 @@ public class FSKeyedSortedMerger implements Shuffle {
   private Comparator<Object> keyComparator;
 
   private Lock lock = new ReentrantLock();
-  private Condition notFull = lock.newCondition();
 
   /**
    * The id of the task
@@ -155,10 +159,6 @@ public class FSKeyedSortedMerger implements Shuffle {
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
-      if (numOfBytesInMemory > maxBytesToKeepInMemory
-          || recordsInMemory.size() > maxRecordsInMemory) {
-        notFull.signal();
-      }
     } finally {
       lock.unlock();
     }
@@ -218,9 +218,9 @@ public class FSKeyedSortedMerger implements Shuffle {
         list.sort(new ComparatorWrapper(keyComparator));
 
         // save the bytes to disk
-        int totalSize = FileLoader.saveKeyValues(list, bytesLength,
+        long totalSize = FileLoader.saveKeyValues(list, bytesLength,
             numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
-        filePartBytes.add(totalSize);
+        maxTupleSize.add(totalSize);
 
         recordsInMemory.clear();
         bytesLength.clear();
@@ -236,18 +236,67 @@ public class FSKeyedSortedMerger implements Shuffle {
    * This method gives the values
    */
   public Iterator<Object> readIterator() {
-    // lets start with first file
-    return new FSIterator();
+    return new Iterator<Object>() {
+
+      private FSIterator fsIterator = new FSIterator();
+      private Tuple nextTuple = fsIterator.hasNext() ? fsIterator.next() : null;
+      private Iterator itOfCurrentKey = null;
+
+      private void skipKeys() {
+        //user is trying to skip keys. For now, we are iterating over them internally
+        if (this.itOfCurrentKey != null) {
+          //todo replace with an alternative approach
+          while (this.itOfCurrentKey.hasNext()) {
+            this.itOfCurrentKey.next();
+          }
+        }
+      }
+
+      @Override
+      public boolean hasNext() {
+        this.skipKeys();
+        return nextTuple != null;
+      }
+
+      @Override
+      public Tuple<Object, Iterator> next() {
+        if (!hasNext()) {
+          throw new NoSuchElementException("There are no more keys to iterate");
+        }
+        final Object currentKey = nextTuple.getKey();
+        this.itOfCurrentKey = new Iterator<Object>() {
+          @Override
+          public boolean hasNext() {
+            return nextTuple != null && nextTuple.getKey().equals(currentKey);
+          }
+
+          @Override
+          public Object next() {
+            if (this.hasNext()) {
+              Object returnValue = nextTuple.getValue();
+              if (fsIterator.hasNext()) {
+                nextTuple = fsIterator.next();
+              } else {
+                nextTuple = null;
+              }
+              return returnValue;
+            } else {
+              throw new NoSuchElementException("There are no more values for key "
+                  + currentKey);
+            }
+          }
+        };
+        Tuple<Object, Iterator> nextValueSet = new Tuple<>();
+        nextValueSet.setKey(currentKey);
+        nextValueSet.setValue(this.itOfCurrentKey);
+        return nextValueSet;
+      }
+    };
   }
 
   private class FSIterator implements Iterator<Object> {
     // keep track of the open file
     private Map<Integer, OpenFilePart> openFiles = new HashMap<>();
-
-    /**
-     * Max memory per file
-     */
-    private int maxMemoryPerFile;
 
     /**
      * Heap to load the data from the files
@@ -258,16 +307,11 @@ public class FSKeyedSortedMerger implements Shuffle {
 
     FSIterator() {
       heap = new Heap(noOfFileWritten + 1, keyComparator);
-      // lets initialize the open files
-      if (noOfFileWritten > 0) {
-        maxMemoryPerFile = maxBytesToKeepInMemory / noOfFileWritten;
-      } else {
-        maxMemoryPerFile = maxBytesToKeepInMemory;
-      }
       // lets open the files
       for (int i = 0; i < noOfFileWritten; i++) {
         OpenFilePart part = FileLoader.openPart(getSaveFileName(i), 0,
-            maxMemoryPerFile, keyType, dataType, kryoSerializer);
+            maxTupleSize.get(i),
+            keyType, dataType, kryoSerializer);
         openFiles.put(i, part);
       }
       // lets insert the values in memory as -1 entry
@@ -310,7 +354,8 @@ public class FSKeyedSortedMerger implements Shuffle {
         } else {
           // we are not going to do this for -1, memory data
           OpenFilePart newPart = FileLoader.openPart(getSaveFileName(node.listNo),
-              part.getReadOffSet(), maxMemoryPerFile, keyType, dataType, kryoSerializer);
+              maxTupleSize.get(node.listNo),
+              part.getReadOffSet(), keyType, dataType, kryoSerializer);
           openFiles.put(node.listNo, newPart);
 
           if (newPart.hasNext()) {

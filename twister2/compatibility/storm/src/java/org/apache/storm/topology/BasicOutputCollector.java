@@ -43,7 +43,7 @@ public class BasicOutputCollector implements IBasicOutputCollector {
 
   @Override
   public List<Integer> emit(String streamId, List<Object> tuple) {
-    return this.outputCollector.emit(streamId, null, tuple);
+    return this.outputCollector.emit(streamId, (List) null, tuple);
   }
 
   @Override

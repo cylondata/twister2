@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.common.config.Config;
  * outputing the results to various output sources such as files or console.
  * The task takes inputs from another task and outputs to a output source
  */
-public abstract class SinkTask implements ISink {
+public abstract class SinkTask implements IComputableSink {
   private static final long serialVersionUID = -254264903510286748L;
 
   @Override

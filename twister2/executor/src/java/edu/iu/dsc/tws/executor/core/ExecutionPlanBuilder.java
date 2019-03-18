@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core;
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -117,8 +117,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     // for each task we are going to create the communications
     for (TaskSchedulePlan.TaskInstancePlan ip : instancePlan) {
       Vertex v = taskGraph.vertex(ip.getTaskName());
-      Set<String> inEdges = new HashSet<>();
-      Set<String> outEdges = new HashSet<>();
+      Map<String, String> inEdges = new HashMap<>();
+      Map<String, String> outEdges = new HashMap<>();
       if (v == null) {
         throw new RuntimeException("Non-existing task scheduled: " + ip.getTaskName());
       }
@@ -140,7 +140,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             parOpTable.put(v.getName(), e.getName(),
                 new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
           }
-          outEdges.add(e.getName());
+          outEdges.put(e.getName(), child.getName());
         }
       }
 
@@ -159,7 +159,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             parOpTable.put(parent.getName(), e.getName(),
                 new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
           }
-          inEdges.add(e.getName());
+          inEdges.put(e.getName(), parent.getName());
         }
       }
 
@@ -267,7 +267,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
    */
   private INodeInstance createInstances(Config cfg, TaskSchedulePlan.TaskInstancePlan ip,
                                         Vertex vertex, OperationMode operationMode,
-                                        Set<String> inEdges, Set<String> outEdges) {
+                                        Map<String, String> inEdges,
+                                        Map<String, String> outEdges) {
     // lets add the task
     byte[] taskBytes = Utils.serialize(vertex.getTask());
     INode newInstance = (INode) Utils.deserialize(taskBytes);
@@ -276,13 +277,22 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
     if (operationMode.equals(OperationMode.BATCH)) {
       if (newInstance instanceof ICompute) {
-        TaskBatchInstance v = new TaskBatchInstance((ICompute) newInstance,
-            new LinkedBlockingQueue<>(),
-            new LinkedBlockingQueue<>(), cfg,
-            vertex.getName(), taskId, ip.getTaskIndex(),
-            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges, outEdges);
-        batchTaskInstances.put(vertex.getName(), taskId, v);
-        return v;
+        if (newInstance instanceof ISink) {
+          SinkBatchInstance v = new SinkBatchInstance((ICompute) newInstance,
+              new LinkedBlockingQueue<>(), cfg, vertex.getName(),
+              taskId, ip.getTaskIndex(), vertex.getParallelism(),
+              workerId, vertex.getConfig().toMap(), inEdges);
+          batchSinkInstances.put(vertex.getName(), taskId, v);
+          return v;
+        } else {
+          TaskBatchInstance v = new TaskBatchInstance((ICompute) newInstance,
+              new LinkedBlockingQueue<>(),
+              new LinkedBlockingQueue<>(), cfg,
+              vertex.getName(), taskId, ip.getTaskIndex(),
+              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges, outEdges);
+          batchTaskInstances.put(vertex.getName(), taskId, v);
+          return v;
+        }
       } else if (newInstance instanceof ISource) {
         SourceBatchInstance v = new SourceBatchInstance((ISource) newInstance,
             new LinkedBlockingQueue<>(), cfg,
@@ -290,38 +300,33 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges);
         batchSourceInstances.put(vertex.getName(), taskId, v);
         return v;
-      } else if (newInstance instanceof ISink) {
-        SinkBatchInstance v = new SinkBatchInstance((ISink) newInstance,
-            new LinkedBlockingQueue<>(), cfg, vertex.getName(),
-            taskId, ip.getTaskIndex(), vertex.getParallelism(),
-            workerId, vertex.getConfig().toMap(), inEdges);
-        batchSinkInstances.put(vertex.getName(), taskId, v);
-        return v;
       } else {
         throw new RuntimeException("Un-known type");
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {
       if (newInstance instanceof ICompute) {
-        TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
-            new LinkedBlockingQueue<>(),
-            new LinkedBlockingQueue<>(), cfg,
-            vertex.getName(), taskId, ip.getTaskIndex(),
-            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges, outEdges);
-        streamingTaskInstances.put(vertex.getName(), taskId, v);
-        return v;
+        if (newInstance instanceof ISink) {
+          SinkStreamingInstance v = new SinkStreamingInstance((ICompute) newInstance,
+              new LinkedBlockingQueue<>(), cfg, vertex.getName(),
+              taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
+              vertex.getConfig().toMap(), inEdges);
+          streamingSinkInstances.put(vertex.getName(), taskId, v);
+          return v;
+        } else {
+          TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
+              new LinkedBlockingQueue<>(),
+              new LinkedBlockingQueue<>(), cfg,
+              vertex.getName(), taskId, ip.getTaskIndex(),
+              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges, outEdges);
+          streamingTaskInstances.put(vertex.getName(), taskId, v);
+          return v;
+        }
       } else if (newInstance instanceof ISource) {
         SourceStreamingInstance v = new SourceStreamingInstance((ISource) newInstance,
             new LinkedBlockingQueue<>(), cfg,
             vertex.getName(), taskId, ip.getTaskIndex(),
             vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges);
         streamingSourceInstances.put(vertex.getName(), taskId, v);
-        return v;
-      } else if (newInstance instanceof ISink) {
-        SinkStreamingInstance v = new SinkStreamingInstance((ISink) newInstance,
-            new LinkedBlockingQueue<>(), cfg, vertex.getName(),
-            taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
-            vertex.getConfig().toMap(), inEdges);
-        streamingSinkInstances.put(vertex.getName(), taskId, v);
         return v;
       } else {
         throw new RuntimeException("Un-known type");

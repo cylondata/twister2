@@ -21,10 +21,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
+import edu.iu.dsc.tws.task.api.typed.AllGatherCompute;
 
 public class BTAllGatherExample extends BenchTaskWorker {
 
@@ -46,33 +45,29 @@ public class BTAllGatherExample extends BenchTaskWorker {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class AllGatherSinkTask extends BaseSink {
+  protected static class AllGatherSinkTask extends AllGatherCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private static int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
-      if (message.getContent() instanceof Iterator) {
-        int numberOfElements = 0;
-        int totalValues = 0;
-        LOG.info(String.format("%d received gather %d", context.getWorkerId(), context.taskId()));
-        Iterator<Object> itr = (Iterator<Object>) message.getContent();
-        while (itr.hasNext()) {
-          Object value = itr.next();
-          if (value instanceof Tuple) {
-            Object data = ((Tuple) value).getValue();
-            numberOfElements++;
-            if (data instanceof int[]) {
-              totalValues += ((int[]) data).length;
-            }
-            if (count % jobParameters.getPrintInterval() == 0) {
-              Object object = message.getContent();
-              experimentData.setOutput(data);
-              try {
-                verify(OperationNames.ALLGATHER);
-              } catch (VerificationException e) {
-                LOG.info("Exception Message : " + e.getMessage());
-              }
+    public boolean allGather(Iterator<Tuple<Integer, int[]>> itr) {
+      int numberOfElements = 0;
+      int totalValues = 0;
+      LOG.info(String.format("%d received gather %d", context.getWorkerId(), context.taskId()));
+      while (itr.hasNext()) {
+        Object value = itr.next();
+        if (value != null) {
+          Object data = ((Tuple) value).getValue();
+          numberOfElements++;
+          if (data instanceof int[]) {
+            totalValues += ((int[]) data).length;
+          }
+          if (count % jobParameters.getPrintInterval() == 0) {
+            experimentData.setOutput(data);
+            try {
+              verify(OperationNames.ALLGATHER);
+            } catch (VerificationException e) {
+              LOG.info("Exception Message : " + e.getMessage());
             }
           }
         }

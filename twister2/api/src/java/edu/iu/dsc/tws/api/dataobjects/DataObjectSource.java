@@ -20,65 +20,97 @@ import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class DataObjectSource extends BaseSource {
+/**
+ * This class is responsible for partition the datapoints which is based on the task parallelism
+ * value. This class may use either the "LocalFixedInputPartitioner" or "LocalTextInputPartitioner"
+ * to partition the datapoints. Finally, write the partitioned datapoints into their respective
+ * edges.
+ */
+public class DataObjectSource<T> extends BaseSource {
 
   private static final Logger LOG = Logger.getLogger(DataObjectSource.class.getName());
 
   private static final long serialVersionUID = -1L;
 
-  private DataSource<String, ?> source;
+  /**
+   * DataSource to partition the datapoints
+   */
+  private DataSource<?, ?> source;
 
+  /**
+   * Edge name to write the partitoned datapoints
+   */
+  private String edgeName;
+
+  public DataObjectSource(String edgename) {
+    this.edgeName = edgename;
+  }
+
+  /**
+   * Getter property to set the edge name
+   * @return
+   */
+  public String getEdgeName() {
+    return edgeName;
+  }
+
+  /**
+   * Setter property to set the edge name
+   * @param edgeName
+   */
+  public void setEdgeName(String edgeName) {
+    this.edgeName = edgeName;
+  }
+
+  /**
+   * This method get the partitioned datapoints using the task index and write those values using
+   * the respective edge name.
+   */
   @Override
   public void execute() {
-    LOG.info("Context Task Index:" + context.taskIndex());
-    InputSplit<String> inputSplit = source.getNextSplit(context.taskIndex());
-    int splitCount = 0;
-    int totalCount = 0;
+    LOG.fine("Context Task Index:" + context.taskIndex() + "\t" + getEdgeName());
+    InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
     while (inputSplit != null) {
       try {
         int count = 0;
         while (!inputSplit.reachedEnd()) {
-          String value = inputSplit.nextRecord(null);
-          if (value != null) {                     //Bug here...
-            //LOG.info("We read value: " + value); //First index reads more value than for
-            //example 100, task index 0 reads 51 & 1 reads 49
-            context.write("direct", value);
+          Object value = inputSplit.nextRecord(null);
+          if (value != null) {
+            context.write(getEdgeName(), value);
             count += 1;
-            totalCount += 1;
           }
         }
-        splitCount += 1;
         inputSplit = source.getNextSplit(context.taskIndex());
-        LOG.info("Task index:" + context.taskIndex() + " count: " + count
-            + "split: " + splitCount + " total count: " + totalCount);
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
       }
     }
-    context.end("direct");
+    context.end(getEdgeName());
   }
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
-
     String datainputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
+    int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DSIZE));
     ExecutionRuntime runtime = (ExecutionRuntime)
         cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-
     boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
     if (!shared) {
       this.source = runtime.createInput(cfg, context,
-          new LocalTextInputPartitioner(new Path(datainputDirectory), context.getParallelism()));
+          new LocalTextInputPartitioner(new Path(datainputDirectory),
+              context.getParallelism(), config));
     } else {
       this.source = runtime.createInput(cfg, context,
-          new SharedTextInputPartitioner(new Path(datainputDirectory)));
+          new SharedTextInputPartitioner(new Path(datainputDirectory),
+              context.getParallelism(), cfg));
     }
   }
 }

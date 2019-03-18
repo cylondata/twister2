@@ -14,27 +14,32 @@ package edu.iu.dsc.tws.examples.tset;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetBuilder;
+import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
+import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class HelloTSet extends TaskWorker implements Serializable {
+public class HelloTSet extends TSetBatchWorker implements Serializable {
+  private static final Logger LOG = Logger.getLogger(HelloTSet.class.getName());
+
   private static final long serialVersionUID = -2;
+
   @Override
-  public void execute() {
-    TSetBuilder builder = TSetBuilder.newBuilder(config);
-    TSet<int[]> source = builder.createSource(new Source<int[]>() {
+  public void execute(TwisterBatchContext tc) {
+    LOG.info("Strating Hello TSet Example");
+    TSet<int[]> source = tc.createSource(new Source<int[]>() {
 
       private int count = 0;
 
@@ -48,11 +53,14 @@ public class HelloTSet extends TaskWorker implements Serializable {
         count++;
         return new int[]{1, 1, 1};
       }
-    }).setName("Source");
+    }, 4).setName("Source");
 
-    TSet<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
+    PartitionTLink<int[]> partitioned = source.
+        partition(new LoadBalancePartitioner<>()).setName("part");
+    MapTSet<int[], int[]> mapedPartition =
+        partitioned.map((MapFunction<int[], int[]>) ints -> ints, 4).setName("Mapped");
 
-    TSet<int[]> reduce = partitioned.reduce((t1, t2) -> {
+    ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {
         ret[i] = t1[i] + t2[i];
@@ -61,15 +69,12 @@ public class HelloTSet extends TaskWorker implements Serializable {
     }).setName("Reduce");
 
     reduce.sink(value -> {
-      System.out.println(Arrays.toString(value));
+      LOG.info("Results " + Arrays.toString(value));
       return false;
-    });
+    }).setName("sink");
 
-    builder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph graph = builder.build();
+    LOG.info("Ending  Hello TSet Example");
 
-    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, executionPlan);
   }
 
   public static void main(String[] args) {

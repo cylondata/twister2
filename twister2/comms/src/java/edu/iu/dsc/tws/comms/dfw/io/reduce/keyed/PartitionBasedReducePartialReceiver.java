@@ -148,7 +148,7 @@ public class PartitionBasedReducePartialReceiver implements MessageReceiver {
       finishedDestinations.put(s, new HashSet<>());
     }
 
-    destinations = ((DataFlowPartition) op).getDestinations();
+    destinations = op.getTargets();
     this.operation = op;
 
     // lists to keep track of messages for destinations

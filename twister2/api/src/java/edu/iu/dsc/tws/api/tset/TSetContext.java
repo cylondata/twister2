@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -42,6 +43,12 @@ public class TSetContext {
   private Map<String, Object> configs;
 
   /**
+   * Inputs that are added to a TSet are stored in this
+   * map to be passed to functions
+   */
+  private Map<String, Cacheable<?>> inputMap;
+
+  /**
    * The worker id this tSet instance belongs to
    */
   private int workerId;
@@ -71,6 +78,11 @@ public class TSetContext {
     this.parallelism = parallelism;
     this.configs = configs;
     this.workerId = wId;
+    this.inputMap = new HashMap<>();
+  }
+
+  public TSetContext() {
+    this.inputMap = new HashMap<>();
   }
 
   /**
@@ -142,5 +154,88 @@ public class TSetContext {
    */
   public Config getConfig() {
     return config;
+  }
+
+  /**
+   * get the complete input map
+   *
+   * @return the current input map
+   */
+  protected Map<String, Cacheable<?>> getInputMap() {
+    return inputMap;
+  }
+
+  /**
+   * Set a new input map
+   *
+   * @param inputMap the map to be set for this context
+   */
+  protected void setInputMap(Map<String, Cacheable<?>> inputMap) {
+    this.inputMap = inputMap;
+  }
+
+  /**
+   * Adds the given map into {@link TSetContext#inputMap}
+   *
+   * @param map the map to be added
+   */
+  protected void addInputMap(Map<String, Cacheable<?>> map) {
+    this.inputMap.putAll(map);
+  }
+
+  /**
+   * Retrives the input object that corresponds to the given key
+   *
+   * @param key key of the input object
+   * @return the input object if the key is present or null
+   */
+  public Cacheable<?> getInput(String key) {
+    return inputMap.get(key);
+  }
+
+  /**
+   * Adds a input object into the map
+   *
+   * @param key the key to be associated with the input object
+   * @param data the input object
+   */
+  public void addInput(String key, Cacheable<?> data) {
+    inputMap.put(key, data);
+  }
+
+  public int gettSetIndex() {
+    return tSetIndex;
+  }
+
+  protected void settSetIndex(int tSetIndex) {
+    this.tSetIndex = tSetIndex;
+  }
+
+  public int gettSetId() {
+    return tSetId;
+  }
+
+  protected void settSetId(int tSetId) {
+    this.tSetId = tSetId;
+  }
+
+  public String gettSetName() {
+    return tSetName;
+  }
+
+  protected void settSetName(String tSetName) {
+    this.tSetName = tSetName;
+  }
+
+  protected void setParallelism(int parallelism) {
+    this.parallelism = parallelism;
+  }
+
+  protected void setWorkerId(int workerId) {
+    this.workerId = workerId;
+  }
+
+  protected void setConfig(Config config) {
+    this.config = config;
   }
 }

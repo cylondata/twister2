@@ -14,8 +14,9 @@ package edu.iu.dsc.tws.examples.tset;
 import java.io.File;
 import java.io.IOException;
 
-import edu.iu.dsc.tws.api.tset.TSet;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.OneToOnePartitioner;
+import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.api.tset.sink.FileSink;
 import edu.iu.dsc.tws.api.tset.sources.FileSource;
 import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
@@ -24,13 +25,11 @@ import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.utils.DataGenerator;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public class TSetFileAccessExample extends BaseTSetWorker {
+public class TSetFileAccessExample extends BaseTSetBatchWorker {
   @Override
-  public void execute() {
-    super.execute();
+  public void execute(TwisterBatchContext tc) {
+    super.execute(tc);
 
     String inputDirectory = config.getStringValue(Constants.ARGS_FNAME,
         "/tmp/twister2");
@@ -51,18 +50,12 @@ public class TSetFileAccessExample extends BaseTSetWorker {
       }
     }
 
-    TSet<String> textSource = tSetBuilder.createSource(new FileSource<>(
-        new SharedTextInputPartitioner(new Path(input)))).setParallelism(
-            jobParameters.getTaskStages().get(0));
+    SourceTSet<String> textSource = tc.createSource(new FileSource<>(
+        new SharedTextInputPartitioner(new Path(input))), jobParameters.getTaskStages().get(0));
 
     textSource.partition(new OneToOnePartitioner<>()).sink(
         new FileSink<>(new TextOutputWriter(
             FileSystem.WriteMode.OVERWRITE,
-            new Path(output)))).setParallelism(
-                jobParameters.getTaskStages().get(0));
-
-    DataFlowTaskGraph graph = tSetBuilder.build();
-    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, executionPlan);
+            new Path(output))), jobParameters.getTaskStages().get(0));
   }
 }

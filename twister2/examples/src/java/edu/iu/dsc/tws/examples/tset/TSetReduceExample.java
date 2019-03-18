@@ -11,34 +11,40 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.TSet;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
-public class TSetReduceExample extends BaseTSetWorker {
+public class TSetReduceExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetReduceExample.class.getName());
 
   @Override
-  public void execute() {
-    super.execute();
+  public void execute(TwisterBatchContext tc) {
+    super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
-        setParallelism(jobParameters.getTaskStages().get(0));
-    TSet<int[]> reduce = source.reduce((t1, t2) -> {
+    List<Integer> taskStages = jobParameters.getTaskStages();
+    int sourceParallelism = taskStages.get(0);
+    int sinkParallelism = taskStages.get(1);
+    SourceTSet<int[]> source = tc.createSource(new BaseSource(),
+        sourceParallelism).setName("Source");
+    ReduceTLink<int[]> reduce = source.reduce((t1, t2) -> {
       int[] val = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {
         val[i] = t1[i] + t2[i];
       }
       return val;
-    }).setParallelism(10);
+    });
 
     reduce.sink(value -> {
       experimentData.setOutput(value);
+      LOG.info("Result : " + Arrays.toString(value));
       try {
         verify(OperationNames.REDUCE);
       } catch (VerificationException e) {
@@ -46,10 +52,6 @@ public class TSetReduceExample extends BaseTSetWorker {
       }
       return true;
     });
-
-    DataFlowTaskGraph graph = tSetBuilder.build();
-    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, executionPlan);
   }
 
 }
