@@ -11,15 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.examples.verification.VerificationException;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.batch.BPartitionKeyedCompute;
 
 public class BTPartitionKeyedExample extends BenchTaskWorker {
 
@@ -34,22 +38,39 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     DataType keyType = DataType.INTEGER;
     String edge = "edge";
     BaseSource g = new KeyedSourceBatchTask(edge);
-    BaseSink r = new KeyedPartitionSinkTask();
+    ISink r = new BKeyedPartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class KeyedPartitionSinkTask extends BaseSink {
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  protected static class BKeyedPartitionSinkTask
+      extends BPartitionKeyedCompute<Integer, int[]> implements ISink {
+
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
+    public boolean keyedPartition(Iterator<Tuple<Integer, int[]>> content) {
+      while (content.hasNext()) {
+        content.next();
+        count++;
+      }
+      experimentData.setOutput(content);
+
+      //TODO:We have to check the verification part
+      try {
+        verify(OperationNames.KEYED_PARTITION);
+      } catch (VerificationException e) {
+        LOG.info("Exception Message : " + e.getMessage());
+      }
+
       if (count % jobParameters.getPrintInterval() == 0) {
-        LOG.info("Batch Message Keyed-Reduced : " + message.getContent()
-            + ", Count : " + count);
+        LOG.info(String.format("%d %d Batch Message Keyed Partition Received count: %d",
+            context.getWorkerId(),
+            context.taskId(), count));
       }
       count++;
       return true;

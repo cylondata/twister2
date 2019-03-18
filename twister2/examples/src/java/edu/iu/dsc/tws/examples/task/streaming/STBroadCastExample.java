@@ -19,9 +19,9 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.streaming.SBroadCastCompute;
 
 public class STBroadCastExample extends BenchTaskWorker {
 
@@ -35,7 +35,7 @@ public class STBroadCastExample extends BenchTaskWorker {
 
     String edge = "edge";
     BaseSource g = new SourceStreamTask(edge);
-    BaseSink r = new BroadCastSinkTask();
+    ISink r = new BroadCastSinkTask();
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
@@ -43,16 +43,15 @@ public class STBroadCastExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class BroadCastSinkTask extends BaseSink {
+  protected static class BroadCastSinkTask extends SBroadCastCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
+    public boolean broadcast(int[] content) {
       count++;
       if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        experimentData.setOutput(object);
+        experimentData.setOutput(content);
         LOG.log(Level.INFO, String.format("Received messages to %d: %d", context.taskId(), count));
         try {
           verify(OperationNames.BROADCAST);
