@@ -12,13 +12,14 @@
 
 package edu.iu.dsc.tws.examples.comms.batch;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -137,9 +138,9 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
         if (dataIterator.hasNext()) {
           data = (int[]) dataIterator.next();
         }
-        LOG.log(Level.INFO, String.format("%d Results : key: %s value sample: %s num vals : %s",
-            workerId, key, Arrays.toString(Arrays.copyOfRange(data,
-                0, Math.min(data.length, 10))), 1));
+        int noOfSuchArrays = Iterators.size(dataIterator);
+        LOG.log(Level.INFO, String.format("%d Results : key: %s, Size : %d, Count : %d",
+            workerId, key, data.length, noOfSuchArrays));
       }
       gatherDone = true;
       return true;

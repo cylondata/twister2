@@ -16,7 +16,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.After;
@@ -34,7 +33,7 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 public class FSKeyedSortedMergerTest {
   private static final Logger LOG = Logger.getLogger(FSMergerTest.class.getName());
 
-  private FSKeyedSortedMerger fsMerger;
+  private FSKeyedSortedMerger2 fsMerger;
 
   private KryoSerializer serializer;
 
@@ -48,7 +47,7 @@ public class FSKeyedSortedMergerTest {
 
   @Before
   public void before() throws Exception {
-    fsMerger = new FSKeyedSortedMerger(1000, 100, "/tmp",
+    fsMerger = new FSKeyedSortedMerger2(1000, 100, "/tmp",
         "fskeyedsortedmerger", MessageType.INTEGER, MessageType.OBJECT,
         Comparator.comparingInt(i -> (Integer) i), 0);
     serializer = new KryoSerializer();
@@ -71,13 +70,16 @@ public class FSKeyedSortedMergerTest {
   @Test
   public void testStart() throws Exception {
     int dataLength = 1024;
-    int noOfKeys = 1000;
+    int noOfKeys = 1000000;
+    int dataForEachKey = 1;
     int[] data = new int[dataLength];
     Arrays.fill(data, 1);
     byte[] serializedData = serializer.serialize(data);
     for (int i = 0; i < noOfKeys; i++) {
-      fsMerger.add(i, serializedData, serializedData.length);
-      fsMerger.run();
+      for (int j = 0; j < dataForEachKey; j++) {
+        fsMerger.add(i, serializedData, serializedData.length);
+        fsMerger.run();
+      }
     }
 
     fsMerger.switchToReading();
@@ -87,13 +89,11 @@ public class FSKeyedSortedMergerTest {
     Set<Integer> set = new HashSet<>();
     int current = 0;
     while (it.hasNext()) {
-      LOG.info("Reading value: " + count);
       Tuple val = (Tuple) it.next();
       int k = (int) val.getKey();
       if (k < current) {
         Assert.fail("Wrong order");
       }
-      LOG.log(Level.INFO, "Key: " + k);
       current = k;
       if (set.contains(k)) {
         Assert.fail("Duplicate value");
@@ -109,12 +109,12 @@ public class FSKeyedSortedMergerTest {
         }
         dataCount++;
       }
-      if (dataCount != 1) {
+      if (dataCount != dataForEachKey) {
         Assert.fail("Invalid amount of data arrays for key");
       }
       count++;
     }
-    if (count != 1000) {
+    if (count != noOfKeys) {
       Assert.fail("Count =  " + count);
     }
   }
