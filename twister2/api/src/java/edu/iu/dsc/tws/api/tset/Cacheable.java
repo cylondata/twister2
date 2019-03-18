@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.api.tset;
 
+import java.io.Serializable;
 import java.util.List;
 
 import edu.iu.dsc.tws.dataset.DataObject;
@@ -21,7 +22,7 @@ import edu.iu.dsc.tws.dataset.DataObject;
  * This interface defines the methods that other classes can use to
  * access the cached data
  */
-public interface Cacheable<T> {
+public interface Cacheable<T> extends Serializable {
 
   /**
    * retrieve data saved in the TSet
