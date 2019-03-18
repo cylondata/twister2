@@ -112,7 +112,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   /**
    * The key comparator used for comparing keys
    */
-  private Comparator<Object> keyComparator;
+  private Comparator keyComparator;
   private ComparatorWrapper comparatorWrapper;
 
   private Lock lock = new ReentrantLock();
@@ -140,7 +140,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
    */
   public FSKeyedSortedMerger2(int maxBytesInMemory, int maxRecsInMemory,
                               String dir, String opName, MessageType kType,
-                              MessageType dType, Comparator<Object> kComparator, int tar) {
+                              MessageType dType, Comparator kComparator, int tar) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxRecordsInMemory = maxRecsInMemory;
     this.folder = dir;
@@ -309,7 +309,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
 
     private PriorityQueue<ControlledFileReader> controlledFileReaders
-        = new PriorityQueue<>(noOfFileWritten);
+        = new PriorityQueue<>(1 + noOfFileWritten);
     private ControlledFileReader sameKeyReader;
 
     FSIterator() {

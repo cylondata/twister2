@@ -51,7 +51,7 @@ import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
-import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
+import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
@@ -155,7 +155,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
 
       // lists to keep track of messages for destinations
       for (int target : expectedIds.keySet()) {
-        Shuffle sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory,
+        Shuffle sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
             shuffleDirectory, DFWIOUtils.getOperationName(target, operationLeft),
             operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target);
 

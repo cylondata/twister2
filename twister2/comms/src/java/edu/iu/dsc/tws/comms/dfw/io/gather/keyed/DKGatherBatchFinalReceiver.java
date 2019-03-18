@@ -50,7 +50,7 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
   /**
    * Comparator for sorting records
    */
-  private Comparator<Object> comparator;
+  private Comparator comparator;
 
   /**
    * Serializer used to convert between objects and byte streams
@@ -69,7 +69,7 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
 
 
   public DKGatherBatchFinalReceiver(BulkReceiver receiver, boolean srt, int limitPerKey,
-                                    String shuffleDir, Comparator<Object> com) {
+                                    String shuffleDir, Comparator com) {
     this.bulkReceiver = receiver;
     this.sorted = srt;
     this.limitPerKey = limitPerKey;
