@@ -65,7 +65,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
     //TODO: consider what happens when same execEnv is used to create multiple graphs
     CachedTSet<double[][]> points = tc.createSource(
-        new PointsSource(), parallelismValue).cache();
+        new PointsSource(), parallelismValue).setName("dataSource").cache();
 //    CachedTSet<double[][]> centers = tc.createSource(new
 //    CenterSource(), parallelismValue).cache();
 //

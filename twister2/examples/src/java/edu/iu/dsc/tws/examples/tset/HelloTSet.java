@@ -12,22 +12,16 @@
 package edu.iu.dsc.tws.examples.tset;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
-import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
-import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
-import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
@@ -53,25 +47,25 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
         count++;
         return new int[]{1, 1, 1};
       }
-    }, 4).setName("Source");
+    }, 4).setName("Source").cache();
 
-    PartitionTLink<int[]> partitioned = source.
-        partition(new LoadBalancePartitioner<>()).setName("part");
-    MapTSet<int[], int[]> mapedPartition =
-        partitioned.map((MapFunction<int[], int[]>) ints -> ints, 4).setName("Mapped");
-
-    ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
-      int[] ret = new int[t1.length];
-      for (int i = 0; i < t1.length; i++) {
-        ret[i] = t1[i] + t2[i];
-      }
-      return ret;
-    }).setName("Reduce");
-
-    reduce.sink(value -> {
-      LOG.info("Results " + Arrays.toString(value));
-      return false;
-    }).setName("sink");
+//    PartitionTLink<int[]> partitioned = source.
+//        partition(new LoadBalancePartitioner<>()).setName("part");
+//    MapTSet<int[], int[]> mapedPartition =
+//        partitioned.map((MapFunction<int[], int[]>) ints -> ints, 4).setName("Mapped");
+//
+//    ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
+//      int[] ret = new int[t1.length];
+//      for (int i = 0; i < t1.length; i++) {
+//        ret[i] = t1[i] + t2[i];
+//      }
+//      return ret;
+//    }).setName("Reduce");
+//
+//    reduce.sink(value -> {
+//      LOG.info("Results " + Arrays.toString(value));
+//      return false;
+//    }).setName("sink");
 
     LOG.info("Ending  Hello TSet Example");
 
