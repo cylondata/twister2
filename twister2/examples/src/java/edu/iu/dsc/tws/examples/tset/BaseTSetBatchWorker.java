@@ -50,7 +50,7 @@ public class BaseTSetBatchWorker extends TSetBatchWorker implements Serializable
     }
   }
 
-  public static class BaseSource implements Source<int[]> {
+  public static class TestBaseSource implements Source<int[]> {
     private int count = 0;
 
     private int[] values;

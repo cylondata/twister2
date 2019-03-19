@@ -30,7 +30,7 @@ public class TSetAllReduceExample extends BaseTSetBatchWorker {
     // set the parallelism of source to task stage 0
     int srcPara = jobParameters.getTaskStages().get(0);
     int sinkPara = jobParameters.getTaskStages().get(1);
-    SourceTSet<int[]> source = tc.createSource(new BaseSource(), srcPara).setName("Source");
+    SourceTSet<int[]> source = tc.createSource(new TestBaseSource(), srcPara).setName("Source");
     AllReduceTLink<int[]> reduce = source.allReduce((t1, t2) -> {
       int[] val = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {
