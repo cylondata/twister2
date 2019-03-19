@@ -15,8 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.BaseSink;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.IdentitySelector;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
@@ -36,7 +35,7 @@ public class TSetKeyedReduceExample extends BaseTSetBatchWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    SourceTSet<int[]> source = tc.createSource(new BaseSource(),
+    SourceTSet<int[]> source = tc.createSource(new TestBaseSource(),
         sourceParallelism).setName("Source");
     KeyedReduceTLink<int[], int[]> reduce = source.
         groupBy(new LoadBalancePartitioner<>(), new IdentitySelector<>()).
@@ -48,12 +47,12 @@ public class TSetKeyedReduceExample extends BaseTSetBatchWorker {
             return val;
           });
 
-    reduce.sink(new Sink<int[]>() {
+    reduce.sink(new BaseSink<int[]>() {
       @Override
       public boolean add(int[] value) {
         experimentData.setOutput(value);
         try {
-          LOG.info("Task Id : " + CONTEXT.getIndex() + " Results " + Arrays.toString(value));
+          LOG.info("Task Id : " + context.getIndex() + " Results " + Arrays.toString(value));
           verify(OperationNames.REDUCE);
         } catch (VerificationException e) {
           LOG.info("Exception Message : " + e.getMessage());
@@ -62,7 +61,7 @@ public class TSetKeyedReduceExample extends BaseTSetBatchWorker {
       }
 
       @Override
-      public void prepare(TSetContext context) {
+      public void prepare() {
       }
     }, sinkParallelism);
   }

@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.api.tset;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.link.GatherTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
@@ -34,9 +35,14 @@ public final class TSetUtils {
         || parent instanceof KeyedPartitionTLink;
   }
 
+  /**
+   * Check if the link is Iterable
+   */
   public static <T> boolean isIterableInput(BaseTLink<T> parent, OperationMode mode) {
     if (mode == OperationMode.STREAMING) {
-      if (parent instanceof ReduceTLink) {
+      if (parent instanceof DirectTLink) {
+        return true;
+      } else if (parent instanceof ReduceTLink) {
         return false;
       } else if (parent instanceof KeyedReduceTLink) {
         return false;
@@ -54,7 +60,9 @@ public final class TSetUtils {
         throw new RuntimeException("Failed to build un-supported operation: " + parent);
       }
     } else {
-      if (parent instanceof ReduceTLink) {
+      if (parent instanceof DirectTLink) {
+        return true;
+      } else if (parent instanceof ReduceTLink) {
         return false;
       } else if (parent instanceof KeyedReduceTLink) {
         return true;

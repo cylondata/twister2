@@ -11,22 +11,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-/**
- * Represents a source producing values
- *
- * @param <T> type of values produced by source
- */
-public interface  Source<T> extends TFunction {
-  /**
-   * Weather we have more data
-   *
-   * @return true if there is more data to be read
-   */
-  boolean hasNext();
-
-  /**
-   * Get the next value
-   * @return the next value
-   */
-  T next();
+public abstract class BaseReduceFunction extends TBaseFunction implements ReduceFunction {
 }
