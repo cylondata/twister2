@@ -13,11 +13,11 @@ package edu.iu.dsc.tws.api.tset.sink;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.Sink;
+import edu.iu.dsc.tws.api.tset.BaseSink;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 
-public class CacheSink<T> implements Sink<T> {
+public class CacheSink<T> extends BaseSink<T> {
   private static final Logger LOG = Logger.getLogger(CacheSink.class.getName());
 
   private int count = 0;

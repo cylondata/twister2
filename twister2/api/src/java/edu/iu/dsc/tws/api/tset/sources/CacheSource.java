@@ -15,11 +15,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.Source;
+import edu.iu.dsc.tws.api.tset.BaseSource;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
 
-public class CacheSource<T> implements Source<T> {
+public class CacheSource<T> extends BaseSource<T> {
   private static final Logger LOG = Logger.getLogger(CacheSource.class.getName());
 
   //TODO: need to check this codes logic developed now just based on the data object API
