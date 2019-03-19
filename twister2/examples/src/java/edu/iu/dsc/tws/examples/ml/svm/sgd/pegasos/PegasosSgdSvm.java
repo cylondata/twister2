@@ -82,12 +82,12 @@ public class PegasosSgdSvm extends SgdSvm implements Serializable {
     double[] currentW = w;
     for (int i = 0; i < this.iterations; i++) {
       for (int j = 0; j < x.length; j++) {
-        double condition = y[i] * Matrix.dot(x[j], currentW);
+        double condition = y[j] * Matrix.dot(x[j], currentW);
         double[] newW;
         if (condition < 1) {
           this.xyia = new double[x.length];
           this.xyia = Matrix.scalarMultiply(Matrix
-              .subtract(currentW, Matrix.scalarMultiply(x[j], y[i])), alpha);
+              .subtract(currentW, Matrix.scalarMultiply(x[j], y[j])), alpha);
           newW = Matrix.subtract(currentW, xyia);
         } else {
           wa = new double[x.length];

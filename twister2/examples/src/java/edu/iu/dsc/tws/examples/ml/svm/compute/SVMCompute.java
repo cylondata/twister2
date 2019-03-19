@@ -52,8 +52,6 @@ public class SVMCompute extends BaseCompute {
 
   private PegasosSgdSvm pegasosSgdSvm;
 
-  private int features;
-
   private int batchDataCount = 0;
 
   public SVMCompute(OperationMode operationMode) {
@@ -65,18 +63,6 @@ public class SVMCompute extends BaseCompute {
     this.w = this.binaryBatchModel.getW();
     this.operationMode = operationMode;
     LOG.info(String.format("Initializing SVMCompute : %s", this.binaryBatchModel.toString()));
-    initializeStreamMode();
-  }
-
-  /**
-   * This constructor is called for dummy data mode
-   *
-   * @param features number of features in a data point
-   * @param operationMode Streaming or Batch
-   */
-  public SVMCompute(int features, OperationMode operationMode) {
-    this.operationMode = operationMode;
-    this.features = features;
     initializeStreamMode();
   }
 
@@ -111,7 +97,7 @@ public class SVMCompute extends BaseCompute {
     if (this.operationMode.equals(OperationMode.STREAMING)) {
       if (object instanceof double[]) {
         this.streamDataPoint = (double[]) object;
-        if (this.streamDataPoint.length == this.features + 1) {
+        if (this.streamDataPoint.length == this.binaryBatchModel.getFeatures() + 1) {
           this.y = this.streamDataPoint[0];
           this.x = Arrays.copyOfRange(this.streamDataPoint, 1, this.streamDataPoint.length);
           this.onlineTraining(this.x, this.y);

@@ -79,7 +79,7 @@ public class BinaryBatchModel extends Model {
 
   @Override
   public int getSamples() {
-    return  this.samples;
+    return this.samples;
   }
 
   @Override
@@ -94,7 +94,7 @@ public class BinaryBatchModel extends Model {
 
   @Override
   public double[] getW() {
-    return super.getW();
+    return this.w;
   }
 
   public double[][] getX() {

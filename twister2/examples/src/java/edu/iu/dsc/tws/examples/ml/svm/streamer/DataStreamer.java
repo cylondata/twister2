@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
+import edu.iu.dsc.tws.examples.ml.svm.exceptions.InputDataFormatException;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -56,7 +57,11 @@ public class DataStreamer extends BaseSource {
   public void execute() {
 
     if (this.isDummy) {
-      dummyDataStreamer();
+      try {
+        dummyDataStreamer();
+      } catch (InputDataFormatException e) {
+        e.printStackTrace();
+      }
     } else {
       realDataStreamer();
     }
@@ -68,13 +73,19 @@ public class DataStreamer extends BaseSource {
     super.prepare(cfg, ctx);
   }
 
-  public void dummyDataStreamer() {
+  public void dummyDataStreamer() throws InputDataFormatException {
     if (this.operationMode.equals(OperationMode.STREAMING)) {
       double[] x = DataUtils.seedDoubleArray(this.binaryBatchModel.getFeatures());
       Random random = new Random();
       int index = random.nextInt(2);
       double label = labels[index];
       double[] data = DataUtils.combineLabelAndData(x, label);
+      if (!(data.length == this.binaryBatchModel.getFeatures() + 1)) {
+        throw
+            new InputDataFormatException(String
+                .format("Input Data Format Exception : [data length : %d, feature length +1 : %d]",
+                    data.length, this.binaryBatchModel.getFeatures() + 1));
+      }
       this.context.write(Constants.SimpleGraphConfig.DATA_EDGE, data);
     }
 
