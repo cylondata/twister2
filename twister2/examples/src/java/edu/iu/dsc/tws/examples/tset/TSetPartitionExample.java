@@ -15,8 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.BaseSink;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.OneToOnePartitioner;
 import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
@@ -35,11 +34,11 @@ public class TSetPartitionExample extends BaseTSetBatchWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    SourceTSet<int[]> source = tc.createSource(new BaseSource(),
+    SourceTSet<int[]> source = tc.createSource(new TestBaseSource(),
         sourceParallelism).setName("Source");
     PartitionTLink<int[]> partition = source.partition(new OneToOnePartitioner<>());
 
-    partition.sink(new Sink<int[]>() {
+    partition.sink(new BaseSink<int[]>() {
       @Override
       public boolean add(int[] value) {
         LOG.info("Task Id : " + context.getIndex() + " Results " + Arrays.toString(value));
@@ -53,7 +52,7 @@ public class TSetPartitionExample extends BaseTSetBatchWorker {
       }
 
       @Override
-      public void prepare(TSetContext context) {
+      public void prepare() {
       }
     }, sinkParallelism);
   }

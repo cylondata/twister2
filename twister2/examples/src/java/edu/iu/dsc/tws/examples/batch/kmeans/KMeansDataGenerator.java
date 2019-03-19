@@ -87,7 +87,10 @@ public final class KMeansDataGenerator {
           line.append(",").append("\t");
         }
       }
-      datapoints.append(line).append("\n");
+      datapoints.append(line);
+      if (i < numPoints - 1) {
+        datapoints.append("\n");
+      }
     }
     return datapoints.toString();
   }

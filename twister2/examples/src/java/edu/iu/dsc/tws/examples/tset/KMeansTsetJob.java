@@ -17,8 +17,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.tset.BaseMapFunction;
+import edu.iu.dsc.tws.api.tset.BaseSource;
 import edu.iu.dsc.tws.api.tset.MapFunction;
-import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
@@ -77,7 +78,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
   }
 
-  public class KMeansMap implements MapFunction<double[][], double[][]> {
+  public class KMeansMap extends BaseMapFunction<double[][], double[][]> {
 
     @Override
     public double[][] map(double[][] doubles) {
@@ -105,7 +106,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     }
   }
 
-  public class PointsSource implements Source<double[][]> {
+  public class PointsSource extends BaseSource<double[][]> {
 
     @Override
     public void prepare() {
@@ -172,7 +173,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
           }
           LOG.info(context.getIndex() + " Counts : " + count);
           inputSplit = source.getNextSplit(context.getIndex());
-          LOG.info("Task index:" + context.getIndex() + " count: " + count);
+          LOG.info("Task index: 11111 " + context.getIndex() + " count: " + count);
         } catch (IOException e) {
           LOG.log(Level.SEVERE, "Failed to read the input", e);
         }
@@ -182,7 +183,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
   }
 
 
-  public class CenterSource implements Source<double[][]> {
+  public class CenterSource extends BaseSource<double[][]> {
 
     private DataSource<double[][], InputSplit<double[][]>> source;
 

@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorker;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class TSetKMeansWorkerMain {

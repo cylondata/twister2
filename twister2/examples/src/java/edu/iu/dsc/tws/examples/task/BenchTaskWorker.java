@@ -115,6 +115,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
     @Override
     public void execute() {
+      LOG.info("++++++++++  : " + context.getWorkerId() + " : " + context.taskIndex());
       Object val = inputData;
       int iterations = jobParameters.getIterations();
       while (count <= iterations) {

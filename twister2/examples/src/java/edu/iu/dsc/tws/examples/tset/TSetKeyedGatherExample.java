@@ -23,7 +23,7 @@ public class TSetKeyedGatherExample extends BaseTSetBatchWorker {
     super.execute(tc);
 
     // set the parallelism of source to task stage 0
-    /*TSet<int[]> source = tSetBuilder.createSource(new BaseSource()).setName("Source").
+    /*TSet<int[]> source = tSetBuilder.createSource(new TestBaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
     TSet<int[]> reduce = source.groupBy(new LoadBalancePartitioner<>(), new IdentitySelector<>()).
         setParallelism(10);
