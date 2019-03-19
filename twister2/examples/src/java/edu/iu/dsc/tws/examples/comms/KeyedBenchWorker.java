@@ -174,7 +174,7 @@ public abstract class KeyedBenchWorker implements IWorker {
       Integer key;
       for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
         // lets generate a message
-        key = 100 + task;
+        key = (i + task + 1000) % jobParameters.getTaskStages().get(1);
         int flag = i == jobParameters.getTotalIterations() - 1 ? MessageFlags.LAST : 0;
 
         if (i == jobParameters.getWarmupIterations()) {

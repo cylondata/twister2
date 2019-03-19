@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.api.tset.sets;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.Cacheable;
@@ -21,12 +22,23 @@ import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
+import edu.iu.dsc.tws.api.tset.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
+import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.link.DirectTLink;
+import edu.iu.dsc.tws.api.tset.link.GatherTLink;
+import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
+import edu.iu.dsc.tws.api.tset.sink.CacheSink;
+import edu.iu.dsc.tws.api.tset.sources.CacheSource;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
@@ -34,17 +46,20 @@ import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 
 public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
+  private static final Logger LOG = Logger.getLogger(CachedTSet.class.getName());
+
+  private static final long serialVersionUID = -1L;
 
   private BaseTLink<T> parent;
   // todo: This dataobject should bind to the executor, I think! because tsets would not be
   //  visible to the executor
-  private DataObject<T> datapoints = null;
+  private DataObject<T> data = null;
 
   public CachedTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<T> prnt) {
     super(cfg, tSetEnv);
     this.parent = prnt;
     this.name = "cache-" + parent.getName();
-    datapoints = new DataObjectImpl<>(config);
+    data = new DataObjectImpl<>(config);
     this.parallel = 1;
   }
 
@@ -52,7 +67,7 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
     super(cfg, tSetEnv);
     this.parent = prnt;
     this.name = "cache-" + parent.getName();
-    datapoints = new DataObjectImpl<>(config);
+    data = new DataObjectImpl<>(config);
     this.parallel = parallelism;
   }
 
@@ -65,8 +80,10 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
     boolean keyed = TSetUtils.isKeyedInput(parent);
     // lets override the parallelism
     int p = calculateParallelism(parent);
-    Sink<T> cacheSink = new CacheSink();
-    cacheSink.addInputs(inputMap);
+    Sink<T> cacheSink = new CacheSink(data);
+    if (inputMap.size() > 0) {
+      cacheSink.addInputs(inputMap);
+    }
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
         new SinkOp<>(cacheSink, isIterable, keyed), p);
     parent.buildConnection(connection);
@@ -74,28 +91,82 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
   }
 
   public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
     return cacheSource.map(mapFn);
   }
 
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
     return cacheSource.flatMap(mapFn);
   }
 
   public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
     return cacheSource.map(mFn);
   }
 
   public <P1> IterableFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
     return cacheSource.flatMap(mFn);
   }
 
   public SinkTSet<T> sink(Sink<T> sink) {
-    SourceTSet<T> cacheSource = (SourceTSet<T>) tSetEnv.createSource(new CacheSource(), parallel);
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
     return cacheSource.sink(sink);
+  }
+
+  @Override
+  public DirectTLink<T> direct() {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
+    return cacheSource.direct();
+  }
+
+  @Override
+  public ReduceTLink<T> reduce(ReduceFunction<T> reduceFn) {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
+    return cacheSource.reduce(reduceFn);
+  }
+
+  @Override
+  public PartitionTLink<T> partition(PartitionFunction<T> partitionFn) {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
+    return cacheSource.partition(partitionFn);
+  }
+
+  @Override
+  public GatherTLink<T> gather() {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
+    return cacheSource.gather();
+  }
+
+  @Override
+  public AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
+    return cacheSource.allReduce(reduceFn);
+  }
+
+  @Override
+  public AllGatherTLink<T> allGather() {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
+    return cacheSource.allGather();
+  }
+
+  @Override
+  public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
+                                       Selector<T, K> selector) {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
+    return cacheSource.groupBy(partitionFunction, selector);
+  }
+
+  @Override
+  public ReplicateTLink<T> replicate(int replications) {
+    SourceTSet<T> cacheSource = tSetEnv.createSource(new CacheSource(data), parallel);
+    return cacheSource.replicate(replications);
+  }
+
+  @Override
+  public CachedTSet<T> cache() {
+    throw new IllegalStateException("Calling Cache on an already cached Object");
   }
 
   @Override
@@ -105,7 +176,11 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
 
   @Override
   public List<T> getData() {
-    DataPartition<T>[] parts = datapoints.getPartitions();
+    if (data == null) {
+      LOG.fine("Data has not been added to the data object");
+      return new ArrayList<>();
+    }
+    DataPartition<T>[] parts = data.getPartitions();
     List<T> results = new ArrayList();
     for (DataPartition<T> part : parts) {
       results.add(part.getConsumer().next());
@@ -115,13 +190,16 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
 
   @Override
   public DataObject<T> getDataObject() {
-    return datapoints;
+    return data;
   }
 
   @Override
   public boolean addData(T value) {
-    int curr = datapoints.getPartitionCount();
-    datapoints.addPartition(new EntityPartition<T>(curr, value)); //
+    if (data == null) {
+      data = new DataObjectImpl<>(config);
+    }
+    int curr = data.getPartitionCount();
+    data.addPartition(new EntityPartition<T>(curr, value)); //
     return false;
   }
 
@@ -129,43 +207,5 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
   public CachedTSet<T> setName(String n) {
     this.name = n;
     return this;
-  }
-
-  private class CacheSink implements Sink<T> {
-
-    private int count = 0;
-
-    @Override
-    public boolean add(T value) {
-      // todo every time add is called, a new partition will be made! how to handle that?
-      return addData(value);
-    }
-
-    @Override
-    public void close() {
-
-    }
-  }
-
-  private class CacheSource implements Source<T> {
-    //TODO: need to check this codes logic developed now just based on the data object API
-    private int count = getDataObject().getPartitionCount();
-    private int current = 0;
-
-    @Override
-    public boolean hasNext() {
-      boolean hasNext = (current < count) ? getDataObject().getPartitions(current)
-          .getConsumer().hasNext() : false;
-
-      while (++current < count && !hasNext) {
-        hasNext = getDataObject().getPartitions(current).getConsumer().hasNext();
-      }
-      return hasNext;
-    }
-
-    @Override
-    public T next() {
-      return getDataObject().getPartitions(current).getConsumer().next();
-    }
   }
 }

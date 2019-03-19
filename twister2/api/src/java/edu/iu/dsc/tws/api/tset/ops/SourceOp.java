@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -19,6 +21,7 @@ import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceOp<T> implements ISource {
+  private static final Logger LOG = Logger.getLogger(SourceOp.class.getName());
 
   private static final long serialVersionUID = -2400242961L;
 
@@ -49,7 +52,6 @@ public class SourceOp<T> implements ISource {
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     this.context = ctx;
-
     TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
         ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
     dataSet.prepare(tSetContext);

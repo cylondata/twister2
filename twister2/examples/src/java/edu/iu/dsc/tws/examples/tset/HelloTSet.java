@@ -41,6 +41,11 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
     LOG.info("Strating Hello TSet Example");
     TSet<int[]> source = tc.createSource(new Source<int[]>() {
 
+      @Override
+      public void prepare() {
+
+      }
+
       private int count = 0;
 
       @Override

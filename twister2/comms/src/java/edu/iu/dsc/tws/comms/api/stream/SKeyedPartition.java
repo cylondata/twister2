@@ -15,12 +15,13 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.keyed.KPartitionStreamingFinalReceiver;
 
 /**
  * Streaming Keyed Partition Operation
@@ -48,11 +49,11 @@ public class SKeyedPartition {
    */
   public SKeyedPartition(Communicator comm, TaskPlan plan,
                          Set<Integer> sources, Set<Integer> targets, MessageType dataType,
-                         MessageType keyType, MessageReceiver rcvr,
+                         MessageType keyType, SingularReceiver rcvr,
                          DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
-    this.partition = new DataFlowPartition(comm.getChannel(), sources, targets, rcvr,
-        new PartitionPartialReceiver(),
+    this.partition = new DataFlowPartition(comm.getChannel(), sources, targets,
+        new KPartitionStreamingFinalReceiver(rcvr), new PartitionPartialReceiver(),
         dataType, keyType);
 
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
@@ -71,7 +72,7 @@ public class SKeyedPartition {
   public boolean partition(int src, Object key, Object message, int flags) {
     int dest = destinationSelector.next(src, key, message);
 
-    boolean send = partition.send(src, new Tuple(key, message, partition.getKeyType(),
+    boolean send = partition.send(src, new Tuple<>(key, message, partition.getKeyType(),
         partition.getDataType()), flags, dest);
     if (send) {
       destinationSelector.commit(src, dest);

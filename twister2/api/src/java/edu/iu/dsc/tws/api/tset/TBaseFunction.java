@@ -11,27 +11,28 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import java.io.Serializable;
 import java.util.Map;
 
-/**
- * Base class for all the functions in TSet implementation
- */
-public interface TFunction extends Serializable {
-
+public abstract class TBaseFunction implements TFunction {
   /**
-   * Prepare the function
-   *
-   * @param context CONTEXT
+   * The runtime context that is made avilable to users who create functions that
+   * extend from the TBaseFunction abstract class
    */
-  default void prepare(TSetContext context) {
+  public TSetContext context = new TSetContext();
 
+  @Override
+  public void prepare(TSetContext ctx) {
+    this.context.setConfig(ctx.getConfig());
+    this.context.setParallelism(ctx.getParallelism());
+    this.context.settSetId(ctx.getId());
+    this.context.settSetIndex(ctx.getIndex());
+    this.context.settSetName(ctx.getName());
+    this.context.setWorkerId(ctx.getWorkerId());
+    this.context.getInputMap().putAll(ctx.getInputMap());
+    prepare();
   }
 
-
-  default void prepare() {
-
-  }
+  public abstract void prepare();
 
   /**
    * Gets the input value for the given key from the input map
@@ -39,9 +40,9 @@ public interface TFunction extends Serializable {
    * @param key the key to be retrieved
    * @return the object associated with the given key, null if the key is not present
    */
-  default Object getInput(String key) {
-    throw new UnsupportedOperationException("Inputs for TSets are only supported for functions"
-        + "that extend from TBaseFunction.");
+  @Override
+  public Object getInput(String key) {
+    return context.getInputMap().get(key);
   }
 
   /**
@@ -50,9 +51,9 @@ public interface TFunction extends Serializable {
    * @param key the key to be added
    * @param input the value associated with the key
    */
-  default void addInput(String key, Cacheable<?> input) {
-    throw new UnsupportedOperationException("Inputs for TSets are only supported for functions"
-        + "that extend from TBaseFunction.");
+  @Override
+  public void addInput(String key, Cacheable<?> input) {
+    context.getInputMap().put(key, input);
   }
 
   /**
@@ -61,9 +62,8 @@ public interface TFunction extends Serializable {
    * @param map map that contains key, input pairs that need to be added into
    * the  input map
    */
-  default void addInputs(Map<String, Cacheable<?>> map) {
-    throw new UnsupportedOperationException("Inputs for TSets are only supported for functions"
-        + "that extend from TBaseFunction.");
+  @Override
+  public void addInputs(Map<String, Cacheable<?>> map) {
+    context.getInputMap().putAll(map);
   }
 }
-

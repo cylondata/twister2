@@ -11,12 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset;
 
+import java.io.Serializable;
+
 /**
  * Distributed data set
  *
  * @param <T> the distributed set interface
  */
-public interface DataObject<T> {
+public interface DataObject<T> extends Serializable {
 
   /**
    * Add a partition to the data object
