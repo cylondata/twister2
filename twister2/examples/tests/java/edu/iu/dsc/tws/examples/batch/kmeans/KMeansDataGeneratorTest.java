@@ -18,6 +18,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.dataobjects.DataFileReadSource;
+import edu.iu.dsc.tws.api.dataobjects.DataFileSink;
+import edu.iu.dsc.tws.api.dataobjects.DataFileSplittedReadSource;
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSink;
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
@@ -39,6 +41,46 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 public class KMeansDataGeneratorTest {
 
   private static final Logger LOG = Logger.getLogger(KMeansDataGeneratorTest.class.getName());
+
+  @Test
+  public void testUniqueSchedules5() throws IOException {
+    Config config = getConfig();
+
+    String cinputDirectory = "/tmp/testcinput";
+    int numFiles = 1;
+    int csize = 4;
+    int dimension = 2;
+    int parallelismValue = 2;
+
+    KMeansDataGenerator.generateData("txt", new Path(cinputDirectory),
+        numFiles, csize, 100, dimension, config);
+
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+
+    /*DataFileReadSource task = new DataFileReadSource();
+    taskGraphBuilder.addSource("map", task, parallelismValue);
+    taskGraphBuilder.setMode(OperationMode.BATCH);
+
+    Path path = new Path(cinputDirectory);
+    final FileSystem fs = path.getFileSystem(config);
+    final FileStatus pathFile = fs.getFileStatus(path);
+
+    Assert.assertNotNull(pathFile);
+
+    DataFileReader fileReader = new DataFileReader(config, "local");
+    double[][] centroids = fileReader.readData(path, dimension, csize);
+    Assert.assertNotNull(centroids);*/
+
+    DataFileSplittedReadSource centroidSourceTask = new DataFileSplittedReadSource("direct");
+    DataFileSink centroidSinkTask = new DataFileSink();
+    taskGraphBuilder.addSource("csource", centroidSourceTask, 1);
+    ComputeConnection secondGraphComputeConnection = taskGraphBuilder.addSink(
+        "csink", centroidSinkTask, 1);
+    secondGraphComputeConnection.direct("csource", "direct", DataType.OBJECT);
+    taskGraphBuilder.setMode(OperationMode.BATCH);
+    Assert.assertNotNull(centroidSinkTask.get());
+  }
+
 
   @Test
   public void testUniqueSchedules2() throws IOException {
@@ -108,6 +150,7 @@ public class KMeansDataGeneratorTest {
       Assert.assertNotNull(inputSplit);
     }
   }
+
   @Test
   public void testUniqueSchedules3() throws IOException {
     Config config = getConfig();

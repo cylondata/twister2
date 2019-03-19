@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 /**
@@ -46,6 +47,8 @@ public class KMeansCalculator {
     this.centroids = centres;
     this.dimension = dim;
     this.centerSums = new double[this.centroids.length][this.centroids[0].length + 1];
+    LOG.info("Datapoints values are::::" + Arrays.deepToString(this.points));
+    LOG.info("Centroids values are::::" + Arrays.deepToString(this.centroids));
   }
 
   /**

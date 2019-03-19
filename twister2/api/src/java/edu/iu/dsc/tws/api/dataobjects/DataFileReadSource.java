@@ -15,8 +15,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.utils.DataFileReader;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
@@ -33,7 +31,6 @@ public class DataFileReadSource extends BaseSource {
   private int datasize;
 
   private DataFileReader fileReader;
-  private DataObject<double[][]> dataObject = null;
   private double[][] datapoints = null;
 
   /**
@@ -71,7 +68,6 @@ public class DataFileReadSource extends BaseSource {
   public void execute() {
     datapoints = fileReader.readData(new Path(fileDirectory), dimension, datasize);
     context.writeEnd(getEdgeName(), datapoints);
-    //dataObject.addPartition(new EntityPartition<>(0, datapoints));
   }
 
   public void prepare(Config cfg, TaskContext context) {
@@ -81,11 +77,5 @@ public class DataFileReadSource extends BaseSource {
     fileDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
     dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DIMENSIONS));
     datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_CSIZE));
-    dataObject = new DataObjectImpl<>(config);
   }
-
- /* @Override
-  public DataPartition<double[][]> get() {
-    return new EntityPartition<>(context.taskIndex(), datapoints);
-  }*/
 }

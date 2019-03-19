@@ -33,9 +33,9 @@ import edu.iu.dsc.tws.task.api.TaskContext;
  * to partition the datapoints. Finally, write the partitioned datapoints into their respective
  * edges.
  */
-public class DataFileSource<T> extends BaseSource {
+public class DataFileSplittedReadSource<T> extends BaseSource {
 
-  private static final Logger LOG = Logger.getLogger(DataFileSource.class.getName());
+  private static final Logger LOG = Logger.getLogger(DataFileSplittedReadSource.class.getName());
 
   private static final long serialVersionUID = -1L;
 
@@ -49,7 +49,7 @@ public class DataFileSource<T> extends BaseSource {
    */
   private String edgeName;
 
-  public DataFileSource(String edgename) {
+  public DataFileSplittedReadSource(String edgename) {
     this.edgeName = edgename;
   }
 
