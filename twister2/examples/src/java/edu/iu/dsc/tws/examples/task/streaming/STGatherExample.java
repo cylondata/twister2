@@ -22,9 +22,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.GatherCompute;
 
 public class STGatherExample extends BenchTaskWorker {
 
@@ -38,7 +38,7 @@ public class STGatherExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
     BaseSource g = new SourceStreamTask(edge);
-    BaseSink r = new GatherSinkTask();
+    ISink r = new GatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
@@ -46,39 +46,39 @@ public class STGatherExample extends BenchTaskWorker {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class GatherSinkTask extends BaseSink {
-    private int count = 0;
+  protected static class GatherSinkTask extends GatherCompute<int[]> implements ISink {
+
     private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
-      Object object = message.getContent();
+    public boolean gather(Iterator<Tuple<Integer, int[]>> content) {
+      int numberOfElements = 0;
+      int totalValues = 0;
       if (count % jobParameters.getPrintInterval() == 0) {
-
-        if (object instanceof Iterator) {
-          Iterator<?> itr = (Iterator<?>) object;
-          while (itr.hasNext()) {
-            Object res = itr.next();
-            if (res instanceof Tuple) {
-              int[] a = (int[]) ((Tuple) res).getValue();
-              experimentData.setOutput(a);
-              LOG.info("Message Gathered : " + Arrays.toString(a));
-            }
-            try {
-              verify(OperationNames.GATHER);
-            } catch (VerificationException e) {
-              e.printStackTrace();
-            }
+        while (content.hasNext()) {
+          count++;
+          Tuple<Integer, int[]> tuple = content.next();
+          int[] value = tuple.getValue();
+          numberOfElements++;
+          experimentData.setOutput(value);
+          LOG.info("Message Gathered : " + Arrays.toString(value));
+          try {
+            verify(OperationNames.GATHER);
+          } catch (VerificationException e) {
+            e.printStackTrace();
           }
         }
+      }
 
-        /*if (count % jobParameters.getPrintInterval() == 0) {
-          LOG.info("Gathered : " + message.getContent().getClass().getJobName()
-              + ", Count : " + count + " numberOfElements: " + numberOfElements
-              + " total: " + totalValues);
-        }*/
+      if (count % jobParameters.getPrintInterval() == 0) {
+        LOG.info("Gathered : " + content.getClass().getTypeName()
+            + ", Count : " + count + " numberOfElements: " + numberOfElements
+            + " total: " + totalValues);
       }
       return true;
     }
   }
 }
+
+
