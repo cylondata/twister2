@@ -48,6 +48,8 @@ public class SVMRunner extends TaskWorker {
 
   private final int reduceParallelism = 1;
 
+  private int features = 10;
+
   @Override
   public void execute() {
 
@@ -55,8 +57,8 @@ public class SVMRunner extends TaskWorker {
 
     OperationMode operationMode = OperationMode.BATCH;
 
-    DataStreamer dataStreamer = new DataStreamer(operationMode);
-    SVMCompute svmCompute = new SVMCompute(operationMode);
+    DataStreamer dataStreamer = new DataStreamer(features, operationMode);
+    SVMCompute svmCompute = new SVMCompute(features, operationMode);
     SVMReduce svmReduce = new SVMReduce(operationMode);
 
     builder.addSource(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE, dataStreamer,
@@ -80,16 +82,17 @@ public class SVMRunner extends TaskWorker {
 
     LOG.info("Task Graph Executed !!! ");
 
-    DataObject<double[]> dataSet = taskExecutor.getOutput(graph, plan,
-        Constants.SimpleGraphConfig.SVM_REDUCE);
-    DataPartition<double[]> values = dataSet.getPartitions()[0];
-    DataPartitionConsumer<double[]> dataPartitionConsumer = values.getConsumer();
-    //LOG.info("Final Receive  : " + dataPartitionConsumer.hasNext());
-    while (dataPartitionConsumer.hasNext()) {
-      LOG.info("Final Aggregated Values Are:"
-          + Arrays.toString(dataPartitionConsumer.next()));
+    if (operationMode.equals(OperationMode.BATCH)) {
+      DataObject<double[]> dataSet = taskExecutor.getOutput(graph, plan,
+          Constants.SimpleGraphConfig.SVM_REDUCE);
+      DataPartition<double[]> values = dataSet.getPartitions()[0];
+      DataPartitionConsumer<double[]> dataPartitionConsumer = values.getConsumer();
+      //LOG.info("Final Receive  : " + dataPartitionConsumer.hasNext());
+      while (dataPartitionConsumer.hasNext()) {
+        LOG.info("Final Aggregated Values Are:"
+            + Arrays.toString(dataPartitionConsumer.next()));
+      }
     }
-
 
   }
 

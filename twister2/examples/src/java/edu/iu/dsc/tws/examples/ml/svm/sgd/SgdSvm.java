@@ -12,13 +12,19 @@
 package edu.iu.dsc.tws.examples.ml.svm.sgd;
 
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
 
-public abstract class StreamingSGD {
+public abstract class SgdSvm implements Serializable {
+
+  private static final long serialVersionUID = 7674550472679161913L;
 
   protected double[] x;
   protected double y;
+  protected double[][] xBatch;
+  protected double[] yBatch;
   protected double alpha = 0.01;
   protected int features = 1;
   protected int samples = 1;
@@ -29,7 +35,7 @@ public abstract class StreamingSGD {
   protected long testingTime = 0;
   protected long dataLoadingTime = 0;
 
-  public StreamingSGD(double[] x, double y, double alpha, int iterations) {
+  public SgdSvm(double[] x, double y, double alpha, int iterations) {
     this.x = x;
     this.y = y;
     this.alpha = alpha;
@@ -51,9 +57,19 @@ public abstract class StreamingSGD {
 
   }
 
-  public StreamingSGD(double[] w, double[] x, double y, double alpha, int iterations) {
-    this.x = x;
-    this.y = y;
+
+  /**
+   * This constructor is initialized for Batch based SGD SVM
+   *
+   * @param w initial weights (random Gaussian Distribution)
+   * @param x data points
+   * @param y labels for corresponding data points
+   * @param alpha learning rate : default = 0.001
+   * @param iterations number of iterations to run the SGD SVM
+   */
+  public SgdSvm(double[] w, double[][] x, double[] y, double alpha, int iterations) {
+    this.xBatch = x;
+    this.yBatch = y;
     this.alpha = alpha;
     if (x.length == 0) {
       this.isInvalid = true;
@@ -63,8 +79,8 @@ public abstract class StreamingSGD {
       if (x.length < 1) {
         this.isInvalid = true;
       } else {
-        this.samples = 1;
-        this.features = x.length;
+        this.samples = x.length;
+        this.features = x[0].length;
         this.w = w;
       }
 
@@ -73,7 +89,37 @@ public abstract class StreamingSGD {
 
   }
 
+  /**
+   * This constructor is initialized for Streaming based SGD SVM
+   *
+   * @param w initial weight
+   * @param alpha learning rate : default 0.001
+   * @param iterations number of iterations
+   * @param features number of features in a data point
+   */
+  public SgdSvm(double[] w, double alpha, int iterations, int features) {
+    this.alpha = alpha;
+    this.w = w;
+    this.iterations = iterations;
+    this.features = features;
+  }
+
+  /**
+   * This method is deprecated
+   * @deprecated
+   * Use iterativeSGD for batch mode training
+   * Use onlineSGD for streaming mode training
+   * @throws NullDataSetException
+   * @throws MatrixMultiplicationException
+   */
+  @Deprecated
   public abstract void sgd() throws NullDataSetException, MatrixMultiplicationException;
+
+  public abstract void iterativeSgd(double[] w1, double[][] x1, double[] y1)
+      throws NullDataSetException, MatrixMultiplicationException;
+
+  public abstract void onlineSGD(double[] w1, double[] x1, double y1)
+      throws NullDataSetException, MatrixMultiplicationException;
 
   public double[] getW() {
     return w;

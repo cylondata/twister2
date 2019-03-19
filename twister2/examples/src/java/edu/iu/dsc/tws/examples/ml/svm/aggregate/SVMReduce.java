@@ -50,23 +50,28 @@ public class SVMReduce extends BaseSink implements Collector {
 
     if (message.getContent() == null) {
       LOG.info("Something Went Wrong !!!");
-      status = false;
+      this.status = false;
     } else {
-      if (this.operationMode.equals(OperationMode.BATCH)) {
-        if (message.getContent() instanceof double[]) {
-          status = true;
-          this.object = (double[]) message.getContent();
-          if (debug) {
-            LOG.log(Level.INFO, "Received Data from workerId: " + this.context.getWorkerId()
-                + ":" + this.context.taskId() + ":" + Arrays.toString(object));
-          }
+
+      if (message.getContent() instanceof double[]) {
+        this.status = true;
+        this.object = (double[]) message.getContent();
+        if (debug) {
+          LOG.log(Level.INFO, "Received Data from workerId: " + this.context.getWorkerId()
+              + ":" + this.context.taskId() + ":" + Arrays.toString(this.object));
         }
       }
 
+      if (this.operationMode.equals(OperationMode.BATCH)) {
+        // do batch based computation
+        LOG.info("Batch Mode : " + Arrays.toString(this.object));
+      }
+
       if (this.operationMode.equals(OperationMode.STREAMING)) {
-        // do streaming computation
+        // do streaming based computation
+        LOG.info("Streaming Mode : " + Arrays.toString(this.object));
       }
     }
-    return status;
+    return this.status;
   }
 }
