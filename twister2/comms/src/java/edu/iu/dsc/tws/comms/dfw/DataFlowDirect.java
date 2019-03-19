@@ -75,7 +75,6 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
 
 
   private Lock lock;
-  private Lock finishlock;
 
   /**
    * The task plan
@@ -137,7 +136,6 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     this.finalReceiver = finalRcvr;
     this.delegate = new ChannelDataFlowOperation(channel);
     this.lock = new ReentrantLock();
-    this.finishlock = new ReentrantLock();
     this.edgeValue = edge;
     this.taskPlan = plan;
     this.router = new DirectRouter(plan, sources, targets);
