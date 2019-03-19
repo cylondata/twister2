@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.api.stream.SKeyedPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.partition.keyed.KPartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
@@ -64,7 +63,7 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
     this.edgeGenerator = e;
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SKeyedPartition(newComm, taskPlan, sources, dests, dataType, keyType,
-        new KPartitionStreamingFinalReceiver(new PartitionRecvrImpl()), destSelector);
+        new PartitionRecvrImpl(), destSelector);
   }
 
   @Override
