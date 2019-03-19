@@ -75,6 +75,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
 
 
   private Lock lock;
+  private Lock finishlock;
 
   /**
    * The task plan
@@ -126,6 +127,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
    */
   private Map<Integer, Integer> sourcesToDestinations = new HashMap<>();
 
+
   public DataFlowDirect(TWSChannel channel,
                         List<Integer> src, List<Integer> target,
                         MessageReceiver finalRcvr, Config cfg, MessageType t,
@@ -135,6 +137,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     this.finalReceiver = finalRcvr;
     this.delegate = new ChannelDataFlowOperation(channel);
     this.lock = new ReentrantLock();
+    this.finishlock = new ReentrantLock();
     this.edgeValue = edge;
     this.taskPlan = plan;
     this.router = new DirectRouter(plan, sources, targets);
@@ -233,11 +236,17 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean progress() {
     boolean partialNeedsProgress = false;
-    boolean needFinishProgress;
+    boolean needFinishProgress = true;
     boolean done;
     try {
       // lets send the finished one
-      needFinishProgress = handleFinish();
+      if (lock.tryLock()) {
+        try {
+          needFinishProgress = handleFinish();
+        } finally {
+          lock.unlock();
+        }
+      }
 
       delegate.progress();
       done = delegate.isComplete();
@@ -311,7 +320,12 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     if (!thisSources.contains(source)) {
       throw new RuntimeException("Invalid source completion: " + source);
     }
-    pendingFinishSources.add(source);
+    lock.lock();
+    try {
+      pendingFinishSources.add(source);
+    } finally {
+      lock.unlock();
+    }
   }
 
   @Override
