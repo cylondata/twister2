@@ -23,14 +23,29 @@ public abstract class Model implements Serializable {
 
   private static final long serialVersionUID = -3452275060295386696L;
 
+  /**
+   * Number of data points
+   */
   protected int samples;
 
+  /**
+   * Number of features in a data point (dimensions)
+   */
   protected int features;
 
+  /**
+   * Class labels in the classification {+1,-1} is the default for Binary Classification
+   */
   protected double[] labels;
 
+  /**
+   * Weight Vector
+   */
   protected double[] w;
 
+  /**
+   * Learning rate
+   */
   protected double alpha;
 
   public Model() {

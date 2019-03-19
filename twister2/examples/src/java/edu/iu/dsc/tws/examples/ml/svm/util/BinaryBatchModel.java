@@ -21,20 +21,47 @@ public class BinaryBatchModel extends Model {
 
   private static final long serialVersionUID = 4109749989421999985L;
 
+  /**
+   * All data points involved in the batch mode execution
+   * Memory bound exceptions has to be handled
+   * X keeps all the data points per this worker in it's memory
+   */
   private double[][] x;
+
+  /**
+   * All the labels of datapoints kept in memory
+   * */
 
   private double[] y;
 
+  /**
+   * Temporary filed to hold the incoming {y_i,x_i} combined message
+   */
   private double[][] xy;
 
+  /**
+   * Number of iterations for the batch mode iterative algorithm
+   */
   private int iterations;
 
+  /**
+   * Number of elements in a given data point (dimensionality)
+   */
   private int features;
 
+  /**
+   * Number of data samples in the batch mode
+   */
   private int samples;
 
+  /**
+   * Learning rate
+   */
   private double alpha;
 
+  /**
+   * Weight vector and takes the shape of a single data point.
+   */
   private double[] w;
 
   public BinaryBatchModel() {

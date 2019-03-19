@@ -93,6 +93,11 @@ public final class SVMJobParameters {
 
   private boolean isDummy = false;
 
+  /**
+   * Builds the Job Parameters relevant SVM Algorithm
+   * @param cfg : this must be initialized where Job is initialized.
+   * @return
+   */
   public static SVMJobParameters build(Config cfg) {
     SVMJobParameters svmJobParameters = new SVMJobParameters();
     svmJobParameters.features = cfg

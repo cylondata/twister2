@@ -23,6 +23,11 @@ import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
+/**
+ * This is the DataStreamer for both batch and streaming mode
+ * In streaming mode a single data point is sent continously.
+ * But in the batch application an array of data points is sent once.
+ */
 public class DataStreamer extends BaseSource {
 
   private static final Logger LOG = Logger.getLogger(DataStreamer.class.getName());
@@ -73,6 +78,12 @@ public class DataStreamer extends BaseSource {
     super.prepare(cfg, ctx);
   }
 
+  /**
+   * This method is used to deal with dummy data based data stream generation
+   * Here data points are generated using a Gaussian Distribution and labels are assigned
+   * +1 or -1 randomly for a given data point.
+   * @throws InputDataFormatException
+   */
   public void dummyDataStreamer() throws InputDataFormatException {
     if (this.operationMode.equals(OperationMode.STREAMING)) {
       double[] x = DataUtils.seedDoubleArray(this.binaryBatchModel.getFeatures());
@@ -97,6 +108,10 @@ public class DataStreamer extends BaseSource {
     }
   }
 
+  /**
+   * This method must be implemented
+   * TODO : Use Twister2 DataAPI to Handle real data streaming
+   */
   public void realDataStreamer() {
     // do real data streaming
     throw new org.apache.commons.lang.NotImplementedException("Method Not Implemented");
