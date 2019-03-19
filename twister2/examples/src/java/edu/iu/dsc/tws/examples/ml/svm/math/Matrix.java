@@ -115,16 +115,24 @@ public final class Matrix {
   }
 
   public static double dot(double[] x, double[] w) throws MatrixMultiplicationException {
-    if (x.length == w.length) {
-      double result = 0;
-      for (int i = 0; i < x.length; i++) {
-        result += x[i] * w[i];
-      }
-      return result;
-    } else {
-      throw new MatrixMultiplicationException("Invalid Dimensions x.length "
-          + x.length + ", w.length : " + w.length);
+    double result = 0;
+    if (x == null) {
+      throw new NullPointerException("X is null");
     }
+    if (w == null) {
+      throw new NullPointerException("w is null");
+    }
+    if (x != null && w != null) {
+      if (x.length == w.length) {
+        for (int i = 0; i < x.length; i++) {
+          result += x[i] * w[i];
+        }
+      } else {
+        throw new MatrixMultiplicationException("Invalid Dimensions x.length "
+            + x.length + ", w.length : " + w.length);
+      }
+    }
+    return result;
   }
 
 

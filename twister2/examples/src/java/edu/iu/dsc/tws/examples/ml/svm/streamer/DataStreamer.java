@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
+import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -31,6 +32,10 @@ public class DataStreamer extends BaseSource {
 
   private final double[] labels = {-1, +1};
 
+  private boolean isDummy = false;
+
+  private BinaryBatchModel binaryBatchModel;
+
   public DataStreamer(OperationMode operationMode) {
     this.operationMode = operationMode;
   }
@@ -40,13 +45,32 @@ public class DataStreamer extends BaseSource {
     this.operationMode = operationMode;
   }
 
+  public DataStreamer(OperationMode operationMode, boolean isDummy,
+                      BinaryBatchModel binaryBatchModel) {
+    this.operationMode = operationMode;
+    this.isDummy = isDummy;
+    this.binaryBatchModel = binaryBatchModel;
+  }
+
   @Override
   public void execute() {
 
+    if (this.isDummy) {
+      dummyDataStreamer();
+    } else {
+      realDataStreamer();
+    }
 
+  }
 
+  @Override
+  public void prepare(Config cfg, TaskContext ctx) {
+    super.prepare(cfg, ctx);
+  }
+
+  public void dummyDataStreamer() {
     if (this.operationMode.equals(OperationMode.STREAMING)) {
-      double[] x = DataUtils.seedDoubleArray(features);
+      double[] x = DataUtils.seedDoubleArray(this.binaryBatchModel.getFeatures());
       Random random = new Random();
       int index = random.nextInt(2);
       double label = labels[index];
@@ -55,15 +79,15 @@ public class DataStreamer extends BaseSource {
     }
 
     if (this.operationMode.equals(OperationMode.BATCH)) {
-      double[][] data = DataUtils.generateDummyDataPoints(10, 10);
+      double[][] data = DataUtils.generateDummyDataPoints(this.binaryBatchModel.getSamples(),
+          this.binaryBatchModel.getFeatures());
       this.context.write(Constants.SimpleGraphConfig.DATA_EDGE, data);
       this.context.end(Constants.SimpleGraphConfig.DATA_EDGE);
     }
-
   }
 
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    super.prepare(cfg, ctx);
+  public void realDataStreamer() {
+    // do real data streaming
+    throw new org.apache.commons.lang.NotImplementedException("Method Not Implemented");
   }
 }

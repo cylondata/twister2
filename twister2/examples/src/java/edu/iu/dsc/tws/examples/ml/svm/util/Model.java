@@ -11,13 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.util;
 
+import java.io.Serializable;
+
 /**
  * This class contains the training model
  * This can be used to provide a single object containing all the information about the
  * trained model. This class can be extended to get the behaviors of Binary classification or
  * multi-class classification model
  */
-public abstract class Model {
+public abstract class Model implements Serializable {
+
+  private static final long serialVersionUID = -3452275060295386696L;
 
   protected int samples;
 
@@ -28,6 +32,9 @@ public abstract class Model {
   protected double[] w;
 
   protected double alpha;
+
+  public Model() {
+  }
 
   public Model(int samples, int features, double[] labels, double[] w) {
     this.samples = samples;
@@ -67,4 +74,6 @@ public abstract class Model {
   public void setAlpha(double alpha) {
     this.alpha = alpha;
   }
+
+  public abstract void saveModel(String file);
 }

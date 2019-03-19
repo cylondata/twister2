@@ -106,7 +106,7 @@ public abstract class SgdSvm implements Serializable {
 
   /**
    * This method is deprecated
-   * @deprecated
+   * @deprecated method
    * Use iterativeSGD for batch mode training
    * Use onlineSGD for streaming mode training
    * @throws NullDataSetException

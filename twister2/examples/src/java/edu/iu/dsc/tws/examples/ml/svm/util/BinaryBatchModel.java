@@ -11,11 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.util;
 
+import java.util.Arrays;
+
 /**
  * This class is an extended Model which is specialized to hold the parameters
  * involved in the Binary Batch based training
  */
 public class BinaryBatchModel extends Model {
+
+  private static final long serialVersionUID = 4109749989421999985L;
 
   private double[][] x;
 
@@ -25,14 +29,31 @@ public class BinaryBatchModel extends Model {
 
   private int iterations;
 
+  private int features;
+
+  private int samples;
+
+  private double alpha;
+
+  private double[] w;
+
+  public BinaryBatchModel() {
+  }
+
   public BinaryBatchModel(int samples, int features, double[] labels, double[] w) {
     super(samples, features, labels, w);
+    this.samples = samples;
+    this.features = features;
+    this.labels = labels;
+    this.w = w;
   }
 
   public BinaryBatchModel(int samples, int features, double[] labels, double[] w, double[][] x) {
     super(samples, features, labels, w);
     this.x = x;
     this.y = labels;
+    this.features = features;
+    this.w = w;
   }
 
   public BinaryBatchModel(int samples, int features, double[] labels, double[] w,
@@ -40,6 +61,8 @@ public class BinaryBatchModel extends Model {
     super(samples, features, labels, w, alpha);
     this.x = x;
     this.y = labels;
+    this.features = features;
+    this.alpha = alpha;
   }
 
   public BinaryBatchModel(int samples, int features, double[] labels, double[] w,
@@ -48,16 +71,20 @@ public class BinaryBatchModel extends Model {
     this.x = x;
     this.y = labels;
     this.iterations = iterations;
+    this.features = features;
+    this.samples = samples;
+    this.alpha = alpha;
   }
+
 
   @Override
   public int getSamples() {
-    return super.getSamples();
+    return  this.samples;
   }
 
   @Override
   public int getFeatures() {
-    return super.getFeatures();
+    return this.features;
   }
 
   @Override
@@ -92,5 +119,43 @@ public class BinaryBatchModel extends Model {
 
   public void setIterations(int iterations) {
     this.iterations = iterations;
+  }
+
+  public void setFeatures(int features) {
+    this.features = features;
+  }
+
+  public void setSamples(int samples) {
+    this.samples = samples;
+  }
+
+  @Override
+  public double getAlpha() {
+    return alpha;
+  }
+
+  @Override
+  public void setAlpha(double alpha) {
+    this.alpha = alpha;
+  }
+
+  public void setW(double[] w) {
+    this.w = w;
+  }
+
+  @Override
+  public void saveModel(String file) {
+    // save model
+  }
+
+  @Override
+  public String toString() {
+    return "BinaryBatchModel{"
+        + "iterations=" + iterations
+        + ", features=" + features
+        + ", samples=" + samples
+        + ", alpha=" + alpha
+        + ", w=" + Arrays.toString(w)
+        + '}';
   }
 }

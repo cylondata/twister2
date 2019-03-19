@@ -76,6 +76,17 @@ public final class DataUtils {
     return data;
   }
 
+
+  /**
+   * This method is deprecated and use the updateModelData method to update the model with
+   * data points
+   * @deprecated method
+   * @param xy data points with {y_i, x_i_1, .... x_i_d}
+   * @param iterations number of iterations
+   * @param alpha learning rate
+   * @return returns the BinaryBatchModel
+   */
+  @Deprecated
   public static BinaryBatchModel generateBinaryModel(double[][] xy, int iterations, double alpha) {
     BinaryBatchModel binaryBatchModel = null;
 
@@ -96,5 +107,41 @@ public final class DataUtils {
 
     return binaryBatchModel;
   }
+
+  /**
+   * This method updates an existing BinaryBatchModel with the data points
+   * @param binaryBatchModel Binary Batch Model
+   * @param xy data points with {y_i, x_i_1, .... x_i_d}
+   * @return returns the updated model
+   */
+  public static BinaryBatchModel updateModelData(BinaryBatchModel binaryBatchModel, double[][] xy) {
+    if (binaryBatchModel == null) {
+      throw new NullPointerException("BinaryBatchModel is null !!!");
+    } else {
+      double[] w = binaryBatchModel.getW();
+      LOG.info(String.format("W : %s ", Arrays.toString(w)));
+      int features = binaryBatchModel.getFeatures();
+      int samples = binaryBatchModel.getSamples();
+      if (xy.length > 0 && features > 0) {
+        if (xy[0].length > 0 && samples > 0) {
+          double[][] x = new double[samples][features];
+          double[] y = new double[samples];
+          for (int i = 0; i < samples; i++) {
+            y[i] = xy[i][0];
+            x[i] = Arrays.copyOfRange(xy[i], 1, features + 1);
+          }
+          binaryBatchModel.setX(x);
+          binaryBatchModel.setY(y);
+          binaryBatchModel.setW(w);
+          binaryBatchModel.setSamples(samples);
+          binaryBatchModel.setFeatures(features);
+          LOG.info(String.format("X : %s, y : %s", Arrays.toString(binaryBatchModel.getX()[0]),
+              Arrays.toString(binaryBatchModel.getY())));
+        }
+      }
+    }
+    return binaryBatchModel;
+  }
+
 
 }

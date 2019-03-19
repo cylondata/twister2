@@ -60,8 +60,17 @@ public class SVMCompute extends BaseCompute {
     this.operationMode = operationMode;
   }
 
+  public SVMCompute(BinaryBatchModel binaryBatchModel, OperationMode operationMode) {
+    this.binaryBatchModel = binaryBatchModel;
+    this.w = this.binaryBatchModel.getW();
+    this.operationMode = operationMode;
+    LOG.info(String.format("Initializing SVMCompute : %s", this.binaryBatchModel.toString()));
+    initializeStreamMode();
+  }
+
   /**
    * This constructor is called for dummy data mode
+   *
    * @param features number of features in a data point
    * @param operationMode Streaming or Batch
    */
@@ -90,7 +99,7 @@ public class SVMCompute extends BaseCompute {
           }
           this.batchDataPoints = (double[][]) ret;
           this.initializeBatchMode();
-          this.batchTraining(this.binaryBatchModel.getX(), this.binaryBatchModel.getY());
+          this.batchTraining();
           this.context.write(Constants.SimpleGraphConfig.REDUCE_EDGE, this.w);
         }
       }
@@ -121,6 +130,7 @@ public class SVMCompute extends BaseCompute {
   /**
    * This method can be used to do the online training
    * Upon the receiving IMessage with a double [] = {y_i, x_i1, ...x_id}
+   *
    * @param x1 data point with d elements
    * @param y1 label an integer [-1, +1] for binary classification
    */
@@ -138,15 +148,15 @@ public class SVMCompute extends BaseCompute {
   }
 
   /**
-   * This method is used to do batch mode training
-   * @param x1 datapoints, x1.length = number of samples x1[i] contains a data point
-   * @param y1 labels, y1.length = number of samples, y1[i] == label of i^th data point
+   * This method is used to do batch mode training   *
    */
-  public void batchTraining(double[][] x1, double[] y1) {
+  public void batchTraining() {
+    double[][] x1 = this.binaryBatchModel.getX();
+    double[] y1 = this.binaryBatchModel.getY();
     LOG.log(Level.INFO, String.format("Batch Mode Training , Samples %d, Features %d",
         x1.length, x1[0].length));
     try {
-      pegasosSgdSvm.iterativeSgd(this.w, x1, y1);
+      pegasosSgdSvm.iterativeSgd(this.binaryBatchModel.getW(), x1, y1);
       this.w = pegasosSgdSvm.getW();
     } catch (NullDataSetException e) {
       e.printStackTrace();
@@ -160,8 +170,8 @@ public class SVMCompute extends BaseCompute {
    */
   public void initializeStreamMode() {
     if (this.operationMode.equals(OperationMode.STREAMING)) {
-      this.initializeWeights();
-      pegasosSgdSvm = new PegasosSgdSvm(this.w, 0.001, 1, this.features);
+      pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(),
+          this.binaryBatchModel.getAlpha(), 1, this.binaryBatchModel.getFeatures());
     }
   }
 
@@ -170,27 +180,41 @@ public class SVMCompute extends BaseCompute {
    * This method is called per a received batch
    */
   public void initializeBatchMode() {
-    this.initializeWeights();
-    this.initializeBinaryModel(this.batchDataPoints, 100, 0.001);
-    pegasosSgdSvm = new PegasosSgdSvm(this.w, binaryBatchModel.getX(), binaryBatchModel.getY(),
-        binaryBatchModel.getAlpha(), binaryBatchModel.getIterations(),
-        binaryBatchModel.getFeatures());
-
+    this.initializeBinaryModel(this.batchDataPoints);
+    pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(), this.binaryBatchModel.getX(),
+        this.binaryBatchModel.getY(), this.binaryBatchModel.getAlpha(),
+        this.binaryBatchModel.getIterations(), this.binaryBatchModel.getFeatures());
   }
 
   /**
-   * must be initialized before main initialization
+   * This method is deprecated and in the new api the model is initialized before job submission
+   *
+   * @deprecated must be initialized before main initialization
    */
+  @Deprecated
   public void initializeBinaryModel(double[][] xy, int iterations, double alpha) {
     binaryBatchModel = DataUtils.generateBinaryModel(xy, iterations, alpha);
   }
 
   /**
+   * Binary Model is updated with received batch data
+   *
+   * @param xy data points included with label and features
+   */
+  public void initializeBinaryModel(double[][] xy) {
+    if (binaryBatchModel == null) {
+      throw new NullPointerException("Binary Batch Model is Null !!!");
+    }
+    LOG.info("Binary Batch Model Before Updated : " + this.binaryBatchModel.toString());
+    this.binaryBatchModel = DataUtils.updateModelData(this.binaryBatchModel, xy);
+    LOG.info("Binary Batch Model After Updated : " + this.binaryBatchModel.toString());
+    LOG.info(String.format("Updated Data [%d,%d] ",
+        this.binaryBatchModel.getX().length, this.binaryBatchModel.getX()[0].length));
+  }
+
+  /**
    * Initializes weights with a Gaussian distribution
    */
-  public void initializeWeights() {
-    this.wInit = DataUtils.seedDoubleArray(features);
-    this.w = wInit;
-  }
+
 
 }

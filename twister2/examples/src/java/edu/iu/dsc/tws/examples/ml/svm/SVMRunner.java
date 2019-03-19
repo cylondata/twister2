@@ -11,109 +11,192 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.dataset.DataPartition;
-import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
-import edu.iu.dsc.tws.examples.ml.svm.aggregate.ReduceAggregator;
-import edu.iu.dsc.tws.examples.ml.svm.aggregate.SVMReduce;
-import edu.iu.dsc.tws.examples.ml.svm.compute.SVMCompute;
-import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
-import edu.iu.dsc.tws.examples.ml.svm.streamer.DataStreamer;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
+import edu.iu.dsc.tws.data.utils.WorkerConstants;
+import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdRunner;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class SVMRunner extends TaskWorker {
+public final class SVMRunner {
 
   private static final Logger LOG = Logger.getLogger(SVMRunner.class.getName());
 
-  private int dataStreamerParallelism = 4;
+  private static Config config;
 
-  private int svmComputeParallelism = 4;
+  private static Options options;
 
-  private final int reduceParallelism = 1;
+  private static JobConfig jobConfig;
 
-  private int features = 10;
+  private static int workers;
 
-  @Override
-  public void execute() {
+  private static int parallelism;
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+  private static int ramMb;
 
-    OperationMode operationMode = OperationMode.BATCH;
+  private static int diskGb;
 
-    DataStreamer dataStreamer = new DataStreamer(features, operationMode);
-    SVMCompute svmCompute = new SVMCompute(features, operationMode);
-    SVMReduce svmReduce = new SVMReduce(operationMode);
+  private static int instances;
 
-    builder.addSource(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE, dataStreamer,
-        dataStreamerParallelism);
-    ComputeConnection svmComputeConnection = builder
-        .addCompute(Constants.SimpleGraphConfig.SVM_COMPUTE, svmCompute, svmComputeParallelism);
-    ComputeConnection svmReduceConnection = builder
-        .addSink(Constants.SimpleGraphConfig.SVM_REDUCE, svmReduce, reduceParallelism);
+  private static int cpus;
 
-    svmComputeConnection
-        .direct(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE,
-            Constants.SimpleGraphConfig.DATA_EDGE, DataType.OBJECT);
-    svmReduceConnection
-        .reduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
-            new ReduceAggregator(), DataType.OBJECT);
+  private static int threads;
 
-    builder.setMode(operationMode);
-    DataFlowTaskGraph graph = builder.build();
-    ExecutionPlan plan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, plan);
+  private static String jobName; // aka expName
 
-    LOG.info("Task Graph Executed !!! ");
-
-    if (operationMode.equals(OperationMode.BATCH)) {
-      DataObject<double[]> dataSet = taskExecutor.getOutput(graph, plan,
-          Constants.SimpleGraphConfig.SVM_REDUCE);
-      DataPartition<double[]> values = dataSet.getPartitions()[0];
-      DataPartitionConsumer<double[]> dataPartitionConsumer = values.getConsumer();
-      //LOG.info("Final Receive  : " + dataPartitionConsumer.hasNext());
-      while (dataPartitionConsumer.hasNext()) {
-        LOG.info("Final Aggregated Values Are:"
-            + Arrays.toString(dataPartitionConsumer.next()));
-      }
-    }
-
-  }
+  private SVMRunner() { }
 
   public static void main(String[] args) {
     LOG.log(Level.INFO, "SVM Simple Config");
 
-    // first load the configurations from command line and config files
-    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+    try {
+      initCmdArgs(args);
+      printArgs();
+      submitJob();
+    } catch (ParseException e) {
+      e.printStackTrace();
+    }
 
+  }
+
+  /**
+   * This method is used to initialize parameters need to run the program
+   * @param args
+   * @throws ParseException
+   */
+  public static void initCmdArgs(String[] args) throws ParseException {
+    // first load the configurations from command line and config files
+    config = ResourceAllocator.loadConfig(new HashMap<>());
+    options = new Options();
+    // Job Submission parameters
+    options.addOption(WorkerConstants.WORKERS, true, "Workers");
+    options.addOption(WorkerConstants.CPUS_PER_NODE, true, "Number of Cpus per Worker");
+    options.addOption(WorkerConstants.RAM_MB, true, "RAM Per Worker");
+    options.addOption(WorkerConstants.DISK_GB, true, "Disk Size Allocation");
+    options.addOption(WorkerConstants.INSTANCES, true, "Instances");
+    options.addOption(WorkerConstants.PARALLELISM, true, "Overall Parallelism");
+    options.addOption(WorkerConstants.THREADS_PER_WORKER, true, "Threads Per Worker");
+
+
+    //Directory based Parameters [optional parameters when running the dummy data mode
+    options.addOption(Utils.createOption(MLDataObjectConstants.TRAINING_DATA_DIR,
+        true, "Training data directory", false));
+    options.addOption(Utils.createOption(MLDataObjectConstants.TESTING_DATA_DIR,
+        true, "Testing data directory", false));
+    options.addOption(Utils.createOption(MLDataObjectConstants.CROSS_VALIDATION_DATA_DIR,
+        true, "Training data directory", false));
+    options.addOption(Utils.createOption(MLDataObjectConstants.MODEL_SAVE_PATH,
+        true, "Model Save Directory", false));
+
+    // optional running choice based params
+    options.addOption(MLDataObjectConstants.DUMMY, false, "Dummy data used for experiment");
+    options.addOption(MLDataObjectConstants.STREAMING, false, "Streaming mode");
+    options.addOption(MLDataObjectConstants.SPLIT, false, "Split Data");
+    options.addOption(Utils.createOption(MLDataObjectConstants.RATIO,
+        true, "Data Split Ratio [0.60,0.20,0.20]", false));
+
+    // parameters to run the algorithm
+    options.addOption(MLDataObjectConstants.SgdSvmDataObjectConstants.ALPHA, true,
+        "Learning Rate");
+    options.addOption(MLDataObjectConstants.SgdSvmDataObjectConstants.C, true,
+        "C (constraint)");
+    options.addOption(MLDataObjectConstants.SgdSvmDataObjectConstants.EXP_NAME, true,
+        "Experiment Name");
+    options.addOption(MLDataObjectConstants.SgdSvmDataObjectConstants.FEATURES, true,
+        "Features in a data point");
+    options.addOption(MLDataObjectConstants.SgdSvmDataObjectConstants.SAMPLES, true,
+        "Samples in the data set");
+    options.addOption(Utils.createOption(MLDataObjectConstants.SgdSvmDataObjectConstants.ITERATIONS,
+        true, "Iterations", false));
+
+    CommandLineParser commandLineParser = new DefaultParser();
+    CommandLine cmd = commandLineParser.parse(options, args);
     // build JobConfig
+    jobConfig = new JobConfig();
+
+    workers = Integer.parseInt(cmd.getOptionValue(WorkerConstants.WORKERS));
+    cpus = Integer.parseInt(cmd.getOptionValue(WorkerConstants.CPUS_PER_NODE));
+    ramMb = Integer.parseInt(cmd.getOptionValue(WorkerConstants.RAM_MB));
+    diskGb = Integer.parseInt(cmd.getOptionValue(WorkerConstants.DISK_GB));
+    instances = Integer.parseInt(cmd.getOptionValue(WorkerConstants.INSTANCES));
+    parallelism = Integer.parseInt(cmd.getOptionValue(WorkerConstants.PARALLELISM));
+    threads = Integer.parseInt(cmd.getOptionValue(WorkerConstants.THREADS_PER_WORKER));
+
+    jobConfig.put(WorkerConstants.WORKERS, workers);
+    jobConfig.put(WorkerConstants.CPUS_PER_NODE, cpus);
+    jobConfig.put(WorkerConstants.RAM_MB, ramMb);
+    jobConfig.put(WorkerConstants.DISK_GB, diskGb);
+    jobConfig.put(WorkerConstants.INSTANCES, instances);
+    jobConfig.put(WorkerConstants.PARALLELISM, parallelism);
+
+    jobConfig.put(MLDataObjectConstants.TRAINING_DATA_DIR,
+        cmd.getOptionValue(MLDataObjectConstants.TRAINING_DATA_DIR));
+    jobConfig.put(MLDataObjectConstants.TESTING_DATA_DIR,
+        cmd.getOptionValue(MLDataObjectConstants.TESTING_DATA_DIR));
+    jobConfig.put(MLDataObjectConstants.CROSS_VALIDATION_DATA_DIR,
+        cmd.getOptionValue(MLDataObjectConstants.CROSS_VALIDATION_DATA_DIR));
+    jobConfig.put(MLDataObjectConstants.MODEL_SAVE_PATH,
+        cmd.getOptionValue(MLDataObjectConstants.MODEL_SAVE_PATH));
+
+
+    jobConfig.put(MLDataObjectConstants.DUMMY, cmd.hasOption(MLDataObjectConstants.DUMMY));
+    jobConfig.put(MLDataObjectConstants.STREAMING, cmd.hasOption(MLDataObjectConstants.STREAMING));
+    jobConfig.put(MLDataObjectConstants.SPLIT, cmd.hasOption(MLDataObjectConstants.SPLIT));
+    jobConfig.put(MLDataObjectConstants.RATIO,
+        cmd.getOptionValue(MLDataObjectConstants.RATIO));
+
+    jobConfig.put(MLDataObjectConstants.SgdSvmDataObjectConstants.ALPHA,
+        Double.parseDouble(cmd
+            .getOptionValue(MLDataObjectConstants.SgdSvmDataObjectConstants.ALPHA)));
+    jobConfig.put(MLDataObjectConstants.SgdSvmDataObjectConstants.C,
+        Double.parseDouble(cmd
+            .getOptionValue(MLDataObjectConstants.SgdSvmDataObjectConstants.C)));
+    jobConfig.put(MLDataObjectConstants.SgdSvmDataObjectConstants.FEATURES,
+        Integer.parseInt(cmd
+            .getOptionValue(MLDataObjectConstants.SgdSvmDataObjectConstants.FEATURES)));
+    jobConfig.put(MLDataObjectConstants.SgdSvmDataObjectConstants.SAMPLES,
+        Integer.parseInt(cmd
+            .getOptionValue(MLDataObjectConstants.SgdSvmDataObjectConstants.SAMPLES)));
+    jobConfig.put(MLDataObjectConstants.SgdSvmDataObjectConstants.ITERATIONS,
+        Integer.parseInt(cmd
+            .getOptionValue(MLDataObjectConstants.SgdSvmDataObjectConstants.ITERATIONS)));
+
+    jobName = cmd.getOptionValue(MLDataObjectConstants.SgdSvmDataObjectConstants.EXP_NAME);
+    jobConfig.put(MLDataObjectConstants.SgdSvmDataObjectConstants.EXP_NAME, jobName);
+
+  }
+
+  public static void submitJob() {
     HashMap<String, Object> configurations = new HashMap<>();
-    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, threads);
     //build the job
-    JobConfig jobConfig = new JobConfig();
+
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("SVMRunner");
-    jobBuilder.setWorkerClass(SVMRunner.class.getName());
-    jobBuilder.addComputeResource(2, 512, 1.0, 1);
+    jobBuilder.setJobName(jobName);
+    jobBuilder.setWorkerClass(SvmSgdRunner.class.getName());
+    jobBuilder.addComputeResource(cpus, ramMb, diskGb, instances);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
     Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
+
+  public static void printArgs() {
+    LOG.info(jobConfig.toString());
+  }
+
 }
