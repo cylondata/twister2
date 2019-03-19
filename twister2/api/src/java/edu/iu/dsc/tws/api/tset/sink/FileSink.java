@@ -36,6 +36,11 @@ public class FileSink<T> implements Sink<T> {
   }
 
   @Override
+  public void prepare() {
+
+  }
+
+  @Override
   public void close() {
     output.close();
   }

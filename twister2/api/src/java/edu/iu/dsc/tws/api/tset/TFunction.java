@@ -19,7 +19,8 @@ import java.util.Map;
  */
 public interface TFunction extends Serializable {
 
-  TSetContext CONTEXT = new TSetContext();
+  @SuppressWarnings("all")
+  TSetContext context = new TSetContext();
 
   /**
    * Prepare the function
@@ -27,14 +28,19 @@ public interface TFunction extends Serializable {
    * @param context CONTEXT
    */
   default void prepare(TSetContext context) {
-    this.CONTEXT.setConfig(context.getConfig());
-    this.CONTEXT.settSetIndex(context.gettSetIndex());
-    this.CONTEXT.settSetId(context.gettSetId());
-    this.CONTEXT.settSetName(context.gettSetName());
-    this.CONTEXT.setParallelism(context.getParallelism());
-    this.CONTEXT.setConfig(context.getConfig());
-    this.CONTEXT.setWorkerId(context.getWorkerId());
-    this.CONTEXT.addInputMap(context.getInputMap());
+    this.context.setConfig(context.getConfig());
+    this.context.settSetIndex(context.getIndex());
+    this.context.settSetId(context.getId());
+    this.context.settSetName(context.gettSetName());
+    this.context.setParallelism(context.getParallelism());
+    this.context.setConfig(context.getConfig());
+    this.context.setWorkerId(context.getWorkerId());
+    this.context.addInputMap(context.getInputMap());
+    prepare();
+  }
+
+  default void prepare() {
+
   }
 
   /**
@@ -44,26 +50,27 @@ public interface TFunction extends Serializable {
    * @return the object associated with the given key, null if the key is not present
    */
   default Object getInput(String key) {
-    return CONTEXT.getInputMap().get(key);
+    return context.getInputMap().get(key);
   }
 
   /**
-   * Adds the given key value pair into the {@link TFunction#CONTEXT} input map
+   * Adds the given key value pair into the input map
    *
    * @param key the key to be added
    * @param input the value associated with the key
    */
   default void addInput(String key, Cacheable<?> input) {
-    CONTEXT.getInputMap().put(key, input);
+    context.getInputMap().put(key, input);
   }
 
   /**
    * Adds the given map into the input map
    *
    * @param map map that contains key, input pairs that need to be added into
-   * the {@link TFunction#CONTEXT} input map
+   * the  input map
    */
   default void addInputs(Map<String, Cacheable<?>> map) {
-    CONTEXT.getInputMap().putAll(map);
+    context.getInputMap().putAll(map);
   }
 }
+

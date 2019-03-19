@@ -88,6 +88,11 @@ public class FileSource<T> implements Source<T> {
     this.currentSplit = getNextSplit(context.getIndex());
   }
 
+  @Override
+  public void prepare() {
+
+  }
+
   private InputSplit<T> getNextSplit(int id) {
     InputSplitAssigner<T> assigner = inputPartitioner.getInputSplitAssigner(splits);
     InputSplit<T> split = assigner.getNextInputSplit("localhost", id);

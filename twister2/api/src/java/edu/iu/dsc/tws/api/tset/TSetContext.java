@@ -203,16 +203,8 @@ public class TSetContext {
     inputMap.put(key, data);
   }
 
-  public int gettSetIndex() {
-    return tSetIndex;
-  }
-
   protected void settSetIndex(int tSetIndex) {
     this.tSetIndex = tSetIndex;
-  }
-
-  public int gettSetId() {
-    return tSetId;
   }
 
   protected void settSetId(int tSetId) {

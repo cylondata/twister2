@@ -63,4 +63,9 @@ public class CacheSource<T> implements Source<T> {
   private DataObject<T> getDataObject() {
     return datapoints;
   }
+
+  @Override
+  public void prepare() {
+
+  }
 }

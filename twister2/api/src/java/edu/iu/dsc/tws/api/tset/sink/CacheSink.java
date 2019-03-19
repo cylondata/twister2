@@ -43,4 +43,9 @@ public class CacheSink<T> implements Sink<T> {
     datapoints.addPartition(new EntityPartition<T>(curr, value)); //
     return false;
   }
+
+  @Override
+  public void prepare() {
+
+  }
 }
