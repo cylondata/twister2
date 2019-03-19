@@ -53,7 +53,7 @@ public class TSetKeyedReduceExample extends BaseTSetBatchWorker {
       public boolean add(int[] value) {
         experimentData.setOutput(value);
         try {
-          LOG.info("Task Id : " + CONTEXT.getIndex() + " Results " + Arrays.toString(value));
+          LOG.info("Task Id : " + context.getIndex() + " Results " + Arrays.toString(value));
           verify(OperationNames.REDUCE);
         } catch (VerificationException e) {
           LOG.info("Exception Message : " + e.getMessage());

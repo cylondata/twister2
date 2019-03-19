@@ -41,7 +41,7 @@ public class TSetReplicateExample extends BaseTSetBatchWorker {
       @Override
       public boolean add(int[] value) {
         experimentData.setOutput(value);
-        LOG.info("Task Id : " + CONTEXT.getIndex() + " Results " + Arrays.toString(value));
+        LOG.info("Task Id : " + context.getIndex() + " Results " + Arrays.toString(value));
         try {
           verify(OperationNames.BROADCAST);
         } catch (VerificationException e) {

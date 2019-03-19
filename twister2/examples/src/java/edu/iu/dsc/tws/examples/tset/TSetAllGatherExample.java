@@ -40,7 +40,7 @@ public class TSetAllGatherExample extends BaseTSetBatchWorker {
     gather.sink(new Sink<int[]>() {
       @Override
       public boolean add(int[] value) {
-        LOG.info("Task Id : " + CONTEXT.getIndex() + " Results " + Arrays.toString(value));
+        LOG.info("Task Id : " + context.getIndex() + " Results " + Arrays.toString(value));
         experimentData.setOutput(value);
         try {
           verify(OperationNames.ALLGATHER);
@@ -52,6 +52,11 @@ public class TSetAllGatherExample extends BaseTSetBatchWorker {
 
       @Override
       public void prepare(TSetContext context) {
+      }
+
+      @Override
+      public void prepare() {
+
       }
     }, sourceParallelism);
   }

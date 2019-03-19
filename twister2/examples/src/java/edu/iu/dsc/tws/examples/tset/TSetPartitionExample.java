@@ -42,7 +42,7 @@ public class TSetPartitionExample extends BaseTSetBatchWorker {
     partition.sink(new Sink<int[]>() {
       @Override
       public boolean add(int[] value) {
-        LOG.info("Task Id : " + CONTEXT.getIndex() + " Results " + Arrays.toString(value));
+        LOG.info("Task Id : " + context.getIndex() + " Results " + Arrays.toString(value));
         experimentData.setOutput(value);
         try {
           verify(OperationNames.PARTITION);

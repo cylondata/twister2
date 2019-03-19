@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
-import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.common.config.Config;
@@ -83,8 +82,13 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     @Override
     public double[][] map(double[][] doubles) {
       //TODO: cast needed since the context inputmap can hold many types of TSets, Solution?
-      List<double[][]> centers = (List<double[][]>) CONTEXT.getInput("centers").getData();
+      List<double[][]> centers = (List<double[][]>) context.getInput("centers").getData();
       return new double[0][];
+    }
+
+    @Override
+    public void prepare() {
+
     }
   }
 
@@ -94,13 +98,19 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     public double[][] map(double[][] doubles) {
       return new double[0][];
     }
+
+    @Override
+    public void prepare() {
+
+    }
   }
 
   public class PointsSource implements Source<double[][]> {
 
     @Override
-    public void prepare(TSetContext context) {
+    public void prepare() {
       LOG.info("Context Prepare Task Index:" + context.getIndex());
+      LOG.info("+++++++++++++ " + context.getWorkerId() + " : " + context.getIndex());
 
       int para = context.getParallelism();
       Config cfg = context.getConfig();
@@ -141,24 +151,28 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
     @Override
     public double[][] next() {
-      LOG.fine("Context Task Index:" + CONTEXT.getIndex());
-      InputSplit inputSplit = source.getNextSplit(CONTEXT.getIndex());
+      LOG.fine("Context Task Index:" + context.getIndex());
+      InputSplit inputSplit = source.getNextSplit(context.getIndex());
       int totalCount = 0;
       while (inputSplit != null) {
         try {
           int count = 0;
           while (!inputSplit.reachedEnd()) {
             String value = (String) inputSplit.nextRecord(null);
+            if (value == null) {
+              break;
+            }
             String[] splts = value.split(",");
             for (int i = 0; i < dimension; i++) {
-              localPoints[count][i] = Double.valueOf(splts[i]);
+//              localPoints[count][i] = Double.valueOf(splts[i]);
             }
             if (value != null) {
               count += 1;
             }
           }
-          inputSplit = source.getNextSplit(CONTEXT.getIndex());
-          LOG.info("Task index:" + CONTEXT.getIndex() + " count: " + count);
+          LOG.info(context.getIndex() + " Counts : " + count);
+          inputSplit = source.getNextSplit(context.getIndex());
+          LOG.info("Task index:" + context.getIndex() + " count: " + count);
         } catch (IOException e) {
           LOG.log(Level.SEVERE, "Failed to read the input", e);
         }
@@ -173,18 +187,18 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     private DataSource<double[][], InputSplit<double[][]>> source;
 
     public CenterSource() {
-      Config cfg = CONTEXT.getConfig();
+      Config cfg = context.getConfig();
       String datainputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
       int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DSIZE));
       boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
       if (!shared) {
         this.source = new DataSource(cfg, new LocalFixedInputPartitioner(new
-            Path(datainputDirectory), CONTEXT.getParallelism(), cfg, datasize),
-            CONTEXT.getParallelism());
+            Path(datainputDirectory), context.getParallelism(), cfg, datasize),
+            context.getParallelism());
       } else {
         this.source = new DataSource(cfg, new SharedTextInputPartitioner(new
-            Path(datainputDirectory), CONTEXT.getParallelism(), cfg),
-            CONTEXT.getParallelism());
+            Path(datainputDirectory), context.getParallelism(), cfg),
+            context.getParallelism());
       }
     }
 
@@ -196,6 +210,11 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     @Override
     public double[][] next() {
       return new double[0][];
+    }
+
+    @Override
+    public void prepare() {
+
     }
   }
 }
