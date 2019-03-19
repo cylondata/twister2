@@ -74,8 +74,7 @@ public class KMeansWorker extends TaskWorker {
     String dinputDirectory = kMeansJobParameters.getDatapointDirectory();
     String cinputDirectory = kMeansJobParameters.getCentroidDirectory();
 
-    double[][] datapoint;
-    double[][] centroid;
+
 
     if (workerId == 0) {
       workerUtils.generateDatapoints(dimension, numFiles, dsize, csize,
@@ -94,12 +93,8 @@ public class KMeansWorker extends TaskWorker {
     DataFlowTaskGraph datapointsTaskGraph = taskGraphBuilder.build();
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
-
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(
         datapointsTaskGraph, firstGraphExecutionPlan, "dsink");
-    DataPartition<Object> dataPointsPartition = dataPointsObject.getPartitions()[0];
-    datapoint = workerUtils.getDataPoints(dataPointsPartition.getPartitionId(),
-        dataPointsPartition, dsize, parallelismValue, dimension);
 
     /* Second Graph to read the centroids **/
     DataFileSource centroidSourceTask = new DataFileSource("direct");
@@ -117,7 +112,7 @@ public class KMeansWorker extends TaskWorker {
     DataObject<Object> centroidsDataObject = taskExecutor.getOutput(
         centroidsTaskGraph, secondGraphExecutionPlan, "csink");
     DataPartition<Object> centroidsDataPartition = centroidsDataObject.getPartitions()[0];
-    centroid = workerUtils.getCentroids(centroidsDataPartition.getPartitionId(),
+    double[][] centroid = workerUtils.getCentroids(centroidsDataPartition.getPartitionId(),
         centroidsDataPartition, csize, dimension);
 
     /* Third Graph to do the actual calculation **/
@@ -132,16 +127,14 @@ public class KMeansWorker extends TaskWorker {
     DataFlowTaskGraph kmeansTaskGraph = taskGraphBuilder.build();
 
     //Store datapoints and centroids
-    DataObject<double[][]> datapoints = new DataObjectImpl<>(config);
     DataObject<double[][]> centroids = new DataObjectImpl<>(config);
 
     for (int i = 0; i < iterations; i++) {
-      datapoints.addPartition(new EntityPartition<>(0, datapoint));
       centroids.addPartition(new EntityPartition<>(0, centroid));
 
       ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
-
-      taskExecutor.addInput(kmeansTaskGraph, plan, "kmeanssource", "points", datapoints);
+      taskExecutor.addInput(
+          kmeansTaskGraph, plan, "kmeanssource", "points", dataPointsObject);
       taskExecutor.addInput(kmeansTaskGraph, plan, "kmeanssource", "centroids", centroids);
       taskExecutor.execute(kmeansTaskGraph, plan);
 
@@ -157,11 +150,27 @@ public class KMeansWorker extends TaskWorker {
 
     private double[][] centroid = null;
     private double[][] datapoints = null;
+
     private KMeansCalculator kMeansCalculator = null;
+    private KMeansWorkerUtils workerUtils = null;
+
+    private DataObject<?> dataPointsObject = null;
+    private DataObject<?> dataObject = null;
+    private EntityPartition<?> datapointsEntityPartition = null;
 
     @Override
     public void execute() {
+      workerUtils = new KMeansWorkerUtils(config);
       int dim = Integer.parseInt(config.getStringValue("dim"));
+      int parallel = Integer.parseInt(config.getStringValue("parallelism"));
+      int dsize = Integer.parseInt(config.getStringValue("dsize"));
+
+      datapointsEntityPartition
+          = (EntityPartition<?>) dataPointsObject.getPartitions(context.taskIndex());
+      dataObject = (DataObject<?>) datapointsEntityPartition.getConsumer().next();
+      datapoints = workerUtils.getDataPoints(context.taskIndex(),
+          dataObject, dsize, parallel, dim);
+
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
       context.writeEnd("all-reduce", kMeansCenters);
@@ -170,11 +179,9 @@ public class KMeansWorker extends TaskWorker {
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataObject<?> data) {
-      LOG.log(Level.FINE, "Received input: " + name);
+      LOG.log(Level.INFO, "Received input: " + name);
       if ("points".equals(name)) {
-        DataPartition<double[][]> dataPoints = (DataPartition<double[][]>)
-            data.getPartitions()[0];
-        this.datapoints = dataPoints.getConsumer().next();
+        this.dataPointsObject = data;
       }
 
       if ("centroids".equals(name)) {
