@@ -55,7 +55,7 @@ public class KMeansDataGeneratorTest {
 
     int parallelismValue = 1;
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    DataObjectSource sourceTask = new DataObjectSource("direct");
+    DataObjectSource sourceTask = new DataObjectSource("direct", dinputDirectory);
     DataObjectSink sinkTask = new DataObjectSink();
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
@@ -89,7 +89,7 @@ public class KMeansDataGeneratorTest {
 
     int parallelismValue = 2;
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    DataObjectSource sourceTask = new DataObjectSource("direct");
+    DataObjectSource sourceTask = new DataObjectSource("direct", dinputDirectory);
     DataObjectSink sinkTask = new DataObjectSink();
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
@@ -126,7 +126,7 @@ public class KMeansDataGeneratorTest {
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
     DataFileReplicatedReadSource task = new DataFileReplicatedReadSource(
-        Context.TWISTER2_DIRECT_EDGE);
+        Context.TWISTER2_DIRECT_EDGE, cinputDirectory);
     taskGraphBuilder.addSource("map", task, parallelismValue);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
@@ -158,7 +158,7 @@ public class KMeansDataGeneratorTest {
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
     DataFileReplicatedReadSource task = new DataFileReplicatedReadSource(
-        Context.TWISTER2_DIRECT_EDGE);
+        Context.TWISTER2_DIRECT_EDGE, cinputDirectory);
     taskGraphBuilder.addSource("map", task, parallelismValue);
     taskGraphBuilder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();

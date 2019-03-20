@@ -80,7 +80,8 @@ public class KMeansWorker extends TaskWorker {
     }
 
     /* First Graph to partition and read the partitioned data points **/
-    DataObjectSource sourceTask = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE);
+    DataObjectSource sourceTask = new DataObjectSource(
+        Context.TWISTER2_DIRECT_EDGE, dinputDirectory);
     DataObjectSink sinkTask = new DataObjectSink();
     taskGraphBuilder.addSource("datapointsource", sourceTask, parallelismValue);
     ComputeConnection firstGraphComputeConnection = taskGraphBuilder.addSink(
@@ -97,7 +98,7 @@ public class KMeansWorker extends TaskWorker {
 
     /* Second Graph to read the centroids **/
     DataFileReplicatedReadSource centroidSourceTask = new DataFileReplicatedReadSource(
-        Context.TWISTER2_DIRECT_EDGE);
+        Context.TWISTER2_DIRECT_EDGE, cinputDirectory);
     DataObjectSink centroidSinkTask = new DataObjectSink();
     taskGraphBuilder.addSource("centroidsource", centroidSourceTask, parallelismValue);
     ComputeConnection secondGraphComputeConnection = taskGraphBuilder.addSink(

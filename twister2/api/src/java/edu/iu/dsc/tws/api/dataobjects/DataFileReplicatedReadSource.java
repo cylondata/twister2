@@ -23,17 +23,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.dataobjects;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.fs.FSDataInputStream;
-import edu.iu.dsc.tws.data.fs.FileStatus;
-import edu.iu.dsc.tws.data.fs.FileSystem;
+import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
+import edu.iu.dsc.tws.dataset.DataSource;
+import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
+import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
@@ -47,20 +49,29 @@ public class DataFileReplicatedReadSource extends BaseSource {
 
   private static final long serialVersionUID = -1L;
 
-  private String fileDirectory;
-  private int dimension;
-  private int datasize;
-  private String fileSystem = null;
+  /**
+   * DataSource to partition the datapoints
+   */
+  private DataSource<?, ?> source;
 
-  private FileSystem fs = null;
-  private FSDataInputStream fdis;
   /**
    * Edge name to write the partitoned datapoints
    */
   private String edgeName;
 
-  public DataFileReplicatedReadSource(String edgename) {
+  private String dataDirectory;
+
+  public String getDataDirectory() {
+    return dataDirectory;
+  }
+
+  public void setDataDirectory(String dataDirectory) {
+    this.dataDirectory = dataDirectory;
+  }
+
+  public DataFileReplicatedReadSource(String edgename, String directory) {
     this.edgeName = edgename;
+    this.dataDirectory = directory;
   }
 
   /**
@@ -87,36 +98,36 @@ public class DataFileReplicatedReadSource extends BaseSource {
    */
   @Override
   public void execute() {
-    try {
-      Path path = new Path(fileDirectory);
-      final FileStatus pathFile;
-      fs = path.getFileSystem(config);
-      if ("hdfs".equals(fileSystem)) {
-        pathFile = fs.getFileStatus(path);
-        this.fdis = fs.open(pathFile.getPath());
-      } else {
-        for (FileStatus file : fs.listFiles(path)) {
-          this.fdis = fs.open(file.getPath());
+    LOG.fine("Context Task Index:" + context.taskIndex() + "\t" + getEdgeName());
+    InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
+    while (inputSplit != null) {
+      try {
+        while (!inputSplit.reachedEnd()) {
+          Object value = inputSplit.nextRecord(null);
+          if (value != null) {
+            context.write(getEdgeName(), value);
+          }
         }
+        inputSplit = source.getNextSplit(context.taskIndex());
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Failed to read the input", e);
       }
-      BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(this.fdis));
-      Object line;
-      while ((line = bufferedReader.readLine()) != null) {
-        context.write(getEdgeName(), line);
-      }
-      bufferedReader.close();
-      fdis.close();
-    } catch (IOException ioe) {
-      throw new RuntimeException("IOException Occured", ioe);
     }
     context.end(getEdgeName());
   }
 
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
-    fileSystem = cfg.getStringValue(DataObjectConstants.ARGS_FILE_SYSTEM);
-    fileDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
-    dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DIMENSIONS));
-    datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_CSIZE));
+
+    ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+    boolean shared = cfg.getBooleanValue(DataObjectConstants.SHARED_FILE_SYSTEM);
+
+    if (!shared) {
+      this.source = runtime.createInput(cfg, context, new LocalCompleteTextInputPartitioner(
+          new Path(getDataDirectory()), context.getParallelism(), config));
+    } else {
+      this.source = runtime.createInput(cfg, context, new SharedTextInputPartitioner(
+          new Path(getDataDirectory()), context.getParallelism(), config));
+    }
   }
 }

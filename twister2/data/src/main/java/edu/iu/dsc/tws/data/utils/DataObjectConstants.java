@@ -20,16 +20,16 @@ public class DataObjectConstants {
   protected DataObjectConstants() {
   }
 
-  public static final String ARGS_WORKERS = "workers";
-  public static final String ARGS_DIMENSIONS = "dim";
-  public static final String ARGS_PARALLELISM_VALUE = "parallelism";
-  public static final String ARGS_SHARED_FILE_SYSTEM = "fShared";
-  public static final String ARGS_DSIZE = "dsize";
-  public static final String ARGS_CSIZE = "csize";
-  public static final String ARGS_DINPUT_DIRECTORY = "dinput";
-  public static final String ARGS_CINPUT_DIRECTORY = "cinput";
-  public static final String ARGS_OUTPUT_DIRECTORY = "output";
-  public static final String ARGS_NUMBER_OF_FILES = "nFiles";
-  public static final String ARGS_FILE_SYSTEM = "filesys";
+  public static final String WORKERS = "workers";
+  public static final String DIMENSIONS = "dim";
+  public static final String PARALLELISM_VALUE = "parallelism";
+  public static final String SHARED_FILE_SYSTEM = "fShared";
+  public static final String DSIZE = "dsize";
+  public static final String CSIZE = "csize";
+  public static final String DINPUT_DIRECTORY = "dinput";
+  public static final String CINPUT_DIRECTORY = "cinput";
+  public static final String OUTPUT_DIRECTORY = "output";
+  public static final String NUMBER_OF_FILES = "nFiles";
+  public static final String FILE_SYSTEM = "filesys";
   public static final String ARGS_ITERATIONS = "iter";
 }

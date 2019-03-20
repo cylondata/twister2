@@ -52,7 +52,7 @@ public class DataFileSink<T> extends BaseSink implements Collector {
   @Override
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
-    String outDir = cfg.getStringValue(DataObjectConstants.ARGS_OUTPUT_DIRECTORY);
+    String outDir = cfg.getStringValue(DataObjectConstants.OUTPUT_DIRECTORY);
     this.datasink = new DataSink<>(cfg,
         new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
   }
