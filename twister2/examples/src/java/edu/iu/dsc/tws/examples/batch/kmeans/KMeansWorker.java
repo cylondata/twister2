@@ -80,8 +80,8 @@ public class KMeansWorker extends TaskWorker {
     }
 
     /* First Graph to partition and read the partitioned data points **/
-    DataObjectSource sourceTask = new DataObjectSource(
-        Context.TWISTER2_DIRECT_EDGE, dinputDirectory);
+    DataObjectSource sourceTask = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
+        dinputDirectory);
     DataObjectSink sinkTask = new DataObjectSink();
     taskGraphBuilder.addSource("datapointsource", sourceTask, parallelismValue);
     ComputeConnection firstGraphComputeConnection = taskGraphBuilder.addSink(

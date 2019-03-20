@@ -29,10 +29,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
-import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
-import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
@@ -118,16 +116,8 @@ public class DataFileReplicatedReadSource extends BaseSource {
 
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
-
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    boolean shared = cfg.getBooleanValue(DataObjectConstants.SHARED_FILE_SYSTEM);
-
-    if (!shared) {
-      this.source = runtime.createInput(cfg, context, new LocalCompleteTextInputPartitioner(
+    this.source = runtime.createInput(cfg, context, new LocalCompleteTextInputPartitioner(
           new Path(getDataDirectory()), context.getParallelism(), config));
-    } else {
-      this.source = runtime.createInput(cfg, context, new SharedTextInputPartitioner(
-          new Path(getDataDirectory()), context.getParallelism(), config));
-    }
   }
 }
