@@ -122,7 +122,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
         }
         return true;
       }
-
+      LOG.info(String.format("%d got message", executor));
       List<Object> targetMsgList = targetMessages.get(target);
       if (targetMsgList == null) {
         throw new RuntimeException(String.format("%d target not exists %d %s", executor, target,
@@ -152,6 +152,8 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
           Iterator<Map.Entry<Integer, List<Object>>> it = targetMessages.entrySet().iterator();
           while (it.hasNext()) {
             Map.Entry<Integer, List<Object>> e = it.next();
+            LOG.info(String.format("%d Calling Receiver", executor));
+
             if (receiver.receive(e.getKey(), e.getValue().iterator())) {
               it.remove();
             } else {
