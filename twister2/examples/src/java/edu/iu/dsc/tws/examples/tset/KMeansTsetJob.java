@@ -115,11 +115,11 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
       int para = context.getParallelism();
       Config cfg = context.getConfig();
-      this.dataSize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DSIZE));
-      this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DIMENSIONS));
-      String datainputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
-      int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DSIZE));
-      boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
+      this.dataSize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
+      this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
+      String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
+      int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
+      boolean shared = cfg.getBooleanValue(DataObjectConstants.SHARED_FILE_SYSTEM);
 
       //The +1 in the array size is because of a data balancing bug
       localPoints = new double[dataSize / para + 1][dimension];
@@ -189,9 +189,9 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
     public CenterSource() {
       Config cfg = context.getConfig();
-      String datainputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
-      int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DSIZE));
-      boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
+      String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
+      int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
+      boolean shared = cfg.getBooleanValue(DataObjectConstants.SHARED_FILE_SYSTEM);
       if (!shared) {
         this.source = new DataSource(cfg, new LocalFixedInputPartitioner(new
             Path(datainputDirectory), context.getParallelism(), cfg, datasize),

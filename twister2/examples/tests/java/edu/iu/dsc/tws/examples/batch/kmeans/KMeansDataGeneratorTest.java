@@ -17,13 +17,14 @@ import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.dataobjects.DataFileReadSource;
+import edu.iu.dsc.tws.api.dataobjects.DataFileReplicatedReadSource;
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSink;
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
@@ -41,6 +42,41 @@ public class KMeansDataGeneratorTest {
   private static final Logger LOG = Logger.getLogger(KMeansDataGeneratorTest.class.getName());
 
   @Test
+  public void testUniqueSchedules1() throws IOException {
+    Config config = getConfig();
+
+    int numFiles = 1;
+    int dsize = 20;
+    int dimension = 2;
+    String dinputDirectory = "/tmp/testdinput";
+
+    KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
+        numFiles, dsize, 100, dimension, config);
+
+    int parallelismValue = 1;
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    DataObjectSource sourceTask = new DataObjectSource("direct", dinputDirectory);
+    DataObjectSink sinkTask = new DataObjectSink();
+    taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
+    ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
+        parallelismValue);
+    computeConnection1.direct("source", "direct", DataType.OBJECT);
+    taskGraphBuilder.setMode(OperationMode.BATCH);
+
+    LocalTextInputPartitioner localTextInputPartitioner = new
+        LocalTextInputPartitioner(new Path(dinputDirectory), parallelismValue, config);
+
+    DataSource<String, ?> source
+        = new DataSource<>(config, localTextInputPartitioner, parallelismValue);
+
+    InputSplit<String> inputSplit;
+    for (int i = 0; i < parallelismValue; i++) {
+      inputSplit = source.getNextSplit(i);
+      Assert.assertNotNull(inputSplit);
+    }
+  }
+
+  @Test
   public void testUniqueSchedules2() throws IOException {
     Config config = getConfig();
 
@@ -53,7 +89,7 @@ public class KMeansDataGeneratorTest {
 
     int parallelismValue = 2;
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    DataObjectSource sourceTask = new DataObjectSource("direct");
+    DataObjectSource sourceTask = new DataObjectSource("direct", dinputDirectory);
     DataObjectSink sinkTask = new DataObjectSink();
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
@@ -75,40 +111,6 @@ public class KMeansDataGeneratorTest {
   }
 
   @Test
-  public void testUniqueSchedules1() throws IOException {
-    Config config = getConfig();
-
-    int numFiles = 1;
-    int dsize = 20;
-    int dimension = 2;
-    String dinputDirectory = "/tmp/testdinput";
-
-    KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
-        numFiles, dsize, 100, dimension, config);
-
-    int parallelismValue = 1;
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    DataObjectSource sourceTask = new DataObjectSource("direct");
-    DataObjectSink sinkTask = new DataObjectSink();
-    taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
-    ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
-        parallelismValue);
-    computeConnection1.direct("source", "direct", DataType.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
-
-    LocalTextInputPartitioner localTextInputPartitioner = new
-        LocalTextInputPartitioner(new Path(dinputDirectory), parallelismValue, config);
-
-    DataSource<String, ?> source
-        = new DataSource<>(config, localTextInputPartitioner, parallelismValue);
-
-    InputSplit<String> inputSplit;
-    for (int i = 0; i < parallelismValue; i++) {
-      inputSplit = source.getNextSplit(i);
-      Assert.assertNotNull(inputSplit);
-    }
-  }
-  @Test
   public void testUniqueSchedules3() throws IOException {
     Config config = getConfig();
 
@@ -123,7 +125,8 @@ public class KMeansDataGeneratorTest {
 
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
-    DataFileReadSource task = new DataFileReadSource();
+    DataFileReplicatedReadSource task = new DataFileReplicatedReadSource(
+        Context.TWISTER2_DIRECT_EDGE, cinputDirectory);
     taskGraphBuilder.addSource("map", task, parallelismValue);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
@@ -154,7 +157,8 @@ public class KMeansDataGeneratorTest {
 
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
-    DataFileReadSource task = new DataFileReadSource();
+    DataFileReplicatedReadSource task = new DataFileReplicatedReadSource(
+        Context.TWISTER2_DIRECT_EDGE, cinputDirectory);
     taskGraphBuilder.addSource("map", task, parallelismValue);
     taskGraphBuilder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();

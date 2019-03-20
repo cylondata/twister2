@@ -31,9 +31,9 @@ import edu.iu.dsc.tws.task.api.TaskContext;
  * to partition the datapoints. Finally, write the partitioned datapoints into their respective
  * edges.
  */
-public class DataObjectSource<T> extends BaseSource {
+public class DataFileSplittedReadSource<T> extends BaseSource {
 
-  private static final Logger LOG = Logger.getLogger(DataObjectSource.class.getName());
+  private static final Logger LOG = Logger.getLogger(DataFileSplittedReadSource.class.getName());
 
   private static final long serialVersionUID = -1L;
 
@@ -46,12 +46,8 @@ public class DataObjectSource<T> extends BaseSource {
    * Edge name to write the partitoned datapoints
    */
   private String edgeName;
-  private String dataDirectory;
 
-  public DataObjectSource(String edgename, String dataDirectory) {
-    this.edgeName = edgename;
-    this.dataDirectory = dataDirectory;
-  }
+  private String dataDirectory;
 
   public String getDataDirectory() {
     return dataDirectory;
@@ -59,6 +55,10 @@ public class DataObjectSource<T> extends BaseSource {
 
   public void setDataDirectory(String dataDirectory) {
     this.dataDirectory = dataDirectory;
+  }
+
+  public DataFileSplittedReadSource(String edgename) {
+    this.edgeName = edgename;
   }
 
   /**
@@ -85,6 +85,7 @@ public class DataObjectSource<T> extends BaseSource {
   public void execute() {
     LOG.fine("Context Task Index:" + context.taskIndex() + "\t" + getEdgeName());
     InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
+    int totalCount = 0;
     while (inputSplit != null) {
       try {
         int count = 0;
@@ -93,6 +94,7 @@ public class DataObjectSource<T> extends BaseSource {
           if (value != null) {
             context.write(getEdgeName(), value);
             count += 1;
+            totalCount += 1;
           }
         }
         inputSplit = source.getNextSplit(context.taskIndex());
@@ -103,6 +105,11 @@ public class DataObjectSource<T> extends BaseSource {
     context.end(getEdgeName());
   }
 
+  /**
+   * Retrieve the data input directory using the DataObjectConstants and the config file.
+   * @param cfg
+   * @param context
+   */
   @Override
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
