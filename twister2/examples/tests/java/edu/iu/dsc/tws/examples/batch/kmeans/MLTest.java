@@ -13,15 +13,17 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.Arrays;
 
+
 import org.junit.Test;
 
-import edu.iu.dsc.tws.examples.ml.svm.util.DataGenerator;
+import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
+
 
 public class MLTest {
 
   @Test
   public void testDataGen() {
-    double[] ar = DataGenerator.seedDoubleArray(10);
+    double[] ar = DataUtils.seedDoubleArray(10);
     System.out.println(Arrays.toString(ar));
   }
 
