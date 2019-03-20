@@ -50,6 +50,7 @@ java_tests(
     test_classes = [
         "edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGeneratorTest",
         "edu.iu.dsc.tws.examples.batch.kmeans.TaskGraphBuildTest",
+        "edu.iu.dsc.tws.examples.batch.kmeans.MLTest",
     ],
     runtime_deps = [
         ":examples-tests",
@@ -61,6 +62,7 @@ java_tests_debug(
     test_classes = [
         "edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGeneratorTest",
         "edu.iu.dsc.tws.examples.batch.kmeans.TaskGraphBuildTest",
+        "edu.iu.dsc.tws.examples.batch.kmeans.MLTest",
     ],
     runtime_deps = [
         ":examples-tests",
