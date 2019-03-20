@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -106,14 +105,8 @@ public class KMeansWorker extends TaskWorker {
     DataFlowTaskGraph centroidsTaskGraph = taskGraphBuilder.build();
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
     taskExecutor.execute(centroidsTaskGraph, secondGraphExecutionPlan);
-
     DataObject<Object> centroidsDataObject = taskExecutor.getOutput(
         centroidsTaskGraph, secondGraphExecutionPlan, "centroidsink");
-
-    /*DataPartition<Object> centroidsDataPartition = centroidsDataObject.getPartitions()[0];
-    double[][] centroid1 = workerUtils.getCentroids(centroidsDataPartition.getPartitionId(),
-        centroidsDataPartition, csize, dimension);
-    LOG.info("Initial Centroid Values are:" + Arrays.deepToString(centroid1));*/
 
     /* Third Graph to do the actual calculation **/
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
@@ -126,19 +119,13 @@ public class KMeansWorker extends TaskWorker {
     taskGraphBuilder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph kmeansTaskGraph = taskGraphBuilder.build();
 
-    //Store datapoints and centroids
-    DataObject<double[][]> centroids = new DataObjectImpl<>(config);
-
     double[][] centroid = null;
     for (int i = 0; i < iterations; i++) {
-      //centroids.addPartition(new EntityPartition<>(0, centroid));
-
       ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
       taskExecutor.addInput(
           kmeansTaskGraph, plan, "kmeanssource", "points", dataPointsObject);
       taskExecutor.addInput(
           kmeansTaskGraph, plan, "kmeanssource", "centroids", centroidsDataObject);
-      //taskExecutor.addInput(kmeansTaskGraph, plan, "kmeanssource", "centroids", centroids);
       taskExecutor.execute(kmeansTaskGraph, plan);
 
       DataObject<double[][]> dataSet = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
@@ -158,31 +145,14 @@ public class KMeansWorker extends TaskWorker {
     private KMeansWorkerUtils workerUtils = null;
 
     private DataObject<?> dataPointsObject = null;
-    private DataObject<?> dataObject = null;
-    private EntityPartition<Object> datapointsEntityPartition = null;
-
     private DataObject<?> centroidsObject = null;
-    private DataObject<?> centroidObject = null;
-    private EntityPartition<Object> centroidsEntityPartition = null;
 
     @Override
     public void execute() {
       workerUtils = new KMeansWorkerUtils(config);
       int dim = Integer.parseInt(config.getStringValue("dim"));
-
-      datapointsEntityPartition
-          = (EntityPartition<Object>) dataPointsObject.getPartitions(context.taskIndex());
-      if (datapointsEntityPartition != null) {
-        dataObject = (DataObject<?>) datapointsEntityPartition.getConsumer().next();
-        datapoints = workerUtils.getDataPoints(context.taskIndex(), dataObject);
-      }
-
-      centroidsEntityPartition
-          = (EntityPartition<Object>) centroidsObject.getPartitions(context.taskIndex());
-      if (centroidsEntityPartition != null) {
-        centroidObject = (DataObject<?>) centroidsEntityPartition.getConsumer().next();
-        centroid = workerUtils.getCentroids(context.taskIndex(), centroidObject);
-      }
+      datapoints = getTaskIndexDataPoints(context.taskIndex());
+      centroid = getTaskIndexCentroids(context.taskIndex());
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
       context.writeEnd("all-reduce", kMeansCenters);
@@ -195,10 +165,31 @@ public class KMeansWorker extends TaskWorker {
       if ("points".equals(name)) {
         this.dataPointsObject = data;
       }
-
       if ("centroids".equals(name)) {
         this.centroidsObject = data;
       }
+    }
+
+    private double[][] getTaskIndexDataPoints(int taskIndex) {
+      EntityPartition<Object> datapointsEntityPartition
+          = (EntityPartition<Object>) dataPointsObject.getPartitions(taskIndex);
+      if (datapointsEntityPartition != null) {
+        DataObject<?> dataObject
+            = (DataObject<?>) datapointsEntityPartition.getConsumer().next();
+        datapoints = workerUtils.getDataPoints(taskIndex, dataObject);
+      }
+      return datapoints;
+    }
+
+    private double[][] getTaskIndexCentroids(int taskIndex) {
+      EntityPartition<Object> centroidsEntityPartition
+          = (EntityPartition<Object>) centroidsObject.getPartitions(taskIndex);
+      if (centroidsEntityPartition != null) {
+        DataObject<?> centroidObject
+            = (DataObject<?>) centroidsEntityPartition.getConsumer().next();
+        centroid = workerUtils.getCentroids(taskIndex, centroidObject);
+      }
+      return centroid;
     }
   }
 
