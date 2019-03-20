@@ -70,6 +70,8 @@ public abstract class BenchWorker implements IWorker {
   //to capture benchmark results
   protected BenchmarkResultsRecorder resultsRecorder;
 
+  private long streamWait = 0;
+
   @Override
   public void execute(Config cfg, int workerID,
                       IWorkerController workerController, IPersistentVolume persistentVolume,
@@ -141,7 +143,17 @@ public abstract class BenchWorker implements IWorker {
   protected void progress() {
     // we need to progress the communication
 
-    while (!isDone()) {
+    while (true) {
+      if (jobParameters.isStream()) {
+        if (isDone() && streamWait == 0) {
+          streamWait = System.currentTimeMillis();
+        }
+        if (isDone() && streamWait > 0 && (System.currentTimeMillis() - streamWait) > 5000) {
+          break;
+        }
+      } else {
+        break;
+      }
       // communicationProgress the channel
       channel.progress();
       // we should communicationProgress the communication directive
