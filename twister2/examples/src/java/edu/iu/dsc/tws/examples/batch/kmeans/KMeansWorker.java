@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
@@ -79,12 +80,13 @@ public class KMeansWorker extends TaskWorker {
     }
 
     /* First Graph to partition and read the partitioned data points **/
-    DataObjectSource sourceTask = new DataObjectSource("direct");
+    DataObjectSource sourceTask = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE);
     DataObjectSink sinkTask = new DataObjectSink();
     taskGraphBuilder.addSource("datapointsource", sourceTask, parallelismValue);
     ComputeConnection firstGraphComputeConnection = taskGraphBuilder.addSink(
         "datapointsink", sinkTask, parallelismValue);
-    firstGraphComputeConnection.direct("datapointsource", "direct", DataType.OBJECT);
+    firstGraphComputeConnection.direct("datapointsource",
+        Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph datapointsTaskGraph = taskGraphBuilder.build();
@@ -94,12 +96,14 @@ public class KMeansWorker extends TaskWorker {
         datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
 
     /* Second Graph to read the centroids **/
-    DataFileReplicatedReadSource centroidSourceTask = new DataFileReplicatedReadSource("direct");
+    DataFileReplicatedReadSource centroidSourceTask = new DataFileReplicatedReadSource(
+        Context.TWISTER2_DIRECT_EDGE);
     DataObjectSink centroidSinkTask = new DataObjectSink();
     taskGraphBuilder.addSource("centroidsource", centroidSourceTask, parallelismValue);
     ComputeConnection secondGraphComputeConnection = taskGraphBuilder.addSink(
         "centroidsink", centroidSinkTask, parallelismValue);
-    secondGraphComputeConnection.direct("centroidsource", "direct", DataType.OBJECT);
+    secondGraphComputeConnection.direct("centroidsource",
+        Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph centroidsTaskGraph = taskGraphBuilder.build();
