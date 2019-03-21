@@ -67,11 +67,11 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
         LOG.info("Exception Message : " + e.getMessage());
       }
 
-      if (count % jobParameters.getPrintInterval() == 0) {
-        LOG.info(String.format("%d %d Batch Message Keyed Partition Received count: %d",
-            context.getWorkerId(),
-            context.taskId(), count));
-      }
+      //if (count % jobParameters.getPrintInterval() == 0) {
+      LOG.info(String.format("%d %d Batch Message Keyed Partition Received count: %d",
+          context.getWorkerId(),
+          context.taskId(), count));
+      //  }
       count++;
       return true;
     }
