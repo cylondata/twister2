@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
-
 /**
  * Execution plan to keep track of the tasks
  */

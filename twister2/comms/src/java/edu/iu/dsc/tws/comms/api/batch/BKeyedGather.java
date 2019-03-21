@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.DKGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 
 public class BKeyedGather {
 
@@ -73,7 +73,7 @@ public class BKeyedGather {
     this.keyType = kType;
     this.dataType = dType;
     MessageReceiver finalReceiver = null;
-    MessageReceiver partialReceiver = new KGatherBatchPartialReceiver(0, 100);
+    MessageReceiver partialReceiver = new PartitionPartialReceiver();
     if (!useDisk) {
       finalReceiver = new KGatherBatchFinalReceiver(rcvr, 100);
     } else {

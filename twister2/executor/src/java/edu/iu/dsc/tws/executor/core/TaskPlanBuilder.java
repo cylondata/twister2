@@ -34,6 +34,8 @@ import java.util.TreeMap;
 
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public final class TaskPlanBuilder {
@@ -42,29 +44,25 @@ public final class TaskPlanBuilder {
 
   /**
    * Create a task plan based on the resource plan from resources and scheduled plan
+   *
    * @param schedulePlan schedule plan
    * @param idGenerator global task id generator
    * @return the task plan
    */
   public static TaskPlan build(int workerID, List<JobMasterAPI.WorkerInfo> workerInfoList,
                                TaskSchedulePlan schedulePlan, TaskIdGenerator idGenerator) {
-    Set<TaskSchedulePlan.ContainerPlan> cPlanList = schedulePlan.getContainers();
+    Set<ContainerPlan> cPlanList = schedulePlan.getContainers();
     Map<Integer, Set<Integer>> containersToTasks = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToTasks = new HashMap<>();
 
     // we need to sort to keep the order
-    workerInfoList.sort(new Comparator<JobMasterAPI.WorkerInfo>() {
-      @Override
-      public int compare(JobMasterAPI.WorkerInfo o1, JobMasterAPI.WorkerInfo o2) {
-        return o1.getWorkerID() - o2.getWorkerID();
-      }
-    });
+    workerInfoList.sort(Comparator.comparingInt(JobMasterAPI.WorkerInfo::getWorkerID));
 
-    for (TaskSchedulePlan.ContainerPlan c : cPlanList) {
-      Set<TaskSchedulePlan.TaskInstancePlan> tSet = c.getTaskInstances();
+    for (ContainerPlan c : cPlanList) {
+      Set<TaskInstancePlan> tSet = c.getTaskInstances();
       Set<Integer> instances = new HashSet<>();
 
-      for (TaskSchedulePlan.TaskInstancePlan tPlan : tSet) {
+      for (TaskInstancePlan tPlan : tSet) {
         instances.add(idGenerator.generateGlobalTaskId(tPlan.getTaskName(),
             tPlan.getTaskId(), tPlan.getTaskIndex()));
       }

@@ -14,9 +14,9 @@ package edu.iu.dsc.tws.tsched.utils;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.api.schedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 
 /**
  * This is the util class for the task scheduler to get the resource value of task instance and
@@ -36,11 +36,7 @@ public final class TaskScheduleUtils {
   /**
    * This method gets the resource requirement of task instances, validate and clone the required
    * task instance ram value.
-   * @param taskName
-   * @param taskRamMap
-   * @param defaultInstanceResource
-   * @param maxContainerResource
-   * @param paddingPercentage
+   *
    * @return Resource
    */
   public static Resource getResourceRequirement(String taskName,
@@ -63,11 +59,6 @@ public final class TaskScheduleUtils {
    * This method is to make sure that each task instance should satisfy the minimum ram value. Also,
    * after increasing the padding percentage of task instance ram, disk, and cpu value it shouldn't
    * go beyond the maximum container resource values (ram, disk, and cpu).
-   *
-   * @param instanceResources
-   * @param maxContainerResources
-   * @param paddingPercentage
-   * @throws TaskSchedulerException
    */
   private static void assertIsValidInstance(Resource instanceResources,
                                             Resource maxContainerResources,

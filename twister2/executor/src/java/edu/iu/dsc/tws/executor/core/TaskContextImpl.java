@@ -19,6 +19,7 @@ import java.util.Set;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class TaskContextImpl implements TaskContext {
@@ -116,6 +117,16 @@ public class TaskContextImpl implements TaskContext {
     this(taskIndex, taskId, taskName, parallelism, wId, collection,
         configs, outEdges, taskSchedulePlan);
     this.inputs = inputs;
+  }
+
+  @Override
+  public Set<ContainerPlan> getWorkers() {
+    return this.taskSchedulePlan.getContainers();
+  }
+
+  @Override
+  public Map<Integer, ContainerPlan> getWorkersMap() {
+    return this.taskSchedulePlan.getContainersMap();
   }
 
   /**

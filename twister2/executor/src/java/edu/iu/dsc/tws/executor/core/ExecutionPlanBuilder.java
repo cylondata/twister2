@@ -41,6 +41,8 @@ import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -104,8 +106,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     ParallelOperationFactory opFactory = new ParallelOperationFactory(
         cfg, network, taskPlan, edgeGenerator);
 
-    Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap = taskSchedule.getContainersMap();
-    TaskSchedulePlan.ContainerPlan conPlan = containersMap.get(workerId);
+    Map<Integer, ContainerPlan> containersMap = taskSchedule.getContainersMap();
+    ContainerPlan conPlan = containersMap.get(workerId);
     if (conPlan == null) {
       LOG.log(Level.INFO, "Cannot find worker in the task plan: " + workerId);
       return null;
@@ -113,9 +115,9 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
     ExecutionPlan execution = new ExecutionPlan();
 
-    Set<TaskSchedulePlan.TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
+    Set<TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
     // for each task we are going to create the communications
-    for (TaskSchedulePlan.TaskInstancePlan ip : instancePlan) {
+    for (TaskInstancePlan ip : instancePlan) {
       Vertex v = taskGraph.vertex(ip.getTaskName());
       Map<String, String> inEdges = new HashMap<>();
       Map<String, String> outEdges = new HashMap<>();
@@ -251,7 +253,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     return execution;
   }
 
-  private Set<Integer> intersectionOfTasks(TaskSchedulePlan.ContainerPlan cp,
+  private Set<Integer> intersectionOfTasks(ContainerPlan cp,
                                            Set<Integer> tasks) {
     Set<Integer> cTasks = taskIdGenerator.getTaskIdsOfContainer(cp);
     cTasks.retainAll(tasks);
@@ -265,7 +267,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
    * @param ip instance plan
    * @param vertex vertex
    */
-  private INodeInstance createInstances(Config cfg, TaskSchedulePlan.TaskInstancePlan ip,
+  private INodeInstance createInstances(Config cfg, TaskInstancePlan ip,
                                         Vertex vertex, OperationMode operationMode,
                                         Map<String, String> inEdges,
                                         Map<String, String> outEdges,
@@ -342,8 +344,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
 
   private int getTaskIdOfTask(String name, TaskSchedulePlan plan) {
-    for (TaskSchedulePlan.ContainerPlan cp : plan.getContainers()) {
-      for (TaskSchedulePlan.TaskInstancePlan ip : cp.getTaskInstances()) {
+    for (ContainerPlan cp : plan.getContainers()) {
+      for (TaskInstancePlan ip : cp.getTaskInstances()) {
         if (name.equals(ip.getTaskName())) {
           return ip.getTaskId();
         }
