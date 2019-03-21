@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.task.api.typed.batch;
 
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -19,10 +20,12 @@ import edu.iu.dsc.tws.task.api.typed.AbstractIterableDataCompute;
 
 public abstract class BPartitionKeyedCompute<K, T>
     extends AbstractIterableDataCompute<Tuple<K, T>> {
+  private static final Logger LOG = Logger.getLogger(BPartitionKeyedCompute.class.getName());
 
   public abstract boolean keyedPartition(Iterator<Tuple<K, T>> content);
 
   public boolean execute(IMessage<Iterator<Tuple<K, T>>> content) {
+    LOG.info("calling ++++++++++++++++ ");
     return this.keyedPartition(content.getContent());
   }
 }
