@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SinkBatchInstance implements INodeInstance {
   /**
@@ -86,9 +87,16 @@ public class SinkBatchInstance implements INodeInstance {
    */
   private Map<String, String> inputEdges;
 
+  /**
+   * Task schedule plan contains information about whole topology. This will be passed to
+   * {@link edu.iu.dsc.tws.task.api.TaskContext} to expose necessary information
+   */
+  private TaskSchedulePlan taskSchedule;
+
   public SinkBatchInstance(ICompute batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
                            String tName, int tId, int tIndex, int parallel, int wId,
-                           Map<String, Object> cfgs, Map<String, String> inEdges) {
+                           Map<String, Object> cfgs, Map<String, String> inEdges,
+                           TaskSchedulePlan taskSchedule) {
     this.batchTask = batchTask;
     this.batchInQueue = batchInQueue;
     this.config = config;
@@ -99,6 +107,7 @@ public class SinkBatchInstance implements INodeInstance {
     this.workerId = wId;
     this.taskName = tName;
     this.inputEdges = inEdges;
+    this.taskSchedule = taskSchedule;
   }
 
   public void reset() {
@@ -107,7 +116,7 @@ public class SinkBatchInstance implements INodeInstance {
 
   public void prepare(Config cfg) {
     batchTask.prepare(cfg, new TaskContextImpl(batchTaskIndex, batchTaskId, taskName,
-        parallelism, workerId, nodeConfigs, inputEdges));
+        parallelism, workerId, nodeConfigs, inputEdges, taskSchedule));
   }
 
   public boolean execute() {
@@ -152,6 +161,7 @@ public class SinkBatchInstance implements INodeInstance {
 
   /**
    * Progress the communication and return weather we need to further progress
+   *
    * @return true if further progress is needed
    */
   private boolean communicationProgress() {

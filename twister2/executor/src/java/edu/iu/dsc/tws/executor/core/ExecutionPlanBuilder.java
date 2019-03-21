@@ -165,7 +165,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
       // lets create the instance
       INodeInstance iNodeInstance = createInstances(cfg, ip, v, taskGraph.getOperationMode(),
-          inEdges, outEdges);
+          inEdges, outEdges, taskSchedule);
       // add to execution
       execution.addNodes(v.getName(), taskIdGenerator.generateGlobalTaskId(
           v.getName(), ip.getTaskId(), ip.getTaskIndex()), iNodeInstance);
@@ -268,7 +268,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   private INodeInstance createInstances(Config cfg, TaskSchedulePlan.TaskInstancePlan ip,
                                         Vertex vertex, OperationMode operationMode,
                                         Map<String, String> inEdges,
-                                        Map<String, String> outEdges) {
+                                        Map<String, String> outEdges,
+                                        TaskSchedulePlan taskSchedule) {
     // lets add the task
     byte[] taskBytes = Utils.serialize(vertex.getTask());
     INode newInstance = (INode) Utils.deserialize(taskBytes);
@@ -281,7 +282,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           SinkBatchInstance v = new SinkBatchInstance((ICompute) newInstance,
               new LinkedBlockingQueue<>(), cfg, vertex.getName(),
               taskId, ip.getTaskIndex(), vertex.getParallelism(),
-              workerId, vertex.getConfig().toMap(), inEdges);
+              workerId, vertex.getConfig().toMap(), inEdges, taskSchedule);
           batchSinkInstances.put(vertex.getName(), taskId, v);
           return v;
         } else {
@@ -289,7 +290,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
               new LinkedBlockingQueue<>(),
               new LinkedBlockingQueue<>(), cfg,
               vertex.getName(), taskId, ip.getTaskIndex(),
-              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges, outEdges);
+              vertex.getParallelism(), workerId, vertex.getConfig().toMap(),
+              inEdges, outEdges, taskSchedule);
           batchTaskInstances.put(vertex.getName(), taskId, v);
           return v;
         }
@@ -297,7 +299,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         SourceBatchInstance v = new SourceBatchInstance((ISource) newInstance,
             new LinkedBlockingQueue<>(), cfg,
             vertex.getName(), taskId, ip.getTaskIndex(),
-            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges);
+            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges, taskSchedule);
         batchSourceInstances.put(vertex.getName(), taskId, v);
         return v;
       } else {
@@ -309,7 +311,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           SinkStreamingInstance v = new SinkStreamingInstance((ICompute) newInstance,
               new LinkedBlockingQueue<>(), cfg, vertex.getName(),
               taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
-              vertex.getConfig().toMap(), inEdges);
+              vertex.getConfig().toMap(), inEdges, taskSchedule);
           streamingSinkInstances.put(vertex.getName(), taskId, v);
           return v;
         } else {
@@ -317,7 +319,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
               new LinkedBlockingQueue<>(),
               new LinkedBlockingQueue<>(), cfg,
               vertex.getName(), taskId, ip.getTaskIndex(),
-              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges, outEdges);
+              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
+              outEdges, taskSchedule);
           streamingTaskInstances.put(vertex.getName(), taskId, v);
           return v;
         }
@@ -325,7 +328,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         SourceStreamingInstance v = new SourceStreamingInstance((ISource) newInstance,
             new LinkedBlockingQueue<>(), cfg,
             vertex.getName(), taskId, ip.getTaskIndex(),
-            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges);
+            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges, taskSchedule);
         streamingSourceInstances.put(vertex.getName(), taskId, v);
         return v;
       } else {
