@@ -15,9 +15,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.dataset.DataObjectImpl;
+import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
+import edu.iu.dsc.tws.data.fs.FileSystem;
+import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -32,7 +35,7 @@ public class DataFileSink<T> extends BaseSink implements Collector {
 
   private static final long serialVersionUID = -1L;
 
-  private DataObject<Object> datapoints = null;
+  private DataSink<String> datasink = null;
 
   /**
    * This method add the received message from the Data File Object into the data objects.
@@ -41,18 +44,21 @@ public class DataFileSink<T> extends BaseSink implements Collector {
    */
   @Override
   public boolean execute(IMessage message) {
-    datapoints.addPartition(new EntityPartition<>(context.taskIndex(), message.getContent()));
+    datasink.add(context.taskIndex(), String.valueOf(message.getContent()));
+    datasink.persist();
     return true;
   }
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
-    this.datapoints = new DataObjectImpl<>(config);
+    String outDir = cfg.getStringValue(DataObjectConstants.OUTPUT_DIRECTORY);
+    this.datasink = new DataSink<>(cfg,
+        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
   }
 
   @Override
   public DataPartition<Object> get() {
-    return new EntityPartition<>(context.taskIndex(), datapoints);
+    return new EntityPartition<>(context.taskIndex(), datasink);
   }
 }
