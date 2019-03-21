@@ -49,42 +49,31 @@ public class MapTSet<T, P> extends BaseTSet<T> {
   public <P1> MapTSet<P1, T> map(MapFunction<T, P1> mFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    MapTSet<P1, T> set = new MapTSet<P1, T>(config, tSetEnv, direct, mFn);
-    children.add(set);
-    return set;
+    return direct.map(mFn);
   }
 
   public <P1> FlatMapTSet<P1, T> flatMap(FlatMapFunction<T, P1> mFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    FlatMapTSet<P1, T> set = new FlatMapTSet<P1, T>(config, tSetEnv, direct, mFn);
-    children.add(set);
-    return set;
+    return direct.flatMap(mFn);
   }
 
   public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IterableMapTSet<P1, T> set = new IterableMapTSet<>(config, tSetEnv, direct, mFn);
-    children.add(set);
-    return set;
+    return direct.map(mFn);
   }
 
   public <P1> IterableFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IterableFlatMapTSet<P1, T> set = new IterableFlatMapTSet<>(config, tSetEnv, direct, mFn);
-    children.add(set);
-    return set;
+    return direct.flatMap(mFn);
   }
 
   public SinkTSet<T> sink(Sink<T> sink) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, direct, sink);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
+    return direct.sink(sink);
   }
 
   @SuppressWarnings("unchecked")
@@ -92,7 +81,9 @@ public class MapTSet<T, P> extends BaseTSet<T> {
     boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     int p = calculateParallelism(parent);
-    mapFn.addInputs(inputMap);
+    if (inputMap.size() > 0) {
+      mapFn.addInputs(inputMap);
+    }
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
         addCompute(generateName("map",
             parent), new MapOp<>(mapFn, isIterable, keyed), p);

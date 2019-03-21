@@ -142,9 +142,6 @@ public final class MPIWorker {
         wInfo = createWorkerInfo(config, MPI.COMM_WORLD.getRank(), job);
         startWorkerWithoutMaster(config, rank, MPI.COMM_WORLD, job);
       }
-
-      // lets do a barrier here so everyone is synchronized at the end
-      MPI.COMM_WORLD.barrier();
     } catch (MPIException e) {
       LOG.log(Level.SEVERE, "Failed the MPI process", e);
       throw new RuntimeException(e);
@@ -155,9 +152,10 @@ public final class MPIWorker {
     } catch (Throwable t) {
       String msg = "Un-expected error";
       LOG.log(Level.SEVERE, msg, t);
-      throw new RuntimeException(msg);
     } finally {
       try {
+        // lets do a barrier here so everyone is synchronized at the end
+        MPI.COMM_WORLD.barrier();
         MPI.Finalize();
       } catch (MPIException ignore) {
       }

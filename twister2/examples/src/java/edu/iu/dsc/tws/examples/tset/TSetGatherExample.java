@@ -34,7 +34,7 @@ public class TSetGatherExample extends BaseTSetBatchWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    SourceTSet<int[]> source = tc.createSource(new BaseSource(),
+    SourceTSet<int[]> source = tc.createSource(new TestBaseSource(),
         sourceParallelism).setName("Source");
     GatherTLink<int[]> gather = source.gather();
     gather.sink(new Sink<int[]>() {

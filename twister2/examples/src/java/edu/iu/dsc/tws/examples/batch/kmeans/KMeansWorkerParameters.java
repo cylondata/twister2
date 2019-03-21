@@ -89,21 +89,21 @@ public final class KMeansWorkerParameters {
    */
   public static KMeansWorkerParameters build(Config cfg) {
 
-    String datapointDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
-    String centroidDirectory = cfg.getStringValue(DataObjectConstants.ARGS_CINPUT_DIRECTORY);
-    String outputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_OUTPUT_DIRECTORY);
-    String fileSystem = cfg.getStringValue(DataObjectConstants.ARGS_FILE_SYSTEM);
+    String datapointDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
+    String centroidDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY);
+    String outputDirectory = cfg.getStringValue(DataObjectConstants.OUTPUT_DIRECTORY);
+    String fileSystem = cfg.getStringValue(DataObjectConstants.FILE_SYSTEM);
 
-    int workers = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_WORKERS));
-    int dsize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DSIZE));
-    int csize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_CSIZE));
-    int dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DIMENSIONS));
+    int workers = Integer.parseInt(cfg.getStringValue(DataObjectConstants.WORKERS));
+    int dsize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
+    int csize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.CSIZE));
+    int dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
     int parallelismVal = Integer.parseInt(
-        cfg.getStringValue(DataObjectConstants.ARGS_PARALLELISM_VALUE));
+        cfg.getStringValue(DataObjectConstants.PARALLELISM_VALUE));
     int iterations = Integer.parseInt(
         cfg.getStringValue(DataObjectConstants.ARGS_ITERATIONS));
-    int numFiles = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_NUMBER_OF_FILES));
-    boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
+    int numFiles = Integer.parseInt(cfg.getStringValue(DataObjectConstants.NUMBER_OF_FILES));
+    boolean shared = cfg.getBooleanValue(DataObjectConstants.SHARED_FILE_SYSTEM);
 
     KMeansWorkerParameters jobParameters = new KMeansWorkerParameters(workers);
 

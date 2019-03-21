@@ -16,7 +16,7 @@ package edu.iu.dsc.tws.api.tset;
  *
  * @param <T> type of values produced by source
  */
-public interface Source<T> extends TFunction {
+public interface  Source<T> extends TFunction {
   /**
    * Weather we have more data
    *

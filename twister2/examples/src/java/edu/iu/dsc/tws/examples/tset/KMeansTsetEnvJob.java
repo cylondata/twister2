@@ -117,17 +117,17 @@ public class KMeansTsetEnvJob extends TSetBatchWorker implements Serializable {
 
     Map<String, Object> configMap = new HashMap<>();
 
-    configMap.put(DataObjectConstants.ARGS_DINPUT_DIRECTORY, dir.getAbsolutePath() + "/data");
-    configMap.put(DataObjectConstants.ARGS_CINPUT_DIRECTORY, dir.getAbsolutePath() + "/cent");
-    configMap.put(DataObjectConstants.ARGS_OUTPUT_DIRECTORY, "/output");
-    configMap.put(DataObjectConstants.ARGS_FILE_SYSTEM, "local");
-    configMap.put(DataObjectConstants.ARGS_DSIZE, Integer.toString(100));
-    configMap.put(DataObjectConstants.ARGS_CSIZE, Integer.toString(10));
-    configMap.put(DataObjectConstants.ARGS_WORKERS, Integer.toString(2));
-    configMap.put(DataObjectConstants.ARGS_NUMBER_OF_FILES, Integer.toString(4));
-    configMap.put(DataObjectConstants.ARGS_DIMENSIONS, Integer.toString(2));
-    configMap.put(DataObjectConstants.ARGS_PARALLELISM_VALUE, Integer.toString(1));
-    configMap.put(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM, false);
+    configMap.put(DataObjectConstants.DINPUT_DIRECTORY, dir.getAbsolutePath() + "/data");
+    configMap.put(DataObjectConstants.CINPUT_DIRECTORY, dir.getAbsolutePath() + "/cent");
+    configMap.put(DataObjectConstants.OUTPUT_DIRECTORY, "/output");
+    configMap.put(DataObjectConstants.FILE_SYSTEM, "local");
+    configMap.put(DataObjectConstants.DSIZE, Integer.toString(100));
+    configMap.put(DataObjectConstants.CSIZE, Integer.toString(10));
+    configMap.put(DataObjectConstants.WORKERS, Integer.toString(2));
+    configMap.put(DataObjectConstants.NUMBER_OF_FILES, Integer.toString(4));
+    configMap.put(DataObjectConstants.DIMENSIONS, Integer.toString(2));
+    configMap.put(DataObjectConstants.PARALLELISM_VALUE, Integer.toString(1));
+    configMap.put(DataObjectConstants.SHARED_FILE_SYSTEM, false);
     configMap.put(DataObjectConstants.ARGS_ITERATIONS, Integer.toString(5));
 
     // build configMap
