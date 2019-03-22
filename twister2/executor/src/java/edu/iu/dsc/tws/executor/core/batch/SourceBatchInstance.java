@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.core.batch;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
@@ -30,6 +31,8 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SourceBatchInstance implements INodeInstance {
+
+  private static final Logger LOG = Logger.getLogger(SourceBatchInstance.class.getName());
 
   /**
    * The actual task executing
@@ -196,6 +199,9 @@ public class SourceBatchInstance implements INodeInstance {
 
     // lets progress the communication
     boolean needsFurther = communicationProgress();
+    if (!needsFurther) {
+      LOG.info("Tid " + workerId + " complete comms");
+    }
     // after we have put everything to communication and no progress is required, lets finish
     if (state.isSet(InstanceState.OUT_COMPLETE) && !needsFurther) {
       state.set(InstanceState.SENDING_DONE);

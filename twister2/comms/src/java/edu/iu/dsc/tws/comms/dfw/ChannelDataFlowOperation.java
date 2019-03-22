@@ -36,6 +36,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
@@ -289,7 +290,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    * @return true if the message is accepted
    */
   protected boolean sendMessagePartial(int source, Object message, int target,
-                                    int flags, RoutingParameters routingParameters) {
+                                       int flags, RoutingParameters routingParameters) {
     // for partial sends we use minus value to find the correct queue
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);
@@ -513,6 +514,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       }
       for (int i = startOfExternalRouts; i < exRoutes.size(); i++) {
         boolean sendAccepted = sendMessageToTarget(chMessage, exRoutes.get(i));
+        if (sendAccepted && (chMessage.getHeader().getFlags()
+            & MessageFlags.END) == MessageFlags.END) {
+          LOG.info("s : " + outMessage.getSource()
+              + " t : " + outMessage.getTarget() + "Ext Sent END message");
+        }
         // if no longer accepts stop
         if (!sendAccepted) {
           canProgress = false;
@@ -542,6 +548,10 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           receiveAccepted = receiver.receiveSendInternally(
               outMessage.getSource(), inRoutes.get(i), outMessage.getTarget(),
               outMessage.getFlags(), messageObject);
+          if (receiveAccepted && (outMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
+            LOG.info("s : " + outMessage.getSource()
+                + "t : " + outMessage.getTarget() + " Internal Sent END message");
+          }
         } finally {
           lock.unlock();
         }

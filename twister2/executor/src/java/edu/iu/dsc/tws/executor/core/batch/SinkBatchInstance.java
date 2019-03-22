@@ -177,6 +177,7 @@ public class SinkBatchInstance implements INodeInstance {
         allDone = false;
       }
     }
+//    LOG.info("WID " + workerId + " ..... ");
     return !allDone;
   }
 
