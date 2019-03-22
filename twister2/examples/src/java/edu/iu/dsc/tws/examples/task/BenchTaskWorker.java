@@ -114,7 +114,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
     long start = System.currentTimeMillis();
     while (true) {
       execution.progress();
-      if (System.currentTimeMillis() - start > 1500) {
+      if (System.currentTimeMillis() - start > 4000) {
         execution.stop();
         execution.close();
         break;

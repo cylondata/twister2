@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.core.batch;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
@@ -26,6 +27,8 @@ import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SinkBatchInstance implements INodeInstance {
+  private static final Logger LOG = Logger.getLogger(SinkBatchInstance.class.getName());
+
   /**
    * The actual batchTask executing
    */
@@ -139,6 +142,9 @@ public class SinkBatchInstance implements INodeInstance {
     }
 
     // we only need the execution done for now
+//    if (state.isSet(InstanceState.EXECUTION_DONE)) {
+//      LOG.info("TID: " + batchTaskId + "Execution done already");
+//    }
     return !state.isSet(InstanceState.EXECUTION_DONE);
   }
 

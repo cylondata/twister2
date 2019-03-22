@@ -95,6 +95,9 @@ public class BPartitionExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
       expected = jobParameters.getIterations();
+      if (expectedIds.size() == 0) {
+        partitionDone = true;
+      }
     }
 
     @Override

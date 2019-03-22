@@ -142,7 +142,6 @@ public abstract class BenchWorker implements IWorker {
 
   protected void progress() {
     // we need to progress the communication
-
     while (true) {
       if (jobParameters.isStream()) {
         if (isDone() && streamWait == 0) {
@@ -154,6 +153,7 @@ public abstract class BenchWorker implements IWorker {
       } else if (isDone()) {
         break;
       }
+
       // communicationProgress the channel
       channel.progress();
       // we should communicationProgress the communication directive

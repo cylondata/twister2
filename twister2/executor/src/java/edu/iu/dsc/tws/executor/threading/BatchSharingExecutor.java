@@ -130,9 +130,15 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
             boolean needsFurther = nodeInstance.execute();
             if (!needsFurther) {
               finishedInstances.put(nodeInstance.getId(), true);
+              LOG.info("####WID: " + workerId + " TID : " + nodeInstance.getId()
+                  + " No progress needed now");
+
             } else {
               // we need to further execute this task
-              tasks.offer(nodeInstance);
+              boolean done = tasks.offer(nodeInstance);
+              if (!done) {
+                LOG.info("####WID: " + workerId + "Task submission failed");
+              }
             }
           } else {
             break;
@@ -141,6 +147,9 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
           LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
           throw new RuntimeException("Error occurred in execution of task", t);
         }
+      }
+      if (!notStopped) {
+        LOG.info("####WID: " + workerId + "Stopped");
       }
     }
   }
