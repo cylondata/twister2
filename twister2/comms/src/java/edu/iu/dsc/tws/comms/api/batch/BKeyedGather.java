@@ -30,8 +30,8 @@ import edu.iu.dsc.tws.comms.dfw.RingPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchPartialReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.DKGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 
 public class BKeyedGather {
@@ -66,19 +66,19 @@ public class BKeyedGather {
                       Set<Integer> sources, Set<Integer> destinations,
                       MessageType kType, MessageType dType, BulkReceiver rcvr,
                       DestinationSelector destSelector,
-                      boolean useDisk, Comparator comparator) {
+                      boolean useDisk, Comparator<Object> comparator) {
     if (useDisk && comparator == null) {
       throw new RuntimeException("Key comparator should be specified in disk based mode");
     }
     this.keyType = kType;
     this.dataType = dType;
-    MessageReceiver finalReceiver = null;
+    MessageReceiver finalReceiver;
     MessageReceiver partialReceiver = new PartitionPartialReceiver();
     if (!useDisk) {
       finalReceiver = new KGatherBatchFinalReceiver(rcvr, 100);
     } else {
-      finalReceiver = new DKGatherBatchFinalReceiver(
-          rcvr, true, 10, comm.getPersistentDirectory(), comparator);
+      finalReceiver = new DPartitionBatchFinalReceiver(
+          rcvr, true, comm.getPersistentDirectory(), comparator);
     }
 
     if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_GATHER.equals(
@@ -117,7 +117,7 @@ public class BKeyedGather {
 
   public boolean gather(int source, Object key, Object data, int flags) {
     int dest = destinationSelector.next(source, key, data);
-    return keyedGather.send(source, new Tuple(key, data, keyType,
+    return keyedGather.send(source, new Tuple<>(key, data, keyType,
         dataType), flags, dest);
   }
 

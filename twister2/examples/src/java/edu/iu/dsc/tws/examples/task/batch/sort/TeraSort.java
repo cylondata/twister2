@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -51,20 +50,15 @@ public class TeraSort extends TaskWorker {
     tgb.addSource("int-source", integerSource, 4);
 
     Receiver receiver = new Receiver();
-    tgb.addSink("int-recv", receiver)
+    tgb.addSink("int-recv", receiver, 4)
         .keyedGather("int-source", "edge",
             DataType.INTEGER, DataType.BYTE, true,
             Comparator.comparingInt(o -> (Integer) o));
 
     DataFlowTaskGraph dataFlowTaskGraph = tgb.build();
     ExecutionPlan executionPlan = taskExecutor.plan(dataFlowTaskGraph);
-    IExecution execution = taskExecutor.iExecute(dataFlowTaskGraph, executionPlan);
-    while (!gatherDone) {
-      execution.progress();
-    }
+    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
     LOG.info("Stopping execution...");
-    execution.stop();
-    execution.close();
   }
 
   public static class Receiver extends KeyedGatherCompute<Integer, byte[]> implements ISink {
@@ -101,7 +95,7 @@ public class TeraSort extends TaskWorker {
       super.prepare(cfg, ctx);
       this.toSend = cfg.getLongValue(
           "data-amount-in-gb", 1
-      ) * 4L * 1024 * 1024 * 1024;
+      ) * 1024 * 1024 * 10;
       this.value = new byte[cfg.getIntegerValue("value-size-in-byte", 1)];
       Arrays.fill(this.value, (byte) 1);
       this.random = new Random();
