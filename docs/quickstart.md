@@ -4,7 +4,7 @@ Lets look at how to setup Twister2 and run few examples. Twister2 is designed as
 
 ## Building Twister2
 
-First we need to build Twister2. [Compiling Twister2](deployment/compiling.md) explains how to build it. After building the code and
+First we need to build Twister2. [Compiling Twister2](compiling/compiling.md) explains how to build it. After building the code and
 following the instructions in [Twister2 Distribution](https://twister2.gitbook.io/twister2/deployment/compiling#twister2-distribution) you
 should have a extracted folder named `twister2-0.1.0`, this would be your twister2 home folder.
 
