@@ -103,6 +103,9 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
       expected = expectedIds.size() * jobParameters.getIterations();
+      if (expectedIds.size() == 0) {
+        partitionDone = true;
+      }
     }
 
     @Override

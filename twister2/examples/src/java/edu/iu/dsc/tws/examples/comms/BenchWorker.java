@@ -143,17 +143,7 @@ public abstract class BenchWorker implements IWorker {
   protected void progress() {
     // we need to progress the communication
 
-    while (true) {
-      if (jobParameters.isStream()) {
-        if (isDone() && streamWait == 0) {
-          streamWait = System.currentTimeMillis();
-        }
-        if (isDone() && streamWait > 0 && (System.currentTimeMillis() - streamWait) > 5000) {
-          break;
-        }
-      } else {
-        break;
-      }
+    while (!isDone()) {
       // communicationProgress the channel
       channel.progress();
       // we should communicationProgress the communication directive
