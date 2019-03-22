@@ -19,6 +19,8 @@ import java.util.Set;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class TaskContextImpl implements TaskContext {
   /**
@@ -71,51 +73,60 @@ public class TaskContextImpl implements TaskContext {
    */
   private Map<String, String> inputs;
 
+  private TaskSchedulePlan taskSchedulePlan;
+
   /**
    * Names of out edges
    */
   private Set<String> outEdgeNames = new HashSet<>();
 
+  private TaskContextImpl(int taskIndex, int taskId, String taskName,
+                          int parallelism, int wId,
+                          Map<String, Object> configs,
+                          TaskSchedulePlan taskSchedulePlan) {
+    this.taskIndex = taskIndex;
+    this.taskId = taskId;
+    this.taskName = taskName;
+    this.parallelism = parallelism;
+    this.workerId = wId;
+    this.configs = configs;
+    this.taskSchedulePlan = taskSchedulePlan;
+  }
+
 
   public TaskContextImpl(int taskIndex, int taskId, String taskName,
-                     int parallelism, int wId, Map<String, Object> configs,
-                     Map<String, String> inputs) {
-    this.taskIndex = taskIndex;
-    this.taskId = taskId;
-    this.taskName = taskName;
-    this.parallelism = parallelism;
-    this.configs = configs;
-    this.workerId = wId;
+                         int parallelism, int wId, Map<String, Object> configs,
+                         Map<String, String> inputs, TaskSchedulePlan taskSchedulePlan) {
+    this(taskIndex, taskId, taskName, parallelism, wId, configs, taskSchedulePlan);
     this.inputs = inputs;
   }
 
   public TaskContextImpl(int taskIndex, int taskId, String taskName, int parallelism, int wId,
-                     OutputCollection collection, Map<String, Object> configs,
-                     Map<String, String> outEdges) {
-    this.taskIndex = taskIndex;
-    this.taskId = taskId;
-    this.taskName = taskName;
-    this.parallelism = parallelism;
+                         OutputCollection collection, Map<String, Object> configs,
+                         Map<String, String> outEdges, TaskSchedulePlan taskSchedulePlan) {
+    this(taskIndex, taskId, taskName, parallelism, wId, configs, taskSchedulePlan);
     this.collection = collection;
-    this.configs = configs;
-    this.workerId = wId;
     this.outEdges = outEdges;
     outEdgeNames.addAll(outEdges.keySet());
   }
 
   public TaskContextImpl(int taskIndex, int taskId, String taskName, int parallelism, int wId,
-                     OutputCollection collection, Map<String, Object> configs,
-                     Map<String, String> inputs, Map<String, String> outEdges) {
-    this.taskIndex = taskIndex;
-    this.taskId = taskId;
-    this.taskName = taskName;
-    this.parallelism = parallelism;
-    this.collection = collection;
-    this.configs = configs;
-    this.workerId = wId;
-    this.outEdges = outEdges;
+                         OutputCollection collection, Map<String, Object> configs,
+                         Map<String, String> inputs, Map<String, String> outEdges,
+                         TaskSchedulePlan taskSchedulePlan) {
+    this(taskIndex, taskId, taskName, parallelism, wId, collection,
+        configs, outEdges, taskSchedulePlan);
     this.inputs = inputs;
-    outEdgeNames.addAll(outEdges.keySet());
+  }
+
+  @Override
+  public Set<ContainerPlan> getWorkers() {
+    return this.taskSchedulePlan.getContainers();
+  }
+
+  @Override
+  public Map<Integer, ContainerPlan> getWorkersMap() {
+    return this.taskSchedulePlan.getContainersMap();
   }
 
   /**
@@ -127,6 +138,7 @@ public class TaskContextImpl implements TaskContext {
 
   /**
    * The task index
+   *
    * @return index
    */
   public int taskIndex() {
@@ -135,6 +147,7 @@ public class TaskContextImpl implements TaskContext {
 
   /**
    * Task id
+   *
    * @return the task id
    */
   public int taskId() {
@@ -150,6 +163,7 @@ public class TaskContextImpl implements TaskContext {
 
   /**
    * Get the parallism of the task
+   *
    * @return number of parallel instances
    */
   public int getParallelism() {
@@ -158,6 +172,7 @@ public class TaskContextImpl implements TaskContext {
 
   /**
    * Get the worker id this task is running
+   *
    * @return worker id
    */
   public int getWorkerId() {
@@ -166,6 +181,7 @@ public class TaskContextImpl implements TaskContext {
 
   /**
    * Get the task specific configurations
+   *
    * @return map of configurations
    */
   public Map<String, Object> getConfigurations() {
@@ -184,6 +200,7 @@ public class TaskContextImpl implements TaskContext {
 
   /**
    * Get the out edges of this task
+   *
    * @return the output edges, edge name and task connected to this edge
    */
   public Map<String, String> getOutEdges() {
@@ -192,82 +209,65 @@ public class TaskContextImpl implements TaskContext {
 
   /**
    * Get the edge names and the tasks connected using those edges
+   *
    * @return a map with edge, and task connected to this edge
    */
   public Map<String, String> getInputs() {
     return inputs;
   }
 
+  private void validateEdge(String edge) {
+    if (!outEdgeNames.contains(edge)) {
+      throw new RuntimeException("output on edge not specified by user: " + edge);
+    }
+
+    if (isDone.containsKey(edge) && isDone.get(edge)) {
+      throw new RuntimeException("Cannot send on a stream that ended");
+    }
+  }
+
   /**
    * Write a message with a key
+   *
    * @param edge the edge
    * @param key key
    * @param message message
    * @return true if the message is accepted
    */
   public boolean write(String edge, Object key, Object message) {
-    if (!outEdgeNames.contains(edge)) {
-      throw new RuntimeException("output on edge not specified by user: " + edge);
-    }
-
-    if (isDone.containsKey(edge) && isDone.get(edge)) {
-      throw new RuntimeException("Cannot send on a stream that ended");
-    }
-
+    this.validateEdge(edge);
     return collection.collect(edge, new TaskMessage(key, message, edge, taskId));
   }
 
   /**
    * Write a message to the destination
+   *
    * @param edge edge
    * @param message message
    */
   public boolean write(String edge, Object message) {
-    if (!outEdgeNames.contains(edge)) {
-      throw new RuntimeException("output on edge not specified by user: " + edge);
-    }
-
-    if (isDone.containsKey(edge) && isDone.get(edge)) {
-      throw new RuntimeException("Cannot send on a stream that ended");
-    }
-
-    return collection.collect(edge, new TaskMessage(message, edge, taskId));
+    return write(edge, null, message);
   }
 
   /**
    * Write the last message
+   *
    * @param edge edge
    * @param message message
    */
   public boolean writeEnd(String edge, Object message) {
-    if (!outEdgeNames.contains(edge)) {
-      throw new RuntimeException("output on edge not specified by user: " + edge);
-    }
-
-    if (isDone.containsKey(edge) && isDone.get(edge)) {
-      throw new RuntimeException("Cannot send on a stream that ended");
-    }
-
-    boolean collect = collection.collect(edge, new TaskMessage(message, edge, taskId));
-    isDone.put(edge, true);
-    return collect;
+    return this.writeEnd(edge, null, message);
   }
 
   /**
    * Write the last message
+   *
    * @param edge edge
    * @param key key
    * @param message message
    */
   public boolean writeEnd(String edge, Object key, Object message) {
-    if (!outEdgeNames.contains(edge)) {
-      throw new RuntimeException("output on edge not specified by user: " + edge);
-    }
-
-    if (isDone.containsKey(edge) && isDone.get(edge)) {
-      throw new RuntimeException("Cannot send on a stream that ended");
-    }
-
+    this.validateEdge(edge);
     boolean collect = collection.collect(edge, new TaskMessage(key, message, edge, taskId));
     isDone.put(edge, true);
     return collect;
@@ -275,6 +275,7 @@ public class TaskContextImpl implements TaskContext {
 
   /**
    * End the current writing
+   *
    * @param edge edge
    */
   public void end(String edge) {
@@ -283,6 +284,7 @@ public class TaskContextImpl implements TaskContext {
 
   /**
    * Return true, if this task is done
+   *
    * @param edge edge name
    * @return boolean
    */

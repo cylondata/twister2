@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.OutputCollection;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
  * The class represents the instance of the executing task
@@ -111,6 +112,7 @@ public class TaskStreamingInstance implements INodeInstance {
    * Output edges
    */
   private Map<String, String> outputEdges;
+  private TaskSchedulePlan taskSchedule;
 
   /**
    * Input edges
@@ -120,7 +122,8 @@ public class TaskStreamingInstance implements INodeInstance {
   public TaskStreamingInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                                BlockingQueue<IMessage> outQueue, Config config, String tName,
                                int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
-                               Map<String, String> inEdges, Map<String, String> outEdges) {
+                               Map<String, String> inEdges, Map<String, String> outEdges,
+                               TaskSchedulePlan taskSchedule) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
@@ -135,12 +138,13 @@ public class TaskStreamingInstance implements INodeInstance {
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
     this.inputEdges = inEdges;
     this.outputEdges = outEdges;
+    this.taskSchedule = taskSchedule;
   }
 
   public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
     task.prepare(cfg, new TaskContextImpl(taskIndex, taskId, taskName, parallelism, workerId,
-        outputCollection, nodeConfigs, inputEdges, outputEdges));
+        outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule));
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {

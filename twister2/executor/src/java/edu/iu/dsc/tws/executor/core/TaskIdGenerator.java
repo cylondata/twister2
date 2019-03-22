@@ -38,9 +38,10 @@ package edu.iu.dsc.tws.executor.core;
 import java.util.HashSet;
 import java.util.Set;
 
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
  * This is a global task id generator depending on the taskId, task index and task name
@@ -69,10 +70,10 @@ public class TaskIdGenerator {
     return sources;
   }
 
-  public Set<Integer> getTaskIdsOfContainer(TaskSchedulePlan.ContainerPlan cPlan) {
-    Set<TaskSchedulePlan.TaskInstancePlan> ips = cPlan.getTaskInstances();
+  public Set<Integer> getTaskIdsOfContainer(ContainerPlan cPlan) {
+    Set<TaskInstancePlan> ips = cPlan.getTaskInstances();
     Set<Integer> tasks = new HashSet<>();
-    for (TaskSchedulePlan.TaskInstancePlan ip : ips) {
+    for (TaskInstancePlan ip : ips) {
       tasks.add(generateGlobalTaskId(ip.getTaskName(), ip.getTaskId(), ip.getTaskIndex()));
     }
     return tasks;

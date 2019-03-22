@@ -23,8 +23,9 @@ import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class SinkStreamingInstance  implements INodeInstance {
+public class SinkStreamingInstance implements INodeInstance {
   /**
    * The actual streamingTask executing
    */
@@ -80,10 +81,12 @@ public class SinkStreamingInstance  implements INodeInstance {
    * The input edges
    */
   private Map<String, String> inEdges;
+  private TaskSchedulePlan taskSchedulePlan;
 
   public SinkStreamingInstance(ICompute streamingTask, BlockingQueue<IMessage> streamingInQueue,
                                Config config, String tName, int tId, int tIndex, int parallel,
-                               int wId, Map<String, Object> cfgs, Map<String, String> inEdges) {
+                               int wId, Map<String, Object> cfgs, Map<String, String> inEdges,
+                               TaskSchedulePlan taskSchedulePlan) {
     this.streamingTask = streamingTask;
     this.streamingInQueue = streamingInQueue;
     this.config = config;
@@ -94,11 +97,12 @@ public class SinkStreamingInstance  implements INodeInstance {
     this.workerId = wId;
     this.taskName = tName;
     this.inEdges = inEdges;
+    this.taskSchedulePlan = taskSchedulePlan;
   }
 
   public void prepare(Config cfg) {
     streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, streamingTaskId, taskName,
-        parallelism, workerId, nodeConfigs, inEdges));
+        parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
   }
 
   public boolean execute() {

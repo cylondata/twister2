@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.DKGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 
 public class BKeyedGather {
 
@@ -53,8 +53,8 @@ public class BKeyedGather {
                       Set<Integer> sources, Set<Integer> destinations,
                       MessageType kType, MessageType dType,
                       BulkReceiver rcvr, DestinationSelector destSelector) {
-    this(comm, plan, sources, destinations, kType, dType, rcvr, null,
-        destSelector, false);
+    this(comm, plan, sources, destinations, kType, dType, rcvr,
+        destSelector, false, null);
   }
 
   /**
@@ -65,16 +65,16 @@ public class BKeyedGather {
   public BKeyedGather(Communicator comm, TaskPlan plan,
                       Set<Integer> sources, Set<Integer> destinations,
                       MessageType kType, MessageType dType, BulkReceiver rcvr,
-                      Comparator<Object> comparator, DestinationSelector destSelector,
-                      boolean shuffle) {
-    if (shuffle && comparator == null) {
-      throw new RuntimeException("Key comparator should be specified in shuffle mode");
+                      DestinationSelector destSelector,
+                      boolean useDisk, Comparator comparator) {
+    if (useDisk && comparator == null) {
+      throw new RuntimeException("Key comparator should be specified in disk based mode");
     }
     this.keyType = kType;
     this.dataType = dType;
     MessageReceiver finalReceiver = null;
-    MessageReceiver partialReceiver = new KGatherBatchPartialReceiver(0, 100);
-    if (!shuffle) {
+    MessageReceiver partialReceiver = new PartitionPartialReceiver();
+    if (!useDisk) {
       finalReceiver = new KGatherBatchFinalReceiver(rcvr, 100);
     } else {
       finalReceiver = new DKGatherBatchFinalReceiver(
@@ -93,7 +93,7 @@ public class BKeyedGather {
 
       this.keyedGather = new DataFlowMultiGather(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations,
-          new GatherMultiBatchFinalReceiver(rcvr, shuffle, false, comm.getPersistentDirectory(),
+          new GatherMultiBatchFinalReceiver(rcvr, useDisk, false, comm.getPersistentDirectory(),
               null), new GatherMultiBatchPartialReceiver(),
           edges, kType, dType);
     } else if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_PARTITION.equals(

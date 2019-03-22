@@ -73,9 +73,9 @@ public class JobService {
   public Page<Job> searchJobs(List<JobState> states, String keyword, int page) {
     PageRequest pageRequest = PageRequest.of(page, 25);
     return this.jobRepository.findAllByStateInAndJobNameContainingOrderByCreatedTimeDesc(
-            states,
-            keyword,
-            pageRequest
+        states,
+        keyword,
+        pageRequest
     );
   }
 
@@ -108,7 +108,12 @@ public class JobService {
   @Transactional
   public void scale(String jobId, ScaleWorkersRequest scaleWorkersRequest) {
     ComputeResource cr = this.computeResourceService
-            .getScalableComputeResourceForJob(jobId);
+        .getScalableComputeResourceForJob(jobId);
+
+    if (cr == null) {
+      throw new EntityNotFoundException("Couldn't find scalable "
+          + "compute resource for job : " + jobId);
+    }
 
     cr.setInstances(cr.getInstances() + scaleWorkersRequest.getChange());
     this.computeResourceService.save(cr);
@@ -117,9 +122,9 @@ public class JobService {
     wState.setState(WorkerState.KILLED_BY_SCALE_DOWN);
     for (Long killedWorker : scaleWorkersRequest.getKilledWorkers()) {
       this.workerService.changeState(
-              jobId,
-              killedWorker,
-              wState
+          jobId,
+          killedWorker,
+          wState
       );
     }
 
