@@ -7,7 +7,6 @@
   * [Linux](compiling/linux.md)
   * [MacOS](compiling/macos.md)
 * [Deployment](deployment/README.md)
-  * [Compiling](compiling/compiling.md)
   * [Running a Job](deployment/job-submit.md)
   * [Standalone](deployment/standalone/running-jobs.md)
   * [Nomad](deployment/nomad/running-jobs.md)
