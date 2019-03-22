@@ -24,6 +24,8 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -49,9 +51,9 @@ public class DataLocalityTaskSchedulerTest {
 
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
 
-      Map<Integer, TaskSchedulePlan.ContainerPlan> map2 = plan2.getContainersMap();
-      for (TaskSchedulePlan.ContainerPlan containerPlan : plan1.getContainers()) {
-        TaskSchedulePlan.ContainerPlan p2 = map2.get(containerPlan.getContainerId());
+      Map<Integer, ContainerPlan> map2 = plan2.getContainersMap();
+      for (ContainerPlan containerPlan : plan1.getContainers()) {
+        ContainerPlan p2 = map2.get(containerPlan.getContainerId());
 
         Assert.assertTrue(containerEquals(containerPlan, p2));
       }
@@ -77,8 +79,8 @@ public class DataLocalityTaskSchedulerTest {
   }
 
 
-  private boolean containerEquals(TaskSchedulePlan.ContainerPlan p1,
-                                  TaskSchedulePlan.ContainerPlan p2) {
+  private boolean containerEquals(ContainerPlan p1,
+                                  ContainerPlan p2) {
     if (p1.getContainerId() != p2.getContainerId()) {
       return false;
     }
@@ -87,7 +89,7 @@ public class DataLocalityTaskSchedulerTest {
       return false;
     }
 
-    for (TaskSchedulePlan.TaskInstancePlan instancePlan : p1.getTaskInstances()) {
+    for (TaskInstancePlan instancePlan : p1.getTaskInstances()) {
       if (!p2.getTaskInstances().contains(instancePlan)) {
         return false;
       }
