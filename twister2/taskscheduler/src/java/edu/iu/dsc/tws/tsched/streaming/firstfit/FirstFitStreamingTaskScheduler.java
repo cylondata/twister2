@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.api.schedule.Resource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.builder.ContainerIdScorer;
@@ -27,7 +28,6 @@ import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.RequiredRam;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;

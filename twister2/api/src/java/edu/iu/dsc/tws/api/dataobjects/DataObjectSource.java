@@ -17,10 +17,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
-import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
-import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
@@ -48,9 +46,19 @@ public class DataObjectSource<T> extends BaseSource {
    * Edge name to write the partitoned datapoints
    */
   private String edgeName;
+  private String dataDirectory;
 
-  public DataObjectSource(String edgename) {
+  public DataObjectSource(String edgename, String dataDirectory) {
     this.edgeName = edgename;
+    this.dataDirectory = dataDirectory;
+  }
+
+  public String getDataDirectory() {
+    return dataDirectory;
+  }
+
+  public void setDataDirectory(String dataDirectory) {
+    this.dataDirectory = dataDirectory;
   }
 
   /**
@@ -98,19 +106,8 @@ public class DataObjectSource<T> extends BaseSource {
   @Override
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
-    String datainputDirectory = cfg.getStringValue(DataObjectConstants.ARGS_DINPUT_DIRECTORY);
-    int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.ARGS_DSIZE));
-    ExecutionRuntime runtime = (ExecutionRuntime)
-        cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    boolean shared = cfg.getBooleanValue(DataObjectConstants.ARGS_SHARED_FILE_SYSTEM);
-    if (!shared) {
-      this.source = runtime.createInput(cfg, context,
-          new LocalTextInputPartitioner(new Path(datainputDirectory),
-              context.getParallelism(), config));
-    } else {
-      this.source = runtime.createInput(cfg, context,
-          new SharedTextInputPartitioner(new Path(datainputDirectory),
-              context.getParallelism(), cfg));
-    }
+    ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+    this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
+        new Path(getDataDirectory()), context.getParallelism(), config));
   }
 }

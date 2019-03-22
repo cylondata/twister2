@@ -7,7 +7,7 @@ have Zookeeper running somewhere. Please refer to Mesos and Zookeeper
 webpages for more information on installing them.
 
 To compile  and install Twister2 on a machine, please follow the steps
-in [compiling document](../compiling.md).
+in [compiling document](../../compiling/compiling.md).
 You may also check [developer
 document](../../developers/developer-environment.md) for
 setting up IDEs.

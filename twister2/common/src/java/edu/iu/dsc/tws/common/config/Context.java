@@ -85,6 +85,7 @@ public class Context {
 
   public static final String TWISTER2_VERSION = "0.1.0";
 
+  public static final String TWISTER2_DIRECT_EDGE = "direct";
 
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);

@@ -34,7 +34,7 @@ public class BTReduceExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
 
     String edge = "edge";
-    BaseSource g = new SourceBatchTask(edge);
+    BaseSource g = new SourceTask(edge);
     ISink r = new ReduceSinkTask();
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);

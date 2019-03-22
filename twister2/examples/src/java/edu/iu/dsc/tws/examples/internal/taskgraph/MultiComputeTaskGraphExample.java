@@ -240,23 +240,23 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
 
     Options options = new Options();
-    options.addOption(DataObjectConstants.ARGS_PARALLELISM_VALUE, true, "parallelism");
-    options.addOption(DataObjectConstants.ARGS_WORKERS, true, "workers");
-    options.addOption(DataObjectConstants.ARGS_DSIZE, true, "dsize");
+    options.addOption(DataObjectConstants.PARALLELISM_VALUE, true, "parallelism");
+    options.addOption(DataObjectConstants.WORKERS, true, "workers");
+    options.addOption(DataObjectConstants.DSIZE, true, "dsize");
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
-    int workers = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.ARGS_WORKERS));
+    int workers = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.WORKERS));
     int parallelismValue = Integer.parseInt(cmd.getOptionValue(
-        DataObjectConstants.ARGS_PARALLELISM_VALUE));
-    int dsize = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.ARGS_DSIZE));
+        DataObjectConstants.PARALLELISM_VALUE));
+    int dsize = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.DSIZE));
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    jobConfig.put(DataObjectConstants.ARGS_DSIZE, Integer.toString(dsize));
-    jobConfig.put(DataObjectConstants.ARGS_WORKERS, Integer.toString(workers));
-    jobConfig.put(DataObjectConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
+    jobConfig.put(DataObjectConstants.DSIZE, Integer.toString(dsize));
+    jobConfig.put(DataObjectConstants.WORKERS, Integer.toString(workers));
+    jobConfig.put(DataObjectConstants.PARALLELISM_VALUE, Integer.toString(parallelismValue));
     jobConfig.putAll(configurations);
 
     //build the job

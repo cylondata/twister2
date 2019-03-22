@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.shuffle;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -125,8 +126,9 @@ public final class FileLoader {
       totalSize += size + dataLengthSize;
 
       Files.createDirectories(Paths.get(outFileName).getParent());
-      FileChannel rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
-      ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, totalSize);
+      RandomAccessFile randomAccessFile = new RandomAccessFile(outFileName, "rw");
+      FileChannel rwChannel = randomAccessFile.getChannel();
+      MappedByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, totalSize);
       for (int i = 0; i < records.size(); i++) {
         long positionBefore = os.position(); //position of os before writing this tuple
 
@@ -167,6 +169,13 @@ public final class FileLoader {
         LOG.log(Level.WARNING, "Sum doesn't equal size: " + sizeSum + " != " + size);
       }
       rwChannel.close();
+      randomAccessFile.close();
+      try {
+        MemoryMapUtils.unMapBuffer(os);
+      } catch (Exception e) {
+        //ignore
+        LOG.warning("Couldn't manually unmap a byte buffer");
+      }
       return maxRecord;
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed write to disc", e);

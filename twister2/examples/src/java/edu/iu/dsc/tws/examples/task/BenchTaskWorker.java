@@ -11,23 +11,36 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task;
 
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.task.api.BaseSource;
+import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_SEND;
 
 public abstract class BenchTaskWorker extends TaskWorker {
+
   private static final Logger LOG = Logger.getLogger(BenchTaskWorker.class.getName());
 
   protected static final String SOURCE = "source";
@@ -46,10 +59,20 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   protected static JobParameters jobParameters;
 
-  protected static Object inputData;
+  protected static int[] inputDataArray;
+
+  private boolean verified = true;
+
+  //to capture benchmark results
+  protected BenchmarkResultsRecorder resultsRecorder;
 
   @Override
   public void execute() {
+    this.resultsRecorder = new BenchmarkResultsRecorder(
+        config,
+        workerId == 0
+    );
+    Timing.setDefaultTimingUnit(TimingUnit.NANO_SECONDS);
     experimentData = new ExperimentData();
     jobParameters = JobParameters.build(config);
     experimentData.setTaskStages(jobParameters.getTaskStages());
@@ -65,8 +88,12 @@ public abstract class BenchTaskWorker extends TaskWorker {
       experimentData.setOperationMode(OperationMode.BATCH);
       experimentData.setIterations(jobParameters.getIterations());
     }
-    inputData = generateData();
-    experimentData.setInput(inputData);
+
+    inputDataArray = DataGenerator.generateIntData(jobParameters.getSize());
+
+    //todo remove below
+    experimentData.setInput(inputDataArray);
+
     buildTaskGraph();
     dataFlowTaskGraph = taskGraphBuilder.build();
     executionPlan = taskExecutor.plan(dataFlowTaskGraph);
@@ -74,16 +101,13 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
     // if streaming lets stop after sometime
     if (jobParameters.isStream()) {
-      new Thread(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            Thread.sleep(1500);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-          execution.stop();
+      new Thread(() -> {
+        try {
+          Thread.sleep(1500);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
         }
+        execution.stop();
       }).start();
     }
 
@@ -100,34 +124,73 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   public abstract TaskGraphBuilder buildTaskGraph();
 
-  protected static class SourceBatchTask extends BaseSource {
+  /**
+   * This method will verify results and append the output to the results recorder
+   */
+  protected void verifyResults(ResultsVerifier resultsVerifier, Object results,
+                               Map<String, Object> args) {
+    if (jobParameters.isDoVerify()) {
+      verified = verified && resultsVerifier.verify(results, args);
+      //this will record verification failed if any of the iteration fails to verify
+      this.resultsRecorder.recordColumn("Verified", verified);
+    } else {
+      this.resultsRecorder.recordColumn("Verified", "Not Performed");
+    }
+  }
+
+  protected static class SourceTask extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
     private int count = 0;
     private String edge;
+    private int iterations;
+    private boolean timingCondition;
+    private boolean stream;
 
-    public SourceBatchTask() {
-
+    public SourceTask() {
+      this.iterations = jobParameters.getIterations();
     }
 
-    public SourceBatchTask(String e) {
+    public SourceTask(String e, boolean stream) {
+      this();
+      this.edge = e;
+      this.stream = stream;
+    }
+
+    public SourceTask(String e) {
+      this();
       this.edge = e;
     }
 
     @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      Optional<TaskInstancePlan> min = ctx.getTasksInThisWorkerByName(SOURCE).stream()
+          .min(Comparator.comparingInt(TaskInstancePlan::getTaskId));
+      //do timing only on task having lowest ID
+      if (min.isPresent()) {
+        this.timingCondition = ctx.getWorkerId() == 0 && ctx.taskId() == min.get().getTaskId();
+      } else {
+        LOG.warning("Couldn't find lowest ID task for " + SOURCE);
+      }
+    }
+
+    @Override
     public void execute() {
-      LOG.info("++++++++++  : " + context.getWorkerId() + " : " + context.taskIndex());
-      Object val = inputData;
-      int iterations = jobParameters.getIterations();
-      while (count <= iterations) {
-        if (count == iterations) {
-          context.end(this.edge);
-        } else if (count < iterations) {
-          experimentData.setInput(val);
-          if (context.write(this.edge, val)) {
-            //
-          }
+      if (count < iterations) {
+        //todo remove
+        experimentData.setInput(inputDataArray);
+        if (context.write(this.edge, inputDataArray)) {
+          count++;
         }
-        count++;
+        if (count == jobParameters.getWarmupIterations()) {
+          Timing.mark(TIMING_ALL_SEND, this.timingCondition);
+        }
+
+        if (!stream && count >= jobParameters.getWarmupIterations()) {
+          Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
+        }
+      } else {
+        context.end(this.edge);
       }
     }
   }
@@ -138,28 +201,25 @@ public abstract class BenchTaskWorker extends TaskWorker {
     private String edge;
 
     private int count;
+    private int iterations;
 
     public KeyedSourceBatchTask() {
+      this.iterations = jobParameters.getIterations();
     }
 
     public KeyedSourceBatchTask(String edge) {
+      this();
       this.edge = edge;
     }
 
     @Override
     public void execute() {
-      Object val = inputData;
-      int iterations = jobParameters.getIterations();
-      while (count <= iterations) {
-        if (count == iterations) {
-          context.end(this.edge);
-        } else if (count < iterations) {
-          experimentData.setInput(val);
-          if (context.write(edge, count, val)) {
-            //
-          }
+      if (count <= iterations) {
+        if (context.write(edge, count, inputDataArray)) {
+          count++;
         }
-        count++;
+      } else {
+        context.end(this.edge);
       }
     }
   }
@@ -168,9 +228,10 @@ public abstract class BenchTaskWorker extends TaskWorker {
     private static final long serialVersionUID = -254264903510284748L;
     private int count = 0;
     private String edge;
+    private int iterations;
 
     public SourceStreamTask() {
-
+      this.iterations = jobParameters.getIterations();
     }
 
     public SourceStreamTask(String e) {
@@ -179,13 +240,8 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
     @Override
     public void execute() {
-      Object val = inputData;
-      experimentData.setInput(val);
-      int iterations = jobParameters.getIterations();
-      while (count <= iterations) {
-        if (context.write(this.edge, val)) {
-          //
-        }
+      experimentData.setInput(inputDataArray);
+      if (count <= iterations && context.write(this.edge, inputDataArray)) {
         count++;
       }
     }
@@ -195,36 +251,25 @@ public abstract class BenchTaskWorker extends TaskWorker {
     private static final long serialVersionUID = -254264903510284748L;
 
     private String edge;
-
     private int count = 0;
+    private int iterations;
 
     public KeyedSourceStreamTask() {
+      this.iterations = jobParameters.getIterations();
     }
 
     public KeyedSourceStreamTask(String edge) {
+      this();
       this.edge = edge;
     }
 
     @Override
     public void execute() {
-      Object val = inputData;
-      int iterations = jobParameters.getIterations();
-      while (count <= iterations) {
-        if (context.write(edge, count, val)) {
-          //
-        }
+      experimentData.setInput(inputDataArray);
+      if (count <= iterations && context.write(this.edge, inputDataArray)) {
         count++;
       }
     }
-  }
-
-
-  protected static Object generateData() {
-    return DataGenerator.generateIntData(jobParameters.getSize());
-  }
-
-  protected static Object generateEmpty() {
-    return DataGenerator.generateIntData(jobParameters.getSize());
   }
 
   public static void verify(String operationNames) throws VerificationException {

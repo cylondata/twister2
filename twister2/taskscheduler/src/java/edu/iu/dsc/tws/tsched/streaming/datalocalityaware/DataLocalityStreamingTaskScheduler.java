@@ -22,6 +22,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.utils.DataNodeLocatorUtils;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.Resource;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
@@ -29,7 +32,6 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -89,7 +91,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     //Represents task schedule plan Id
     int taskSchedulePlanId = 0;
 
-    Set<TaskSchedulePlan.ContainerPlan> containerPlans = new HashSet<>();
+    Set<ContainerPlan> containerPlans = new HashSet<>();
 
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
@@ -118,7 +120,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
       double containerCpuValue = TaskSchedulerContext.containerCpuPadding(config);
 
       List<InstanceId> taskInstanceIds = containerInstanceMap.get(containerId);
-      Map<InstanceId, TaskSchedulePlan.TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
+      Map<InstanceId, TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
       for (InstanceId id : taskInstanceIds) {
         double instanceRAMValue = instancesRamMap.get(containerId).get(id);
@@ -128,7 +130,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
         Resource instanceResource = new Resource(instanceRAMValue,
             instanceDiskValue, instanceCPUValue);
 
-        taskInstancePlanMap.put(id, new TaskSchedulePlan.TaskInstancePlan(
+        taskInstancePlanMap.put(id, new TaskInstancePlan(
             id.getTaskName(), id.getTaskId(), id.getTaskIndex(), instanceResource));
 
         containerRAMValue += instanceRAMValue;
@@ -147,8 +149,8 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
             containerCpuValue);
       }
 
-      TaskSchedulePlan.ContainerPlan taskContainerPlan =
-          new TaskSchedulePlan.ContainerPlan(containerId,
+      ContainerPlan taskContainerPlan =
+          new ContainerPlan(containerId,
               new HashSet<>(taskInstancePlanMap.values()), containerResource);
       containerPlans.add(taskContainerPlan);
     }
