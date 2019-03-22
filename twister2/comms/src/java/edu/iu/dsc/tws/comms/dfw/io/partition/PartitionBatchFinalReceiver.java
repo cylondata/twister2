@@ -114,6 +114,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
     try {
       Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(target);
       if ((flags & MessageFlags.END) == MessageFlags.END) {
+        LOG.info("Got END message");
         if (onFinishedSrcsTarget.contains(src)) {
           LOG.log(Level.WARNING,
               String.format("%d Duplicate finish from source id %d", this.thisWorker, src));
