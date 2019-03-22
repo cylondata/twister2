@@ -72,11 +72,14 @@ public class BKeyedGather {
     }
     this.keyType = kType;
     this.dataType = dType;
+
+    MessageType receiveDataType = dataType;
     MessageReceiver finalReceiver;
     MessageReceiver partialReceiver = new PartitionPartialReceiver();
     if (!useDisk) {
       finalReceiver = new KGatherBatchFinalReceiver(rcvr, 100);
     } else {
+      receiveDataType = MessageType.BYTE;
       finalReceiver = new DPartitionBatchFinalReceiver(
           rcvr, true, comm.getPersistentDirectory(), comparator);
     }
@@ -102,13 +105,13 @@ public class BKeyedGather {
           CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
         this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
             plan, sources, destinations,
-            finalReceiver, partialReceiver, dataType, dataType,
+            finalReceiver, partialReceiver, dataType, receiveDataType,
             keyType, keyType, comm.nextEdge());
       } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
           CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
         this.keyedGather = new RingPartition(comm.getConfig(), comm.getChannel(),
             plan, sources, destinations, finalReceiver, partialReceiver,
-            dataType, dataType, keyType, keyType, comm.nextEdge());
+            dataType, receiveDataType, keyType, keyType, comm.nextEdge());
       }
     }
     this.destinationSelector = destSelector;
