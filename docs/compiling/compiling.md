@@ -9,7 +9,7 @@ Refer the specific guides for details on different platforms.
 * [Compiling on Linux](linux.md)
 * [Compiling MacOS](macos.md)
 
-## Compile overview
+## Overview
 
 Twister2 can be compiled with the following general command
 
