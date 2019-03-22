@@ -126,7 +126,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
       batchDone.put(expectedIdPerTarget.getKey(), false);
       isEmptySent.put(expectedIdPerTarget.getKey(), false);
       sendQueue.put(expectedIdPerTarget.getKey(),
-          new ConcurrentLinkedDeque<Object>());
+          new ConcurrentLinkedDeque<>());
     }
   }
 
@@ -246,8 +246,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
     } else {
       Tuple tuple = (Tuple) object;
       if (messagesPerTarget.containsKey(tuple.getKey())) {
-        if (messagesPerTarget.get(tuple.getKey()).size() < limitPerKey
-            || isFinalBatchReceiver) {
+        if (messagesPerTarget.get(tuple.getKey()).size() < limitPerKey) {
           return messagesPerTarget.get(tuple.getKey()).offer(tuple.getValue());
         } else {
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "

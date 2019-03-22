@@ -21,6 +21,8 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
@@ -68,7 +70,7 @@ public class RoundRobinBatchTaskSchedulerTest {
 
       int instancescount1 = 0;
 
-      for (TaskSchedulePlan.ContainerPlan containerPlan : plan1.getContainers()) {
+      for (ContainerPlan containerPlan : plan1.getContainers()) {
         instancescount1 = containerPlan.getTaskInstances().size();
       }
       Assert.assertEquals(instancescount1, graph.getTaskVertexSet().size());
@@ -76,8 +78,8 @@ public class RoundRobinBatchTaskSchedulerTest {
   }
 
 
-  private boolean containerEquals(TaskSchedulePlan.ContainerPlan p1,
-                                  TaskSchedulePlan.ContainerPlan p2) {
+  private boolean containerEquals(ContainerPlan p1,
+                                  ContainerPlan p2) {
     if (p1.getContainerId() != p2.getContainerId()) {
       return false;
     }
@@ -86,7 +88,7 @@ public class RoundRobinBatchTaskSchedulerTest {
       return false;
     }
 
-    for (TaskSchedulePlan.TaskInstancePlan instancePlan : p1.getTaskInstances()) {
+    for (TaskInstancePlan instancePlan : p1.getTaskInstances()) {
       if (!p2.getTaskInstances().contains(instancePlan)) {
         return false;
       }

@@ -36,7 +36,7 @@ public class BTGatherExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    BaseSource g = new SourceBatchTask(edge);
+    BaseSource g = new SourceTask(edge);
     ISink r = new GatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);

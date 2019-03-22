@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SourceBatchInstance implements INodeInstance {
 
@@ -109,10 +110,12 @@ public class SourceBatchInstance implements INodeInstance {
    * The high water mark for messages
    */
   private int highWaterMark;
+  private TaskSchedulePlan taskSchedule;
 
   public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue,
                              Config config, String tName, int tId, int tIndex, int parallel,
-                             int wId, Map<String, Object> cfgs, Map<String, String> outEdges) {
+                             int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
+                             TaskSchedulePlan taskSchedule) {
     this.batchTask = task;
     this.outBatchQueue = outQueue;
     this.config = config;
@@ -125,13 +128,14 @@ public class SourceBatchInstance implements INodeInstance {
     this.outputEdges = outEdges;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
+    this.taskSchedule = taskSchedule;
   }
 
   public void prepare(Config cfg) {
     outputBatchCollection = new DefaultOutputCollection(outBatchQueue);
 
     taskContext = new TaskContextImpl(batchTaskIndex, batchTaskId, batchTaskName,
-        parallelism, workerId, outputBatchCollection, nodeConfigs, outputEdges);
+        parallelism, workerId, outputBatchCollection, nodeConfigs, outputEdges, taskSchedule);
     batchTask.prepare(cfg, taskContext);
   }
 
@@ -219,6 +223,7 @@ public class SourceBatchInstance implements INodeInstance {
 
   /**
    * Progress the communication and return weather we need to further progress
+   *
    * @return true if further progress is needed
    */
   public boolean communicationProgress() {

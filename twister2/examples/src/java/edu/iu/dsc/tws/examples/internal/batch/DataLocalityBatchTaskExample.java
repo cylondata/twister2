@@ -36,6 +36,8 @@ import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
@@ -48,7 +50,7 @@ import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 public class DataLocalityBatchTaskExample implements IWorker {
 
   private static final Logger LOG =
-          Logger.getLogger(DataLocalityBatchTaskExample.class.getName());
+      Logger.getLogger(DataLocalityBatchTaskExample.class.getName());
 
   public static void main(String[] args) {
     // first load the configurations from command line and config files
@@ -115,15 +117,15 @@ public class DataLocalityBatchTaskExample implements IWorker {
      */
 
     builder.connect("source", "sink1", "partition-edge1",
-            OperationNames.PARTITION);
+        OperationNames.PARTITION);
     builder.connect("sink1", "sink2", "partition-edge2",
-            OperationNames.PARTITION);
+        OperationNames.PARTITION);
     builder.connect("sink1", "merge", "partition-edge3",
-            OperationNames.PARTITION);
+        OperationNames.PARTITION);
     builder.connect("sink2", "final", "partition-edge4",
-            OperationNames.PARTITION);
+        OperationNames.PARTITION);
     builder.connect("merge", "final", "partition-edge5",
-            OperationNames.PARTITION);
+        OperationNames.PARTITION);
 
     builder.operationMode(OperationMode.STREAMING);
 
@@ -167,18 +169,18 @@ public class DataLocalityBatchTaskExample implements IWorker {
     //Just to print the task schedule plan...
     if (workerID == 0) {
       if (taskSchedulePlan != null) {
-        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-                = taskSchedulePlan.getContainersMap();
-        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+        Map<Integer, ContainerPlan> containersMap
+            = taskSchedulePlan.getContainersMap();
+        for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
           Integer integer = entry.getKey();
-          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-          Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
-                  = containerPlan.getTaskInstances();
+          ContainerPlan containerPlan = entry.getValue();
+          Set<TaskInstancePlan> containerPlanTaskInstances
+              = containerPlan.getTaskInstances();
           LOG.info("Task Details for Container Id:" + integer);
-          for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
+          for (TaskInstancePlan ip : containerPlanTaskInstances) {
             LOG.info("Task Id:" + ip.getTaskId()
-                    + "\tTask Index" + ip.getTaskIndex()
-                    + "\tTask Name:" + ip.getTaskName());
+                + "\tTask Index" + ip.getTaskIndex()
+                + "\tTask Name:" + ip.getTaskName());
           }
         }
       }
@@ -194,7 +196,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
 
   private WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
       Worker w = new Worker(workerInfo.getWorkerID());
       if (w.getId() == 0) {
         w.addProperty("bandwidth", 1000.0);
@@ -270,7 +272,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
-              + ", Count : " + count);
+          + ", Count : " + count);
       count++;
       return true;
     }
@@ -284,7 +286,7 @@ public class DataLocalityBatchTaskExample implements IWorker {
     public boolean execute(IMessage message) {
 
       LOG.info("Message Partition Received : " + message.getContent()
-              + ", Count : " + count);
+          + ", Count : " + count);
       count++;
       return true;
     }

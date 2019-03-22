@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
-import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
+import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -138,7 +138,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
             DFWIOUtils.getOperationName(target, partition), partition.getDataType());
       } else {
         if (sorted) {
-          sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory,
+          sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
               shuffleDirectory, DFWIOUtils.getOperationName(target, partition),
               partition.getKeyType(), partition.getDataType(), comparator, target);
         } else {

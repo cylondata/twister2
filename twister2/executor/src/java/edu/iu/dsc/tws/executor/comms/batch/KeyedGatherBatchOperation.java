@@ -11,9 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.batch;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -32,6 +34,8 @@ import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedGatherBatchOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(KeyedGatherBatchOperation.class.getName());
+
   protected BKeyedGather op;
 
   private TaskKeySelector selector;
@@ -50,11 +54,21 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
       destSelector = new HashingSelector();
     }
 
+    boolean useDisk = false;
+    Comparator keyComparator = null;
+    try {
+      useDisk = (Boolean) edge.getProperty("use-disk");
+      keyComparator = (Comparator) edge.getProperty("key-comparator");
+      LOG.info("Configuring disk based batch operation");
+    } catch (Exception ex) {
+      //ignore
+    }
+
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BKeyedGather(newComm, taskPlan, sources, dests,
         Utils.dataTypeToMessageType(edge.getKeyType()),
         Utils.dataTypeToMessageType(edge.getDataType()), new GatherRecvrImpl(),
-        destSelector);
+        destSelector, useDisk, keyComparator);
 
     communicationEdge = e.generate(edge.getName());
   }
