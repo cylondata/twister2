@@ -36,12 +36,18 @@ public class KMeansWorkerUtils {
   private int dsize;
   private int csize;
 
+  private double[][] datapoint = null;
+  private double[][] centroid = null;
+
   public KMeansWorkerUtils(Config cfg) {
     this.config = cfg;
     this.parallel = Integer.parseInt(config.getStringValue("parallelism"));
     this.dsize = Integer.parseInt(config.getStringValue("dsize"));
     this.csize = Integer.parseInt(config.getStringValue("csize"));
     this.dimension = Integer.parseInt(config.getStringValue("dim"));
+
+    datapoint = new double[dsize / parallel + 1][dimension];
+    centroid = new double[csize][dimension];
   }
 
   /**
@@ -49,9 +55,10 @@ public class KMeansWorkerUtils {
    * based on the delimiter comma.
    */
   public double[][] getDataPoints(int taskIndex, DataObject<?> datapointsDataObject) {
+
     Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>)
         datapointsDataObject.getPartitions(taskIndex).getConsumer().next();
-    double[][] datapoint = new double[dsize / parallel + 1][dimension];
+
     int value = 0;
     while (arrayListIterator.hasNext()) {
       String val = String.valueOf(arrayListIterator.next());
@@ -68,20 +75,21 @@ public class KMeansWorkerUtils {
    * This method receive centroids object and parse the object and store it into the double array
    * based on the delimiter comma.
    */
-  public double[][] getCentroids(int partitionId, DataObject<?> centroidsDataObject) {
+  public double[][] getCentroids(int taskIndex, DataObject<?> centroidsDataObject) {
+
     Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>)
-        centroidsDataObject.getPartitions(partitionId).getConsumer().next();
-    double[][] datapoint = new double[csize][dimension];
+        centroidsDataObject.getPartitions(taskIndex).getConsumer().next();
+
     int value = 0;
     while (arrayListIterator.hasNext()) {
       String val = String.valueOf(arrayListIterator.next());
       String[] data = val.split(",");
       for (int i = 0; i < dimension; i++) {
-        datapoint[value][i] = Double.parseDouble(data[i].trim());
+        centroid[value][i] = Double.parseDouble(data[i].trim());
       }
       value++;
     }
-    return datapoint;
+    return centroid;
   }
 
   /**
@@ -93,17 +101,17 @@ public class KMeansWorkerUtils {
         = (DataObjectImpl<Object>) dataPointsPartition.getConsumer().next();
     Iterator<ArrayList> arrayListIterator
         = (Iterator<ArrayList>) dataObject.getPartitions(partitionId).getConsumer().next();
-    double[][] datapoint = new double[dsize / parallel + 1][dimension];
+    double[][] points = new double[dsize / parallel + 1][dimension];
     int value = 0;
     while (arrayListIterator.hasNext()) {
       String val = String.valueOf(arrayListIterator.next());
       String[] data = val.split(",");
       for (int i = 0; i < dimension; i++) {
-        datapoint[value][i] = Double.parseDouble(data[i].trim());
+        points[value][i] = Double.parseDouble(data[i].trim());
       }
       value++;
     }
-    return datapoint;
+    return points;
   }
 
 
@@ -114,7 +122,7 @@ public class KMeansWorkerUtils {
   public double[][] getCentroids(int partitionId, DataPartition<Object> centroidsPartition) {
     DataObjectImpl<Object> dataObject
         = (DataObjectImpl<Object>) centroidsPartition.getConsumer().next();
-    double[][] datapoint = new double[csize][dimension];
+    double[][] centroids = new double[csize][dimension];
     Iterator<ArrayList> arrayListIterator
         = (Iterator<ArrayList>) dataObject.getPartitions(partitionId).getConsumer().next();
     int value = 0;
@@ -122,11 +130,11 @@ public class KMeansWorkerUtils {
       String val = String.valueOf(arrayListIterator.next());
       String[] data = val.split(",");
       for (int i = 0; i < dimension; i++) {
-        datapoint[value][i] = Double.parseDouble(data[i].trim());
+        centroids[value][i] = Double.parseDouble(data[i].trim());
       }
       value++;
     }
-    return datapoint;
+    return centroids;
   }
 
   /**
