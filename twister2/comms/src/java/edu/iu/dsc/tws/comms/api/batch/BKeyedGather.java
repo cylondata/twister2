@@ -30,8 +30,8 @@ import edu.iu.dsc.tws.comms.dfw.RingPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchPartialReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.DKGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 
 public class BKeyedGather {
@@ -66,19 +66,22 @@ public class BKeyedGather {
                       Set<Integer> sources, Set<Integer> destinations,
                       MessageType kType, MessageType dType, BulkReceiver rcvr,
                       DestinationSelector destSelector,
-                      boolean useDisk, Comparator comparator) {
+                      boolean useDisk, Comparator<Object> comparator) {
     if (useDisk && comparator == null) {
       throw new RuntimeException("Key comparator should be specified in disk based mode");
     }
     this.keyType = kType;
     this.dataType = dType;
-    MessageReceiver finalReceiver = null;
+
+    MessageType receiveDataType = dataType;
+    MessageReceiver finalReceiver;
     MessageReceiver partialReceiver = new PartitionPartialReceiver();
     if (!useDisk) {
       finalReceiver = new KGatherBatchFinalReceiver(rcvr, 100);
     } else {
-      finalReceiver = new DKGatherBatchFinalReceiver(
-          rcvr, true, 10, comm.getPersistentDirectory(), comparator);
+      receiveDataType = MessageType.BYTE;
+      finalReceiver = new DPartitionBatchFinalReceiver(
+          rcvr, true, comm.getPersistentDirectory(), comparator);
     }
 
     if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_GATHER.equals(
@@ -102,13 +105,13 @@ public class BKeyedGather {
           CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
         this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
             plan, sources, destinations,
-            finalReceiver, partialReceiver, dataType, dataType,
+            finalReceiver, partialReceiver, dataType, receiveDataType,
             keyType, keyType, comm.nextEdge());
       } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
           CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
         this.keyedGather = new RingPartition(comm.getConfig(), comm.getChannel(),
             plan, sources, destinations, finalReceiver, partialReceiver,
-            dataType, dataType, keyType, keyType, comm.nextEdge());
+            dataType, receiveDataType, keyType, keyType, comm.nextEdge());
       }
     }
     this.destinationSelector = destSelector;
@@ -117,7 +120,7 @@ public class BKeyedGather {
 
   public boolean gather(int source, Object key, Object data, int flags) {
     int dest = destinationSelector.next(source, key, data);
-    return keyedGather.send(source, new Tuple(key, data, keyType,
+    return keyedGather.send(source, new Tuple<>(key, data, keyType,
         dataType), flags, dest);
   }
 
