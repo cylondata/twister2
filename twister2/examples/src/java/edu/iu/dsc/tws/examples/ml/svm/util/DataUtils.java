@@ -11,9 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 
 public final class DataUtils {
 
@@ -80,11 +84,12 @@ public final class DataUtils {
   /**
    * This method is deprecated and use the updateModelData method to update the model with
    * data points
-   * @deprecated method
+   *
    * @param xy data points with {y_i, x_i_1, .... x_i_d}
    * @param iterations number of iterations
    * @param alpha learning rate
    * @return returns the BinaryBatchModel
+   * @deprecated method
    */
   @Deprecated
   public static BinaryBatchModel generateBinaryModel(double[][] xy, int iterations, double alpha) {
@@ -110,6 +115,7 @@ public final class DataUtils {
 
   /**
    * This method updates an existing BinaryBatchModel with the data points
+   *
    * @param binaryBatchModel Binary Batch Model
    * @param xy data points with {y_i, x_i_1, .... x_i_d}
    * @return returns the updated model
@@ -124,9 +130,9 @@ public final class DataUtils {
       int samples = binaryBatchModel.getSamples();
       if (xy.length > 0 && features > 0) {
         if (xy[0].length > 0 && samples > 0) {
-          double[][] x = new double[samples][features];
-          double[] y = new double[samples];
-          for (int i = 0; i < samples; i++) {
+          double[][] x = new double[xy.length][xy[0].length];
+          double[] y = new double[xy.length];
+          for (int i = 0; i < xy.length; i++) {
             y[i] = xy[i][0];
             x[i] = Arrays.copyOfRange(xy[i], 1, features + 1);
           }
@@ -135,12 +141,49 @@ public final class DataUtils {
           binaryBatchModel.setW(w);
           binaryBatchModel.setSamples(samples);
           binaryBatchModel.setFeatures(features);
-          LOG.info(String.format("X : %s, y : %s", Arrays.toString(binaryBatchModel.getX()[0]),
-              Arrays.toString(binaryBatchModel.getY())));
+          LOG.info(String.format("X : %s, y : %s, Samples %d",
+              Arrays.toString(binaryBatchModel.getX()[0]),
+              binaryBatchModel.getY()[0], binaryBatchModel.getY().length));
         }
       }
     }
     return binaryBatchModel;
+  }
+
+  /**
+   * This method is used to convert the input data obtained from a different SourceTask
+   */
+  public static double[][] getDataPointsFromDataObject(Object object) {
+    double[][] res = null;
+    if (object instanceof ArrayList<?>) {
+      ArrayList<?> data = (ArrayList<?>) object;
+      res = new double[data.size()][];
+      int count = 0;
+      for (Object o : data) {
+        if (o instanceof String) {
+          //LOG.info(String.format("Transformed Data : %s", (String) o));
+          //each string contains the a , delimeter string
+          // the first value is the class label and the rest are features of the datapoint
+          String[] s = String.valueOf(o).split(Constants.SimpleGraphConfig.DELIMITER);
+          double label = Double.parseDouble(s[0]);
+          int features = s.length - 1;
+          res[count] = new double[features];
+          for (int i = 0; i < features; i++) {
+            res[count][i] = Double.parseDouble(s[i + 1]);
+          }
+          count++;
+        } else {
+          LOG.info(String.format("Data Type : %s", o.getClass().getName()));
+        }
+      }
+    }
+    return res;
+  }
+
+  public static double[][] getDataObjectToDoubleArray(DataObject<Object> dataPointsObject1) {
+    double[][] d = null;
+
+    return d;
   }
 
 

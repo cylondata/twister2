@@ -11,10 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.streamer;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.InputDataFormatException;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
@@ -23,12 +30,7 @@ import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-/**
- * This is the DataStreamer for both batch and streaming mode
- * In streaming mode a single data point is sent continously.
- * But in the batch application an array of data points is sent once.
- */
-public class DataStreamer extends BaseSource {
+public class InputDataStreamer extends BaseSource implements Receptor {
 
   private static final Logger LOG = Logger.getLogger(DataStreamer.class.getName());
 
@@ -42,17 +44,23 @@ public class DataStreamer extends BaseSource {
 
   private BinaryBatchModel binaryBatchModel;
 
-  public DataStreamer(OperationMode operationMode) {
+  private DataObject<?> dataPointsObject = null;
+
+  private Object datapoints = null;
+
+  private double[][] datapointArray = null;
+
+  public InputDataStreamer(OperationMode operationMode) {
     this.operationMode = operationMode;
   }
 
-  public DataStreamer(int features, OperationMode operationMode) {
+  public InputDataStreamer(int features, OperationMode operationMode) {
     this.features = features;
     this.operationMode = operationMode;
   }
 
-  public DataStreamer(OperationMode operationMode, boolean isDummy,
-                      BinaryBatchModel binaryBatchModel) {
+  public InputDataStreamer(OperationMode operationMode, boolean isDummy,
+                           BinaryBatchModel binaryBatchModel) {
     this.operationMode = operationMode;
     this.isDummy = isDummy;
     this.binaryBatchModel = binaryBatchModel;
@@ -82,7 +90,6 @@ public class DataStreamer extends BaseSource {
    * This method is used to deal with dummy data based data stream generation
    * Here data points are generated using a Gaussian Distribution and labels are assigned
    * +1 or -1 randomly for a given data point.
-   * @throws InputDataFormatException
    */
   public void dummyDataStreamer() throws InputDataFormatException {
     if (this.operationMode.equals(OperationMode.STREAMING)) {
@@ -110,11 +117,55 @@ public class DataStreamer extends BaseSource {
   }
 
   /**
-   * This method must be implemented
-   * TODO : Use Twister2 DataAPI to Handle real data streaming
+   *This method is used to retrieve real data from
+   * Data Source Task
+   *
    */
   public void realDataStreamer() {
     // do real data streaming
-    throw new org.apache.commons.lang.NotImplementedException("Method Not Implemented");
+    if (this.operationMode.equals(OperationMode.BATCH)) {
+      getData();
+      this.context.write(Constants.SimpleGraphConfig.DATA_EDGE, this.datapointArray);
+      this.context.end(Constants.SimpleGraphConfig.DATA_EDGE);
+    }
+  }
+
+  @Override
+  public void add(String name, DataObject<?> data) {
+    LOG.log(Level.INFO, "Received input: " + name);
+    if (Constants.SimpleGraphConfig.INPUT_DATA.equals(name)) {
+      this.dataPointsObject = data;
+    }
+  }
+
+  public Object getDataPointsByTaskIndex(int taskIndex) {
+    EntityPartition<Object> datapointsEntityPartition
+        = (EntityPartition<Object>) dataPointsObject.getPartitions(taskIndex);
+    if (datapointsEntityPartition != null) {
+      DataObject<?> dataObject
+          = (DataObject<?>) datapointsEntityPartition.getConsumer().next();
+      datapoints = getDataPointsByDataObject(taskIndex, dataObject);
+    }
+    return datapoints;
+  }
+
+  public Object getDataPointsByDataObject(int taskIndex, DataObject<?> datapointsDataObject) {
+    Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>)
+        datapointsDataObject.getPartitions(taskIndex).getConsumer().next();
+    List<Object> items = new ArrayList<>();
+    while (arrayListIterator.hasNext()) {
+      Object object = arrayListIterator.next();
+      items.add(object);
+    }
+    return items;
+  }
+
+  public void getData() {
+    this.datapoints = getDataPointsByTaskIndex(context.taskIndex());
+    LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
+    this.datapointArray = DataUtils.getDataPointsFromDataObject(this.datapoints);
+    LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
+        this.datapointArray.length));
+    //LOG.info(String.format("Data Points : %s", Arrays.deepToString(this.datapointArray)));
   }
 }

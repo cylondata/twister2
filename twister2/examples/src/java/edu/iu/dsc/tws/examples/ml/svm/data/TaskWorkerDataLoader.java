@@ -31,9 +31,9 @@ import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class BatchLoader extends TaskWorker {
+public class TaskWorkerDataLoader extends TaskWorker {
 
-  private static final Logger LOG = Logger.getLogger(BatchLoader.class.getName());
+  private static final Logger LOG = Logger.getLogger(TaskWorkerDataLoader.class.getName());
 
   private static int workers = 1;
   private static int parallelism = 4;

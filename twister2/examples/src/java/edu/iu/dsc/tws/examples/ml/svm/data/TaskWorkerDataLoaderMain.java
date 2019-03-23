@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.data.utils.WorkerConstants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.InvalidArguments;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public class BatchLoaderMain {
+public class TaskWorkerDataLoaderMain {
 
   private static final int DEFAULT_WORKERS = 1;
   private static final int DEFAULT_PARALLELISM = 4;
@@ -41,8 +41,8 @@ public class BatchLoaderMain {
       jobConfig.put(WorkerConstants.PARALLELISM, parallelism);
       jobConfig.put(MLDataObjectConstants.TRAINING_DATA_DIR, dataSource);
       Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-      jobBuilder.setJobName("BatchLoader");
-      jobBuilder.setWorkerClass(BatchLoader.class.getName());
+      jobBuilder.setJobName("TaskWorkerDataLoader");
+      jobBuilder.setWorkerClass(TaskWorkerDataLoader.class.getName());
       jobBuilder.addComputeResource(2, 512, 1.0, workers);
       jobBuilder.setConfig(jobConfig);
 

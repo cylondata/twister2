@@ -26,5 +26,19 @@ public final class Constants {
     public static final String SVM_COMPUTE = "svm_compute";
 
     public static final String SVM_REDUCE = "svm_reduce";
+
+    public static final String INPUT_DATA = "input_data";
+
+    public static final String DATA_OBJECT_SOURCE = "data_source";
+
+    public static final String DATA_OBJECT_SINK = "data_sink";
+
+    public static final String INPUT_TESTING_DATA = "input_testing_data";
+
+    public static final String DATA_OBJECT_SOURCE_TESTING = "data_source_test";
+
+    public static final String DATA_OBJECT_SINK_TESTING = "data_sink_test";
+
+    public static final String DELIMITER = ",";
   }
 }
