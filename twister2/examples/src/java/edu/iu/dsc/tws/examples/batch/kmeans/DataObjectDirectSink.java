@@ -49,8 +49,8 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
 /**
- * This class receives the message from the DataObjectSource and writes the output into the
- * DataObject.
+ * This class receives the message object from the DataObjectCompute and write into their
+ * respective task index values.
  */
 public class DataObjectDirectSink<T> extends BaseSink implements Collector {
 
@@ -65,15 +65,13 @@ public class DataObjectDirectSink<T> extends BaseSink implements Collector {
    */
   @Override
   public boolean execute(IMessage message) {
-    List<double[]> values = new ArrayList<>();
+    List<double[][]> values = new ArrayList<>();
     while (((Iterator) message.getContent()).hasNext()) {
-      values.add((double[]) ((Iterator) message.getContent()).next());
-      //datapoints.addPartition(new EntityPartition<>(context.taskIndex(), datapoint));
+      values.add((double[][]) ((Iterator) message.getContent()).next());
     }
-
     dataPointsLocal = new double[values.size()][];
-    for (int i = 0; i < values.size(); i++) {
-      dataPointsLocal[i] = values.get(i);
+    for (double[][] value : values) {
+      dataPointsLocal = value;
     }
     return true;
   }

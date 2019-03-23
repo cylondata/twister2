@@ -100,13 +100,13 @@ public class KMeansWorker extends TaskWorker {
         DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
-    //Build the taskgraph
+    //Build the first taskgraph
     DataFlowTaskGraph datapointsTaskGraph = taskGraphBuilder.build();
-    //Get the execution plan
+    //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
-    //Actual execution
+    //Actual execution for the first taskgraph
     taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
-    //Retrive the output of the task graph.
+    //Retrieve the output of the first task graph
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(
         datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
 
@@ -130,40 +130,49 @@ public class KMeansWorker extends TaskWorker {
         DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
+    //Build the second taskgraph
     DataFlowTaskGraph centroidsTaskGraph = taskGraphBuilder.build();
+    //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
+    //Actual execution for the second taskgraph
     taskExecutor.execute(centroidsTaskGraph, secondGraphExecutionPlan);
+    //Retrieve the output of the first task graph
     DataObject<Object> centroidsDataObject = taskExecutor.getOutput(
         centroidsTaskGraph, secondGraphExecutionPlan, "centroidsink");
 
     /* Third Graph to do the actual calculation **/
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
+
+    //Add source, and sink tasks to the task graph builder for the third task graph
     taskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
     ComputeConnection kMeanscomputeConnection = taskGraphBuilder.addSink(
         "kmeanssink", kMeansAllReduceTask, parallelismValue);
+
+    //Creating the communication edges between the tasks for the third task graph
     kMeanscomputeConnection.allreduce("kmeanssource", "all-reduce",
         new CentroidAggregator(), DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph kmeansTaskGraph = taskGraphBuilder.build();
 
-    double[][] centroid = null;
+    //Perform the iterations from 0 to 'n' number of iterations
     for (int i = 0; i < iterations; i++) {
       ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
+      //add the datapoints and centroids as input the kmeanssource task.
       taskExecutor.addInput(
           kmeansTaskGraph, plan, "kmeanssource", "points", dataPointsObject);
       taskExecutor.addInput(
           kmeansTaskGraph, plan, "kmeanssource", "centroids", centroidsDataObject);
-
+      //actual execution of the third task graph
       taskExecutor.execute(kmeansTaskGraph, plan);
-
+      //retrieve the new centroid value for the next iterations
       centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
-
-      //DataObject<double[][]> dataSet = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
-      //DataPartition<double[][]> values = dataSet.getPartitions()[0];
-      //centroid = values.getConsumer().next();
     }
-    //LOG.info("Final Centroid Values are:" + Arrays.deepToString(centroid));
+
+    DataPartition<?> centroidPartition = centroidsDataObject.getPartitions(workerId);
+    double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
+    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+        + Arrays.deepToString(centroid));
   }
 
   private static class KMeansSourceTask extends BaseSource implements Receptor {
@@ -185,11 +194,9 @@ public class KMeansWorker extends TaskWorker {
 
       DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
       datapoints = (double[][]) dataPartition.getConsumer().next();
-      LOG.info("datapoints:" + Arrays.deepToString(datapoints));
 
       DataPartition<?> centroidPartition = centroidsObject.getPartitions(context.taskIndex());
       centroid = (double[][]) centroidPartition.getConsumer().next();
-      LOG.info("Centroids:" + Arrays.deepToString(centroid) + "\t(" + centroid.length + ")");
 
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
@@ -207,25 +214,6 @@ public class KMeansWorker extends TaskWorker {
         this.centroidsObject = data;
       }
     }
-
-//    private double[][] getTaskIndexDataPoints(
-//        EntityPartition<Object> datapointsEntityPartition, int taskIndex) {
-//      if (datapointsEntityPartition != null) {
-//        DataObject<?> dataObject = (DataObject<?>) datapointsEntityPartition.getConsumer().next();
-//        datapoints = workerUtils.getDataPoints(taskIndex, dataObject);
-//      }
-//      return datapoints;
-//    }
-//
-//    private double[][] getTaskIndexCentroids(
-//        EntityPartition<Object> centroidsEntityPartition, int taskIndex) {
-//      if (centroidsEntityPartition != null) {
-//        DataObject<?> centroidObject
-//            = (DataObject<?>) centroidsEntityPartition.getConsumer().next();
-//        centroid = workerUtils.getCentroids(taskIndex, centroidObject);
-//      }
-//      return centroid;
-//    }
   }
 
   private static class KMeansAllReduceTask extends BaseSink implements Collector {

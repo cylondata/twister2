@@ -24,7 +24,6 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.Iterator;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -33,10 +32,28 @@ import edu.iu.dsc.tws.task.api.BaseCompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
+/**
+ * This class is responsible for handling the data objects and converting into two-dimensional array
+ * of objects.
+ */
 public class DataObjectCompute extends BaseCompute {
 
   private static final Logger LOG = Logger.getLogger(DataObjectCompute.class.getName());
   private static final long serialVersionUID = -254264120110286748L;
+  private int parallel;
+  private int datasize;
+  private int dimension;
+
+  public DataObjectCompute(int dsize, int parallel, int dim) {
+    this.parallel = parallel;
+    this.datasize = dsize;
+    this.dimension = dim;
+  }
+
+  public DataObjectCompute(int size, int dim) {
+    this.datasize = size;
+    this.dimension = dim;
+  }
 
   public int getDatasize() {
     return datasize;
@@ -62,25 +79,8 @@ public class DataObjectCompute extends BaseCompute {
     this.parallel = parallel;
   }
 
-  private int parallel;
-  private int datasize;
-  private int dimension;
-
-  public DataObjectCompute(int dsize, int parallel, int dim) {
-    this.parallel = parallel;
-    this.datasize = dsize;
-    this.dimension = dim;
-  }
-
-  public DataObjectCompute(int size, int dim) {
-    this.datasize = size;
-    this.dimension = dim;
-  }
-
   @Override
   public boolean execute(IMessage message) {
-    LOG.log(Level.INFO, "First Compute Received Data: " + context.getWorkerId()
-        + ":" + context.taskId());
     if (message.getContent() instanceof Iterator) {
       int value = 0;
       double[][] datapoint;
