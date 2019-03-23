@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdRunner;
+import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdAdvancedRunner;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -187,7 +187,7 @@ public final class SVMRunner {
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName(jobName);
-    jobBuilder.setWorkerClass(SvmSgdRunner.class.getName());
+    jobBuilder.setWorkerClass(SvmSgdAdvancedRunner.class.getName());
     jobBuilder.addComputeResource(cpus, ramMb, diskGb, instances);
     jobBuilder.setConfig(jobConfig);
 
