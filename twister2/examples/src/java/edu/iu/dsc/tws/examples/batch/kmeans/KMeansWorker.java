@@ -83,8 +83,9 @@ public class KMeansWorker extends TaskWorker {
     /* First Graph to partition and read the partitioned data points **/
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
-    DataObjectCompute dataObjectCompute = new DataObjectCompute(dsize, parallelismValue, dimension);
-    DataObjectDirectSink dataObjectSink = new DataObjectDirectSink();
+    KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
+        dsize, parallelismValue, dimension);
+    KMeansDataObjectDirectSink dataObjectSink = new KMeansDataObjectDirectSink();
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
     taskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
@@ -113,8 +114,8 @@ public class KMeansWorker extends TaskWorker {
     /* Second Graph to read the centroids **/
     DataFileReplicatedReadSource dataFileReplicatedReadSource = new DataFileReplicatedReadSource(
         Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
-    DataObjectCompute centroidObjectCompute = new DataObjectCompute(csize, dimension);
-    DataObjectDirectSink centroidObjectSink = new DataObjectDirectSink();
+    KMeansDataObjectCompute centroidObjectCompute = new KMeansDataObjectCompute(csize, dimension);
+    KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink();
 
     //Add source, compute, and sink tasks to the task graph builder for the second task graph
     taskGraphBuilder.addSource("centroidsource", dataFileReplicatedReadSource, parallelismValue);

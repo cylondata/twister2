@@ -52,9 +52,9 @@ import edu.iu.dsc.tws.task.api.TaskContext;
  * This class receives the message object from the DataObjectCompute and write into their
  * respective task index values.
  */
-public class DataObjectDirectSink<T> extends BaseSink implements Collector {
+public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector {
 
-  private static final Logger LOG = Logger.getLogger(DataObjectDirectSink.class.getName());
+  private static final Logger LOG = Logger.getLogger(KMeansDataObjectDirectSink.class.getName());
 
   private static final long serialVersionUID = -1L;
 
