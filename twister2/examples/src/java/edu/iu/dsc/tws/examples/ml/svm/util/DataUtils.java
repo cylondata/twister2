@@ -25,6 +25,8 @@ public final class DataUtils {
 
   private static final double[] LABELS = {-1, +1};
 
+  private static final boolean DEBUG = false;
+
   private DataUtils() {
   }
 
@@ -125,7 +127,10 @@ public final class DataUtils {
       throw new NullPointerException("BinaryBatchModel is null !!!");
     } else {
       double[] w = binaryBatchModel.getW();
-      LOG.info(String.format("W : %s ", Arrays.toString(w)));
+      if (DEBUG) {
+        LOG.info(String.format("W : %s ", Arrays.toString(w)));
+      }
+
       int features = binaryBatchModel.getFeatures();
       int samples = binaryBatchModel.getSamples();
       if (xy.length > 0 && features > 0) {
@@ -134,17 +139,22 @@ public final class DataUtils {
           double[] y = new double[xy.length];
           for (int i = 0; i < xy.length; i++) {
             y[i] = xy[i][0];
-            x[i] = Arrays.copyOfRange(xy[i], 1, features + 1);
+            x[i] = Arrays.copyOfRange(xy[i], 1, xy[0].length);
           }
           binaryBatchModel.setX(x);
           binaryBatchModel.setY(y);
           binaryBatchModel.setW(w);
           binaryBatchModel.setSamples(samples);
           binaryBatchModel.setFeatures(features);
-          LOG.info(String.format("X : %s, y : %s, Samples %d",
-              Arrays.toString(binaryBatchModel.getX()[0]),
-              binaryBatchModel.getY()[0], binaryBatchModel.getY().length));
+          if (DEBUG) {
+            LOG.info(String.format("X : %s, y : %s, Samples %d",
+                Arrays.toString(binaryBatchModel.getX()[0]),
+                binaryBatchModel.getY()[0], binaryBatchModel.getY().length));
+          }
+
         }
+      } else {
+        LOG.severe(String.format("Something Went Wrong"));
       }
     }
     return binaryBatchModel;
@@ -167,10 +177,13 @@ public final class DataUtils {
           String[] s = String.valueOf(o).split(Constants.SimpleGraphConfig.DELIMITER);
           double label = Double.parseDouble(s[0]);
           int features = s.length - 1;
-          res[count] = new double[features];
-          for (int i = 0; i < features; i++) {
-            res[count][i] = Double.parseDouble(s[i + 1]);
+          res[count] = new double[s.length];
+          for (int i = 0; i < s.length; i++) {
+            res[count][i] = Double.parseDouble(s[i]);
           }
+//          for (int i = 0; i < features; i++) {
+//            res[count][i] = Double.parseDouble(s[i + 1]);
+//          }
           count++;
         } else {
           LOG.info(String.format("Data Type : %s", o.getClass().getName()));
@@ -180,9 +193,18 @@ public final class DataUtils {
     return res;
   }
 
+  public static double[] getWeightVectorFromWeightVectorObject(Object object) {
+    double[] weightVector = null;
+
+    return weightVector;
+  }
+
   public static double[][] getDataObjectToDoubleArray(DataObject<Object> dataPointsObject1) {
     double[][] d = null;
-
+    LOG.info(String.format("Which Type %s", dataPointsObject1.getClass().getName()));
+    LOG.info(String.format("How Much %d", dataPointsObject1.getPartitions().length));
+    LOG.info(String.format("Next Element %s",
+        dataPointsObject1.getPartitions()[0].getConsumer().next().getClass().getName()));
     return d;
   }
 

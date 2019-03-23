@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class InputDataStreamer extends BaseSource implements Receptor {
 
-  private static final Logger LOG = Logger.getLogger(DataStreamer.class.getName());
+  private static final Logger LOG = Logger.getLogger(InputDataStreamer.class.getName());
 
   private int features = 10;
 
