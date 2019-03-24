@@ -50,6 +50,8 @@ public class InputDataStreamer extends BaseSource implements Receptor {
 
   private double[][] datapointArray = null;
 
+  private boolean debug = false;
+
   public InputDataStreamer(OperationMode operationMode) {
     this.operationMode = operationMode;
   }
@@ -117,9 +119,8 @@ public class InputDataStreamer extends BaseSource implements Receptor {
   }
 
   /**
-   *This method is used to retrieve real data from
+   * This method is used to retrieve real data from
    * Data Source Task
-   *
    */
   public void realDataStreamer() {
     // do real data streaming
@@ -132,7 +133,10 @@ public class InputDataStreamer extends BaseSource implements Receptor {
 
   @Override
   public void add(String name, DataObject<?> data) {
-    LOG.log(Level.INFO, "Received input: " + name);
+    if (debug) {
+      LOG.log(Level.INFO, String.format("Received input: %s ", name));
+    }
+
     if (Constants.SimpleGraphConfig.INPUT_DATA.equals(name)) {
       this.dataPointsObject = data;
     }
@@ -162,7 +166,9 @@ public class InputDataStreamer extends BaseSource implements Receptor {
 
   public void getData() {
     this.datapoints = getDataPointsByTaskIndex(context.taskIndex());
-    LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
+    if (debug) {
+      LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
+    }
     this.datapointArray = DataUtils.getDataPointsFromDataObject(this.datapoints);
     LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
         this.datapointArray.length));

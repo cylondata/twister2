@@ -100,6 +100,13 @@ public final class SVMJobParameters {
 
   private int parallelism = 4;
 
+
+  /**
+   * Experiment name == Job Name
+   * */
+
+  private String experimentName = "";
+
   /**
    * Builds the Job Parameters relevant SVM Algorithm
    * @param cfg : this must be initialized where Job is initialized.
@@ -131,6 +138,8 @@ public final class SVMJobParameters {
         MLDataObjectConstants.DUMMY, true);
     svmJobParameters.parallelism = cfg
         .getIntegerValue(WorkerConstants.PARALLELISM, 4);
+    svmJobParameters.experimentName = cfg
+        .getStringValue(MLDataObjectConstants.SgdSvmDataObjectConstants.EXP_NAME);
 
     return  svmJobParameters;
   }
@@ -239,6 +248,14 @@ public final class SVMJobParameters {
     this.parallelism = parallelism;
   }
 
+  public String getExperimentName() {
+    return experimentName;
+  }
+
+  public void setExperimentName(String experimentName) {
+    this.experimentName = experimentName;
+  }
+
   @Override
   public String toString() {
     return "SVMJobParameters{"
@@ -255,6 +272,7 @@ public final class SVMJobParameters {
         + ", isSplit=" + isSplit
         + ", isDummy=" + isDummy
         + ", parallelism=" + parallelism
+        + ", experimentName=" + experimentName
         + '}';
   }
 }

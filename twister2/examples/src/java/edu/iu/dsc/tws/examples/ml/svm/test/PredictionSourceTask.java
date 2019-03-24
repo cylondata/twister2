@@ -63,7 +63,10 @@ public class PredictionSourceTask extends BaseSource implements Receptor {
 
   @Override
   public void add(String name, DataObject<?> data) {
-    LOG.log(Level.INFO, "Received input: " + name);
+    if (debug) {
+      LOG.log(Level.INFO, "Received input: " + name);
+    }
+
     if (Constants.SimpleGraphConfig.TEST_DATA.equals(name)) {
       this.testDataPointsObject = data;
     }
@@ -161,7 +164,6 @@ public class PredictionSourceTask extends BaseSource implements Receptor {
 
   /**
    * This method must be broken down to smaller parts
-   * @throws MatrixMultiplicationException
    */
   public void getData() throws MatrixMultiplicationException {
     this.testDataPoints = getDataPointsByTaskIndex(context.taskIndex());

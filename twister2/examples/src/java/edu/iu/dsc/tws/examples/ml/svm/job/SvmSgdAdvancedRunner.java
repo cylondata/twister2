@@ -81,7 +81,19 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
 
   private PredictionAggregator predictionAggregator;
 
+  private double dataLoadingTime = 0;
+
+  private double trainingTime = 0;
+
+  private double testingTime = 0;
+
+  private double accuracy = 0;
+
   private boolean debug = false;
+
+  private String experimentName = "";
+
+  private static final double NANO_TO_SEC = 1000000000;
 
 
   @Override
@@ -97,6 +109,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     this.svmJobParameters = SVMJobParameters.build(config);
     this.binaryBatchModel = new BinaryBatchModel();
     this.dataStreamerParallelism = this.svmJobParameters.getParallelism();
+    this.experimentName = this.svmJobParameters.getExperimentName();
     // svm compute parallelism can be set as a configurable parameter
     this.svmComputeParallelism = this.dataStreamerParallelism;
     this.binaryBatchModel.setIterations(this.svmJobParameters.getIterations());
@@ -117,17 +130,24 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     this.operationMode = this.svmJobParameters.isStreaming()
         ? OperationMode.STREAMING : OperationMode.BATCH;
 
-
+    Long t1 = System.nanoTime();
     trainingData = executeTrainingDataLoadingTaskGraph();
+    dataLoadingTime = (double) (System.nanoTime() - t1) / NANO_TO_SEC;
 
+    t1 = System.nanoTime();
     trainedWeightVector = executeTrainingGraph();
+    trainingTime = (double) (System.nanoTime() - t1) / NANO_TO_SEC;
 
+    t1 = System.nanoTime();
     testingData = executeTestingDataLoadingTaskGraph();
-
+    dataLoadingTime += (double) (System.nanoTime() - t1) / NANO_TO_SEC;
 
     if (operationMode.equals(OperationMode.BATCH)) {
+      t1 = System.nanoTime();
       testingResults = executeTestingTaskGraph();
-      retriveFinalTestingAccuracy(testingResults);
+      accuracy = retriveFinalTestingAccuracy(testingResults);
+      testingTime += (double) (System.nanoTime() - t1) / NANO_TO_SEC;
+      printTaskSummary();
     }
 
     if (operationMode.equals(OperationMode.STREAMING)) {
@@ -139,6 +159,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
    * This method loads the training data in a distributed mode
    * dataStreamerParallelism is the amount of parallelism used
    * in loaded the data in parallel.
+   *
    * @return twister2 DataObject containing the training data
    */
   public DataObject<Object> executeTrainingDataLoadingTaskGraph() {
@@ -173,6 +194,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
    * Testing data is loaded in parallel depending on the parallelism parameter given
    * There are partitions created equal to the parallelism
    * Later this will be used to do the testing in parallel in the testing task graph
+   *
    * @return twister2 DataObject containing the testing data
    */
   public DataObject<Object> executeTestingDataLoadingTaskGraph() {
@@ -211,6 +233,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
    * training parallelism is same. It is the general model to keep them equal. But
    * you can increase the parallelism the way you want. But it is adviced to keep these
    * values equal. Dynamic parallelism in training is not yet tested fully in Twister2 Framework.
+   *
    * @return Twister2 DataObject<double[]> containing the reduced weight vector
    */
   public DataObject<double[]> executeTrainingGraph() {
@@ -255,6 +278,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
 
   /**
    * This method returns the final weight vector from the trained model
+   *
    * @param graph1 DataflowTaskGraph from which we retrieve the final weight vector
    * @param plan1 ExecutionPlan from which we retrive the final weight vector
    * @return Twister2 DataObject containing the final reduced weight vector is retrieved
@@ -290,6 +314,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
    * Testing is also done in a parallel way. At the testing data loading stage we load the data
    * in parallel with reference to the given parallelism and testing is also in in parallel
    * Then we get test results for all these testing data partitions
+   *
    * @return Returns the Accuracy value obtained
    */
   public DataObject<Object> executeTestingTaskGraph() {
@@ -330,7 +355,9 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     return data;
   }
 
-  /** This method retrieves the accuracy data object from the prediction task graph
+  /**
+   * This method retrieves the accuracy data object from the prediction task graph
+   *
    * @param predictionGraph DataFlowTaskGraph from which the final accuracy is retrieved
    * @param predictionPlan PredictionTaskGraph from which the final accuracy is retrieved
    * @return returns the Twister2 DataObject containing the accuracy object
@@ -348,8 +375,8 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
    * Calculates the final accuracy by taking the dataParallelism in to consideration
    * Here the parallelism is vital as we need to know the average accuracy produced by
    * each testing data set.
+   *
    * @param finalRes DataObject which contains the final accuracy
-   * @return
    */
   public double retriveFinalTestingAccuracy(DataObject<Object> finalRes) {
     double avgAcc = 0;
@@ -361,6 +388,24 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
       LOG.severe("Something Went Wrong In Calculating Testing Accuracy");
     }
     return avgAcc;
+  }
+
+  public void printTaskSummary() {
+    String s = "\n\n";
+    s += "======================================================================================\n";
+    s += "\t\t\tSVM Task Summary : [" + this.experimentName + "]\n";
+    s += "======================================================================================\n";
+    s += "Training Dataset [" + this.svmJobParameters.getTrainingDataDir() + "] \n";
+    s += "Testing  Dataset [" + this.svmJobParameters.getTestingDataDir() + "] \n";
+    s += "Data Loading Time (Training + Testing) \t\t\t\t= " + String.format("%.9f",
+        dataLoadingTime) + "  s \n";
+    s += "Training Time \t\t\t\t\t\t\t= " + trainingTime + "  s \n";
+    s += "Testing Time  \t\t\t\t\t\t\t= " + testingTime + "  s \n";
+    s += "Total Time (Data Loading Time + Training Time + Testing Time) \t="
+        + String.format(" %.9f", dataLoadingTime + trainingTime + testingTime) + "  s \n";
+    s += String.format("Accuracy of the Trained Model \t\t\t\t\t= %.9f", accuracy) + " %%\n";
+    s += "======================================================================================\n";
+    LOG.info(String.format(s));
   }
 
 
