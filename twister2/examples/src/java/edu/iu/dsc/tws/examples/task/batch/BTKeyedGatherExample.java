@@ -12,10 +12,8 @@
 package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -78,16 +76,16 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
             .map(TaskInstancePlan::getTaskIndex)
             .filter(i -> i % sinksCount == ctx.taskIndex())
             .collect(Collectors.toSet());
-        Map<Integer, List<int[]>> generatedData = new HashMap<>();
-        for (Integer taskIndex : taskIds) {
-          for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
-            generatedData.computeIfAbsent(taskIndex, ti -> new ArrayList<>()).add(ints);
-          }
+
+        List<int[]> dataFromEachTask = new ArrayList<>();
+        for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
+          dataFromEachTask.add(ints);
         }
+
         List<Tuple<Integer, Iterator<int[]>>> finalOutput = new ArrayList<>();
 
-        generatedData.keySet().forEach(key -> {
-          finalOutput.add(new Tuple<>(key, generatedData.get(key).iterator()));
+        taskIds.forEach(key -> {
+          finalOutput.add(new Tuple<>(key, dataFromEachTask.iterator()));
         });
 
         return finalOutput.iterator();
