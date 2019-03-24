@@ -32,7 +32,7 @@
     * [Communication Model](concepts/communication/communication-model.md)
   * [Task Graph](concepts/task-graph/task-graph.md)
   * [Task System](concepts/task-system/task-system.md)
-  * [Executor](concepts/executor/executor.md)
+  * [Executor](concepts/task-executor/task-executor.md)
   * [Data Access](concepts/data-access/data-access.md)
 * [Architecture](architecture/README.md)
   * [Controller](architecture/controller/README.md)

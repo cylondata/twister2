@@ -24,5 +24,5 @@ This section describes those components in more details.
 * [Task System](task-system/task-system.md)
 * [Task Graph](task-graph/task-graph.md)
 * [Task Scheduler](task-scheduler/task-scheduler.md)
-* [Executor](executor/executor.md)
+* [Executor](task-executor/task-executor.md)
 * [Data Access](data-access/data-access.md)
