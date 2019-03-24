@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.ml.svm.aggregate;
+package edu.iu.dsc.tws.examples.ml.svm.test;
 
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -22,13 +22,15 @@ import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class SVMReduce extends BaseSink implements Collector {
+public class PredictionReduceTask extends BaseSink implements Collector {
 
   private static final long serialVersionUID = -254264120110286748L;
 
-  private static final Logger LOG = Logger.getLogger(SVMReduce.class.getName());
+  private static final Logger LOG = Logger.getLogger(PredictionReduceTask.class.getName());
 
   private double[] object;
+
+  private double doubleObject;
 
   private boolean debug = false;
 
@@ -36,23 +38,21 @@ public class SVMReduce extends BaseSink implements Collector {
 
   private OperationMode operationMode;
 
-  public SVMReduce(OperationMode operationMode) {
+  public PredictionReduceTask(OperationMode operationMode) {
     this.operationMode = operationMode;
   }
 
   @Override
-  public DataPartition<double[]> get() {
-    return new EntityPartition<>(this.context.taskIndex(), this.object);
+  public DataPartition<?> get() {
+    return new EntityPartition<>(this.context.taskIndex(), this.doubleObject);
   }
 
   @Override
   public boolean execute(IMessage message) {
-
     if (message.getContent() == null) {
       LOG.info("Something Went Wrong !!!");
       this.status = false;
     } else {
-
       if (message.getContent() instanceof double[]) {
         this.status = true;
         this.object = (double[]) message.getContent();
@@ -60,22 +60,21 @@ public class SVMReduce extends BaseSink implements Collector {
           LOG.log(Level.INFO, "Received Data from workerId: " + this.context.getWorkerId()
               + ":" + this.context.taskId() + ":" + Arrays.toString(this.object));
         }
+      } else if (message.getContent() instanceof Double) {
+        this.status = true;
+        this.doubleObject = (double) message.getContent();
+      } else {
+        LOG.severe("Something Went Wrong");
       }
 
       if (this.operationMode.equals(OperationMode.BATCH)) {
         // do batch based computation
-        if (debug) {
-          LOG.info("Batch Mode : " + Arrays.toString(this.object));
-        }
-
+        LOG.info("Batch Mode : " + this.doubleObject);
       }
 
       if (this.operationMode.equals(OperationMode.STREAMING)) {
         // do streaming based computation
-        if (debug) {
-          LOG.info("Streaming Mode : " + Arrays.toString(this.object));
-        }
-
+        LOG.info("Streaming Mode : " + this.doubleObject);
       }
     }
     return this.status;
