@@ -161,14 +161,16 @@ public abstract class BenchTaskWorker extends TaskWorker {
     private String edge;
     private int iterations;
     private boolean timingCondition;
-
-    public SourceTask() {
-      this.iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
-    }
+    private boolean keyed = false;
 
     public SourceTask(String e) {
-      this();
+      this.iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
       this.edge = e;
+    }
+
+    public SourceTask(String e, boolean keyed) {
+      this(e);
+      this.keyed = keyed;
     }
 
     @Override
@@ -186,7 +188,8 @@ public abstract class BenchTaskWorker extends TaskWorker {
           Timing.mark(TIMING_ALL_SEND, this.timingCondition);
         }
 
-        if (context.write(this.edge, inputDataArray)) {
+        if ((this.keyed && context.write(this.edge, context.taskIndex(), inputDataArray))
+            || (!this.keyed && context.write(this.edge, inputDataArray))) {
           count++;
         }
 

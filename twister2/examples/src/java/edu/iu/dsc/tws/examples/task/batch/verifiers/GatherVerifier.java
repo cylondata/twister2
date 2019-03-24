@@ -21,7 +21,9 @@ import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
-import edu.iu.dsc.tws.examples.verification.comparators.TupleIteratorComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 
@@ -42,7 +44,12 @@ public class GatherVerifier extends ResultsVerifier<int[], Iterator<Tuple<Intege
             }
           }
           return generatedData.iterator();
-        }, new TupleIteratorComparator<>(IntArrayComparator.getInstance())
+        }, new IteratorComparator<>(
+            new TupleComparator<>(
+                IntComparator.getInstance(),
+                IntArrayComparator.getInstance()
+            )
+        )
     );
   }
 }
