@@ -175,7 +175,7 @@ public class PredictionSourceTask extends BaseSource implements Receptor {
           this.testDatapointArray.length));
     }
     //LOG.info(String.format("Data Points : %s", Arrays.deepToString(this.datapointArray)));
-    this.weighVector = getWeightVectorByTaskIndex(context.taskIndex());
+    this.weighVector = getWeightVectorByTaskIndex(0);
     if (this.weighVector instanceof double[]) {
       this.weightVectorArray = (double[]) this.weighVector;
       if (debug) {
@@ -205,6 +205,8 @@ public class PredictionSourceTask extends BaseSource implements Receptor {
       this.accuracy = predict.predict();
       LOG.info(String.format("Task Index[%d] Accuracy [%f]", context.taskIndex(),
           this.accuracy));
+    } else {
+      LOG.info(String.format("Weight Vector : %s ", this.weighVector));
     }
 
     //DataUtils.getWeightVectorFromWeightVectorObject(this.weighVector);

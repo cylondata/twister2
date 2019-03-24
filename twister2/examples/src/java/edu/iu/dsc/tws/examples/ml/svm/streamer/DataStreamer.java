@@ -24,10 +24,14 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 /**
+ * Initial Implementation of Twister2 SVM
+ * @deprecated
+ * This class is deprecated
  * This is the DataStreamer for both batch and streaming mode
  * In streaming mode a single data point is sent continously.
  * But in the batch application an array of data points is sent once.
  */
+@Deprecated
 public class DataStreamer extends BaseSource {
 
   private static final Logger LOG = Logger.getLogger(DataStreamer.class.getName());
@@ -115,6 +119,6 @@ public class DataStreamer extends BaseSource {
    */
   public void realDataStreamer() {
     // do real data streaming
-    throw new org.apache.commons.lang.NotImplementedException("Method Not Implemented");
+    //throw new org.apache.commons.lang.NotImplementedException("Method Not Implemented");
   }
 }

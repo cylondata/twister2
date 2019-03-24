@@ -208,7 +208,8 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
           Constants.SimpleGraphConfig.PREDICTION_REDUCE_TASK);
       Object o = finalRes.getPartitions()[0].getConsumer().next();
       if (o instanceof Double) {
-        LOG.info(String.format("Testing Accuracy  : %f ", (double) o));
+        double avgAcc = ((double) o) / dataStreamerParallelism;
+        LOG.info(String.format("Testing Accuracy  : %f ", avgAcc));
       } else {
         LOG.severe("Something Went Wrong !!!");
       }
