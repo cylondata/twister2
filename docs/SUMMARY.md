@@ -18,6 +18,8 @@
       * [Twister2 Mesos Install](deployment/mesos/twister2-mesos-install.md)
   * [Slurm](deployment/slurm/running-jobs.md)
   * [Logging](deployment/logging.md)
+* [Distributed Runtime](concepts/distributed-runtime.md)
+* [Programming APIs](concepts/programming-api.md)  
 * [Task System](concepts/task-system/task-system.md)      
   * [Task Graph](concepts/task-system/task-graph/task-graph.md)
   * [Executor](concepts/task-system/task-executor/task-executor.md)  

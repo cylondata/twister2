@@ -14,34 +14,34 @@ package edu.iu.dsc.tws.api.tset.sink;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.BaseSink;
-import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 
 public class CacheSink<T> extends BaseSink<T> {
   private static final Logger LOG = Logger.getLogger(CacheSink.class.getName());
 
   private int count = 0;
-  private DataObject<T> datapoints = null;
+  private DataPartition<T> partition = null;
 
-  public CacheSink(DataObject<T> datapoints) {
-    this.datapoints = datapoints;
+  public CacheSink() {
   }
 
   @Override
   public boolean add(T value) {
     // todo every time add is called, a new partition will be made! how to handle that?
-    return addData(value);
+    partition = new EntityPartition<>(context.getIndex(), value);
+    return true;
   }
+
 
   @Override
   public void close() {
 
   }
 
-  private boolean addData(T value) {
-    int curr = datapoints.getPartitionCount();
-    datapoints.addPartition(new EntityPartition<T>(curr, value)); //
-    return false;
+  @Override
+  public DataPartition<T> get() {
+    return partition;
   }
 
   @Override

@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.api.tset;
 import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -63,5 +64,12 @@ public class TSetEnv {
     DataFlowTaskGraph graph = tSetBuilder.build();
     ExecutionPlan executionPlan = taskExecutor.plan(graph);
     this.taskExecutor.execute(graph, executionPlan);
+  }
+
+  public <T> DataObject<T> runAndGet(String sinkName) {
+    DataFlowTaskGraph graph = tSetBuilder.build();
+    ExecutionPlan executionPlan = taskExecutor.plan(graph);
+    this.taskExecutor.execute(graph, executionPlan);
+    return this.taskExecutor.getOutput(graph, executionPlan, sinkName);
   }
 }

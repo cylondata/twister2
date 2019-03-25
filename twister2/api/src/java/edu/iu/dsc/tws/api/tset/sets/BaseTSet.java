@@ -190,7 +190,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
     children.add(direct);
     CachedTSet<T> cacheTSet = new CachedTSet<>(config, tSetEnv, direct, parallel);
     direct.getChildren().add(cacheTSet);
-    tSetEnv.run();
+    cacheTSet.setData(tSetEnv.runAndGet(cacheTSet.getName()));
 
     tSetEnv.settSetBuilder(TSetBuilder.newBuilder(config).setMode(tSetEnv.
         getTSetBuilder().getOpMode()));
