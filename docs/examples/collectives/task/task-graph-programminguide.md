@@ -146,7 +146,19 @@ dataflow nodes. Also, the sink task receives the input from multiple compute dat
 
 The structure of the graph is given below:
 
-  ![MultipleComputeNodes Task Graph](MultiCompute_TaskGraph.png)
+```text
+    Source (Task 1)
+       |
+       |
+       V
+  Task2  Task3 (Multiple Compute Elements)
+    |     |
+    |     |
+    V     V
+  Target (Task 4)
+```
+
+  ![MultipleComputeNodes Task Graph](../../../images/multicompute_taskgraph.png)
  
 ### MultiCompute Task Graph Example
 
