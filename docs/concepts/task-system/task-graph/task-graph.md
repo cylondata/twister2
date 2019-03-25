@@ -1,17 +1,18 @@
 # Task Graph
 
-## Taskgraph in Twister2
+The task graph is the preferred choice for the processing of large-scale data. It simplifies the process of task parallelism and has the ability to dynamically determine the 
+dependency between those tasks. The nodes in the task graph consist of task vertices and edges in which task vertices represent the computational units of an application and edges represent
+the communication edges between those computational units. In other words, it describes the details about how the data is consumed between those units. Each node in the task graph holds the 
+information about the input and its output. The task graph is converted into an execution graph once the actual execution takes place.
 
-The task layer provides a higher-level abstraction on top of the communication layer to hide the 
-underlying details of the execution and communication from the user. Computations are modeled as 
-task graphs in the task layer which could be created either statically or dynamically. A node in the 
-task graph represents a task whereas an edge represents the communication link between the vertices.
-Each node in the task graph holds the information about the input and its output. A task could be 
-long-running (streaming graph) or short-running (dataflow graph without loops) depending on the type 
+## Task Graph in Twister2
+
+The task layer provides a higher-level abstraction on top of the communication layer to hide the underlying details of the execution and communication from the user. Computations are modeled as 
+task graphs in the task layer which could be created either statically or dynamically. A node in the task graph represents a task whereas an edge represents the communication link between the vertices.
+Each node in the task graph holds the information about the input and its output. A task could be long-running (streaming graph) or short-running (dataflow graph without loops) depending on the type 
 of application. 
 
-A task graph 'TG' generally consists of set of Task Vertices'TV' and Task Edges \(TE\) which is 
-mathematically denoted as Task Graph
+A task graph 'TG' generally consists of set of Task Vertices'TV' and Task Edges \(TE\) which is mathematically denoted as Task Graph
 
 ```text
 (TG) -> (TV, TE)
@@ -42,7 +43,8 @@ The following three essential points should be considered while creating and sch
    * The task vertices represent the source and target task vertex 
    * The task edge represent the edges to connect the task vertices
 * The task graph in Twister2  
-  * supports iterative data processing - For example, in K-Means clustering algorithm, at the end of every iteration, data points and centroids are stored in the DataSet which will be used for the next iteration 
+  * supports iterative data processing - For example, in K-Means clustering algorithm, at the end of every iteration, data points and centroids are stored in the DataSet 
+    which will be used for the next iteration 
   * It doesn’t allow loops or self-loops or cycles
   
 ## Directed Task Graph and Undirected Task Graph
@@ -52,7 +54,7 @@ the edges in the task graph that connects the task vertexes have a direction as 
 undirected task graph, the edges in the task graph that connects the task vertexes have no direction as shown in Fig 2.
 The present task system supports only directed dataflow task graph.
 
-![Directed Graph](directed.png)  ![UnDirected Graph](undirected.png)
+![Directed Graph](../../../images/directed.png)  ![UnDirected Graph](../../../images/undirected.png)
 
 ## Dataflow Task Graph
 

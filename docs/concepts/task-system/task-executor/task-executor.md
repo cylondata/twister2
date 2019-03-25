@@ -31,7 +31,3 @@ public Executor(Config cfg, int wId, ExecutionPlan executionPlan, TWSChannel cha
 * Execution graph is a transformation of the user-defined task graph created by the framework to be executed on the cluster.
 * Execution graph will be scheduled to the available resource by the task scheduler.
 * Fig.1 represents the user graph and execution graph where they run multiple ‘W’ and ‘G’ operations.
-
-
-
-

@@ -159,7 +159,7 @@ public class KMeansWorker extends TaskWorker {
     //Perform the iterations from 0 to 'n' number of iterations
     for (int i = 0; i < iterations; i++) {
       ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
-      //add the datapoints and centroids as input the kmeanssource task.
+      //add the datapoints and centroids as input to the kmeanssource task.
       taskExecutor.addInput(
           kmeansTaskGraph, plan, "kmeanssource", "points", dataPointsObject);
       taskExecutor.addInput(
@@ -183,14 +183,11 @@ public class KMeansWorker extends TaskWorker {
     private double[][] datapoints = null;
 
     private KMeansCalculator kMeansCalculator = null;
-    private KMeansWorkerUtils workerUtils = null;
-
     private DataObject<?> dataPointsObject = null;
     private DataObject<?> centroidsObject = null;
 
     @Override
     public void execute() {
-      workerUtils = new KMeansWorkerUtils(config);
       int dim = Integer.parseInt(config.getStringValue("dim"));
 
       DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
@@ -241,14 +238,14 @@ public class KMeansWorker extends TaskWorker {
     }
 
     @Override
-    public void prepare(Config cfg, TaskContext context) {
-      super.prepare(cfg, context);
-      this.datapoints = new DataObjectImpl<>(config);
+    public DataPartition<double[][]> get() {
+      return new EntityPartition<>(context.taskIndex(), newCentroids);
     }
 
     @Override
-    public DataPartition<double[][]> get() {
-      return new EntityPartition<>(context.taskIndex(), newCentroids);
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+      this.datapoints = new DataObjectImpl<>(config);
     }
   }
 
