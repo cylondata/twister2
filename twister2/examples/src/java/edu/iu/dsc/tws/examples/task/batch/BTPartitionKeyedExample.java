@@ -11,8 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
+
+import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -48,8 +51,9 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     @Override
     public boolean execute(IMessage message) {
       if (count % jobParameters.getPrintInterval() == 0) {
+        Iterator t = (Iterator) message.getContent();
         LOG.info("Batch Message Keyed-Reduced : " + message.getContent()
-            + ", Count : " + count);
+            + ", Size : " + Iterators.size(t));
       }
       count++;
       return true;
