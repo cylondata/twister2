@@ -19,12 +19,11 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.task.batch.verifiers.ReduceVerifier;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
-import edu.iu.dsc.tws.examples.verification.GeneratorUtils;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
-import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -60,15 +59,7 @@ public class BTAllReduceExample extends BenchTaskWorker {
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
       this.timingCondition = getTimingCondition(SINK, context);
-      resultsVerifier = new ResultsVerifier<>(
-          inputDataArray,
-          (ints, args) -> {
-            int senders = ctx.getTasksByName(SOURCE).size();
-            return GeneratorUtils.multiplyIntArray(ints,
-                senders * jobParameters.getTotalIterations());
-          },
-          IntArrayComparator.getInstance()
-      );
+      resultsVerifier = new ReduceVerifier(inputDataArray, ctx, SOURCE, jobParameters);
     }
 
     @Override
