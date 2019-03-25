@@ -59,6 +59,8 @@
   * [Task Examples](examples/collectives/task/task_examples.md)
   * [Communication Examples](examples/collectives/comms/comms_examples.md)
   * [K-Means](examples/kmeans/kmeans_example.md)
+* [Compatibility API's]  
+  * [Apache Storm](compatibility/storm.md)
 * [Releases](release/README.md)  
   * [Twister2 v0.1.0](release/twister2_release_0_1_0.md)
 * [Community](community/README.md)
