@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
-import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
+import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
@@ -50,7 +50,7 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
   /**
    * Comparator for sorting records
    */
-  private Comparator<Object> comparator;
+  private Comparator comparator;
 
   /**
    * Serializer used to convert between objects and byte streams
@@ -69,7 +69,7 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
 
 
   public DKGatherBatchFinalReceiver(BulkReceiver receiver, boolean srt, int limitPerKey,
-                                    String shuffleDir, Comparator<Object> com) {
+                                    String shuffleDir, Comparator com) {
     this.bulkReceiver = receiver;
     this.sorted = srt;
     this.limitPerKey = limitPerKey;
@@ -91,7 +91,7 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
 
       Shuffle sortedMerger;
       if (sorted) {
-        sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory,
+        sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
             shuffleDirectory, getOperationName(target), dataFlowOperation.getKeyType(),
             dataFlowOperation.getDataType(), comparator, target);
       } else {

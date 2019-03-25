@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -88,6 +90,23 @@ public class ComputeConnection {
    */
   public ComputeConnection broadcast(String parent, String name, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.BROADCAST, dataType);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
+   * Create a broadcast connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param properties the properties for this connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection broadcast(String parent, String name, DataType dataType,
+                                     Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.BROADCAST, dataType);
+    edge.setProperties(properties);
     inputs.put(parent, edge);
 
     return this;
@@ -197,6 +216,26 @@ public class ComputeConnection {
   }
 
   /**
+   * Create a reduce connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param function the reduce function
+   * @param dataType the data type
+   * @param properties properties of the connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection reduce(String parent, String name,
+                                  IFunction function, DataType dataType,
+                                  Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.REDUCE, dataType, function);
+    edge.setProperties(properties);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
    * Create a keyed reduce connection
    *
    * @param parent the parent to connection
@@ -238,6 +277,29 @@ public class ComputeConnection {
                                        Op op, DataType keyTpe, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
         new ReduceFn(op, dataType));
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
+   * Create a keyed reduce connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param function the reduce function
+   * @param keyTpe the key data type
+   * @param dataType the data type
+   * @param properties properties of the connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection keyedReduce(String parent, String name,
+                                       IFunction function, DataType keyTpe, DataType dataType,
+                                       TaskPartitioner partitioner, TaskKeySelector selector,
+                                       Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
+        function, partitioner, selector);
+    edge.setProperties(properties);
     inputs.put(parent, edge);
 
     return this;
@@ -286,44 +348,6 @@ public class ComputeConnection {
   }
 
   /**
-   * Create a keyed gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param keyTpe the key data type
-   * @param dataType the data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection keyedGather(String parent, String name,
-                                       DataType keyTpe, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.KEYED_GATHER, dataType, keyTpe);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a keyed gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param keyTpe the key data type
-   * @param dataType the data type
-   * @param partitioner the partitioner
-   * @param  selector selector
-   * @return the ComputeConnection
-   */
-  public ComputeConnection keyedGather(String parent, String name,
-                                       DataType keyTpe, DataType dataType,
-                                       TaskPartitioner partitioner, TaskKeySelector selector) {
-    Edge edge = new Edge(name, OperationNames.KEYED_GATHER, dataType, keyTpe,
-        null, partitioner, selector);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
    * Create a gather connection
    *
    * @param parent the parent to connection
@@ -355,6 +379,104 @@ public class ComputeConnection {
     inputs.put(parent, edge);
 
     return this;
+  }
+
+  /**
+   * Create a keyed gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param keyTpe the key data type
+   * @param dataType the data type
+   * @return the ComputeConnection
+   */
+  public ComputeConnection keyedGather(String parent, String name,
+                                       DataType keyTpe, DataType dataType,
+                                       TaskPartitioner partitioner, TaskKeySelector selector,
+                                       Map<String, Object> properties,
+                                       boolean useDisk, Comparator keyComparator) {
+    Edge edge = new Edge(name, OperationNames.KEYED_GATHER, dataType, keyTpe,
+        null, partitioner, selector);
+    edge.setProperties(properties);
+
+    //todo move these hard coded properties to a proper place in API package,
+    // once twister2 code is refactored
+    edge.addProperty("use-disk", useDisk);
+    edge.addProperty("key-comparator", keyComparator);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
+   * Create a keyed gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param keyTpe the key data type
+   * @param dataType the data type
+   * @param useDisk use the disk if memory overflows
+   * @param keyComparator comparator to compare keys
+   * @return the ComputeConnection
+   */
+  public ComputeConnection keyedGather(String parent, String name,
+                                       DataType keyTpe, DataType dataType,
+                                       boolean useDisk, Comparator keyComparator) {
+    return this.keyedGather(parent, name, keyTpe, dataType, null,
+        null, new HashMap<>(), useDisk, keyComparator);
+  }
+
+  /**
+   * Create a keyed gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param keyTpe the key data type
+   * @param dataType the data type
+   * @return the ComputeConnection
+   */
+  public ComputeConnection keyedGather(String parent, String name,
+                                       DataType keyTpe, DataType dataType) {
+    return this.keyedGather(parent, name, keyTpe, dataType, null,
+        null, new HashMap<>(), false, null);
+  }
+
+  /**
+   * Create a keyed gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param keyTpe the key data type
+   * @param dataType the data type
+   * @param partitioner the partitioner
+   * @param selector selector
+   * @return the ComputeConnection
+   */
+  public ComputeConnection keyedGather(String parent, String name,
+                                       DataType keyTpe, DataType dataType,
+                                       TaskPartitioner partitioner, TaskKeySelector selector) {
+    return this.keyedGather(parent, name, keyTpe, dataType, partitioner,
+        selector, Collections.emptyMap(), false, null);
+  }
+
+  /**
+   * Create a keyed gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param keyTpe the key data type
+   * @param dataType the data type
+   * @param partitioner the partitioner
+   * @param selector selector
+   * @param properties properties of the connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection keyedGather(String parent, String name,
+                                       DataType keyTpe, DataType dataType,
+                                       TaskPartitioner partitioner, TaskKeySelector selector,
+                                       Map<String, Object> properties) {
+    return this.keyedGather(parent, name, keyTpe, dataType, partitioner,
+        selector, properties, false, null);
   }
 
   /**
@@ -429,7 +551,7 @@ public class ComputeConnection {
    * @param keyTpe the key data type
    * @param dataType the data type
    * @param partitioner the partitioner
-   * @param  selector selector
+   * @param selector selector
    * @return compute connection
    */
   public ComputeConnection keyedPartition(String parent, String edgeName,
@@ -546,6 +668,26 @@ public class ComputeConnection {
   }
 
   /**
+   * Create a reduce connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param function the reduce function
+   * @param dataType the data type
+   * @param properties properties of the connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection allreduce(String parent, String name,
+                                     IFunction function, DataType dataType,
+                                     Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.ALLREDUCE, dataType, function);
+    edge.setProperties(properties);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
    * Create a gather connection
    *
    * @param parent the parent to connection
@@ -602,6 +744,24 @@ public class ComputeConnection {
   }
 
   /**
+   * Create a gather connection
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param dataType data type
+   * @param properties properties of the connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection allgather(String parent, String name, DataType dataType,
+                                     Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.ALLGATHER, dataType);
+    edge.setProperties(properties);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
    * Create a direct connection between two parallel task sets
    *
    * @param parent the parent to connection
@@ -611,6 +771,24 @@ public class ComputeConnection {
    */
   public ComputeConnection direct(String parent, String name, DataType dataType) {
     Edge edge = new Edge(name, OperationNames.DIRECT, dataType);
+    inputs.put(parent, edge);
+
+    return this;
+  }
+
+  /**
+   * Create a direct connection between two parallel task sets
+   *
+   * @param parent the parent to connection
+   * @param name name of the edge
+   * @param dataType data type
+   * @param properties properties of the connection
+   * @return the ComputeConnection
+   */
+  public ComputeConnection direct(String parent, String name, DataType dataType,
+                                  Map<String, Object> properties) {
+    Edge edge = new Edge(name, OperationNames.DIRECT, dataType);
+    edge.setProperties(properties);
     inputs.put(parent, edge);
 
     return this;

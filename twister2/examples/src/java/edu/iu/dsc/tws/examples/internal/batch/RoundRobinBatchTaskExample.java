@@ -37,6 +37,8 @@ import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
@@ -159,15 +161,15 @@ public class RoundRobinBatchTaskExample implements IWorker {
     //Just to print the task schedule plan...
     if (workerID == 0) {
       if (taskSchedulePlan != null) {
-        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+        Map<Integer, ContainerPlan> containersMap
                 = taskSchedulePlan.getContainersMap();
-        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+        for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
           Integer integer = entry.getKey();
-          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-          Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
+          ContainerPlan containerPlan = entry.getValue();
+          Set<TaskInstancePlan> containerPlanTaskInstances
                   = containerPlan.getTaskInstances();
           LOG.info("Task Details for Container Id:" + integer);
-          for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
+          for (TaskInstancePlan ip : containerPlanTaskInstances) {
             LOG.info("Task Id:" + ip.getTaskId()
                     + "\tTask Index" + ip.getTaskIndex()
                     + "\tTask Name:" + ip.getTaskName());

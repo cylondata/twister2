@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.executor.comms.streaming;
 
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
@@ -24,8 +23,6 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.api.stream.SKeyedPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.partition.keyed.KPartitionStreamingFinalReceiver;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
@@ -33,27 +30,20 @@ import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.api.TaskPartitioner;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(ReduceStreamingOperation.class.getName());
-
   private SKeyedPartition op;
-
-  private MessageType dataType;
-
-  private MessageType keyType;
 
   private TaskKeySelector selector;
 
   public KeyedPartitionStreamOperation(Config config, Communicator network, TaskPlan tPlan,
                                        Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                       DataType dType, DataType kType, String edgeName,
-                                       TaskPartitioner partitioner, TaskKeySelector selec) {
+                                       Edge edge) {
     super(config, network, tPlan);
-    this.dataType = Utils.dataTypeToMessageType(dType);
-    this.keyType = Utils.dataTypeToMessageType(kType);
-    this.selector = selec;
+    MessageType dataType = Utils.dataTypeToMessageType(edge.getDataType());
+    MessageType keyType = Utils.dataTypeToMessageType(edge.getKeyType());
+    this.selector = edge.getSelector();
 
     if (sources.size() == 0) {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
@@ -63,16 +53,17 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
     }
 
-    DestinationSelector destSelector = null;
-    if (selec != null) {
-      destSelector = new DefaultDestinationSelector(partitioner);
+    DestinationSelector destSelector;
+    if (selector != null) {
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
     } else {
       destSelector = new HashingSelector();
     }
 
     this.edgeGenerator = e;
-    op = new SKeyedPartition(channel, taskPlan, sources, dests, dataType, keyType,
-        new KPartitionStreamingFinalReceiver(new PartitionRecvrImpl()), destSelector);
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    op = new SKeyedPartition(newComm, taskPlan, sources, dests, dataType, keyType,
+        new PartitionRecvrImpl(), destSelector);
   }
 
   @Override
@@ -96,7 +87,7 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
     @Override
     public boolean receive(int target, Object data) {
       if (data instanceof Tuple) {
-        TaskMessage msg = new TaskMessage(((Tuple) data).getKey(), data,
+        TaskMessage msg = new TaskMessage<>(((Tuple) data).getKey(), data,
             edgeGenerator.getStringMapping(communicationEdge), target);
         BlockingQueue<IMessage> messages = outMessages.get(target);
         if (messages != null) {

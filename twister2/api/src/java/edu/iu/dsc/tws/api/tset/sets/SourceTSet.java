@@ -39,48 +39,38 @@ public class SourceTSet<T> extends BaseTSet<T> {
   public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    MapTSet<P, T> set = new MapTSet<P, T>(config, tSetEnv, direct, mapFn, parallel);
-    children.add(set);
-    return set;
+    return direct.map(mapFn);
   }
 
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, direct, mapFn, parallel);
-    children.add(set);
-    return set;
+    return direct.flatMap(mapFn);
   }
 
   public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, direct, mapFn, parallel);
-    children.add(set);
-    return set;
+    return direct.map(mapFn);
   }
 
   public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, direct,
-        mapFn, parallel);
-    children.add(set);
-    return set;
+    return direct.flatMap(mapFn);
   }
 
   public SinkTSet<T> sink(Sink<T> sink) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, direct, sink, parallel);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
+    return direct.sink(sink);
   }
 
   @Override
   public boolean baseBuild() {
-    source.addInputs(inputMap);
+    if (inputMap.size() > 0) {
+      source.addInputs(inputMap);
+    }
     tSetEnv.getTSetBuilder().getTaskGraphBuilder().
         addSource(getName(), new SourceOp<T>(source), parallel);
     return true;

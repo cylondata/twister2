@@ -70,7 +70,7 @@ public final class KMeansDataGenerator {
       PrintWriter pw = new PrintWriter(outputStream);
       String points = generatePoints(sizeOfFile, dimension, sizeMargin);
       pw.print(points);
-      outputStream.flush();
+      outputStream.sync();
       pw.close();
     }
   }
@@ -87,7 +87,10 @@ public final class KMeansDataGenerator {
           line.append(",").append("\t");
         }
       }
-      datapoints.append(line).append("\n");
+      datapoints.append(line);
+      if (i < numPoints - 1) {
+        datapoints.append("\n");
+      }
     }
     return datapoints.toString();
   }

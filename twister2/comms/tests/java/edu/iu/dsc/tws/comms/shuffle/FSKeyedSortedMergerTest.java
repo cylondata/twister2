@@ -11,13 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
-import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Random;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.After;
@@ -35,9 +33,7 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 public class FSKeyedSortedMergerTest {
   private static final Logger LOG = Logger.getLogger(FSMergerTest.class.getName());
 
-  private FSKeyedSortedMerger fsMerger;
-
-  private Random random;
+  private FSKeyedSortedMerger2 fsMerger;
 
   private KryoSerializer serializer;
 
@@ -51,10 +47,9 @@ public class FSKeyedSortedMergerTest {
 
   @Before
   public void before() throws Exception {
-    fsMerger = new FSKeyedSortedMerger(1000, 100, "/tmp",
+    fsMerger = new FSKeyedSortedMerger2(1000, 100, "/tmp",
         "fskeyedsortedmerger", MessageType.INTEGER, MessageType.OBJECT,
-        new KeyComparator(), 0);
-    random = new Random();
+        Comparator.comparingInt(i -> (Integer) i), 0);
     serializer = new KryoSerializer();
   }
 
@@ -74,14 +69,17 @@ public class FSKeyedSortedMergerTest {
 
   @Test
   public void testStart() throws Exception {
-    ByteBuffer buffer = ByteBuffer.allocate(4);
-    for (int i = 0; i < 1000; i++) {
-      buffer.clear();
-      buffer.putInt(i);
-      byte[] serialize = serializer.serialize(i);
-      int[] val = {i};
-      fsMerger.add(val, serialize, serialize.length);
-      fsMerger.run();
+    int dataLength = 1024;
+    int noOfKeys = 1000000;
+    int dataForEachKey = 1;
+    int[] data = new int[dataLength];
+    Arrays.fill(data, 1);
+    byte[] serializedData = serializer.serialize(data);
+    for (int i = 0; i < noOfKeys; i++) {
+      for (int j = 0; j < dataForEachKey; j++) {
+        fsMerger.add(i, serializedData, serializedData.length);
+        fsMerger.run();
+      }
     }
 
     fsMerger.switchToReading();
@@ -91,21 +89,32 @@ public class FSKeyedSortedMergerTest {
     Set<Integer> set = new HashSet<>();
     int current = 0;
     while (it.hasNext()) {
-      LOG.info("Reading value: " + count);
       Tuple val = (Tuple) it.next();
-      int[] k = (int[]) val.getKey();
-      if (k[0] < current) {
+      int k = (int) val.getKey();
+      if (k < current) {
         Assert.fail("Wrong order");
       }
-      LOG.log(Level.INFO, "Key: " + k[0]);
-      current = k[0];
-      if (set.contains(k[0])) {
+      current = k;
+      if (set.contains(k)) {
         Assert.fail("Duplicate value");
       }
-      set.add(k[0]);
+      set.add(k);
+      //data check
+      Iterator dataIt = (Iterator) val.getValue();
+      int dataCount = 0;
+      while (dataIt.hasNext()) {
+        int[] arr = (int[]) dataIt.next();
+        if (arr.length != dataLength) {
+          Assert.fail("Data sizes mismatch");
+        }
+        dataCount++;
+      }
+      if (dataCount != dataForEachKey) {
+        Assert.fail("Invalid amount of data arrays for key");
+      }
       count++;
     }
-    if (count != 1000) {
+    if (count != noOfKeys) {
       Assert.fail("Count =  " + count);
     }
   }

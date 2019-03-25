@@ -19,22 +19,18 @@ import java.util.Map;
  */
 public interface TFunction extends Serializable {
 
-  TSetContext CONTEXT = new TSetContext();
-
   /**
    * Prepare the function
    *
    * @param context CONTEXT
    */
   default void prepare(TSetContext context) {
-    this.CONTEXT.setConfig(context.getConfig());
-    this.CONTEXT.settSetIndex(context.gettSetIndex());
-    this.CONTEXT.settSetId(context.gettSetId());
-    this.CONTEXT.settSetName(context.gettSetName());
-    this.CONTEXT.setParallelism(context.getParallelism());
-    this.CONTEXT.setConfig(context.getConfig());
-    this.CONTEXT.setWorkerId(context.getWorkerId());
-    this.CONTEXT.addInputMap(context.getInputMap());
+
+  }
+
+
+  default void prepare() {
+
   }
 
   /**
@@ -44,26 +40,30 @@ public interface TFunction extends Serializable {
    * @return the object associated with the given key, null if the key is not present
    */
   default Object getInput(String key) {
-    return CONTEXT.getInputMap().get(key);
+    throw new UnsupportedOperationException("Inputs for TSets are only supported for functions"
+        + "that extend from TBaseFunction.");
   }
 
   /**
-   * Adds the given key value pair into the {@link TFunction#CONTEXT} input map
+   * Adds the given key value pair into the input map
    *
    * @param key the key to be added
    * @param input the value associated with the key
    */
   default void addInput(String key, Cacheable<?> input) {
-    CONTEXT.getInputMap().put(key, input);
+    throw new UnsupportedOperationException("Inputs for TSets are only supported for functions"
+        + "that extend from TBaseFunction.");
   }
 
   /**
    * Adds the given map into the input map
    *
    * @param map map that contains key, input pairs that need to be added into
-   * the {@link TFunction#CONTEXT} input map
+   * the  input map
    */
   default void addInputs(Map<String, Cacheable<?>> map) {
-    CONTEXT.getInputMap().putAll(map);
+    throw new UnsupportedOperationException("Inputs for TSets are only supported for functions"
+        + "that extend from TBaseFunction.");
   }
 }
+

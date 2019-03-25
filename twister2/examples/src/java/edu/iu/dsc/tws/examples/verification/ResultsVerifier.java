@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.verification;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -49,5 +50,9 @@ public class ResultsVerifier<I, O> {
       LOG.info(() -> "Results are verified!");
     }
     return equal;
+  }
+
+  public boolean verify(O generatedOutput) {
+    return this.verify(generatedOutput, Collections.emptyMap());
   }
 }

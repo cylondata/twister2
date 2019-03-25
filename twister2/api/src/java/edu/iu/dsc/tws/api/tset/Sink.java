@@ -21,6 +21,7 @@ import java.io.Serializable;
 public interface Sink<T> extends TFunction, Serializable {
   /**
    * Add a value
+   *
    * @param value the value to add
    * @return true if success
    */

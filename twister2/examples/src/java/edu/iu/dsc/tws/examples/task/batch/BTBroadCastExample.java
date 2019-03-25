@@ -17,12 +17,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.batch.BBroadCastCompute;
 
 public class BTBroadCastExample extends BenchTaskWorker {
 
@@ -34,36 +35,31 @@ public class BTBroadCastExample extends BenchTaskWorker {
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     String edge = "edge";
-    BaseSource g = new SourceBatchTask(edge);
-    BaseSink r = new BroadcastSinkTask();
+    BaseSource g = new SourceTask(edge);
+    ISink r = new BroadcastSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
     return taskGraphBuilder;
   }
 
-  protected static class BroadcastSinkTask extends BaseSink {
+  protected static class BroadcastSinkTask extends BBroadCastCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
-      count++;
-      //  if (count % jobParameters.getPrintInterval() == 0) {
-      Object object = message.getContent();
-      if (object instanceof Iterator) {
-        while (((Iterator) object).hasNext()) {
-          experimentData.setOutput(((Iterator) object).next());
-          LOG.log(Level.INFO, String.format("Received messages to %d: %d",
-              context.taskId(), count));
-          try {
-            verify(OperationNames.BROADCAST);
-          } catch (VerificationException e) {
-            LOG.info("Exception Message : " + e.getMessage());
-          }
+    public boolean broadcast(Iterator<Tuple<Integer, int[]>> content) {
+
+      while (content.hasNext()) {
+        experimentData.setOutput(content.next());
+        LOG.log(Level.INFO, String.format("Received messages to %d: %d",
+            context.taskId(), count));
+        try {
+          verify(OperationNames.BROADCAST);
+        } catch (VerificationException e) {
+          LOG.info("Exception Message : " + e.getMessage());
         }
       }
-      // }
       return true;
     }
   }

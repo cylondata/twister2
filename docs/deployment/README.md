@@ -5,7 +5,7 @@ deployment of data analytics applications as simple as possible.
 
 In the deployment section we discuss the following topics.
 
-* [Compiling](compiling.md)
+* [Compiling](../compiling/compiling.md)
 * [Job Submit](job-submit.md)
 * [Kubernetes](kubernetes/running-jobs.md)
 * [Standalone](standalone/running-jobs.md)

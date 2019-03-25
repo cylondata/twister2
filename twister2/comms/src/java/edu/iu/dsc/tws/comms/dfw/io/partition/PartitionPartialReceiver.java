@@ -107,6 +107,8 @@ public class PartitionPartialReceiver implements MessageReceiver {
 
   private boolean representSourceSet = false;
 
+  private boolean allFinished = false;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
@@ -194,14 +196,14 @@ public class PartitionPartialReceiver implements MessageReceiver {
     boolean needsFurtherProgress = false;
     lock.lock();
 
-    if (progressAttempts > 2) {
+    if (allFinished && progressAttempts > 2) {
       for (Map.Entry<Integer, List<Object>> e : destinationMessages.entrySet()) {
         if (e.getValue().size() > 0) {
           swapToReady(e.getKey(), e.getValue());
         }
       }
       progressAttempts = 0;
-    } else {
+    } else if (allFinished) {
       progressAttempts++;
     }
 
@@ -242,8 +244,10 @@ public class PartitionPartialReceiver implements MessageReceiver {
       if (operation.isDelegateComplete() && !needsFurtherProgress
           && onFinishedSources.equals(thisWorkerSources)
           && readyToSend.isEmpty()) {
+
         for (int source : thisWorkerSources) {
           Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
+          allFinished = true;
           for (int dest : destinations) {
             if (!finishedDestPerSource.contains(dest)) {
               if (operation.sendPartial(source, new byte[1], MessageFlags.END, dest)) {

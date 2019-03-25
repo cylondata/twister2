@@ -11,12 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public class TSetContext {
+public class TSetContext implements Serializable {
   /**
    * tSet index, which goes from 0 up to the number of parallel tSets
    */
@@ -203,16 +204,8 @@ public class TSetContext {
     inputMap.put(key, data);
   }
 
-  public int gettSetIndex() {
-    return tSetIndex;
-  }
-
   protected void settSetIndex(int tSetIndex) {
     this.tSetIndex = tSetIndex;
-  }
-
-  public int gettSetId() {
-    return tSetId;
   }
 
   protected void settSetId(int tSetId) {

@@ -20,9 +20,9 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.ReduceCompute;
 
 public class BTReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTReduceExample.class.getName());
@@ -34,8 +34,8 @@ public class BTReduceExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
 
     String edge = "edge";
-    BaseSource g = new SourceBatchTask(edge);
-    BaseSink r = new ReduceSinkTask();
+    BaseSource g = new SourceTask(edge);
+    ISink r = new ReduceSinkTask();
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
@@ -43,18 +43,18 @@ public class BTReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class ReduceSinkTask extends BaseSink {
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  protected static class ReduceSinkTask extends ReduceCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
 
     private int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
+    public boolean reduce(int[] content) {
       count++;
       LOG.info(String.format("%d received message %d", context.getWorkerId(), count));
       if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        experimentData.setOutput(object);
+        experimentData.setOutput(content);
         try {
           verify(OperationNames.REDUCE);
         } catch (VerificationException e) {
