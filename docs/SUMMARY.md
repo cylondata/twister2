@@ -24,6 +24,7 @@
   * [Task Scheduler](concepts/task-system/task-scheduler/task-scheduler.md)
     * [Streaming Schedulers](concepts/task-system/task-scheduler/straming.md)     
     * [Batch Schedulers](concepts/task-system/task-scheduler/batch.md)
+* [Distributed Runtime](concepts/distributed-runtime.md)    
 * [Parallel Operators](concepts/communication/README.md)
   * [Operators](concepts/communication/communication.md)
   * [Communication Model](concepts/communication/communication-model.md)
