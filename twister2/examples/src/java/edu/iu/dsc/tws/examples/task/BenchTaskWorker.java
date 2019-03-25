@@ -61,17 +61,17 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   protected static int[] inputDataArray;
 
-  private boolean verified = true;
-
   //to capture benchmark results
-  protected BenchmarkResultsRecorder resultsRecorder;
+  protected static BenchmarkResultsRecorder resultsRecorder;
 
   @Override
   public void execute() {
-    this.resultsRecorder = new BenchmarkResultsRecorder(
-        config,
-        workerId == 0
-    );
+    if (resultsRecorder == null) {
+      resultsRecorder = new BenchmarkResultsRecorder(
+          config,
+          workerId == 0
+      );
+    }
     Timing.setDefaultTimingUnit(TimingUnit.NANO_SECONDS);
     experimentData = new ExperimentData();
     jobParameters = JobParameters.build(config);
@@ -127,14 +127,31 @@ public abstract class BenchTaskWorker extends TaskWorker {
   /**
    * This method will verify results and append the output to the results recorder
    */
-  protected void verifyResults(ResultsVerifier resultsVerifier, Object results,
-                               Map<String, Object> args) {
+  protected static boolean verifyResults(ResultsVerifier resultsVerifier,
+                                         Object results,
+                                         Map<String, Object> args,
+                                         boolean verified) {
+    boolean currentVerifiedStatus = verified;
     if (jobParameters.isDoVerify()) {
-      verified = verified && resultsVerifier.verify(results, args);
+      currentVerifiedStatus = verified && resultsVerifier.verify(results, args);
       //this will record verification failed if any of the iteration fails to verify
-      this.resultsRecorder.recordColumn("Verified", verified);
+      resultsRecorder.recordColumn("Verified", verified);
     } else {
-      this.resultsRecorder.recordColumn("Verified", "Not Performed");
+      resultsRecorder.recordColumn("Verified", "Not Performed");
+    }
+    return currentVerifiedStatus;
+  }
+
+  public static boolean getTimingCondition(String taskName, TaskContext ctx) {
+    Optional<TaskInstancePlan> min = ctx.getTasksInThisWorkerByName(taskName).stream()
+        .min(Comparator.comparingInt(TaskInstancePlan::getTaskIndex));
+    //do timing only on task having lowest ID
+    if (min.isPresent()) {
+      return ctx.getWorkerId() == 0
+          && ctx.taskIndex() == min.get().getTaskIndex();
+    } else {
+      LOG.warning("Couldn't find lowest ID task for " + SOURCE);
+      return false;
     }
   }
 
@@ -144,34 +161,22 @@ public abstract class BenchTaskWorker extends TaskWorker {
     private String edge;
     private int iterations;
     private boolean timingCondition;
-    private boolean stream;
-
-    public SourceTask() {
-      this.iterations = jobParameters.getIterations();
-    }
-
-    public SourceTask(String e, boolean stream) {
-      this();
-      this.edge = e;
-      this.stream = stream;
-    }
+    private boolean keyed = false;
 
     public SourceTask(String e) {
-      this();
+      this.iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
       this.edge = e;
+    }
+
+    public SourceTask(String e, boolean keyed) {
+      this(e);
+      this.keyed = keyed;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
-      Optional<TaskInstancePlan> min = ctx.getTasksInThisWorkerByName(SOURCE).stream()
-          .min(Comparator.comparingInt(TaskInstancePlan::getTaskId));
-      //do timing only on task having lowest ID
-      if (min.isPresent()) {
-        this.timingCondition = ctx.getWorkerId() == 0 && ctx.taskId() == min.get().getTaskId();
-      } else {
-        LOG.warning("Couldn't find lowest ID task for " + SOURCE);
-      }
+      this.timingCondition = getTimingCondition(SOURCE, ctx);
     }
 
     @Override
@@ -179,14 +184,16 @@ public abstract class BenchTaskWorker extends TaskWorker {
       if (count < iterations) {
         //todo remove
         experimentData.setInput(inputDataArray);
-        if (context.write(this.edge, inputDataArray)) {
-          count++;
-        }
         if (count == jobParameters.getWarmupIterations()) {
           Timing.mark(TIMING_ALL_SEND, this.timingCondition);
         }
 
-        if (!stream && count >= jobParameters.getWarmupIterations()) {
+        if ((this.keyed && context.write(this.edge, context.taskIndex(), inputDataArray))
+            || (!this.keyed && context.write(this.edge, inputDataArray))) {
+          count++;
+        }
+
+        if (jobParameters.isStream() && count >= jobParameters.getWarmupIterations()) {
           Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
         }
       } else {
