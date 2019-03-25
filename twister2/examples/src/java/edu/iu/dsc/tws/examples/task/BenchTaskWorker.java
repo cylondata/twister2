@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.task;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
@@ -64,6 +65,9 @@ public abstract class BenchTaskWorker extends TaskWorker {
   //to capture benchmark results
   protected static BenchmarkResultsRecorder resultsRecorder;
 
+  protected static AtomicInteger sendersInProgress = new AtomicInteger();
+  protected static AtomicInteger receiversInProgress = new AtomicInteger();
+
   @Override
   public void execute() {
     if (resultsRecorder == null) {
@@ -99,27 +103,12 @@ public abstract class BenchTaskWorker extends TaskWorker {
     executionPlan = taskExecutor.plan(dataFlowTaskGraph);
     IExecution execution = taskExecutor.iExecute(dataFlowTaskGraph, executionPlan);
 
-    // if streaming lets stop after sometime
-    if (jobParameters.isStream()) {
-      new Thread(() -> {
-        try {
-          Thread.sleep(1500);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-        execution.stop();
-      }).start();
+    while (execution.progress() && (sendersInProgress.get() != 0
+        || receiversInProgress.get() != 0)) {
+      //do nothing
     }
-
-    long start = System.currentTimeMillis();
-    while (true) {
-      execution.progress();
-      if (System.currentTimeMillis() - start > 1500) {
-        execution.stop();
-        execution.close();
-        break;
-      }
-    }
+    execution.stop();
+    execution.close();
   }
 
   public abstract TaskGraphBuilder buildTaskGraph();
@@ -163,6 +152,8 @@ public abstract class BenchTaskWorker extends TaskWorker {
     private boolean timingCondition;
     private boolean keyed = false;
 
+    private boolean endNotified = false;
+
     public SourceTask(String e) {
       this.iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
       this.edge = e;
@@ -177,6 +168,15 @@ public abstract class BenchTaskWorker extends TaskWorker {
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
       this.timingCondition = getTimingCondition(SOURCE, ctx);
+      sendersInProgress.incrementAndGet();
+    }
+
+    private void notifyEnd() {
+      if (endNotified) {
+        return;
+      }
+      sendersInProgress.decrementAndGet();
+      endNotified = true;
     }
 
     @Override
@@ -198,6 +198,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
         }
       } else {
         context.end(this.edge);
+        this.notifyEnd();
       }
     }
   }
