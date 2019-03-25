@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.comms.dfw.io.partition;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -25,19 +24,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-/**
- * This is the partial receiver for the partition operation.
- * Partial receiver is only going to get called for messages going to other destinations
- * We have partial receivers for each actual source, So even if the message is going to be forwarded
- * to a task within the same worker the message will still go through the partial receiver.
- */
-public class PartitionPartialReceiver implements MessageReceiver {
+public class PartitionStreamingPartialReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionPartialReceiver.class.getName());
 
   /**
@@ -86,28 +77,11 @@ public class PartitionPartialReceiver implements MessageReceiver {
   private Lock lock = new ReentrantLock();
 
   /**
-   * we have sent to these destinations
-   */
-  private Map<Integer, Set<Integer>> finishedDestinations = new HashMap<>();
-
-  /**
-   * These sources called onFinished
-   */
-  private Set<Integer> onFinishedSources = new HashSet<>();
-
-  /**
-   * Sources of this worker
-   */
-  private Set<Integer> thisWorkerSources = new HashSet<>();
-
-  /**
    * Progress attempts without sending
    */
   private int progressAttempts = 0;
 
   private boolean representSourceSet = false;
-
-  private boolean allFinished = false;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -115,10 +89,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
     highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
     executor = op.getTaskPlan().getThisExecutor();
     TaskPlan taskPlan = op.getTaskPlan();
-    thisWorkerSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, op.getSources());
-    for (int s : thisWorkerSources) {
-      finishedDestinations.put(s, new HashSet<>());
-    }
 
     destinations = op.getTargets();
     this.operation = op;
@@ -153,14 +123,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
 
       List<Object> dests = destinationMessages.get(target);
 
-      if ((flags & MessageFlags.END) == MessageFlags.END) {
-        for (Map.Entry<Integer, List<Object>> e : destinationMessages.entrySet()) {
-          swapToReady(e.getKey(), e.getValue());
-        }
-
-        onFinishedSources.add(src);
-        return true;
-      }
 
       if (dests.size() > highWaterMark) {
         return false;
@@ -196,14 +158,14 @@ public class PartitionPartialReceiver implements MessageReceiver {
     boolean needsFurtherProgress = false;
     lock.lock();
 
-    if (allFinished && progressAttempts > 2) {
+    if (progressAttempts > 2) {
       for (Map.Entry<Integer, List<Object>> e : destinationMessages.entrySet()) {
         if (e.getValue().size() > 0) {
           swapToReady(e.getKey(), e.getValue());
         }
       }
       progressAttempts = 0;
-    } else if (allFinished) {
+    } else {
       progressAttempts++;
     }
 
@@ -212,7 +174,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
       Iterator<Map.Entry<Integer, List<Object>>> it = readyToSend.entrySet().iterator();
 
       while (it.hasNext()) {
-
         Map.Entry<Integer, List<Object>> e = it.next();
         List<Object> send = new ArrayList<>(e.getValue());
         if (send.size() == 0) {
@@ -241,38 +202,11 @@ public class PartitionPartialReceiver implements MessageReceiver {
           needsFurtherProgress = true;
         }
       }
-      if (operation.isDelegateComplete() && !needsFurtherProgress
-          && onFinishedSources.equals(thisWorkerSources)
-          && readyToSend.isEmpty()) {
 
-        for (int source : thisWorkerSources) {
-          Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
-          allFinished = true;
-          for (int dest : destinations) {
-            if (!finishedDestPerSource.contains(dest)) {
-              if (operation.sendPartial(source, new byte[1], MessageFlags.END, dest)) {
-                finishedDestPerSource.add(dest);
-              } else {
-                needsFurtherProgress = true;
-                // no point in going further
-                break;
-              }
-            }
-          }
-        }
-        return needsFurtherProgress;
-      } else {
-        for (int source : thisWorkerSources) {
-          Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
-          if (!finishedDestPerSource.equals(destinations)) {
-            needsFurtherProgress = true;
-          }
-        }
-        return needsFurtherProgress;
-      }
     } finally {
       lock.unlock();
     }
+    return needsFurtherProgress;
   }
 
   /**
@@ -293,7 +227,6 @@ public class PartitionPartialReceiver implements MessageReceiver {
         swapToReady(e.getKey(), e.getValue());
       }
       // finished
-      onFinishedSources.add(source);
     } finally {
       lock.unlock();
     }

@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
+import edu.iu.dsc.tws.data.utils.WorkerConstants;
 
 /**
  * This class is used to define the Job Parameters needed to launch
@@ -93,6 +94,19 @@ public final class SVMJobParameters {
 
   private boolean isDummy = false;
 
+  /*
+  * Runs the algorithm with the given parallelism
+  * */
+
+  private int parallelism = 4;
+
+
+  /**
+   * Experiment name == Job Name
+   * */
+
+  private String experimentName = "";
+
   /**
    * Builds the Job Parameters relevant SVM Algorithm
    * @param cfg : this must be initialized where Job is initialized.
@@ -122,6 +136,10 @@ public final class SVMJobParameters {
         .getDoubleValue(MLDataObjectConstants.SgdSvmDataObjectConstants.ALPHA, 0.001);
     svmJobParameters.isDummy = cfg.getBooleanValue(
         MLDataObjectConstants.DUMMY, true);
+    svmJobParameters.parallelism = cfg
+        .getIntegerValue(WorkerConstants.PARALLELISM, 4);
+    svmJobParameters.experimentName = cfg
+        .getStringValue(MLDataObjectConstants.SgdSvmDataObjectConstants.EXP_NAME);
 
     return  svmJobParameters;
   }
@@ -222,6 +240,22 @@ public final class SVMJobParameters {
     isDummy = dummy;
   }
 
+  public int getParallelism() {
+    return parallelism;
+  }
+
+  public void setParallelism(int parallelism) {
+    this.parallelism = parallelism;
+  }
+
+  public String getExperimentName() {
+    return experimentName;
+  }
+
+  public void setExperimentName(String experimentName) {
+    this.experimentName = experimentName;
+  }
+
   @Override
   public String toString() {
     return "SVMJobParameters{"
@@ -237,6 +271,8 @@ public final class SVMJobParameters {
         + ", c=" + c
         + ", isSplit=" + isSplit
         + ", isDummy=" + isDummy
+        + ", parallelism=" + parallelism
+        + ", experimentName=" + experimentName
         + '}';
   }
 }

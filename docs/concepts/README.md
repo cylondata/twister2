@@ -22,7 +22,7 @@ This section describes those components in more details.
 
 * [Communication](communication/communication-model.md)
 * [Task System](task-system/task-system.md)
-* [Task Graph](task-graph/task-graph.md)
-* [Task Scheduler](task-scheduler/task-scheduler.md)
-* [Executor](task-executor/task-executor.md)
+* [Task Graph](task-system/task-graph/task-graph.md)
+* [Task Scheduler](task-system/task-scheduler/task-scheduler.md)
+* [Executor](task-system/executor/executor.md)
 * [Data Access](data-access/data-access.md)

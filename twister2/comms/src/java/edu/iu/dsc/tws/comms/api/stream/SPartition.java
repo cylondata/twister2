@@ -20,8 +20,8 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingPartialReceiver;
 
 /**
  * Streaming Partition Operation
@@ -55,7 +55,8 @@ public class SPartition {
                     DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
     this.partition = new DataFlowPartition(comm.getChannel(), sources, targets,
-        new PartitionStreamingFinalReceiver(rcvr), new PartitionPartialReceiver(), dataType);
+        new PartitionStreamingFinalReceiver(rcvr),
+        new PartitionStreamingPartialReceiver(), dataType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
   }
