@@ -64,6 +64,7 @@ public class STAllGatherExample extends BenchTaskWorker {
       super.prepare(cfg, ctx);
       this.timingCondition = getTimingCondition(SINK, context);
       resultsVerifier = new GatherVerifier(inputDataArray, ctx, SOURCE);
+      receiversInProgress.incrementAndGet();
     }
 
     @Override
@@ -79,6 +80,7 @@ public class STAllGatherExample extends BenchTaskWorker {
         Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
         BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, this.timingCondition);
         resultsRecorder.writeToCSV();
+        receiversInProgress.decrementAndGet();
       }
       this.verified = verifyResults(resultsVerifier, itr, null, verified);
       return true;
