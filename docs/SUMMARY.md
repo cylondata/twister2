@@ -16,24 +16,17 @@
   * [Mesos](deployment/mesos/README.md)
       * [Running Jobs](deployment/mesos/running-jobs.md)
       * [Twister2 Mesos Install](deployment/mesos/twister2-mesos-install.md)
-  * [Slurm](deployment/slurm/running-jobs.md)    
-* [Concepts](concepts/README.md)
-  * [Task Scheduler](concepts/task-scheduler/README.md)
-    * [Streaming](concepts/task-scheduler/streaming/README.md)
-      * [First Fit Streaming Task Scheduler](concepts/task-scheduler/streaming/first-fit-streaming-task-scheduler.md)
-      * [Round Robin Task Scheduler](concepts/task-scheduler/streaming/round-robin-task-scheduler.md)
-      * [Data Locality Streaming Task Scheduler](concepts/task-scheduler/streaming/data-locality-streaming-task-scheduler.md)
-    * [Batch](concepts/task-scheduler/batch/README.md)
-      * [Data Locality Batch Task Scheduler](concepts/task-scheduler/batch/data-locality-batch-task-scheduler.md)
-      * [Round Robin Batch Task Scheduler](concepts/task-scheduler/batch/round-robin-batch-task-scheduler.md)
-    * [Task Scheduler](concepts/task-scheduler/task-scheduler.md)
-  * [Communication](concepts/communication/README.md)
-    * [Communication](concepts/communication/communication.md)
-    * [Communication Model](concepts/communication/communication-model.md)
-  * [Task Graph](concepts/task-graph/task-graph.md)
-  * [Task System](concepts/task-system/task-system.md)
-  * [Executor](concepts/executor/executor.md)
-  * [Data Access](concepts/data-access/data-access.md)
+  * [Slurm](deployment/slurm/running-jobs.md)
+* [Task System](concepts/task-system/task-system.md)      
+  * [Task Graph](concepts/task-system/task-graph/task-graph.md)
+  * [Executor](concepts/task-system/executor/executor.md)  
+  * [Task Scheduler](concepts/task-system/task-scheduler/task-scheduler.md)
+    * [Streaming Schedulers](concepts/task-system/task-scheduler/straming.md)     
+    * [Batch Schedulers](concepts/task-system/task-scheduler/batch.md)
+* [Parallel Operators](concepts/communication/README.md)
+  * [Operators](concepts/communication/communication.md)
+  * [Communication Model](concepts/communication/communication-model.md)
+* [Data Access](concepts/data-access/data-access.md)
 * [Architecture](architecture/README.md)
   * [Controller](architecture/controller/README.md)
     * [ZK Based Worker Discovery](architecture/controller/zk-based-worker-controller.md)
@@ -50,7 +43,7 @@
   * [Job Master](architecture/job-master/README.md)
     * [Job Master](architecture/job-master/job-master.md)
   * [Common](architecture/common/README.md)
-    * [Logging](architecture/common/logging.md)
+    * [Logging](deployment/logging.md)
 * [Developers](developers/README.md)
   * [Developer Environment](developers/developer-environment.md)
   * [Debugging](developers/debugging.md)
@@ -115,6 +108,11 @@
   * [Twister2 overview](tutorial/twister2-overview.md)
   * [Developing big data solutions](tutorial/developing.md)
   * [Summary and future work](tutorial/conclusion.md)
+
+
+
+
+
 
 
 
