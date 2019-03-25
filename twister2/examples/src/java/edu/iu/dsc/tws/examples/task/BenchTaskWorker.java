@@ -202,35 +202,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
     }
   }
 
-  protected static class KeyedSourceBatchTask extends BaseSource {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    private String edge;
-
-    private int count;
-    private int iterations;
-
-    public KeyedSourceBatchTask() {
-      this.iterations = jobParameters.getIterations();
-    }
-
-    public KeyedSourceBatchTask(String edge) {
-      this();
-      this.edge = edge;
-    }
-
-    @Override
-    public void execute() {
-      if (count <= iterations) {
-        if (context.write(edge, count, inputDataArray)) {
-          count++;
-        }
-      } else {
-        context.end(this.edge);
-      }
-    }
-  }
-
   protected static class SourceStreamTask extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
     private int count = 0;
