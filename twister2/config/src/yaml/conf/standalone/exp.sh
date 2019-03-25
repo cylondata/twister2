@@ -12,7 +12,7 @@ if [ $OMPI_COMM_WORLD_RANK = "0" ]; then
 fi
 
 profile=
-#debug=
+debug=
 
 # set JAVA_HOME by user
 CUSTOM_JAVA_HOME=

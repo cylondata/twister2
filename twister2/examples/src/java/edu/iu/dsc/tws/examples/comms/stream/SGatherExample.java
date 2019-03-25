@@ -135,8 +135,8 @@ public class SGatherExample extends BenchWorker {
         while (object.hasNext()) {
           Object data = object.next();
           if (data instanceof Tuple) {
-            LOG.info(() -> String.format("%d received %d", target,
-                (Integer) ((Tuple) data).getKey()));
+            LOG.info(() -> String.format("%d received %d %d", target,
+                (Integer) ((Tuple) data).getKey(), count));
             dataReceived.add((int[]) ((Tuple) data).getValue());
           } else {
             LOG.severe(() -> "Un-expected data: " + data.getClass());
