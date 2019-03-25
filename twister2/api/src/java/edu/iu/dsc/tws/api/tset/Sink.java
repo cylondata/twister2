@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.api.tset;
 
 import java.io.Serializable;
 
+import edu.iu.dsc.tws.dataset.DataPartition;
+
 /**
  * Add a value at the end of the graph
  *
@@ -31,5 +33,13 @@ public interface Sink<T> extends TFunction, Serializable {
    * Call this at the end
    */
   default void close() {
+  }
+
+  /**
+   * Return the data partition associated with this task instance
+   */
+  default DataPartition<T> get() {
+    throw new UnsupportedOperationException("Get is not supported for this task, please"
+        + "override the get method in the Sink interface to add functionality");
   }
 }
