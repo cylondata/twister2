@@ -257,12 +257,18 @@ public class PartitionPartialReceiver implements MessageReceiver {
           }
         }
         return needsFurtherProgress;
+      } else {
+        for (int source : thisWorkerSources) {
+          Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
+          if (!finishedDestPerSource.equals(destinations)) {
+            needsFurtherProgress = true;
+          }
+        }
+        return needsFurtherProgress;
       }
     } finally {
       lock.unlock();
     }
-
-    return needsFurtherProgress;
   }
 
   /**
