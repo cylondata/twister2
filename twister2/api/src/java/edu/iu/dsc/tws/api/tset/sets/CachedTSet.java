@@ -67,7 +67,6 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
     this.parent = prnt;
     this.name = "cache-" + parent.getName();
     data = new DataObjectImpl<>(config);
-    LOG.info("Init CachedTSet " + data.toString());
     this.parallel = parallelism;
   }
 
