@@ -2,7 +2,7 @@
 
 First, you can install Kubernetes project to a machine on your cluster or your personal machine. You need to have kubectl running on the machine you installed the project.
 
-To compile & install Twister2 on a machine, please follow the steps in [compiling document](../compiling.md). You may also check [developer document](../../developers/developer-environment.md) for setting up IDEs.
+To compile & install Twister2 on a machine, please follow the steps in [compiling document](../../compiling/compiling.md). You may also check [developer document](../../developers/developer-environment.md) for setting up IDEs.
 
 Here are the things that you need to do to run Twister2 jobs on Kubernetes clusters:
 * **Authorization of Pods**: This is a required step to run any Twister2 job on Kubernetes clusters. 

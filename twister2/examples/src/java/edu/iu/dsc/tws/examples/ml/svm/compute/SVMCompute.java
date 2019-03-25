@@ -89,8 +89,11 @@ public class SVMCompute extends BaseCompute {
           this.context.write(Constants.SimpleGraphConfig.REDUCE_EDGE, this.w);
         }
       }
-      LOG.info(String.format("Batch Size : %d, Dimensions of Data [%d,%d] ",
-          this.batchDataCount, this.batchDataPoints.length, this.batchDataPoints[0].length));
+      if (debug) {
+        LOG.info(String.format("Batch Size : %d, Dimensions of Data [%d,%d] ",
+            this.batchDataCount, this.batchDataPoints.length, this.batchDataPoints[0].length));
+      }
+
       this.context.end(Constants.SimpleGraphConfig.REDUCE_EDGE);
     }
 
@@ -139,8 +142,11 @@ public class SVMCompute extends BaseCompute {
   public void batchTraining() {
     double[][] x1 = this.binaryBatchModel.getX();
     double[] y1 = this.binaryBatchModel.getY();
-    LOG.log(Level.INFO, String.format("Batch Mode Training , Samples %d, Features %d",
-        x1.length, x1[0].length));
+    if (debug) {
+      LOG.log(Level.INFO, String.format("Batch Mode Training , Samples %d, Features %d",
+          x1.length, x1[0].length));
+    }
+
     try {
       pegasosSgdSvm.iterativeSgd(this.binaryBatchModel.getW(), x1, y1);
       this.w = pegasosSgdSvm.getW();
@@ -191,11 +197,16 @@ public class SVMCompute extends BaseCompute {
     if (binaryBatchModel == null) {
       throw new NullPointerException("Binary Batch Model is Null !!!");
     }
-    LOG.info("Binary Batch Model Before Updated : " + this.binaryBatchModel.toString());
+    if (debug) {
+      LOG.info("Binary Batch Model Before Updated : " + this.binaryBatchModel.toString());
+    }
     this.binaryBatchModel = DataUtils.updateModelData(this.binaryBatchModel, xy);
-    LOG.info("Binary Batch Model After Updated : " + this.binaryBatchModel.toString());
-    LOG.info(String.format("Updated Data [%d,%d] ",
-        this.binaryBatchModel.getX().length, this.binaryBatchModel.getX()[0].length));
+    if (debug) {
+      LOG.info("Binary Batch Model After Updated : " + this.binaryBatchModel.toString());
+      LOG.info(String.format("Updated Data [%d,%d] ",
+          this.binaryBatchModel.getX().length, this.binaryBatchModel.getX()[0].length));
+    }
+
   }
 
   /**

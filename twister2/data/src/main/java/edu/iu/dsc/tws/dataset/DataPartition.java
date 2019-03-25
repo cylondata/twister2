@@ -11,20 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset;
 
+import java.io.Serializable;
+
 /**
  * Partition of a distributed set
  *
  * @param <T> partition
  */
-public interface DataPartition<T> {
+public interface DataPartition<T> extends Serializable {
   /**
    * Get the data consumer
+   *
    * @return the consumer
    */
   DataPartitionConsumer<T> getConsumer();
 
   /**
    * Get the id of the partition
+   *
    * @return the id of the partition
    */
   int getPartitionId();

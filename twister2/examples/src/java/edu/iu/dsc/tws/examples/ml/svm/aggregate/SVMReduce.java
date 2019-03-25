@@ -64,12 +64,18 @@ public class SVMReduce extends BaseSink implements Collector {
 
       if (this.operationMode.equals(OperationMode.BATCH)) {
         // do batch based computation
-        LOG.info("Batch Mode : " + Arrays.toString(this.object));
+        if (debug) {
+          LOG.info("Batch Mode : " + Arrays.toString(this.object));
+        }
+
       }
 
       if (this.operationMode.equals(OperationMode.STREAMING)) {
         // do streaming based computation
-        LOG.info("Streaming Mode : " + Arrays.toString(this.object));
+        if (debug) {
+          LOG.info("Streaming Mode : " + Arrays.toString(this.object));
+        }
+
       }
     }
     return this.status;

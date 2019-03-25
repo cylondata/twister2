@@ -43,7 +43,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.DataPartition;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 
 public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
   private static final Logger LOG = Logger.getLogger(CachedTSet.class.getName());
@@ -79,13 +78,13 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
     boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     // lets override the parallelism
-    int p = calculateParallelism(parent);
-    Sink<T> cacheSink = new CacheSink(data);
+    int para = calculateParallelism(parent);
+    Sink<T> cacheSink = new CacheSink();
     if (inputMap.size() > 0) {
       cacheSink.addInputs(inputMap);
     }
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
-        new SinkOp<>(cacheSink, isIterable, keyed), p);
+        new SinkOp<>(cacheSink, isIterable, keyed), para);
     parent.buildConnection(connection);
     return true;
   }
@@ -195,12 +194,16 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
 
   @Override
   public boolean addData(T value) {
-    if (data == null) {
-      data = new DataObjectImpl<>(config);
-    }
-    int curr = data.getPartitionCount();
-    data.addPartition(new EntityPartition<T>(curr, value)); //
+//    if (data == null) {
+//      data = new DataObjectImpl<>(config);
+//    }
+//    int curr = data.getPartitionCount();
+//    data.addPartition(new EntityPartition<T>(curr, value)); //
     return false;
+  }
+
+  public void setData(DataObject<T> inData) {
+    this.data = inData;
   }
 
   @Override

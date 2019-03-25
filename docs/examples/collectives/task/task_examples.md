@@ -84,7 +84,7 @@ After creating the source and sink task, depending on the collective operation u
 create the task graph as stated in the following examples. The created source and 
 sink tasks must be added to the task graph with source and sink names with unique identities.
 
-The following [task graph](../../../concepts/task-graph/task-graph.md)  building refers to a reduction based example, which will be elaborated
+The following [task graph](../../../concepts/task-system/task-graph/task-graph.md)  building refers to a reduction based example, which will be elaborated
 in the following sections.  
 
 ```java

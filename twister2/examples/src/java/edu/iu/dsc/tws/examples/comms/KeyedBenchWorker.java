@@ -139,7 +139,7 @@ public abstract class KeyedBenchWorker implements IWorker {
         if (isDone() && streamWait > 0 && (System.currentTimeMillis() - streamWait) > 5000) {
           break;
         }
-      } else {
+      } else if (isDone()) {
         break;
       }
       // progress the channel
