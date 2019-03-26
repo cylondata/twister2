@@ -16,7 +16,7 @@ docker pull twister2/standalone
 
 ## Building twister2/standalone Image Using Dockerfile
 
-If you want to build docker image by yourself, you can download the [Dockerfile](../../../docker/standalone/DockerFile) and in the same directory, use the command below:
+If you want to build docker image by yourself, you can download the [Dockerfile](../../../docker/standalone/Dockerfile) and in the same directory, use the command below:
 
 ```bash
 docker build -t repositoryname:tag .
