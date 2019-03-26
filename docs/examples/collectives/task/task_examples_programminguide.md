@@ -225,8 +225,10 @@ can see the SourceTask as the source task for all the batch examples.
     int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
+    
     BaseSource g = new SourceTask(edge);
     ISink r = new GatherSinkTask();
+    
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
@@ -259,9 +261,11 @@ can see the SourceTask as the source task for all the batch examples.
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
+    
     String edge = "edge";
     ISource g = new SourceTask(edge);
     ISink r = new AllGatherSinkTask();
+    
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.allgather(SOURCE, edge, dataType);
@@ -293,9 +297,11 @@ can see the SourceTask as the source task for all the batch examples.
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
+    
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
     ISink r = new BroadcastSinkTask();
+    
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
@@ -328,9 +334,11 @@ can see the SourceTask as the source task for all the batch examples.
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
+    
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
     ISink r = new PartitionSinkTask();
+    
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
@@ -366,9 +374,11 @@ can see the SourceTask as the source task for all the batch examples.
     Op operation = Op.SUM;
     DataType keyType = DataType.INTEGER;
     DataType dataType = DataType.INTEGER;
+    
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
     ISink r = new KeyedReduceSinkTask();
+    
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
@@ -402,9 +412,11 @@ can see the SourceTask as the source task for all the batch examples.
     int sinkParallelism = taskStages.get(1);
     DataType keyType = DataType.INTEGER;
     DataType dataType = DataType.INTEGER;
+    
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
     ISink r = new KeyedGatherSinkTask();
+    
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
@@ -440,9 +452,11 @@ can see the SourceTask as the source task for all the batch examples.
     int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     DataType keyType = DataType.INTEGER;
+    
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
     ISink r = new BKeyedPartitionSinkTask();
+    
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
@@ -982,4 +996,4 @@ the execute method to execute the generated task graph.
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.internal.taskgraph.MultiComputeTaskGraphExample -dsize 100 -parallelism 2 -workers 2 
 ```
 
-[MultipleComputeNodes TaskGraph Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/MultiStageGraph.java)
+[MultiComputeNodes TaskGraph Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/MultiStageGraph.java)
