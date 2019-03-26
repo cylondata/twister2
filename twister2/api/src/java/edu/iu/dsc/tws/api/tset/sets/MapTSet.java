@@ -36,6 +36,7 @@ public class MapTSet<T, P> extends BaseTSet<T> {
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = 1;
+    this.name = "map-" + parent.getName();
   }
 
   public MapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
@@ -44,6 +45,7 @@ public class MapTSet<T, P> extends BaseTSet<T> {
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = parallelism;
+    this.name = generateName("map", parent);
   }
 
   public <P1> MapTSet<P1, T> map(MapFunction<T, P1> mFn) {
@@ -81,13 +83,8 @@ public class MapTSet<T, P> extends BaseTSet<T> {
     boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     int p = calculateParallelism(parent);
-    if (inputMap.size() > 0) {
-      mapFn.addInputs(inputMap);
-    }
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
-        addCompute(generateName("map",
-            parent), new MapOp<>(mapFn, isIterable, keyed), p);
-
+        addCompute(getName(), new MapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }
