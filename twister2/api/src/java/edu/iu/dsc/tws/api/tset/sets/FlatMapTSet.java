@@ -93,9 +93,6 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
 
     int p = calculateParallelism(parent);
     String newName = generateName("flat-map", parent);
-    if (inputMap.size() > 0) {
-      mapFn.addInputs(inputMap);
-    }
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
         addCompute(newName, new FlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);

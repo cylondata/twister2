@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.GeneratorUtils;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
@@ -87,11 +88,7 @@ public class SAllReduceExample extends BenchWorker {
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (array, args) -> {
       int sourcesCount = jobParameters.getTaskStages().get(0);
-      int[] outArray = new int[array.length];
-      for (int i = 0; i < array.length; i++) {
-        outArray[i] = array[i] * sourcesCount;
-      }
-      return outArray;
+      return GeneratorUtils.multiplyIntArray(array, sourcesCount);
     }, IntArrayComparator.getInstance());
 
     // now initialize the workers

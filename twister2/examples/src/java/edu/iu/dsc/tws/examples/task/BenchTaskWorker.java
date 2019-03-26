@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.task;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
@@ -25,10 +26,7 @@ import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
-import edu.iu.dsc.tws.examples.verification.ExperimentData;
-import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -55,71 +53,57 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   protected ComputeConnection computeConnection;
 
-  protected static ExperimentData experimentData;
-
   protected static JobParameters jobParameters;
 
   protected static int[] inputDataArray;
 
-  private boolean verified = true;
-
   //to capture benchmark results
-  protected BenchmarkResultsRecorder resultsRecorder;
+  protected static BenchmarkResultsRecorder resultsRecorder;
+
+  protected static AtomicInteger sendersInProgress = new AtomicInteger();
+  protected static AtomicInteger receiversInProgress = new AtomicInteger();
 
   @Override
   public void execute() {
-    this.resultsRecorder = new BenchmarkResultsRecorder(
-        config,
-        workerId == 0
-    );
+    if (resultsRecorder == null) {
+      resultsRecorder = new BenchmarkResultsRecorder(
+          config,
+          workerId == 0
+      );
+    }
     Timing.setDefaultTimingUnit(TimingUnit.NANO_SECONDS);
-    experimentData = new ExperimentData();
     jobParameters = JobParameters.build(config);
-    experimentData.setTaskStages(jobParameters.getTaskStages());
     taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     if (jobParameters.isStream()) {
       taskGraphBuilder.setMode(OperationMode.STREAMING);
-      experimentData.setOperationMode(OperationMode.STREAMING);
-      //streaming application doesn't consider iteration as a looping of the action on the
-      //same data set. It's rather producing an streaming of data
-      experimentData.setIterations(1);
     } else {
       taskGraphBuilder.setMode(OperationMode.BATCH);
-      experimentData.setOperationMode(OperationMode.BATCH);
-      experimentData.setIterations(jobParameters.getIterations());
     }
 
     inputDataArray = DataGenerator.generateIntData(jobParameters.getSize());
-
-    //todo remove below
-    experimentData.setInput(inputDataArray);
 
     buildTaskGraph();
     dataFlowTaskGraph = taskGraphBuilder.build();
     executionPlan = taskExecutor.plan(dataFlowTaskGraph);
     IExecution execution = taskExecutor.iExecute(dataFlowTaskGraph, executionPlan);
 
-    // if streaming lets stop after sometime
-    if (jobParameters.isStream()) {
-      new Thread(() -> {
-        try {
-          Thread.sleep(1500);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-        execution.stop();
-      }).start();
+    while (execution.progress() && (sendersInProgress.get() != 0
+        || receiversInProgress.get() != 0)) {
+      //do nothing
+      //LOG.info(sendersInProgress.get() + "," + receiversInProgress.get());
     }
 
-    long start = System.currentTimeMillis();
-    while (true) {
-      execution.progress();
-      if (System.currentTimeMillis() - start > 1500) {
-        execution.stop();
-        execution.close();
-        break;
+    //now just spin for several iterations to progress the remaining communication.
+    //todo fix streaming to return false, when comm is done
+    long timeNow = System.currentTimeMillis();
+    if (jobParameters.isStream()) {
+      LOG.info("Streaming Example task will wait 10secs to finish communication...");
+      while (System.currentTimeMillis() - timeNow < 10000) {
+        execution.progress();
       }
     }
+    execution.stop();
+    execution.close();
   }
 
   public abstract TaskGraphBuilder buildTaskGraph();
@@ -127,14 +111,31 @@ public abstract class BenchTaskWorker extends TaskWorker {
   /**
    * This method will verify results and append the output to the results recorder
    */
-  protected void verifyResults(ResultsVerifier resultsVerifier, Object results,
-                               Map<String, Object> args) {
+  protected static boolean verifyResults(ResultsVerifier resultsVerifier,
+                                         Object results,
+                                         Map<String, Object> args,
+                                         boolean verified) {
+    boolean currentVerifiedStatus = verified;
     if (jobParameters.isDoVerify()) {
-      verified = verified && resultsVerifier.verify(results, args);
+      currentVerifiedStatus = verified && resultsVerifier.verify(results, args);
       //this will record verification failed if any of the iteration fails to verify
-      this.resultsRecorder.recordColumn("Verified", verified);
+      resultsRecorder.recordColumn("Verified", verified);
     } else {
-      this.resultsRecorder.recordColumn("Verified", "Not Performed");
+      resultsRecorder.recordColumn("Verified", "Not Performed");
+    }
+    return currentVerifiedStatus;
+  }
+
+  public static boolean getTimingCondition(String taskName, TaskContext ctx) {
+    Optional<TaskInstancePlan> min = ctx.getTasksInThisWorkerByName(taskName).stream()
+        .min(Comparator.comparingInt(TaskInstancePlan::getTaskIndex));
+    //do timing only on task having lowest ID
+    if (min.isPresent()) {
+      return ctx.getWorkerId() == 0
+          && ctx.taskIndex() == min.get().getTaskIndex();
+    } else {
+      LOG.warning("Couldn't find lowest ID task for " + SOURCE);
+      return false;
     }
   }
 
@@ -144,146 +145,70 @@ public abstract class BenchTaskWorker extends TaskWorker {
     private String edge;
     private int iterations;
     private boolean timingCondition;
-    private boolean stream;
+    private boolean keyed = false;
 
-    public SourceTask() {
-      this.iterations = jobParameters.getIterations();
-    }
+    private boolean endNotified = false;
 
-    public SourceTask(String e, boolean stream) {
-      this();
-      this.edge = e;
-      this.stream = stream;
-    }
+    // if this is set to true, Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
+    // will be marked only for the lowest target(sink)
+    private boolean markTimingOnlyForLowestTarget = false;
+    private int noOfTargets = 0;
 
     public SourceTask(String e) {
-      this();
+      this.iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
       this.edge = e;
+    }
+
+    public SourceTask(String e, boolean keyed) {
+      this(e);
+      this.keyed = keyed;
+    }
+
+    public void setMarkTimingOnlyForLowestTarget(boolean markTimingOnlyForLowestTarget) {
+      this.markTimingOnlyForLowestTarget = markTimingOnlyForLowestTarget;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
-      Optional<TaskInstancePlan> min = ctx.getTasksInThisWorkerByName(SOURCE).stream()
-          .min(Comparator.comparingInt(TaskInstancePlan::getTaskId));
-      //do timing only on task having lowest ID
-      if (min.isPresent()) {
-        this.timingCondition = ctx.getWorkerId() == 0 && ctx.taskId() == min.get().getTaskId();
-      } else {
-        LOG.warning("Couldn't find lowest ID task for " + SOURCE);
+      this.timingCondition = getTimingCondition(SOURCE, ctx);
+      this.noOfTargets = ctx.getTasksByName(SINK).size();
+      sendersInProgress.incrementAndGet();
+    }
+
+    private void notifyEnd() {
+      if (endNotified) {
+        return;
       }
+      sendersInProgress.decrementAndGet();
+      endNotified = true;
+      LOG.info(String.format("Source : %d done sending.", context.taskIndex()));
     }
 
     @Override
     public void execute() {
       if (count < iterations) {
-        //todo remove
-        experimentData.setInput(inputDataArray);
-        if (context.write(this.edge, inputDataArray)) {
-          count++;
-        }
         if (count == jobParameters.getWarmupIterations()) {
           Timing.mark(TIMING_ALL_SEND, this.timingCondition);
         }
 
-        if (!stream && count >= jobParameters.getWarmupIterations()) {
-          Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
-        }
-      } else {
-        context.end(this.edge);
-      }
-    }
-  }
 
-  protected static class KeyedSourceBatchTask extends BaseSource {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    private String edge;
-
-    private int count;
-    private int iterations;
-
-    public KeyedSourceBatchTask() {
-      this.iterations = jobParameters.getIterations();
-    }
-
-    public KeyedSourceBatchTask(String edge) {
-      this();
-      this.edge = edge;
-    }
-
-    @Override
-    public void execute() {
-      if (count <= iterations) {
-        if (context.write(edge, count, inputDataArray)) {
+        if ((this.keyed && context.write(this.edge, context.taskIndex(), inputDataArray))
+            || (!this.keyed && context.write(this.edge, inputDataArray))) {
           count++;
         }
+
+        if (jobParameters.isStream() && count >= jobParameters.getWarmupIterations()) {
+          // if we should mark timing only for lowest target, consider that for timing condition
+          boolean sendingToLowestTarget = count % noOfTargets == 0;
+          Timing.mark(TIMING_MESSAGE_SEND,
+              this.timingCondition
+                  && (!this.markTimingOnlyForLowestTarget || sendingToLowestTarget)
+          );
+        }
       } else {
         context.end(this.edge);
-      }
-    }
-  }
-
-  protected static class SourceStreamTask extends BaseSource {
-    private static final long serialVersionUID = -254264903510284748L;
-    private int count = 0;
-    private String edge;
-    private int iterations;
-
-    public SourceStreamTask() {
-      this.iterations = jobParameters.getIterations();
-    }
-
-    public SourceStreamTask(String e) {
-      this.edge = e;
-    }
-
-    @Override
-    public void execute() {
-      experimentData.setInput(inputDataArray);
-      if (count <= iterations && context.write(this.edge, inputDataArray)) {
-        count++;
-      }
-    }
-  }
-
-  protected static class KeyedSourceStreamTask extends BaseSource {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    private String edge;
-    private int count = 0;
-    private int iterations;
-
-    public KeyedSourceStreamTask() {
-      this.iterations = jobParameters.getIterations();
-    }
-
-    public KeyedSourceStreamTask(String edge) {
-      this();
-      this.edge = edge;
-    }
-
-    @Override
-    public void execute() {
-      experimentData.setInput(inputDataArray);
-      if (count <= iterations && context.write(this.edge, inputDataArray)) {
-        count++;
-      }
-    }
-  }
-
-  public static void verify(String operationNames) throws VerificationException {
-    boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
-    if (doVerify) {
-      LOG.info("Verifying results ...");
-      ExperimentVerification experimentVerification
-          = new ExperimentVerification(experimentData, operationNames);
-      isVerified = experimentVerification.isVerified();
-      if (isVerified) {
-        LOG.info("Results generated from the experiment are verified.");
-      } else {
-        throw new VerificationException("Results do not match");
+        this.notifyEnd();
       }
     }
   }

@@ -15,6 +15,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -51,7 +52,19 @@ public class JobService {
 
   public Job createJob(Job job) {
     job.getWorkers().forEach(worker -> worker.setJob(job));
-    job.getComputeResources().forEach(computeResource -> computeResource.setJob(job));
+
+    AtomicInteger scalableResourcesCount = new AtomicInteger(0);
+    job.getComputeResources().forEach(computeResource -> {
+      if (computeResource.isScalable()) {
+        scalableResourcesCount.incrementAndGet();
+      }
+      computeResource.setJob(job);
+    });
+
+    if (scalableResourcesCount.get() != 1) {
+      throw new RuntimeException("Job should have exactly one "
+          + "scalable resource. Found : " + scalableResourcesCount);
+    }
 
     //create non existing nodes : todo not appropriate, resolve once twister2 support nodes
     //if node is defined without rack and data center, replace them with prefix+jobId
@@ -111,7 +124,7 @@ public class JobService {
         .getScalableComputeResourceForJob(jobId);
 
     if (cr == null) {
-      throw new EntityNotFoundException("Couldn't find scalable "
+      throw new EntityNotFoundException("Couldn't find the scalable "
           + "compute resource for job : " + jobId);
     }
 

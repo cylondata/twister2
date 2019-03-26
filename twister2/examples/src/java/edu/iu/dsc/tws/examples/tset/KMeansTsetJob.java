@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.tset;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,9 +24,10 @@ import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
+import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
-import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
@@ -66,15 +68,18 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     //TODO: consider what happens when same execEnv is used to create multiple graphs
     CachedTSet<double[][]> points = tc.createSource(
         new PointsSource(), parallelismValue).setName("dataSource").cache();
-//    CachedTSet<double[][]> centers = tc.createSource(new
-//    CenterSource(), parallelismValue).cache();
-//
-//    for (int i = 0; i < iterations; i++) {
-//      MapTSet<double[][], double[][]> kmeansTSet = points.map(new KMeansMap());
-//      kmeansTSet.addInput("centers", centers);
+    LOG.info("Parts" + points.getDataObject().getPartitionCount());
+    CachedTSet<double[][]> centers = tc.createSource(
+        new CenterSource(), parallelismValue).cache();
+
+
+    for (int i = 0; i < iterations; i++) {
+      MapTSet<double[][], double[][]> kmeansTSet = points.map(new KMeansMap());
+      kmeansTSet.addInput("centers", centers);
+      kmeansTSet.cache();
 //      AllReduceTLink<double[][]> reduced = kmeansTSet.allReduce((t1, t2) -> t1);
 //      centers = reduced.map(new AverageCenters(), parallelismValue).cache();
-//    }
+    }
 
   }
 
@@ -84,6 +89,8 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     public double[][] map(double[][] doubles) {
       //TODO: cast needed since the context inputmap can hold many types of TSets, Solution?
       List<double[][]> centers = (List<double[][]>) context.getInput("centers").getData();
+      LOG.info("Centers Points " + Arrays.deepToString(centers.toArray()));
+      LOG.info("Data Points " + doubles.length + " " + doubles[0][0]);
       return new double[0][];
     }
 
@@ -108,10 +115,16 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
   public class PointsSource extends BaseSource<double[][]> {
 
+
+    private DataSource<double[][], InputSplit<double[][]>> source;
+    private int dataSize;
+    private int dimension;
+    private double[][] localPoints;
+    private boolean read = false;
+
     @Override
     public void prepare() {
-      LOG.info("Context Prepare Task Index:" + context.getIndex());
-      LOG.info("+++++++++++++ " + context.getWorkerId() + " : " + context.getIndex());
+      LOG.info("Context Prepare Data Task Index:" + context.getIndex());
 
       int para = context.getParallelism();
       Config cfg = context.getConfig();
@@ -119,27 +132,73 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
       String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
       int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
-      boolean shared = cfg.getBooleanValue(DataObjectConstants.SHARED_FILE_SYSTEM);
-
       //The +1 in the array size is because of a data balancing bug
       localPoints = new double[dataSize / para + 1][dimension];
-
-      if (!shared) {
-        this.source = new DataSource(cfg, new LocalFixedInputPartitioner(new
-            Path(datainputDirectory), context.getParallelism(), cfg, datasize),
-            context.getParallelism());
-      } else {
-        this.source = new DataSource(cfg, new SharedTextInputPartitioner(new
-            Path(datainputDirectory), context.getParallelism(), cfg),
-            context.getParallelism());
-      }
+      this.source = new DataSource(cfg, new LocalFixedInputPartitioner(new
+          Path(datainputDirectory), context.getParallelism(), cfg, datasize),
+          context.getParallelism());
     }
 
+    @Override
+    public boolean hasNext() {
+      if (!read) {
+        read = true;
+        return true;
+      }
+      return false;
+    }
+
+    @Override
+    public double[][] next() {
+      LOG.fine("Context Prepare Center Task Index:" + context.getIndex());
+      InputSplit inputSplit = source.getNextSplit(context.getIndex());
+      int totalCount = 0;
+      while (inputSplit != null) {
+        try {
+          int count = 0;
+          while (!inputSplit.reachedEnd()) {
+            String value = (String) inputSplit.nextRecord(null);
+            if (value == null) {
+              break;
+            }
+            String[] splts = value.split(",");
+            for (int i = 0; i < dimension; i++) {
+              localPoints[count][i] = Double.valueOf(splts[i]);
+            }
+            if (value != null) {
+              count += 1;
+            }
+          }
+          LOG.info(context.getIndex() + " Counts : " + count);
+          inputSplit = source.getNextSplit(context.getIndex());
+        } catch (IOException e) {
+          LOG.log(Level.SEVERE, "Failed to read the input", e);
+        }
+      }
+      return localPoints;
+    }
+  }
+
+
+  public class CenterSource extends BaseSource<double[][]> {
+
     private DataSource<double[][], InputSplit<double[][]>> source;
-    private int dataSize;
-    private int dimension;
-    private double[][] localPoints;
     private boolean read = false;
+    private int dimension;
+    private double[][] centers;
+
+    @Override
+    public void prepare() {
+      Config cfg = context.getConfig();
+      String datainputDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY);
+      this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
+      int csize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.CSIZE));
+
+      this.centers = new double[csize][dimension];
+      this.source = new DataSource(cfg, new LocalCompleteTextInputPartitioner(new
+          Path(datainputDirectory), context.getParallelism(), cfg),
+          context.getParallelism());
+    }
 
     @Override
     public boolean hasNext() {
@@ -165,7 +224,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
             }
             String[] splts = value.split(",");
             for (int i = 0; i < dimension; i++) {
-//              localPoints[count][i] = Double.valueOf(splts[i]);
+              centers[count][i] = Double.valueOf(splts[i]);
             }
             if (value != null) {
               count += 1;
@@ -173,50 +232,14 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
           }
           LOG.info(context.getIndex() + " Counts : " + count);
           inputSplit = source.getNextSplit(context.getIndex());
-          LOG.info("Task index: 11111 " + context.getIndex() + " count: " + count);
         } catch (IOException e) {
           LOG.log(Level.SEVERE, "Failed to read the input", e);
         }
       }
-      return new double[0][];
-    }
-  }
-
-
-  public class CenterSource extends BaseSource<double[][]> {
-
-    private DataSource<double[][], InputSplit<double[][]>> source;
-
-    public CenterSource() {
-      Config cfg = context.getConfig();
-      String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
-      int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
-      boolean shared = cfg.getBooleanValue(DataObjectConstants.SHARED_FILE_SYSTEM);
-      if (!shared) {
-        this.source = new DataSource(cfg, new LocalFixedInputPartitioner(new
-            Path(datainputDirectory), context.getParallelism(), cfg, datasize),
-            context.getParallelism());
-      } else {
-        this.source = new DataSource(cfg, new SharedTextInputPartitioner(new
-            Path(datainputDirectory), context.getParallelism(), cfg),
-            context.getParallelism());
-      }
+      return centers;
     }
 
-    @Override
-    public boolean hasNext() {
-      return false;
-    }
 
-    @Override
-    public double[][] next() {
-      return new double[0][];
-    }
-
-    @Override
-    public void prepare() {
-
-    }
   }
 }
 

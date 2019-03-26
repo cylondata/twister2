@@ -11,4 +11,6 @@ In the deployment section we discuss the following topics.
 * [Mesos](mesos/running-jobs.md)
 * [Slurm](slurm/running-jobs.md)
 * [Nomad](nomad/running-jobs.md)
+* [Docker](docker/running-jobs.md)
 * [Logging](logging.md)
+

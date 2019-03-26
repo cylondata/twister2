@@ -15,13 +15,18 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.task.batch.verifiers.ReduceVerifier;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.typed.ReduceCompute;
 
 public class BTReduceExample extends BenchTaskWorker {
@@ -47,20 +52,25 @@ public class BTReduceExample extends BenchTaskWorker {
   protected static class ReduceSinkTask extends ReduceCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
 
-    private int count = 0;
+    private boolean timingCondition;
+
+    private ResultsVerifier<int[], int[]> resultsVerifier;
+    private boolean verified = true;
+
+    @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SINK, context);
+      resultsVerifier = new ReduceVerifier(inputDataArray, ctx, SOURCE, jobParameters);
+    }
 
     @Override
     public boolean reduce(int[] content) {
-      count++;
-      LOG.info(String.format("%d received message %d", context.getWorkerId(), count));
-      if (count % jobParameters.getPrintInterval() == 0) {
-        experimentData.setOutput(content);
-        try {
-          verify(OperationNames.REDUCE);
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
-        }
-      }
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      LOG.info(String.format("%d received reduce %d", context.getWorkerId(), context.taskId()));
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+      this.verified = verifyResults(resultsVerifier, content, null, verified);
       return true;
     }
   }

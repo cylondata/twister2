@@ -23,7 +23,8 @@ import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.DataPartition;
 
 /**
- * This class has the utility methods to parse the data partitions and data objects.
+ * This class has the utility methods to generate the datapoints and centroids. Also, it has the
+ * methods to parse the data partitions and data objects and store into the double arrays.
  */
 public class KMeansWorkerUtils {
 
@@ -46,8 +47,24 @@ public class KMeansWorkerUtils {
     this.csize = Integer.parseInt(config.getStringValue("csize"));
     this.dimension = Integer.parseInt(config.getStringValue("dim"));
 
-    datapoint = new double[dsize / parallel + 1][dimension];
+    datapoint = new double[dsize / parallel][dimension];
     centroid = new double[csize][dimension];
+  }
+
+  /**
+   * This method is to generate the datapoints and centroids based on the user submitted values.
+   */
+  public boolean generateDatapoints(int dim, int numFiles, int datasize, int centroidsize,
+                                    String dinputDirectory, String cinputDirectory) {
+    try {
+      KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
+          numFiles, datasize, 100, dim, config);
+      KMeansDataGenerator.generateData("txt", new Path(cinputDirectory),
+          numFiles, centroidsize, 100, dim, config);
+    } catch (IOException ioe) {
+      throw new RuntimeException("Failed to create input data:", ioe);
+    }
+    return true;
   }
 
   /**
@@ -58,7 +75,6 @@ public class KMeansWorkerUtils {
 
     Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>)
         datapointsDataObject.getPartitions(taskIndex).getConsumer().next();
-
     int value = 0;
     while (arrayListIterator.hasNext()) {
       String val = String.valueOf(arrayListIterator.next());
@@ -72,14 +88,13 @@ public class KMeansWorkerUtils {
   }
 
   /**
-   * This method receive centroids object and parse the object and store it into the double array
+   * This method receive centroids data object and parse the object and store it into the double array
    * based on the delimiter comma.
    */
   public double[][] getCentroids(int taskIndex, DataObject<?> centroidsDataObject) {
 
     Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>)
         centroidsDataObject.getPartitions(taskIndex).getConsumer().next();
-
     int value = 0;
     while (arrayListIterator.hasNext()) {
       String val = String.valueOf(arrayListIterator.next());
@@ -93,7 +108,7 @@ public class KMeansWorkerUtils {
   }
 
   /**
-   * This method receive datapartitions and parse partition and store it into the double array
+   * This method receive data partitions and parse and store it into the double array
    * based on the delimiter comma.
    */
   public double[][] getDataPoints(int partitionId, DataPartition<Object> dataPointsPartition) {
@@ -116,7 +131,7 @@ public class KMeansWorkerUtils {
 
 
   /**
-   * This method receive centroids object and parse the object and store it into the double array
+   * This method receive centroids object and parse and store it into the double array
    * based on the delimiter comma.
    */
   public double[][] getCentroids(int partitionId, DataPartition<Object> centroidsPartition) {
@@ -135,21 +150,5 @@ public class KMeansWorkerUtils {
       value++;
     }
     return centroids;
-  }
-
-  /**
-   * This method is to generate the datapoints and centroids based on the user submitted values.
-   */
-  public boolean generateDatapoints(int dim, int numFiles, int datasize, int centroidsize,
-                                    String dinputDirectory, String cinputDirectory) {
-    try {
-      KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
-          numFiles, datasize, 100, dim, config);
-      KMeansDataGenerator.generateData("txt", new Path(cinputDirectory),
-          numFiles, centroidsize, 100, dim, config);
-    } catch (IOException ioe) {
-      throw new RuntimeException("Failed to create input data:", ioe);
-    }
-    return true;
   }
 }

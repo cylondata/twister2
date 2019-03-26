@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.task.api.BaseCompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -40,17 +39,36 @@ public class KMeansDataObjectCompute extends BaseCompute {
 
   private static final Logger LOG = Logger.getLogger(KMeansDataObjectCompute.class.getName());
   private static final long serialVersionUID = -254264120110286748L;
+
+  /**
+   * Edge name to write the partitoned datapoints
+   */
+  private String edgeName;
+
+  /**
+   * Task parallelism
+   */
   private int parallel;
+
+  /**
+   * Data size
+   */
   private int datasize;
+
+  /**
+   * Dimension of the datapoints
+   */
   private int dimension;
 
-  public KMeansDataObjectCompute(int dsize, int parallel, int dim) {
+  public KMeansDataObjectCompute(String edgename, int dsize, int parallel, int dim) {
+    this.edgeName = edgename;
     this.parallel = parallel;
     this.datasize = dsize;
     this.dimension = dim;
   }
 
-  public KMeansDataObjectCompute(int size, int dim) {
+  public KMeansDataObjectCompute(String edgename, int size, int dim) {
+    this.edgeName = edgename;
     this.datasize = size;
     this.dimension = dim;
   }
@@ -79,6 +97,14 @@ public class KMeansDataObjectCompute extends BaseCompute {
     this.parallel = parallel;
   }
 
+  public String getEdgeName() {
+    return edgeName;
+  }
+
+  public void setEdgeName(String edgeName) {
+    this.edgeName = edgeName;
+  }
+
   @Override
   public boolean execute(IMessage message) {
     if (message.getContent() instanceof Iterator) {
@@ -96,10 +122,10 @@ public class KMeansDataObjectCompute extends BaseCompute {
           datapoint[value][i] = Double.parseDouble(data[i].trim());
         }
         value++;
-        context.write(Context.TWISTER2_DIRECT_EDGE, datapoint);
+        context.write(getEdgeName(), datapoint);
       }
     }
-    context.end(Context.TWISTER2_DIRECT_EDGE);
+    context.end(getEdgeName());
     return true;
   }
 

@@ -74,8 +74,9 @@ public final class Timing {
   private static void verifyTwoFlags(String flagA, String flagB) {
     if (timestamps.get(flagA).size() != timestamps.get(flagB).size()) {
       throw new RuntimeException(
-          "Collected data for two flags mismatches. FlagA : " + timestamps.get(flagA).size()
-              + " , FlagB : " + timestamps.get(flagB).size()
+          "Collected data for two flags mismatches. FlagA[" + flagA + "] : "
+              + timestamps.get(flagA).size()
+              + " , FlagB[" + flagB + "] : " + timestamps.get(flagB).size()
       );
     }
 

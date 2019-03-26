@@ -16,13 +16,18 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.task.batch.verifiers.GatherVerifier;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.typed.GatherCompute;
 
 public class BTGatherExample extends BenchTaskWorker {
@@ -44,37 +49,28 @@ public class BTGatherExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings("rawtypes")
   protected static class GatherSinkTask extends GatherCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
-    private static int count = 0;
+
+    private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
+    private boolean verified = true;
+    private boolean timingCondition;
+
+    @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SINK, context);
+      resultsVerifier = new GatherVerifier(inputDataArray, ctx, SOURCE, jobParameters);
+    }
 
     @Override
     public boolean gather(Iterator<Tuple<Integer, int[]>> content) {
-      int numberOfElements = 0;
-      int totalValues = 0;
-      while (content.hasNext()) {
-        count++;
-        Tuple<Integer, int[]> value = content.next();
-        if (value != null) {
-          int[] data = value.getValue();
-          numberOfElements++;
-          if (count % jobParameters.getPrintInterval() == 0) {
-            experimentData.setOutput(data);
-            try {
-              verify(OperationNames.GATHER);
-            } catch (VerificationException e) {
-              LOG.info("Exception Message : " + e.getMessage());
-            }
-          }
-        }
-      }
-
-      if (count % jobParameters.getPrintInterval() == 0) {
-        LOG.info("Gathered : " + content.getClass().getTypeName()
-            + " numberOfElements: " + numberOfElements
-            + " total: " + totalValues);
-      }
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      LOG.info(String.format("%d received gather %d", context.getWorkerId(), context.taskId()));
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+      this.verified = verifyResults(resultsVerifier, content, null, verified);
       return true;
     }
   }
