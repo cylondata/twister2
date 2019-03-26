@@ -45,8 +45,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   protected static final String SINK = "sink";
 
-  protected static final int LOWEST_FLAG = -1;
-
   protected DataFlowTaskGraph dataFlowTaskGraph;
 
   protected TaskGraphBuilder taskGraphBuilder;
@@ -92,10 +90,10 @@ public abstract class BenchTaskWorker extends TaskWorker {
     while (execution.progress() && (sendersInProgress.get() != 0
         || receiversInProgress.get() != 0)) {
       //do nothing
-      //System.out.println(sendersInProgress.get() + "," + receiversInProgress.get());
+      //LOG.info(sendersInProgress.get() + "," + receiversInProgress.get());
     }
 
-    //now just spin for several iterations to progress the remaining communicatoin.
+    //now just spin for several iterations to progress the remaining communication.
     //todo fix streaming to return false, when comm is done
     long timeNow = System.currentTimeMillis();
     if (jobParameters.isStream()) {
