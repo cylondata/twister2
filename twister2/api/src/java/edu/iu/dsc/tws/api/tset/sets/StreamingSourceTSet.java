@@ -20,11 +20,12 @@ import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
-import edu.iu.dsc.tws.api.tset.link.StreamingDirectTLink;
+import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class StreamingSourceTSet<T> extends SourceTSet<T> {
+public class StreamingSourceTSet<T> extends StreamingBaseTSet<T> {
+  private Source<T> source;
 
   public StreamingSourceTSet(Config cfg, TSetEnv tSetEnv, Source<T> src, int parallelism) {
     super(cfg, tSetEnv);

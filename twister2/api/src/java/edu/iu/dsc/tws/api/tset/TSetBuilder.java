@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.api.tset.sets.StreamingSourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -29,7 +29,7 @@ public final class TSetBuilder {
   /**
    * List of sources added to this builder
    */
-  private List<SourceTSet<?>> sources;
+  private List<BaseTSet<?>> sources;
 
   /**
    * Operation mode
@@ -90,7 +90,7 @@ public final class TSetBuilder {
 
   public DataFlowTaskGraph build() {
     builder.setMode(opMode);
-    for (SourceTSet<?> set : sources) {
+    for (BaseTSet<?> set : sources) {
       set.build();
     }
     return builder.build();

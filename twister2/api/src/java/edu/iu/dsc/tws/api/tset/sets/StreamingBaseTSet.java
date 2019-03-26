@@ -11,13 +11,76 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sets;
 
+
+import edu.iu.dsc.tws.api.tset.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
+import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.GatherTLink;
+import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
+import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
+import edu.iu.dsc.tws.api.tset.link.streaming.StreamingPartitionTLink;
 import edu.iu.dsc.tws.common.config.Config;
 
-public abstract class StreamingBaseTSet extends BaseTSet {
+public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
   public StreamingBaseTSet(Config cfg, TSetEnv tSetEnv) {
     super(cfg, tSetEnv);
   }
 
+  @Override
+  public StreamingDirectTLink<T> direct() {
+    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
+    children.add(direct);
+    return direct;
+  }
 
+  @Override
+  public ReduceTLink<T> reduce(ReduceFunction<T> reduceFn) {
+    return null;
+  }
+
+  public StreamingPartitionTLink<T> partition(PartitionFunction<T> partitionFn) {
+    StreamingPartitionTLink<T> partition = new StreamingPartitionTLink<>(config,
+        tSetEnv, this, partitionFn);
+    children.add(partition);
+    return partition;
+  }
+
+  @Override
+  public GatherTLink<T> gather() {
+    return null;
+
+  }
+
+  @Override
+  public AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
+    return null;
+
+  }
+
+  @Override
+  public AllGatherTLink<T> allGather() {
+    return null;
+
+  }
+
+  @Override
+  public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
+                                       Selector<T, K> selector) {
+    return null;
+
+  }
+
+  @Override
+  public ReplicateTLink<T> replicate(int replications) {
+    return null;
+  }
+
+  @Override
+  public CachedTSet<T> cache() {
+    throw new UnsupportedOperationException("Cache is not avilable in streaming operations");
+  }
 }

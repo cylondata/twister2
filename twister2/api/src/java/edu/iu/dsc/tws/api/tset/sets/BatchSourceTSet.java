@@ -26,7 +26,8 @@ import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class BatchSourceTSet<T> extends SourceTSet<T> {
+public class BatchSourceTSet<T> extends BatchBaseTSet<T> {
+  private Source<T> source;
 
   public BatchSourceTSet(Config cfg, TSetEnv tSetEnv, Source<T> src, int parallelism) {
     super(cfg, tSetEnv);
