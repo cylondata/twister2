@@ -215,31 +215,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
     }
   }
 
-  protected static class KeyedSourceStreamTask extends BaseSource {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    private String edge;
-    private int count = 0;
-    private int iterations;
-
-    public KeyedSourceStreamTask() {
-      this.iterations = jobParameters.getIterations();
-    }
-
-    public KeyedSourceStreamTask(String edge) {
-      this();
-      this.edge = edge;
-    }
-
-    @Override
-    public void execute() {
-      experimentData.setInput(inputDataArray);
-      if (count <= iterations && context.write(this.edge, inputDataArray)) {
-        count++;
-      }
-    }
-  }
-
   public static void verify(String operationNames) throws VerificationException {
     boolean doVerify = jobParameters.isDoVerify();
     boolean isVerified = false;
