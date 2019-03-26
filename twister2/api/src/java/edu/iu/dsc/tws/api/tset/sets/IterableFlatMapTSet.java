@@ -82,9 +82,6 @@ public class IterableFlatMapTSet<T, P> extends BaseTSet<T> {
 
     // lets override the parallelism
     int p = calculateParallelism(parent);
-    if (inputMap.size() > 0) {
-      mapFn.addInputs(inputMap);
-    }
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
         addCompute(generateName("i-flat-map", parent),
             new IterableFlatMapOp<>(mapFn, isIterable, keyed), p);

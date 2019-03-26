@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.tset;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,6 +24,7 @@ import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
+import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
@@ -70,13 +72,14 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     CachedTSet<double[][]> centers = tc.createSource(
         new CenterSource(), parallelismValue).cache();
 
-//
-//    for (int i = 0; i < iterations; i++) {
-//      MapTSet<double[][], double[][]> kmeansTSet = points.map(new KMeansMap());
-//      kmeansTSet.addInput("centers", centers);
+
+    for (int i = 0; i < iterations; i++) {
+      MapTSet<double[][], double[][]> kmeansTSet = points.map(new KMeansMap());
+      kmeansTSet.addInput("centers", centers);
+      kmeansTSet.cache();
 //      AllReduceTLink<double[][]> reduced = kmeansTSet.allReduce((t1, t2) -> t1);
 //      centers = reduced.map(new AverageCenters(), parallelismValue).cache();
-//    }
+    }
 
   }
 
@@ -86,6 +89,8 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     public double[][] map(double[][] doubles) {
       //TODO: cast needed since the context inputmap can hold many types of TSets, Solution?
       List<double[][]> centers = (List<double[][]>) context.getInput("centers").getData();
+      LOG.info("Centers Points " + Arrays.deepToString(centers.toArray()));
+      LOG.info("Data Points " + doubles.length + " " + doubles[0][0]);
       return new double[0][];
     }
 

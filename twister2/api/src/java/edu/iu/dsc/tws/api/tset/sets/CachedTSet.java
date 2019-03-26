@@ -80,9 +80,6 @@ public class CachedTSet<T> extends BaseTSet<T> implements Cacheable<T> {
     // lets override the parallelism
     int para = calculateParallelism(parent);
     Sink<T> cacheSink = new CacheSink();
-    if (inputMap.size() > 0) {
-      cacheSink.addInputs(inputMap);
-    }
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
         new SinkOp<>(cacheSink, isIterable, keyed), para);
     parent.buildConnection(connection);
