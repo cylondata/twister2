@@ -13,17 +13,15 @@ package edu.iu.dsc.tws.task.api.typed.batch;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.typed.AbstractIterableDataCompute;
 
-public abstract class BBroadCastCompute<T> extends
-    AbstractIterableDataCompute<Tuple<Integer, T>> {
+public abstract class BBroadCastCompute<T> extends AbstractIterableDataCompute<T> {
 
-  public abstract boolean broadcast(Iterator<Tuple<Integer, T>> content);
+  public abstract boolean broadcast(Iterator<T> content);
 
   @Override
-  public boolean execute(IMessage<Iterator<Tuple<Integer, T>>> content) {
+  public boolean execute(IMessage<Iterator<T>> content) {
     return this.broadcast(content.getContent());
   }
 }

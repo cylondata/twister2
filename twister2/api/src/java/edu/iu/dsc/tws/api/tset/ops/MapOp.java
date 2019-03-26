@@ -13,16 +13,19 @@ package edu.iu.dsc.tws.api.tset.ops;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.task.Receptor;
+import edu.iu.dsc.tws.api.tset.CacheableImpl;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class MapOp<T, R> implements ICompute {
+public class MapOp<T, R> implements ICompute, Receptor {
   private static final long serialVersionUID = -1220168533L;
 
   private MapFunction<T, R> mapFn;
@@ -79,5 +82,10 @@ public class MapOp<T, R> implements ICompute {
     TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
         ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
     mapFn.prepare(tSetContext);
+  }
+
+  @Override
+  public void add(String name, DataObject<?> data) {
+    mapFn.addInput(name, new CacheableImpl<>(data));
   }
 }

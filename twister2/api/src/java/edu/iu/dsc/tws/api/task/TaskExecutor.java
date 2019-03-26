@@ -64,6 +64,7 @@ public class TaskExecutor {
 
   /**
    * Creates a task executor.
+   *
    * @param cfg the configuration
    * @param wId the worker id
    * @param net communicator
@@ -147,6 +148,7 @@ public class TaskExecutor {
 
   /**
    * Add input to the the task instances
+   *
    * @param graph task graph
    * @param plan execution plan
    * @param taskName task name
@@ -174,13 +176,14 @@ public class TaskExecutor {
 
   /**
    * Add input to the the task instances
+   *
    * @param graph task graph
    * @param plan execution plan
    * @param inputKey inputkey
    * @param input input
    */
   public void addSourceInput(DataFlowTaskGraph graph, ExecutionPlan plan,
-                       String inputKey, DataObject<Object> input) {
+                             String inputKey, DataObject<Object> input) {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
     if (nodes == null) {
       throw new RuntimeException(String.format("%d Failed to set input for non-existing "
@@ -236,7 +239,7 @@ public class TaskExecutor {
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
   public <T> DataObject<T> getSinkOutput(DataFlowTaskGraph graph, ExecutionPlan plan,
-                                              String dataName) {
+                                         String dataName) {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     DataObject<T> dataSet = new DataObjectImpl<>(config);
@@ -267,7 +270,7 @@ public class TaskExecutor {
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
   public <T> DataObject<T> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan,
-                                          String taskName, String dataName) {
+                                     String taskName, String dataName) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {
       throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);

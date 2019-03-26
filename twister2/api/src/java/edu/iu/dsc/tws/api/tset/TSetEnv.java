@@ -11,9 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -26,10 +30,13 @@ public class TSetEnv {
 
   private TaskExecutor taskExecutor;
 
+  private Map<String, Map<String, Cacheable<?>>> inputMap;
+
   public TSetEnv(Config config, TaskExecutor taskExecutor) {
     this.config = config;
     this.taskExecutor = taskExecutor;
     this.tSetBuilder = TSetBuilder.newBuilder(config);
+    inputMap = new HashMap<>();
   }
 
   public TSetEnv(Config config, TaskExecutor taskExecutor, OperationMode mode) {
@@ -37,6 +44,7 @@ public class TSetEnv {
     this.taskExecutor = taskExecutor;
     this.tSetBuilder = TSetBuilder.newBuilder(config);
     this.tSetBuilder.setMode(mode);
+    inputMap = new HashMap<>();
   }
 
   public Config getConfig() {
@@ -62,6 +70,36 @@ public class TSetEnv {
   public void run() { // todo: is this the best name? or should this be a method in the tset?
     DataFlowTaskGraph graph = tSetBuilder.build();
     ExecutionPlan executionPlan = taskExecutor.plan(graph);
+    pushInputsToFunctions(graph, executionPlan);
     this.taskExecutor.execute(graph, executionPlan);
+  }
+
+  public <T> DataObject<T> runAndGet(String sinkName) {
+    DataFlowTaskGraph graph = tSetBuilder.build();
+    ExecutionPlan executionPlan = taskExecutor.plan(graph);
+    pushInputsToFunctions(graph, executionPlan);
+    this.taskExecutor.execute(graph, executionPlan);
+    return this.taskExecutor.getOutput(graph, executionPlan, sinkName);
+  }
+
+  public void addInput(String taskName, String key, Cacheable<?> input) {
+    Map temp = inputMap.getOrDefault(taskName, new HashMap<>());
+    temp.put(key, input);
+    inputMap.put(taskName, temp);
+  }
+
+  /**
+   * pushes the inputs into each task before the task execution is done
+   *
+   * @param executionPlan the built execution plan
+   */
+  private void pushInputsToFunctions(DataFlowTaskGraph graph, ExecutionPlan executionPlan) {
+    for (String taskName : inputMap.keySet()) {
+      Map<String, Cacheable<?>> tempMap = inputMap.get(taskName);
+      for (String keyName : tempMap.keySet()) {
+        taskExecutor.addInput(graph, executionPlan, taskName,
+            keyName, tempMap.get(keyName).getDataObject());
+      }
+    }
   }
 }

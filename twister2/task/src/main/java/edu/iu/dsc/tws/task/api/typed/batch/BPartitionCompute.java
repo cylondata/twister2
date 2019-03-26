@@ -13,16 +13,15 @@ package edu.iu.dsc.tws.task.api.typed.batch;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.typed.AbstractIterableDataCompute;
 
-public abstract class BPartitionCompute<T> extends AbstractIterableDataCompute<Tuple<Integer, T>> {
+public abstract class BPartitionCompute<T> extends AbstractIterableDataCompute<T> {
 
-  public abstract boolean partition(Iterator<Tuple<Integer, T>> content);
+  public abstract boolean partition(Iterator<T> content);
 
   @Override
-  public boolean execute(IMessage<Iterator<Tuple<Integer, T>>> content) {
+  public boolean execute(IMessage<Iterator<T>> content) {
     return this.partition(content.getContent());
   }
 }

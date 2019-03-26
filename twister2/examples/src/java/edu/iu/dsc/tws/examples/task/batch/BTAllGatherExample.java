@@ -11,25 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.task.batch.verifiers.GatherVerifier;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
-import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
-import edu.iu.dsc.tws.examples.verification.comparators.TupleIteratorComparator;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.api.typed.AllGatherCompute;
 
 public class BTAllGatherExample extends BenchTaskWorker {
@@ -56,35 +54,23 @@ public class BTAllGatherExample extends BenchTaskWorker {
     private static final long serialVersionUID = -254264903510284798L;
 
     private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
+    private boolean verified = true;
+    private boolean timingCondition;
 
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
-      resultsVerifier = new ResultsVerifier<>(
-          inputDataArray,
-          (ints, args) -> {
-            Set<Integer> taskIds = ctx.getTasksByName(SOURCE).stream()
-                .map(TaskInstancePlan::getTaskIndex)
-                .collect(Collectors.toSet());
-            List<Tuple<Integer, int[]>> generatedData = new ArrayList<>();
-            for (Integer taskIndex : taskIds) {
-              for (int i = 0; i < jobParameters.getIterations(); i++) {
-                generatedData.add(new Tuple<>(100000 + taskIndex, ints));
-              }
-            }
-            return generatedData.iterator();
-          },
-          new TupleIteratorComparator<>(IntArrayComparator.getInstance())
-      );
+      this.timingCondition = getTimingCondition(SINK, context);
+      resultsVerifier = new GatherVerifier(inputDataArray, ctx, SOURCE, jobParameters);
     }
 
     @Override
     public boolean allGather(Iterator<Tuple<Integer, int[]>> itr) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
       LOG.info(String.format("%d received gather %d", context.getWorkerId(), context.taskId()));
-      resultsVerifier.verify(itr);
-//      BenchmarkUtils.markTotalTime(resultsRecorder, context.getWorkerId() == 0);
-//      resultsRecorder.writeToCSV();
-//      verifyResults(resultsVerifier, itr, null);
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+      this.verified = verifyResults(resultsVerifier, itr, null, verified);
       return true;
     }
   }

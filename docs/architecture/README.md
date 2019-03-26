@@ -38,6 +38,5 @@ It is a long running service. It is installed and started once and it runs conti
 
 Following sections describe some of these components in detail.
 
-* [Logging](common/logging.md)
 * [Worker Controller](controller/worker-controller.md)
 * [Job Master](job-master/job-master.md)
