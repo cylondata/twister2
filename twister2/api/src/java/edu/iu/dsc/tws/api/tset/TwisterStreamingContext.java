@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.TaskExecutor;
-import edu.iu.dsc.tws.api.tset.sets.StreamingSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingSourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 

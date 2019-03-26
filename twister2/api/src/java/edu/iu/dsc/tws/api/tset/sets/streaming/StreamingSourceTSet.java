@@ -10,7 +10,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.api.tset.sets;
+package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 import java.util.Random;
 
@@ -22,6 +22,8 @@ import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
+import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 
 public class StreamingSourceTSet<T> extends StreamingBaseTSet<T> {
@@ -34,7 +36,7 @@ public class StreamingSourceTSet<T> extends StreamingBaseTSet<T> {
     this.parallel = parallelism;
   }
 
-  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
+  public <P> StreamingMapTSet<P, T> map(MapFunction<T, P> mapFn) {
     StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.map(mapFn);
