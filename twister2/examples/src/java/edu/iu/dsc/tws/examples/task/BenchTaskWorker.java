@@ -215,29 +215,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
     }
   }
 
-  protected static class SourceStreamTask extends BaseSource {
-    private static final long serialVersionUID = -254264903510284748L;
-    private int count = 0;
-    private String edge;
-    private int iterations;
-
-    public SourceStreamTask() {
-      this.iterations = jobParameters.getIterations();
-    }
-
-    public SourceStreamTask(String e) {
-      this.edge = e;
-    }
-
-    @Override
-    public void execute() {
-      experimentData.setInput(inputDataArray);
-      if (count <= iterations && context.write(this.edge, inputDataArray)) {
-        count++;
-      }
-    }
-  }
-
   protected static class KeyedSourceStreamTask extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
 
