@@ -158,7 +158,7 @@ The structure of the graph is given below:
   Target (Task 4)
 ```
 
-  ![MultipleComputeNodes Task Graph](multicompute_taskgraph.png)
+  ![MultipleComputeNodes Task Graph](../../../images/multicompute_taskgraph.png)
  
 ### MultiCompute Task Graph Example
 

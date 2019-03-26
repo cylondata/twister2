@@ -22,21 +22,25 @@ We support the following components in Twister2
     1. Twister2:Net - a data level dataflow communication library for streaming and large scale batch analysis
     2. Harp - a BSP (Bulk Synchronous Processing) innovative collective framework for parallel applications and machine learning at message level
     3. OpenMPI (HPC Environments only) at message level
-3. Task Graph - Create dataflow graphs for streaming and batch analysis including iterative computations
-4. Task Scheduler - Schedule the task graph into cluster resources supporting different scheduling algorithms
-    1. Datalocality Scheduling
-    2. Roundrobin scheduling
-    3. First fit scheduling
-5. Executor - Execution of task graph     
-    1. Batch executor
-    2. Streaming executor
-6. API for creating Task Graph and Communication
+3. Task System
+    1. Task Graph 
+       * Create dataflow graphs for streaming and batch analysis including iterative computations 
+    2. Task Scheduler - Schedule the task graph into cluster resources supporting different scheduling algorithms
+       * Datalocality Scheduling
+       * Roundrobin scheduling
+       * First fit scheduling
+    3. Executor - Execution of task graph     
+       * Batch executor
+       * Streaming executor
+4. API for creating Task Graph and Communication
     1. Communication API
     2. Task based API
-7. Support for storage systems
+    3. Data API (TSet API)
+5. Support for storage systems
     1. HDFS
     2. Local file systems
     3. NFS for persistent storage
+6. Web UI for monitoring Twister2 Jobs
 
 Twister2 can be deployed both in HPC and cloud environments. When deployed in a HPC environment, it 
 can use OpenMPI for its communications. It can be programmed at different levels depending on the 
@@ -65,25 +69,21 @@ We have started working on our next major release that will connect the core com
 into a full data analytics environment. In particular it will focus on providing APIs around the core
 capabilities of Twister2 and integration of applications in a single dataflow. 
 
-### Next release (End of December 2018)
+### Next release (End of May 2018)
 
-1. Hierarchical task scheduling - Ability to run different types of jobs in a single dataflow
+1. Connected DataFlow
 2. Fault tolerance
-3. Data API including DataSet similar to Spark RDD, Flink DataSet and Heron Streamlet
-3. Supporting different API's including Storm, Spark, Beam  
-4. Heterogeneous resources allocations
-5. Web UI for monitoring Twister2 Jobs
+3. Supporting more API's including Beam  
+4. Python API
 6. More resource managers - Pilot Jobs, Yarn
 7. More example applications
 
 ### Beyond next release
 
 1. Implementing core parts of Twister2 with C/C++ for high performance 
-2. Python APIs
 3. Direct use of RDMA
-4. FaaS APIs 
 5. SQL interface 
-6. Native MPI support for cloud deployements
+6. Native MPI support for cloud deployments
 
 ## Important Links
 

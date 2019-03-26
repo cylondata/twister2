@@ -1,7 +1,7 @@
 # Communication
 
-Twister2 supports both BSP style and DataFlow style communications. It supports BSP style using
-MPI and Harp while it can use Twister:Net data flow communication for dat analysis.
+Twister2 supports both BSP style and DataFlow style operators. It supports BSP style using
+MPI and Harp and can use Twister:Net data flow operators for dat analysis.
 
 ## DataFlow Communication
 
