@@ -106,6 +106,17 @@ public abstract class BenchTaskWorker extends TaskWorker {
     while (execution.progress() && (sendersInProgress.get() != 0
         || receiversInProgress.get() != 0)) {
       //do nothing
+      //System.out.println(sendersInProgress.get() + "," + receiversInProgress.get());
+    }
+
+    //now just spin for several iterations to progress the remaining communicatoin.
+    //todo fix streaming to return false, when comm is done
+    long timeNow = System.currentTimeMillis();
+    if (jobParameters.isStream()) {
+      LOG.info("Streaming Example task will wait 10secs to finish communication...");
+      while (System.currentTimeMillis() - timeNow < 10000) {
+        execution.progress();
+      }
     }
     execution.stop();
     execution.close();
@@ -177,6 +188,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
       }
       sendersInProgress.decrementAndGet();
       endNotified = true;
+      LOG.info(String.format("Source : %d done sending.", context.taskIndex()));
     }
 
     @Override
