@@ -15,7 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.task.TaskExecutor;
-import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.StreamingSourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -51,8 +52,12 @@ public class TSetEnv {
     return config;
   }
 
-  public <T> SourceTSet<T> createSource(Source<T> source, int parallelism) {
-    return this.tSetBuilder.createSource(source, parallelism, this);
+  public <T> BatchSourceTSet<T> createBatchSource(Source<T> source, int parallelism) {
+    return this.tSetBuilder.createBatchSource(source, parallelism, this);
+  }
+
+  public <T> StreamingSourceTSet<T> createStreamingSource(Source<T> source, int parallelism) {
+    return this.tSetBuilder.createStreamingSource(source, parallelism, this);
   }
 
   public void setMode(OperationMode mode) {

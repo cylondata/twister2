@@ -15,25 +15,21 @@ package edu.iu.dsc.tws.api.tset.link;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
-public class DirectTLink<T> extends BaseTLink<T> {
+public class StreamingDirectTLink<T> extends BaseTLink<T> {
   private BaseTSet<T> parent;
 
-  public DirectTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
+  public StreamingDirectTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
     super(cfg, tSetEnv);
     this.parent = prnt;
     this.name = "direct-" + parent.getName();
@@ -49,20 +45,6 @@ public class DirectTLink<T> extends BaseTLink<T> {
   public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
     FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, this, mapFn,
         parent.getParallelism());
-    children.add(set);
-    return set;
-  }
-
-  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
-    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, this,
-        mapFn, parent.getParallelism());
-    children.add(set);
-    return set;
-  }
-
-  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
-        mapFn, parent.getParallelism());
     children.add(set);
     return set;
   }
@@ -87,7 +69,7 @@ public class DirectTLink<T> extends BaseTLink<T> {
   }
 
   @Override
-  public DirectTLink<T> setName(String n) {
+  public StreamingDirectTLink<T> setName(String n) {
     super.setName(n);
     return this;
   }

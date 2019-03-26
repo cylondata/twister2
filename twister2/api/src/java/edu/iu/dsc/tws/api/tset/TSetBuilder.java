@@ -15,7 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.StreamingSourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -69,9 +71,19 @@ public final class TSetBuilder {
     return this;
   }
 
-  public <T> SourceTSet<T> createSource(Source<T> source, int parallelism, TSetEnv tSetEnv) {
+  public <T> BatchSourceTSet<T> createBatchSource(Source<T> source, int parallelism,
+                                                  TSetEnv tSetEnv) {
     builder.setMode(opMode);
-    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, tSetEnv, source, parallelism);
+    BatchSourceTSet<T> tSourceTSet = new BatchSourceTSet<>(config, tSetEnv, source, parallelism);
+    sources.add(tSourceTSet);
+    return tSourceTSet;
+  }
+
+  public <T> StreamingSourceTSet<T> createStreamingSource(Source<T> source, int parallelism,
+                                                          TSetEnv tSetEnv) {
+    builder.setMode(opMode);
+    StreamingSourceTSet<T> tSourceTSet = new StreamingSourceTSet<>(config, tSetEnv,
+        source, parallelism);
     sources.add(tSourceTSet);
     return tSourceTSet;
   }

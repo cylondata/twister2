@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.TaskExecutor;
+import edu.iu.dsc.tws.api.tset.sets.StreamingSourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -48,9 +49,9 @@ public class TwisterStreamingContext {
    * @param source source function to be used
    * @return SourceTset created
    */
-  public <T> TSet<T> createSource(Source<T> source, int parallelism) {
+  public <T> StreamingSourceTSet<T> createSource(Source<T> source, int parallelism) {
     //TODO: how to make sure user sets the correct mode? before using create source, pass in mode
     TSetEnv tSetEnv = new TSetEnv(this.config, this.taskExecutor, this.mode);
-    return tSetEnv.createSource(source, parallelism);
+    return tSetEnv.createStreamingSource(source, parallelism);
   }
 }

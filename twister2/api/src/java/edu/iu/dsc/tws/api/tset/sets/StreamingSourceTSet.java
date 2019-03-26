@@ -12,18 +12,43 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
+import java.util.Random;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.tset.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.MapFunction;
+import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.link.StreamingDirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public abstract class SourceTSet<T> extends BatchBaseTSet<T> {
-  protected Source<T> source;
+public class StreamingSourceTSet<T> extends SourceTSet<T> {
 
-  public SourceTSet(Config cfg, TSetEnv tSetEnv) {
+  public StreamingSourceTSet(Config cfg, TSetEnv tSetEnv, Source<T> src, int parallelism) {
     super(cfg, tSetEnv);
+    this.source = src;
+    this.name = "source-" + new Random(System.nanoTime()).nextInt(10);
+    this.parallel = parallelism;
+  }
+
+  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
+    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
+    children.add(direct);
+    return direct.map(mapFn);
+  }
+
+  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
+    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
+    children.add(direct);
+    return direct.flatMap(mapFn);
+  }
+
+  public SinkTSet<T> sink(Sink<T> sink) {
+    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
+    children.add(direct);
+    return direct.sink(sink);
   }
 
   @Override
@@ -39,7 +64,7 @@ public abstract class SourceTSet<T> extends BatchBaseTSet<T> {
   }
 
   @Override
-  public SourceTSet<T> setName(String n) {
+  public StreamingSourceTSet<T> setName(String n) {
     this.name = n;
     return this;
   }
