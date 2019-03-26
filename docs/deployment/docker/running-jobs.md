@@ -2,13 +2,13 @@
 
 Standalone docker image contains twister2 source code and prebuilt twister2. Examples can be easily run using this image.
 
-we assume that docker is already installed on your machine.
+We assume that docker is already installed on your machine.
 
 ##  Pulling twister2/standalone Image From twister2 dockerhub
 
-Our dockerhub page is : [https://hub.docker.com/r/twister2/standalone](https://hub.docker.com/r/twister2/standalone)
+dockerhub page for the image: [https://hub.docker.com/r/twister2/standalone](https://hub.docker.com/r/twister2/standalone)
 
-To download our docker image:
+To download the docker image:
 
 ```bash
 docker pull twister2/standalone
@@ -50,7 +50,7 @@ twister2 submit slurm job-type job-file-name job-class-name [job-args]
 Here is an example command
 
 ```bash
-./bin/twister2 submit slurm jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
 ```
 
 In this mode, the job is killed immediately when you terminate the client using ```Ctrl + C```.
@@ -70,7 +70,7 @@ This will build twister2 distribution in the file:
 bazel-bin/scripts/package/twister2-0.1.0.tar.gz
 ```
 
-If you want to modify the twister2 code and test without installing all the dependencies to your machine, you can mount the directory to the docker container and build the twister2 inside the container:
+If you want to modify the twister2 code and test without installing all the dependencies to your machine, you can mount the directory to the docker container:
 
 ```bash
 docker run -v /path/in/host:/path/in/container -it twister2/standalone bash
