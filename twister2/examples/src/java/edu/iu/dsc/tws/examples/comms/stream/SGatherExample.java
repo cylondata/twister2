@@ -29,7 +29,10 @@ import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
-import edu.iu.dsc.tws.examples.verification.comparators.ListOfIntArraysComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_RECV;
 
@@ -40,7 +43,7 @@ public class SGatherExample extends BenchWorker {
 
   private boolean gatherDone = false;
 
-  private ResultsVerifier<int[], List<int[]>> resultsVerifier;
+  private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -74,12 +77,17 @@ public class SGatherExample extends BenchWorker {
     }
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (dataArray, args) -> {
-      List<int[]> listOfArrays = new ArrayList<>();
+      List<Tuple<Integer, int[]>> listOfArrays = new ArrayList<>();
       for (int i = 0; i < noOfSourceTasks; i++) {
-        listOfArrays.add(dataArray);
+        listOfArrays.add(new Tuple<>(i, dataArray));
       }
-      return listOfArrays;
-    }, ListOfIntArraysComparator.getInstance());
+      return listOfArrays.iterator();
+    }, new IteratorComparator<>(
+        new TupleComparator<>(
+            IntComparator.getInstance(),
+            IntArrayComparator.getInstance()
+        )
+    ));
 
     // now initialize the workers
     for (int t : tasksOfExecutor) {
@@ -129,21 +137,7 @@ public class SGatherExample extends BenchWorker {
         Timing.mark(TIMING_MESSAGE_RECV, workerId == 0);
       }
 
-      //only do if verification is necessary, since this affects timing
-      if (jobParameters.isDoVerify()) {
-        List<int[]> dataReceived = new ArrayList<>();
-        while (object.hasNext()) {
-          Object data = object.next();
-          if (data instanceof Tuple) {
-            LOG.info(() -> String.format("%d received %d", target,
-                (Integer) ((Tuple) data).getKey()));
-            dataReceived.add((int[]) ((Tuple) data).getValue());
-          } else {
-            LOG.severe(() -> "Un-expected data: " + data.getClass());
-          }
-        }
-        verifyResults(resultsVerifier, dataReceived, null);
-      }
+      verifyResults(resultsVerifier, object, null);
 
       if (count == expectedIterations + warmupIterations) {
         Timing.mark(TIMING_ALL_RECV, workerId == 0);
