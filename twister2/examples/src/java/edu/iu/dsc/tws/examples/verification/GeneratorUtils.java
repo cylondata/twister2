@@ -9,19 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.typed.batch;
+package edu.iu.dsc.tws.examples.verification;
 
-import java.util.Iterator;
+public final class GeneratorUtils {
 
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.typed.AbstractIterableDataCompute;
+  private GeneratorUtils() {
+  }
 
-public abstract class BBroadCastCompute<T> extends AbstractIterableDataCompute<T> {
-
-  public abstract boolean broadcast(Iterator<T> content);
-
-  @Override
-  public boolean execute(IMessage<Iterator<T>> content) {
-    return this.broadcast(content.getContent());
+  public static int[] multiplyIntArray(int[] arr, int mul) {
+    int[] newArr = new int[arr.length];
+    for (int i = 0; i < arr.length; i++) {
+      newArr[i] = arr[i] * mul;
+    }
+    return newArr;
   }
 }

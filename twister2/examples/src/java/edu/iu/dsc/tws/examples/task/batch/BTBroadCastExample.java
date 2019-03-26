@@ -11,18 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntIteratorComparator;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.typed.batch.BBroadCastCompute;
 
 public class BTBroadCastExample extends BenchTaskWorker {
@@ -45,21 +49,35 @@ public class BTBroadCastExample extends BenchTaskWorker {
 
   protected static class BroadcastSinkTask extends BBroadCastCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
+
+    private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
+    private boolean verified = true;
+    private boolean timingCondition;
 
     @Override
-    public boolean broadcast(Iterator<Tuple<Integer, int[]>> content) {
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SINK, context);
+      resultsVerifier = new ResultsVerifier<>(
+          inputDataArray,
+          (ints, args) -> {
+            List<int[]> expected = new ArrayList<>();
+            for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
+              expected.add(ints);
+            }
+            return expected.iterator();
+          },
+          IntIteratorComparator.getInstance()
+      );
+    }
 
-      while (content.hasNext()) {
-        experimentData.setOutput(content.next());
-        LOG.log(Level.INFO, String.format("Received messages to %d: %d",
-            context.taskId(), count));
-        try {
-          verify(OperationNames.BROADCAST);
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
-        }
-      }
+    @Override
+    public boolean broadcast(Iterator<int[]> content) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      LOG.info(String.format("%d received broadcast %d", context.getWorkerId(), context.taskId()));
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+      this.verified = verifyResults(resultsVerifier, content, null, verified);
       return true;
     }
   }

@@ -9,19 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.typed.batch;
+package edu.iu.dsc.tws.examples.verification.comparators;
 
-import java.util.Iterator;
+import edu.iu.dsc.tws.examples.verification.ResultsComparator;
 
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.typed.AbstractIterableDataCompute;
+public final class IntComparator implements ResultsComparator<Integer> {
 
-public abstract class BBroadCastCompute<T> extends AbstractIterableDataCompute<T> {
+  private static final IntComparator INSTANCE = new IntComparator();
 
-  public abstract boolean broadcast(Iterator<T> content);
+  private IntComparator() {
+
+  }
+
+  public static IntComparator getInstance() {
+    return INSTANCE;
+  }
 
   @Override
-  public boolean execute(IMessage<Iterator<T>> content) {
-    return this.broadcast(content.getContent());
+  public boolean compare(Integer d1, Integer d2) {
+    return d1.equals(d2);
   }
 }

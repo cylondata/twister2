@@ -11,18 +11,25 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.api.typed.batch.BPartitionCompute;
 
 public class BTPartitionExample extends BenchTaskWorker {
@@ -46,32 +53,46 @@ public class BTPartitionExample extends BenchTaskWorker {
   @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class PartitionSinkTask extends BPartitionCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
+
+    private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
+    private boolean verified = true;
+    private boolean timingCondition;
 
     @Override
-    public boolean partition(Iterator<Tuple<Integer, int[]>> content) {
-      while (content.hasNext()) {
-        content.next();
-        count++;
-      }
-      //TODO:We have to check the verification part
-      if (count % jobParameters.getPrintInterval() == 0) {
-        experimentData.setOutput(content);
-        try {
-          verify(OperationNames.PARTITION);
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
-        }
-      }
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SINK, context);
 
-      if (count % jobParameters.getPrintInterval() == 0) {
-        LOG.info("INstance : " + content.getClass().getName());
-        LOG.info("ITr next : " + content.hasNext());
-        while (content.hasNext()) {
-          Object res = content.next();
-          LOG.info("Message Partition Received : " + res.getClass().getName()
-              + ", Count : " + count);
-        }
+      int totalSinks = ctx.getTasksByName(SINK).size();
+      long noOfSources = ctx.getTasksByName(SOURCE).stream().map(
+          TaskInstancePlan::getTaskIndex
+      ).filter(ti -> ti % totalSinks == ctx.taskIndex()).count();
+
+      if (jobParameters.getTotalIterations() % totalSinks != 0) {
+        LOG.warning("Total iterations is not divisible by total sinks. "
+            + "Verification won't run for this configuration.");
+      } else {
+        resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
+          List<int[]> expectedData = new ArrayList<>();
+
+          for (long i = 0; i < noOfSources * jobParameters.getTotalIterations(); i++) {
+            expectedData.add(ints);
+          }
+          return expectedData.iterator();
+        }, new IteratorComparator<>(
+            IntArrayComparator.getInstance()
+        ));
+      }
+    }
+
+    @Override
+    public boolean partition(Iterator<int[]> content) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      LOG.info(String.format("%d received partition %d", context.getWorkerId(), context.taskId()));
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+      if (resultsVerifier != null) {
+        this.verified = verifyResults(resultsVerifier, content, null, verified);
       }
       return true;
     }
