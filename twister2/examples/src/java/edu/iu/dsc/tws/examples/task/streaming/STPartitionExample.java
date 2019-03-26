@@ -15,12 +15,14 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.typed.streaming.SPartitionCompute;
 
 public class STPartitionExample extends BenchTaskWorker {
@@ -34,7 +36,8 @@ public class STPartitionExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    BaseSource g = new SourceStreamTask(edge);
+    BaseSource g = new SourceTask(edge);
+    ((SourceTask) g).setMarkTimingOnlyForLowestTarget(true);
     ISink r = new PartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
@@ -46,20 +49,56 @@ public class STPartitionExample extends BenchTaskWorker {
   protected static class PartitionSinkTask extends SPartitionCompute<int[]> implements ISink {
 
     private static final long serialVersionUID = -254264903510284798L;
+    private ResultsVerifier<int[], int[]> resultsVerifier;
+    private boolean verified = true;
+    private boolean timingCondition;
+
     private int count = 0;
+    private int countTotal = 0;
+
+    //expected counts from a single target
+    private int expectedWarmups = 0;
+    private int expectedTotal = 0;
+
+    //expectedCounts from all targets
+    private int expectedTotalFromAll = 0;
 
     @Override
-    public boolean partition(int[] content) {
-      if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = content;
-        experimentData.setOutput(object);
-        try {
-          verify(OperationNames.PARTITION);
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
-        }
-        count += 1;
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SINK, context);
+
+      resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> ints,
+          IntArrayComparator.getInstance());
+      receiversInProgress.incrementAndGet();
+
+      int noOfSinks = ctx.getTasksByName(SINK).size();
+
+      expectedWarmups = jobParameters.getWarmupIterations() / noOfSinks;
+      if (jobParameters.getWarmupIterations() % noOfSinks > 0
+          && jobParameters.getWarmupIterations() % noOfSinks > ctx.taskIndex()) {
+        expectedWarmups++;
       }
+
+      expectedTotal = jobParameters.getTotalIterations() / noOfSinks;
+      if (jobParameters.getTotalIterations() % noOfSinks > 0
+          && jobParameters.getWarmupIterations() % noOfSinks > ctx.taskIndex()) {
+        expectedTotal++;
+      }
+
+      expectedTotalFromAll = expectedTotal * ctx.getTasksByName(SOURCE).size();
+      LOG.info(String.format("%d expecting %d warmups and %d total",
+          ctx.taskIndex(), expectedWarmups, expectedTotal));
+    }
+
+    @Override
+    public boolean partition(int[] data) {
+      //todo not taking timing
+      countTotal++;
+      if (countTotal == expectedTotalFromAll) {
+        receiversInProgress.decrementAndGet();
+      }
+      this.verified = verifyResults(resultsVerifier, data, null, verified);
       return true;
     }
   }

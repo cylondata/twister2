@@ -26,10 +26,7 @@ import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
-import edu.iu.dsc.tws.examples.verification.ExperimentData;
-import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -48,6 +45,8 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
   protected static final String SINK = "sink";
 
+  protected static final int LOWEST_FLAG = -1;
+
   protected DataFlowTaskGraph dataFlowTaskGraph;
 
   protected TaskGraphBuilder taskGraphBuilder;
@@ -55,8 +54,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
   protected ExecutionPlan executionPlan;
 
   protected ComputeConnection computeConnection;
-
-  protected static ExperimentData experimentData;
 
   protected static JobParameters jobParameters;
 
@@ -77,26 +74,15 @@ public abstract class BenchTaskWorker extends TaskWorker {
       );
     }
     Timing.setDefaultTimingUnit(TimingUnit.NANO_SECONDS);
-    experimentData = new ExperimentData();
     jobParameters = JobParameters.build(config);
-    experimentData.setTaskStages(jobParameters.getTaskStages());
     taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     if (jobParameters.isStream()) {
       taskGraphBuilder.setMode(OperationMode.STREAMING);
-      experimentData.setOperationMode(OperationMode.STREAMING);
-      //streaming application doesn't consider iteration as a looping of the action on the
-      //same data set. It's rather producing an streaming of data
-      experimentData.setIterations(1);
     } else {
       taskGraphBuilder.setMode(OperationMode.BATCH);
-      experimentData.setOperationMode(OperationMode.BATCH);
-      experimentData.setIterations(jobParameters.getIterations());
     }
 
     inputDataArray = DataGenerator.generateIntData(jobParameters.getSize());
-
-    //todo remove below
-    experimentData.setInput(inputDataArray);
 
     buildTaskGraph();
     dataFlowTaskGraph = taskGraphBuilder.build();
@@ -165,6 +151,11 @@ public abstract class BenchTaskWorker extends TaskWorker {
 
     private boolean endNotified = false;
 
+    // if this is set to true, Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
+    // will be marked only for the lowest target(sink)
+    private boolean markTimingOnlyForLowestTarget = false;
+    private int noOfTargets = 0;
+
     public SourceTask(String e) {
       this.iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
       this.edge = e;
@@ -175,10 +166,15 @@ public abstract class BenchTaskWorker extends TaskWorker {
       this.keyed = keyed;
     }
 
+    public void setMarkTimingOnlyForLowestTarget(boolean markTimingOnlyForLowestTarget) {
+      this.markTimingOnlyForLowestTarget = markTimingOnlyForLowestTarget;
+    }
+
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
       this.timingCondition = getTimingCondition(SOURCE, ctx);
+      this.noOfTargets = ctx.getTasksByName(SINK).size();
       sendersInProgress.incrementAndGet();
     }
 
@@ -194,11 +190,10 @@ public abstract class BenchTaskWorker extends TaskWorker {
     @Override
     public void execute() {
       if (count < iterations) {
-        //todo remove
-        experimentData.setInput(inputDataArray);
         if (count == jobParameters.getWarmupIterations()) {
           Timing.mark(TIMING_ALL_SEND, this.timingCondition);
         }
+
 
         if ((this.keyed && context.write(this.edge, context.taskIndex(), inputDataArray))
             || (!this.keyed && context.write(this.edge, inputDataArray))) {
@@ -206,27 +201,16 @@ public abstract class BenchTaskWorker extends TaskWorker {
         }
 
         if (jobParameters.isStream() && count >= jobParameters.getWarmupIterations()) {
-          Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
+          // if we should mark timing only for lowest target, consider that for timing condition
+          boolean sendingToLowestTarget = count % noOfTargets == 0;
+          Timing.mark(TIMING_MESSAGE_SEND,
+              this.timingCondition
+                  && (!this.markTimingOnlyForLowestTarget || sendingToLowestTarget)
+          );
         }
       } else {
         context.end(this.edge);
         this.notifyEnd();
-      }
-    }
-  }
-
-  public static void verify(String operationNames) throws VerificationException {
-    boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
-    if (doVerify) {
-      LOG.info("Verifying results ...");
-      ExperimentVerification experimentVerification
-          = new ExperimentVerification(experimentData, operationNames);
-      isVerified = experimentVerification.isVerified();
-      if (isVerified) {
-        LOG.info("Results generated from the experiment are verified.");
-      } else {
-        throw new VerificationException("Results do not match");
       }
     }
   }

@@ -89,6 +89,8 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
 
     @Override
     public boolean keyedPartition(Tuple<Integer, int[]> data) {
+      // this task can be the target for many sources, let's consider just the
+      // messages from the lowest source for benchmark and verification
       if (data.getKey() == this.lowestSource) {
         count++;
         if (count > jobParameters.getWarmupIterations()) {
