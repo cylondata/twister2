@@ -33,4 +33,4 @@ algorithms. Twister2 aims to support both types of task scheduling algorithms.
 
 [Task Graph](task-graph/task-graph.md)
 [Task Scheduler](task-scheduler/task-scheduler.md)
-[Executor](executor/executor.md)
+[Executor](task-executor/task-executor.md)
