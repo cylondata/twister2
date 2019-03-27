@@ -9,7 +9,7 @@ and aggregate the results which reduce the processing time of K-Means Clustering
 
 The implementation details of k-means clustering in Twister2 is pictorially represented in Fig.1.
 
-![K-Means Implementation Details](../../../images/kmeans.png)
+![K-Means Implementation](../../../images/kmeans.png)
 
 ### DataObjectConstants
 
