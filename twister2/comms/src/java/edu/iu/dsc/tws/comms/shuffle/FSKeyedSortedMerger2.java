@@ -151,6 +151,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     this.comparatorWrapper = new ComparatorWrapper(keyComparator);
     this.kryoSerializer = new KryoMemorySerializer();
     this.target = tar;
+    LOG.info("Disk merger configured. Folder : " + folder
+        + ", Bytes in memory :" + maxBytesInMemory + ", Records in memory : " + maxRecsInMemory);
   }
 
   /**
