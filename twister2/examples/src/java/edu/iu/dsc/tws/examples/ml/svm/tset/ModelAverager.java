@@ -9,26 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data.utils;
+package edu.iu.dsc.tws.examples.ml.svm.tset;
 
-public final class WorkerConstants {
+import edu.iu.dsc.tws.api.tset.BaseMapFunction;
 
-  private WorkerConstants() {  }
+public class ModelAverager extends BaseMapFunction<double[], double[]> {
 
-  public static final String WORKERS = "workers";
+  private int parallelism = 0;
 
-  public static final String PARALLELISM = "parallelism";
+  public ModelAverager(int parallelism) {
+    this.parallelism = parallelism;
+  }
 
-  public static final String CPUS_PER_NODE = "cpus";
+  @Override
+  public double[] map(double[] doubles) {
+    for (int i = 0; i < doubles.length; i++) {
+      doubles[i] = doubles[i] / (double) parallelism;
+    }
+    return doubles;
+  }
 
-  public static final String RAM_MB = "ram_mb";
+  @Override
+  public void prepare() {
 
-  public static final String DISK_GB = "disk_gb";
-
-  public static final String INSTANCES = "instances";
-
-  public static final String THREADS_PER_WORKER = "threads";
-
-
-
+  }
 }

@@ -28,7 +28,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdAdvancedRunner;
+import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdTsetRunner;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -58,7 +60,11 @@ public final class SVMRunner {
 
   private static String jobName; // aka expName
 
-  private SVMRunner() { }
+  private static String svmRunType; //tset,task,etc
+
+
+  private SVMRunner() {
+  }
 
   public static void main(String[] args) {
     LOG.log(Level.INFO, "SVM Simple Config");
@@ -75,8 +81,6 @@ public final class SVMRunner {
 
   /**
    * This method is used to initialize parameters need to run the program
-   * @param args
-   * @throws ParseException
    */
   public static void initCmdArgs(String[] args) throws ParseException {
     // first load the configurations from command line and config files
@@ -90,6 +94,7 @@ public final class SVMRunner {
     options.addOption(WorkerConstants.INSTANCES, true, "Instances");
     options.addOption(WorkerConstants.PARALLELISM, true, "Overall Parallelism");
     options.addOption(WorkerConstants.THREADS_PER_WORKER, true, "Threads Per Worker");
+    options.addOption(Constants.SimpleGraphConfig.SVM_RUN_TYPE, true, "test,task,etc");
 
 
     //Directory based Parameters [optional parameters when running the dummy data mode
@@ -122,6 +127,8 @@ public final class SVMRunner {
         "Samples in the data set");
     options.addOption(Utils.createOption(MLDataObjectConstants.SgdSvmDataObjectConstants.ITERATIONS,
         true, "Iterations", false));
+    options.addOption(Utils.createOption(MLDataObjectConstants.SgdSvmDataObjectConstants
+            .TESTING_SAMPLES, true, "Testing Samples", true));
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
@@ -135,6 +142,7 @@ public final class SVMRunner {
     instances = Integer.parseInt(cmd.getOptionValue(WorkerConstants.INSTANCES));
     parallelism = Integer.parseInt(cmd.getOptionValue(WorkerConstants.PARALLELISM));
     threads = Integer.parseInt(cmd.getOptionValue(WorkerConstants.THREADS_PER_WORKER));
+    svmRunType = cmd.getOptionValue(Constants.SimpleGraphConfig.SVM_RUN_TYPE);
 
     jobConfig.put(WorkerConstants.WORKERS, workers);
     jobConfig.put(WorkerConstants.CPUS_PER_NODE, cpus);
@@ -171,6 +179,9 @@ public final class SVMRunner {
     jobConfig.put(MLDataObjectConstants.SgdSvmDataObjectConstants.SAMPLES,
         Integer.parseInt(cmd
             .getOptionValue(MLDataObjectConstants.SgdSvmDataObjectConstants.SAMPLES)));
+    jobConfig.put(MLDataObjectConstants.SgdSvmDataObjectConstants.TESTING_SAMPLES,
+        Integer.parseInt(cmd
+            .getOptionValue(MLDataObjectConstants.SgdSvmDataObjectConstants.TESTING_SAMPLES)));
     jobConfig.put(MLDataObjectConstants.SgdSvmDataObjectConstants.ITERATIONS,
         Integer.parseInt(cmd
             .getOptionValue(MLDataObjectConstants.SgdSvmDataObjectConstants.ITERATIONS)));
@@ -187,7 +198,14 @@ public final class SVMRunner {
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName(jobName);
-    jobBuilder.setWorkerClass(SvmSgdAdvancedRunner.class.getName());
+    //TODO: set a util if this list gets longer
+    if (svmRunType.equalsIgnoreCase(Constants.SimpleGraphConfig.TASK_RUNNER)) {
+      jobBuilder.setWorkerClass(SvmSgdAdvancedRunner.class.getName());
+    }
+    if (svmRunType.equalsIgnoreCase(Constants.SimpleGraphConfig.TSET_RUNNER)) {
+      jobBuilder.setWorkerClass(SvmSgdTsetRunner.class.getName());
+    }
+
     jobBuilder.addComputeResource(cpus, ramMb, diskGb, instances);
     jobBuilder.setConfig(jobConfig);
 
