@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;

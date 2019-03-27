@@ -38,7 +38,8 @@ public class StreamingAllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.Bas
 
   private BaseTSet<T> parent;
 
-  public StreamingAllReduceTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt, ReduceFunction<T> rFn) {
+  public StreamingAllReduceTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt,
+                                 ReduceFunction<T> rFn) {
     super(cfg, tSetEnv);
     this.reduceFn = rFn;
     this.parent = prnt;
@@ -51,13 +52,15 @@ public class StreamingAllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.Bas
   }
 
   public <P> StreamingMapTSet<P, T> map(MapFunction<T, P> mapFn, int parallelism) {
-    StreamingMapTSet<P, T> set = new StreamingMapTSet<P, T>(config, tSetEnv, this, mapFn, parallelism);
+    StreamingMapTSet<P, T> set = new StreamingMapTSet<P, T>(config, tSetEnv,
+        this, mapFn, parallelism);
     children.add(set);
     return set;
   }
 
   public <P> StreamingFlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn, int parallelism) {
-    StreamingFlatMapTSet<P, T> set = new StreamingFlatMapTSet<P, T>(config, tSetEnv, this, mapFn, parallelism);
+    StreamingFlatMapTSet<P, T> set = new StreamingFlatMapTSet<P, T>(config, tSetEnv,
+        this, mapFn, parallelism);
     children.add(set);
     return set;
   }

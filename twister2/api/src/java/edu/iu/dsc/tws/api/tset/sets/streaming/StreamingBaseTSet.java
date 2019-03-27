@@ -79,14 +79,16 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
 
   @Override
   public StreamingAllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
-    StreamingAllReduceTLink<T> allreduce = new StreamingAllReduceTLink<>(config, tSetEnv, this, reduceFn);
+    StreamingAllReduceTLink<T> allreduce = new StreamingAllReduceTLink<>(config, tSetEnv,
+        this, reduceFn);
     children.add(allreduce);
     return allreduce;
   }
 
   @Override
   public StreamingAllGatherTLink<T> allGather() {
-    StreamingAllGatherTLink<T> allgather = new StreamingAllGatherTLink<>(config, tSetEnv, this);
+    StreamingAllGatherTLink<T> allgather = new StreamingAllGatherTLink<>(config,
+        tSetEnv, this);
     children.add(allgather);
     return allgather;
   }
@@ -105,7 +107,8 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
       LOG.log(Level.SEVERE, msg);
       throw new RuntimeException(msg);
     }
-    StreamingReplicateTLink<T> cloneTSet = new StreamingReplicateTLink<>(config, tSetEnv, this, replications);
+    StreamingReplicateTLink<T> cloneTSet = new StreamingReplicateTLink<>(config, tSetEnv,
+        this, replications);
     children.add(cloneTSet);
     return cloneTSet;
   }
