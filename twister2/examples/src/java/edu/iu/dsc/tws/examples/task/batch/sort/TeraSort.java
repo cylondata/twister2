@@ -60,7 +60,6 @@ public class TeraSort extends TaskWorker {
   private static final String ARG_RESOURCE_INSTANCES = "instances";
 
   private static final String ARG_TASKS_SOURCES = "sources";
-  private static final String ARG_TASKS_SINKS = "sinks";
 
   private static final String ARG_TUNE_MAX_BYTES_IN_MEMORY = "memoryBytes";
   private static final String ARG_TUNE_MAX_RECORDS_IN_MEMORY = "memoryRecords";
@@ -82,7 +81,7 @@ public class TeraSort extends TaskWorker {
     tgb.addSource(TASK_SOURCE, integerSource, config.getIntegerValue(ARG_TASKS_SOURCES, 4));
 
     Receiver receiver = new Receiver();
-    tgb.addSink(TASK_RECV, receiver, config.getIntegerValue(ARG_TASKS_SINKS, 4))
+    tgb.addSink(TASK_RECV, receiver, 1)
         .keyedGather(TASK_SOURCE, EDGE,
             DataType.INTEGER, DataType.BYTE, true,
             Comparator.comparingInt(o -> (Integer) o));
@@ -209,8 +208,6 @@ public class TeraSort extends TaskWorker {
     //tasks
     options.addOption(createOption(ARG_TASKS_SOURCES, true,
         "No of source tasks", true));
-    options.addOption(createOption(ARG_TASKS_SINKS, true,
-        "No of sink tasks", true));
 
     //optional configurations (tune performance)
     options.addOption(createOption(
@@ -231,7 +228,6 @@ public class TeraSort extends TaskWorker {
     jobConfig.put(ARG_KEY_RANGE, Integer.valueOf(cmd.getOptionValue(ARG_KEY_RANGE)));
 
     jobConfig.put(ARG_TASKS_SOURCES, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SOURCES)));
-    jobConfig.put(ARG_TASKS_SINKS, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SINKS)));
 
     if (cmd.hasOption(ARG_TUNE_MAX_BYTES_IN_MEMORY)) {
       jobConfig.put(SHUFFLE_MAX_BYTES_IN_MEMORY,

@@ -8,3 +8,4 @@ In the examples section, we discuss the following.
 * [Wordcount Examples](wordcount/wordcount.md)
 * [IterativeJob Examples](iterative/iterative_examples.md)
 * [MultiStage Examples](multistage/multistage_examples.md)
+* [Tera Sort](terasort/terasort.md)
