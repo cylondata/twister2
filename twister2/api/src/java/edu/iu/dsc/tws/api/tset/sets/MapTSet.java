@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.MapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class MapTSet<T, P> extends BaseTSet<T> {
+public class MapTSet<T, P> extends BatchBaseTSet<T> {
   private BaseTLink<P> parent;
 
   private MapFunction<P, T> mapFn;

@@ -75,7 +75,7 @@ public class KMeansTsetEnvJob extends TSetBatchWorker implements Serializable {
     }
 //    TSetBuilder builder = TSetBuilder.newBuilder(config);
     TSet<double[][]> points = tc.createSource(new PointsSource(), parallelismValue).cache();
-//    TSet<double[][]> centers = tc.createSource(new CenterSource()).cache();
+//    TSet<double[][]> centers = tc.createBatchSource(new CenterSource()).cache();
 
 
 //    for (int i = 0; i < iterations; i++) {

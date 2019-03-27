@@ -15,7 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.task.TaskExecutor;
-import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingSourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -51,8 +52,12 @@ public class TSetEnv {
     return config;
   }
 
-  public <T> SourceTSet<T> createSource(Source<T> source, int parallelism) {
-    return this.tSetBuilder.createSource(source, parallelism, this);
+  public <T> BatchSourceTSet<T> createBatchSource(Source<T> source, int parallelism) {
+    return this.tSetBuilder.createBatchSource(source, parallelism, this);
+  }
+
+  public <T> StreamingSourceTSet<T> createStreamingSource(Source<T> source, int parallelism) {
+    return this.tSetBuilder.createStreamingSource(source, parallelism, this);
   }
 
   public void setMode(OperationMode mode) {
@@ -101,5 +106,15 @@ public class TSetEnv {
             keyName, tempMap.get(keyName).getDataObject());
       }
     }
+  }
+
+  /**
+   * reset the Env so that it can be reused for the next action
+   * This method will reset the {@link TSetEnv#tSetBuilder} and clears all the values in the
+   * {@link TSetEnv#inputMap}
+   */
+  public void reset() {
+    settSetBuilder(TSetBuilder.newBuilder(config).setMode(tSetBuilder.getOpMode()));
+    inputMap.clear();
   }
 }
