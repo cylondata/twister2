@@ -16,7 +16,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -31,7 +30,10 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
-import edu.iu.dsc.tws.examples.verification.comparators.ListOfIntArraysComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
 
 public class SAllGatherExample extends BenchWorker {
@@ -41,7 +43,7 @@ public class SAllGatherExample extends BenchWorker {
 
   private volatile boolean gatherDone = true;
 
-  private ResultsVerifier<int[], List<int[]>> resultsVerifier;
+  private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   private int receiverInWorker0 = -1; //any recv scheduled in worker 0
 
@@ -88,12 +90,17 @@ public class SAllGatherExample extends BenchWorker {
     }
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (dataArray, args) -> {
-      List<int[]> listOfArrays = new ArrayList<>();
+      List<Tuple<Integer, int[]>> listOfArrays = new ArrayList<>();
       for (int i = 0; i < noOfSourceTasks; i++) {
-        listOfArrays.add(dataArray);
+        listOfArrays.add(new Tuple<>(i, dataArray));
       }
-      return listOfArrays;
-    }, ListOfIntArraysComparator.getInstance());
+      return listOfArrays.iterator();
+    }, new IteratorComparator<>(
+        new TupleComparator<>(
+            IntComparator.getInstance(),
+            IntArrayComparator.getInstance()
+        )
+    ));
 
     // now initialize the workers
     for (int t : sourceTasksOfExecutor) {
@@ -157,21 +164,7 @@ public class SAllGatherExample extends BenchWorker {
         LOG.info(() -> String.format("Target %d received ALL %d", target, count));
         gatherDone = true;
       }
-      //only do if verification is necessary, since this affects timing
-      if (jobParameters.isDoVerify()) {
-        List<int[]> dataReceived = new ArrayList<>();
-        while (itr.hasNext()) {
-          Object data = itr.next();
-          if (data instanceof Tuple) {
-            LOG.log(Level.INFO, String.format("%d received %d", target,
-                (Integer) ((Tuple) data).getKey()));
-            dataReceived.add((int[]) ((Tuple) data).getValue());
-          } else {
-            LOG.severe("Un-expected data: " + data.getClass());
-          }
-        }
-        verifyResults(resultsVerifier, dataReceived, null);
-      }
+      verifyResults(resultsVerifier, itr, null);
       return true;
     }
   }
