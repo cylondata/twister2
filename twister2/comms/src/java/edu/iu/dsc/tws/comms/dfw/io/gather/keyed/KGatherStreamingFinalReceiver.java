@@ -13,10 +13,13 @@ package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 
 /**
  * Keyed reduce final receiver for streaming  mode
@@ -48,6 +51,12 @@ public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
     this.limitPerKey = 1;
     this.windowSize = window;
     this.localWindowCount = 0;
+  }
+
+  @Override
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
   }
 
   @Override
