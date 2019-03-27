@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
@@ -21,31 +22,37 @@ import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
-import edu.iu.dsc.tws.api.tset.ops.MapOp;
+import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class StreamingMapTSet<T, P> extends StreamingBaseTSet<T> {
+/**
+ * Apply a flat map operation
+ *
+ * @param <T> the input type
+ * @param <P> the output type
+ */
+public class StreamingFlatMapTSet<T, P> extends StreamingBaseTSet<T> {
+  private static final Logger LOG = Logger.getLogger(StreamingFlatMapTSet.class.getName());
+
   private BaseTLink<P> parent;
 
-  private MapFunction<P, T> mapFn;
+  private FlatMapFunction<P, T> mapFn;
 
-  public StreamingMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                          MapFunction<P, T> mapFunc) {
+  public StreamingFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
+                              FlatMapFunction<P, T> mapFunc) {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = 1;
-    this.name = "map-" + parent.getName();
   }
 
-  public StreamingMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                          MapFunction<P, T> mapFunc, int parallelism) {
+  public StreamingFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
+                              FlatMapFunction<P, T> mapFunc, int parallelism) {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = parallelism;
-    this.name = generateName("map", parent);
   }
 
   public <P1> StreamingMapTSet<P1, T> map(MapFunction<T, P1> mFn) {
@@ -60,6 +67,7 @@ public class StreamingMapTSet<T, P> extends StreamingBaseTSet<T> {
     return direct.flatMap(mFn);
   }
 
+
   public SinkTSet<T> sink(Sink<T> sink) {
     StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
     children.add(direct);
@@ -70,9 +78,11 @@ public class StreamingMapTSet<T, P> extends StreamingBaseTSet<T> {
   public boolean baseBuild() {
     boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
+
     int p = calculateParallelism(parent);
+    String newName = generateName("flat-map", parent);
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
-        addCompute(getName(), new MapOp<>(mapFn, isIterable, keyed), p);
+        addCompute(newName, new FlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }
@@ -83,7 +93,7 @@ public class StreamingMapTSet<T, P> extends StreamingBaseTSet<T> {
   }
 
   @Override
-  public StreamingMapTSet<T, P> setName(String n) {
+  public StreamingFlatMapTSet<T, P> setName(String n) {
     this.name = n;
     return this;
   }

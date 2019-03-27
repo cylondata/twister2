@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
-import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 
@@ -42,7 +41,7 @@ public class StreamingSourceTSet<T> extends StreamingBaseTSet<T> {
     return direct.map(mapFn);
   }
 
-  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
+  public <P> StreamingFlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
     StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.flatMap(mapFn);
