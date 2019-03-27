@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_SEND;
@@ -149,6 +150,20 @@ public abstract class KeyedBenchWorker implements IWorker {
     }
   }
 
+  /**
+   * This method will verify results and append the output to the results recorder
+   */
+  protected void verifyResults(ResultsVerifier resultsVerifier, Object results,
+                               Map<String, Object> args) {
+    if (jobParameters.isDoVerify()) {
+      verified = verified && resultsVerifier.verify(results, args);
+      //this will record verification failed if any of the iteration fails to verify
+      this.resultsRecorder.recordColumn("Verified", verified);
+    } else {
+      this.resultsRecorder.recordColumn("Verified", "Not Performed");
+    }
+  }
+
   public void close() {
   }
 
@@ -166,6 +181,8 @@ public abstract class KeyedBenchWorker implements IWorker {
     private final boolean timingCondition;
     private int task;
 
+    private boolean timingForLowestTargetOnly = false;
+
     public MapWorker(int task) {
       this.task = task;
       this.timingCondition = workerId == 0 && task == 0;
@@ -174,6 +191,10 @@ public abstract class KeyedBenchWorker implements IWorker {
           jobParameters.getIterations(),
           this.timingCondition
       );
+    }
+
+    public void setTimingForLowestTargetOnly(boolean timingForLowestTargetOnly) {
+      this.timingForLowestTargetOnly = timingForLowestTargetOnly;
     }
 
     @Override
@@ -185,7 +206,7 @@ public abstract class KeyedBenchWorker implements IWorker {
       Integer key;
       for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
         // lets generate a message
-        key = (i + task + 1000) % jobParameters.getTaskStages().get(1);
+        key = i % jobParameters.getTaskStages().get(1);
         int flag = i == jobParameters.getTotalIterations() - 1 ? MessageFlags.LAST : 0;
 
         if (i == jobParameters.getWarmupIterations()) {
@@ -193,7 +214,8 @@ public abstract class KeyedBenchWorker implements IWorker {
         }
 
         if (i >= jobParameters.getWarmupIterations()) {
-          Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
+          Timing.mark(TIMING_MESSAGE_SEND,
+              this.timingCondition && (!timingForLowestTargetOnly || key == 0));
         }
 
         sendMessages(task, key, inputDataArray, flag);

@@ -64,8 +64,7 @@ public class SAllGatherExample extends BenchWorker {
     }
     // create the communication
     gather = new SAllGather(communicator, taskPlan, sources, targets,
-        new FinalReduceReceiver(jobParameters.getIterations(),
-            jobParameters.getWarmupIterations()),
+        new FinalReduceReceiver(),
         MessageType.OBJECT);
 
     Set<Integer> sourceTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -130,41 +129,44 @@ public class SAllGatherExample extends BenchWorker {
   }
 
   public class FinalReduceReceiver implements BulkReceiver {
-    private int count = 0;
-    private int expected;
-    private int warmup;
 
-    public FinalReduceReceiver(int expected, int warmup) {
-      this.expected = expected;
-      this.warmup = warmup;
-    }
+    private int count = 0;
+    private int countToLowest = 0;
+
+    private int totalExpectedCount = 0;
 
     @Override
     public void init(Config cfg, Set<Integer> targets) {
-      expected = expected * targets.size();
-      warmup = warmup * targets.size();
+      this.totalExpectedCount = targets.size() * jobParameters.getTotalIterations();
     }
 
     @Override
     public boolean receive(int target, Iterator<Object> itr) {
       count++;
-      if (count > this.warmup) {
-        Timing.mark(BenchmarkConstants.TIMING_MESSAGE_RECV, workerId == 0
-            && target == receiverInWorker0);
+      if (receiverInWorker0 == target) {
+        this.countToLowest++;
+        if (countToLowest > jobParameters.getWarmupIterations()) {
+          Timing.mark(BenchmarkConstants.TIMING_MESSAGE_RECV, workerId == 0
+              && target == receiverInWorker0);
+        }
+
+        if (countToLowest == jobParameters.getTotalIterations()) {
+          Timing.mark(TIMING_ALL_RECV, workerId == 0
+              && target == receiverInWorker0);
+          BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0
+              && target == receiverInWorker0);
+          resultsRecorder.writeToCSV();
+          LOG.info(() -> String.format("Target %d received ALL %d", target, count));
+        }
       }
 
       LOG.info(() -> String.format("Target %d received count %d", target, count));
 
-      if (count == expected + warmup) {
-        Timing.mark(TIMING_ALL_RECV, workerId == 0
-            && target == receiverInWorker0);
-        BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0
-            && target == receiverInWorker0);
-        resultsRecorder.writeToCSV();
-        LOG.info(() -> String.format("Target %d received ALL %d", target, count));
+      verifyResults(resultsVerifier, itr, null);
+
+      if (count == totalExpectedCount) {
         gatherDone = true;
       }
-      verifyResults(resultsVerifier, itr, null);
       return true;
     }
   }

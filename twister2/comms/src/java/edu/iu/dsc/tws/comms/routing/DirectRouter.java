@@ -38,9 +38,6 @@ public class DirectRouter {
 
   /**
    * Create a direct router
-   * @param plan
-   * @param srscs
-   * @param dest
    */
   public DirectRouter(TaskPlan plan, List<Integer> srscs, List<Integer> dest) {
     this.destination = dest;
@@ -75,9 +72,11 @@ public class DirectRouter {
     for (int i = 0; i < srscs.size(); i++) {
       int src = srscs.get(i);
       int tar = dest.get(i);
-      List<Integer> sources = new ArrayList<>();
-      sources.add(src);
-      this.upstream.put(tar, sources);
+      if (myTasks != null && myTasks.contains(tar)) {
+        List<Integer> sources = new ArrayList<>();
+        sources.add(src);
+        this.upstream.put(tar, sources);
+      }
     }
 
     // lets calculate the executors we are receiving
@@ -103,6 +102,7 @@ public class DirectRouter {
 
   /**
    * Return true if this is a last receiver
+   *
    * @return true
    */
   public boolean isLastReceiver() {

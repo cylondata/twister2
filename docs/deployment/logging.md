@@ -61,7 +61,7 @@ The last parameter shows whether System.out and System.err streams should also b
 
 Kubernetes Twister2 workers initialize the worker loggers as the following. This method needs to be called as early as possible when the workers start.
 
-```bash
+```java
   public static void initWorkerLogger(int workerID, K8sPersistentVolume pv, Config cnfg) {
 
     // set logging level

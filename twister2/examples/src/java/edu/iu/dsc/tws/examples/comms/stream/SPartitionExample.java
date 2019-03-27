@@ -24,13 +24,20 @@ import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.api.stream.SPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 
+/**
+ * todo add timing, and terminating conditions
+ */
 public class SPartitionExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SPartitionExample.class.getName());
 
   private SPartition partition;
 
   private boolean partitionDone = false;
+
+  private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -51,6 +58,9 @@ public class SPartitionExample extends BenchWorker {
     // create the communication
     partition = new SPartition(communicator, taskPlan, sources, targets,
         MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector());
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
+        (ints, args) -> ints, IntArrayComparator.getInstance());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -82,12 +92,15 @@ public class SPartitionExample extends BenchWorker {
   }
 
   public class PartitionReceiver implements SingularReceiver {
+
     private int count = 0;
     private int expected;
 
     @Override
     public void init(Config cfg, Set<Integer> targets) {
-      expected = jobParameters.getIterations() * targets.size();
+      expected = (jobParameters.getIterations() * jobParameters.getTaskStages().get(0)
+          / jobParameters.getTaskStages().get(1)) * targets.size();
+      //roughly, could be more than this
     }
 
     @Override
@@ -100,6 +113,8 @@ public class SPartitionExample extends BenchWorker {
       if (count >= expected) {
         partitionDone = true;
       }
+
+      verifyResults(resultsVerifier, it, null);
 
       return true;
     }
