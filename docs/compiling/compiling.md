@@ -80,7 +80,15 @@ When you compile Twister2 it will automatically download and compile OpenMPI 3.1
   ```text
   mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_312/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.1.2
   ```
+## Generating Maven Artifacts
 
+Although twitser2 use bazel as its build system, it has an option to generate maven artifacts for each twister2 module.
+
+To generate and install maven artifacts to your local repository, run following command at the root of twister2 source.
+
+```./util/mvn/install-local-snapshot.sh```
+
+[Twister2 Applications](https://github.com/DSC-SPIDAL/twister2applications) is a repository containing a set of examples and applications written as maven modules which exploit twister2 maven artifacts.
 
 ## FAQ
 
