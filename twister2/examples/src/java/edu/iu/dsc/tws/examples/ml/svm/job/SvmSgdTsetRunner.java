@@ -118,8 +118,7 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
         .map(new ModelAverager(this.svmJobParameters.getParallelism())).cache();
     double[] wFinal = finalW.getData().get(0);
     this.binaryBatchModel.setW(wFinal);
-    LOG.info(String.format("Data : %s",
-        Arrays.toString(wFinal)));
+    LOG.info(String.format("Data : %s", Arrays.toString(wFinal)));
 
     IterableMapTSet<Double, double[][]> svmTestTset = testingData
         .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
@@ -131,7 +130,6 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
         .map(new AccuracyAverager(this.svmJobParameters.getParallelism())).cache();
     double acc = finalAcc.getData().get(0);
     LOG.info(String.format("Training Accuracy : %f ", acc));
-
   }
 
   /**

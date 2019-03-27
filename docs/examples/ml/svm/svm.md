@@ -506,7 +506,9 @@ output data format defines **O**.
 
 Then the reduce function has to be called to reduce the trained models to get a
 globally synchronized model. Here, the lambda functions has been used to do it quite
-effectively without creating a new class. 
+effectively without creating a new class. Here a **ReduceTLink** a TLink specialized
+to perform reduction operation is used. This is another abstraction we use in TSet based
+application development. 
 
 ```java
 ReduceTLink<double[]> reduceTLink = svmTrainTset.reduce((t1, t2) -> {
@@ -521,6 +523,63 @@ ReduceTLink<double[]> reduceTLink = svmTrainTset.reduce((t1, t2) -> {
 ```
 
 
+Next step is to obtain the averaged model over the executed reduction. 
+
+```java
+CachedTSet<double[]> finalW = reduceTLink
+        .map(new ModelAverager(this.svmJobParameters.getParallelism())).cache();
+    double[] wFinal = finalW.getData().get(0);
+```
+TSetLinks provide a Map interface to write customizable mapping functions depending user requirment
+to get processed output. Here a simple average is performed over the globally synchronized data
+using the **ModelAverager** class. It is nothing but averaging to get the mean of the globally
+synchronied model with respect to the parallelism. 
+
+**getData** method returns the partitions and as this is a reduce example there 
+will be a single partition. 
 
  
+ In the testing stage, we used the same model as used in the task example. The testing is also
+ done in parallel. 
+ 
+ ```java
+IterableMapTSet<Double, double[][]> svmTestTset = testingData
+        .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
+    ReduceTLink<Double> reduceTestLink = svmTestTset.reduce((t1, t2) -> {
+      double t = t1 + t2;
+      return t;
+    });
+```
 
+As same as a training Mapper task, a testing mapper task is defined to run the
+SVM prediction within the **SVMTestMap** interface. We abstract the computation logic
+inside this Map class. And finally, a reduction is performed on the accuracy calculated
+per test data set. 
+
+```java
+ CachedTSet<Double> finalAcc = reduceTestLink
+        .map(new AccuracyAverager(this.svmJobParameters.getParallelism())).cache();
+    double acc = finalAcc.getData().get(0);
+    LOG.info(String.format("Training Accuracy : %f ", acc));
+``` 
+
+Final testing accuracy can be obtained by averaging through the globally synchronized value. 
+For that a simple map function can be plugged into the TSetLink. 
+
+###### Note we use a separate TSet Link per a specific task. 
+
+### Running TSet Based SVM
+
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb <ram-size-MB> -disk_gb <disk-size-in-GB> -instances <no-of-instances> -alpha <learning rate> -C <training-constraint> -exp_name <experiment-name> -features <dimension of a data point> -samples <no-of-training-samples> -iterations <iterations> -training_data_dir <training-data-file> -testing_data_dir <testing-data-file>-parallelism <overall-parallelism> -workers <no-of-workers> -cpus <no-of-cpus> -threads <no-threads-for-scheduler> -svm_run_type tset -testing_samples <testing-samples>
+
+```
+
+#### Sample Run
+
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb 4096 -disk_gb 2 -instances 1 -alpha 0.1 -C 1.0 -exp_name test-svm -features 300 -samples 49749 -iterations 10 -training_data_dir <training-data-csv-file> -testing_data_dir <testing-data-csv-file> -parallelism 8 -workers 1 -cpus 1 -threads 4 -svm_run_type tset -testing_samples 14951
+
+```
+
+###### Note make sure you have formatted the CSV files as instructed in the SVM Task Example. 
