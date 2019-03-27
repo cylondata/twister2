@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class GroupedTSet<T, K> extends BaseTSet<T> {
+public class GroupedTSet<T, K> extends BatchBaseTSet<T> {
   private PartitionFunction<K> partitioner;
 
   private Selector<T, K> selector;

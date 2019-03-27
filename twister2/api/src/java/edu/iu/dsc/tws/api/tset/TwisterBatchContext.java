@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.task.TaskExecutor;
-import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -54,9 +54,9 @@ public class TwisterBatchContext {
    * @param parallelism the parallelism of the source task
    * @return SourceTset created
    */
-  public <T> SourceTSet<T> createSource(Source<T> source, int parallelism) {
+  public <T> BatchSourceTSet<T> createSource(Source<T> source, int parallelism) {
     //TODO: how to make sure user sets the correct mode? before using create source, pass in mode
     TSetEnv tSetEnv = new TSetEnv(this.config, this.taskExecutor, this.mode);
-    return tSetEnv.createSource(source, parallelism);
+    return tSetEnv.createBatchSource(source, parallelism);
   }
 }

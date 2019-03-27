@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
-import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
@@ -30,7 +30,8 @@ public class TSetAllReduceExample extends BaseTSetBatchWorker {
     // set the parallelism of source to task stage 0
     int srcPara = jobParameters.getTaskStages().get(0);
     int sinkPara = jobParameters.getTaskStages().get(1);
-    SourceTSet<int[]> source = tc.createSource(new TestBaseSource(), srcPara).setName("Source");
+    BatchSourceTSet<int[]> source = tc.createSource(new TestBaseSource(), srcPara)
+        .setName("Source");
     AllReduceTLink<int[]> reduce = source.allReduce((t1, t2) -> {
       int[] val = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {

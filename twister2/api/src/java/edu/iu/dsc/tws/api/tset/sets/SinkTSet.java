@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class SinkTSet<T> extends BaseTSet<T> {
+public class SinkTSet<T> extends BatchBaseTSet<T> {
   private Sink<T> sink;
 
   private BaseTLink<T> parent;

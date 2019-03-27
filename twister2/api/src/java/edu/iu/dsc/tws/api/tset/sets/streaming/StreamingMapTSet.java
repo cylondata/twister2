@@ -10,61 +10,53 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.api.tset.sets;
+package edu.iu.dsc.tws.api.tset.sets.streaming;
+
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
-import edu.iu.dsc.tws.api.tset.ops.IterableMapOp;
+import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
+import edu.iu.dsc.tws.api.tset.ops.MapOp;
+import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class IterableMapTSet<T, P> extends BatchBaseTSet<T> {
+public class StreamingMapTSet<T, P> extends StreamingBaseTSet<T> {
   private BaseTLink<P> parent;
 
-  private IterableMapFunction<P, T> mapFn;
+  private MapFunction<P, T> mapFn;
 
-  public IterableMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                         IterableMapFunction<P, T> mapFunc) {
+  public StreamingMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
+                          MapFunction<P, T> mapFunc) {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = 1;
+    this.name = "map-" + parent.getName();
   }
 
-  public IterableMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                         IterableMapFunction<P, T> mapFunc, int parallelism) {
+  public StreamingMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
+                          MapFunction<P, T> mapFunc, int parallelism) {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = parallelism;
+    this.name = generateName("map", parent);
   }
 
-  public <P1> MapTSet<P1, T> map(MapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+  public <P1> StreamingMapTSet<P1, T> map(MapFunction<T, P1> mFn) {
+    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.map(mFn);
   }
 
   public <P1> FlatMapTSet<P1, T> flatMap(FlatMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.flatMap(mFn);
-  }
-
-  public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.map(mFn);
-  }
-
-  public <P1> IterableFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.flatMap(mFn);
@@ -82,8 +74,7 @@ public class IterableMapTSet<T, P> extends BatchBaseTSet<T> {
     boolean keyed = TSetUtils.isKeyedInput(parent);
     int p = calculateParallelism(parent);
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
-        addCompute(generateName("i-map",
-            parent), new IterableMapOp<>(mapFn, isIterable, keyed), p);
+        addCompute(getName(), new MapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }
@@ -94,7 +85,7 @@ public class IterableMapTSet<T, P> extends BatchBaseTSet<T> {
   }
 
   @Override
-  public BaseTSet<T> setName(String n) {
+  public StreamingMapTSet<T, P> setName(String n) {
     this.name = n;
     return this;
   }

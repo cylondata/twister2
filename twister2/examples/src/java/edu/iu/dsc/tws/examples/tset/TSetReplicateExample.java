@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.tset.BaseSink;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
-import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
@@ -32,7 +32,7 @@ public class TSetReplicateExample extends BaseTSetBatchWorker {
     // set the parallelism of source to task stage 0
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
-    SourceTSet<int[]> source = tc.createSource(new TestBaseSource(), sourceParallelism).
+    BatchSourceTSet<int[]> source = tc.createSource(new TestBaseSource(), sourceParallelism).
         setName("Source");
     ReplicateTLink<int[]> replicate = source.replicate(10);
 
