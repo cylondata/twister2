@@ -28,6 +28,11 @@ schedule plan and return the same.
 
 [Round Robin Streaming Task Scheduler Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/streaming/roundrobin/RoundRobinTaskScheduler.java)
 
+The size of the worker (memory, disk, and cpu) and the task instances (memory, disk, and cpu) allocated 
+to the worker are homogeneous in nature is shown in Fig.1.
+
+![Round Robin Allocation Details](../../../images/roundrobin_taskscheduler.png)
+
 ## First Fit Streaming Task Scheduler
 
 FirstFit Task Scheduler allocates the task instances of the task graph in a heuristic manner. 
@@ -50,6 +55,11 @@ It allocates the task instances into the first container which has enough resour
 allocate a new container to allocate the task instances.
 
 [First Fit Streaming Task Scheduler Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/streaming/firstfit/FirstFitStreamingTaskScheduler.java)
+
+The size of the container (memory, disk, and cpu) and the task instances (memory, disk, and cpu) are 
+heterogeneous in nature is shown in Fig.2.
+
+![First Fit Allocation Details](../../../images/firstfit_taskscheduler.png)
 
 ## Data Locality Streaming Task Scheduler
 
@@ -120,3 +130,8 @@ Finally, the schedule method pack the task instance plan and the container plan 
 plan and return the same.
 
 [Data Locality Streaming Task Scheduler Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/streaming/datalocalityaware/DataLocalityStreamingTaskScheduler.java)
+
+The allocation of task instances (task instance plan) based on the data locality based task scheduling
+is shown in Fig. 3.
+
+![Data Locality Allocation Details](../../../images/datalocality_taskscheduler.png)
