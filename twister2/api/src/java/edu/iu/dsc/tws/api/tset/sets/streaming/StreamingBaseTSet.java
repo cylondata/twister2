@@ -24,23 +24,28 @@
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
-import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
-import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.GatherTLink;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
+import edu.iu.dsc.tws.api.tset.link.streaming.StreamingAllGatherTLink;
+import edu.iu.dsc.tws.api.tset.link.streaming.StreamingAllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
+import edu.iu.dsc.tws.api.tset.link.streaming.StreamingGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingPartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.streaming.StreamingReplicateTLink;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
 import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
+  private static final Logger LOG = Logger.getLogger(StreamingBaseTSet.class.getName());
+
   public StreamingBaseTSet(Config cfg, TSetEnv tSetEnv) {
     super(cfg, tSetEnv);
   }
@@ -65,33 +70,44 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public GatherTLink<T> gather() {
-    return null;
-
+  public StreamingGatherTLink<T> gather() {
+    StreamingGatherTLink<T> gather = new StreamingGatherTLink<>(config,
+        tSetEnv, this);
+    children.add(gather);
+    return gather;
   }
 
   @Override
-  public AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
-    return null;
-
+  public StreamingAllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
+    StreamingAllReduceTLink<T> allreduce = new StreamingAllReduceTLink<>(config, tSetEnv, this, reduceFn);
+    children.add(allreduce);
+    return allreduce;
   }
 
   @Override
-  public AllGatherTLink<T> allGather() {
-    return null;
-
+  public StreamingAllGatherTLink<T> allGather() {
+    StreamingAllGatherTLink<T> allgather = new StreamingAllGatherTLink<>(config, tSetEnv, this);
+    children.add(allgather);
+    return allgather;
   }
 
   @Override
   public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
                                        Selector<T, K> selector) {
-    return null;
-
+    throw new UnsupportedOperationException("Cache is not avilable in streaming operations");
   }
 
   @Override
-  public ReplicateTLink<T> replicate(int replications) {
-    return null;
+  public StreamingReplicateTLink<T> replicate(int replications) {
+
+    if (parallel != 1) {
+      String msg = "TSets with parallelism 1 can be replicated: " + parallel;
+      LOG.log(Level.SEVERE, msg);
+      throw new RuntimeException(msg);
+    }
+    StreamingReplicateTLink<T> cloneTSet = new StreamingReplicateTLink<>(config, tSetEnv, this, replications);
+    children.add(cloneTSet);
+    return cloneTSet;
   }
 
   @Override

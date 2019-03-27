@@ -87,7 +87,7 @@ public interface TSet<T> extends TBase<T> {
    *
    * @return the cloned set
    */
-  ReplicateTLink<T> replicate(int replications);
+  TLink<T> replicate(int replications);
 
   /**
    * Executes TSet and saves any generated data as a in-memory data object
@@ -98,6 +98,7 @@ public interface TSet<T> extends TBase<T> {
 
   /**
    * Allows users to pass in other TSets as inputs for a TSet
+   *
    * @param key the key used to store the given TSet
    * @param input the TSet to be added as an input
    * @return true if the input was added successfully or false otherwise
