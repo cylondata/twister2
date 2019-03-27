@@ -7,6 +7,10 @@ and aggregate the results which reduce the processing time of K-Means Clustering
 
 ## K-Means Clustering Implementation Details
 
+The implementation details of k-means clustering in Twister2 is pictorially represented in Fig.1.
+
+![K-Means Implementation Details](../../../images/kmeans.png)
+
 ### DataObjectConstants
 
 The constants which are used by the k-means algorithm to specify the number of workers, parallelism, dimension, size of datapoints,
