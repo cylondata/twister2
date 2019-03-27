@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.util;
 
+import java.io.Serializable;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -21,7 +22,7 @@ import edu.iu.dsc.tws.data.utils.WorkerConstants;
  * This class is used to define the Job Parameters needed to launch
  * a streaming or batch mode SGD based SVM
  */
-public final class SVMJobParameters {
+public final class SVMJobParameters implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(SVMJobParameters.class.getName());
 
@@ -36,6 +37,11 @@ public final class SVMJobParameters {
    * Number of data points
    * */
   private int samples;
+
+  /**
+   * Number of testing data points
+   * */
+  private int testingSamples;
 
   /*
   * A streaming or batch mode operation
@@ -118,6 +124,8 @@ public final class SVMJobParameters {
         .getIntegerValue(MLDataObjectConstants.SgdSvmDataObjectConstants.FEATURES, 10);
     svmJobParameters.samples = cfg.getIntegerValue(
         MLDataObjectConstants.SgdSvmDataObjectConstants.SAMPLES, 1000);
+    svmJobParameters.testingSamples = cfg.getIntegerValue(
+        MLDataObjectConstants.SgdSvmDataObjectConstants.TESTING_SAMPLES, 1000);
     svmJobParameters.isStreaming = cfg.getBooleanValue(
         MLDataObjectConstants.STREAMING, false);
     svmJobParameters.isSplit = cfg.getBooleanValue(MLDataObjectConstants.SPLIT, false);
@@ -256,11 +264,20 @@ public final class SVMJobParameters {
     this.experimentName = experimentName;
   }
 
+  public int getTestingSamples() {
+    return testingSamples;
+  }
+
+  public void setTestingSamples(int testingSamples) {
+    this.testingSamples = testingSamples;
+  }
+
   @Override
   public String toString() {
     return "SVMJobParameters{"
         + "features=" + features
         + ", samples=" + samples
+        + ", testingSamples=" + testingSamples
         + ", isStreaming=" + isStreaming
         + ", trainingDataDir='" + trainingDataDir + '\''
         + ", testingDataDir='" + testingDataDir + '\''
