@@ -69,7 +69,7 @@ We have started working on our next major release that will connect the core com
 into a full data analytics environment. In particular it will focus on providing APIs around the core
 capabilities of Twister2 and integration of applications in a single dataflow. 
 
-### Next release (End of May 2018)
+### Next release (End of May 2019)
 
 1. Connected DataFlow
 2. Fault tolerance

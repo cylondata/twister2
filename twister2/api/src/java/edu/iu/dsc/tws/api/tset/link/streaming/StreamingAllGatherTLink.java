@@ -27,50 +27,54 @@ import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
-public class StreamingDirectTLink<T> extends BaseTLink<T> {
+/**
+ * Represent a data set created by an all gather operation
+ *
+ * @param <T> type of data
+ */
+public class StreamingAllGatherTLink<T> extends BaseTLink<T> {
   private BaseTSet<T> parent;
 
-  public StreamingDirectTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
+  public StreamingAllGatherTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
     super(cfg, tSetEnv);
     this.parent = prnt;
-    this.name = "direct-" + parent.getName();
+    this.name = "all-gather-" + parent.getName();
   }
 
-  public <P> StreamingMapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    StreamingMapTSet<P, T> set = new StreamingMapTSet<P, T>(config, tSetEnv, this, mapFn,
-        parent.getParallelism());
+  @Override
+  public boolean baseBuild() {
+    return true;
+  }
+
+  public <P> StreamingMapTSet<P, T> map(MapFunction<T, P> mapFn, int parallelism) {
+    StreamingMapTSet<P, T> set = new StreamingMapTSet<P, T>(config, tSetEnv,
+        this, mapFn, parallelism);
     children.add(set);
     return set;
   }
 
-  public <P> StreamingFlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    StreamingFlatMapTSet<P, T> set = new StreamingFlatMapTSet<P, T>(config, tSetEnv, this, mapFn,
-        parent.getParallelism());
+  public <P> StreamingFlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn, int parallelism) {
+    StreamingFlatMapTSet<P, T> set = new StreamingFlatMapTSet<P, T>(config, tSetEnv,
+        this, mapFn, parallelism);
     children.add(set);
     return set;
   }
 
-  public SinkTSet<T> sink(Sink<T> sink) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink,
-        parent.getParallelism());
+  public SinkTSet<T> sink(Sink<T> sink, int parallelism) {
+    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink, parallelism);
     children.add(sinkTSet);
     tSetEnv.run();
     return sinkTSet;
   }
 
   @Override
-  public boolean baseBuild() {
-    return false;
-  }
-
-  @Override
   public void buildConnection(ComputeConnection connection) {
     DataType dataType = TSetUtils.getDataType(getType());
-    connection.direct(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+    connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
 
   @Override
-  public StreamingDirectTLink<T> setName(String n) {
+  public BaseTLink<T> setName(String n) {
     super.setName(n);
     return this;
   }
