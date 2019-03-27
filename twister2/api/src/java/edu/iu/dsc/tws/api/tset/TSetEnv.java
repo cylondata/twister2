@@ -107,4 +107,14 @@ public class TSetEnv {
       }
     }
   }
+
+  /**
+   * reset the Env so that it can be reused for the next action
+   * This method will reset the {@link TSetEnv#tSetBuilder} and clears all the values in the
+   * {@link TSetEnv#inputMap}
+   */
+  public void reset() {
+    settSetBuilder(TSetBuilder.newBuilder(config).setMode(tSetBuilder.getOpMode()));
+    inputMap.clear();
+  }
 }

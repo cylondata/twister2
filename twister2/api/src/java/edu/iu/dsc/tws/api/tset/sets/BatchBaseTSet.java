@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
-import edu.iu.dsc.tws.api.tset.TSetBuilder;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
@@ -107,8 +106,7 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
     direct.getChildren().add(cacheTSet);
     cacheTSet.setData(tSetEnv.runAndGet(cacheTSet.getName()));
 
-    tSetEnv.settSetBuilder(TSetBuilder.newBuilder(config).setMode(tSetEnv.
-        getTSetBuilder().getOpMode()));
+    tSetEnv.reset();
     return cacheTSet;
   }
 

@@ -190,6 +190,11 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
+  public T getPartitionData(int partitionId) {
+    return null;
+  }
+
+  @Override
   public boolean addData(T value) {
 //    if (data == null) {
 //      data = new DataObjectImpl<>(config);
