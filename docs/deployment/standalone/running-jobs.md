@@ -52,7 +52,7 @@ need to change the following parameter found in ```conf/standalone/resource.yaml
 twister2.resource.scheduler.mpi.mpirun.file: "twister2-core/ompi/bin/mpirun"
 ```
 
-You can follow the [Compiling Guide](../../compiling/compiling.md) to get instructions on how to install and configure OpenMPI.
+You can follow the [compiling document](../../compiling/compiling.md) to get instructions on how to install and configure OpenMPI.
 
 ## How it works
 
@@ -61,7 +61,7 @@ of mpirun inside the ```conf/standalone/mpi.sh``` script.
 
 ## Deploying and Running on a MPI cluster
 
-Follow the [Guid on Running an MPI Cluster within a LAN](http://mpitutorial.com/tutorials/running-an-mpi-cluster-within-a-lan/) to setup your MPI cluster. 
+Follow the [Guide on Running an MPI Cluster within a LAN](http://mpitutorial.com/tutorials/running-an-mpi-cluster-within-a-lan/) to setup your MPI cluster. 
 
 Twister2 when running in standalone mode, picks the [hostfile](https://www.open-mpi.org/faq/?category=running#mpirun-hostfile) from ```conf/standalone/nodes```
 
