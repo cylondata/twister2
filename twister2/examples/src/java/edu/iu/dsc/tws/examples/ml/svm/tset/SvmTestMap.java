@@ -32,6 +32,8 @@ public class SvmTestMap extends BaseMapFunction<double[][], Double> {
 
   private double localAccuracy = 0;
 
+  private boolean debug = false;
+
   public SvmTestMap(BinaryBatchModel binaryBatchModel, SVMJobParameters svmJobParameters) {
     this.binaryBatchModel = binaryBatchModel;
     this.svmJobParameters = svmJobParameters;
@@ -47,7 +49,10 @@ public class SvmTestMap extends BaseMapFunction<double[][], Double> {
     } catch (MatrixMultiplicationException e) {
       e.printStackTrace();
     }
-    LOG.info(String.format("Local Acc [%d] %f", this.context.getIndex(), this.localAccuracy));
+    if (debug) {
+      LOG.info(String.format("Local Acc [%d] %f", this.context.getIndex(), this.localAccuracy));
+    }
+
     return this.localAccuracy;
   }
 

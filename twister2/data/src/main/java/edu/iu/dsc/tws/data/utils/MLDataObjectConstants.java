@@ -38,6 +38,10 @@ public final class MLDataObjectConstants {
 
     public static final String SAMPLES = "samples";
 
+    public static final String TRAINING_SAMPLES = "training_samples";
+
+    public static final String TESTING_SAMPLES = "testing_samples";
+
     public static final String ITERATIONS = "iterations";
 
     public static final String ALPHA = "alpha";
