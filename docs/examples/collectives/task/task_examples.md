@@ -83,8 +83,8 @@ computeConnection.reduce(SOURCE, edge, operation, DataType.INTEGER);
 
 ### AbstractSingleDataCompute and AbstractIterableDataCompute
 
-The AbstractSingleDataCompute<T> and AbstractIterableDataCompute<Iterator<T>> are the two abstract 
-classes abstracted from the base class of BaseCompute<T> and BaseCompute<Iterator<T>> which is mainly
+The `AbstractSingleDataCompute<T>` and `AbstractIterableDataCompute<Iterator<T>>` are the two abstract 
+classes abstracted from the base class of `BaseCompute<T>` and `BaseCompute<Iterator<T>>` which is mainly
 used to define the type of data coming from the communication operations either single or an
 or an iterator.
    
@@ -133,8 +133,8 @@ SourceTask as the source task for all the batch examples.
   }
 ```
   
-The sink task is abstracted from ReduceCompute<int[]> and the ReduceCompute<T> is abstracted from 
-AbstractSingleDataCompute<T>.
+The sink task is abstracted from `ReduceCompute<int[]>` and the `ReduceCompute<T>` is abstracted from 
+`AbstractSingleDataCompute<T>`.
 
 ```java 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -197,8 +197,8 @@ can see the SourceTask as the source task for all the batch examples.
     return taskGraphBuilder;
   }
 ```
-The sink task is abstracted from AllReduceCompute<int[]> and the AllReduceCompute<T> is further 
-abstracted from AbstractSingleDataCompute<T>.
+The sink task is abstracted from `AllReduceCompute<int[]>` and the `AllReduceCompute<T>` is further 
+abstracted from `AbstractSingleDataCompute<T>`.
 
 [Task based Batch AllReduce Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/BTAllReduceExample.java)
 
@@ -235,8 +235,8 @@ can see the SourceTask as the source task for all the batch examples.
     return taskGraphBuilder;
   }
 ```
-The sink task is abstracted from GatherCompute<int[]> and the GatherCompute<T> is further abstracted 
-from AbstractIterableDataCompute<Tuple<Integer, T>>.
+The sink task is abstracted from `GatherCompute<int[]>` and the `GatherCompute<T>` is further abstracted 
+from `AbstractIterableDataCompute<Tuple<Integer, T>>`.
 
 [Task based Batch Gather Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/BTGatherExample.java)
 
@@ -272,8 +272,8 @@ can see the SourceTask as the source task for all the batch examples.
     return taskGraphBuilder;
   }
 ```
-The sink task is abstracted from AllGatherCompute<int[]> and the AllGatherCompute<T> is further abstracted 
-from  AbstractIterableDataCompute<Tuple<Integer, T>>.
+The sink task is abstracted from `AllGatherCompute<int[]>` and the `AllGatherCompute<T>` is further abstracted 
+from  `AbstractIterableDataCompute<Tuple<Integer, T>>`.
 
 [Task based Batch AllGather Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/BTAllGatherExample.java)
 
@@ -308,8 +308,8 @@ can see the SourceTask as the source task for all the batch examples.
     return taskGraphBuilder;
   }
 ```
-The sink task is abstracted from BBroadCastCompute<int[]>  and the BBroadCastCompute<T> is further 
-abstracted from AbstractIterableDataCompute<T>.
+The sink task is abstracted from `BBroadCastCompute<int[]>`  and the `BBroadCastCompute<T>` is further 
+abstracted from `AbstractIterableDataCompute<T>`.
 
 [Task based Batch Broadcast Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/BTBroadCastExample.java)
 
@@ -346,8 +346,8 @@ can see the SourceTask as the source task for all the batch examples.
   }
 ```
 
-The sink task is abstracted from BPartitionCompute<int[]> and the BPartitionCompute<T> is further 
-abstracted from AbstractIterableDataCompute<T>.
+The sink task is abstracted from `BPartitionCompute<int[]>` and the `BPartitionCompute<T>` is further 
+abstracted from `AbstractIterableDataCompute<T>`.
 
 [Task based Batch Partition Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/BTPartitionExample.java)
 
@@ -385,8 +385,8 @@ can see the SourceTask as the source task for all the batch examples.
     return taskGraphBuilder;
   }
 ```
-The sink task is abstracted from BKeyedReduceCompute<Integer, int[]> and the BKeyedReduceCompute<K, T> 
-is further abstracted from AbstractIterableDataCompute<Tuple<K, T>>.
+The sink task is abstracted from `BKeyedReduceCompute<Integer, int[]>` and the `BKeyedReduceCompute<K, T>` 
+is further abstracted from `AbstractIterableDataCompute<Tuple<K, T>>`.
 
 [Task based Batch Keyed-Reduce Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/BTKeyedReduceExample.java)
 
@@ -424,8 +424,8 @@ can see the SourceTask as the source task for all the batch examples.
   }
 ```
 
-The sink task is abstracted from BKeyedGatherCompute<Integer, int[]> and the BKeyedGatherCompute<K, T> 
-is further abstracted from AbstractIterableDataCompute<Tuple<K, Iterator<T>>>.
+The sink task is abstracted from `BKeyedGatherCompute<Integer, int[]>` and the `BKeyedGatherCompute<K, T>` 
+is further abstracted from `AbstractIterableDataCompute<Tuple<K, Iterator<T>>>`.
 
 [Task based Batch Keyed-Gather Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/BTKeyedGatherExample.java)
 
@@ -464,8 +464,8 @@ can see the SourceTask as the source task for all the batch examples.
   }
 ```
 
-The sink task is abstracted from BPartitionKeyedCompute<Integer, int[]> and the BPartitionKeyedCompute<K, T> 
-is further abstracted from AbstractIterableDataCompute<Tuple<K, T>>.
+The sink task is abstracted from `BPartitionKeyedCompute<Integer, int[]>` and the `BPartitionKeyedCompute<K, T>` 
+is further abstracted from `AbstractIterableDataCompute<Tuple<K, T>>`.
 
 [Task based Batch Keyed-Partition Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/BTKeyedPartitionExample.java)
 
@@ -525,8 +525,8 @@ class, you can see the SourceTask as the source task for all the streaming examp
   }
 ```
 
-The sink task is abstracted from  ReduceCompute<int[]> and the ReduceCompute<T> is abstracted from 
-AbstractSingleDataCompute<T>.
+The sink task is abstracted from `ReduceCompute<int[]>` and the `ReduceCompute<T>` is abstracted from 
+`AbstractSingleDataCompute<T>`.
 
 ```java 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -601,8 +601,8 @@ can see the SourceTask as the source task for all the streaming examples.
     return taskGraphBuilder;
   }
 ```
-The sink task is  abstracted from AllReduceCompute<int[]> and the AllReduceCompute<T> is abstracted from 
-AbstractSingleDataCompute<T>.
+The sink task is  abstracted from `AllReduceCompute<int[]>` and the `AllReduceCompute<T>` is abstracted from 
+`AbstractSingleDataCompute<T>`.
 
 [Task based Streaming AllReduce Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/STAllReduceExample.java)
 
@@ -640,8 +640,8 @@ can see the SourceTask as the source task for all the streaming examples.
   }
 ```
 
-The sink task is abstracted from GatherCompute<int[]> and the GatherCompute<T> is abstracted from 
-AbstractIterableDataCompute<Tuple<Integer, T>>.
+The sink task is abstracted from `GatherCompute<int[]>` and the `GatherCompute<T>` is abstracted from 
+`AbstractIterableDataCompute<Tuple<Integer, T>>`.
 
 [Task based Streaming Gather Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/STGatherExample.java)
 
@@ -678,8 +678,8 @@ can see the SourceTask as the source task for all the streaming examples.
     }
 ```
 
-The sink task is abstracted from AllGatherCompute<int[]> and the AllGatherCompute<T> is abstracted from 
-AbstractIterableDataCompute<Tuple<Integer, T>>.
+The sink task is abstracted from `AllGatherCompute<int[]>` and the `AllGatherCompute<T>` is abstracted from 
+`AbstractIterableDataCompute<Tuple<Integer, T>>`.
 
 [Task based Streaming AllGather Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/STAllGatherExample.java)
 
@@ -713,8 +713,8 @@ can see the SourceTask as the source task for all the streaming examples.
     return taskGraphBuilder;
   }
 ```
-The sink task is  abstracted from SBroadCastCompute<int[]> and the SBroadCastCompute<T> is abstracted from 
-AbstractSingleDataCompute<T>.
+The sink task is  abstracted from `SBroadCastCompute<int[]>` and the `SBroadCastCompute<T>` is abstracted from 
+`AbstractSingleDataCompute<T>`.
 
 [Task based Streaming Broadcast Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/STBroadCastExample.java)
 
@@ -750,8 +750,8 @@ can see the SourceTask as the source task for all the streaming examples.
     return taskGraphBuilder;
   }
 ```
-The sink task is abstracted from SPartitionCompute<int[]> and the SPartitionCompute<T> is abstracted from 
-AbstractSingleDataCompute<T>.
+The sink task is abstracted from `SPartitionCompute<int[]>` and the `SPartitionCompute<T>` is abstracted from 
+`AbstractSingleDataCompute<T>`.
 
 [Task based Streaming Partition Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/STPartitionExample.java)
 
@@ -789,8 +789,8 @@ can see the SourceTask as the source task for all the streaming examples.
   }
 ```
 
-The sink task is abstracted from SPartitionKeyedCompute<Integer, int[]> and the SPartitionKeyedCompute<K, T> 
-is abstracted from AbstractSingleDataCompute<Tuple<K, T>>.
+The sink task is abstracted from `SPartitionKeyedCompute<Integer, int[]>` and the `SPartitionKeyedCompute<K, T>` 
+is abstracted from `AbstractSingleDataCompute<Tuple<K, T>>`.
 
 [Task based Batch Keyed-Partition Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/STPartitionKeyedExample.java)
 
@@ -829,8 +829,8 @@ can see the SourceStreamTask as the source task for all the streaming examples.
     return taskGraphBuilder;
   }
 ```
-The sink task is  abstracted from SKeyedReduceCompute<Object, int[]> and the SKeyedReduceCompute<K, T> 
-is abstracted from AbstractSingleDataCompute<Tuple<K, T>> .
+The sink task is  abstracted from `SKeyedReduceCompute<Object, int[]>` and the `SKeyedReduceCompute<K, T>` 
+is abstracted from `AbstractSingleDataCompute<Tuple<K, T>>`.
 
 [Task based Streaming Keyed-Reduce Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/STKeyedReduceExample.java)
 
@@ -868,8 +868,8 @@ can see the SourceStreamTask as the source task for all the streaming examples.
   }
 ```
 
-The sink task is abstracted from KeyedGatherCompute<Object, int[]> and the KeyedGatherCompute<K, T> 
-is abstracted from AbstractIterableDataCompute<Tuple<K, T>>.
+The sink task is abstracted from `KeyedGatherCompute<Object, int[]>` and the `KeyedGatherCompute<K, T>` 
+is abstracted from `AbstractIterableDataCompute<Tuple<K, T>>`.
 
 [Task based Streaming Keyed-Gather Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/streaming/STKeyedGatherExample.java)
 
