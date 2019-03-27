@@ -74,14 +74,14 @@ public class DataLoadingTask extends BaseSource<double[][]> {
     this.dimension = this.binaryBatchModel.getFeatures() + 1;
     if ("train".equalsIgnoreCase(this.dataType)) {
       this.dataSize = this.binaryBatchModel.getSamples();
-      this.localPoints = new double[this.dataSize / (this.parallelism)][this.dimension];
+      this.localPoints = new double[this.dataSize / (this.parallelism + 1)][this.dimension];
       this.source = new DataSource(config, new LocalFixedInputPartitioner(new
           Path(this.svmJobParameters.getTrainingDataDir()), this.parallelism, config,
           this.dataSize), this.parallelism);
     }
     if ("test".equalsIgnoreCase(this.dataType)) {
       this.dataSize = this.svmJobParameters.getTestingSamples();
-      this.localPoints = new double[this.dataSize / (this.parallelism)][this.dimension];
+      this.localPoints = new double[this.dataSize / (this.parallelism + 1)][this.dimension];
       this.source = new DataSource(config, new LocalFixedInputPartitioner(new
           Path(this.svmJobParameters.getTestingDataDir()), this.parallelism, config,
           this.dataSize), this.parallelism);
@@ -116,7 +116,7 @@ public class DataLoadingTask extends BaseSource<double[][]> {
                 this.dimension));
           }
 
-          if (count > this.localPoints.length) {
+          if (count >= this.localPoints.length) {
             break; // TODO : unbalance division temp fix
           }
           for (int i = 0; i < this.dimension; i++) {
