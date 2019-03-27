@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
-public class DirectTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
+public class DirectTLink<T> extends BaseTLink<T> {
   private BaseTSet<T> parent;
 
   public DirectTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {

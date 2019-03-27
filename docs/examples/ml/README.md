@@ -9,4 +9,3 @@ We have designed two main machine learning examples.
 
 1. [KMeans](kmeans/kmeans.md)
 2. [Support Vector Machines](svm/svm.md)
-

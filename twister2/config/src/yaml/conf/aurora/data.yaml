@@ -1,21 +1,23 @@
-#twister2.hadoop.home: "/home/kgovind/hadoop-2.9.0"
-
+#Home directory of the hadoop
 twister2.hadoop.home: "${HADOOP_HOME}"
 
-twister2.hdfs.url: "hdfs://hairy.soic.indiana.edu:9000//"
+#Specify the URL of the namenode with port
+twister2.hdfs.url: "hdfs://namenode:9000"
 
+#specify the hdfs class
 twister2.hdfs.class: "org.apache.hadoop.hdfs.DistributedFileSystem"
 
+#Specify the hdfs key
 twister2.hdfs.implementation.key: "fs.hdfs.impl"
 
+#Specify the config directory of the hdfs
 twister2.hdfs.config.directory: "${HADOOP_HOME}/etc/hadoop/core-site.xml"
 
-#twister2.hdfs.data.directory: "/scratch/kgovind/twister2hdfs/data"
+#Specify the data directory of the hdfs
+twister2.hdfs.data.directory: "/user/username/"
 
-#twister2.hdfs.data.directory: "/tmp/twister2hdfs/data"
+#Specify the name of the namenode
+twister2.hdfs.namenode: "namenode.iu.edu"
 
-twister2.hdfs.data.directory: "/user/kgovind/"
-
-twister2.hdfs.namenode: "hairy.soic.indiana.edu"
-
+#Specify the name of the namenode port
 twister2.hdfs.namenode.port: "9000"

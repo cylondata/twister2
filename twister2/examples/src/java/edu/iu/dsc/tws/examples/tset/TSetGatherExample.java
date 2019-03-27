@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.link.GatherTLink;
-import edu.iu.dsc.tws.api.tset.sets.SourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
@@ -34,7 +34,7 @@ public class TSetGatherExample extends BaseTSetBatchWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    SourceTSet<int[]> source = tc.createSource(new TestBaseSource(),
+    BatchSourceTSet<int[]> source = tc.createSource(new TestBaseSource(),
         sourceParallelism).setName("Source");
     GatherTLink<int[]> gather = source.gather();
     gather.sink(new Sink<int[]>() {

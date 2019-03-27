@@ -26,18 +26,29 @@ public interface Cacheable<T> extends Serializable {
 
   /**
    * retrieve data saved in the TSet
+   *
    * @return dataObject
    */
   List<T> getData();
 
   /**
    * retrieve data saved in the TSet
+   *
    * @return dataObject
    */
   DataObject<T> getDataObject();
 
   /**
+   * get the data from the given partition
+   *
+   * @param partitionId the partition ID
+   * @return the data related to the given partition
+   */
+  T getPartitionData(int partitionId);
+
+  /**
    * Add Data to the data object
+   *
    * @param value value to be added
    * @return true if the data was added successfully or false otherwise
    */

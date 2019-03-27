@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.common.config.Config;
  * @param <T> the input type
  * @param <P> the output type
  */
-public class FlatMapTSet<T, P> extends BaseTSet<T> {
+public class FlatMapTSet<T, P> extends BatchBaseTSet<T> {
   private static final Logger LOG = Logger.getLogger(FlatMapTSet.class.getName());
 
   private BaseTLink<P> parent;
@@ -93,9 +93,6 @@ public class FlatMapTSet<T, P> extends BaseTSet<T> {
 
     int p = calculateParallelism(parent);
     String newName = generateName("flat-map", parent);
-    if (inputMap.size() > 0) {
-      mapFn.addInputs(inputMap);
-    }
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
         addCompute(newName, new FlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);

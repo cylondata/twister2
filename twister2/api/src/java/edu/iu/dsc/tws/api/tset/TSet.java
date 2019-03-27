@@ -11,13 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
-import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
-import edu.iu.dsc.tws.api.tset.link.GatherTLink;
-import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
-import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
+import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
 
@@ -37,7 +32,7 @@ public interface TSet<T> extends TBase<T> {
    *
    * @return this TSet
    */
-  DirectTLink<T> direct();
+  TLink<T> direct();
 
   /**
    * Reduce operation on the data
@@ -45,7 +40,7 @@ public interface TSet<T> extends TBase<T> {
    * @param reduceFn the reduce function
    * @return this set
    */
-  ReduceTLink<T> reduce(ReduceFunction<T> reduceFn);
+  TLink<T> reduce(ReduceFunction<T> reduceFn);
 
   /**
    * All reduce operation
@@ -53,7 +48,7 @@ public interface TSet<T> extends TBase<T> {
    * @param reduceFn reduce function
    * @return this set
    */
-  AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn);
+  TLink<T> allReduce(ReduceFunction<T> reduceFn);
 
   /**
    * Partition the data according the to partition function
@@ -61,21 +56,21 @@ public interface TSet<T> extends TBase<T> {
    * @param partitionFn partition function
    * @return this set
    */
-  PartitionTLink<T> partition(PartitionFunction<T> partitionFn);
+  TLink<T> partition(PartitionFunction<T> partitionFn);
 
   /**
    * Gather the set of values into a single partition
    *
    * @return this set
    */
-  GatherTLink<T> gather();
+  TLink<T> gather();
 
   /**
    * Gather the set of values into a single partition
    *
    * @return this set
    */
-  AllGatherTLink<T> allGather();
+  TLink<T> allGather();
 
   /**
    * Select a set of values

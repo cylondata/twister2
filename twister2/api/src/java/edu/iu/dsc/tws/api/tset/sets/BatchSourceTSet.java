@@ -26,10 +26,10 @@ import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class SourceTSet<T> extends BaseTSet<T> {
+public class BatchSourceTSet<T> extends BatchBaseTSet<T> {
   private Source<T> source;
 
-  public SourceTSet(Config cfg, TSetEnv tSetEnv, Source<T> src, int parallelism) {
+  public BatchSourceTSet(Config cfg, TSetEnv tSetEnv, Source<T> src, int parallelism) {
     super(cfg, tSetEnv);
     this.source = src;
     this.name = "source-" + new Random(System.nanoTime()).nextInt(10);
@@ -68,9 +68,6 @@ public class SourceTSet<T> extends BaseTSet<T> {
 
   @Override
   public boolean baseBuild() {
-    if (inputMap.size() > 0) {
-      source.addInputs(inputMap);
-    }
     tSetEnv.getTSetBuilder().getTaskGraphBuilder().
         addSource(getName(), new SourceOp<T>(source), parallel);
     return true;
@@ -82,7 +79,7 @@ public class SourceTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public SourceTSet<T> setName(String n) {
+  public BatchSourceTSet<T> setName(String n) {
     this.name = n;
     return this;
   }

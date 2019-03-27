@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.IterableMapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class IterableMapTSet<T, P> extends BaseTSet<T> {
+public class IterableMapTSet<T, P> extends BatchBaseTSet<T> {
   private BaseTLink<P> parent;
 
   private IterableMapFunction<P, T> mapFn;
@@ -81,9 +81,6 @@ public class IterableMapTSet<T, P> extends BaseTSet<T> {
     boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     int p = calculateParallelism(parent);
-    if (inputMap.size() > 0) {
-      mapFn.addInputs(inputMap);
-    }
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
         addCompute(generateName("i-map",
             parent), new IterableMapOp<>(mapFn, isIterable, keyed), p);
