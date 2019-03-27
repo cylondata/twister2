@@ -1,6 +1,6 @@
-#Tera Sort
+# Tera Sort
 
-##Introduction
+## Introduction
 
 Tera Sort is a common benchmark to measure and compare high performance big data frameworks such as Twister2. The idea is to measure the time to sort one terabyte of randomly distributed data.
 
