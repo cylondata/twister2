@@ -34,15 +34,15 @@ We will briefly discuss the functionality of each components as below.
 #### Input Split
 
 The input split provides information on a particular part of a file, possibly located or hosted
-on a distributed file system and replicated among several hosts. Twister2 supports the following type
-of input splits namely
+on a distributed file system and replicated among several hosts. 
+
+Twister2 supports the following type of input splits namely
+
 1. FileInputSplit 
 2. TextInputSplit
 3. DelimitedInputSplit
 4. CSVInputSplit
 5. BinaryInputSplit
-6. GenericCSVInputSplit
-7. LocatableInputSplit
 
 #### Input Partitioner
 
