@@ -38,11 +38,12 @@ on a distributed file system and replicated among several hosts.
 
 Twister2 supports the following type of input splits namely
 
-1. FileInputSplit 
-2. TextInputSplit
-3. DelimitedInputSplit
-4. CSVInputSplit
-5. BinaryInputSplit
+1. FileInputSplit - It is abstracted from LocatableInputSplit in which input split refers to split 
+   located on one or more hosts.
+2. TextInputSplit - It is abstracted from DelimitedInputSplit in which input split refers to split 
+   based on the delimited values. 
+3. CSVInputSplit - It is also abstracted from DelimitedInputSplit mainly used to split the CSV file.
+4. BinaryInputSplit - It is abstracted from FileInputSplit mainly used to split the binary file.  
 
 #### Input Partitioner
 
@@ -89,7 +90,7 @@ distributed file system or a local file system. Twister2 file system supports th
 operations namely
 
 1. File I/O Operations for both HDFS and local file system
-2. BlockLocation for both both HDFS and local file system 
+2. BlockLocation for both HDFS and local file system 
 3. FileStatus for both HDFS and local file system
 4. File Path operations for both HDFS and local file system
 
