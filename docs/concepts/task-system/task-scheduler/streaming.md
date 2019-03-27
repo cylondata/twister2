@@ -9,7 +9,10 @@ task instance 1 of 1st task will go to container 1 and task instance 1 of 2nd ta
 
 It generates the task schedule plan which consists of the containers \(container plan\) and the 
 allocation of task instances \(task instance plan\) on those containers. The size of the container 
-\(memory, disk, and cpu\) and the task instances \(memory, disk, and cpu\) are homogeneous in nature.
+\(memory, disk, and cpu\) and the task instances \(memory, disk, and cpu\) are homogeneous in nature
+is shown in Fig.1.
+
+![Round Robin Allocation](../../../images/roundrobin_taskscheduler.png)
 
 First, it will allocate the task instances into the logical container values and then it will 
 calculate the required ram, disk, and cpu values for the task instances and the logical containers 
@@ -28,10 +31,6 @@ schedule plan and return the same.
 
 [Round Robin Streaming Task Scheduler Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/streaming/roundrobin/RoundRobinTaskScheduler.java)
 
-The size of the worker (memory, disk, and cpu) and the task instances (memory, disk, and cpu) allocated 
-to the worker are homogeneous in nature is shown in Fig.1.
-
-![Round Robin Allocation Details](../../../images/roundrobin_taskscheduler.png)
 
 ## First Fit Streaming Task Scheduler
 
@@ -43,7 +42,10 @@ For example, if there are two tasks with parallelism value of 2, 1st task -&gt; 
 to container 0, 1st task -&gt; instance 1 will go to container 0, 2nd task -&gt; instance 0 will go 
 to container 0 \(if the total task instance required values doesn't reach the maximum size of 
 container 0. If the container has reached its maximum limit then it will allocate the 2nd task -&gt; 
-instance 1 will go to container 1.
+instance 1 will go to container 1. The size of the container (memory, disk, and cpu) and the task 
+instances (memory, disk, and cpu) are heterogeneous in nature is shown in Fig.2.
+
+![First Fit Allocation](../../../images/firstfit_taskscheduler.png)
 
 The initialize() method in the FirstFitStreamingTaskScheduler first initialize the task instance ram, 
 disk, and cpu values with default task instance values specified in the TaskSchedulerContext. Next, 
@@ -55,11 +57,6 @@ It allocates the task instances into the first container which has enough resour
 allocate a new container to allocate the task instances.
 
 [First Fit Streaming Task Scheduler Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/streaming/firstfit/FirstFitStreamingTaskScheduler.java)
-
-The size of the container (memory, disk, and cpu) and the task instances (memory, disk, and cpu) are 
-heterogeneous in nature is shown in Fig.2.
-
-![First Fit Allocation Details](../../../images/firstfit_taskscheduler.png)
 
 ## Data Locality Streaming Task Scheduler
 
@@ -74,7 +71,11 @@ and cpu\) and the task instances \(memory, disk, and cpu\) are homogeneous in na
 computes the distance between the worker node and the datanodes and allocate the task instances into
 the logical container values and then it will calculate the required ram, disk, and cpu values for 
 the task instances and the logical containers which is based on the task configuration values and 
-the allocated worker values respectively.
+the allocated worker values respectively. The allocation of task instances (task instance plan) based 
+on the data locality based task scheduling is shown in Fig. 3.
+                                          
+![Data Locality Aware Allocation](../../../images/datalocality_taskscheduler.png)
+
 
 The DataLocalityStreamingTaskScheduler first initialize the ram, disk, and cpu values with default 
 task instance values specified in the TaskSchedulerContext. The schedule() method invokes the 
@@ -131,7 +132,3 @@ plan and return the same.
 
 [Data Locality Streaming Task Scheduler Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/streaming/datalocalityaware/DataLocalityStreamingTaskScheduler.java)
 
-The allocation of task instances (task instance plan) based on the data locality based task scheduling
-is shown in Fig. 3.
-
-![Data Locality Allocation Details](../../../images/datalocality_taskscheduler.png)
