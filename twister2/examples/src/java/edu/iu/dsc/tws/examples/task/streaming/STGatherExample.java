@@ -11,19 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.task.streaming.verifiers.GatherVerifier;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.typed.GatherCompute;
 
 public class STGatherExample extends BenchTaskWorker {
@@ -37,7 +41,7 @@ public class STGatherExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    BaseSource g = new SourceStreamTask(edge);
+    BaseSource g = new SourceTask(edge);
     ISink r = new GatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
@@ -49,33 +53,36 @@ public class STGatherExample extends BenchTaskWorker {
   protected static class GatherSinkTask extends GatherCompute<int[]> implements ISink {
 
     private static final long serialVersionUID = -254264903510284798L;
+    private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
+    private boolean verified = true;
+    private boolean timingCondition;
+
     private int count = 0;
 
     @Override
-    public boolean gather(Iterator<Tuple<Integer, int[]>> content) {
-      int numberOfElements = 0;
-      int totalValues = 0;
-      if (count % jobParameters.getPrintInterval() == 0) {
-        while (content.hasNext()) {
-          count++;
-          Tuple<Integer, int[]> tuple = content.next();
-          int[] value = tuple.getValue();
-          numberOfElements++;
-          experimentData.setOutput(value);
-          LOG.info("Message Gathered : " + Arrays.toString(value));
-          try {
-            verify(OperationNames.GATHER);
-          } catch (VerificationException e) {
-            e.printStackTrace();
-          }
-        }
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SINK, context);
+      resultsVerifier = new GatherVerifier(inputDataArray, ctx, SOURCE);
+      receiversInProgress.incrementAndGet();
+    }
+
+    @Override
+    public boolean gather(Iterator<Tuple<Integer, int[]>> data) {
+      count++;
+      if (count > jobParameters.getWarmupIterations()) {
+        Timing.mark(BenchmarkConstants.TIMING_MESSAGE_RECV, this.timingCondition);
       }
 
-      if (count % jobParameters.getPrintInterval() == 0) {
-        LOG.info("Gathered : " + content.getClass().getTypeName()
-            + ", Count : " + count + " numberOfElements: " + numberOfElements
-            + " total: " + totalValues);
+      if (count == jobParameters.getTotalIterations()) {
+        LOG.info(String.format("%d received gather %d",
+            context.getWorkerId(), context.taskId()));
+        Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+        BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, this.timingCondition);
+        resultsRecorder.writeToCSV();
+        receiversInProgress.decrementAndGet();
       }
+      this.verified = verifyResults(resultsVerifier, data, null, verified);
       return true;
     }
   }

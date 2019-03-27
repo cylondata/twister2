@@ -11,10 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
+import edu.iu.dsc.tws.api.task.Receptor;
+import edu.iu.dsc.tws.api.tset.CacheableImpl;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.task.api.IFunction;
 
-public class ReduceOpFunction<T> implements IFunction {
+public class ReduceOpFunction<T> implements IFunction, Receptor {
   private static final long serialVersionUID = -4344592105191874L;
 
   private ReduceFunction<T> reduceFn;
@@ -29,5 +32,10 @@ public class ReduceOpFunction<T> implements IFunction {
     T t1 = (T) object1;
     T t2 = (T) object2;
     return reduceFn.reduce(t1, t2);
+  }
+
+  @Override
+  public void add(String name, DataObject<?> data) {
+    reduceFn.addInput(name, new CacheableImpl<>(data));
   }
 }

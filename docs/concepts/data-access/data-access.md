@@ -1,70 +1,111 @@
-#### Twister2 and HDFS Configuration File
+### Data Access
 
-The Hadoop Distributed File System (HDFS) (https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html) is a high fault-tolerant distributed file system. 
-It provides high throughput access to the data which is suitable for the applications require large datasets. It supports the master/slave architecture
-which consists of namenode and datanode. 
+Data access abstracts out various data sources including files and streaming sources to simplify the
+job of an application developer. Since the goal of Twister2 is to provide a toolkit which allows 
+developers to choose the desired components, Twister2 includes a lower level API for data access 
+in addition to a higher level abstraction. For example, the abstraction of a File System allows Twister2 
+to support NFS, HDFS, and local file system, which enables the developer to store and read data from 
+any file by specifying only the URL. 
 
-Twister2 provides the support for both local file system and distributed file system. The main configuration file for integrating Twister2 with HDFS
-is data.yaml configuration file. The main contents of data.yaml are given below. 
+The important role of the data access layer is to handle data partitioning and data locality in an 
+efficient manner. An unbalanced set of data partitions will create stragglers, which will increase 
+the execution time of the application. The data access layer is responsible for providing the developer
+with appropriate information regarding data locality. Data locality directly affects the execution 
+time since unnecessary data movements will degrade the efficiency of the application. In addition 
+to the built-in functions of Twister2, the developer is given the option to plug in custom logic to 
+handle data partitioning and locality.
 
-## data.yaml file
+For more details, please refer the manuscript
 
-The user has to specify their HDFS cluster namenode in twister2.hdfs.url and twister2.hdfs.namenode. Also, they have to
-specify the respective data directory name as twister2.hdfs.data.directory.
+https://onlinelibrary.wiley.com/doi/epdf/10.1002/cpe.5189
 
-\`\`yaml
+### Main components of data access layer
 
-```text
-twister2.hadoop.home: "${HADOOP_HOME}"
+The data access layer consists of the following main components namely
 
-twister2.hdfs.url: "hdfs://namenodename:9000//"
+1. Input Split
+2. Input Partitioner or Input Formatter
+3. Input Split Assigner
+4. OutputWriter
+5. FileSystem
+6. Dataset
 
-twister2.hdfs.class: "org.apache.hadoop.hdfs.DistributedFileSystem"
+We will briefly discuss the functionality of each components as below. 
 
-twister2.hdfs.implementation.key: "fs.hdfs.impl"
+#### Input Split
 
-twister2.hdfs.config.directory: "${HADOOP_HOME}/etc/hadoop/core-site.xml"
+The input split provides information on a particular part of a file, possibly located or hosted
+on a distributed file system and replicated among several hosts. Twister2 supports the following type
+of input splits namely
+1. FileInputSplit 
+2. TextInputSplit
+3. DelimitedInputSplit
+4. CSVInputSplit
+5. BinaryInputSplit
+6. GenericCSVInputSplit
+7. LocatableInputSplit
 
-twister2.hdfs.data.directory: "/user/data-directoryname/"
+#### Input Partitioner
 
-twister2.hdfs.namenode: "namenodename"
+The input partitioner describes 
+ * how the input data is partitioned based on the task parallelism value 
+ * how to read the records from the input split
+ 
+Twister2 supports the various types of input partitioners or formatters namely
 
-twister2.hdfs.namenode.port: "9000"
-```
+1. FileInputPartitioner - It is the abstraction for the file input partitioner. It create the split
+   of the input files which is based on the number of total number of bytes divided by the task 
+   parallelism value. 
+   
+2. FixedInputPartitioner - It is really useful if the user exactly know the number of lines
+   available in the input data file. It split or partition the files which is based on the total 
+   number of lines divided by the task parallelism value.
+   
+3. CompleteFileInputPartitioner - It is the abstraction for partitioning and reading the complete 
+   file without creating the splits. 
+   
+4. BinaryInputPartitioner - It is used to split the binary input file. 
+     
+#### Input Split Assigner
 
-\`\`
+The input split assigner distributes the input splits among the task instances of the data source 
+exists. It also return the next input split that shall be consumed. The consumer's host is passed as 
+a parameter to allow localized assignments. Twister2 supports two types of input split assigners 
+namely 
 
-#### HDFS Data Context Class
+1. OrderedInputSplitAssigner - It assigns the input splits based on the partitions and key value.
+2. LocatableInputSplitAssigner - It assigns to each host splits that are local, before assigning 
+   splits that are not local.
 
-The main contents of HDFS Data Context class is 
+#### OutputWriter
 
-```text
-    private static final String HDFS_URL = "twister2.hdfs.url";
-    private static final String HDFS_URL_DEFAULT = "hdfs://namenodename:9000//";
+The output writer is mainly responsible for writing the output to the file. Twister2 has the 
+TextOutputWriter which abstracts from the FileOutputWriter for writing the data to the local file 
+system or to the distributed file system(HDFS).
 
-    private static final String HADOOP_HOME = "twister2.hadoop.home";
-    private static final String HADOOP_HOME_DEFAULT = "${HADOOP_HOME}";
+#### FileSystem
 
-    private static final String HDFS_CLASS = "twister2.hdfs.class";
-    private static final String HDFS_CLASS_DEFAULT = "org.apache.hadoop.hdfs.DistributedFileSystem";
+The file system is an abstraction of generic file system which can be extended to support both
+distributed file system or a local file system. Twister2 file system supports the following
+operations namely
 
-    private static final String HDFS_IMPLEMENTATION_KEY = "twister2.hdfs.implementation.key";
-    private static final String HDFS_IMPLEMENTATION_KEY_DEFAULT = "fs.hdfs.impl";
+1. File I/O Operations for both HDFS and local file system
+2. BlockLocation for both both HDFS and local file system 
+3. FileStatus for both HDFS and local file system
+4. File Path operations for both HDFS and local file system
 
-    private static final String HDFS_CONFIG_DIRECTORY = "twister2.hdfs.config.directory";
-    private static final String HDFS_CONFIG_DIRECTORY_DEFAULT = "$HADOOP_HOME/etc/hadoop/core-site.xml";
+#### DataSet
 
-    private static final String HDFS_DATA_DIRECTORY = "twister2.hdfs.data.directory";
-    private static final String HDFS_DATA_DIRECTORY_DEFAULT = "/user/datadirectoryname/";
+It represents the distributed data set. It has the partition of a distributed data set. Also, it
+has the functionality to split and retrieve the partition of a distributed data set.   
 
-    private static final String HDFS_NAMENODE_NAME = "twister2.hdfs.namenode";
-    private static final String HDFS_NAMENODE_DEFAULT = "namenodename";
+#### Twister2 and HDFS 
 
-    private static final String HDFS_NAMENODE_PORT = "twister2.hdfs.namenode.port";
-    private static final Integer HDFS_NAMENODE_PORT_DEFAULT = 9000;
-```
-    
-
+The Hadoop Distributed File System (HDFS) (https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html) 
+is a high fault-tolerant distributed file system. It provides high throughput access to the data 
+which is suitable for the applications require large datasets. It supports the master/slave architecture
+which consists of namenode and datanode. Twister2 has the interface to connect the HDFS using 
+the Hadoop/HDFS API's.
 
 
     

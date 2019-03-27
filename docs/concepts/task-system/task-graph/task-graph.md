@@ -39,18 +39,6 @@ instances of the task graph.
 \(Reference: Patterns for Parallel Programming, Chapter 3 \(2\) & 
 [https://patterns.eecs.berkeley.edu/?page\_id=609](https://patterns.eecs.berkeley.edu/?page_id=609)\)
 
-## Task Graph in Twister2
-
-* The task graph system in Twister2 is mainly aimed to support the directed dataflow task graph 
-  which consists of task vertices and task edges. 
-   * The task vertices represent the source and target task vertex 
-   * The task edge represent the edges to connect the task vertices
-* The task graph in Twister2  
-  * supports iterative data processing - For example, in K-Means clustering algorithm, at the end of 
-    every iteration, data points and centroids are stored in the DataSet which will be used for the 
-    next iteration 
-  * It doesn’t allow loops or self-loops or cycles
-  
 ## Directed Task Graph and Undirected Task Graph
 
 There are two types of task graphs namely directed task graph and undirected task graph. In directed
@@ -61,14 +49,35 @@ task graph.
 
 ![Directed Graph](../../../images/directed.png)  ![UnDirected Graph](../../../images/undirected.png)
 
-## Dataflow Task Graph
+## Streaming Task Graph
 
-It consists of set of task vertices and task edges. It describes the details about how the data is 
-consumed (in this example using all-reduce communication) between the task vertices.  
+Stream refers the process of handling unbounded sequence of data units. The streaming application 
+that can continuosly consumes input stream units and produces the output stream units. The streaming
+task graph is mainly responsible for building and executing the streaming applications.
 
- * Source Task - It extends the BaseSource and implements the Receptor interface which is given below.
- * Compute Task - It implements the IFunction interface which is given below.
- * Sink Task - It extends the BaseSink and implements the Collector interface. 
+## Batch Task Graph
+
+Batch processing refers the process of handling bounded sequence of data units. Batch applications 
+mainly consumes bounded data units and produces the data units. The batch task graph is mainly 
+responsible for building and executing the batch applications.
+
+## Task Graph in Twister2
+
+* The task graph system in Twister2 is mainly aimed to support the directed dataflow task graph 
+  which consists of task vertices and task edges. 
+   * The task vertices represent the source and target task vertex 
+   * The task edge represent the edges to connect the task vertices
+   
+* The task graph in Twister2  
+  * supports iterative data processing - For example, in K-Means clustering algorithm, at the end of 
+    every iteration, data points and centroids are stored in the DataSet which will be used for the 
+    next iteration 
+  * It doesn’t allow loops or self-loops or cycles
+    
+* It describes the details about how the data is consumed between the task vertices.  
+  * Source Task - It extends the BaseSource and implements the Receptor interface which is given below.
+  * Compute Task - It implements the IFunction interface which is given below.
+  * Sink Task - It extends the BaseSink and implements the Collector interface. 
 
 ## Implementation Details
 

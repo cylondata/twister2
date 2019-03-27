@@ -23,17 +23,18 @@ public class CacheSource<T> extends BaseSource<T> {
   private static final Logger LOG = Logger.getLogger(CacheSource.class.getName());
 
   //TODO: need to check this codes logic developed now just based on the data object API
-  private int count = getDataObject().getPartitionCount();
+  private int count = 0;
   private int current = 0;
   private DataObject<T> datapoints = null;
 
   public CacheSource(DataObject<T> datapoints) {
     this.datapoints = datapoints;
+    count = getDataObject().getPartitionCount();
   }
 
   @Override
   public boolean hasNext() {
-    boolean hasNext = (current < count) ? getDataObject().getPartitions(current)
+    boolean hasNext = (current < count) ? getDataObject().getPartitions(context.getIndex())
         .getConsumer().hasNext() : false;
 
     while (++current < count && !hasNext) {
@@ -44,7 +45,7 @@ public class CacheSource<T> extends BaseSource<T> {
 
   @Override
   public T next() {
-    return getDataObject().getPartitions(current).getConsumer().next();
+    return getDataObject().getPartitions(context.getIndex()).getConsumer().next();
   }
 
   private List<T> getData() {
