@@ -13,14 +13,14 @@ package edu.iu.dsc.tws.examples.ml.svm.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.BaseMapFunction;
+import edu.iu.dsc.tws.api.tset.BaseIterableMapFunction;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.test.Predict;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 
-public class SvmTestMap extends BaseMapFunction<double[][], Double> {
+public class SvmTestMap extends BaseIterableMapFunction<double[][], Double> {
 
   private static final Logger LOG = Logger.getLogger(SvmTestMap.class.getName());
 
@@ -40,7 +40,13 @@ public class SvmTestMap extends BaseMapFunction<double[][], Double> {
   }
 
   @Override
-  public Double map(double[][] doubles) {
+  public void prepare() {
+
+  }
+
+  @Override
+  public Double map(Iterable<double[][]> t) {
+    double[][] doubles = t.iterator().next();
     this.binaryBatchModel = DataUtils.updateModelData(this.binaryBatchModel, doubles);
     this.predict = new Predict(this.binaryBatchModel.getX(), this.binaryBatchModel.getY(),
         this.binaryBatchModel.getW());
@@ -54,10 +60,5 @@ public class SvmTestMap extends BaseMapFunction<double[][], Double> {
     }
 
     return this.localAccuracy;
-  }
-
-  @Override
-  public void prepare() {
-
   }
 }

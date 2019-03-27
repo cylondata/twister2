@@ -17,13 +17,14 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.tset.BaseIterableMapFunction;
 import edu.iu.dsc.tws.api.tset.BaseMapFunction;
 import edu.iu.dsc.tws.api.tset.BaseSource;
 import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
@@ -73,7 +74,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
 
     for (int i = 0; i < iterations; i++) {
-      MapTSet<double[][], double[][]> kmeansTSet = points.map(new KMeansMap());
+      IterableMapTSet<double[][], double[][]> kmeansTSet = points.map(new KMeansMap());
       kmeansTSet.addInput("centers", centers);
       AllReduceTLink<double[][]> reduced = kmeansTSet.allReduce((t1, t2) -> {
         double[][] newCentroids = new double[t1.length]
@@ -93,24 +94,26 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
         + Arrays.deepToString(centers.getData().get(0)));
   }
 
-  public class KMeansMap extends BaseMapFunction<double[][], double[][]> {
+  public class KMeansMap extends BaseIterableMapFunction<double[][], double[][]> {
     private int dimension;
-
-    @Override
-    public double[][] map(double[][] doubles) {
-      //TODO: cast needed since the context inputmap can hold many types of TSets, Solution?
-      double[][] centers = (double[][]) context.getInput("centers").
-          getPartitionData(context.getIndex());
-      KMeansCalculator kMeansCalculator = new KMeansCalculator(doubles, centers, dimension);
-      double[][] kMeansCenters = kMeansCalculator.calculate();
-      return kMeansCenters;
-    }
 
     @Override
     public void prepare() {
       Config cfg = context.getConfig();
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
 
+    }
+
+    @Override
+    public double[][] map(Iterable<double[][]> t) {
+
+      double[][] data = t.iterator().next();
+      //TODO: cast needed since the context inputmap can hold many types of TSets, Solution?
+      double[][] centers = (double[][]) context.getInput("centers").
+          getPartitionData(context.getIndex());
+      KMeansCalculator kMeansCalculator = new KMeansCalculator(data, centers, dimension);
+      double[][] kMeansCenters = kMeansCalculator.calculate();
+      return kMeansCenters;
     }
   }
 
