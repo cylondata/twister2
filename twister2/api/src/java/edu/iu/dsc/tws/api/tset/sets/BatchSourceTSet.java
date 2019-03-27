@@ -15,10 +15,8 @@ package edu.iu.dsc.tws.api.tset.sets;
 import java.util.Random;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
@@ -34,18 +32,6 @@ public class BatchSourceTSet<T> extends BatchBaseTSet<T> {
     this.source = src;
     this.name = "source-" + new Random(System.nanoTime()).nextInt(10);
     this.parallel = parallelism;
-  }
-
-  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.map(mapFn);
-  }
-
-  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.flatMap(mapFn);
   }
 
   public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
