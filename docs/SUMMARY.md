@@ -17,6 +17,7 @@
       * [Running Jobs](deployment/mesos/running-jobs.md)
       * [Twister2 Mesos Install](deployment/mesos/twister2-mesos-install.md)
   * [Slurm](deployment/slurm/running-jobs.md)
+  * [Docker](deployment/docker/running-jobs.md)
   * [Logging](deployment/logging.md)
 * [Developer Guide](guides/first-twister2-app.md)  
 * [Distributed Runtime](concepts/distributed-runtime.md)
