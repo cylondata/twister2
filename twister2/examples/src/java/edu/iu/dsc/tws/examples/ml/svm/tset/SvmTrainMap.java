@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.examples.ml.svm.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.BaseMapFunction;
+import edu.iu.dsc.tws.api.tset.BaseIterableMapFunction;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
 import edu.iu.dsc.tws.examples.ml.svm.sgd.pegasos.PegasosSgdSvm;
@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 
-public class SvmTrainMap extends BaseMapFunction<double[][], double[]> {
+public class SvmTrainMap extends BaseIterableMapFunction<double[][], double[]> {
 
   private static final Logger LOG = Logger.getLogger(SvmTrainMap.class.getName());
 
@@ -39,7 +39,13 @@ public class SvmTrainMap extends BaseMapFunction<double[][], double[]> {
   }
 
   @Override
-  public double[] map(double[][] dataPoints) {
+  public void prepare() {
+    this.w = this.binaryBatchModel.getW();
+  }
+
+  @Override
+  public double[] map(Iterable<double[][]> t) {
+    double[][] dataPoints = t.iterator().next();
     this.binaryBatchModel = DataUtils.updateModelData(this.binaryBatchModel, dataPoints);
     this.pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(),
         this.binaryBatchModel.getX(), this.binaryBatchModel.getY(),
@@ -54,10 +60,5 @@ public class SvmTrainMap extends BaseMapFunction<double[][], double[]> {
       e.printStackTrace();
     }
     return this.pegasosSgdSvm.getW();
-  }
-
-  @Override
-  public void prepare() {
-    this.w = this.binaryBatchModel.getW();
   }
 }

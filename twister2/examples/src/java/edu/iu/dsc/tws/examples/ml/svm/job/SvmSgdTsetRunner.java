@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.SVMReduce;
 import edu.iu.dsc.tws.examples.ml.svm.compute.SVMCompute;
@@ -101,7 +101,7 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
     initializeParameters();
     CachedTSet<double[][]> trainingData = loadTrainingData();
     CachedTSet<double[][]> testingData = loadTestingData();
-    MapTSet<double[], double[][]> svmTrainTset = trainingData
+    IterableMapTSet<double[], double[][]> svmTrainTset = trainingData
         .map(new SvmTrainMap(this.binaryBatchModel, this.svmJobParameters));
     //svmTset.addInput("trainingData", testingData);
     ReduceTLink<double[]> reduceTLink = svmTrainTset.reduce((t1, t2) -> {
@@ -121,7 +121,7 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
     LOG.info(String.format("Data : %s",
         Arrays.toString(wFinal)));
 
-    MapTSet<Double, double[][]> svmTestTset = testingData
+    IterableMapTSet<Double, double[][]> svmTestTset = testingData
         .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
     ReduceTLink<Double> reduceTestLink = svmTestTset.reduce((t1, t2) -> {
       double t = t1 + t2;

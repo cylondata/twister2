@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.api.tset.sets;
 
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.MapFunction;
@@ -46,18 +45,6 @@ public class MapTSet<T, P> extends BatchBaseTSet<T> {
     this.mapFn = mapFunc;
     this.parallel = parallelism;
     this.name = generateName("map", parent);
-  }
-
-  public <P1> MapTSet<P1, T> map(MapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.map(mFn);
-  }
-
-  public <P1> FlatMapTSet<P1, T> flatMap(FlatMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.flatMap(mFn);
   }
 
   public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
