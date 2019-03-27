@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.IterableFlatMapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class IterableFlatMapTSet<T, P> extends BaseTSet<T> {
+public class IterableFlatMapTSet<T, P> extends BatchBaseTSet<T> {
   private BaseTLink<P> parent;
 
   private IterableFlatMapFunction<P, T> mapFn;
