@@ -74,7 +74,7 @@ public class TeraSort extends TaskWorker {
 
   @Override
   public void execute() {
-    Timing.setDefaultTimingUnit(TimingUnit.NANO_SECONDS);
+    Timing.setDefaultTimingUnit(TimingUnit.MILLI_SECONDS);
     TaskGraphBuilder tgb = TaskGraphBuilder.newBuilder(config);
     tgb.setMode(OperationMode.BATCH);
 
