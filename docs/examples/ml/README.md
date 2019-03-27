@@ -8,4 +8,4 @@ algorithms in the upcoming releases.
 We have designed two main machine learning examples.
 
 1. [KMeans](kmeans/kmeans.md)
-2. [Support Vector Machines](svm/svm.md)
+2. [Support Vector Machines (Task)](svm/svm.md)
