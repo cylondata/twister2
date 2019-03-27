@@ -51,7 +51,7 @@ vector we do a model synchronization. A preliminary research we did on this prov
 is highly efficient and accuracy of the algorithm doesn't dilute with the model synchronization 
 frequency.
 
-##Distributed SVM Batch Model
+##Distributed SVM Batch Model - Task Example
 
 ![Twister2 Distributed SVM Batch Model](images/twister2_ml_simple_model_svm.png)
 
@@ -347,8 +347,239 @@ to convert data to the dense format.
  #### Sample Run
  
  ```bash
-./twister2-0.1.0/bin/twister2 submit standalone jar twister2-0.1.0/examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb 4096 -disk_gb 2 -instances 1 -alpha 0.1 -C 1.0 -exp_name test-svm -features 22 -samples 35000 -iterations 10 -training_data_dir <path-to-training-csv> -testing_data_dir <path-to-testing-csv> -parallelism 8 -workers 1 -cpus 1 -threads 4
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb 4096 -disk_gb 2 -instances 1 -alpha 0.1 -C 1.0 -exp_name test-svm -features 22 -samples 35000 -iterations 10 -training_data_dir <path-to-training-csv> -testing_data_dir <path-to-testing-csv> -parallelism 8 -workers 1 -cpus 1 -threads 4
 ```
 
 
 
+##Distributed SVM Batch Model - Tset Example
+
+TSet is an abstraction for the Task API. The reason behind using TSet is to provide 
+much easier coding environment for API users. For developer level using Task Example
+will be much easier when you want to write plug-ins for existing programmes. In TSet
+level most of the Task level APIs are abstracted to provide a readable interface. 
+
+The design model used in here is as same as the task example. Let's go through the code.
+
+
+```java
+CachedTSet<double[][]> trainingData = loadTrainingData();
+    CachedTSet<double[][]> testingData = loadTestingData();
+    MapTSet<double[], double[][]> svmTrainTset = trainingData
+        .map(new SvmTrainMap(this.binaryBatchModel, this.svmJobParameters));
+    //svmTset.addInput("trainingData", testingData);
+    ReduceTLink<double[]> reduceTLink = svmTrainTset.reduce((t1, t2) -> {
+      double[] w1 = new double[t1.length];
+      try {
+        w1 = Matrix.add(t1, t2);
+      } catch (MatrixMultiplicationException e) {
+        e.printStackTrace();
+      }
+      return w1;
+    });
+
+    CachedTSet<double[]> finalW = reduceTLink
+        .map(new ModelAverager(this.svmJobParameters.getParallelism())).cache();
+    double[] wFinal = finalW.getData().get(0);
+    this.binaryBatchModel.setW(wFinal);
+    LOG.info(String.format("Data : %s",
+        Arrays.toString(wFinal)));
+
+    MapTSet<Double, double[][]> svmTestTset = testingData
+        .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
+    ReduceTLink<Double> reduceTestLink = svmTestTset.reduce((t1, t2) -> {
+      double t = t1 + t2;
+      return t;
+    });
+    CachedTSet<Double> finalAcc = reduceTestLink
+        .map(new AccuracyAverager(this.svmJobParameters.getParallelism())).cache();
+    double acc = finalAcc.getData().get(0);
+    LOG.info(String.format("Training Accuracy : %f ", acc));
+```
+
+### Code Explained
+
+First, we need to load the training data, 
+
+```java
+CachedTSet<double[][]> data = this.twisterBatchContext.createSource(
+        new DataLoadingTask(this.binaryBatchModel, this.svmJobParameters, "train"),
+        this.dataStreamerParallelism).setName("trainingDataSource").cache();
+```
+
+Here we need to create a data loading task. 
+
+When using TSets, you need to load the data using the same Data API interfaces. 
+But here, we provided less abstraction towards data loading, so that user can 
+define their logics within **DataLoadingTask** (More details are below). 
+
+In the DataLoading task, the data object must be defined with reference to the number
+of partitions considering the total data size. 
+
+```java
+ public void prepare() {
+    this.config = context.getConfig();
+    this.parallelism = context.getParallelism();
+    // dimension is +1 features as the input data comes along with the label
+    this.dimension = this.binaryBatchModel.getFeatures() + 1;
+    if ("train".equalsIgnoreCase(this.dataType)) {
+      this.dataSize = this.binaryBatchModel.getSamples();
+      this.localPoints = new double[this.dataSize / (this.parallelism + 1)][this.dimension];
+      this.source = new DataSource(config, new LocalFixedInputPartitioner(new
+          Path(this.svmJobParameters.getTrainingDataDir()), this.parallelism, config,
+          this.dataSize), this.parallelism);
+    }
+    if ("test".equalsIgnoreCase(this.dataType)) {
+      this.dataSize = this.svmJobParameters.getTestingSamples();
+      this.localPoints = new double[this.dataSize / (this.parallelism + 1)][this.dimension];
+      this.source = new DataSource(config, new LocalFixedInputPartitioner(new
+          Path(this.svmJobParameters.getTestingDataDir()), this.parallelism, config,
+          this.dataSize), this.parallelism);
+    }
+  }
+```
+
+Here the data loader has to load the data considering training and testing data sizes.
+So the source path and data sizes are different. The data size means the number of 
+lines in your file (it must be in csv format as mentioned in the task example section).
+Currently that field is not implicitly handled in the current release (0.2.0).
+
+**DataLoadingTask** extends the **BaseSource**, so the expected data type can be defined. 
+The overriden **next()** method uses the Twister2 Data API to load the data. 
+
+```java
+  public double[][] next() {
+    LOG.fine("Context Prepare Task Index:" + context.getIndex());
+    InputSplit inputSplit = this.source.getNextSplit(context.getIndex());
+    int totalCount = 0;
+    while (inputSplit != null) {
+      try {
+        int count = 0;
+        while (!inputSplit.reachedEnd()) {
+          String value = (String) inputSplit.nextRecord(null);
+          if (value == null) {
+            break;
+          }
+          String[] splts = value.split(",");
+          if (debug) {
+            LOG.info(String.format("Count %d , splits %d, dimensions %d", count, splts.length,
+                this.dimension));
+          }
+
+          if (count >= this.localPoints.length) {
+            break; // TODO : unbalance division temp fix
+          }
+          for (int i = 0; i < this.dimension; i++) {
+            this.localPoints[count][i] = Double.valueOf(splts[i]);
+          }
+          if (value != null) {
+            count += 1;
+          }
+        }
+        inputSplit = this.source.getNextSplit(context.getIndex());
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Failed to read the input", e);
+      }
+    }
+    return this.localPoints;
+  }
+```
+
+###### Note : Loading data format depends on the data processing logics that you have aleady defined in your program. Handl the data loading with care. You can use a filter function to process them in the expected way.
+
+The loaded data has to be referenced via a **Cacheable Tset => CashedTSet** object. 
+
+```java
+    CachedTSet<double[][]> trainingData = loadTrainingData();
+    CachedTSet<double[][]> testingData = loadTestingData();
+```
+
+Now, the training has to be done on the loaded data. 
+
+```java
+  MapTSet<double[], double[][]> svmTrainTset = trainingData
+        .map(new SvmTrainMap(this.binaryBatchModel, this.svmJobParameters));
+```
+The Training logic must be programmed inside the a Map class which is extended from the
+**BaseMapFunction<T,O)>**. Here the input data format defines **T** and the expected 
+output data format defines **O**.  
+
+Then the reduce function has to be called to reduce the trained models to get a
+globally synchronized model. Here, the lambda functions has been used to do it quite
+effectively without creating a new class. Here a **ReduceTLink** a TLink specialized
+to perform reduction operation is used. This is another abstraction we use in TSet based
+application development. 
+
+```java
+ReduceTLink<double[]> reduceTLink = svmTrainTset.reduce((t1, t2) -> {
+      double[] w1 = new double[t1.length];
+      try {
+        w1 = Matrix.add(t1, t2);
+      } catch (MatrixMultiplicationException e) {
+        e.printStackTrace();
+      }
+      return w1;
+    });
+```
+
+
+Next step is to obtain the averaged model over the executed reduction. 
+
+```java
+CachedTSet<double[]> finalW = reduceTLink
+        .map(new ModelAverager(this.svmJobParameters.getParallelism())).cache();
+    double[] wFinal = finalW.getData().get(0);
+```
+TSetLinks provide a Map interface to write customizable mapping functions depending user requirment
+to get processed output. Here a simple average is performed over the globally synchronized data
+using the **ModelAverager** class. It is nothing but averaging to get the mean of the globally
+synchronied model with respect to the parallelism. 
+
+**getData** method returns the partitions and as this is a reduce example there 
+will be a single partition. 
+
+ 
+ In the testing stage, we used the same model as used in the task example. The testing is also
+ done in parallel. 
+ 
+ ```java
+IterableMapTSet<Double, double[][]> svmTestTset = testingData
+        .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
+    ReduceTLink<Double> reduceTestLink = svmTestTset.reduce((t1, t2) -> {
+      double t = t1 + t2;
+      return t;
+    });
+```
+
+As same as a training Mapper task, a testing mapper task is defined to run the
+SVM prediction within the **SVMTestMap** interface. We abstract the computation logic
+inside this Map class. And finally, a reduction is performed on the accuracy calculated
+per test data set. 
+
+```java
+ CachedTSet<Double> finalAcc = reduceTestLink
+        .map(new AccuracyAverager(this.svmJobParameters.getParallelism())).cache();
+    double acc = finalAcc.getData().get(0);
+    LOG.info(String.format("Training Accuracy : %f ", acc));
+``` 
+
+Final testing accuracy can be obtained by averaging through the globally synchronized value. 
+For that a simple map function can be plugged into the TSetLink. 
+
+###### Note we use a separate TSet Link per a specific task. 
+
+### Running TSet Based SVM
+
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb <ram-size-MB> -disk_gb <disk-size-in-GB> -instances <no-of-instances> -alpha <learning rate> -C <training-constraint> -exp_name <experiment-name> -features <dimension of a data point> -samples <no-of-training-samples> -iterations <iterations> -training_data_dir <training-data-file> -testing_data_dir <testing-data-file>-parallelism <overall-parallelism> -workers <no-of-workers> -cpus <no-of-cpus> -threads <no-threads-for-scheduler> -svm_run_type tset -testing_samples <testing-samples>
+
+```
+
+#### Sample Run
+
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb 4096 -disk_gb 2 -instances 1 -alpha 0.1 -C 1.0 -exp_name test-svm -features 300 -samples 49749 -iterations 10 -training_data_dir <training-data-csv-file> -testing_data_dir <testing-data-csv-file> -parallelism 8 -workers 1 -cpus 1 -threads 4 -svm_run_type tset -testing_samples 14951
+
+```
+
+###### Note make sure you have formatted the CSV files as instructed in the SVM Task Example. 

@@ -99,7 +99,7 @@ public class DataLoadingTask extends BaseSource<double[][]> {
 
   @Override
   public double[][] next() {
-    LOG.fine("Context Prepare Center Task Index:" + context.getIndex());
+    LOG.fine("Context Prepare Task Index:" + context.getIndex());
     InputSplit inputSplit = this.source.getNextSplit(context.getIndex());
     int totalCount = 0;
     while (inputSplit != null) {
