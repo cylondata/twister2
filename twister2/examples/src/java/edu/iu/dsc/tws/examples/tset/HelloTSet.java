@@ -50,7 +50,7 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
 
       @Override
       public boolean hasNext() {
-        return count < 1;
+        return count < 4;
       }
 
       @Override
@@ -61,7 +61,7 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
     }, 4).setName("Source");
 
     PartitionTLink<int[]> partitioned = source.
-        partition(new LoadBalancePartitioner<>()).setName("part");
+        partition(new LoadBalancePartitioner<>());
     IterableMapTSet<int[], int[]> mapedPartition =
         partitioned.map((IterableMapFunction<int[], int[]>) ints -> {
           LOG.info("tests");
@@ -71,7 +71,7 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
             return new int[0];
           }
         },
-            4).setName("Mapped");
+            4);
 
     ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];
@@ -79,12 +79,12 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
         ret[i] = t1[i] + t2[i];
       }
       return ret;
-    }).setName("Reduce");
+    });
 
     reduce.sink(value -> {
       LOG.info("Results " + Arrays.toString(value));
       return false;
-    }).setName("sink");
+    });
 
     LOG.info("Ending  Hello TSet Example");
 
