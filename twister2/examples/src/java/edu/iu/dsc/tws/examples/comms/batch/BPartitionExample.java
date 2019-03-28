@@ -11,13 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -27,6 +28,12 @@ import edu.iu.dsc.tws.comms.api.batch.BPartition;
 import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 
 public class BPartitionExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BPartitionExample.class.getName());
@@ -34,6 +41,7 @@ public class BPartitionExample extends BenchWorker {
   private BPartition partition;
 
   private boolean partitionDone = false;
+  private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -54,6 +62,26 @@ public class BPartitionExample extends BenchWorker {
     // create the communication
     partition = new BPartition(communicator, taskPlan, sources, targets,
         MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector(), false);
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
+      int lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
+      int target = Integer.valueOf(args.get("target").toString());
+
+      int toThisFromOneSource = jobParameters.getTotalIterations() / targets.size();
+      if (jobParameters.getTotalIterations() % targets.size() > (target - lowestTarget)) {
+        toThisFromOneSource++;
+      }
+
+      List<int[]> expectedData = new ArrayList<>();
+
+      for (int i = 0; i < toThisFromOneSource * sources.size(); i++) {
+        expectedData.add(ints);
+      }
+
+      return expectedData.iterator();
+    }, new IteratorComparator<>(
+        IntArrayComparator.getInstance()
+    ));
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -90,17 +118,25 @@ public class BPartitionExample extends BenchWorker {
   }
 
   public class PartitionReceiver implements BulkReceiver {
-    private int expected;
+    private int lowestTarget = 0;
 
     @Override
-    public void init(Config cfg, Set<Integer> expectedIds) {
-      expected = jobParameters.getIterations();
+    public void init(Config cfg, Set<Integer> targets) {
+      if (targets.isEmpty()) {
+        partitionDone = true;
+        return;
+      }
+      this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
     }
 
     @Override
-    public boolean receive(int target, Iterator<Object> it) {
-      LOG.log(Level.INFO, String.format("%d Received message to %d count %d expected %d",
-          workerId, target, Iterators.size(it), expected));
+    public boolean receive(int target, Iterator<Object> object) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV,
+          workerId == 0 && target == lowestTarget);
+      BenchmarkUtils.markTotalTime(resultsRecorder, workerId == 0
+          && target == lowestTarget);
+      resultsRecorder.writeToCSV();
+      verifyResults(resultsVerifier, object, Collections.singletonMap("target", target));
       partitionDone = true;
       return true;
     }
