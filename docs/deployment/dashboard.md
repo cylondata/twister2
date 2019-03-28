@@ -1,6 +1,6 @@
 # Dashboard
 
-Twister2 dashboard gives you a comprehensive overview of all your jobs running in a cluster. Dashboard comes integrated with twister2's main binary build, but it runs as a separate and standalone process from twister2 framework. Due to this nature, you should manually start the dashboard, if required.
+Twister2 dashboard gives you a comprehensive overview of all your jobs running in a cluster. Dashboard comes bundled with twister2's main binary build, but it runs as a separate and standalone process from twister2 framework. Due to this nature, you should manually start the dashboard, if required.
 
 ## Starting dashboard
 
@@ -26,7 +26,7 @@ For more on datasource related configurations, refer [spring datasource document
 
 #### Webserver
 
-Dashboard process spawns an embedded tomcat instance on port 8080.
+Dashboard process spawns an embedded [tomcat](http://tomcat.apache.org/) instance on port 8080.
 How ever, this can be configured to use any other port. Refer [spring documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/howto-properties-and-configuration.html) for more information.
 
 ### log4j2.xml
