@@ -13,10 +13,13 @@ package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
@@ -31,6 +34,12 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
     this.bulkReceiver = receiver;
     this.limitPerKey = 1;
     this.isFinalBatchReceiver = true;
+  }
+
+  @Override
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
   }
 
   @Override

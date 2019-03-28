@@ -25,6 +25,9 @@ import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.typed.streaming.SPartitionCompute;
 
+/**
+ * todo add timing
+ */
 public class STPartitionExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(STPartitionExample.class.getName());

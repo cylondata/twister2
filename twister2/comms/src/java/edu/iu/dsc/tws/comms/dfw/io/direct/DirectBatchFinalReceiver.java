@@ -89,6 +89,8 @@ public class DirectBatchFinalReceiver implements MessageReceiver {
       targetMessages.put(d, new ArrayList<>());
     }
 
+    this.receiver.init(cfg, expectedIds.keySet());
+
     LOG.log(Level.FINE, String.format("%d Expected ids %s", executor, expectedIds));
   }
 

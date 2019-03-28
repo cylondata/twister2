@@ -198,6 +198,8 @@ public abstract class BenchWorker implements IWorker {
 
     private boolean timingCondition;
 
+    private boolean timingForLowestTargetOnly = false;
+
     public MapWorker(int task) {
       this.task = task;
       this.timingCondition = workerId == 0 && task == 0;
@@ -208,12 +210,15 @@ public abstract class BenchWorker implements IWorker {
       );
     }
 
+    public void setTimingForLowestTargetOnly(boolean timingForLowestTargetOnly) {
+      this.timingForLowestTargetOnly = timingForLowestTargetOnly;
+    }
+
     @Override
     public void run() {
       LOG.info(() -> "Starting map worker: " + workerId + " task: " + task);
 
-      for (int i = 0; i < jobParameters.getIterations()
-          + jobParameters.getWarmupIterations(); i++) {
+      for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
         // lets generate a message
         int flag = (i == jobParameters.getIterations() - 1) ? MessageFlags.LAST : 0;
 
@@ -222,7 +227,10 @@ public abstract class BenchWorker implements IWorker {
         }
 
         if (i >= jobParameters.getWarmupIterations()) {
-          Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
+          Timing.mark(TIMING_MESSAGE_SEND,
+              this.timingCondition
+                  && (!this.timingForLowestTargetOnly
+                  || i % jobParameters.getTaskStages().get(1) == 0));
         }
 
         sendMessages(task, inputDataArray, flag);

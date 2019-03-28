@@ -112,30 +112,37 @@ public class SBroadcastExample extends BenchWorker {
   public class BCastReceiver implements SingularReceiver {
 
     private int count = 0;
-    private int expected = 0;
-    private int warmUp = 0;
+    private int countToLowest = 0;
+
+    private int totalExpectedCount = 0;
 
     @Override
     public void init(Config cfg, Set<Integer> targets) {
-      expected = targets.size() * jobParameters.getIterations();
-      warmUp = targets.size() * jobParameters.getWarmupIterations();
+      this.totalExpectedCount = targets.size() * jobParameters.getTotalIterations();
     }
+
 
     @Override
     public boolean receive(int target, Object object) {
       count++;
-      if (count > this.warmUp) {
-        Timing.mark(TIMING_MESSAGE_RECV, workerId == 0
-            && target == receiverInWorker0);
+      if (target == receiverInWorker0) {
+        this.countToLowest++;
+        if (this.countToLowest > jobParameters.getWarmupIterations()) {
+          Timing.mark(TIMING_MESSAGE_RECV, workerId == 0
+              && target == receiverInWorker0);
+        }
+
+        verifyResults(resultsVerifier, object, null);
+
+        if (countToLowest == jobParameters.getTotalIterations()) {
+          Timing.mark(TIMING_ALL_RECV, workerId == 0 && target == receiverInWorker0);
+          BenchmarkUtils.markTotalAndAverageTime(resultsRecorder,
+              workerId == 0 && target == receiverInWorker0);
+          resultsRecorder.writeToCSV();
+        }
       }
 
-      verifyResults(resultsVerifier, object, null);
-
-      if (count == expected + warmUp) {
-        Timing.mark(TIMING_ALL_RECV, workerId == 0 && target == receiverInWorker0);
-        BenchmarkUtils.markTotalAndAverageTime(resultsRecorder,
-            workerId == 0 && target == receiverInWorker0);
-        resultsRecorder.writeToCSV();
+      if (count == this.totalExpectedCount) {
         bCastDone = true;
       }
       return true;
