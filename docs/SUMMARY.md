@@ -21,6 +21,7 @@
   * [Slurm](deployment/slurm/running-jobs.md)
   * [Docker](deployment/docker/running-jobs.md)
   * [Logging](deployment/logging.md)
+  * [Dashboard](deployment/dashboard.md)
 * [Developer Guide](guides/first-twister2-app.md)  
 * [Distributed Runtime](concepts/distributed-runtime.md)
 * [Programming APIs](concepts/programming-api.md)  
