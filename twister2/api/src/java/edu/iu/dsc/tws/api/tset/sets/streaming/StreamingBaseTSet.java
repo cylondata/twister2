@@ -27,10 +27,10 @@ package edu.iu.dsc.tws.api.tset.sets.streaming;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingAllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingAllReduceTLink;
@@ -94,8 +94,8 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
-                                       Selector<T, K> selector) {
+  public <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction,
+                                       Selector<K, T> selector) {
     throw new UnsupportedOperationException("Cache is not avilable in streaming operations");
   }
 

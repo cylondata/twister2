@@ -1,16 +1,14 @@
 # Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware" or "userdefined"
 twister2.streaming.taskscheduler: "roundrobin"
-#twister2.streaming.taskscheduler: "datalocalityaware"
 
 # Streaming Task Scheduler Class
 twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
 #twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler"
 #twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"
+#twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"
 
 #Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware" or "userdefined"
 twister2.batch.taskscheduler: "roundrobin"
-#twister2.batch.taskscheduler: "datalocalityaware"
-#twister2.batch.taskscheduler: "userdefined"
 
 #Batch Task Scheduler Class
 twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"

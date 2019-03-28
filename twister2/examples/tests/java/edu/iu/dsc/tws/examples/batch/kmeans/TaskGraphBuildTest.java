@@ -87,8 +87,8 @@ public class TaskGraphBuildTest {
   }
 
   private Config getConfig() {
-    String twister2Home = "/home/kannan/twister2/bazel-bin/scripts/package/twister2-0.2.0";
-    String configDir = "/home/kannan/twister2/twister2/taskscheduler/tests/conf/";
+    String twister2Home = "/home/username/twister2/bazel-bin/scripts/package/twister2-0.2.0";
+    String configDir = "/home/username/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
     return Config.newBuilder().putAll(config).build();

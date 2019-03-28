@@ -14,35 +14,31 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.MapFunction;
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.KIterableFlatMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.KIterableMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
 import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
+import edu.iu.dsc.tws.api.tset.sets.KIterableFlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.KIterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
-public class KeyedPartitionTLink<T, K> extends KeyValueTLink<T, K> {
-  private BaseTSet<T> parent;
+public class KeyedPartitionTLink<K, V> extends KeyValueTLink<K, V> {
+  private BaseTSet<V> parent;
 
   private PartitionFunction<K> partitionFunction;
 
-  private Selector<T, K> selector;
+  private Selector<K, V> selector;
 
-  public KeyedPartitionTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt,
-                             PartitionFunction<K> parFn, Selector<T, K> selc) {
+  public KeyedPartitionTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<V> prnt,
+                             PartitionFunction<K> parFn, Selector<K, V> selc) {
     super(cfg, tSetEnv);
     this.parent = prnt;
     this.partitionFunction = parFn;
@@ -55,35 +51,23 @@ public class KeyedPartitionTLink<T, K> extends KeyValueTLink<T, K> {
     return parent.getName();
   }
 
-  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn, int parallelism) {
-    MapTSet<P, T> set = new MapTSet<P, T>(config, tSetEnv, this, mapFn, parallelism);
-    children.add(set);
-    return set;
-  }
-
-  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn, int parallelism) {
-    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, this, mapFn, parallelism);
-    children.add(set);
-    return set;
-  }
-
-  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn, int parallelism) {
-    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, this, mapFn,
+  public <O> KIterableMapTSet<K, V, O> map(KIterableMapFunction<K, V, O> mapFn, int parallelism) {
+    KIterableMapTSet<K, V, O> set = new KIterableMapTSet<>(config, tSetEnv, this, mapFn,
         parallelism);
     children.add(set);
     return set;
   }
 
-  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn,
-                                               int parallelism) {
-    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
+  public <O> KIterableFlatMapTSet<K, V, O> flatMap(KIterableFlatMapFunction<K, V, O> mapFn,
+                                                   int parallelism) {
+    KIterableFlatMapTSet<K, V, O> set = new KIterableFlatMapTSet<>(config, tSetEnv, this,
         mapFn, parallelism);
     children.add(set);
     return set;
   }
 
-  public SinkTSet<T> sink(Sink<T> sink, int parallelism) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink, parallelism);
+  public SinkTSet<V> sink(Sink<V> sink, int parallelism) {
+    SinkTSet<V> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink, parallelism);
     children.add(sinkTSet);
     tSetEnv.run();
     return sinkTSet;
@@ -98,19 +82,19 @@ public class KeyedPartitionTLink<T, K> extends KeyValueTLink<T, K> {
     return partitionFunction;
   }
 
-  public Selector<T, K> getSelector() {
+  public Selector<K, V> getSelector() {
     return selector;
   }
 
   public void buildConnection(ComputeConnection connection) {
     DataType keyType = TSetUtils.getDataType(getClassK());
-    DataType dataType = TSetUtils.getDataType(getClassT());
+    DataType dataType = TSetUtils.getDataType(getClassV());
     connection.keyedPartition(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
         new TaskPartitionFunction<K>(partitionFunction), new TaskKeySelectorImpl<>(selector));
   }
 
   @Override
-  public KeyedPartitionTLink<T, K> setName(String n) {
+  public KeyedPartitionTLink<K, V> setName(String n) {
     super.setName(n);
     return this;
   }

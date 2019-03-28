@@ -17,18 +17,18 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.tset.CacheableImpl;
 import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class IterableMapOp<T, R> implements ICompute, Receptor {
+public class IterableMapOp<I, O> implements ICompute, Receptor {
   private static final long serialVersionUID = -1220168533L;
 
-  private IterableMapFunction<T, R> mapFn;
+  private IterableMapFunction<I, O> mapFn;
 
   private TaskContext context;
 
@@ -39,7 +39,7 @@ public class IterableMapOp<T, R> implements ICompute, Receptor {
   public IterableMapOp() {
   }
 
-  public IterableMapOp(IterableMapFunction<T, R> mapFn, boolean inputItr, boolean kyd) {
+  public IterableMapOp(IterableMapFunction<I, O> mapFn, boolean inputItr, boolean kyd) {
     this.mapFn = mapFn;
     this.inputIterator = inputItr;
     this.keyed = kyd;
@@ -48,16 +48,16 @@ public class IterableMapOp<T, R> implements ICompute, Receptor {
   @SuppressWarnings("unchecked")
   @Override
   public boolean execute(IMessage content) {
-    Iterable<T> data;
+    Iterable<I> data;
     if (inputIterator) {
-      data = new TSetIterable<>((Iterator<T>) content.getContent());
+      data = new TSetIterable<>((Iterator<I>) content.getContent());
     } else {
-      ArrayList<T> itr = new ArrayList<>();
-      itr.add((T) content.getContent());
+      ArrayList<I> itr = new ArrayList<>();
+      itr.add((I) content.getContent());
       data = new TSetIterable<>(itr.iterator());
     }
 
-    R result = mapFn.map(data);
+    O result = mapFn.map(data);
     return context.write(Constants.DEFAULT_EDGE, result);
   }
 

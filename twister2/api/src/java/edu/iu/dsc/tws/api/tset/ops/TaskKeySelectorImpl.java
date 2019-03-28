@@ -16,17 +16,17 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.TaskKeySelector;
 
-public class TaskKeySelectorImpl<T, K> implements TaskKeySelector {
-  private Selector<T, K> selector;
+public class TaskKeySelectorImpl<K, V> implements TaskKeySelector {
+  private Selector<K, V> selector;
 
-  public TaskKeySelectorImpl(Selector<T, K> selec) {
+  public TaskKeySelectorImpl(Selector<K, V> selec) {
     this.selector = selec;
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public Object select(Object data) {
-    return selector.select((T) data);
+    return selector.select((V) data);
   }
 
   @Override
