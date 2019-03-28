@@ -11,13 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -25,8 +27,16 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 
 /**
  * This class is a example use of the keyed partition function
@@ -38,6 +48,7 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
   private BKeyedPartition partition;
 
   private boolean partitionDone = false;
+  private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -62,6 +73,32 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
     // now initialize the workers
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
+      int lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
+      int target = Integer.valueOf(args.get("target").toString());
+      Set<Integer> keysRoutedToThis = new HashSet<>();
+      for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
+        if (i % targets.size() == target - lowestTarget) {
+          keysRoutedToThis.add(i);
+        }
+      }
+
+      List<Tuple<Integer, int[]>> expectedData = new ArrayList<>();
+
+      for (Integer key : keysRoutedToThis) {
+        for (int i = 0; i < sources.size(); i++) {
+          expectedData.add(new Tuple<>(key, ints));
+        }
+      }
+
+      return expectedData.iterator();
+    }, new IteratorComparator<>(
+        new TupleComparator<>(
+            (d1, d2) -> true, //any int
+            IntArrayComparator.getInstance()
+        )
+    ));
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
         workerId, sources, 1, tasksOfExecutor));
@@ -97,20 +134,26 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
   }
 
   public class PartitionReceiver implements BulkReceiver {
-    private int count = 0;
-    private int expected;
+    private int lowestTarget = 0;
 
     @Override
-    public void init(Config cfg, Set<Integer> expectedIds) {
-      expected = expectedIds.size() * jobParameters.getIterations();
+    public void init(Config cfg, Set<Integer> targets) {
+      if (targets.isEmpty()) {
+        partitionDone = true;
+        return;
+      }
+      this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
     }
 
     @Override
-    public boolean receive(int target, Iterator<Object> it) {
-      LOG.log(Level.INFO, String.format("%d Received message %d count %d",
-          workerId, target, Iterators.size(it)));
+    public boolean receive(int target, Iterator<Object> object) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV,
+          workerId == 0 && target == lowestTarget);
+      BenchmarkUtils.markTotalTime(resultsRecorder, workerId == 0
+          && target == lowestTarget);
+      resultsRecorder.writeToCSV();
+      verifyResults(resultsVerifier, object, Collections.singletonMap("target", target));
       partitionDone = true;
-
       return true;
     }
   }
