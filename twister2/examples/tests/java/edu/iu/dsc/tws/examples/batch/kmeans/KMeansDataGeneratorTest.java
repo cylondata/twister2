@@ -80,7 +80,7 @@ public class KMeansDataGeneratorTest {
   public void testUniqueSchedules2() throws IOException {
     Config config = getConfig();
 
-    String dinputDirectory = "hdfs://kannan-Precision-5820-Tower-X-Series:9000/tmp/testdinput";
+    String dinputDirectory = "hdfs://namenode:9000/tmp/testdinput";
     int numFiles = 1;
     int dsize = 20;
     int dimension = 2;
@@ -145,7 +145,7 @@ public class KMeansDataGeneratorTest {
   public void testUniqueSchedules4() throws IOException {
     Config config = getConfig();
 
-    String cinputDirectory = "hdfs://kannan-Precision-5820-Tower-X-Series:9000/tmp/testcinput";
+    String cinputDirectory = "hdfs://namenode:9000/tmp/testcinput";
 
     int numFiles = 1;
     int csize = 4;
@@ -175,8 +175,8 @@ public class KMeansDataGeneratorTest {
   }
 
   private Config getConfig() {
-    String twister2Home = "/home/kannan/twister2/bazel-bin/scripts/package/twister2-0.2.0";
-    String configDir = "/home/kannan/twister2/twister2/taskscheduler/tests/conf/";
+    String twister2Home = "/home/username/twister2/bazel-bin/scripts/package/twister2-0.2.0";
+    String configDir = "/home/username/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
     return Config.newBuilder().putAll(config).build();
