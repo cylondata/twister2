@@ -88,7 +88,7 @@ To generate and install maven artifacts to your local repository, run following 
 
 ```./util/mvn/install-local-snapshot.sh```
 
-[Twister2 Applications](https://github.com/DSC-SPIDAL/twister2applications) is a repository containing a set of examples and applications written as maven modules which exploit twister2 maven artifacts.
+For more details refer the section [Generate Maven Artifacts](generate-maven.md).
 
 ## FAQ
 
