@@ -82,7 +82,7 @@ When you compile Twister2 it will automatically download and compile OpenMPI 3.1
  ```
 ## Generating Maven Artifacts
 
-Although twitser2 use bazel as its build system, it has an option to generate maven artifacts for each twister2 module.
+Although twister2 use bazel as its build system, it has an option to generate maven artifacts for each twister2 module.
 
 To generate and install maven artifacts to your local repository, run following command at the root of twister2 source.
 
