@@ -82,7 +82,7 @@ public class IterableMapTSet<T, P> extends BatchBaseTSet<T> {
   }
 
   @Override
-  public BaseTSet<T> setName(String n) {
+  public IterableMapTSet<T, P> setName(String n) {
     this.name = n;
     return this;
   }
