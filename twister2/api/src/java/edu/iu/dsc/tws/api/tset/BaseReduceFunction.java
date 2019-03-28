@@ -11,5 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+
 public abstract class BaseReduceFunction extends TBaseFunction implements ReduceFunction {
 }
