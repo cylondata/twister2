@@ -12,14 +12,15 @@
 
 package edu.iu.dsc.tws.examples.comms.batch;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -30,13 +31,24 @@ import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 
+/**
+ * todo fix verification
+ */
 public class BDKeyedGatherExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(BDKeyedGatherExample.class.getName());
 
   private BKeyedGather keyedGather;
 
   private boolean gatherDone;
+  private ResultsVerifier<int[], Iterator<Tuple<Integer, Iterator<int[]>>>> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -76,12 +88,45 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
       }
     }
 
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
+      int lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
+      int target = Integer.valueOf(args.get("target").toString());
+      Set<Integer> keysRoutedToThis = new HashSet<>();
+      for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
+        if (i % targets.size() == target - lowestTarget) {
+          keysRoutedToThis.add(i);
+        }
+      }
+
+      List<int[]> dataForEachKey = new ArrayList<>();
+      for (int i = 0; i < sources.size(); i++) {
+        dataForEachKey.add(ints);
+      }
+
+      List<Tuple<Integer, Iterator<int[]>>> expectedData = new ArrayList<>();
+
+      for (Integer key : keysRoutedToThis) {
+        expectedData.add(new Tuple<>(key, dataForEachKey.iterator()));
+      }
+
+      return expectedData.iterator();
+    }, new IteratorComparator<>(
+        new TupleComparator<>(
+            (d1, d2) -> true, //any int
+            new IteratorComparator<>(
+                IntArrayComparator.getInstance()
+            )
+        )
+    ));
+
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
         workerId, sources, 1, tasksOfExecutor));
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
-      Thread mapThread = new Thread(new MapWorker(t));
+      MapWorker mapWorker = new MapWorker(t);
+      mapWorker.setTimingForLowestTargetOnly(true);
+      Thread mapThread = new Thread(mapWorker);
       mapThread.start();
     }
   }
@@ -116,31 +161,25 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
   }
 
   public class FinalReduceReceiver implements BulkReceiver {
+    private int lowestTarget = 0;
+
     @Override
-    public void init(Config cfg, Set<Integer> expectedIds) {
+    public void init(Config cfg, Set<Integer> targets) {
+      if (targets.isEmpty()) {
+        gatherDone = true;
+        return;
+      }
+      this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public boolean receive(int target, Iterator<Object> it) {
-      LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-
-      if (it == null) {
-        return true;
-      }
-
-      while (it.hasNext()) {
-        Tuple<Object, Object> currentPair = (Tuple) it.next();
-        Object key = currentPair.getKey();
-        Iterator dataIterator = (Iterator) currentPair.getValue();
-        int[] data = new int[0];
-        if (dataIterator.hasNext()) {
-          data = (int[]) dataIterator.next();
-        }
-        int noOfSuchArrays = Iterators.size(dataIterator);
-        LOG.log(Level.INFO, String.format("%d Results : key: %s, Size : %d, Count : %d",
-            workerId, key, data.length, noOfSuchArrays));
-      }
+    public boolean receive(int target, Iterator<Object> object) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV,
+          workerId == 0 && target == lowestTarget);
+      BenchmarkUtils.markTotalTime(resultsRecorder, workerId == 0
+          && target == lowestTarget);
+      resultsRecorder.writeToCSV();
+      verifyResults(resultsVerifier, object, Collections.singletonMap("target", target));
       gatherDone = true;
       return true;
     }
