@@ -18,8 +18,8 @@ We support the following components in Twister2
     3. Mesos
     4. Slurm 
     5. Nomad
-2. Parallel and Distributed Communications in HPC and Cloud Environments
-    1. Twister2:Net - a data level dataflow communication library for streaming and large scale batch analysis
+2. Parallel and Distributed Operators in HPC and Cloud Environments
+    1. Twister2:Net - a data level dataflow operator library for streaming and large scale batch analysis
     2. Harp - a BSP (Bulk Synchronous Processing) innovative collective framework for parallel applications and machine learning at message level
     3. OpenMPI (HPC Environments only) at message level
 3. Task System
@@ -32,16 +32,21 @@ We support the following components in Twister2
     3. Executor - Execution of task graph     
        * Batch executor
        * Streaming executor
-4. API for creating Task Graph and Communication
-    1. Communication API
-    2. Task based API
+4. TSet for distributed data representation (Similar to Spark RDD, Flink DataSet and Heron Streamlet)
+    1. Iterative computations
+    2. Data caching
+5. API for streaming and batch applications
+    1. Operator API
+    2. Task Graph based API
     3. Data API (TSet API)
-5. Support for storage systems
+6. Support for storage systems
     1. HDFS
     2. Local file systems
     3. NFS for persistent storage
-6. Web UI for monitoring Twister2 Jobs
-7. Apache Storm Compatibility API
+7. Web UI for monitoring Twister2 Jobs
+8. Apache Storm Compatibility API
+9. Connected DataFlow (Experimental)
+    1. Supports creation of multiple dataflow graphs executing in a single job
 
 Twister2 can be deployed both in HPC and cloud environments. When deployed in a HPC environment, it 
 can use OpenMPI for its communications. It can be programmed at different levels depending on the 
