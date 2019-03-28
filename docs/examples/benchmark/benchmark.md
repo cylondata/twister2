@@ -146,7 +146,7 @@ Currently twister2 benchmark suite supports following types of argument values d
 
 1. fixed
 
-In fixed type, this argument will be always passed as a constant to the jar.
+  In fixed type, this argument will be always passed as a constant to the jar.
 
 2. array
 
