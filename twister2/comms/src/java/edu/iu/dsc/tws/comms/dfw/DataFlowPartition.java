@@ -290,9 +290,10 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
         deSerializerMap.put(ex, new UnifiedKeyDeSerializer(new KryoSerializer(),
-            executor, keyType, dataType));
+            executor, keyType, receiveType));
       } else {
-        deSerializerMap.put(ex, new UnifiedDeserializer(new KryoSerializer(), executor, dataType));
+        deSerializerMap.put(ex, new UnifiedDeserializer(new KryoSerializer(),
+            executor, receiveType));
       }
     }
 
