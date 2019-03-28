@@ -85,7 +85,7 @@ public class SKeyedPartition {
    * @param src the source that is ending
    */
   public void finish(int src) {
-    partition.finish(src);
+    //partition.finish(src);
   }
 
   /**

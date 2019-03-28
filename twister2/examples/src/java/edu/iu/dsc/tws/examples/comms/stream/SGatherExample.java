@@ -55,12 +55,12 @@ public class SGatherExample extends BenchWorker {
     for (int i = 0; i < noOfSourceTasks; i++) {
       sources.add(i);
     }
+
     int target = noOfSourceTasks;
 
     // create the communication
     gather = new SGather(communicator, taskPlan, sources, target, MessageType.INTEGER,
-        new FinalReduceReceiver(jobParameters.getIterations(),
-            jobParameters.getWarmupIterations()));
+        new FinalReduceReceiver());
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -117,36 +117,30 @@ public class SGatherExample extends BenchWorker {
   }
 
   public class FinalReduceReceiver implements BulkReceiver {
-    private int count = 0;
-    private int expectedIterations;
-    private int warmupIterations;
 
-    public FinalReduceReceiver(int expected, int warmupIterations) {
-      this.expectedIterations = expected;
-      this.warmupIterations = warmupIterations;
-    }
+    private int count = 0;
 
     @Override
-    public void init(Config cfg, Set<Integer> expectedIds) {
+    public void init(Config cfg, Set<Integer> targets) {
+
     }
 
     @Override
     public boolean receive(int target, Iterator<Object> object) {
       count++;
-      if (count > this.warmupIterations) {
+      if (count > jobParameters.getWarmupIterations()) {
         Timing.mark(TIMING_MESSAGE_RECV, workerId == 0);
       }
 
       verifyResults(resultsVerifier, object, null);
 
-      if (count == expectedIterations + warmupIterations) {
+      if (count == jobParameters.getTotalIterations()) {
         Timing.mark(TIMING_ALL_RECV, workerId == 0);
         BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0);
         resultsRecorder.writeToCSV();
         LOG.info(() -> String.format("Target %d received count %d", target, count));
         gatherDone = true;
       }
-
       return true;
     }
   }

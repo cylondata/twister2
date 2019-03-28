@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -26,12 +26,12 @@ import edu.iu.dsc.tws.comms.api.batch.BReduce;
 import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
-import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
-import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
-import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
+import edu.iu.dsc.tws.examples.verification.GeneratorUtils;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 
 public class BReduceExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BReduceExample.class.getName());
@@ -39,6 +39,7 @@ public class BReduceExample extends BenchWorker {
   private BReduce reduce;
 
   private boolean reduceDone;
+  private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -68,6 +69,11 @@ public class BReduceExample extends BenchWorker {
     if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
       reduceDone = true;
     }
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
+        (ints, args) -> GeneratorUtils.multiplyIntArray(
+            ints, jobParameters.getTotalIterations() * sources.size()),
+        IntArrayComparator.getInstance());
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
         workerId, sources, target, tasksOfExecutor));
@@ -104,44 +110,27 @@ public class BReduceExample extends BenchWorker {
   }
 
   public class FinalSingularReceiver implements SingularReceiver {
+    private int lowestTarget = 0;
 
     @Override
-    public void init(Config cfg, Set<Integer> expectedIds) {
+    public void init(Config cfg, Set<Integer> targets) {
+      if (targets.isEmpty()) {
+        reduceDone = true;
+        return;
+      }
+      this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
     }
 
     @Override
     public boolean receive(int target, Object object) {
-      Timing.mark(TIMING_ALL_RECV, workerId == 0);
-      resultsRecorder.recordColumn("Total Time", Timing.averageDiff(
-          TIMING_ALL_SEND,
-          TIMING_ALL_RECV,
-          workerId == 0
-      ));
-      experimentData.setOutput(object);
-      LOG.info("Reduced value : " + Arrays.toString((int[]) object));
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV,
+          workerId == 0 && target == lowestTarget);
+      BenchmarkUtils.markTotalTime(resultsRecorder, workerId == 0
+          && target == lowestTarget);
+      resultsRecorder.writeToCSV();
+      verifyResults(resultsVerifier, object, null);
       reduceDone = true;
-      try {
-        verify();
-      } catch (VerificationException e) {
-        LOG.info("Exception Message : " + e.getMessage());
-      }
       return true;
-    }
-  }
-
-  public void verify() throws VerificationException {
-    boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
-    if (doVerify) {
-      LOG.info("Verifying results ...");
-      ExperimentVerification experimentVerification
-          = new ExperimentVerification(experimentData, OperationNames.REDUCE);
-      isVerified = experimentVerification.isVerified();
-      if (isVerified) {
-        LOG.info("Results generated from the experiment are verified.");
-      } else {
-        throw new VerificationException("Results do not match");
-      }
     }
   }
 

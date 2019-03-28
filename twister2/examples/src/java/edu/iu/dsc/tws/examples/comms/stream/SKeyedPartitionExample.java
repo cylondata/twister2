@@ -22,11 +22,16 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.api.stream.SKeyedPartition;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 
 /**
  * Streaming keyed partition example
+ * todo add timing and terminating condition
  */
 public class SKeyedPartitionExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(SPartitionExample.class.getName());
@@ -34,6 +39,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
   private SKeyedPartition partition;
 
   private boolean partitionDone = false;
+  private ResultsVerifier<int[], Tuple<Integer, int[]>> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -55,6 +61,13 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
     partition = new SKeyedPartition(communicator, taskPlan, sources, targets,
         MessageType.INTEGER, MessageType.INTEGER,
         new PartitionReceiver(), new HashingSelector());
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
+        (ints, args) -> new Tuple<>(-1, ints),
+        new TupleComparator<>(
+            (d1, d2) -> true, //any int
+            IntArrayComparator.getInstance()
+        ));
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -102,6 +115,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
       if (count >= expected) {
         partitionDone = true;
       }
+      // verifyResults(resultsVerifier, data, null);
       return true;
     }
   }

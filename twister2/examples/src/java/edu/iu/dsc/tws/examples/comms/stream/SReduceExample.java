@@ -56,10 +56,7 @@ public class SReduceExample extends BenchWorker {
     // create the communication
     reduce = new SReduce(communicator, taskPlan, sources, target, MessageType.INTEGER,
         new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
-        new FinalSingularReceiver(
-            jobParameters.getIterations(),
-            jobParameters.getWarmupIterations()
-        )
+        new FinalSingularReceiver()
     );
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -115,13 +112,6 @@ public class SReduceExample extends BenchWorker {
   public class FinalSingularReceiver implements SingularReceiver {
 
     private int count = 0;
-    private int expectedIterations;
-    private int warmupIterations = 0;
-
-    public FinalSingularReceiver(int expectedIterations, int warmupIterations) {
-      this.expectedIterations = expectedIterations;
-      this.warmupIterations = warmupIterations;
-    }
 
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
@@ -131,7 +121,7 @@ public class SReduceExample extends BenchWorker {
     @Override
     public boolean receive(int target, Object object) {
       count++;
-      if (count > this.warmupIterations) {
+      if (count > jobParameters.getWarmupIterations()) {
         Timing.mark(TIMING_MESSAGE_RECV, workerId == 0);
       }
 
@@ -139,7 +129,7 @@ public class SReduceExample extends BenchWorker {
 
       verifyResults(resultsVerifier, object, null);
 
-      if (count == expectedIterations + warmupIterations) {
+      if (count == jobParameters.getTotalIterations()) {
         Timing.mark(TIMING_ALL_RECV, workerId == 0);
         BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0);
         resultsRecorder.writeToCSV();
