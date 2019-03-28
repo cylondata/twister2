@@ -12,10 +12,10 @@ app_deps = [
     "@org_springframework_boot_spring_boot//jar",
     "@org_springframework_spring_context//jar",
     "@org_springframework_boot_spring_boot_autoconfigure//jar",
-    "@org_springframework_boot_spring_boot_starter_logging//jar",
+    #"@org_springframework_boot_spring_boot_starter_logging//jar",
     "@ch_qos_logback_logback_classic//jar",
     "@ch_qos_logback_logback_core//jar",
-    "@org_apache_logging_log4j_log4j_to_slf4j//jar",
+    #"@org_apache_logging_log4j_log4j_to_slf4j//jar",
     "@org_slf4j_jul_to_slf4j//jar",
     "@javax_annotation_javax_annotation_api//jar",
     "@org_springframework_spring_core//jar",
@@ -98,7 +98,7 @@ app_deps = [
     "@com_h2database_h2//jar",
     "@org_apache_logging_log4j_log4j_api//jar",
     "@org_apache_logging_log4j_log4j_core//jar",
-    #"@org_apache_logging_log4j_log4j_slf4j_impl//jar",
+    "@org_apache_logging_log4j_log4j_slf4j_impl//jar",
 ]
 
 #add_boot_jetty_starter(app_deps)
