@@ -53,7 +53,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 
-#openmpi install
+# openmpi install
 RUN wget https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz
 RUN tar -zxvf openmpi-3.0.0.tar.gz -C /
 ENV OMPI_BUILD="/openmpi-build"
@@ -72,7 +72,7 @@ EXPOSE 2022 2023 30000 30001 30002 30003 30004 30005 30006 30007 30008 30009 300
 
 
 COPY rootfs/config /root/.ssh/
-COPY twister2-0.1.0 /twister2-0.1.0/
+COPY twister2-0.2.0 /twister2-0.2.0/
 
 RUN apt-get update && apt-get install -y python python-dev python-pip python-virtualenv rsync
 CMD ["/init.sh","-bash"]

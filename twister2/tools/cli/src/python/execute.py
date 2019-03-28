@@ -25,8 +25,10 @@ import twister2.tools.cli.src.python.opts as opts
 import twister2.tools.cli.src.python.jars as jars
 import twister2.tools.cli.src.python.config as config
 
+
 ################################################################################
-def twister2_class(class_name, lib_jars, extra_jars=None, args=None, java_defines=None, client_props=None):
+def twister2_class(class_name, lib_jars, extra_jars=None, args=None, java_defines=None,
+                   client_props=None):
     '''
     Execute a twister2 class given the args and the jars needed for class path
     :param class_name:
@@ -76,6 +78,7 @@ def twister2_class(class_name, lib_jars, extra_jars=None, args=None, java_define
     # stderr message has extra information, such as debugging message
     return ProcessResult(proc)
 
+
 def twister2_tar(class_name, topology_tar, arguments, tmpdir_root, java_defines):
     '''
     :param class_name:
@@ -95,7 +98,8 @@ def twister2_tar(class_name, topology_tar, arguments, tmpdir_root, java_defines)
     # in addition to the topology jar at top level. Pants keeps
     # filename for jar and tar the same except for extension.
 
-    topology_jar = os.path.basename(topology_tar).replace(".tar.gz", "").replace(".tar", "") + ".jar"
+    topology_jar = os.path.basename(topology_tar).replace(".tar.gz", "").replace(".tar",
+                                                                                 "") + ".jar"
 
     extra_jars = [
         os.path.join(tmpdir, "twister2-instance.jar"),
@@ -109,15 +113,22 @@ def twister2_tar(class_name, topology_tar, arguments, tmpdir_root, java_defines)
     # Now execute the class
     return twister2_class(class_name, lib_jars, extra_jars, arguments, java_defines)
 
-def twister2_jar(jar_path, args=None):
+
+def twister2_jar(jar_path, args=None, jvm_args=[]):
     if args is None:
         args = []
 
-    all_args = [config.get_java_path(), "-jar", jar_path]
+    all_args = [config.get_java_path()]
+
+    all_args += list(jvm_args)
+
+    all_args += ["-jar", jar_path]
 
     all_args += list(args)
 
-    proc = subprocess.Popen(all_args,  stdout=subprocess.PIPE,
+    print(all_args)
+
+    proc = subprocess.Popen(all_args, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, bufsize=1)
 
     return ProcessResult(proc)

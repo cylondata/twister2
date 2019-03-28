@@ -41,6 +41,7 @@ We support the following components in Twister2
     2. Local file systems
     3. NFS for persistent storage
 6. Web UI for monitoring Twister2 Jobs
+7. Apache Storm Compatibility API
 
 Twister2 can be deployed both in HPC and cloud environments. When deployed in a HPC environment, it 
 can use OpenMPI for its communications. It can be programmed at different levels depending on the 
@@ -69,7 +70,7 @@ We have started working on our next major release that will connect the core com
 into a full data analytics environment. In particular it will focus on providing APIs around the core
 capabilities of Twister2 and integration of applications in a single dataflow. 
 
-### Next release (End of May 2019)
+### Next release (End of June 2019)
 
 1. Connected DataFlow
 2. Fault tolerance
