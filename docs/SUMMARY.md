@@ -7,6 +7,7 @@
   * [Linux](compiling/linux.md)
   * [MacOS](compiling/macos.md)
   * [Generate Maven](compiling/generate-maven.md)
+  * [Dashboard](compiling/compile-dashboard.md)
 * [Deployment](deployment/README.md)
   * [Running a Job](deployment/job-submit.md)
   * [Standalone](deployment/standalone/running-jobs.md)
