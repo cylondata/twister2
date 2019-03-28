@@ -150,58 +150,58 @@ Currently twister2 benchmark suite supports following types of argument values d
 
 2. array
 
-```json
-{
-      "id": "stages",
-      "name": "Stages",
-      "optional": false,
-      "values": {
-        "type": "array",
-        "array": [
-          "1,8"
-        ]
+  ```json
+  {
+        "id": "stages",
+        "name": "Stages",
+        "optional": false,
+        "values": {
+          "type": "array",
+          "array": [
+            "1,8"
+          ]
+        }
       }
-    }
-```
-
-In array type, you may define a set of possible values as shown in above example.
+  ```
+  
+  In array type, you may define a set of possible values as shown in above example.
 
 3. Steps
 
-```json
-{
-      "id": "size",
-      "name": "Data Size",
-      "optional": false,
-      "values": {
-        "type": "steps",
-        "from": 0,
-        "to": 15,
-        "step": 5
+  ```json
+  {
+        "id": "size",
+        "name": "Data Size",
+        "optional": false,
+        "values": {
+          "type": "steps",
+          "from": 0,
+          "to": 15,
+          "step": 5
+        }
       }
-    }
-```
-
-In steps type, benchmark suite will generate a set of possible values based on the ```from,to and step``` defined. For example, for above configuration, the possible values will be ```0,5,10,15```.
+  ```
+  
+  In steps type, benchmark suite will generate a set of possible values based on the ```from,to and step``` defined. For example, for above configuration, the possible values will be ```0,5,10,15```.
 
 4. None
 
-```json
-{
-      "id": "verify",
-      "name": "Verify",
-      "optional": false,
-      "values": {
-        "type": "none"
+  ```json
+  {
+        "id": "verify",
+        "name": "Verify",
+        "optional": false,
+        "values": {
+          "type": "none"
+        }
       }
-    }
-```
-
-In none type, argument will be specified without any value. For example, above argument will be passed as follows.
-
-```bash
-java -jar jarname.jar -verify -anotherFlag 1200
-```
+  ```
+  
+  In none type, argument will be specified without any value. For example, above argument will be passed as follows.
+  
+  ```bash
+  java -jar jarname.jar -verify -anotherFlag 1200
+  ```
 
 ### Defining child benchmarks
 
