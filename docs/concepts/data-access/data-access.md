@@ -1,10 +1,10 @@
 ### Data Access
 
 Data access abstracts out various data sources including files and streaming sources to simplify the
-job of an application developer. Twister2 includes a lower level API for data access 
-in addition to a higher level abstraction. For example, the abstraction of a File System allows Twister2 
-to support NFS, local file system, and HDFS which enables the developer to store and read data from 
-any file by specifying only the URL. 
+job of an application developer. Twister2 includes a lower level API for data access in addition to 
+a higher level abstraction. For example, the abstraction of a File System allows Twister2 to support 
+NFS, local file system, and HDFS which enables the developer to store and read data from any file by 
+specifying only the URL. 
 
 The important role of the data access layer is to handle data partitioning and data locality in an 
 efficient manner. An unbalanced set of data partitions will create stragglers, which will increase 
