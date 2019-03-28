@@ -22,14 +22,6 @@ statically configured PersistentVolume exists in the cluster.  Our Mesos
 system uses NFS for persistent storage to store logs and outputs of
 twister2 jobs.
 
-We tested with NFS-Client provisioner
-from: [\[https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client\]{.underline}](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client)
-
-NFS-Client provisioner is used if you already have an NFS server.
-Otherwise you may use the NFS provisioner that does not require to have
-an NFS
-server: [\[https://github.com/kubernetes-incubator/external-storage/tree/master/nfs\]{.underline}](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs)
-
 You have to set the following parameters in client.yaml config file in
 order to use NFS.
 
