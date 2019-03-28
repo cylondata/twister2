@@ -18,11 +18,13 @@ import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.KIterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.KIterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
 import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.api.tset.sets.KIterableFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.KIterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
@@ -56,13 +58,13 @@ public class KeyedPartitionTLink<K, V> extends KeyValueTLink<K, V> {
     return set;
   }
 
-//  public <P> IterableFlatMapTSet<P, V> flatMap(IterableFlatMapFunction<V, P> mapFn,
-//                                               int parallelism) {
-//    IterableFlatMapTSet<P, V> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
-//        mapFn, parallelism);
-//    children.add(set);
-//    return set;
-//  }
+  public <O> KIterableFlatMapTSet<K, V, O> flatMap(KIterableFlatMapFunction<K, V, O> mapFn,
+                                                   int parallelism) {
+    KIterableFlatMapTSet<K, V, O> set = new KIterableFlatMapTSet<>(config, tSetEnv, this,
+        mapFn, parallelism);
+    children.add(set);
+    return set;
+  }
 
   public SinkTSet<V> sink(Sink<V> sink, int parallelism) {
     SinkTSet<V> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink, parallelism);

@@ -89,7 +89,7 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
     return cacheSource.map(mFn);
   }
 
-  public <P1> IterableFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
+  public <P1> IterableFlatMapTSet<T, P1> flatMap(IterableFlatMapFunction<T, P1> mFn) {
     BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
     return cacheSource.flatMap(mFn);
   }

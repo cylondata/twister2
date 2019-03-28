@@ -23,41 +23,41 @@ import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.IterableFlatMapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class IterableFlatMapTSet<T, P> extends BatchBaseTSet<T> {
-  private BaseTLink<P> parent;
+public class IterableFlatMapTSet<I, O> extends BatchBaseTSet<O> {
+  private BaseTLink<I> parent;
 
-  private IterableFlatMapFunction<P, T> mapFn;
+  private IterableFlatMapFunction<I, O> mapFn;
 
-  public IterableFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                             IterableFlatMapFunction<P, T> mapFunc) {
+  public IterableFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<I> parent,
+                             IterableFlatMapFunction<I, O> mapFunc) {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = 1;
   }
 
-  public IterableFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                             IterableFlatMapFunction<P, T> mapFunc, int parallelism) {
+  public IterableFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<I> parent,
+                             IterableFlatMapFunction<I, O> mapFunc, int parallelism) {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = parallelism;
   }
 
-  public <P1> IterableMapTSet<T, P1> map(IterableMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+  public <O1> IterableMapTSet<O, O1> map(IterableMapFunction<O, O1> mFn) {
+    DirectTLink<O> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.map(mFn);
   }
 
-  public <P1> IterableFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+  public <O1> IterableFlatMapTSet<O, O1> flatMap(IterableFlatMapFunction<O, O1> mFn) {
+    DirectTLink<O> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.flatMap(mFn);
   }
 
-  public SinkTSet<T> sink(Sink<T> sink) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+  public SinkTSet<O> sink(Sink<O> sink) {
+    DirectTLink<O> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.sink(sink);
   }
@@ -81,7 +81,7 @@ public class IterableFlatMapTSet<T, P> extends BatchBaseTSet<T> {
   }
 
   @Override
-  public IterableFlatMapTSet<T, P> setName(String n) {
+  public IterableFlatMapTSet<I, O> setName(String n) {
     this.name = n;
     return this;
   }

@@ -42,8 +42,8 @@ public class DirectTLink<T> extends BaseTLink<T> {
     return set;
   }
 
-  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
+  public <P> IterableFlatMapTSet<T, P> flatMap(IterableFlatMapFunction<T, P> mapFn) {
+    IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
         mapFn, parent.getParallelism());
     children.add(set);
     return set;

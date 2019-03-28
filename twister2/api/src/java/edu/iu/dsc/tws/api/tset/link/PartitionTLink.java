@@ -52,9 +52,9 @@ public class PartitionTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
     return set;
   }
 
-  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn,
+  public <P> IterableFlatMapTSet<T, P> flatMap(IterableFlatMapFunction<T, P> mapFn,
                                                int parallelism) {
-    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
+    IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
         mapFn, parallelism);
     children.add(set);
     return set;

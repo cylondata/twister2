@@ -18,13 +18,13 @@ import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.NestedIterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.NestedIterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
 import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.NestedIterableFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.NestedIterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
@@ -60,10 +60,10 @@ public class KeyedGatherTLink<K, V> extends KeyValueTLink<K, V> {
     return set;
   }
 
-  public <P> IterableFlatMapTSet<P, V> flatMap(IterableFlatMapFunction<V, P> mapFn,
-                                               int parallelism) {
-    IterableFlatMapTSet<P, V> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
-        mapFn, parallelism);
+  public <O> NestedIterableFlatMapTSet<K, V, O> flatMap(
+      NestedIterableFlatMapFunction<K, V, O> mapFn, int parallelism) {
+    NestedIterableFlatMapTSet<K, V, O> set = new NestedIterableFlatMapTSet<>(config, tSetEnv,
+        this, mapFn, parallelism);
     children.add(set);
     return set;
   }

@@ -40,7 +40,7 @@ public class BatchSourceTSet<T> extends BatchBaseTSet<T> {
     return direct.map(mapFn);
   }
 
-  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
+  public <P> IterableFlatMapTSet<T, P> flatMap(IterableFlatMapFunction<T, P> mapFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.flatMap(mapFn);
