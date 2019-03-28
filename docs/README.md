@@ -35,10 +35,10 @@ We support the following components in Twister2
 4. TSet for distributed data representation (Similar to Spark RDD, Flink DataSet and Heron Streamlet)
     1. Iterative computations
     2. Data caching
-5. API for streaming and batch applications
+5. APIs for streaming and batch applications
     1. Operator API
     2. Task Graph based API
-    3. Data API (TSet API)
+    3. TSet API
 6. Support for storage systems
     1. HDFS
     2. Local file systems
