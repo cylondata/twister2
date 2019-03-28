@@ -53,7 +53,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 
-#openmpi install
+# openmpi install
 RUN wget https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz
 RUN tar -zxvf openmpi-3.0.0.tar.gz -C /
 ENV OMPI_BUILD="/openmpi-build"
