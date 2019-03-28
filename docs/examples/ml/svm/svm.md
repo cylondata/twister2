@@ -350,12 +350,10 @@ to convert data to the dense format.
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb 4096 -disk_gb 2 -instances 1 -alpha 0.1 -C 1.0 -exp_name test-svm -features 22 -samples 35000 -iterations 10 -training_data_dir <path-to-training-csv> -testing_data_dir <path-to-testing-csv> -parallelism 8 -workers 1 -cpus 1 -threads 4
 ```
 
-#### Sample Outpit
+#### Sample Output
+
 
 ```bash
-======================================================================================
-			SVM Task Summary : [test-svm]
-======================================================================================
 Training Dataset [/home/vibhatha/data/svm/w8a/training.csv] 
 Testing  Dataset [/home/vibhatha/data/svm/w8a/testing.csv] 
 Data Loading Time (Training + Testing) 				= 1.943881115  s 
@@ -363,8 +361,6 @@ Training Time 							= 7.978291269  s
 Testing Time  							= 0.828260105  s 
 Total Time (Data Loading Time + Training Time + Testing Time) 	= 10.750432489  s 
 Accuracy of the Trained Model 					= 88.904494382 %
-======================================================================================
-
 
 ```
 
