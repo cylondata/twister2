@@ -23,24 +23,33 @@ public class CacheSource<T> extends BaseSource<T> {
   private static final Logger LOG = Logger.getLogger(CacheSource.class.getName());
 
   //TODO: need to check this codes logic developed now just based on the data object API
+  //TODO: currently we assume that each task has only a single partition associated with it and that
+  //TODO: that also has only a single value
   private int count = 0;
   private int current = 0;
   private DataObject<T> datapoints = null;
+  private boolean read;
 
   public CacheSource(DataObject<T> datapoints) {
     this.datapoints = datapoints;
     count = getDataObject().getPartitionCount();
+    this.read = false;
   }
 
   @Override
   public boolean hasNext() {
-    boolean hasNext = (current < count) ? getDataObject().getPartitions(context.getIndex())
-        .getConsumer().hasNext() : false;
-
-    while (++current < count && !hasNext) {
-      hasNext = getDataObject().getPartitions(current).getConsumer().hasNext();
+    if (!read) {
+      read = true;
+      return true;
+    } else {
+      return false;
     }
-    return hasNext;
+//    boolean hasNext = (current < count) ? getDataObject().getPartitions(context.getIndex())
+//        .getConsumer().hasNext() : false;
+//
+//    while (++current < count && !hasNext) {
+//      hasNext = getDataObject().getPartitions(current).getConsumer().hasNext();
+//    }
   }
 
   @Override

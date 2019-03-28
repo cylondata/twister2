@@ -10,52 +10,52 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.api.tset.link;
+package edu.iu.dsc.tws.api.tset.link.streaming;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
+import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
+import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
-public class PartitionTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
+/**
+ * Represent a data set created by an all gather operation
+ *
+ * @param <T> type of data
+ */
+public class StreamingAllGatherTLink<T> extends BaseTLink<T> {
   private BaseTSet<T> parent;
 
-  private PartitionFunction<T> partitionFunction;
-
-  public PartitionTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt,
-                        PartitionFunction<T> parFn) {
+  public StreamingAllGatherTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
     super(cfg, tSetEnv);
     this.parent = prnt;
-    this.partitionFunction = parFn;
-    this.name = "partition-" + parent.getName();
+    this.name = "all-gather-" + parent.getName();
   }
 
   @Override
-  public String getName() {
-    return parent.getName();
+  public boolean baseBuild() {
+    return true;
   }
 
-  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn, int parallelism) {
-    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, this, mapFn,
-        parallelism);
+  public <P> StreamingMapTSet<P, T> map(MapFunction<T, P> mapFn, int parallelism) {
+    StreamingMapTSet<P, T> set = new StreamingMapTSet<P, T>(config, tSetEnv,
+        this, mapFn, parallelism);
     children.add(set);
     return set;
   }
 
-  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn,
-                                               int parallelism) {
-    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
-        mapFn, parallelism);
+  public <P> StreamingFlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn, int parallelism) {
+    StreamingFlatMapTSet<P, T> set = new StreamingFlatMapTSet<P, T>(config, tSetEnv,
+        this, mapFn, parallelism);
     children.add(set);
     return set;
   }
@@ -68,23 +68,13 @@ public class PartitionTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
   }
 
   @Override
-  public boolean baseBuild() {
-    return true;
-  }
-
-  @Override
   public void buildConnection(ComputeConnection connection) {
     DataType dataType = TSetUtils.getDataType(getType());
-
-    connection.partition(parent.getName(), Constants.DEFAULT_EDGE, dataType);
-  }
-
-  public PartitionFunction<T> getPartitionFunction() {
-    return partitionFunction;
+    connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
 
   @Override
-  public PartitionTLink<T> setName(String n) {
+  public BaseTLink<T> setName(String n) {
     super.setName(n);
     return this;
   }

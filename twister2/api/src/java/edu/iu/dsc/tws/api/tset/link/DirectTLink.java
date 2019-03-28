@@ -14,18 +14,14 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
@@ -37,20 +33,6 @@ public class DirectTLink<T> extends BaseTLink<T> {
     super(cfg, tSetEnv);
     this.parent = prnt;
     this.name = "direct-" + parent.getName();
-  }
-
-  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    MapTSet<P, T> set = new MapTSet<P, T>(config, tSetEnv, this, mapFn,
-        parent.getParallelism());
-    children.add(set);
-    return set;
-  }
-
-  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, this, mapFn,
-        parent.getParallelism());
-    children.add(set);
-    return set;
   }
 
   public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {

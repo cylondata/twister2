@@ -18,10 +18,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.Cacheable;
-import edu.iu.dsc.tws.api.tset.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
@@ -84,16 +82,6 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
         new SinkOp<>(cacheSink, isIterable, keyed), para);
     parent.buildConnection(connection);
     return true;
-  }
-
-  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
-    return cacheSource.map(mapFn);
-  }
-
-  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
-    return cacheSource.flatMap(mapFn);
   }
 
   public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {

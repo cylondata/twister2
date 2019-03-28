@@ -30,7 +30,7 @@ import java.util.HashMap;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.tset.MapFunction;
+import edu.iu.dsc.tws.api.tset.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
+import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
@@ -70,12 +70,13 @@ public class HelloTSetEnv extends TSetBatchWorker implements Serializable {
     }, 4).setName("Source");
 
     PartitionTLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
-    MapTSet<int[], int[]> mapedPartition = partitioned.map(new MapFunction<int[], int[]>() {
-      @Override
-      public int[] map(int[] ints) {
-        return new int[0];
-      }
-    }, 4);
+    IterableMapTSet<int[], int[]> mapedPartition = partitioned.
+        map(new IterableMapFunction<int[], int[]>() {
+          @Override
+          public int[] map(Iterable<int[]> t) {
+            return new int[0];
+          }
+        }, 4);
     ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {

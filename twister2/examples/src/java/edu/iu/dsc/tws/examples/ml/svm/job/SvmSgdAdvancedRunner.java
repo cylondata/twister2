@@ -400,7 +400,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     s += "Data Loading Time (Training + Testing) \t\t\t\t= " + String.format("%3.9f",
         dataLoadingTime) + "  s \n";
     s += "Training Time \t\t\t\t\t\t\t= " + String.format("%3.9f", trainingTime) + "  s \n";
-    s += "Testing Time  \t\t\t\t\t\t\t= " + String.format("%3.9f", testingTime) + "  s \n";
+    s += "Testing Time  \t\t\t\t\t\t\t= " +  String.format("%3.9f", testingTime) + "  s \n";
     s += "Total Time (Data Loading Time + Training Time + Testing Time) \t="
         + String.format(" %.9f", dataLoadingTime + trainingTime + testingTime) + "  s \n";
     s += String.format("Accuracy of the Trained Model \t\t\t\t\t= %2.9f", accuracy) + " %%\n";

@@ -20,10 +20,8 @@ import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.MapOp;
-import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 
@@ -56,14 +54,14 @@ public class StreamingMapTSet<T, P> extends StreamingBaseTSet<T> {
     return direct.map(mFn);
   }
 
-  public <P1> FlatMapTSet<P1, T> flatMap(FlatMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+  public <P1> StreamingFlatMapTSet<P1, T> flatMap(FlatMapFunction<T, P1> mFn) {
+    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.flatMap(mFn);
   }
 
   public SinkTSet<T> sink(Sink<T> sink) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.sink(sink);
   }

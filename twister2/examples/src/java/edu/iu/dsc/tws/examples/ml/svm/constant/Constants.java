@@ -53,6 +53,12 @@ public final class Constants {
 
     public static final String CROSS_VALIDATION_DATA = "test_data";
 
+    public static final String SVM_RUN_TYPE = "svm_run_type"; // tset, task, comms, etc
+
+    public static final String TSET_RUNNER = "tset";
+
+    public static final String TASK_RUNNER = "task";
+
 
   }
 }

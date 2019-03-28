@@ -9,26 +9,29 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.data.utils;
+package edu.iu.dsc.tws.examples.ml.svm.tset;
 
-public final class WorkerConstants {
+import java.util.logging.Logger;
 
-  private WorkerConstants() {  }
+import edu.iu.dsc.tws.api.tset.BaseMapFunction;
 
-  public static final String WORKERS = "workers";
+public class AccuracyAverager extends BaseMapFunction<Double, Double> {
 
-  public static final String PARALLELISM = "parallelism";
+  private static final Logger LOG = Logger.getLogger(AccuracyAverager.class.getName());
 
-  public static final String CPUS_PER_NODE = "cpus";
+  private int parallelism = 1;
 
-  public static final String RAM_MB = "ram_mb";
+  public AccuracyAverager(int parallelism) {
+    this.parallelism = parallelism;
+  }
 
-  public static final String DISK_GB = "disk_gb";
+  @Override
+  public Double map(Double aDouble) {
+    return aDouble / (double) this.parallelism;
+  }
 
-  public static final String INSTANCES = "instances";
+  @Override
+  public void prepare() {
 
-  public static final String THREADS_PER_WORKER = "threads";
-
-
-
+  }
 }

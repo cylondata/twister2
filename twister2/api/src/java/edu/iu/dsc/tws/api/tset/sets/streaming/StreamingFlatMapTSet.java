@@ -10,20 +10,20 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.api.tset.sets;
+package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableMapFunction;
+import edu.iu.dsc.tws.api.tset.MapFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
+import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
+import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 
 /**
@@ -32,43 +32,44 @@ import edu.iu.dsc.tws.common.config.Config;
  * @param <T> the input type
  * @param <P> the output type
  */
-public class FlatMapTSet<T, P> extends BatchBaseTSet<T> {
-  private static final Logger LOG = Logger.getLogger(FlatMapTSet.class.getName());
+public class StreamingFlatMapTSet<T, P> extends StreamingBaseTSet<T> {
+  private static final Logger LOG = Logger.getLogger(StreamingFlatMapTSet.class.getName());
 
   private BaseTLink<P> parent;
 
   private FlatMapFunction<P, T> mapFn;
 
-  public FlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                     FlatMapFunction<P, T> mapFunc) {
+  public StreamingFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
+                              FlatMapFunction<P, T> mapFunc) {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = 1;
   }
 
-  public FlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                     FlatMapFunction<P, T> mapFunc, int parallelism) {
+  public StreamingFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
+                              FlatMapFunction<P, T> mapFunc, int parallelism) {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = parallelism;
   }
 
-  public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+  public <P1> StreamingMapTSet<P1, T> map(MapFunction<T, P1> mFn) {
+    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.map(mFn);
   }
 
-  public <P1> IterableFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+  public <P1> StreamingFlatMapTSet<P1, T> flatMap(FlatMapFunction<T, P1> mFn) {
+    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.flatMap(mFn);
   }
 
+
   public SinkTSet<T> sink(Sink<T> sink) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
+    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.sink(sink);
   }
@@ -92,7 +93,7 @@ public class FlatMapTSet<T, P> extends BatchBaseTSet<T> {
   }
 
   @Override
-  public FlatMapTSet<T, P> setName(String n) {
+  public StreamingFlatMapTSet<T, P> setName(String n) {
     this.name = n;
     return this;
   }

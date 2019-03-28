@@ -27,50 +27,64 @@ import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
-public class StreamingDirectTLink<T> extends BaseTLink<T> {
+public class StreamingReplicateTLink<T> extends BaseTLink {
   private BaseTSet<T> parent;
 
-  public StreamingDirectTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
+  private int replications;
+
+  public StreamingReplicateTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt, int reps) {
     super(cfg, tSetEnv);
     this.parent = prnt;
-    this.name = "direct-" + parent.getName();
+    this.name = "clone-" + parent.getName();
+    this.replications = reps;
+  }
+
+  @Override
+  public int overrideParallelism() {
+    return replications;
   }
 
   public <P> StreamingMapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    StreamingMapTSet<P, T> set = new StreamingMapTSet<P, T>(config, tSetEnv, this, mapFn,
-        parent.getParallelism());
+    StreamingMapTSet<P, T> set = new StreamingMapTSet<P, T>(config, tSetEnv,
+        this, mapFn, replications);
     children.add(set);
     return set;
   }
 
   public <P> StreamingFlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    StreamingFlatMapTSet<P, T> set = new StreamingFlatMapTSet<P, T>(config, tSetEnv, this, mapFn,
-        parent.getParallelism());
+    StreamingFlatMapTSet<P, T> set = new StreamingFlatMapTSet<P, T>(config, tSetEnv, this,
+        mapFn, replications);
     children.add(set);
     return set;
   }
 
   public SinkTSet<T> sink(Sink<T> sink) {
     SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink,
-        parent.getParallelism());
+        replications);
     children.add(sinkTSet);
     tSetEnv.run();
     return sinkTSet;
   }
 
   @Override
+  public String getName() {
+    return parent.getName();
+  }
+
+  @Override
   public boolean baseBuild() {
-    return false;
+    return true;
   }
 
   @Override
   public void buildConnection(ComputeConnection connection) {
     DataType dataType = TSetUtils.getDataType(getType());
-    connection.direct(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+
+    connection.broadcast(parent.getName(), Constants.DEFAULT_EDGE, dataType);
   }
 
   @Override
-  public StreamingDirectTLink<T> setName(String n) {
+  public StreamingReplicateTLink<T> setName(String n) {
     super.setName(n);
     return this;
   }
