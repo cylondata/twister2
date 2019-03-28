@@ -11,8 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,9 +28,14 @@ import edu.iu.dsc.tws.comms.api.batch.BGather;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
-import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 
 public class BGatherExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BGatherExample.class.getName());
@@ -35,6 +43,7 @@ public class BGatherExample extends BenchWorker {
   private BGather gather;
 
   private boolean gatherDone;
+  private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -65,6 +74,23 @@ public class BGatherExample extends BenchWorker {
     if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
       gatherDone = true;
     }
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
+        (ints, args) -> {
+          List<Tuple<Integer, int[]>> expectedData = new ArrayList<>();
+          for (Integer source : sources) {
+            for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
+              expectedData.add(new Tuple<>(source, ints));
+            }
+          }
+          return expectedData.iterator();
+        },
+        new IteratorComparator<>(
+            new TupleComparator<>(
+                IntComparator.getInstance(),
+                IntArrayComparator.getInstance()
+            )
+        ));
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
         workerId, sources, target, tasksOfExecutor));
@@ -106,46 +132,27 @@ public class BGatherExample extends BenchWorker {
   }
 
   public class FinalReduceReceiver implements BulkReceiver {
+    private int lowestTarget = 0;
+
     @Override
-    public void init(Config cfg, Set<Integer> expectedIds) {
+    public void init(Config cfg, Set<Integer> targets) {
+      if (targets.isEmpty()) {
+        gatherDone = true;
+        return;
+      }
+      this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
     }
 
     @Override
-    public boolean receive(int target, Iterator<Object> it) {
-      LOG.log(Level.INFO, String.format("%d Received final input", workerId));
-      while (it.hasNext()) {
-        Object object = it.next();
-        if (object instanceof Tuple) {
-          LOG.log(Level.INFO, String.format("%d received %d", target,
-              (Integer) ((Tuple) object).getKey()));
-          experimentData.setOutput(((Tuple) object).getValue());
-        } else {
-          LOG.severe("Un-expected data: " + object.getClass());
-        }
-        try {
-          verify();
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
-        }
-      }
+    public boolean receive(int target, Iterator<Object> itr) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV,
+          workerId == 0 && target == lowestTarget);
+      BenchmarkUtils.markTotalTime(resultsRecorder, workerId == 0
+          && target == lowestTarget);
+      resultsRecorder.writeToCSV();
       gatherDone = true;
+      verifyResults(resultsVerifier, itr, null);
       return true;
-    }
-  }
-
-  public void verify() throws VerificationException {
-    boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
-    if (doVerify) {
-      LOG.info("Verifying results ...");
-      ExperimentVerification experimentVerification
-          = new ExperimentVerification(experimentData, OperationNames.GATHER);
-      isVerified = experimentVerification.isVerified();
-      if (isVerified) {
-        LOG.info("Results generated from the experiment are verified.");
-      } else {
-        throw new VerificationException("Results do not match");
-      }
     }
   }
 }
