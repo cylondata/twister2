@@ -1,4 +1,5 @@
 {
-  "jarRootDir": "/home/chathura/Code/twister2/bazel-bin/scripts/package/twister2-0.1.0/examples",
-  "t2Bin": "/home/chathura/Code/twister2/bazel-bin/scripts/package/twister2-0.1.0/bin/twister2"
+  "jarRootDir": "/home/chathura/Code/twister2/bazel-bin/scripts/package/twister2-0.2.0/examples",
+  "t2Bin": "/home/chathura/Code/twister2/bazel-bin/scripts/package/twister2-0.2.0/bin/twister2",
+  "jdk": "/opt/jdk"
 }
