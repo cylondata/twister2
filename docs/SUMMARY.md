@@ -63,6 +63,7 @@
     * [KMeans](examples/ml/kmeans/kmeans.md)
   * [Join](examples/joins/joins.md)
   * [Word Count](examples/wordcount/wordcount.md)
+  * [Benchmarking](examples/benchmark/benchmark.md)
 * [Compatibility API's](compatibility/compatibility.md)  
   * [Apache Storm](compatibility/storm.md)
 * [Releases](release/README.md)  

@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
+
 public abstract class BaseFlatMapFunction<T, O> extends TBaseFunction
     implements FlatMapFunction<T, O> {
 }

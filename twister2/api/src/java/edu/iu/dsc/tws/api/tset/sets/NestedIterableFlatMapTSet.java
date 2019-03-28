@@ -18,26 +18,28 @@ import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.fn.NestedIterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
-import edu.iu.dsc.tws.api.tset.ops.IterableFlatMapOp;
+import edu.iu.dsc.tws.api.tset.link.KeyValueTLink;
+import edu.iu.dsc.tws.api.tset.ops.NestedIterableFlatMapOp;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class IterableFlatMapTSet<I, O> extends BatchBaseTSet<O> {
-  private BaseTLink<I> parent;
+public class NestedIterableFlatMapTSet<K, V, O> extends BatchBaseTSet<O> {
+  private KeyValueTLink<K, V> parent;
 
-  private IterableFlatMapFunction<I, O> mapFn;
+  private NestedIterableFlatMapFunction<K, V, O> mapFn;
 
-  public IterableFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<I> parent,
-                             IterableFlatMapFunction<I, O> mapFunc) {
+  public NestedIterableFlatMapTSet(Config cfg, TSetEnv tSetEnv, KeyValueTLink<K, V> parent,
+                                   NestedIterableFlatMapFunction<K, V, O> mapFunc) {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = 1;
   }
 
-  public IterableFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<I> parent,
-                             IterableFlatMapFunction<I, O> mapFunc, int parallelism) {
+  public NestedIterableFlatMapTSet(Config cfg, TSetEnv tSetEnv, KeyValueTLink<K, V> parent,
+                                   NestedIterableFlatMapFunction<K, V, O> mapFunc,
+                                   int parallelism) {
     super(cfg, tSetEnv);
     this.parent = parent;
     this.mapFn = mapFunc;
@@ -70,7 +72,7 @@ public class IterableFlatMapTSet<I, O> extends BatchBaseTSet<O> {
     int p = calculateParallelism(parent);
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
         addCompute(generateName("i-flat-map", parent),
-            new IterableFlatMapOp<>(mapFn, isIterable, keyed), p);
+            new NestedIterableFlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
     return true;
   }
@@ -81,7 +83,7 @@ public class IterableFlatMapTSet<I, O> extends BatchBaseTSet<O> {
   }
 
   @Override
-  public IterableFlatMapTSet<I, O> setName(String n) {
+  public NestedIterableFlatMapTSet<K, V, O> setName(String n) {
     this.name = n;
     return this;
   }

@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
-
 public class LoadBalancePartitioner<T> implements PartitionFunction<T> {
   private Map<Integer, List<Integer>> destination = new HashMap<>();
 
