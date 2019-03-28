@@ -3,7 +3,7 @@
 Twister2 dashboard has two components.
 
 1. Front End Web application; A [ReactJS](https://reactjs.org/) based web application
-2. Web server; A spring boot application, which exposes a RESTful Web Service (JAX-RS)
+2. Web server; A [spring boot application](https://spring.io/projects/spring-boot), which exposes a RESTful Web Service (JAX-RS)
 
 Even though (2) Embedded web server, has been included in the main bazel build, (1) Front End Web application should be build separately.
 
