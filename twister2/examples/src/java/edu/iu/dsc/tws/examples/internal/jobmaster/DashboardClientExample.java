@@ -11,10 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.jobmaster;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.examples.basic.HelloWorld;
@@ -38,12 +39,37 @@ public final class DashboardClientExample {
     String dashAddress = args[0];
     String jobID = args[1];
     DashboardClient dashClient = new DashboardClient(dashAddress, jobID);
-    sendJobKilledMessage(dashClient);
+
+    // if number of args is 3, kill the job
+    if (args.length == 3) {
+      sendJobKilledMessage(dashClient);
+      return;
+    }
+
+    // job has one type of ComputeResource
+    int computeResourceInstances = 3;
+    boolean scalable = true;
+
+    JobAPI.Job job = Twister2Job.newBuilder()
+        .setJobName("job-1")
+        .setWorkerClass(HelloWorld.class)
+        .addComputeResource(2, 1024, computeResourceInstances, scalable)
+        .build()
+        .serialize();
+
+    // all workers on the same node
+    // just to make things simple
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo("123.123.123", "rack-0", "dc-0");
 
 //    DashboardClient dashClient = new DashboardClient("http://localhost:8080", "job-1");
 
-//    testRegisterJob(dashClient);
-//    testRegisterWorker(dashClient);
+    testRegisterJob(dashClient, job, nodeInfo);
+    testRegisterWorker(dashClient, 0, job.getComputeResource(0), nodeInfo);
+//    testRegisterWorker(dashClient, 1, job.getComputeResource(0), nodeInfo);
+//    testRegisterWorker(dashClient, 2, job.getComputeResource(0), nodeInfo);
+//    testScalingDown(dashClient, job);
+    testScalingUp(dashClient, job);
+    sendJobKilledMessage(dashClient);
 
     // test state change
 //    dashClient.jobStateChange(JobState.STARTED);
@@ -56,34 +82,48 @@ public final class DashboardClientExample {
 
   }
 
-  public static void testRegisterJob(DashboardClient dashClient) {
-
-    Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setJobName("job-1")
-        .setWorkerClass(HelloWorld.class)
-        .addComputeResource(2, 1024, 5)
-        .addComputeResource(1, 512, 3)
-        .build();
-
-    JobAPI.Job job = twister2Job.serialize();
-
-    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo("123.123.123", "rack-0", "dc-0");
-
+  public static JobAPI.Job testRegisterJob(DashboardClient dashClient,
+                                           JobAPI.Job job,
+                                           JobMasterAPI.NodeInfo nodeInfo) {
     dashClient.registerJob(job, nodeInfo);
+    return job;
   }
 
-  public static void testRegisterWorker(DashboardClient dashClient) {
+  public static void testRegisterWorker(DashboardClient dashClient,
+                                        int workerID,
+                                        JobAPI.ComputeResource computeResource,
+                                        JobMasterAPI.NodeInfo nodeInfo) {
 
-    JobAPI.ComputeResource computeResource =
-        ComputeResourceUtils.createComputeResource(0, 1, 1024, 1);
-
-    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo("123.123.123", "rack-0", "dc-0");
-
-    int workerID = 0;
     JobMasterAPI.WorkerInfo workerInfo =
         WorkerInfoUtils.createWorkerInfo(workerID, "123.456.789", 9009, nodeInfo, computeResource);
 
     dashClient.registerWorker(workerInfo);
+  }
+
+  public static boolean testScalingUp(DashboardClient dashClient, JobAPI.Job job) {
+
+    int addedWorkers = 2;
+    int updatedNumberOfWorkers = job.getNumberOfWorkers() + addedWorkers;
+    LOG.info("change: " + addedWorkers + " updatedNumberOfWorkers: " + updatedNumberOfWorkers);
+
+    List<Integer> workerList = new LinkedList<>();
+    workerList.add(1);
+    workerList.add(2);
+    return dashClient.scaledWorkers(
+        addedWorkers, updatedNumberOfWorkers, workerList);
+  }
+
+  public static boolean testScalingDown(DashboardClient dashClient, JobAPI.Job job) {
+
+    int removedWorkers = 2;
+    int change = 0 - removedWorkers;
+    int updatedNumberOfWorkers = job.getNumberOfWorkers() - removedWorkers;
+    LOG.info("change: " + change + " updatedNumberOfWorkers: " + updatedNumberOfWorkers);
+
+    List<Integer> killedWorkers = new LinkedList<>();
+    killedWorkers.add(job.getNumberOfWorkers() - 1);
+    killedWorkers.add(job.getNumberOfWorkers() - 2);
+    return dashClient.scaledWorkers(change, updatedNumberOfWorkers, killedWorkers);
   }
 
   public static void printUsage() {
