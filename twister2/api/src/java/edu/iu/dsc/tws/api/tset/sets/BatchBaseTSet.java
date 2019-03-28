@@ -76,9 +76,9 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
-                                       Selector<T, K> selector) {
-    GroupedTSet<T, K> groupedTSet = new GroupedTSet<>(config, tSetEnv, this,
+  public <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction,
+                                       Selector<K, T> selector) {
+    GroupedTSet<K, T> groupedTSet = new GroupedTSet<>(config, tSetEnv, this,
         partitionFunction, selector);
     children.add(groupedTSet);
     return groupedTSet;

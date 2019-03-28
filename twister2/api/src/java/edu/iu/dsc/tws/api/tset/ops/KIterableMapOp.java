@@ -9,26 +9,29 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.api.tset.ops;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 
+
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.tset.CacheableImpl;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.KIterableMapFunction;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class IterableMapOp<I, O> implements ICompute, Receptor {
+public class KIterableMapOp<K, V, O> implements ICompute, Receptor {
   private static final long serialVersionUID = -1220168533L;
 
-  private IterableMapFunction<I, O> mapFn;
+  private KIterableMapFunction<K, V, O> mapFn;
 
   private TaskContext context;
 
@@ -36,10 +39,10 @@ public class IterableMapOp<I, O> implements ICompute, Receptor {
 
   private boolean keyed;
 
-  public IterableMapOp() {
+  public KIterableMapOp() {
   }
 
-  public IterableMapOp(IterableMapFunction<I, O> mapFn, boolean inputItr, boolean kyd) {
+  public KIterableMapOp(KIterableMapFunction<K, V, O> mapFn, boolean inputItr, boolean kyd) {
     this.mapFn = mapFn;
     this.inputIterator = inputItr;
     this.keyed = kyd;
@@ -48,12 +51,12 @@ public class IterableMapOp<I, O> implements ICompute, Receptor {
   @SuppressWarnings("unchecked")
   @Override
   public boolean execute(IMessage content) {
-    Iterable<I> data;
+    Iterable<Tuple<K, V>> data;
     if (inputIterator) {
-      data = new TSetIterable<>((Iterator<I>) content.getContent());
+      data = new TSetIterable<>((Iterator<Tuple<K, V>>) content.getContent());
     } else {
-      ArrayList<I> itr = new ArrayList<>();
-      itr.add((I) content.getContent());
+      ArrayList<Tuple<K, V>> itr = new ArrayList<>();
+      itr.add((Tuple<K, V>) content.getContent());
       data = new TSetIterable<>(itr.iterator());
     }
 

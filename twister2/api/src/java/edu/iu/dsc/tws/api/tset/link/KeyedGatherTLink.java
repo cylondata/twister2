@@ -18,31 +18,27 @@ import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
+import edu.iu.dsc.tws.api.tset.fn.NestedIterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
 import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
+import edu.iu.dsc.tws.api.tset.sets.NestedIterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 
-public class KeyedGatherTLink<T, K> extends KeyValueTLink<T, K> {
-  private BaseTSet<T> parent;
+public class KeyedGatherTLink<K, V> extends KeyValueTLink<K, V> {
+  private BaseTSet<V> parent;
 
   private PartitionFunction<K> partitionFunction;
 
-  private Selector<T, K> selector;
+  private Selector<K, V> selector;
 
-  public KeyedGatherTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt,
-                          PartitionFunction<K> parFn, Selector<T, K> selc) {
+  public KeyedGatherTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<V> prnt,
+                          PartitionFunction<K> parFn, Selector<K, V> selc) {
     super(cfg, tSetEnv);
     this.parent = prnt;
     this.partitionFunction = parFn;
@@ -55,41 +51,31 @@ public class KeyedGatherTLink<T, K> extends KeyValueTLink<T, K> {
     return parent.getName();
   }
 
-  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn, int parallelism) {
-    MapTSet<P, T> set = new MapTSet<P, T>(config, tSetEnv, this, mapFn, parallelism);
-    children.add(set);
-    return set;
-  }
-
-  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn, int parallelism) {
-    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, this, mapFn, parallelism);
-    children.add(set);
-    return set;
-  }
-
-  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn, int parallelism) {
-    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, this, mapFn,
+  public <O> NestedIterableMapTSet<K, V, O> map(NestedIterableMapFunction<K, V, O> mapFn,
+                                                int parallelism) {
+    NestedIterableMapTSet<K, V, O> set = new NestedIterableMapTSet<>(config, tSetEnv,
+        this, mapFn,
         parallelism);
     children.add(set);
     return set;
   }
 
-  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn,
+  public <P> IterableFlatMapTSet<P, V> flatMap(IterableFlatMapFunction<V, P> mapFn,
                                                int parallelism) {
-    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
+    IterableFlatMapTSet<P, V> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
         mapFn, parallelism);
     children.add(set);
     return set;
   }
 
-  public SinkTSet<T> sink(Sink<T> sink, int parallelism) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink, parallelism);
+  public SinkTSet<V> sink(Sink<V> sink, int parallelism) {
+    SinkTSet<V> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink, parallelism);
     children.add(sinkTSet);
     tSetEnv.run();
     return sinkTSet;
   }
 
-  public BaseTSet<T> getParent() {
+  public BaseTSet<V> getParent() {
     return parent;
   }
 
@@ -102,19 +88,19 @@ public class KeyedGatherTLink<T, K> extends KeyValueTLink<T, K> {
     return partitionFunction;
   }
 
-  public Selector<T, K> getSelector() {
+  public Selector<K, V> getSelector() {
     return selector;
   }
 
   public void buildConnection(ComputeConnection connection) {
     DataType keyType = TSetUtils.getDataType(getClassK());
-    DataType dataType = TSetUtils.getDataType(getClassT());
+    DataType dataType = TSetUtils.getDataType(getClassV());
     connection.keyedGather(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
         new TaskPartitionFunction<>(partitionFunction), new TaskKeySelectorImpl<>(selector));
   }
 
   @Override
-  public KeyedGatherTLink<T, K> setName(String n) {
+  public KeyedGatherTLink<K, V> setName(String n) {
     super.setName(n);
     return this;
   }

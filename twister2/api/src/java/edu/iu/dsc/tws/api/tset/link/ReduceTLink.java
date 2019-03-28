@@ -62,8 +62,8 @@ public class ReduceTLink<T> extends BaseTLink<T> {
     return set;
   }
 
-  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
-    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, this,
+  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
+    IterableMapTSet<T, P> set = new IterableMapTSet<>(config, tSetEnv, this,
         mapFn, 1);
     children.add(set);
     return set;

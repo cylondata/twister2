@@ -94,8 +94,8 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
-                                       Selector<T, K> selector) {
+  public <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction,
+                                       Selector<K, T> selector) {
     throw new UnsupportedOperationException("Cache is not avilable in streaming operations");
   }
 

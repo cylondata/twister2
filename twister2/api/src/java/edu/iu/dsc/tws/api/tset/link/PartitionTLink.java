@@ -45,8 +45,8 @@ public class PartitionTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
     return parent.getName();
   }
 
-  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn, int parallelism) {
-    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, this, mapFn,
+  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn, int parallelism) {
+    IterableMapTSet<T, P> set = new IterableMapTSet<>(config, tSetEnv, this, mapFn,
         parallelism);
     children.add(set);
     return set;

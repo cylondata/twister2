@@ -22,15 +22,15 @@ import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
 import edu.iu.dsc.tws.common.config.Config;
 
-public class GroupedTSet<T, K> extends BatchBaseTSet<T> {
+public class GroupedTSet<K, V> extends BatchBaseTSet<V> {
   private PartitionFunction<K> partitioner;
 
-  private Selector<T, K> selector;
+  private Selector<K, V> selector;
 
-  private BaseTSet<T> parent;
+  private BaseTSet<V> parent;
 
-  public GroupedTSet(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt, PartitionFunction<K> partFn,
-                     Selector<T, K> selc) {
+  public GroupedTSet(Config cfg, TSetEnv tSetEnv, BaseTSet<V> prnt, PartitionFunction<K> partFn,
+                     Selector<K, V> selc) {
     super(cfg, tSetEnv);
     this.partitioner = partFn;
     this.selector = selc;
@@ -39,8 +39,8 @@ public class GroupedTSet<T, K> extends BatchBaseTSet<T> {
     this.parallel = 1;
   }
 
-  public GroupedTSet(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt, PartitionFunction<K> partFn,
-                     Selector<T, K> selc, int parallelism) {
+  public GroupedTSet(Config cfg, TSetEnv tSetEnv, BaseTSet<V> prnt, PartitionFunction<K> partFn,
+                     Selector<K, V> selc, int parallelism) {
     super(cfg, tSetEnv);
     this.partitioner = partFn;
     this.selector = selc;
@@ -49,28 +49,28 @@ public class GroupedTSet<T, K> extends BatchBaseTSet<T> {
     this.parallel = parallelism;
   }
 
-  public KeyedReduceTLink<T, K> keyedReduce(ReduceFunction<T> reduceFn) {
-    KeyedReduceTLink<T, K> reduce = new KeyedReduceTLink<>(config, tSetEnv, parent,
+  public KeyedReduceTLink<K, V> keyedReduce(ReduceFunction<V> reduceFn) {
+    KeyedReduceTLink<K, V> reduce = new KeyedReduceTLink<>(config, tSetEnv, parent,
         reduceFn, partitioner, selector);
     children.add(reduce);
     return reduce;
   }
 
-  public KeyedPartitionTLink<T, K> keyedPartition() {
-    KeyedPartitionTLink<T, K> partition = new KeyedPartitionTLink<>(config, tSetEnv,
+  public KeyedPartitionTLink<K, V> keyedPartition() {
+    KeyedPartitionTLink<K, V> partition = new KeyedPartitionTLink<>(config, tSetEnv,
         parent, partitioner, selector);
     children.add(partition);
     return partition;
   }
 
-  public KeyedGatherTLink<T, K> keyedGather() {
-    KeyedGatherTLink<T, K> gather = new KeyedGatherTLink<>(config, tSetEnv, parent,
+  public KeyedGatherTLink<K, V> keyedGather() {
+    KeyedGatherTLink<K, V> gather = new KeyedGatherTLink<>(config, tSetEnv, parent,
         partitioner, selector);
     children.add(gather);
     return gather;
   }
 
-  public BaseTSet<T> getParent() {
+  public BaseTSet<V> getParent() {
     return parent;
   }
 
@@ -85,7 +85,7 @@ public class GroupedTSet<T, K> extends BatchBaseTSet<T> {
   }
 
   @Override
-  public GroupedTSet<T, K> setName(String n) {
+  public GroupedTSet<K, V> setName(String n) {
     this.name = n;
     return this;
   }

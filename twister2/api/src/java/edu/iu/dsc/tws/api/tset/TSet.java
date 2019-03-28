@@ -81,7 +81,7 @@ public interface TSet<T> extends TBase<T> {
    * @param <K> the type for partitioning
    * @return grouped set
    */
-  <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction, Selector<T, K> selector);
+  <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction, Selector<K, T> selector);
 
   /**
    * Create a cloned dataset

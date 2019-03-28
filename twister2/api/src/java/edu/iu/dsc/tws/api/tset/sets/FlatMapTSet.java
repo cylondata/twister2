@@ -55,7 +55,7 @@ public class FlatMapTSet<T, P> extends BatchBaseTSet<T> {
     this.parallel = parallelism;
   }
 
-  public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
+  public <P1> IterableMapTSet<T, P1> map(IterableMapFunction<T, P1> mFn) {
     DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
     children.add(direct);
     return direct.map(mFn);

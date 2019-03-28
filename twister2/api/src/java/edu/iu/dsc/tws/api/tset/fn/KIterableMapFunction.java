@@ -9,26 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.api.tset.fn;
 
-package edu.iu.dsc.tws.api.tset.link;
+import edu.iu.dsc.tws.api.tset.TFunction;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
-import com.google.common.reflect.TypeToken;
-
-import edu.iu.dsc.tws.api.tset.TSetEnv;
-import edu.iu.dsc.tws.common.config.Config;
-
-public abstract class KeyValueTLink<K, V> extends BaseTLink<V> {
-  public KeyValueTLink(Config cfg, TSetEnv tSetEnv) {
-    super(cfg, tSetEnv);
-  }
-
-  Class<? super K> getClassK() {
-    return new TypeToken<K>(getClass()) {
-    }.getRawType();
-  }
-
-  Class<? super V> getClassV() {
-    return new TypeToken<V>(getClass()) {
-    }.getRawType();
-  }
+/**
+ * Keyed Iterable map function
+ *
+ * @param <K> input key type
+ * @param <V> input value type
+ * @param <O> output type
+ */
+public interface KIterableMapFunction<K, V, O> extends TFunction {
+  /**
+   * Map with an iterable input
+   *
+   * @param t type of input
+   * @return object
+   */
+  O map(Iterable<Tuple<K, V>> t);
 }

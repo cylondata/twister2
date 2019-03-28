@@ -35,8 +35,8 @@ public class DirectTLink<T> extends BaseTLink<T> {
     this.name = "direct-" + parent.getName();
   }
 
-  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
-    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, this,
+  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
+    IterableMapTSet<T, P> set = new IterableMapTSet<>(config, tSetEnv, this,
         mapFn, parent.getParallelism());
     children.add(set);
     return set;

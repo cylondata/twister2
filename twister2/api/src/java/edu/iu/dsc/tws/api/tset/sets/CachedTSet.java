@@ -84,7 +84,7 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
     return true;
   }
 
-  public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
+  public <P1> IterableMapTSet<T, P1> map(IterableMapFunction<T, P1> mFn) {
     BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
     return cacheSource.map(mFn);
   }
@@ -136,8 +136,8 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
-  public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
-                                       Selector<T, K> selector) {
+  public <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction,
+                                       Selector<K, T> selector) {
     BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
     return cacheSource.groupBy(partitionFunction, selector);
   }
