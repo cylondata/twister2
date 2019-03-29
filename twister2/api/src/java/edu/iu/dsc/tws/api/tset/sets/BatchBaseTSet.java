@@ -14,10 +14,10 @@ package edu.iu.dsc.tws.api.tset.sets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
@@ -76,9 +76,9 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
-                                       Selector<T, K> selector) {
-    GroupedTSet<T, K> groupedTSet = new GroupedTSet<>(config, tSetEnv, this,
+  public <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction,
+                                       Selector<K, T> selector) {
+    GroupedTSet<K, T> groupedTSet = new GroupedTSet<>(config, tSetEnv, this,
         partitionFunction, selector);
     children.add(groupedTSet);
     return groupedTSet;

@@ -9,19 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.api.tset.fn;
+
+import edu.iu.dsc.tws.api.tset.TFunction;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 /**
- * Map function, one input and one output
+ * Keyed Iterable map function
  *
- * @param <T> input type
+ * @param <K> input key type
+ * @param <V> input value type
  * @param <O> output type
  */
-public interface MapFunction<T, O> extends TFunction {
+public interface KIterableMapFunction<K, V, O> extends TFunction {
   /**
-   * Map function
-   * @param t input
-   * @return the result
+   * Map with an iterable input
+   *
+   * @param t type of input
+   * @return object
    */
-  O map(T t);
+  O map(Iterable<Tuple<K, V>> t);
 }

@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
+
 public abstract class BaseIterableFlatMapFunction<T, O> extends TBaseFunction
     implements IterableFlatMapFunction<T, O> {
 }

@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.api.tset.ops;
 
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.tset.CacheableImpl;
-import edu.iu.dsc.tws.api.tset.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.task.api.IFunction;
 

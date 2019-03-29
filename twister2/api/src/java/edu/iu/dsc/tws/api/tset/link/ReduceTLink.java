@@ -14,14 +14,14 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.MapFunction;
-import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunction;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
@@ -62,15 +62,15 @@ public class ReduceTLink<T> extends BaseTLink<T> {
     return set;
   }
 
-  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
-    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, this,
+  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
+    IterableMapTSet<T, P> set = new IterableMapTSet<>(config, tSetEnv, this,
         mapFn, 1);
     children.add(set);
     return set;
   }
 
-  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
+  public <P> IterableFlatMapTSet<T, P> flatMap(IterableFlatMapFunction<T, P> mapFn) {
+    IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
         mapFn, 1);
     children.add(set);
     return set;

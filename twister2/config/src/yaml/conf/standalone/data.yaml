@@ -19,5 +19,5 @@ twister2.hdfs.data.directory: "/user/username/"
 #Specify the name of the namenode
 twister2.hdfs.namenode: "namenode.iu.edu"
 
-#Specify the name of the namenode port
+#Specify the namenode port
 twister2.hdfs.namenode.port: "9000"

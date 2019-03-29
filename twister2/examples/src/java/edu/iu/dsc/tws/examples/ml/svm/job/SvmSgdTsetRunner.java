@@ -101,7 +101,7 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
     initializeParameters();
     CachedTSet<double[][]> trainingData = loadTrainingData();
     CachedTSet<double[][]> testingData = loadTestingData();
-    IterableMapTSet<double[], double[][]> svmTrainTset = trainingData
+    IterableMapTSet<double[][], double[]> svmTrainTset = trainingData
         .map(new SvmTrainMap(this.binaryBatchModel, this.svmJobParameters));
     //svmTset.addInput("trainingData", testingData);
     ReduceTLink<double[]> reduceTLink = svmTrainTset.reduce((t1, t2) -> {
@@ -120,7 +120,7 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
     this.binaryBatchModel.setW(wFinal);
     LOG.info(String.format("Data : %s", Arrays.toString(wFinal)));
 
-    IterableMapTSet<Double, double[][]> svmTestTset = testingData
+    IterableMapTSet<double[][], Double> svmTestTset = testingData
         .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
     ReduceTLink<Double> reduceTestLink = svmTestTset.reduce((t1, t2) -> {
       double t = t1 + t2;

@@ -10,6 +10,7 @@ load("//tools:rules/twister2_client.bzl", "twister2_client_kubernetes_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_kubernetes_deployment_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_mesos_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_nomad_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_dashboard_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_lib_third_party_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_lib_task_scheduler_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_lib_resource_scheduler_files")
@@ -122,9 +123,9 @@ pack_tw2(
 pack_tw2(
     name = "twister2-ompi-lib",
     srcs = select({
-                   "//tools/platform:darwin": ["@ompi3darwin//:ompi-lib-files"],
-                   "//conditions:default": ["@ompi3//:ompi-lib-files"],
-               }),
+        "//tools/platform:darwin": ["@ompi3darwin//:ompi-lib-files"],
+        "//conditions:default": ["@ompi3//:ompi-lib-files"],
+    }),
     package_dir = "ompi/lib",
     version = T2_VERSION,
 )
@@ -132,29 +133,29 @@ pack_tw2(
 pack_tw2(
     name = "twister2-ompi-bin",
     srcs = select({
-                   "//tools/platform:darwin": ["@ompi3darwin//:ompi-bin-files"],
-                   "//conditions:default": ["@ompi3//:ompi-bin-files"],
-               }),
+        "//tools/platform:darwin": ["@ompi3darwin//:ompi-bin-files"],
+        "//conditions:default": ["@ompi3//:ompi-bin-files"],
+    }),
     package_dir = "ompi/bin",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-ompi-include",
-        srcs = select({
-                       "//tools/platform:darwin": ["@ompi3darwin//:ompi-include-files"],
-                       "//conditions:default": ["@ompi3//:ompi-include-files"],
-                   }),
+    srcs = select({
+        "//tools/platform:darwin": ["@ompi3darwin//:ompi-include-files"],
+        "//conditions:default": ["@ompi3//:ompi-include-files"],
+    }),
     package_dir = "ompi/include",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-ompi-etc",
-        srcs = select({
-                       "//tools/platform:darwin": ["@ompi3darwin//:ompi-etc-files"],
-                       "//conditions:default": ["@ompi3//:ompi-etc-files"],
-                   }),
+    srcs = select({
+        "//tools/platform:darwin": ["@ompi3darwin//:ompi-etc-files"],
+        "//conditions:default": ["@ompi3//:ompi-etc-files"],
+    }),
     package_dir = "ompi/etc",
     version = T2_VERSION,
 )
@@ -250,6 +251,7 @@ pack_tw2(
         ":twister2-bin",
         ":twister2-communication",
         ":twister2-conf-aurora",
+        ":twister2-conf-dashboard",
         ":twister2-conf-kubernetes",
         ":twister2-conf-kubernetes-deployment",
         ":twister2-conf-mesos",
@@ -285,6 +287,7 @@ pack_tw2(
         ":twister2-bin",
         ":twister2-communication",
         ":twister2-conf-aurora",
+        ":twister2-conf-dashboard",
         ":twister2-conf-kubernetes",
         ":twister2-conf-kubernetes-deployment",
         ":twister2-conf-mesos",
@@ -361,6 +364,13 @@ pack_tw2(
     name = "twister2-conf-nomad",
     srcs = twister2_client_nomad_files(),
     package_dir = "conf/nomad",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-conf-dashboard",
+    srcs = twister2_client_dashboard_files(),
+    package_dir = "conf/dashboard",
     version = T2_VERSION,
 )
 

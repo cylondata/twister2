@@ -38,7 +38,7 @@ need to change the following parameter found in ```conf/slurm/resource.yaml``` t
 twister2.resource.scheduler.mpi.mpirun.file: "twister2-core/ompi/bin/mpirun"
 ```
 
-You can follow the [Compiling Guide](../../compiling/compiling.md) to get instructions on how to install and configure OpenMPI.
+You can follow the [compiling guide](../../compiling/compiling.md) to get instructions on how to install and configure OpenMPI.
 
 ## How it works
 

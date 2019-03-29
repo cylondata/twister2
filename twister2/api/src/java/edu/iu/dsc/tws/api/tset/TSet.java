@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
@@ -79,7 +81,7 @@ public interface TSet<T> extends TBase<T> {
    * @param <K> the type for partitioning
    * @return grouped set
    */
-  <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction, Selector<T, K> selector);
+  <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction, Selector<K, T> selector);
 
   /**
    * Create a cloned dataset

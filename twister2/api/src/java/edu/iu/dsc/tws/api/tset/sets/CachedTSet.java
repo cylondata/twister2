@@ -18,14 +18,14 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.tset.Cacheable;
-import edu.iu.dsc.tws.api.tset.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
@@ -84,12 +84,12 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
     return true;
   }
 
-  public <P1> IterableMapTSet<P1, T> map(IterableMapFunction<T, P1> mFn) {
+  public <P1> IterableMapTSet<T, P1> map(IterableMapFunction<T, P1> mFn) {
     BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
     return cacheSource.map(mFn);
   }
 
-  public <P1> IterableFlatMapTSet<P1, T> flatMap(IterableFlatMapFunction<T, P1> mFn) {
+  public <P1> IterableFlatMapTSet<T, P1> flatMap(IterableFlatMapFunction<T, P1> mFn) {
     BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
     return cacheSource.flatMap(mFn);
   }
@@ -136,8 +136,8 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
-  public <K> GroupedTSet<T, K> groupBy(PartitionFunction<K> partitionFunction,
-                                       Selector<T, K> selector) {
+  public <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction,
+                                       Selector<K, T> selector) {
     BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
     return cacheSource.groupBy(partitionFunction, selector);
   }

@@ -26,6 +26,7 @@ configs = parse_configs(config_files)
 
 jar_root_dir = configs["base"]['jarRootDir']
 t2_bin = configs["base"]['t2Bin']
+jdk_dir = configs["base"]["jdk"]
 
 partial_run = len(sys.argv) > 1
 tests_to_run = []
@@ -70,7 +71,7 @@ for test in configs['tests']:
     root_node.collect_leaf_nodes(leaf_nodes)
 
     existing_env = os.environ.copy()
-    existing_env["JAVA_HOME"] = "/opt/jdk"
+    existing_env["JAVA_HOME"] = jdk_dir
 
     command = ""
     for leaf_node in leaf_nodes:

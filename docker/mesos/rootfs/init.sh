@@ -5,7 +5,7 @@
 #echo $(ls twister2/)
 
 cd twister2
-#wget web_server_ip_address:port_number/twister2/mesos/twister2-core-0.1.0.tar.gz
+#wget web_server_ip_address:port_number/twister2/mesos/twister2-core-0.2.0.tar.gz
 #wget web_server_ip_address:port_number/twister2/mesos/twister2-job.tar.gz
 
 
@@ -16,10 +16,10 @@ echo "starting sshd"
 
 #chmod 600 ~/.ssh/id_rsa
 
-if [ ! -f twister2-core-0.1.0.tar.gz ]; then 
+if [ ! -f twister2-core-0.2.0.tar.gz ]; then
     echo "file not found. Probably could not download the file"
 else
-    tar xvf twister2-core-0.1.0.tar.gz
+    tar xvf twister2-core-0.2.0.tar.gz
     tar xvf twister2-job.tar.gz
     echo "files fetched and unpacked"
     java -cp twister2-core/lib/*:twister2-job/libexamples-java.jar:/customJars/* $CLASS_NAME

@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.api.tset.ops;
 
 import java.util.Set;
 
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
 public class TaskPartitionFunction<T> implements TaskPartitioner {

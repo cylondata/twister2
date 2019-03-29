@@ -18,40 +18,51 @@ mvn archetype:generate -DgroupId="twister2-hello" -DartifactId="hello" -Darchety
 
 ## Maven Dependency
 
-Now lets add the Twister2 dependencies to the pom.
+Now lets add the Twister2 dependencies to the pom. Please add the correct version as required.
 
 ```xml
-  <dependency>
+  <dependencies>
+    <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>comms-java</artifactId>
-      <version>0.1.0</version>
-  </dependency>
-  <dependency>
+      <version>0.2.0</version>
+    </dependency>
+    <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>proto-java</artifactId>
-      <version>0.1.0</version>
-  </dependency>
-  <dependency>
+      <version>0.2.0</version>
+    </dependency>
+    <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>resource-scheduler-java</artifactId>
-      <version>0.1.0</version>
-  </dependency>
-  <dependency>
+      <version>0.2.0</version>
+    </dependency>
+    <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>common-java</artifactId>
-      <version>0.1.0</version>
-  </dependency>
-  <dependency>
-      <groupId>edu.iu.dsc.tws</groupId>
-      <artifactId>config-java</artifactId>
-      <version>0.1.0</version>
-      <scope>provided</scope>
-  </dependency>
-  <dependency>
+      <version>0.2.0</version>
+    </dependency>
+    <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>api-java</artifactId>
-      <version>0.1.0</version>
-  </dependency>
+      <version>0.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.iu.dsc.tws</groupId>
+      <artifactId>data-java</artifactId>
+      <version>0.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.iu.dsc.tws</groupId>
+      <artifactId>task-java</artifactId>
+      <version>0.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.iu.dsc.tws</groupId>
+      <artifactId>taskscheduler-java</artifactId>
+      <version>0.2.0</version>
+    </dependency>
+  </dependencies>
 ```
 
 You would want to develop your application as a combined jar. So add the following to the project.
@@ -136,16 +147,6 @@ public class HelloWorld implements IWorker {
     LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
             + "and I got a message: %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
-
-    List<JobMasterAPI.WorkerInfo> workerList = null;
-    try {
-      workerList = workerController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
-    String workersStr = WorkerInfoUtils.workerListAsString(workerList);
-    LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
   }
 
   public static void main(String[] args) {

@@ -17,18 +17,18 @@ import com.google.common.reflect.TypeToken;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.common.config.Config;
 
-public abstract class KeyValueTLink<T, K> extends BaseTLink<T> {
+public abstract class KeyValueTLink<K, V> extends BaseTLink<V> {
   public KeyValueTLink(Config cfg, TSetEnv tSetEnv) {
     super(cfg, tSetEnv);
   }
 
-  Class<? super T> getClassT() {
-    return new TypeToken<T>(getClass()) {
+  Class<? super K> getClassK() {
+    return new TypeToken<K>(getClass()) {
     }.getRawType();
   }
 
-  Class<? super K> getClassK() {
-    return new TypeToken<K>(getClass()) {
+  Class<? super V> getClassV() {
+    return new TypeToken<V>(getClass()) {
     }.getRawType();
   }
 }
