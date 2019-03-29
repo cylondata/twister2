@@ -26,18 +26,23 @@ package edu.iu.dsc.tws.examples.internal.task.checkpoint;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
+import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
@@ -58,6 +63,8 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class TaskCheckpointExample implements IWorker {
+  private static final Logger LOG = Logger.getLogger(TaskCheckpointExample.class.getName());
+
   @Override
   public void execute(Config config, int workerID,
                       IWorkerController workerController,
@@ -66,8 +73,8 @@ public class TaskCheckpointExample implements IWorker {
 
     TWSChannel channel = Network.initializeChannel(config, workerController);
 
-    GeneratorTask g = new GeneratorTask();
-    ReceivingTask r = new ReceivingTask();
+    GeneratorCheckpointTask g = new GeneratorCheckpointTask();
+    RecevingCheckpointTask r = new RecevingCheckpointTask(channel);
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
@@ -91,28 +98,43 @@ public class TaskCheckpointExample implements IWorker {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
+
+    WorkerPlan workerPlan = createWorkerPlan(workerList);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-        workerController.getAllWorkers(),
-        new Communicator(config, channel));
+          workerList, new Communicator(config, channel));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, channel);
     executor.execute();
   }
 
-
-  private static class GeneratorTask extends SourceTask {
-    private static final long serialVersionUID = -254264903510284748L;
+  private static class GeneratorCheckpointTask extends SourceTask {
+    private static final long serialVersionUID = -254264903510284848L;
     private TaskContext ctx;
     private Config config;
 
+    private long id = 1;
+
     @Override
     public void execute() {
-      ctx.write("partition-edge", "Hello");
-    }
 
+      CheckpointBarrier cb = new CheckpointBarrier(id, 2141535, null);
+      ctx.write("partition-edge", cb);
+      id++;
+      try {
+        Thread.sleep(1000);
+      } catch (Exception e) {
+        System.out.print("Sleep failed");
+      }
+    }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
@@ -120,22 +142,35 @@ public class TaskCheckpointExample implements IWorker {
     }
   }
 
-  private static class ReceivingTask extends SinkTask {
-    private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
+  private static final class RecevingCheckpointTask extends SinkTask {
+    private static final long serialVersionUID = -254264903520284798L;
+
+    private TWSChannel channel;
+
+    private int taskId;
+
+    private Map<String, Object> newCfg = new HashMap<>();
+
+    private RecevingCheckpointTask() {
+    }
+
+    private RecevingCheckpointTask(TWSChannel channel) {
+      super();
+      this.channel = channel;
+    }
 
     @Override
     public boolean execute(IMessage message) {
-      if (count % 1000000 == 0) {
-        System.out.println(message.getContent());
-      }
-      count++;
+
+      CheckpointBarrier cb = (CheckpointBarrier) message.getContent();
+      System.out.println(cb.getId() + " from taskId : " + taskId);
+//      channel.direct(newCfg, MessageType.OBJECT, 0, )
       return true;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-
+      this.taskId = context.taskId();
     }
   }
 

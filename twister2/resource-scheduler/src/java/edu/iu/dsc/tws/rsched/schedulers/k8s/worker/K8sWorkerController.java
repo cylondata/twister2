@@ -25,6 +25,7 @@ import com.google.gson.reflect.TypeToken;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -263,20 +264,21 @@ public class K8sWorkerController implements IWorkerController {
    * @return
    */
   @Override
-  public List<JobMasterAPI.WorkerInfo> getAllWorkers() {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException {
     // first make sure all workers are in the list
+    long timeLimitMilliSec = ControllerContext.maxWaitTimeForAllToJoin(config);
     long startTime = System.currentTimeMillis();
     if (workerList.size() < numberOfWorkers) {
-      boolean listBuilt = buildWorkerListWaitForAll(
-          ControllerContext.maxWaitTimeForAllToJoin(config));
+      boolean listBuilt = buildWorkerListWaitForAll(timeLimitMilliSec);
       if (!listBuilt) {
-        return null;
+        throw
+            new TimeoutException("All workers have not joined the job on the time limit: "
+            + timeLimitMilliSec + "ms.");
       }
     }
 
     ArrayList<String> podNameList = constructPodNameList();
 
-    long timeLimitMilliSec = ControllerContext.maxWaitTimeForAllToJoin(config);
     long duration = System.currentTimeMillis() - startTime;
     long remainingTimeLimit = timeLimitMilliSec - duration;
 
@@ -284,10 +286,9 @@ public class K8sWorkerController implements IWorkerController {
     if (allRunning) {
       return workerList;
     } else {
-      LOG.log(Level.SEVERE, "Can not get to all pods running state. Time limit may have been "
-          + "reached. Or there can be a problem for pods to start and running. Time limit value: "
-          + timeLimitMilliSec + "ms");
-      return  null;
+      throw
+          new TimeoutException("All workers have not joined the job on the specified time limit: "
+              + timeLimitMilliSec + "ms.");
     }
   }
 
@@ -367,8 +368,7 @@ public class K8sWorkerController implements IWorkerController {
    * @return
    */
   @Override
-  public boolean waitOnBarrier() {
-    return false;
+  public void waitOnBarrier() throws TimeoutException {
   }
 
 }

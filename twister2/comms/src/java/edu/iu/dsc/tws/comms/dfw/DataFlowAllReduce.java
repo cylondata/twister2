@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,7 +25,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchPartialReceiver;
@@ -98,13 +99,13 @@ public class DataFlowAllReduce implements DataFlowOperation {
     this.executor = taskPlan.getThisExecutor();
 
     broadcast = new DataFlowBroadcast(channel, middleTask, destinations,
-        new BCastReceiver(finalReceiver));
+        new BCastReceiver(finalReceiver, streaming));
     broadcast.init(config, t, instancePlan, broadCastEdge);
 
     MessageReceiver receiver;
     if (streaming) {
       this.partialReceiver = new ReduceStreamingPartialReceiver(middleTask, reduceFunction);
-      receiver = new AllReduceStreamingFinalReceiver(reduceFunction, broadcast, middleTask);
+      receiver = new AllReduceStreamingFinalReceiver(reduceFunction, broadcast);
     } else {
       this.partialReceiver = new ReduceBatchPartialReceiver(middleTask, reduceFunction);
       receiver = new AllReduceBatchFinalReceiver(reduceFunction, broadcast);
@@ -153,7 +154,25 @@ public class DataFlowAllReduce implements DataFlowOperation {
 
   @Override
   public void close() {
+    reduce.close();
+    broadcast.close();
   }
+
+  @Override
+  public void clean() {
+    if (partialReceiver != null) {
+      partialReceiver.clean();
+    }
+
+    if (reduce != null) {
+      reduce.clean();
+    }
+
+    if (broadcast != null) {
+      broadcast.clean();
+    }
+  }
+
 
   @Override
   public void finish(int source) {
@@ -173,23 +192,44 @@ public class DataFlowAllReduce implements DataFlowOperation {
   private static class BCastReceiver implements MessageReceiver {
     private SingularReceiver singularReceiver;
 
-    BCastReceiver(SingularReceiver reduceRcvr) {
+    private Map<Integer, Boolean> finished = new HashMap<>();
+
+    private boolean strm;
+
+    BCastReceiver(SingularReceiver reduceRcvr, boolean strm) {
       this.singularReceiver = reduceRcvr;
+      this.strm = strm;
     }
 
     @Override
     public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
       this.singularReceiver.init(cfg, expectedIds.keySet());
+      for (int i : expectedIds.keySet()) {
+        finished.put(i, false);
+      }
     }
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      return singularReceiver.receive(target, object, flags);
+      boolean offer = singularReceiver.receive(target, object, flags);
+      if (offer) {
+        finished.put(target, true);
+      }
+      return offer;
     }
 
     @Override
     public boolean progress() {
-      return false;
+      if (strm) {
+        return false;
+      } else {
+        for (Boolean b : finished.values()) {
+          if (!b) {
+            return true;
+          }
+        }
+        return false;
+      }
     }
   }
 }

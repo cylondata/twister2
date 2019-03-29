@@ -13,17 +13,17 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -42,7 +42,7 @@ public final class K8sWorkerStarter {
   private static Config config = null;
   private static int workerID = -1; // -1 means, not initialized
   private static JobMasterAPI.WorkerInfo workerInfo;
-  private static JobMasterClient jobMasterClient;
+  private static JMWorkerAgent jobMasterAgent;
   private static String jobName = null;
   private static JobAPI.Job job = null;
   private static JobAPI.ComputeResource computeResource = null;
@@ -86,6 +86,7 @@ public final class K8sWorkerStarter {
     // job file configurations will override
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
+    config = K8sWorkerUtils.unsetWorkerIDAssigment(config);
 
     // get podIP from localhost
     InetAddress localHost = null;
@@ -108,9 +109,13 @@ public final class K8sWorkerStarter {
     // get computeResource for this worker
     computeResource = K8sWorkerUtils.getComputeResource(job, podName);
 
-    // set workerInfo
+    // generate additional ports if requested
+    Map<String, Integer> additionalPorts =
+        K8sWorkerUtils.generateAdditionalPorts(config, workerPort);
+
+    // construct WorkerInfo
     workerInfo = WorkerInfoUtils.createWorkerInfo(
-        workerID, localHost.getHostAddress(), workerPort, nodeInfo, computeResource);
+        workerID, podIP, workerPort, nodeInfo, computeResource, additionalPorts);
 
     // initialize persistent volume
     K8sPersistentVolume pv = null;
@@ -132,23 +137,18 @@ public final class K8sWorkerStarter {
         + "hostIP(nodeIP): " + hostIP + "\n"
     );
 
-    // start JobMasterClient
-    jobMasterClient = new JobMasterClient(config, workerInfo, jobMasterIP,
+    // construct JMWorkerAgent
+    jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
         JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
 
-    Thread clientThread = jobMasterClient.startThreaded();
-    if (clientThread == null) {
-      throw new RuntimeException("Can not start JobMasterClient thread.");
-    }
-
-    // we need to make sure that the worker starting message went through
-    jobMasterClient.sendWorkerStartingMessage();
+    // start JMWorkerAgent
+    jobMasterAgent.startThreaded();
 
     // we will be running the Worker, send running message
-    jobMasterClient.sendWorkerRunningMessage();
+    jobMasterAgent.sendWorkerRunningMessage();
 
     // start the worker
-    startWorker(jobMasterClient.getJMWorkerController(), pv);
+    startWorker(jobMasterAgent, pv);
 
     // close the worker
     closeWorker();
@@ -196,10 +196,10 @@ public final class K8sWorkerStarter {
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(IWorkerController workerController,
+  public static void startWorker(JMWorkerAgent jmWorkerAgent,
                                  IPersistentVolume pv) {
 
-    String workerClass = SchedulerContext.workerClass(config);
+    String workerClass = job.getWorkerClassName();
     IWorker worker;
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
@@ -215,7 +215,7 @@ public final class K8sWorkerStarter {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
 
-    worker.execute(config, workerID, workerController, pv, volatileVolume);
+    worker.execute(config, workerID, jmWorkerAgent.getJMWorkerController(), pv, volatileVolume);
   }
 
   /**
@@ -225,8 +225,8 @@ public final class K8sWorkerStarter {
 
     // send worker completed message to the Job Master and finish
     // Job master will delete the StatefulSet object
-    jobMasterClient.sendWorkerCompletedMessage();
-    jobMasterClient.close();
+    jobMasterAgent.sendWorkerCompletedMessage();
+    jobMasterAgent.close();
   }
 
 }

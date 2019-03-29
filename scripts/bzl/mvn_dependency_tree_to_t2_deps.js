@@ -112,6 +112,6 @@ while (groups) {
     //console.log(groups[0]);
     //downloadAndProcess(groups[0].replace(":jar",""))
     let parts = groups[0].replace(":jar", "").split(":");
-    console.log('"@' + (parts[0] + "_" + parts[1]).replace(/[:\.-]/g, "_") + '//jar",);
+    console.log('"@' + (parts[0] + "_" + parts[1]).replace(/[:\.-]/g, "_") + '//jar');
     groups = regex.exec(mvnDepTree);
 }

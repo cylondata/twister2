@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
@@ -33,6 +34,7 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
  * where it spawns set of parallel workers.
  */
 public class HelloWorld implements IWorker {
+
   private static final Logger LOG = Logger.getLogger(HelloWorld.class.getName());
 
   @Override
@@ -47,7 +49,13 @@ public class HelloWorld implements IWorker {
             + "and I got a message: %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
 
-    List<JobMasterAPI.WorkerInfo> workerList = workerController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
     String workersStr = WorkerInfoUtils.workerListAsString(workerList);
     LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
 

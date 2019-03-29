@@ -14,6 +14,13 @@ def twister2_client_conf_files():
         "//twister2/config/src/yaml:conf-standalone-yaml",
         "//twister2/config/src/yaml:conf-aurora-yaml",
         "//twister2/config/src/yaml:conf-kubernetes-yaml",
+        "//twister2/config/src/yaml:conf-mesos-yaml",
+        "//twister2/config/src/yaml:conf-dashboard",
+    ]
+
+def twister2_client_dashboard_files():
+    return [
+        "//twister2/config/src/yaml:conf-dashboard",
 	      "//twister2/config/src/yaml:conf-mesos-yaml",
     ]
 
@@ -42,6 +49,11 @@ def twister2_client_kubernetes_files():
         "//twister2/config/src/yaml:conf-kubernetes-yaml",
     ]
 
+def twister2_client_kubernetes_deployment_files():
+    return [
+        "//twister2/config/src/yaml:conf-kubernetes-deployment-yaml",
+    ]
+
 def twister2_client_mesos_files():
     return [
         "//twister2/config/src/yaml:conf-mesos-yaml",
@@ -61,6 +73,7 @@ def twister2_client_lib_resource_scheduler_files():
     return [
         "//twister2/resource-scheduler/src/java:resource-scheduler-java",
         "@commons_cli_commons_cli//jar",
+        "//twister2/proto:proto-java",
         "//twister2/proto:proto_job_java",
         "//twister2/proto:proto_checkpoint_java",
         "//third_party:ompi_javabinding_java",
@@ -94,7 +107,6 @@ def twister2_client_lib_resource_scheduler_files():
         "@org_apache_httpcomponents_httpcore//jar",
         "@org_bouncycastle_bcpkix_jdk15on//jar",
         "@org_bouncycastle_bcprov_jdk15on//jar",
-        "//twister2/master/src/java:master-java",
         "@com_google_protobuf//:protobuf_java",
     ]
 
@@ -122,6 +134,7 @@ def twister2_client_lib_data_files():
         "@commons_io_commons_io//jar",
         "@commons_collections_commons_collections//jar",
         "@org_apache_commons_commons_lang3//jar",
+        "@commons_lang_commons_lang//jar",
         "@commons_configuration_commons_configuration//jar",
         "@log4j_log4j//jar",
         "@org_apache_htrace_htrace_core4//jar",

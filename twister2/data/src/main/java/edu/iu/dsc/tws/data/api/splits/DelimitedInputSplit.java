@@ -14,12 +14,15 @@ package edu.iu.dsc.tws.data.api.splits;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 
 public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
+
+  private static final Logger LOG = Logger.getLogger(DelimitedInputSplit.class.getName());
 
   // The charset used to convert strings to bytes
   private String charsetName = "UTF-8";
@@ -62,6 +65,8 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   private transient boolean end;
 
   private long offset = -1;
+
+  private Config config;
 
   /**
    * Constructs a split with host information.
@@ -149,6 +154,7 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   @Override
   public void configure(Config parameters) {
     super.configure(parameters);
+    this.config = parameters;
 
     // the if() clauses are to prevent the configure() method from
     // overwriting the values set by the setters
@@ -166,10 +172,9 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
    * and positions the stream at the correct position, making sure that any partial
    * record at the beginning is skipped.
    */
-  public void open() throws IOException {
-    super.open();
+  public void open(Config cfg) throws IOException {
+    super.open(cfg);
     initBuffers();
-
     this.offset = splitStart;
     if (this.splitStart != 0) {
       this.stream.seek(offset);
@@ -233,7 +238,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
    */
   private boolean fillBuffer(int fillOffset) throws IOException {
     int maxReadLength = this.readBuffer.length - fillOffset;
-    // special case for reading the whole split.
     if (this.splitLength == FileInputPartitioner.READ_WHOLE_SPLIT_FLAG) {
       int read = this.stream.read(this.readBuffer, fillOffset, maxReadLength);
       if (read == -1) {
@@ -247,7 +251,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
       }
     }
 
-    // else ..
     int toRead;
     if (this.splitLength > 0) {
       // if we have more data, read that
@@ -263,8 +266,11 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
       this.overLimit = true;
     }
 
-    int read = this.stream.read(this.readBuffer, fillOffset, toRead);
+    //LineNumberReader numberReader = new LineNumberReader(new InputStreamReader(this.stream));
+    //numberReader.skip(Long.MAX_VALUE);
+    //int noOfLines = numberReader.getLineNumber();
 
+    int read = this.stream.read(this.readBuffer, fillOffset, toRead);
     if (read == -1) {
       this.stream.close();
       this.stream = null;
@@ -278,13 +284,12 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
   }
 
   protected final boolean readLine() throws IOException {
+
     if (this.stream == null || this.overLimit) {
       return false;
     }
 
     int countInWrapBuffer = 0;
-
-    // position of matching positions in the delimiter byte array
     int delimPos = 0;
 
     while (true) {
@@ -302,7 +307,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
                 System.arraycopy(this.wrapBuffer, 0, tmp, 0, countInWrapBuffer);
                 this.wrapBuffer = tmp;
               }
-
               // copy readBuffer bytes to wrapBuffer
               System.arraycopy(this.readBuffer, 0, this.wrapBuffer,
                   countInWrapBuffer, countInReadBuffer);
@@ -313,14 +317,13 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
             setResult(this.wrapBuffer, 0, countInWrapBuffer);
             return true;
           } else {
-            return false;
+            return true;
           }
         }
       }
 
       int startPos = this.readPos - delimPos;
       int count;
-
       // Search for next occurence of delimiter in read buffer.
       while (this.readPos < this.limit && delimPos < this.delimiter.length) {
         if ((this.readBuffer[this.readPos]) == this.delimiter[delimPos]) {
@@ -365,7 +368,6 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
       } else {
         // we reached the end of the readBuffer
         count = this.limit - startPos;
-
         // check against the maximum record length
         if (((long) countInWrapBuffer) + count > this.lineLengthLimit) {
           throw new IOException("The record length exceeded the maximum record length ("
@@ -391,9 +393,9 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
         countInWrapBuffer += bytesToMove;
         // move delimiter chars to the beginning of the readBuffer
         System.arraycopy(this.readBuffer, this.readPos - delimPos, this.readBuffer, 0, delimPos);
-
       }
     }
+
   }
 
   private void setResult(byte[] buffer, int resultOffset, int len) {

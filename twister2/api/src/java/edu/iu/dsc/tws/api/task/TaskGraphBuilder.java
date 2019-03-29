@@ -58,6 +58,7 @@ public final class TaskGraphBuilder {
 
   /**
    * Create an instance of the task builder.
+   *
    * @param cfg configuration
    * @return new task graph builder instance
    */
@@ -71,6 +72,7 @@ public final class TaskGraphBuilder {
 
   /**
    * Set the operation mode, we default to streaming mode
+   *
    * @param mode the operation mode (streaming, batch)
    */
   public void setMode(OperationMode mode) {
@@ -180,6 +182,15 @@ public final class TaskGraphBuilder {
     SourceConnection sc = new SourceConnection(name);
     sourceConnections.add(sc);
     return sc;
+  }
+
+  /**
+   * Get the operation mode
+   *
+   * @return the operation mode
+   */
+  public OperationMode getMode() {
+    return mode;
   }
 
   public DataFlowTaskGraph build() {

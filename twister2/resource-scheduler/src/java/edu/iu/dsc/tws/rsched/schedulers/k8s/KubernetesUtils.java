@@ -26,7 +26,7 @@ public final class KubernetesUtils {
   private static final Logger LOG = Logger.getLogger(KubernetesUtils.class.getName());
 
   // max length for the user provided Twister2 job name
-  private static final int MAX_JOB_NAME_LENGTH = 50;
+  private static final int MAX_JOB_NAME_LENGTH = 45;
 
   private KubernetesUtils() {
   }
@@ -306,7 +306,7 @@ public final class KubernetesUtils {
     int podsCount = 0;
 
     for (JobAPI.ComputeResource computeResource: job.getComputeResourceList()) {
-      podsCount += computeResource.getNumberOfWorkers() / computeResource.getWorkersPerPod();
+      podsCount += computeResource.getInstances();
     }
 
     return podsCount;
@@ -325,7 +325,7 @@ public final class KubernetesUtils {
     for (int i = 0; i < resourceList.size(); i++) {
 
       JobAPI.ComputeResource computeResource = resourceList.get(i);
-      int podsCount = computeResource.getNumberOfWorkers() / computeResource.getWorkersPerPod();
+      int podsCount = computeResource.getInstances();
       int index = computeResource.getIndex();
 
       for (int j = 0; j < podsCount; j++) {

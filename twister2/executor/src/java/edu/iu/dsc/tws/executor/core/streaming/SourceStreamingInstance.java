@@ -25,6 +25,8 @@ import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
+import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICheckPointable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
@@ -33,6 +35,7 @@ import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.Snapshot;
 import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SourceStreamingInstance implements INodeInstance {
 
@@ -97,7 +100,7 @@ public class SourceStreamingInstance implements INodeInstance {
    */
   private int lowWaterMark;
 
-  private Set<String> outEdges;
+//  private Set<String> outEdges;
 
   private int sleeper = 0;
 
@@ -106,9 +109,16 @@ public class SourceStreamingInstance implements INodeInstance {
    */
   private int highWaterMark;
 
+  /**
+   * The output edges
+   */
+  private Map<String, String> outEdges;
+  private TaskSchedulePlan taskSchedule;
+
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
                                  Config config, String tName, int tId, int tIndex, int parallel,
-                                 int wId, Map<String, Object> cfgs, Set<String> outEdges) {
+                                 int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
+                                 TaskSchedulePlan taskSchedule) {
     this.streamingTask = streamingTask;
     this.outStreamingQueue = outStreamingQueue;
     this.config = config;
@@ -119,6 +129,7 @@ public class SourceStreamingInstance implements INodeInstance {
     this.nodeConfigs = cfgs;
     this.workerId = wId;
     this.outEdges = outEdges;
+    this.taskSchedule = taskSchedule;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
     if (CheckpointContext.getCheckpointRecovery(config)) {
@@ -137,15 +148,8 @@ public class SourceStreamingInstance implements INodeInstance {
   public void prepare(Config cfg) {
     outputStreamingCollection = new DefaultOutputCollection(outStreamingQueue);
 
-    TaskContext taskContext = new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
-        parallelism, workerId, outputStreamingCollection, nodeConfigs);
-
-    streamingTask.prepare(cfg, taskContext);
-
-    if (streamingTask instanceof SourceCheckpointableTask) {
-      ((SourceCheckpointableTask) streamingTask).connect(config, taskContext);
-    }
-
+    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, streamingTaskId, taskName,
+        parallelism, workerId, outputStreamingCollection, nodeConfigs, outEdges, taskSchedule));
   }
 
   /**
@@ -186,6 +190,8 @@ public class SourceStreamingInstance implements INodeInstance {
           }
 
         }
+      } else {
+        break;
       }
     }
 
@@ -204,6 +210,13 @@ public class SourceStreamingInstance implements INodeInstance {
 
   public boolean sendBarrier(IParallelOperation op, IMessage message) {
     return op.send(streamingTaskId, message, MessageFlags.BARRIER);
+  }
+
+  @Override
+  public void close() {
+    if (streamingTask instanceof Closable) {
+      ((Closable) streamingTask).close();
+    }
   }
 
   public BlockingQueue<IMessage> getOutStreamingQueue() {

@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -30,7 +31,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
 import edu.iu.dsc.tws.examples.Utils;
 
@@ -57,8 +58,14 @@ public class GatherTestCommunication implements IWorker {
     int noOfTasksPerExecutor = NO_OF_TASKS / workerController.getNumberOfWorkers();
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, workerID,
-        workerController.getAllWorkers(), NO_OF_TASKS);
+    TaskPlan taskPlan = null;
+    try {
+      taskPlan = Utils.createReduceTaskPlan(cfg, workerID,
+          workerController.getAllWorkers(), NO_OF_TASKS);
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
     //first get the communication config file
     TWSChannel network = Network.initializeChannel(cfg, workerController);
 
@@ -114,7 +121,7 @@ public class GatherTestCommunication implements IWorker {
         for (int i = 0; i < 1; i++) {
           int[] data = {task, task * 100};
           // lets generate a message
-//          KeyedContent mesage = new KeyedContent(task, data,
+//          Tuple mesage = new Tuple(task, data,
 //              MessageType.INTEGER, MessageType.OBJECT);
 //
           while (!aggregate.send(task, data, 0)) {

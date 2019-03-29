@@ -32,9 +32,14 @@ import java.util.Set;
  * correct destination based on the key values.
  */
 public interface DestinationSelector {
-  void prepare(Set<Integer> sources, Set<Integer> destinations);
-
-  void prepare(MessageType type, Set<Integer> sources, Set<Integer> destinations);
+  /**
+   * Prepare the destination selector
+   *
+   * @param comm the communicator
+   * @param sources sources
+   * @param destinations destination
+   */
+  void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations);
 
   /**
    * Get next destination using source and the data
@@ -55,7 +60,13 @@ public interface DestinationSelector {
     return 0;
   }
 
-  void commit(int source, int next);
+  /**
+   * Say that we have used the obtained destination
+   *
+   * @param source source
+   * @param obtained obtained destination
+   */
+  void commit(int source, int obtained);
 
   List<Integer> getDestinations(int source);
 }

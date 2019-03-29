@@ -11,17 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntIteratorComparator;
+import edu.iu.dsc.tws.task.api.BaseSource;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.typed.batch.BBroadCastCompute;
 
 public class BTBroadCastExample extends BenchTaskWorker {
 
@@ -33,31 +39,45 @@ public class BTBroadCastExample extends BenchTaskWorker {
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     String edge = "edge";
-    BaseBatchSource g = new SourceBatchTask(edge);
-    BaseBatchSink r = new BroadcastSinkTask();
+    BaseSource g = new SourceTask(edge);
+    ISink r = new BroadcastSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
     return taskGraphBuilder;
   }
 
-  protected static class BroadcastSinkTask extends BaseBatchSink {
+  protected static class BroadcastSinkTask extends BBroadCastCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
+
+    private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
+    private boolean verified = true;
+    private boolean timingCondition;
 
     @Override
-    public boolean execute(IMessage message) {
-      count++;
-      if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        experimentData.setOutput(object);
-        LOG.log(Level.INFO, String.format("Received messages to %d: %d", context.taskId(), count));
-        try {
-          verify(OperationNames.BROADCAST);
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
-        }
-      }
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SINK, context);
+      resultsVerifier = new ResultsVerifier<>(
+          inputDataArray,
+          (ints, args) -> {
+            List<int[]> expected = new ArrayList<>();
+            for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
+              expected.add(ints);
+            }
+            return expected.iterator();
+          },
+          IntIteratorComparator.getInstance()
+      );
+    }
+
+    @Override
+    public boolean broadcast(Iterator<int[]> content) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      LOG.info(String.format("%d received broadcast %d", context.getWorkerId(), context.taskId()));
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+      this.verified = verifyResults(resultsVerifier, content, null, verified);
       return true;
     }
   }

@@ -111,9 +111,8 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
       throw new RuntimeException(String.format("%d Partial receive error %d", executor, target));
     }
 
-    Map<Integer, Boolean> finishedMessages = finished.get(target);
-
     if ((flags & MessageFlags.END) == MessageFlags.END) {
+      Map<Integer, Boolean> finishedMessages = finished.get(target);
       finishedMessages.put(source, true);
       return true;
     }
@@ -134,8 +133,8 @@ public abstract class ReduceBatchReceiver implements MessageReceiver {
       //LOG.info("Flags : " + flags + ", Message Flag Last : " + MessageFlags.FLAGS_LAST);
       m.add(object);
       if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
+        Map<Integer, Boolean> finishedMessages = finished.get(target);
         finishedMessages.put(source, true);
-        //LOG.info("onMessage ReduceBatchReceiver Final Message Added");
       }
     }
     return canAdd;

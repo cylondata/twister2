@@ -45,4 +45,5 @@ public interface IWorker {
                IWorkerController workerController,
                IPersistentVolume persistentVolume,
                IVolatileVolume volatileVolume);
+
 }

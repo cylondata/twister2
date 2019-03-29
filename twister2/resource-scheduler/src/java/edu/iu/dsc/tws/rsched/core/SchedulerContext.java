@@ -25,6 +25,7 @@ public class SchedulerContext extends Context {
   public static final String LAUNCHER_CLASS = "twister2.class.launcher";
   public static final String UPLOADER_CLASS = "twister2.class.uploader";
   public static final String WORKER_CLASS = "twister2.job.worker.class";
+  public static final String DRIVER_CLASS = "twister2.job.driver.class";
   public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
 
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
@@ -32,10 +33,8 @@ public class SchedulerContext extends Context {
   // Internal configuration for job package url
   public static final String JOB_PACKAGE_URI = "twister2.job.package.uri";
 
-  // Temp directory where the files are placed before packing them for upload
-  public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
-
   public static final String WORKER_COMPUTE_RESOURCES = "worker.compute.resources";
+
   /**
    * These are specified as system properties when deploying a job
    */
@@ -47,7 +46,7 @@ public class SchedulerContext extends Context {
 
   public static final String WORKING_DIRECTORY = "twister2.working_directory";
 
-  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core-0.1.0.tar.gz";
+  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core-0.2.0.tar.gz";
   public static final String CORE_PACKAGE_FILENAME = "twister2.package.core";
 
   public static final String JOB_PACKAGE_FILENAME_DEFAULT = "twister2-job.tar.gz";
@@ -70,6 +69,8 @@ public class SchedulerContext extends Context {
   public static final String RACKS_LIST = "racks.list";
   public static final String DATACENTERS_LIST = "datacenters.list";
 
+  public static final String ADDITIONAL_PORTS = "twister2.worker.additional.ports";
+
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
   }
@@ -82,6 +83,10 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(WORKER_CLASS);
   }
 
+  public static String driverClass(Config cfg) {
+    return cfg.getStringValue(DRIVER_CLASS);
+  }
+
   public static String packagesPath(Config cfg) {
     return cfg.getStringValue(TWISTER2_PACKAGES_PATH);
   }
@@ -92,7 +97,7 @@ public class SchedulerContext extends Context {
 
   public static String systemPackageUrl(Config cfg) {
     return TokenSub.substitute(cfg, cfg.getStringValue(SYSTEM_PACKAGE_URI,
-        "${TWISTER2_DIST}/twister2-core-0.1.0.tar.gz"), Context.substitutions);
+        "${TWISTER2_DIST}/twister2-core-0.2.0.tar.gz"), Context.substitutions);
   }
 
   public static URI jobPackageUri(Config cfg) {
@@ -105,10 +110,6 @@ public class SchedulerContext extends Context {
 
   public static String jobPackageFileName(Config cfg) {
     return cfg.getStringValue(JOB_PACKAGE_FILENAME, JOB_PACKAGE_FILENAME_DEFAULT);
-  }
-
-  public static String jobClientTempDirectory(Config cfg) {
-    return cfg.getStringValue(JOB_TEMP_DIR, "/tmp");
   }
 
   public static String userJobJarFile(Config cfg) {
@@ -145,6 +146,15 @@ public class SchedulerContext extends Context {
   public static boolean useOpenMPI(Config cfg) {
     return cfg.getStringValue("twister2.network.channel.class")
         .equals("edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel");
+  }
+
+  public static List<String> additionalPorts(Config cfg) {
+    return cfg.getStringList(ADDITIONAL_PORTS);
+  }
+
+  public static int numberOfAdditionalPorts(Config cfg) {
+    List<String> portNameList = additionalPorts(cfg);
+    return portNameList == null ? 0 : portNameList.size();
   }
 
   public static JobMasterAPI.NodeInfo getNodeInfo(Config cfg, String nodeIP) {

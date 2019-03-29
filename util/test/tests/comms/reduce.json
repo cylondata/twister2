@@ -1,0 +1,16 @@
+{
+  "id": "comms_reduce",
+  "parent": "many_to_one_base",
+  "resultsFile": "comms_reduce.csv",
+  "args": [
+    {
+      "id": "op",
+      "name": "Operation",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "\"reduce\""
+      }
+    }
+  ]
+}

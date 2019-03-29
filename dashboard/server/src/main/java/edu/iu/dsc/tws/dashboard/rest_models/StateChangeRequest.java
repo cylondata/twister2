@@ -1,16 +1,14 @@
 package edu.iu.dsc.tws.dashboard.rest_models;
 
-import edu.iu.dsc.tws.dashboard.data_models.EntityState;
+public class StateChangeRequest<T> {
 
-public class StateChangeRequest {
+  private T state;
 
-  private EntityState entityState;
-
-  public EntityState getEntityState() {
-    return entityState;
+  public T getState() {
+    return state;
   }
 
-  public void setEntityState(EntityState entityState) {
-    this.entityState = entityState;
+  public void setState(T state) {
+    this.state = state;
   }
 }

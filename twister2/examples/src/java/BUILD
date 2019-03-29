@@ -10,11 +10,10 @@ common_deps_files = [
     "//twister2/connectors/src/java:connector-java",
     "//twister2/task/src/main/java:task-java",
     "//twister2/taskscheduler/src/java:taskscheduler-java",
-    "//twister2/proto:proto_taskscheduleplan_java",
+    "//twister2/proto:proto-java",
     "//twister2/api/src/java:api-java",
     "//twister2/data/src/main/java:data-java",
     "//twister2/executor/src/java:executor-java",
-    "//twister2/proto:proto_job_java",
     "//twister2/master/src/java:master-java",
     "//third_party:ompi_javabinding_java",
     "@com_google_guava_guava//jar",
@@ -36,12 +35,15 @@ common_deps_files = [
     "@log4j_log4j//jar",
     "@org_apache_htrace_htrace_core4//jar",
     "@org_apache_hadoop_hadoop_hdfs_client//jar",
-    "//third_party:harp_collective"
+    "@com_fasterxml_jackson_core_jackson_databind//:com_fasterxml_jackson_core_jackson_databind",
+    "//third_party:harp_collective",
+    "//twister2/compatibility/storm:twister2-storm",
+
 ]
 
 t2_java_lib(
     name = "examples-java",
     srcs = glob(["**/*.java"]),
+    artifact_name = "Twister2 Examples",
     deps = common_deps_files,
-    artifact_name = "Twister2 Examples"
 )

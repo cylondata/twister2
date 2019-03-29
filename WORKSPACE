@@ -65,9 +65,40 @@ new_http_archive(
     name = "ompi3",
     build_file = "third_party/ompi3/ompi.BUILD",
     strip_prefix = "openmpi-3.1.2",
-    urls = ["https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.2.tar.gz"],
+    urls = ["https://github.com/DSC-SPIDAL/twister2-thridparty-bin/raw/master/mpi/openmpi-3.1.2.tar.gz"],
+)
+
+new_http_archive(
+    name = "ompi3darwin",
+    build_file = "third_party/ompi3darwin/ompi.darwin.BUILD",
+    strip_prefix = "openmpi-3.1.2",
+    urls = ["https://github.com/DSC-SPIDAL/twister2-thridparty-bin/raw/master/mpi/openmpi-3.1.2.tar.gz"],
 )
 
 load("//:t2_workspace_defs.bzl", "load_modules")
 
 load_modules()
+
+git_repository(
+    name = "build_bazel_rules_nodejs",
+    remote = "https://github.com/bazelbuild/rules_nodejs.git",
+    tag = "0.16.4",  # check for the latest tag when you install
+)
+
+load("@build_bazel_rules_nodejs//:package.bzl", "rules_nodejs_dependencies")
+
+rules_nodejs_dependencies()
+
+load("@build_bazel_rules_nodejs//:defs.bzl", "node_repositories")
+
+node_repositories(package_json = ["//dashboard/client:package.json"])
+
+load("@build_bazel_rules_nodejs//:defs.bzl", "npm_install")
+
+npm_install(
+    name = "npm",
+    package_json = "//dashboard/client:package.json",
+    package_lock_json = "//dashboard/client:package-lock.json",
+)
+
+load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")

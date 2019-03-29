@@ -21,13 +21,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
+//import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
-public class PartitionStreamingFinalReceiver implements MessageReceiver {
+public class PartitionStreamingFinalReceiver extends BasePartitionStreamingFinalReceiver
+    implements MessageReceiver {
 
   private static final Logger LOG = Logger.getLogger(
       PartitionStreamingFinalReceiver.class.getName());
@@ -35,20 +36,22 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
   private Map<Integer, Queue<Object>> messages = new HashMap<>();
 
   // the receiver
-  private BulkReceiver receiver;
+  private SingularReceiver receiver;
 
   private Map<Integer, List<Integer>> expIds;
 
   private Map<Integer, Map<Integer, BlockingQueue<MessageObject>>> barrierMap;
 
 
-  public PartitionStreamingFinalReceiver(BulkReceiver receiver) {
+
+  public PartitionStreamingFinalReceiver(SingularReceiver receiver) {
     this.receiver = receiver;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation operation,
                    Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, operation, expectedIds);
     this.expIds = expectedIds;
     this.barrierMap = new ConcurrentHashMap<>();
     int sendPendingMax = DataFlowContext.sendPendingMax(cfg);
@@ -60,59 +63,65 @@ public class PartitionStreamingFinalReceiver implements MessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
-      if (barrierMap.containsKey(target)) {
-        barrierMap.get(target).putIfAbsent(source, new ArrayBlockingQueue<>(2000));
-      } else {
-        barrierMap.put(target, new HashMap<>());
-        barrierMap.get(target).put(source, new ArrayBlockingQueue<>(2000));
-      }
-      if (barrierMap.get(target).keySet().size() == expIds.get(target).size()) {
-        if (receiver.sync(target, MessageFlags.BARRIER, object)) {
-          for (Integer barrierSource : barrierMap.get(target).keySet()) {
-            for (MessageObject messageObject : barrierMap.get(target).get(barrierSource)) {
-              messages.get(messageObject.getTarget()).offer(messageObject.getMessage());
-            }
-          }
-          barrierMap.get(target).clear();
-        }
-      }
-      return true;
-    } else {
-      if (barrierMap.containsKey(target)) {
-        if (barrierMap.get(target).containsKey(source)) {
-          barrierMap.get(target).get(source).add(new MessageObject(target, object));
-          return true;
-        } else {
-          return messages.get(target).offer(object);
-        }
-      } else {
-        return messages.get(target).offer(object);
-      }
-    }
+//    if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+//      if (barrierMap.containsKey(target)) {
+//        barrierMap.get(target).putIfAbsent(source, new ArrayBlockingQueue<>(2000));
+//      } else {
+//        barrierMap.put(target, new HashMap<>());
+//        barrierMap.get(target).put(source, new ArrayBlockingQueue<>(2000));
+//      }
+//      if (barrierMap.get(target).keySet().size() == expIds.get(target).size()) {
+//        if (receiver.sync(target, MessageFlags.BARRIER, object)) {
+//          for (Integer barrierSource : barrierMap.get(target).keySet()) {
+//            for (MessageObject messageObject : barrierMap.get(target).get(barrierSource)) {
+//              messages.get(messageObject.getTarget()).offer(messageObject.getMessage());
+//            }
+//          }
+//          barrierMap.get(target).clear();
+//        }
+//      }
+//      return true;
+//    } else {
+//      if (barrierMap.containsKey(target)) {
+//        if (barrierMap.get(target).containsKey(source)) {
+//          barrierMap.get(target).get(source).add(new MessageObject(target, object));
+//          return true;
+//        } else {
+//          return messages.get(target).offer(object);
+//        }
+//      } else {
+//        return messages.get(target).offer(object);
+//      }
+//    }
+    return super.onMessage(source, path, target, flags, object);
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
   @Override
   public boolean progress() {
-    boolean needsFurtherProgress = false;
-    // we always send messages from before barrier map
-    for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
-      Integer target = e.getKey();
-      Queue<Object> inComingMessages = e.getValue();
-      Object msg = inComingMessages.peek();
-      if (msg != null) {
-        if (msg instanceof List) {
-          boolean offer = receiver.receive(target, ((List<Object>) msg).iterator());
-          if (offer) {
-            inComingMessages.poll();
-          } else {
-            needsFurtherProgress = true;
-          }
-        }
-      }
-    }
-    return needsFurtherProgress;
+//    boolean needsFurtherProgress = false;
+//    // we always send messages from before barrier map
+//    for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
+//      Integer target = e.getKey();
+//      Queue<Object> inComingMessages = e.getValue();
+//      Object msg = inComingMessages.peek();
+//      if (msg != null) {
+//        if (msg instanceof List) {
+//          boolean offer = receiver.receive(target, ((List<Object>) msg).iterator());
+//          if (offer) {
+//            inComingMessages.poll();
+//          } else {
+//            needsFurtherProgress = true;
+//          }
+//        }
+//      }
+//    }
+//    return needsFurtherProgress;
+    return super.progress();
+  }
+
+  @Override
+  public boolean receive(int target, Object message, int flag) {
+    return receiver.receive(target, message, flag);
   }
 
 

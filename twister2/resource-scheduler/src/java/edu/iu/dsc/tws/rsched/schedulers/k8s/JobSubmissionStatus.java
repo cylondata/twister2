@@ -52,4 +52,5 @@ public class JobSubmissionStatus {
   public void setPvcCreated(boolean pvcCreated) {
     this.pvcCreated = pvcCreated;
   }
+
 }

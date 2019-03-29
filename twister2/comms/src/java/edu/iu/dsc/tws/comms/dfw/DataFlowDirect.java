@@ -27,70 +27,143 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.SingleMessageDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.SingleMessageSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.DirectRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 /**
- * A direct data flow operation sends peer to peer messages
+ * A direct data flow operation sends peer to peer messages, the messages are between one source
+ * and another task
  */
 public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
-  private static final Logger LOG = Logger.getLogger(
-      DataFlowDirect.class.getName());
-  private int sourceId;
-  private int targetId;
+  private static final Logger LOG = Logger.getLogger(DataFlowDirect.class.getName());
+
+  /**
+   * The sources of the operation
+   */
+  private List<Integer> sources;
+
+  /**
+   * The targets of the operation
+   */
+  private List<Integer> targets;
+
+  /**
+   * Edge value to use
+   */
   private int edgeValue;
-  private DirectRouter router;
+
+  /**
+   * Final receiver
+   */
   private MessageReceiver finalReceiver;
-  private ChannelDataFlowOperation delegete;
-  private Config config;
-  private TaskPlan instancePlan;
-  private int executor;
+
+  /**
+   * The delegate
+   */
+  private ChannelDataFlowOperation delegate;
+
+
   private Lock lock;
 
+  /**
+   * The task plan
+   */
+  private TaskPlan taskPlan;
+
+  /**
+   * The router to configure the routing
+   */
+  private DirectRouter router;
+
+  /**
+   * The routing parameters for the sources in this executor
+   */
+  private Map<Integer, RoutingParameters> routes = new HashMap<>();
+
+  /**
+   * Configuration
+   */
+  private Config config;
+
+  /**
+   * Message type
+   */
+  private MessageType type;
+
+  /**
+   * Keep sources as a set to return
+   */
+  private Set<Integer> sourceSet;
+
+  /**
+   * The sources which are pending for finish
+   */
+  private Set<Integer> pendingFinishSources;
+
+  /**
+   * The sources that are finished
+   */
+  private Set<Integer> finishedSources;
+
+  /**
+   * Sources of this worker
+   */
+  private Set<Integer> thisSources;
+
+  /**
+   * Mapping between source and destinations
+   */
+  private Map<Integer, Integer> sourcesToDestinations = new HashMap<>();
+
+
   public DataFlowDirect(TWSChannel channel,
-                        int src, int target,
-                        MessageReceiver finalRcvr) {
-    this.sourceId = src;
-    this.targetId = target;
+                        List<Integer> src, List<Integer> target,
+                        MessageReceiver finalRcvr, Config cfg, MessageType t,
+                        TaskPlan plan, int edge) {
+    this.sources = src;
+    this.targets = target;
     this.finalReceiver = finalRcvr;
-    this.delegete = new ChannelDataFlowOperation(channel);
+    this.delegate = new ChannelDataFlowOperation(channel);
     this.lock = new ReentrantLock();
+    this.edgeValue = edge;
+    this.taskPlan = plan;
+    this.router = new DirectRouter(plan, sources, targets);
+    this.config = cfg;
+    this.type = t;
+    this.sourceSet = new HashSet<>(sources);
+    this.pendingFinishSources = new HashSet<>();
+    this.finishedSources = new HashSet<>();
+    // the sources to targets mapping
+    for (int i = 0; i < src.size(); i++) {
+      sourcesToDestinations.put(sources.get(i), target.get(i));
+    }
+    init();
   }
 
   @Override
-  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
-    MessageHeader header = currentMessage.getHeader();
-
+  public boolean receiveMessage(MessageHeader header, Object object) {
+    int target = header.getDestinationIdentifier();
     // check weather this message is for a sub task
     return finalReceiver.onMessage(header.getSourceId(), 0,
-        targetId, header.getFlags(), object);
+        target, header.getFlags(), object);
   }
 
   @Override
   public boolean receiveSendInternally(int source, int target, int path, int flags,
                                        Object message) {
-    // we only have one destination in this case
-    if (target != targetId) {
-      throw new RuntimeException("We only have one destination");
-    }
-
     // okay this must be for the
     return finalReceiver.onMessage(source, path, target, flags, message);
-  }
-
-  @Override
-  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
-    return false;
   }
 
   protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
@@ -100,35 +173,40 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   /**
    * Initialize
    */
-  public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
-    if (this.finalReceiver != null && isLastReceiver()) {
-      this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
-    }
-    this.edgeValue = edge;
+  private void init() {
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource
+    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
         = new HashMap<>();
-    Map<Integer, Queue<ChannelMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
-    Set<Integer> sources = new HashSet<>();
-    sources.add(sourceId);
-    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
-    for (int s : srcs) {
+    thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sourceSet);
+    for (int s : thisSources) {
       // later look at how not to allocate pairs for this each time
-      pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<Pair<Object, OutMessage>>(
-          DataFlowContext.sendPendingMax(cfg)));
-      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<ChannelMessage>(
-          DataFlowContext.sendPendingMax(cfg)));
-      serializerMap.put(s, new SingleMessageSerializer(new KryoSerializer()));
+      pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
+          DataFlowContext.sendPendingMax(config)));
+      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<>(
+          DataFlowContext.sendPendingMax(config)));
+      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(),
+          taskPlan.getThisExecutor(), type));
     }
 
-    MessageDeSerializer messageDeSerializer = new SingleMessageDeSerializer(new KryoSerializer());
-    deSerializerMap.put(targetId, messageDeSerializer);
-    delegete.init(cfg, t, taskPlan, edge, router.receivingExecutors(),
-        isLastReceiver(), this, pendingSendMessagesPerSource,
+    for (int tar : targets) {
+      MessageDeSerializer messageDeSerializer = new UnifiedDeserializer(new KryoSerializer(),
+          taskPlan.getThisExecutor(), type);
+      deSerializerMap.put(tar, messageDeSerializer);
+    }
+
+    // calculate the routing parameters
+    calculateRoutingParameters();
+
+    // initialize the final receiver
+    this.finalReceiver.init(config, this, receiveExpectedTaskIds());
+
+    delegate.init(config, type, taskPlan, edgeValue, router.receivingExecutors(),
+        this, pendingSendMessagesPerSource,
         pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
   }
@@ -140,13 +218,12 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    return delegete.sendMessage(source, message, 0, flags, sendRoutingParameters(source, 0));
+    return delegate.sendMessage(source, message, 0, flags, routes.get(source));
   }
 
   @Override
   public boolean send(int source, Object message, int flags, int target) {
-    return delegete.sendMessage(source, message, target, flags,
-        sendRoutingParameters(source, target));
+    return delegate.sendMessage(source, message, target, flags, routes.get(source));
   }
 
   @Override
@@ -157,10 +234,20 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean progress() {
     boolean partialNeedsProgress = false;
+    boolean needFinishProgress = true;
     boolean done;
     try {
-      delegete.progress();
-      done = delegete.isComplete();
+      // lets send the finished one
+      if (lock.tryLock()) {
+        try {
+          needFinishProgress = handleFinish();
+        } finally {
+          lock.unlock();
+        }
+      }
+
+      delegate.progress();
+      done = delegate.isComplete();
       if (lock.tryLock()) {
         try {
           partialNeedsProgress = finalReceiver.progress();
@@ -172,16 +259,37 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-    return partialNeedsProgress && done;
+    return partialNeedsProgress || !done || needFinishProgress;
+  }
+
+  private boolean handleFinish() {
+    for (int source : pendingFinishSources) {
+      if (!finishedSources.contains(source)) {
+        int dest = sourcesToDestinations.get(source);
+        if (send(source, new byte[1], MessageFlags.END, dest)) {
+          finishedSources.add(source);
+        } else {
+          // no point in going further
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public boolean isDelegateComplete() {
+    return delegate.isComplete();
   }
 
   @Override
   public boolean isComplete() {
     if (lock.tryLock()) {
-      boolean done = delegete.isComplete();
+      boolean done = delegate.isComplete();
       try {
         boolean needsFurtherProgress = finalReceiver.progress();
-        return done && !needsFurtherProgress;
+        boolean needFinishProgress = handleFinish();
+        return done && !needsFurtherProgress && !needFinishProgress;
       } finally {
         lock.unlock();
       }
@@ -191,16 +299,36 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void close() {
+    if (finalReceiver != null) {
+      finalReceiver.close();
+    }
+
+    delegate.close();
   }
 
   @Override
-  public void finish(int target) {
+  public void clean() {
+    if (finalReceiver != null) {
+      finalReceiver.clean();
+    }
+  }
 
+  @Override
+  public void finish(int source) {
+    if (!thisSources.contains(source)) {
+      throw new RuntimeException("Invalid source completion: " + source);
+    }
+    lock.lock();
+    try {
+      pendingFinishSources.add(source);
+    } finally {
+      lock.unlock();
+    }
   }
 
   @Override
   public TaskPlan getTaskPlan() {
-    return null;
+    return taskPlan;
   }
 
   @Override
@@ -208,11 +336,21 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     return String.valueOf(edgeValue);
   }
 
-  private boolean isLastReceiver() {
-    return router.isLastReceiver();
+  private void calculateRoutingParameters() {
+    Set<Integer> workerTasks = taskPlan.getTasksOfThisExecutor();
+    for (int i = 0; i < sources.size(); i++) {
+      // for each source we have a fixed target
+      int src = sources.get(i);
+      int tar = targets.get(i);
+
+      if (workerTasks != null && workerTasks.contains(src)) {
+        RoutingParameters params = sendRoutingParameters(src, tar);
+        routes.put(src, params);
+      }
+    }
   }
 
-  private RoutingParameters sendRoutingParameters(int source, int path) {
+  private RoutingParameters sendRoutingParameters(int source, int target) {
     RoutingParameters routingParameters = new RoutingParameters();
     // get the expected routes
     Map<Integer, Set<Integer>> internalRoutes = router.getInternalSendTasks(source);
@@ -237,7 +375,11 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
       // we always use path 0 because only one path
       routingParameters.addExternalRoutes(externalSourceRouting);
     }
-    routingParameters.setDestinationId(targetId);
+    routingParameters.setDestinationId(target);
     return routingParameters;
+  }
+
+  public Set<Integer> getSources() {
+    return sourceSet;
   }
 }

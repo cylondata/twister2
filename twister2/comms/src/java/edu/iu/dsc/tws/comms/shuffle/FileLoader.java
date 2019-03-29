@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.shuffle;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -26,6 +27,7 @@ import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
@@ -68,6 +70,27 @@ public final class FileLoader {
     }
   }
 
+  private static int sizeOf(MessageType messageType) {
+    switch (messageType) {
+      case BYTE:
+        return Byte.BYTES;
+      case DOUBLE:
+        return Double.BYTES;
+      case INTEGER:
+        return Integer.BYTES;
+      case LONG:
+        return Long.BYTES;
+      case CHAR:
+        return Character.BYTES;
+      case SHORT:
+        return Short.BYTES;
+      case EMPTY:
+        return 0;
+      default:
+        throw new RuntimeException("size check of an unknown or non primitive message type");
+    }
+  }
+
 
   /**
    * Save the list of records to the file system
@@ -75,53 +98,41 @@ public final class FileLoader {
    * @param records records to be written
    * @param size total size of the records
    * @param outFileName out file name
+   * @return maximum size of the tuple written to this file
    */
-  public static int saveKeyValues(List<KeyValue> records, List<Integer> sizes,
-                                  long size, String outFileName, MessageType keyType,
-                                  KryoMemorySerializer serializer) {
+  public static long saveKeyValues(List<Tuple> records, List<Integer> sizes,
+                                   long size, String outFileName, MessageType keyType,
+                                   KryoMemorySerializer serializer) {
     try {
+      long maxRecord = Long.MIN_VALUE; //max size of a tuple saved to this file
+
       // first serialize keys
-      int totalSize = 0;
+      long totalSize = 0;
       List<byte[]> byteKeys = new ArrayList<>();
       if (keyType == MessageType.OBJECT) {
-        for (KeyValue record : records) {
+        for (Tuple record : records) {
           byte[] data = serializer.serialize(record.getKey());
-          totalSize += data.length + 4;
+          totalSize += data.length + Integer.BYTES; // data + length of key
           byteKeys.add(data);
         }
       } else {
-        for (KeyValue record : records) {
-          if (keyType == MessageType.BYTE) {
-            totalSize += 1;
-          } else if (keyType == MessageType.DOUBLE) {
-            totalSize += 8;
-          } else if (keyType == MessageType.INTEGER) {
-            totalSize += 4;
-          } else if (keyType == MessageType.LONG) {
-            totalSize += 8;
-          } else if (keyType == MessageType.CHAR) {
-            totalSize += 1;
-          } else if (keyType == MessageType.SHORT) {
-            totalSize += 2;
-          }
-        }
+        totalSize += records.size() * sizeOf(keyType);
       }
 
-      long sum = 0;
-      for (Integer s : sizes) {
-        sum += s;
-      }
-      if (sum != size) {
-        LOG.log(Level.WARNING, "Sum doesn't equal size: " + sum + " != " + size);
-      }
+      long sizeSum = 0; //just to check whether sizes match
+
       // we need to write the data lengths and key lengths
-      totalSize += size + sum;
+      int dataLengthSize = Integer.BYTES * records.size();
+      totalSize += size + dataLengthSize;
 
       Files.createDirectories(Paths.get(outFileName).getParent());
-      FileChannel rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
-      ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, totalSize);
+      RandomAccessFile randomAccessFile = new RandomAccessFile(outFileName, "rw");
+      FileChannel rwChannel = randomAccessFile.getChannel();
+      MappedByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, totalSize);
       for (int i = 0; i < records.size(); i++) {
-        KeyValue keyValue = records.get(i);
+        long positionBefore = os.position(); //position of os before writing this tuple
+
+        Tuple keyValue = records.get(i);
         byte[] r = (byte[]) keyValue.getValue();
         // serialize key with its length
         if (keyType == MessageType.OBJECT) {
@@ -147,28 +158,42 @@ public final class FileLoader {
           short kd = (short) keyValue.getKey();
           os.putShort(kd);
         }
+        sizeSum += sizes.get(i);
         os.putInt(sizes.get(i));
         os.put(r, 0, sizes.get(i));
+
+        long tupleSize = os.position() - positionBefore;
+        maxRecord = Math.max(maxRecord, tupleSize);
+      }
+      if (sizeSum != size) {
+        LOG.log(Level.WARNING, "Sum doesn't equal size: " + sizeSum + " != " + size);
       }
       rwChannel.close();
-      return totalSize;
+      randomAccessFile.close();
+      try {
+        MemoryMapUtils.unMapBuffer(os);
+      } catch (Exception e) {
+        //ignore
+        LOG.warning("Couldn't manually unmap a byte buffer");
+      }
+      return maxRecord;
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed write to disc", e);
       throw new RuntimeException(e);
     }
   }
 
-  public static List<KeyValue> readFile(String fileName, MessageType keyType,
-                                        MessageType dataType, KryoMemorySerializer deserializer) {
+  public static List<Tuple> readFile(String fileName, MessageType keyType,
+                                     MessageType dataType, KryoMemorySerializer deserializer) {
     String outFileName = Paths.get(fileName).toString();
     FileChannel rwChannel;
     try {
       rwChannel = new RandomAccessFile(outFileName, "rw").getChannel();
       ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_ONLY, 0, rwChannel.size());
 
-      List<KeyValue> keyValues = new ArrayList<>();
+      List<Tuple> keyValues = new ArrayList<>();
       // lets read the key values
-      int totalRead = 0;
+      long totalRead = 0;
       int count = 0;
       while (totalRead < rwChannel.size()) {
         Object key;
@@ -181,9 +206,13 @@ public final class FileLoader {
 
         int dataSize = os.getInt();
         value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
-        keyValues.add(new KeyValue(key, value));
+        keyValues.add(new Tuple(key, value));
 
-        totalRead += 8 + keySize + dataSize;
+        totalRead += Integer.BYTES + keySize + dataSize;
+        if (keyType == MessageType.OBJECT || keyType == MessageType.MULTI_FIXED_BYTE) {
+          //had to read an additional int to read the key size
+          totalRead += Integer.BYTES;
+        }
         count++;
       }
       rwChannel.force(true);
@@ -204,7 +233,7 @@ public final class FileLoader {
 
       List<Object> values = new ArrayList<>();
       // lets read the key values
-      int totalRead = 0;
+      long totalRead = 0;
       int count = 0;
       while (totalRead < rwChannel.size()) {
         Object value;
@@ -212,7 +241,7 @@ public final class FileLoader {
         int dataSize = os.getInt();
         value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
         values.add(value);
-        totalRead += 4 + dataSize;
+        totalRead += Integer.BYTES + dataSize;
         count++;
       }
       rwChannel.force(true);
@@ -223,11 +252,11 @@ public final class FileLoader {
     }
   }
 
-  public static Triple<List<KeyValue>, Long, Long> openFilePart(String fileName, long startOffSet,
-                                                                int maxSize, MessageType keyType,
-                                                                MessageType dataType,
-                                                                KryoMemorySerializer deserializer) {
-    List<KeyValue> keyValues = new ArrayList<>();
+  public static Triple<List<Tuple>, Long, Long> openFilePart(String fileName, long startOffSet,
+                                                             int maxSize, MessageType keyType,
+                                                             MessageType dataType,
+                                                             KryoMemorySerializer deserializer) {
+    List<Tuple> keyValues = new ArrayList<>();
     String outFileName = Paths.get(fileName).toString();
     FileChannel rwChannel;
     try {
@@ -236,7 +265,7 @@ public final class FileLoader {
           ? maxSize : rwChannel.size() - startOffSet;
       ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_ONLY, startOffSet, size);
 
-      int totalRead = 0;
+      long totalRead = 0;
       while (totalRead < size) {
         Object key;
         Object value;
@@ -257,7 +286,7 @@ public final class FileLoader {
           break;
         }
 
-        keyValues.add(new KeyValue(key, value));
+        keyValues.add(new Tuple(key, value));
         totalRead += 8 + keySize + dataSize;
       }
       rwChannel.close();
@@ -279,10 +308,10 @@ public final class FileLoader {
    * @return OpenFilePart with read information and null if fails
    */
   public static OpenFilePart openPart(String fileName, long startOffSet,
-                                      int maxSize, MessageType keyType,
+                                      long maxSize, MessageType keyType,
                                       MessageType dataType,
                                       KryoMemorySerializer deserializer) {
-    List<KeyValue> keyValues = new ArrayList<>();
+    List<Tuple> keyValues = new ArrayList<>();
     String outFileName = Paths.get(fileName).toString();
     FileChannel rwChannel;
     try {
@@ -291,18 +320,19 @@ public final class FileLoader {
           ? maxSize : rwChannel.size() - startOffSet;
       ByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_ONLY, startOffSet, size);
 
-      int totalRead = 0;
+      long totalRead = 0;
       while (totalRead < size) {
         Object key;
         Object value;
 
         // for object type we have to read the length of the bytes first
-        if (keyType == MessageType.OBJECT && totalRead + 4 > size) {
+        if (keyType == MessageType.OBJECT && totalRead + Integer.BYTES > size) {
           break;
         }
 
         // for object type we read the object bytes + 4
         int keySize = getKeySize(keyType, os);
+
         // we cannot read further
         if (totalRead + keySize > size) {
           break;
@@ -310,25 +340,26 @@ public final class FileLoader {
         key = KeyDeserializer.deserialize(keyType, deserializer, os,
             keySize - Integer.BYTES);
 
-        if (totalRead + keySize + 4 > size) {
+        if (totalRead + keySize + Integer.BYTES > size) {
           break;
         }
 
         int dataSize = os.getInt();
         // we cannot read further
-        if (totalRead + keySize + dataSize + 4 > size) {
+        if (totalRead + keySize + dataSize + Integer.BYTES > size) {
           break;
         }
         value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
 
-        keyValues.add(new KeyValue(key, value));
-        totalRead += 4 + keySize + dataSize;
+        keyValues.add(new Tuple(key, value));
+        totalRead += Integer.BYTES + keySize + dataSize;
       }
-      int size1 = (int) rwChannel.size();
+      long size1 = rwChannel.size();
       rwChannel.close();
-      return new OpenFilePart(keyValues, totalRead + (int) startOffSet,
+      return new OpenFilePart(keyValues, totalRead + startOffSet,
           size1, fileName);
     } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Error in reading file part", e);
       throw new RuntimeException(e);
     }
   }

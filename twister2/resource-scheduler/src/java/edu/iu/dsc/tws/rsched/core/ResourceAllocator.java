@@ -126,25 +126,20 @@ public class ResourceAllocator {
    * Create the job files to be uploaded into the cluster
    */
   private String prepareJobFiles(Config config, JobAPI.Job job) {
-    // lets first save the job file
-    // lets write the job into file, this will be used for job creation
-    String tempDirectory = SchedulerContext.jobClientTempDirectory(config) + "/" + job.getJobName();
-    try {
-      Files.createDirectories(Paths.get(tempDirectory));
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to create the base temp directory for job", e);
-    }
 
     String jobJarFile = SchedulerContext.userJobJarFile(config);
     if (jobJarFile == null) {
       throw new RuntimeException("Job file cannot be null");
     }
 
+    // create a temp directory to save the job package
     Path tempDirPath = null;
+    String tempDirPrefix = "twister2-" + job.getJobName() + "-";
     try {
-      tempDirPath = Files.createTempDirectory(Paths.get(tempDirectory), job.getJobName());
+      tempDirPath = Files.createTempDirectory(tempDirPrefix);
     } catch (IOException e) {
-      throw new RuntimeException("Failed to create temp directory: " + tempDirectory, e);
+      throw new RuntimeException("Failed to create temp directory with the prefix: "
+          + tempDirPrefix, e);
     }
 
     // temp directory to put archive files
@@ -159,7 +154,7 @@ public class ResourceAllocator {
     } else {
       String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
       if (twister2CorePackage == null) {
-        throw new RuntimeException("Core package is not specified in the confiuration");
+        throw new RuntimeException("Core package is not specified in the configuration");
       }
       LOG.log(Level.INFO, String.format("Copy core package: %s to %s",
           twister2CorePackage, tempDirPathString));

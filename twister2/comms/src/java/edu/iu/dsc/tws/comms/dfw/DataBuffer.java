@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.comms.dfw;
 
 import java.nio.ByteBuffer;
 
-import edu.iu.dsc.tws.comms.core.CommunicationContext;
+import edu.iu.dsc.tws.comms.api.CommunicationContext;
 
 import mpi.MPI;
 

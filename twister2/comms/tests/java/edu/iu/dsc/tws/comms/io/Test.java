@@ -23,10 +23,9 @@ import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessageReleaseCallback;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
-import edu.iu.dsc.tws.comms.dfw.OutMessage;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -73,18 +72,18 @@ public class Test {
   public void runTest2() {
     IntData data = new IntData(128);
     List list = new ArrayList<>();
-    list.add(new KeyedContent(new Short((short) 0), data, MessageType.OBJECT, MessageType.INTEGER));
+    list.add(new Tuple(new Short((short) 0), data, MessageType.OBJECT, MessageType.INTEGER));
     data = new IntData(128);
-    list.add(new KeyedContent(new Short((short) 1), data, MessageType.OBJECT, MessageType.INTEGER));
+    list.add(new Tuple(new Short((short) 1), data, MessageType.OBJECT, MessageType.INTEGER));
     ChannelMessage message = serializeObject(list, 1);
     System.out.println("Serialized first");
     deserialize(message);
 
 //    data = new IntData(128000);
 //    list = new ArrayList<>();
-//    list.add(new KeyedContent(new Short((short) 2), data));
+//    list.add(new Tuple(new Short((short) 2), data));
 //    data = new IntData(128000);
-//    list.add(new KeyedContent(new Short((short) 3), data));
+//    list.add(new Tuple(new Short((short) 3), data));
 //    ChannelMessage message2 = serializeObject(list, 1);
 ////    System.out.println("Serialized second");
 ////
@@ -112,16 +111,16 @@ public class Test {
     message.setKeyType(MessageType.SHORT);
     MessageHeader header = multiMessageDeserializer.buildHeader(message.getBuffers().get(0), 0);
     message.setHeader(header);
-    System.out.println(String.format("%d %d %d", header.getLength(),
+    System.out.println(String.format("%d %d %d", header.getNumberTuples(),
         header.getSourceId(), header.getEdge()));
     Object d = multiMessageDeserializer.build(message, 0);
     List list = (List) d;
     for (Object o : list) {
-      if (o instanceof KeyedContent) {
-        System.out.println(((KeyedContent) o).getKey());
-        if (((KeyedContent) o).getValue() instanceof IntData) {
+      if (o instanceof Tuple) {
+        System.out.println(((Tuple) o).getKey());
+        if (((Tuple) o).getValue() instanceof IntData) {
           System.out.println("Length: "
-              + ((IntData) ((KeyedContent) o).getValue()).getData().length);
+              + ((IntData) ((Tuple) o).getValue()).getData().length);
         }
       }
     }
@@ -134,9 +133,9 @@ public class Test {
     channelMessage.setKeyType(MessageType.INTEGER);
 
     int di = -1;
-    OutMessage sendMessage = new OutMessage(source, channelMessage, 0,
-        di, 0, 0, null, null);
-    multiMessageSerializer.build(object, sendMessage);
+//    OutMessage sendMessage = new OutMessage(source, channelMessage, 0,
+//        di, 0, 0, null, null);
+//    multiMessageSerializer.build(object, sendMessage);
 
     return channelMessage;
   }

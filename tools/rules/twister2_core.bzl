@@ -86,3 +86,13 @@ def twister2_harp_integration_files():
         "//third_party:harp_collective",
         "@it_unimi_dsi_fastutil//jar",
     ]
+
+def twister2_dashboard_files():
+    return [
+        "//dashboard/server:twister2-dash-server",
+    ]
+
+def twister2_storm_files():
+    return [
+        "//twister2/compatibility/storm:twister2-storm",
+    ]

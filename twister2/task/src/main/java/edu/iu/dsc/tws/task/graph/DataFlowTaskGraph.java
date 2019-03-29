@@ -17,8 +17,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.common.config.Config;
-
 /**
  * This class extends the base data flow task graph which is mainly responsible for building the
  * task graph for the task vertex and the task edge.
@@ -29,38 +27,13 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   private OperationMode operationMode = OperationMode.STREAMING;
 
   public DataFlowTaskGraph() {
-    super(Comparator.comparing(Vertex::getName), Comparator.comparing(Edge::getName));
+    super(new VertexComparator(), new EdgeComparator());
   }
 
   public DataFlowTaskGraph(OperationMode mode) {
-    super(Comparator.comparing(Vertex::getName), Comparator.comparing(Edge::getName));
+    super(new VertexComparator(), new EdgeComparator());
     this.operationMode = mode;
   }
-
-  //Newly added for Hierarchical Task Graph
-  private String taskGraphName;
-  private DataFlowTaskGraph dataFlowTaskGraph;
-  private Config config;
-
-  public void setTaskGraphName(String taskGraphName) {
-    this.taskGraphName = taskGraphName;
-  }
-
-  public DataFlowTaskGraph(String name, DataFlowTaskGraph dataflowTaskGraph) {
-    this.taskGraphName = name;
-    setTaskGraphName(this.taskGraphName);
-    this.dataFlowTaskGraph = dataflowTaskGraph;
-    config = Config.newBuilder().build();
-  }
-
-  public String getTaskGraphName() {
-    return taskGraphName;
-  }
-
-  public void addConfiguration(String key, Object val) {
-    this.config = Config.newBuilder().put(key, val).putAll(config).build();
-  }
-  //End
 
   /**
    * This method is responsible for storing the directed edges between the source and target task
@@ -69,9 +42,9 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   @Override
   public void build() {
     validate();
-    for (DirectedEdge<Vertex, Edge> de : directedEdges) {
-      taskMap.put(de.sourceTaskVertex.getName(), de.sourceTaskVertex);
-      taskMap.put(de.targetTaskVertex.getName(), de.targetTaskVertex);
+    for (DirectedEdge<Vertex, Edge> de : getDirectedEdgesSet()) {
+      taskMap.put(de.getSourceVertex().getName(), de.getSourceVertex());
+      taskMap.put(de.getTargetVertex().getName(), de.getTargetVertex());
     }
   }
 
@@ -207,12 +180,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   }
 
   public static class StringComparator implements Comparator<String> {
-
-    public Comparator<String> comp(String obj1, String obj2) {
-      Comparator<String> stringComparator = Comparator.comparing(String::toString);
-      return stringComparator;
-    }
-
     public int compare(String obj1, String obj2) {
       if (obj1 == null) {
         return -1;

@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.types;
 
 import java.io.IOException;
@@ -38,10 +26,6 @@ public final class DataDeserializer {
   private DataDeserializer() {
   }
 
-  /**
-   * used when there are more than 1 data object
-   * types other than multi types return as normal
-   */
   /**
    * Deserialize's the message from the list of data buffers.Used when there are more than 1
    * data object types other than multi types return as normal
@@ -64,6 +48,8 @@ public final class DataDeserializer {
         return deserializeShort(buffers, length);
       case BYTE:
         return deserializeBytes(buffers, length);
+      case LONG:
+        return deserializeLong(buffers, length);
       case OBJECT:
         return deserializeObject(buffers, length, deserializer);
       case MULTI_FIXED_BYTE:
@@ -95,6 +81,8 @@ public final class DataDeserializer {
         return deserializeShort(buffers, length);
       case BYTE:
         return deserializeBytes(buffers, length);
+      case LONG:
+        return deserializeLong(buffers, length);
       case OBJECT:
         return deserializeObject(buffers, length, deserializer);
       default:
@@ -199,7 +187,7 @@ public final class DataDeserializer {
   }
 
 
-  public static double[] deserializeDouble(List<DataBuffer> buffers, int byteLength) {
+  private static double[] deserializeDouble(List<DataBuffer> buffers, int byteLength) {
     int noOfDoubles = byteLength / Double.BYTES;
     double[] returnInts = new double[noOfDoubles];
     int bufferIndex = 0;
@@ -218,7 +206,7 @@ public final class DataDeserializer {
     return returnInts;
   }
 
-  public static int[] deserializeInteger(List<DataBuffer> buffers, int byteLength) {
+  private static int[] deserializeInteger(List<DataBuffer> buffers, int byteLength) {
     int noOfInts = byteLength / Integer.BYTES;
     int[] returnInts = new int[noOfInts];
     int bufferIndex = 0;
@@ -237,7 +225,7 @@ public final class DataDeserializer {
     return returnInts;
   }
 
-  public static short[] deserializeShort(List<DataBuffer> buffers, int byteLength) {
+  private static short[] deserializeShort(List<DataBuffer> buffers, int byteLength) {
     int noOfShorts = byteLength / Short.BYTES;
     short[] returnShorts = new short[noOfShorts];
     int bufferIndex = 0;
@@ -256,7 +244,7 @@ public final class DataDeserializer {
     return returnShorts;
   }
 
-  public static long[] deserializeLong(List<DataBuffer> buffers, int byteLength) {
+  private static long[] deserializeLong(List<DataBuffer> buffers, int byteLength) {
     int noOfLongs = byteLength / Long.BYTES;
     long[] returnLongs = new long[noOfLongs];
     int bufferIndex = 0;

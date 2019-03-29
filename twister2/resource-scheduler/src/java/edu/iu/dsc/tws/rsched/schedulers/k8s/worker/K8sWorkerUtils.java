@@ -16,6 +16,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,6 +31,7 @@ import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
@@ -61,6 +65,44 @@ public final class K8sWorkerUtils {
         build();
 
     return conf2;
+  }
+
+  /**
+   * In Kubernetes, worker id assignment by Job Master is not supported
+   * We assign worker ids based on statefulset indexes, pod indexes and container indexes
+   * In OpenMPI jobs, we assign workerIDs based on their MPI rank
+   * However, in OpenMPI jobs, scaling up/down of jobs is not supported.
+   *
+   * Assigning workerIDs by Kubernetes Twister2 utilities is a must
+   * when scaling down workers in a Twister2 job
+   *
+   * We always want to delete the last workers in a job with highest workerIDs,
+   * when scaling down jobs.
+   * Deleting pods in a statefulset is performed by scaling down the statefulset.
+   * When statefulsets are scaled down, the last pods with highest indexes are killed.
+   *
+   * if the worker in the last pod of a statefulset does not have the highest workerID,
+   * then when scaling down the statefulset, we may not kill the last worker in the job.
+   * This happens when JobMaster assigns workerIDs.
+   * Workers do not get ids based on their pod indexes,
+   * but rather based on their registration order with the JobMaster.
+   * Therefore, we can not support workerID assignment by JobMaster in Kubernetes.
+   * @param config
+   * @return
+   */
+  public static Config unsetWorkerIDAssigment(Config config) {
+    if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
+
+      LOG.warning("In Kubernetes clusters, workerID assignment by JobMaster is not supported. "
+          + "Twister2 Kubernetes utilities assign workerIDs.");
+
+      return Config.newBuilder().
+          putAll(config).
+          put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, false).
+          build();
+    }
+
+    return config;
   }
 
   /**
@@ -165,7 +207,8 @@ public final class K8sWorkerUtils {
 
     int workerCount = 0;
     for (int i = 0; i < currentStatefulSetIndex; i++) {
-      workerCount += JobUtils.getComputeResource(job, i).getNumberOfWorkers();
+      JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, i);
+      workerCount += computeResource.getInstances() * computeResource.getWorkersPerPod();
     }
 
     return workerCount;
@@ -218,6 +261,30 @@ public final class K8sWorkerUtils {
       throw new RuntimeException("Cannot get Job master IP from service name.", e);
     }
   }
+
+  /**
+   * generate the additional requested ports for this worker
+   * @param config
+   * @param workerPort
+   * @return
+   */
+  public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
+
+    // if no port is requested, return null
+    List<String> portNames = SchedulerContext.additionalPorts(config);
+    if (portNames == null) {
+      return null;
+    }
+
+    HashMap<String, Integer> ports = new HashMap<>();
+    int i = 1;
+    for (String portName: portNames) {
+      ports.put(portName, workerPort + i++);
+    }
+
+    return ports;
+  }
+
 
 
   /**

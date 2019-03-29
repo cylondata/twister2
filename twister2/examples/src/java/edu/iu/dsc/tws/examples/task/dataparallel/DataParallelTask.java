@@ -27,10 +27,10 @@ import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 
-public class DataParallelTask extends BaseBatchSource {
+public class DataParallelTask extends BaseSource {
   private static final Logger LOG = Logger.getLogger(DataParallelTask.class.getName());
 
   private static final long serialVersionUID = -1L;
@@ -49,11 +49,12 @@ public class DataParallelTask extends BaseBatchSource {
         int count = 0;
         while (!inputSplit.reachedEnd()) {
           String value = inputSplit.nextRecord(null);
-          LOG.info("We read value: " + value);
-
-          sink.add(context.taskIndex(), value);
-          count += 1;
-          totalCount += 1;
+          if (value != null) {
+            LOG.fine("We read value: " + value);
+            sink.add(context.taskIndex(), value);
+            count += 1;
+            totalCount += 1;
+          }
         }
         splitCount += 1;
         inputSplit = source.getNextSplit(context.taskIndex());

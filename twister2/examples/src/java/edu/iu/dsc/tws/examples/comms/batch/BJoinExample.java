@@ -22,9 +22,9 @@ import com.google.common.collect.Iterators;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.batch.BJoin;
-import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.api.batch.BJoin;
+import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.JoinedKeyedBenchWorker;
 
@@ -76,6 +76,11 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
       Thread mapThread = new Thread(new JoinedKeyedBenchWorker.MapWorker(t));
       mapThread.start();
     }
+  }
+
+  @Override
+  public void close() {
+    join.close();
   }
 
   @Override

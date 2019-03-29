@@ -11,15 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-
 /**
  * Wrapper interface for all the messages types.
  */
-public class TaskMessage implements IMessage {
+public class TaskMessage<T> implements IMessage<T> {
   /**
    * Stores the data
    */
-  private Object content;
+  private T content;
 
   /**
    * Key of the data
@@ -41,7 +40,7 @@ public class TaskMessage implements IMessage {
    * Create a task message with data
    * @param data data
    */
-  public TaskMessage(Object data) {
+  public TaskMessage(T data) {
     this.content = data;
   }
 
@@ -51,23 +50,10 @@ public class TaskMessage implements IMessage {
    * @param edge edge
    * @param sourceTask sourcetask
    */
-  public TaskMessage(Object content, String edge, int sourceTask) {
+  public TaskMessage(T content, String edge, int sourceTask) {
     this.content = content;
     this.edge = edge;
     this.sourceTask = sourceTask;
-  }
-
-  /**
-   * Create a task message with data
-   * @param content data
-   * @param edge edge
-   * @param sourceTask sourcetask
-   */
-  public TaskMessage(Object content, String edge, int sourceTask, int flag) {
-    this.content = content;
-    this.edge = edge;
-    this.sourceTask = sourceTask;
-    this.flag = flag;
   }
 
   /**
@@ -77,26 +63,35 @@ public class TaskMessage implements IMessage {
    * @param edge edge
    * @param sourceTask source task
    */
-  public TaskMessage(Object key, Object content, String edge, int sourceTask) {
+  public TaskMessage(Object key, T content, String edge, int sourceTask) {
     this.content = content;
     this.key = key;
     this.edge = edge;
     this.sourceTask = sourceTask;
   }
 
-  public Object getContent() {
-    return content;
-  }
-
-  public int getFlag() {
-    return flag;
-  }
-
-  public void setFlag(int flag) {
+  /**
+   * Task message with key and data
+   * @param key key
+   * @param content data
+   * @param edge edge
+   * @param sourceTask source task
+   * @param flag message flag
+   */
+  public TaskMessage(Object key, T content, String edge, int sourceTask, int flag) {
+    this.content = content;
+    this.key = key;
+    this.edge = edge;
+    this.sourceTask = sourceTask;
     this.flag = flag;
   }
 
-  public void setContent(Object content) {
+
+  public T getContent() {
+    return content;
+  }
+
+  public void setContent(T content) {
     this.content = content;
   }
 

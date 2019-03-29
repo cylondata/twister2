@@ -5,7 +5,7 @@ java_library(
     srcs = glob(["**/*.java"]),
     deps = [
                "//twister2/common/src/java:common-java",
-               "//twister2/proto:proto_jobmaster_java",
+               "//twister2/proto:proto-java",
                "@org_yaml_snakeyaml//jar",
                "@com_google_protobuf//:protobuf_java",
                "//third_party/java:mockito",

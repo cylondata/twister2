@@ -278,7 +278,7 @@ An implementation of IJobTerminator for Kubernetes clusters can be found in:
 Job Master has two components:
 
 ```text
-edu.iu.dsc.tws.master.JobMaster
+edu.iu.dsc.tws.master.server.JobMaster
 edu.iu.dsc.tws.master.client.JobMasterClient
 ```
 

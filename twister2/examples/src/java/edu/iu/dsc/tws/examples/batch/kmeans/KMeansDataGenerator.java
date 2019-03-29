@@ -11,196 +11,126 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.OutputStreamWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Random;
-import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
+import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.hdfs.HadoopDataOutputStream;
-import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
-import edu.iu.dsc.tws.data.utils.HdfsUtils;
 
 /**
- * This class is to generate the datapoints and centroid values in a random manner and write the
- * datapoints and centroid values in the local filesystem or distributed filesystem.
+ * Generate a data set
+ * <p>
+ * 1. We can generate in each worker
+ * 2. We can generate in a common location shared by workers, such as HDFS or NFS
  */
-public class KMeansDataGenerator {
+public final class KMeansDataGenerator {
 
   private static final Logger LOG = Logger.getLogger(KMeansDataGenerator.class.getName());
 
-  protected KMeansDataGenerator() {
+  private KMeansDataGenerator() {
   }
 
   /**
-   * This method generates the datapoints which is based on the which is based on the number of data
-   * points, required dimension, minimum and maximum value (for the random number generation).
+   * Generate a data set
+   *
+   * @param type type of file, i.e. csv, text, binary
+   * @param directory the directory to generate
+   * @param numOfFiles number of files to create
+   * @param sizeOfFile size of each file, different types have a different meaning
+   * @param sizeMargin size will be varied about this much
    */
-  public static void generateDataPointsFile(String fileName, int numPoints, int dimension,
-                                            int seedValue, Config config, String fileSys) {
+  public static void generateData(String type, Path directory, int numOfFiles, int sizeOfFile,
+                                  int sizeMargin, int dimension, Config cfg)
+      throws IOException {
+    if ("csv".equals(type)) {
+      generateCSV(directory, numOfFiles, sizeOfFile, sizeMargin, dimension, cfg);
+    } else if ("txt".equals(type)) {
+      generateText(directory, numOfFiles, sizeOfFile, sizeMargin, dimension, cfg);
+    } else {
+      throw new RuntimeException("Unsupported data gen type: " + type);
+    }
+  }
 
-    StringBuffer datapoints = new StringBuffer();
+  private static void generateText(Path directory, int numOfFiles, int sizeOfFile,
+                                   int sizeMargin, int dimension, Config config)
+      throws IOException {
+    FileSystem fs = FileSystem.get(directory.toUri(), config);
+    if (fs.exists(directory)) {
+      fs.delete(directory, true);
+    }
+    for (int i = 0; i < numOfFiles; i++) {
+      FSDataOutputStream outputStream = fs.create(new Path(directory,
+          generateRandom(10) + ".txt"));
+      PrintWriter pw = new PrintWriter(outputStream);
+      String points = generatePoints(sizeOfFile, dimension, sizeMargin);
+      pw.print(points);
+      outputStream.sync();
+      pw.close();
+    }
+  }
+
+  private static String generatePoints(int numPoints, int dimension, int seedValue) {
+    StringBuilder datapoints = new StringBuilder();
     Random r = new Random(seedValue);
-    try {
-      for (int i = 0; i < numPoints; i++) {
-        String line = "";
-        for (int j = 0; j < dimension; j++) {
-          double randomValue = r.nextDouble();
-          line += randomValue;
-          if (j == 0) {
-            line += "," + "\t";
-          }
+    for (int i = 0; i < numPoints; i++) {
+      StringBuilder line = new StringBuilder();
+      for (int j = 0; j < dimension; j++) {
+        double randomValue = r.nextDouble();
+        line.append(randomValue);
+        if (j == 0) {
+          line.append(",").append("\t");
         }
-        datapoints.append(line);
+      }
+      datapoints.append(line);
+      if (i < numPoints - 1) {
         datapoints.append("\n");
       }
-    } catch (Exception e) {
-      e.printStackTrace();
     }
-    writeToPointsFile(datapoints.toString(), fileName, config, fileSys);
+    return datapoints.toString();
   }
 
-  /**
-   * This method generates the datapoints which is based on the which is based on the number of
-   * centroids, required dimension, minimum and maximum value (for the random number generation).
-   */
-  public static void generateCentroidFile(String fileName, int numCentroids, int dimension,
-                                          int seedValue, Config config, String fileSys) {
 
-    StringBuffer centroids = new StringBuffer();
-    Random r = new Random(seedValue);
-    try {
-      for (int i = 0; i < numCentroids; i++) {
-        String line = "";
-        for (int j = 0; j < dimension; j++) {
-          double randomValue = r.nextDouble();
-          line += randomValue;
-          if (j == 0) {
-            line += "," + "\t";
-          }
-        }
-        centroids.append(line);
-        centroids.append("\n");
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
+  /**
+   * Generate a random csv file, we generate a csv with 10 attributes
+   *
+   * @param directory the path of the directory
+   */
+  private static void generateCSV(Path directory, int numOfFiles, int sizeOfFile,
+                                  int sizeMargin, int dimension, Config config) throws IOException {
+
+    FileSystem fs = FileSystem.get(directory.toUri(), config);
+    if (fs.exists(directory)) {
+      fs.delete(directory, true);
     }
-    writeToCentroidFile(centroids.toString(), fileName, config, fileSys);
-  }
-
-  /**
-   * This method writes the data points into the local filesystem or HDFS which is based on the user
-   * submitted value.
-   */
-  private static void writeToPointsFile(String datapoints, String fileName, Config config,
-                                        String fileSystem) {
-    BufferedWriter bufferedWriter = null;
-    StringTokenizer stringTokenizer = new StringTokenizer(datapoints, "\n");
-
-    HadoopFileSystem hadoopFileSystem = null;
-    HadoopDataOutputStream dataOutputStream = null;
-    try {
-      if ("hdfs".equals(fileSystem)) {
-        HdfsUtils hdfsUtils = new HdfsUtils(config, fileName);
-        hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
-        Path path = hdfsUtils.getPath();
-
-        if (hadoopFileSystem.exists(path)) {
-          hadoopFileSystem.delete(path, false);
-        }
-        dataOutputStream = hadoopFileSystem.create(path);
-        bufferedWriter = new BufferedWriter(new OutputStreamWriter(dataOutputStream, "UTF-8"));
-        while (stringTokenizer.hasMoreTokens()) {
-          String out = stringTokenizer.nextToken().trim();
-          bufferedWriter.write(out);
-          bufferedWriter.write("\n");
-        }
-      } else if ("local".equals(fileSystem)) {
-        File file = new File(fileName);
-        if (file.exists()) {
-          file.delete();
-        }
-        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
-        while (stringTokenizer.hasMoreTokens()) {
-          bufferedWriter.write(stringTokenizer.nextToken().trim());
-          bufferedWriter.write("\n");
-        }
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to write to file", e);
-    } finally {
-      try {
-        bufferedWriter.flush();
-        bufferedWriter.close();
-        if (dataOutputStream != null) {
-          dataOutputStream.close();
-        }
-        if (hadoopFileSystem != null) {
-          hadoopFileSystem.close();
-        }
-      } catch (Exception e) {
-        throw new RuntimeException("Failed to close file'", e);
-      }
+    for (int i = 0; i < numOfFiles; i++) {
+      FSDataOutputStream outputStream = fs.create(new Path(directory,
+          generateRandom(10) + ".csv"));
+      PrintWriter pw = new PrintWriter(outputStream);
+      String points = generatePoints(sizeOfFile, dimension, sizeMargin);
+      pw.print(points);
+      outputStream.sync();
+      pw.close();
     }
   }
 
-  /**
-   * This method writes the centroids into the local filesystem or HDFS which is based on the user
-   * submitted value.
-   */
-  private static void writeToCentroidFile(String datapoints, String fileName,
-                                          Config config, String fileSystem) {
-    BufferedWriter bufferedWriter = null;
-    StringTokenizer stringTokenizer = new StringTokenizer(datapoints, "\n");
-    HadoopFileSystem hadoopFileSystem = null;
-    HadoopDataOutputStream dataOutputStream = null;
-    try {
-      if ("hdfs".equals(fileSystem)) {
-        HdfsUtils hdfsUtils = new HdfsUtils(config, fileName);
-        hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
-        Path path = hdfsUtils.getPath();
-
-        if (hadoopFileSystem.exists(path)) {
-          hadoopFileSystem.delete(path, false);
-        }
-        dataOutputStream = hadoopFileSystem.create(path);
-        bufferedWriter = new BufferedWriter(new OutputStreamWriter(dataOutputStream, "UTF-8"));
-        while (stringTokenizer.hasMoreTokens()) {
-          String out = stringTokenizer.nextToken().trim();
-          bufferedWriter.write(out);
-          bufferedWriter.write("\n");
-        }
-      } else if ("local".equals(fileSystem)) {
-        File file = new File(fileName);
-        if (file.exists()) {
-          file.delete();
-        }
-        bufferedWriter = new BufferedWriter(new FileWriter(fileName));
-        while (stringTokenizer.hasMoreTokens()) {
-          bufferedWriter.write(stringTokenizer.nextToken().trim());
-          bufferedWriter.write("\n");
-        }
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to write centroids file", e);
-    } finally {
-      try {
-        bufferedWriter.flush();
-        bufferedWriter.close();
-        if (dataOutputStream != null) {
-          dataOutputStream.close();
-        }
-        if (hadoopFileSystem != null) {
-          hadoopFileSystem.close();
-        }
-      } catch (Exception e) {
-        throw new RuntimeException("Failed to close file", e);
-      }
+  private static String generateCSVLine(int fields) {
+    StringBuilder row = new StringBuilder();
+    for (int i = 0; i < fields - 1; i++) {
+      row.append(generateRandom(4)).append(", ");
     }
+    row.append(generateRandom(4));
+    return row.toString();
+  }
+
+  private static String generateRandom(int length) {
+    boolean useLetters = true;
+    boolean useNumbers = false;
+    return RandomStringUtils.random(length, useLetters, useNumbers);
   }
 }
-

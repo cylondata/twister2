@@ -30,13 +30,14 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -48,7 +49,7 @@ public final class NomadWorkerStarter {
   /**
    * The jobmaster client
    */
-  private JobMasterClient masterClient;
+  private JMWorkerAgent masterClient;
 
   /**
    * Configuration
@@ -192,7 +193,12 @@ public final class NomadWorkerStarter {
 
     String workerClass = SchedulerContext.workerClass(config);
 
-    List<JobMasterAPI.WorkerInfo> workerInfos = workerController.getAllWorkers();
+    try {
+      List<JobMasterAPI.WorkerInfo> workerInfos = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
 
     try {
       Object object = ReflectionUtils.newInstance(workerClass);
@@ -241,7 +247,7 @@ public final class NomadWorkerStarter {
     JobMasterAPI.WorkerInfo workerInfo =
         WorkerInfoUtils.createWorkerInfo(workerID, host, port, null);
 
-    this.masterClient = createMasterClient(config, jobMasterIP, jobMasterPort,
+    this.masterClient = createMasterAgent(config, jobMasterIP, jobMasterPort,
         workerInfo, numberOfWorkers);
 
     return masterClient.getJMWorkerController();
@@ -250,21 +256,21 @@ public final class NomadWorkerStarter {
   /**
    * Create the job master client to get information about the workers
    */
-  private JobMasterClient createMasterClient(Config cfg, String masterHost, int masterPort,
-                                                    JobMasterAPI.WorkerInfo workerInfo,
-                                                    int numberContainers) {
+  private JMWorkerAgent createMasterAgent(Config cfg, String masterHost, int masterPort,
+                                          JobMasterAPI.WorkerInfo workerInfo,
+                                          int numberContainers) {
     // we start the job master client
-    JobMasterClient jobMasterClient = new JobMasterClient(cfg,
+    JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
         workerInfo, masterHost, masterPort, numberContainers);
     LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
-    jobMasterClient.startThreaded();
-    // now lets send the starting message
-    jobMasterClient.sendWorkerStartingMessage();
+    jobMasterAgent.startThreaded();
+    // No need for sending workerStarting message anymore
+    // that is called in startThreaded method
 
     // now lets send the starting message
-    jobMasterClient.sendWorkerRunningMessage();
+    jobMasterAgent.sendWorkerRunningMessage();
 
-    return jobMasterClient;
+    return jobMasterAgent;
   }
 
   /**

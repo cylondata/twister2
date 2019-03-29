@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.examples.comms.Constants;
+import edu.iu.dsc.tws.examples.utils.DataGenerator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -36,6 +37,7 @@ public class DataParallelWorker extends TaskWorker {
     boolean shared = config.getBooleanValue(Constants.ARGS_SHARED_FILE_SYSTEM);
     int numFiles = config.getIntegerValue(Constants.ARGS_NUMBER_OF_FILES, 4);
     int size = config.getIntegerValue(Constants.ARGS_SIZE, 1000);
+    int parallel = config.getIntegerValue(Constants.ARGS_PARALLEL, 2);
 
     if (!shared && workerId == 0) {
       try {
@@ -46,11 +48,12 @@ public class DataParallelWorker extends TaskWorker {
     }
 
     DataParallelTask task = new DataParallelTask();
-    taskGraphBuilder.addSource("map", task, 4);
+    taskGraphBuilder.addSource("map", task, parallel);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(dataFlowTaskGraph);
     taskExecutor.execute(dataFlowTaskGraph, plan);
   }
+
 }

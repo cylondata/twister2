@@ -37,7 +37,9 @@ twister2.logging.maximum.files: 5
 twister2.job.master.runs.in.client: false
 
 # if true, job master assigns the worker IDs,
-# if false, workers have their IDs when regitering with the job master
+# if false, workers have their IDs when registering with the job master
+# it is always false in Kubernetes
+# setting it to true does not make any difference
 twister2.job.master.assigns.worker.ids: false
 
 # ping message intervals from workers to the job master in milliseconds
@@ -74,6 +76,7 @@ twister2.job.master.ram: 1024
 ###################################################################################
 # WorkerController related config parameters
 ###################################################################################
+
 # amount of timeout for all workers to join the job
 # in milli seconds
 twister2.worker.controller.max.wait.time.for.all.workers.to.join: 100000
@@ -81,3 +84,13 @@ twister2.worker.controller.max.wait.time.for.all.workers.to.join: 100000
 # amount of timeout on barriers for all workers to arrive
 # in milli seconds
 twister2.worker.controller.max.wait.time.on.barrier: 100000
+
+###################################################################
+# Dashboard related settings
+###################################################################
+
+# Dashboard server host address and port
+# if this parameter is not specified, then job master will not try to connect to Dashboard
+# twister2.dashboard.host: "http://149.165.150.81:8080"
+# if dashboard is running as a statefulset in the cluster
+twister2.dashboard.host: "http://twister2-dashboard.default.svc.cluster.local"

@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -24,11 +25,12 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.OperationNames;
@@ -36,13 +38,15 @@ import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -94,7 +98,7 @@ public class HDFSTaskExample implements IWorker {
     builder.setParallelism("sink", 2);
 
     builder.connect("source", "sink", "partition-edge",
-            OperationNames.PARTITION);
+        OperationNames.PARTITION);
     builder.operationMode(OperationMode.STREAMING);
 
     List<String> inputList = new ArrayList<>();
@@ -109,7 +113,14 @@ public class HDFSTaskExample implements IWorker {
     builder.addConfiguration("source", "outputdataset", outputList);
     builder.addConfiguration("sink", "outputdataset", outputList);
 
-    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
+    WorkerPlan workerPlan = createWorkerPlan(workerList);
     DataFlowTaskGraph graph = builder.build();
 
     TaskSchedulePlan taskSchedulePlan;
@@ -121,18 +132,18 @@ public class HDFSTaskExample implements IWorker {
     //Just to print the task schedule plan...
     if (workerID == 0) {
       if (taskSchedulePlan != null) {
-        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-                = taskSchedulePlan.getContainersMap();
-        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+        Map<Integer, ContainerPlan> containersMap
+            = taskSchedulePlan.getContainersMap();
+        for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
           Integer integer = entry.getKey();
-          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-          Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
-                  = containerPlan.getTaskInstances();
+          ContainerPlan containerPlan = entry.getValue();
+          Set<TaskInstancePlan> containerPlanTaskInstances
+              = containerPlan.getTaskInstances();
           LOG.info("Task Details for Container Id:" + integer);
-          for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
+          for (TaskInstancePlan ip : containerPlanTaskInstances) {
             LOG.info("Task Id:" + ip.getTaskId()
-                    + "\tTask Index" + ip.getTaskIndex()
-                    + "\tTask Name:" + ip.getTaskName());
+                + "\tTask Index" + ip.getTaskIndex()
+                + "\tTask Name:" + ip.getTaskName());
           }
         }
       }
@@ -140,7 +151,7 @@ public class HDFSTaskExample implements IWorker {
 
     TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-        workerController.getAllWorkers(), new Communicator(config, network));
+        workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network);
     executor.execute();
@@ -148,7 +159,7 @@ public class HDFSTaskExample implements IWorker {
 
   public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
       Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }
@@ -156,7 +167,7 @@ public class HDFSTaskExample implements IWorker {
     return new WorkerPlan(workers);
   }
 
-  private static class GeneratorTask extends BaseStreamSource {
+  private static class GeneratorTask extends BaseSource {
 
     private static final long serialVersionUID = -254264903510284748L;
     private int count = 0;
@@ -197,13 +208,13 @@ public class HDFSTaskExample implements IWorker {
         count++;
         if (count % 100 == 0) {
           LOG.info(String.format("%d %d Message Partition sent count : %d", context.getWorkerId(),
-                  context.taskId(), count));
+              context.taskId(), count));
         }
       }
     }
   }
 
-  private static class ReceivingTask extends BaseStreamSink {
+  private static class ReceivingTask extends BaseSink {
 
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
@@ -244,7 +255,7 @@ public class HDFSTaskExample implements IWorker {
         count += ((List) message.getContent()).size();
       }
       LOG.info(String.format("%d %d Message Partition Received count: %d", context.getWorkerId(),
-              context.taskId(), count));
+          context.taskId(), count));
       return true;
     }
   }

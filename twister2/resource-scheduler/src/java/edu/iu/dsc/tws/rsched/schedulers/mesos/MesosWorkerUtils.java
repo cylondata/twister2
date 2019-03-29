@@ -11,7 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.mesos;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public final class MesosWorkerUtils {
   private static final Logger LOG = Logger.getLogger(MesosWorkerUtils.class.getName());
@@ -19,4 +25,24 @@ public final class MesosWorkerUtils {
   private MesosWorkerUtils() {
 
   }
+  /**
+   * generate the additional requested ports for this worker
+   * @param config
+   * @param workerPort
+   * @return
+   */
+  public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
+    // if no port is requested, return null
+    List<String> portNames = SchedulerContext.additionalPorts(config);
+    if (portNames == null) {
+      return null;
+    }
+    HashMap<String, Integer> ports = new HashMap<>();
+    int i = 1;
+    for (String portName: portNames) {
+      ports.put(portName, workerPort + i++);
+    }
+    return ports;
+  }
+
 }

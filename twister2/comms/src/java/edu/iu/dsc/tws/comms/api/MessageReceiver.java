@@ -69,4 +69,16 @@ public interface MessageReceiver {
    * @return true if needs further communicationProgress
    */
   boolean progress();
+
+  /**
+   * Close the receiver
+   */
+  default void close() {
+  }
+
+  /**
+   * Clean any state associated with the receiver and go to initial state
+   */
+  default void clean() {
+  }
 }

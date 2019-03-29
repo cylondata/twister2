@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.formatters;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.api.splits.TextInputSplit;
@@ -19,10 +20,14 @@ import edu.iu.dsc.tws.data.fs.Path;
 public class SharedTextInputPartitioner extends FileInputPartitioner<String> {
   private static final long serialVersionUID = 1L;
 
-  private LocatableInputSplitAssigner assigner;
+  private LocatableInputSplitAssigner<String> assigner;
 
   public SharedTextInputPartitioner(Path filePath) {
     super(filePath);
+  }
+
+  public SharedTextInputPartitioner(Path filePath, int numTasks, Config config) {
+    super(filePath, config);
   }
 
   @Override
@@ -32,9 +37,10 @@ public class SharedTextInputPartitioner extends FileInputPartitioner<String> {
   }
 
   @Override
-  public LocatableInputSplitAssigner getInputSplitAssigner(FileInputSplit<String>[] inputSplits) {
+  public LocatableInputSplitAssigner<String> getInputSplitAssigner(
+      FileInputSplit<String>[] inputSplits) {
     if (assigner == null) {
-      assigner = new LocatableInputSplitAssigner(inputSplits);
+      assigner = new LocatableInputSplitAssigner<String>(inputSplits);
     }
     return assigner;
   }

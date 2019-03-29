@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 
 public class DataFlowMultiGather implements DataFlowOperation {
   private static final Logger LOG = Logger.getLogger(DataFlowMultiGather.class.getName());
@@ -56,7 +56,8 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
   private MessageType keyType;
 
-  public DataFlowMultiGather(TWSChannel chnl, Set<Integer> sources, Set<Integer> destination,
+  public DataFlowMultiGather(Config config, TWSChannel chnl, TaskPlan instancePlan,
+                             Set<Integer> sources, Set<Integer> destination,
                              MultiMessageReceiver finalRecv, MultiMessageReceiver partialRecv,
                              Set<Integer> es, MessageType kType,
                              MessageType dType) {
@@ -69,6 +70,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
     this.partialReceiver = partialRecv;
     this.dataType = dType;
     this.keyType = kType;
+    init(config, dType, instancePlan);
   }
 
   @Override
@@ -123,6 +125,16 @@ public class DataFlowMultiGather implements DataFlowOperation {
 
   @Override
   public void close() {
+    for (DataFlowGather gather : gatherMap.values()) {
+      gather.close();
+    }
+  }
+
+  @Override
+  public void clean() {
+    for (DataFlowGather gather : gatherMap.values()) {
+      gather.clean();
+    }
   }
 
   @Override
@@ -142,10 +154,8 @@ public class DataFlowMultiGather implements DataFlowOperation {
     return String.valueOf(edges.toArray()[0]);
   }
 
-  /**
-   * Initialize
-   */
-  public void init(Config config, MessageType dType, TaskPlan instancePlan) {
+
+  private void init(Config config, MessageType dType, TaskPlan instancePlan) {
     executor = instancePlan.getThisExecutor();
     this.dataType = dType;
     this.plan = instancePlan;
@@ -157,8 +167,8 @@ public class DataFlowMultiGather implements DataFlowOperation {
     int count = 0;
     for (int dest : destinations) {
       GatherFinalReceiver finalRcvr = new GatherFinalReceiver(dest);
-      GatherPartialReceiver partialRcvr = null;
-      DataFlowGather gather = null;
+      GatherPartialReceiver partialRcvr;
+      DataFlowGather gather;
       if (partialReceiver != null) {
         partialRcvr = new GatherPartialReceiver(dest);
         gather = new DataFlowGather(channel, sources, dest,
@@ -191,10 +201,10 @@ public class DataFlowMultiGather implements DataFlowOperation {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     boolean isDone = true;
     for (DataFlowGather gather : gatherMap.values()) {
-      isDone = isDone && gather.isDelegeteComplete();
+      isDone = gather.isDelegateComplete();
       if (!isDone) {
         //No need to check further if we already have one false
         return false;
@@ -208,7 +218,7 @@ public class DataFlowMultiGather implements DataFlowOperation {
     boolean isDone = true;
 
     for (DataFlowGather gather : gatherMap.values()) {
-      isDone = isDone && gather.isComplete();
+      isDone = gather.isComplete();
       if (!isDone) {
         //No need to check further if we already have one false
         return false;

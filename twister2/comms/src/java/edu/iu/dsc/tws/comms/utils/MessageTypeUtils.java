@@ -40,8 +40,6 @@ public final class MessageTypeUtils {
         return DataMessageType.DOUBLE;
       case OBJECT:
         return DataMessageType.OBJECT;
-      case BUFFER:
-        return DataMessageType.BUFFER;
       case EMPTY:
         return DataMessageType.EMPTY;
       case SHORT:

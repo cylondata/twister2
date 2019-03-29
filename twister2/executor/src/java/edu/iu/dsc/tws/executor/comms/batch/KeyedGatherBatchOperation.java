@@ -11,44 +11,73 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.comms.batch;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.batch.BKeyedGather;
-import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
+import edu.iu.dsc.tws.comms.api.Communicator;
+import edu.iu.dsc.tws.comms.api.DestinationSelector;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.api.batch.BKeyedGather;
+import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
+import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedGatherBatchOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(KeyedGatherBatchOperation.class.getName());
+
   protected BKeyedGather op;
+
+  private TaskKeySelector selector;
 
   public KeyedGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                    Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                   DataType dataType, DataType keyType,
-                                   String edgeName) {
+                                   Edge edge) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
-    op = new BKeyedGather(channel, taskPlan, sources, dests,
-        Utils.dataTypeToMessageType(keyType),
-        Utils.dataTypeToMessageType(dataType), new GatherRecvrImpl(),
-        new LoadBalanceSelector(), false);
+    this.selector = edge.getSelector();
 
-    communicationEdge = e.generate(edgeName);
+    DestinationSelector destSelector;
+    if (selector != null) {
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
+    } else {
+      destSelector = new HashingSelector();
+    }
+
+    boolean useDisk = false;
+    Comparator keyComparator = null;
+    try {
+      useDisk = (Boolean) edge.getProperty("use-disk");
+      keyComparator = (Comparator) edge.getProperty("key-comparator");
+      LOG.info("Configuring disk based batch operation");
+    } catch (Exception ex) {
+      //ignore
+    }
+
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    op = new BKeyedGather(newComm, taskPlan, sources, dests,
+        Utils.dataTypeToMessageType(edge.getKeyType()),
+        Utils.dataTypeToMessageType(edge.getDataType()), new GatherRecvrImpl(),
+        destSelector, useDisk, keyComparator);
+
+    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
     TaskMessage taskMessage = (TaskMessage) message;
-    return op.gather(source, taskMessage.getKey(), taskMessage.getContent(), flags);
+    Object key = extractKey(taskMessage, selector);
+    return op.gather(source, key, taskMessage.getContent(), flags);
   }
 
   @Override
@@ -63,7 +92,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage(it,
+      TaskMessage msg = new TaskMessage<>(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
@@ -77,5 +106,10 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
   @Override
   public void finish(int source) {
     op.finish(source);
+  }
+
+  @Override
+  public void close() {
+    op.close();
   }
 }

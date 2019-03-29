@@ -33,7 +33,6 @@ public class GatherStreamingPartialReceiver implements MessageReceiver {
   // for each task we need to keep track of incoming messages
   private Map<Integer, Map<Integer, Queue<Object>>> messages = new TreeMap<>();
   private Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
-  private int currentIndex = 0;
   private DataFlowOperation dataFlowOperation;
   private int executor;
   private int sendPendingMax;
@@ -72,12 +71,9 @@ public class GatherStreamingPartialReceiver implements MessageReceiver {
     Integer c = counts.get(target).get(source);
     if (m.size() >= sendPendingMax) {
       canAdd = false;
-//       LOG.info(String.format("%d Partial false: target %d source %d", executor, target, source));
     } else {
       // we need to increment the reference count to make the buffers available
       // other wise they will bre reclaimed
-//        LOG.info(String.format("%d Partial true: target %d source %d %s",
-//            executor, target, source, counts.get(target)));
       if (object instanceof ChannelMessage) {
         ((ChannelMessage) object).incrementRefCount();
       }

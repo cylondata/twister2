@@ -13,10 +13,13 @@ package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 
 /**
  * Keyed reduce final receiver for streaming  mode
@@ -51,6 +54,12 @@ public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
   }
 
   @Override
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
+  }
+
+  @Override
   @SuppressWarnings("unchecked")
   public boolean progress() {
     boolean needsFurtherProgress = false;
@@ -63,7 +72,7 @@ public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
 
       Queue<Object> targetSendQueue = sendQueue.get(target);
       sourcesFinished = isSourcesFinished(target);
-      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
+      if (!sourcesFinished && !(dataFlowOperation.isDelegateComplete()
           && messages.get(target).isEmpty())) {
         needsFurtherProgress = true;
       }
@@ -75,15 +84,12 @@ public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
           results.add(current);
         }
         bulkReceiver.receive(target, results.iterator());
-
       }
 
-      if (sourcesFinished && dataFlowOperation.isDelegeteComplete()
+      if (sourcesFinished && dataFlowOperation.isDelegateComplete()
           && targetSendQueue.isEmpty()) {
         batchDone.put(target, true);
       }
-
-
     }
 
     return needsFurtherProgress;

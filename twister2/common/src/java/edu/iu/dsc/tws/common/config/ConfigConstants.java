@@ -22,12 +22,18 @@ public final class ConfigConstants {
    * */
   public static final String DEFAULT_FILESYSTEM_SCHEME = "file:///";
 
+  public static final String DEFAULT_HDFS_FILESYSTEM_SCHEME = "hdfs:///";
+
+
   /**
    * Key to specify the default filesystem to be used by a job. In the case of
    * <code>file:///</code>, which is the default (see {@link ConfigConstants#DEFAULT_FILESYSTEM_SCHEME}),
    * the local filesystem is going to be used to resolve URIs without an explicit scheme.
    * */
   public static final String FILESYSTEM_SCHEME = "fs.default-scheme";
+
+  public static final String HDFS_FILESYSTEM_SCHEME = "hdfs.default-scheme";
+
 
   private ConfigConstants() {
 

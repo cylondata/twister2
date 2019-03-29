@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -33,7 +34,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.Utils;
@@ -75,8 +76,14 @@ public class BroadcastCommunication implements IWorker {
     this.noOfTasksPerExecutor = NO_OF_TASKS / workerController.getNumberOfWorkers();
 
     // lets create the task plan
-    TaskPlan taskPlan = Utils.createReduceTaskPlan(cfg, workerID,
-        workerController.getAllWorkers(), NO_OF_TASKS);
+    TaskPlan taskPlan = null;
+    try {
+      taskPlan = Utils.createReduceTaskPlan(cfg, workerID,
+          workerController.getAllWorkers(), NO_OF_TASKS);
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
     LOG.log(Level.INFO, "Task plan: " + taskPlan);
     //first get the communication config file
     TWSChannel network = Network.initializeChannel(cfg, workerController);

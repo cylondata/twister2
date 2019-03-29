@@ -34,11 +34,13 @@ import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.SingleMessageDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.SingleMessageSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
@@ -121,11 +123,9 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
    * We can receive messages from internal tasks or an external task, we always receive messages
    * to the main task of the executor and we go from there
    */
-  public boolean receiveMessage(ChannelMessage currentMessage, Object object) {
-    MessageHeader header = currentMessage.getHeader();
-
+  public boolean receiveMessage(MessageHeader header, Object object) {
     // we always receive to the main task
-    int messageDestId = currentMessage.getHeader().getDestinationIdentifier();
+    int messageDestId = header.getDestinationIdentifier();
     // check weather this message is for a sub task
     if (!isLast(header.getSourceId(), header.getFlags(), messageDestId)
         && partialReceiver != null) {
@@ -211,17 +211,10 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
                                        Object message) {
     // check weather this is the last task
     if (router.isLastReceiver()) {
-//      LOG.info(String.format("%d Calling directly final receiver %d",
-//          instancePlan.getThisExecutor(), source));
       return finalReceiver.onMessage(source, path, target, flags, message);
     } else {
       return partialReceiver.onMessage(source, path, target, flags, message);
     }
-  }
-
-  @Override
-  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
-    return true;
   }
 
   @Override
@@ -271,9 +264,9 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, ChannelMessage>>> pendingReceiveMessagesPerSource
+    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
         = new HashMap<>();
-    Map<Integer, Queue<ChannelMessage>> pendingReceiveDeSerializations = new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
@@ -284,7 +277,12 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
           new ArrayBlockingQueue<Pair<Object, OutMessage>>(
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      serializerMap.put(s, new SingleMessageSerializer(new KryoSerializer()));
+      if (isKeyed) {
+        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(), executor,
+            keyType, dataType));
+      } else {
+        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor, dataType));
+      }
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -295,12 +293,17 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     Set<Integer> execs = router.receivingExecutors();
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, ChannelMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<Pair<Object, ChannelMessage>>(
+      Queue<Pair<Object, InMessage>> pendingReceiveMessages =
+          new ArrayBlockingQueue<>(
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
-      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<ChannelMessage>(capacity));
-      deSerializerMap.put(e, new SingleMessageDeSerializer(new KryoSerializer()));
+      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
+      if (isKeyed) {
+        deSerializerMap.put(e, new UnifiedKeyDeSerializer(new KryoSerializer(),
+            executor, keyType, dataType));
+      } else {
+        deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), executor, dataType));
+      }
     }
 
     Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
@@ -310,7 +313,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     }
 
     delegete.init(cfg, t, t, keyType, keyType, taskPlan, edge,
-        router.receivingExecutors(), router.isLastReceiver(), this,
+        router.receivingExecutors(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
   }
@@ -331,7 +334,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     return delegete.isComplete();
   }
 
@@ -340,7 +343,6 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     boolean done = delegete.isComplete();
     boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
         partialLock, partialReceiver);
-//    LOG.log(Level.INFO, String.format("Done %b needsFurther %b", done, needsFurtherProgress));
     return done && !needsFurtherProgress;
   }
 
@@ -352,7 +354,26 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void close() {
+    if (finalReceiver != null) {
+      finalReceiver.close();
+    }
 
+    if (partialReceiver != null) {
+      partialReceiver.close();
+    }
+
+    delegete.close();
+  }
+
+  @Override
+  public void clean() {
+    if (partialReceiver != null) {
+      partialReceiver.clean();
+    }
+
+    if (finalReceiver != null) {
+      finalReceiver.clean();
+    }
   }
 
   @Override

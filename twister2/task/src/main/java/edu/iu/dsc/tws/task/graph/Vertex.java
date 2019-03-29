@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.graph;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.INode;
 
@@ -53,19 +56,22 @@ public class Vertex {
   /**
    * Config value for the task vertex
    */
-  private Config config;
+  private Map<String, Object> config;
+
+  public Vertex() {
+  }
 
   public Vertex(String n, INode t) {
     this.name = n;
     this.task = t;
-    config = Config.newBuilder().build();
+    config = new HashMap<>();
   }
 
   public Vertex(String name, INode task, int parallelism) {
     this.name = name;
     this.task = task;
     this.parallelism = parallelism;
-    config = Config.newBuilder().build();
+    config = new HashMap<>();
   }
 
   public int getRam() {
@@ -81,7 +87,7 @@ public class Vertex {
   }
 
   public Config getConfig() {
-    return config;
+    return Config.newBuilder().putAll(config).build();
   }
 
   public String getName() {
@@ -113,6 +119,6 @@ public class Vertex {
   }
 
   public void addConfiguration(String key, Object val) {
-    this.config = Config.newBuilder().put(key, val).putAll(config).build();
+    this.config.put(key, val);
   }
 }

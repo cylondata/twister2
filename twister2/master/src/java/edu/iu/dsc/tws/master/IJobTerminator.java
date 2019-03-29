@@ -11,6 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master;
 
+/**
+ * Job Master will call this method to terminate the jobs
+ * It calls this method when all workers in a job sent COMPLETED message
+ */
 public interface IJobTerminator {
   boolean terminateJob(String jobName);
 }

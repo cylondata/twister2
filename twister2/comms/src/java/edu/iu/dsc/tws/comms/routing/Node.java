@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.routing;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class Node {
@@ -23,10 +24,29 @@ public class Node {
   // in memory children
   private List<Integer> directChildren = new ArrayList<>();
 
+  /**
+   * The parent node
+   */
   private Node parent;
+
+  /**
+   * Task id
+   */
   private int taskId;
+
+  /**
+   * Group id
+   */
   private int groupId;
+
+  /**
+   * Group level
+   */
   private int groupLevel;
+
+  /**
+   * Executor level
+   */
   private int execLevel;
 
   public Node(int taskId, int groupId) {
@@ -53,8 +73,7 @@ public class Node {
   }
 
   public Set<Integer> getAllChildrenIds() {
-    Set<Integer> allChildren = new HashSet<>();
-    allChildren.addAll(directChildren);
+    Set<Integer> allChildren = new HashSet<>(directChildren);
     for (Node n : children) {
       allChildren.add(n.getTaskId());
     }
@@ -122,6 +141,42 @@ public class Node {
         + ", taskId=" + taskId
         + ", groupId=" + groupId
         + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Node node = (Node) o;
+
+    if (node.parent != null && this.parent != null) {
+      if (!node.parent.equals(this.parent)) {
+        return false;
+      }
+    }
+
+    for (int i = 0; i < node.children.size(); i++) {
+      Node n1 = node.children.get(i);
+      Node n2 = this.children.get(i);
+
+      if (n1.taskId != n2.taskId) {
+        return false;
+      }
+    }
+
+    return taskId == node.taskId
+        && groupId == node.groupId
+        && execLevel == node.execLevel
+        && Objects.equals(directChildren, node.directChildren);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(children, directChildren, parent, taskId, groupId, groupLevel, execLevel);
   }
 }
 

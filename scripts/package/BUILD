@@ -7,8 +7,10 @@ load("//tools:rules/twister2_client.bzl", "twister2_client_slurm_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_standalone_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_aurora_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_kubernetes_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_kubernetes_deployment_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_mesos_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_nomad_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_dashboard_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_lib_third_party_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_lib_task_scheduler_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_lib_resource_scheduler_files")
@@ -31,7 +33,10 @@ load("//tools:rules/twister2_core.bzl", "twister2_core_lib_data_files")
 load("//tools:rules/twister2_core.bzl", "twister2_core_lib_executor_files")
 load("//tools:rules/twister2_core.bzl", "twister2_core_lib_data_lmdb_files")
 load("//tools:rules/twister2_core.bzl", "twister2_harp_integration_files")
+load("//tools:rules/twister2_core.bzl", "twister2_dashboard_files")
+load("//tools:rules/twister2_core.bzl", "twister2_storm_files")
 load("//tools:rules/twister2_master.bzl", "twister2_master_lib_files")
+load("//tools:rules/twister2_master.bzl", "twister2_master_jersey_files")
 load(":pack_functions.bzl", "pack_tw2")
 load("//:t2_meta.bzl", "T2_VERSION")
 
@@ -82,6 +87,7 @@ pack_tw2(
         ":twister2-core-lib-task",
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-third_party",
+        ":twister2-master-jersey",
         ":twister2-master-lib",
     ],
 )
@@ -105,6 +111,7 @@ pack_tw2(
         ":twister2-core-lib-task-scheduler",
         ":twister2-core-lib-third_party",
         ":twister2-harp-libs",
+        ":twister2-master-jersey",
         ":twister2-master-lib",
         ":twister2-ompi-bin",
         ":twister2-ompi-etc",
@@ -115,28 +122,40 @@ pack_tw2(
 
 pack_tw2(
     name = "twister2-ompi-lib",
-    srcs = ["@ompi3//:ompi-lib-files"],
+    srcs = select({
+        "//tools/platform:darwin": ["@ompi3darwin//:ompi-lib-files"],
+        "//conditions:default": ["@ompi3//:ompi-lib-files"],
+    }),
     package_dir = "ompi/lib",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-ompi-bin",
-    srcs = ["@ompi3//:ompi-bin-files"],
+    srcs = select({
+        "//tools/platform:darwin": ["@ompi3darwin//:ompi-bin-files"],
+        "//conditions:default": ["@ompi3//:ompi-bin-files"],
+    }),
     package_dir = "ompi/bin",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-ompi-include",
-    srcs = ["@ompi3//:ompi-include-files"],
+    srcs = select({
+        "//tools/platform:darwin": ["@ompi3darwin//:ompi-include-files"],
+        "//conditions:default": ["@ompi3//:ompi-include-files"],
+    }),
     package_dir = "ompi/include",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-ompi-etc",
-    srcs = ["@ompi3//:ompi-etc-files"],
+    srcs = select({
+        "//tools/platform:darwin": ["@ompi3darwin//:ompi-etc-files"],
+        "//conditions:default": ["@ompi3//:ompi-etc-files"],
+    }),
     package_dir = "ompi/etc",
     version = T2_VERSION,
 )
@@ -232,12 +251,15 @@ pack_tw2(
         ":twister2-bin",
         ":twister2-communication",
         ":twister2-conf-aurora",
+        ":twister2-conf-dashboard",
         ":twister2-conf-kubernetes",
+        ":twister2-conf-kubernetes-deployment",
         ":twister2-conf-mesos",
         ":twister2-conf-nomad",
         ":twister2-conf-slurm",
         ":twister2-conf-standalone",
         ":twister2-core-lib-executor",
+        ":twister2-dashboard",
         ":twister2-dist",
         ":twister2-examples",
         ":twister2-harp-libs",
@@ -250,6 +272,7 @@ pack_tw2(
         ":twister2-lib-task",
         ":twister2-lib-task-scheduler",
         ":twister2-lib-third_party",
+        ":twister2-master-jersey",
         ":twister2-master-lib",
     ],
 )
@@ -264,12 +287,15 @@ pack_tw2(
         ":twister2-bin",
         ":twister2-communication",
         ":twister2-conf-aurora",
+        ":twister2-conf-dashboard",
         ":twister2-conf-kubernetes",
+        ":twister2-conf-kubernetes-deployment",
         ":twister2-conf-mesos",
         ":twister2-conf-nomad",
         ":twister2-conf-slurm",
         ":twister2-conf-standalone",
         ":twister2-core-lib-executor",
+        ":twister2-dashboard",
         ":twister2-dist",
         ":twister2-examples",
         ":twister2-harp-libs",
@@ -282,11 +308,13 @@ pack_tw2(
         ":twister2-lib-task",
         ":twister2-lib-task-scheduler",
         ":twister2-lib-third_party",
+        ":twister2-master-jersey",
         ":twister2-master-lib",
         ":twister2-ompi-bin",
         ":twister2-ompi-etc",
         ":twister2-ompi-include",
         ":twister2-ompi-lib",
+        ":twister2-storm",
     ],
 )
 
@@ -319,6 +347,13 @@ pack_tw2(
 )
 
 pack_tw2(
+    name = "twister2-conf-kubernetes-deployment",
+    srcs = twister2_client_kubernetes_deployment_files(),
+    package_dir = "conf/kubernetes/deployment",
+    version = T2_VERSION,
+)
+
+pack_tw2(
     name = "twister2-conf-mesos",
     srcs = twister2_client_mesos_files(),
     package_dir = "conf/mesos",
@@ -329,6 +364,13 @@ pack_tw2(
     name = "twister2-conf-nomad",
     srcs = twister2_client_nomad_files(),
     package_dir = "conf/nomad",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-conf-dashboard",
+    srcs = twister2_client_dashboard_files(),
+    package_dir = "conf/dashboard",
     version = T2_VERSION,
 )
 
@@ -431,8 +473,29 @@ pack_tw2(
 )
 
 pack_tw2(
+    name = "twister2-master-jersey",
+    srcs = twister2_master_jersey_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
     name = "twister2-harp-libs",
     srcs = twister2_harp_integration_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-dashboard",
+    srcs = twister2_dashboard_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-storm",
+    srcs = twister2_storm_files(),
     package_dir = "lib",
     version = T2_VERSION,
 )

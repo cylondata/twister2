@@ -12,51 +12,48 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.task.checkpoint;
 
-import java.io.File;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
-import edu.iu.dsc.tws.checkpointmanager.state_backend.FsCheckpointStorage;
-import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
+import edu.iu.dsc.tws.common.net.tcp.Progress;
+import edu.iu.dsc.tws.common.net.tcp.StatusCode;
+import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
+import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
+import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
+import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
-import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.core.Runtime;
 import edu.iu.dsc.tws.executor.threading.Executor;
+import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
-import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
-import edu.iu.dsc.tws.task.api.Snapshot;
-import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
+import edu.iu.dsc.tws.task.api.SinkTask;
+import edu.iu.dsc.tws.task.api.SourceTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.graph.GraphConstants;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -71,38 +68,20 @@ public class SourceSinkDiscoveryExample implements IWorker {
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
-
-    Path path = new Path(new File(CheckpointContext
-        .getStatebackendDirectoryDefault(config)).toURI());
-    path.getParent();
-
-    Runtime runtime = new Runtime();
-    runtime.setParentpath(path);
-
-    LocalFileSystem localFileSystem = new LocalFileSystem();
-    runtime.setFileSystem(localFileSystem);
-    Config newconfig = runtime.updateConfig(config);
-
-    if (workerID == 1) {
-      LOG.log(Level.INFO, "Statebackend directory is created for job: " + runtime.getJobName());
-      FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path,
-          runtime.getJobName(), 0);
-    }
-
-    GeneratorTask g = new GeneratorTask();
-
-    ReceivingTask r = new ReceivingTask();
+    SourceSinkDiscoveryExample.GeneratorTask g = new GeneratorTask();
+    ReceivingTask r
+        = new ReceivingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
-    builder.setParallelism("source",
-        Integer.parseInt(newconfig.get("twister2.workers").toString()));
+    builder.setParallelism("source", 4);
     builder.addSink("sink", r);
-    builder.setParallelism("sink",
-        Integer.parseInt(newconfig.get("twister2.workers").toString()));
-    builder.connect("source", "sink", "partition-edge",
-        Operations.PARTITION);
-    builder.operationMode(OperationMode.STREAMING);
+    builder.setParallelism("sink", 4);
+    builder.connect("source", "sink", "partition-edge", Operations.PARTITION);
+
+    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
+    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
+    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
 
     List<String> sourceInputDataset = new ArrayList<>();
     sourceInputDataset.add("dataset1.txt");
@@ -113,92 +92,95 @@ public class SourceSinkDiscoveryExample implements IWorker {
     DataFlowTaskGraph graph = builder.build();
 
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
-    roundRobinTaskScheduler.initialize(newconfig);
+    roundRobinTaskScheduler.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
+    WorkerPlan workerPlan = createWorkerPlan(workerList);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSChannel network = Network.initializeChannel(newconfig, workerController);
+    TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-        workerController.getAllWorkers(),
-        new Communicator(newconfig, network));
-    ExecutionPlan plan = executionPlanBuilder.build(newconfig, graph, taskSchedulePlan);
-    Executor executor = new Executor(newconfig, workerID, plan, network);
+        workerList, new Communicator(config, network));
+    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
+    Executor executor = new Executor(config, workerID, plan, network);
     executor.execute();
   }
 
-  private static class GeneratorTask extends SourceCheckpointableTask {
-    private static final long serialVersionUID = -254264903510284748L;
+  private static class GeneratorTask extends SourceTask {
+    private static final long serialVersionUID = -254264903510214748L;
     private TaskContext ctx;
     private Config config;
 
-    private int count = 0;
+    private RRClient client;
+    private Progress looper;
 
     @Override
     public void execute() {
-      if (count % 1000000 == 0) {
-//        this.addState("count", count);
-      }
-      if (count % 1000000 == 0) {
-//        ctx.write("partition-edge", "Hello");
-        LOG.log(Level.INFO, "count for source is " + count);
-      }
-
-      count++;
+      ctx.write("partition-edge", "Hello");
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-//      connect(cfg, context);
       this.ctx = context;
+
+      client = new RRClient("localhost", 6789, cfg, looper,
+          context.taskId(), new ClientConnectHandler());
+
+      client.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
+          new ClientMessageHandler());
+
     }
 
-    @Override
-    public void restoreSnapshot(Snapshot snapshot) {
-      super.restoreSnapshot(snapshot);
-      count = (Integer) this.getState("count");
+    private class ClientConnectHandler implements ConnectHandler {
+      @Override
+      public void onError(SocketChannel channel) {
+        LOG.info("ClientConnectHandler error thrown inside Source Task");
+      }
+
+      @Override
+      public void onConnect(SocketChannel channel, StatusCode status) {
+        Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
+            .setTaskID(ctx.taskId())
+            .setTaskType(Checkpoint.TaskDiscovery.TaskType.SOURCE)
+            .build();
+
+        client.sendRequest(message);
+      }
+
+      @Override
+      public void onClose(SocketChannel channel) {
+        LOG.info("ClientConnect Handler inside Source task closed");
+      }
     }
 
-    @Override
-    public void addCheckpointableStates() {
-      this.addState("count", count);
+    private class ClientMessageHandler implements MessageHandler {
+      @Override
+      public void onMessage(RequestID id, int workerId, Message message) {
+        client.disconnect();
+      }
     }
   }
 
-  private static class ReceivingTask extends SinkCheckpointableTask {
+
+  private static class ReceivingTask extends SinkTask {
     private static final long serialVersionUID = -254264903511284798L;
-    private Config config;
-
-    private int count = 0;
-
-    private TaskContext ctx;
 
     @Override
     public boolean execute(IMessage message) {
-      System.out.println(message.getContent() + " from Sink Task " + ctx.taskId());
-      count++;
-      LOG.log(Level.INFO, "count in sink is " + count);
+      System.out.println(message.getContent());
       return true;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-      this.ctx = context;
-//      connect(cfg, context);
+
     }
-
-    @Override
-    public void restoreSnapshot(Snapshot snapshot) {
-      super.restoreSnapshot(snapshot);
-      count = (Integer) this.getState("count");
-    }
-
-    @Override
-    public void addCheckpointableStates() {
-      this.addState("count", count);
-    }
-
-
   }
 
   public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
@@ -215,27 +197,9 @@ public class SourceSinkDiscoveryExample implements IWorker {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
-    Options options = new Options();
-    options.addOption(Constants.ARGS_WORKERS, true, "Workers");
-
-    CommandLineParser commandLineParser = new DefaultParser();
-
-    CommandLine cmd;
-
-    try {
-      cmd = commandLineParser.parse(options, args);
-
-    } catch (ParseException e) {
-      throw new RuntimeException("No valid arguments found");
-
-    }
-
-    int workers = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_WORKERS));
-
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
-    configurations.put("twister2.workers", workers);
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
@@ -244,7 +208,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("source-sink-discovery-example");
     jobBuilder.setWorkerClass(SourceSinkDiscoveryExample.class.getName());
-    jobBuilder.addComputeResource(1, 512, workers);
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

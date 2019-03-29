@@ -159,6 +159,11 @@ public final class TarGzipPacker {
 
     String prefix = JOB_ARCHIVE_DIRECTORY + "/" + dir.getName() + "/";
     for (File file : dir.listFiles()) {
+      // ignore if it is a directory
+      if (file.isDirectory()) {
+        continue;
+      }
+
       boolean added = addFileToArchive(file, prefix);
       if (!added) {
         return false;

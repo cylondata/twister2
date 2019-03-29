@@ -11,20 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task;
 
-import edu.iu.dsc.tws.dataset.Partition;
+import edu.iu.dsc.tws.dataset.DataPartition;
 
 /**
  * Special task for collecting the output from tasks
  */
-public interface Collector<T> {
-  long serialVersionUID = -112312423421235L;
-
+public interface Collector {
   /**
    * get the collected valued
    *
    * @return get the default output
    */
-  Partition<T> get();
+  DataPartition<?> get();
 
   /**
    * get the collected valued
@@ -32,7 +30,7 @@ public interface Collector<T> {
    * @param name name of the value to collect
    * @return the partition of the data
    */
-  default Partition<T> get(String name) {
+  default DataPartition<?> get(String name) {
     return null;
   }
 }

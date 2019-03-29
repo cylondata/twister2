@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.utils.Heap;
 import edu.iu.dsc.tws.comms.utils.HeapNode;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
@@ -51,17 +52,17 @@ public class FSSorter {
   private KryoMemorySerializer deserializer = new KryoMemorySerializer();
 
   private class FilePart {
-    private Triple<List<KeyValue>, Long, Long> keyValues;
+    private Triple<List<Tuple>, Long, Long> keyValues;
 
     private int currentIndex = 0;
 
-    FilePart(Triple<List<KeyValue>, Long, Long> keyValues) {
+    FilePart(Triple<List<Tuple>, Long, Long> keyValues) {
       this.keyValues = keyValues;
     }
   }
 
   public FSSorter(int numOfFiles, String dir, Comparator<Object> comparator, int oBytes,
-                  List<KeyValue> openValues, MessageType keyType, MessageType dataType) {
+                  List<Tuple> openValues, MessageType keyType, MessageType dataType) {
     this.noOfFiles = numOfFiles;
     this.folder = dir;
     this.heap = new Heap(numOfFiles + 1, comparator);
@@ -72,11 +73,11 @@ public class FSSorter {
     init(openValues);
   }
 
-  private void init(List<KeyValue> inMemoryValues) {
+  private void init(List<Tuple> inMemoryValues) {
     // lets open the files
     for (int i = 0; i < noOfFiles; i++) {
       String fileName = folder + "/part_" + i;
-      Triple<List<KeyValue>, Long, Long> fileParts = FileLoader.openFilePart(fileName,
+      Triple<List<Tuple>, Long, Long> fileParts = FileLoader.openFilePart(fileName,
           0, openBytes, keyType, dataType, deserializer);
       openList.add(new FilePart(fileParts));
     }
@@ -86,7 +87,7 @@ public class FSSorter {
     // lets add to the heap the first element
     for (int i = 0; i < openList.size(); i++) {
       FilePart p = openList.get(i);
-      List<KeyValue> list = p.keyValues.getLeft();
+      List<Tuple> list = p.keyValues.getLeft();
       if (list.size() > p.currentIndex) {
         heap.insert(list.get(p.currentIndex), i);
         p.currentIndex++;
@@ -99,14 +100,14 @@ public class FSSorter {
 
     int list = min.listNo;
     FilePart p = openList.get(list);
-    List<KeyValue> keyValues = p.keyValues.getLeft();
+    List<Tuple> keyValues = p.keyValues.getLeft();
 
     if (keyValues.size() <= p.currentIndex) {
       String fileName = folder + "/part_" + list;
       // we need to load the next file, we don't need to do anything for in-memory
       // also if the file reached end, we don't need to do anything
       if (list < noOfFiles && p.keyValues.getMiddle() < p.keyValues.getRight()) {
-        Triple<List<KeyValue>, Long, Long> values = FileLoader.openFilePart(fileName,
+        Triple<List<Tuple>, Long, Long> values = FileLoader.openFilePart(fileName,
             p.keyValues.getMiddle(), openBytes, keyType, dataType, deserializer);
         // set the new values to the list
         p.keyValues = values;

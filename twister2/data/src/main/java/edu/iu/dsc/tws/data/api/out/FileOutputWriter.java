@@ -86,14 +86,14 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
    * @param partition partition id
    * @param out the out stream
    */
-  public abstract void createOutput(int partition, FSDataOutputStream out);
+  protected abstract void createOutput(int partition, FSDataOutputStream out);
 
   /**
    * Write the record to output
    * @param partition partition id
    * @param data data
    */
-  public abstract void writeRecord(int partition, T data);
+  protected abstract void writeRecord(int partition, T data);
 
   @Override
   public void configure(Config config) {

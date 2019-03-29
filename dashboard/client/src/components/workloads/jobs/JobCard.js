@@ -1,90 +1,193 @@
 import React from "react";
-import {Card, Elevation, Icon, Button} from "@blueprintjs/core";
+import {Button, Card, Collapse, Elevation, Icon, Intent, Position, Tag, Tooltip} from "@blueprintjs/core";
 import "./JobCard.css";
+import JobService from "../../../services/JobService";
+import {DashToaster} from "../../Dashboard";
+import ClusterTag from "../../grid/clusters/ClusterTag";
+import NodeTag from "../../grid/nodes/NodeTag";
+import {ComputeResourceCard} from "../../grid/compute-resource/ComputeResourceCard";
+import {Link} from "react-router-dom";
+import {JobUtils} from "./JobUtils";
 
 export default class JobCard extends React.Component {
 
     constructor(props) {
         super(props);
+        this.state = {
+            job: this.props.job,
+            syncing: false,
+            stateIntent: JobUtils.getStateIntent(this.props.job.state),
+            infoOpen: false
+        };
     }
+
+    componentWillReceiveProps(nextProps, nextContext) {
+        this.setState({
+            job: nextProps.job,
+            stateIntent: JobUtils.getStateIntent(nextProps.job.state)
+        });
+    }
+
+    syncJob = () => {
+        this.setState({
+            syncing: true
+        });
+
+        JobService.getJobById(this.state.job.jobID).then(respone => {
+            this.setState({
+                job: respone.data,
+                syncing: false,
+                stateIntent: JobUtils.getStateIntent(respone.data.state)
+            });
+            DashToaster.show({
+                message: "Successfully synced Job: " + this.state.job.jobID,
+                intent: Intent.SUCCESS
+            });
+        }).catch(err => {
+            DashToaster.show({
+                message: "Failed to sync Job: " + this.state.job.jobID,
+                intent: Intent.DANGER
+            });
+            this.setState({
+                syncing: false
+            });
+        });
+    };
+
+    getStateIntent = (state) => {
+        switch (state) {
+            case "STARTED":
+                return Intent.PRIMARY;
+            case "COMPLETED":
+                return Intent.SUCCESS;
+            case "FAILED":
+                return Intent.DANGER;
+            default:
+                return Intent.NONE;
+        }
+    };
+
+    toggleInfo = (event) => {
+        event.stopPropagation();
+        this.setState({
+            infoOpen: !this.state.infoOpen
+        })
+    };
+
+    getTimeString = () => {
+        let time = new Date(this.state.job.createdTime);
+        return `${time.getMonth() + 1} / ${time.getDate()} ~ ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+    };
 
     render() {
         return (
-            <Card interactive={true} elevation={Elevation.ZERO} className="tw-node-card">
-                <div>
-                    <Icon icon="desktop" iconSize={50} className="tw-node-icon"/>
-                </div>
-                <div className="tw-node-info-wrapper">
-                    <h4>
-                        Job 1
-                    </h4>
-                    <table className="bp3-html-table bp3-html-table-striped">
-                        <tbody>
-                        <tr>
-                            <td>
-                                Name
-                            </td>
-                            <td>
-                                Fraud detection job
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Description
-                            </td>
-                            <td>
-                                Cash Transaction Monitoring. Identify cash transactions just below regulatory reporting
-                                thresholds. Identify a series of cash disbursements by customer number that together
-                                exceed regulatory reporting threshold. Billing. Identify unusually large number of
-                                waived fee by branch or by employee.
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Cluster
-                            </td>
-                            <td>
-                                <Button text="Cluster X" minimal={true} icon={"layout-sorted-clusters"} small={true}/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Tasks
-                            </td>
-                            <td>
-                                <Button text="Task 1" minimal={true} icon={"layers"} small={true}/>
-                                <Button text="Task 2" minimal={true} icon={"layers"} small={true}/>
-                                <Button text="Task 3" minimal={true} icon={"layers"} small={true}/>
-                                <Button text="Task 4" minimal={true} icon={"layers"} small={true}/>
-                                <Button text="Task 5" minimal={true} icon={"layers"} small={true}/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                State
-                            </td>
-                            <td style={{color: "green"}}>
-                                Running
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Heartbeat
-                            </td>
-                            <td>
-                                {new Date().toTimeString()}
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <div className="tw-node-actions">
-                        {this.props.finished &&
-                        <Button icon="play">Start</Button>}
-                        {!this.props.finished &&
-                        <Button icon="stop">Stop</Button>}
-                        <Button icon="refresh">Sync</Button>
-                        <Button icon="ninja">Tasks</Button>
+            <Card interactive={true} elevation={Elevation.ZERO} className="tw-table-row tw-job-row">
+                <div className="tw-job-row-summary">
+                    <div className="tw-job-row-icon">
+                        <Icon icon="new-grid-item" iconSize={18} className="tw-row-icon"/>
                     </div>
+
+                    <Link to={`jobs/${this.state.job.jobID}`}>
+                        <div className="tw-table-row-left">
+                            <div className="tw-job-row-name">
+                                {this.state.job.jobName}
+                            </div>
+                        </div>
+                    </Link>
+                    <div className="tw-table-row-right">
+                        {/*<NodeTag node={this.state.job.node}/>*/}
+                        <Tooltip content="Job ID" position={Position.TOP}>
+                            <Tag intent={Intent.NONE} icon="tag" minimal={true} style={{height: 25}}
+                                 className="tw-job-row-status-tag">{this.state.job.jobID}</Tag>
+                        </Tooltip>
+                        <Tooltip content="Number of Workers" position={Position.TOP}>
+                            <Tag intent={Intent.NONE} icon="ninja" minimal={true} style={{height: 25, width: 60}}
+                                 className="tw-job-row-status-tag">{this.state.job.numberOfWorkers}</Tag>
+                        </Tooltip>
+
+
+                        <Tag intent={this.state.stateIntent}
+                             className="tw-job-row-status-tag">{this.state.job.state}</Tag>
+                        <Button rightIcon="refresh" text="" small={true} minimal={true} onClick={this.syncJob}/>
+                        <Button rightIcon="caret-down" text="" small={true} minimal={true}
+                                onClick={this.toggleInfo}/>
+
+                    </div>
+                </div>
+                <div className="tw-job-row-info">
+                    <Collapse isOpen={this.state.infoOpen} keepChildrenMounted={true}>
+                        <table className=" bp3-html-table bp3-html-table-striped bp3-html-table-condensed"
+                               width="100%">
+                            <tbody>
+                            <tr>
+                                <td>
+                                    Job ID
+                                </td>
+                                <td>
+                                    {this.state.job.jobID}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Worker Class
+                                </td>
+                                <td>
+                                    {this.state.job.workerClass}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Cluster
+                                </td>
+                                <td>
+                                    <ClusterTag cluster={this.state.job.node.cluster}/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Node
+                                </td>
+                                <td>
+                                    <NodeTag node={this.state.job.node}/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Number of Workers
+                                </td>
+                                <td>
+                                    {this.state.job.numberOfWorkers}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Start Time
+                                </td>
+                                <td>
+                                    {new Date(this.state.job.createdTime).toUTCString()}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    State
+                                </td>
+                                <td>
+                                    <Tag minimal={true} intent={this.state.stateIntent}>{this.state.job.state}</Tag>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Compute Resources
+                                </td>
+                                <td>
+                                    {this.state.job.computeResources.map(cr => {
+                                        return <ComputeResourceCard cr={cr} key={cr.index}/>
+                                    })}
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </Collapse>
                 </div>
             </Card>
         )

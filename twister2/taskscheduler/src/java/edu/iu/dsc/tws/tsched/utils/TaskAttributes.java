@@ -12,9 +12,9 @@
 package edu.iu.dsc.tws.tsched.utils;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.Vertex;
@@ -32,11 +32,8 @@ public class TaskAttributes {
    * This method retrieve the set of task vertices and check if the task vertex has the user
    * specified ram value. If the user doesn't specify the required ram configuration it will
    * assign the default ram value from the task configuration file and store it in the map.
-   * @param taskVertices
-   * @return
    */
   public Map<String, Double> getTaskRamMap(Set<Vertex> taskVertices) {
-
     Map<String, Double> taskRamMap = new HashMap<>();
     Object ram;
     double requiredRam;
@@ -57,11 +54,8 @@ public class TaskAttributes {
    * This method retrieve the set of task vertices and check if the task vertex has the user
    * specified disk value. If the user doesn't specify the required disk configuration it will
    * assign the default disk value from the task configuration file and store it in the map.
-   * @param taskVertices
-   * @return
    */
   public Map<String, Double> getTaskDiskMap(Set<Vertex> taskVertices) {
-
     Map<String, Double> taskDiskMap = new HashMap<>();
     Object disk;
     double requiredDisk;
@@ -82,11 +76,8 @@ public class TaskAttributes {
    * This method retrieve the set of task vertices and check if the task vertex has the user
    * specified cpu value. If the user doesn't specify the required cpu configuration it will assign
    * the default cpu value from the task configuration file and store it in the map.
-   * @param taskVertices
-   * @return
    */
   public Map<String, Double> getTaskCPUMap(Set<Vertex> taskVertices) {
-
     Map<String, Double> taskCPUMap = new HashMap<>();
     Object cpu;
     double requiredCpu;
@@ -107,11 +98,8 @@ public class TaskAttributes {
    * This method is to calculate the total number of task instances in the task graph which is based
    * on the parallelism specified in the task graph or else from the task configuration
    * default values.
-   * @param iTaskSet
-   * @return
    */
   public int getTotalNumberOfInstances(Set<Vertex> iTaskSet) {
-
     Map<String, Integer> parallelTaskMap = getParallelTaskMap(iTaskSet);
     int totalNumberOfInstances = 0;
     for (int instances : parallelTaskMap.values()) {
@@ -125,27 +113,19 @@ public class TaskAttributes {
    * If the user specifies the parallelism value greater than or equal "1" will be considered as a
    * parallelism value. Otherwise, the system assign the default parallelism value to the task
    * vertex from the task scheduling configuration file.
-   * @param iTaskSet
-   * @return
    */
   public Map<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet) {
-
-    //Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
-    Map<String, Integer> parallelTaskMap = new HashMap<>();
-    try {
-      for (Vertex task : iTaskSet) {
-        Config config = task.getConfig();
-        String taskName = task.getName();
-        Integer parallelTaskCount;
-        if (task.getParallelism() >= 1) {
-          parallelTaskCount = task.getParallelism();
-        } else { //if (task.getParallelism() < 1) {
-          parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
-        }
-        parallelTaskMap.put(taskName, parallelTaskCount);
+    Map<String, Integer> parallelTaskMap = new TreeMap<>();
+    for (Vertex task : iTaskSet) {
+      Config config = task.getConfig();
+      String taskName = task.getName();
+      int parallelTaskCount;
+      if (task.getParallelism() >= 1) {
+        parallelTaskCount = task.getParallelism();
+      } else {
+        parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
       }
-    } catch (Exception ee) {
-      ee.printStackTrace();
+      parallelTaskMap.put(taskName, parallelTaskCount);
     }
     return parallelTaskMap;
   }
@@ -155,34 +135,25 @@ public class TaskAttributes {
    * parallelism value greater than or equal "1" will be considered as a parallelism value.
    * Otherwise, the system assign the default parallelism value to the task vertex from the task
    * scheduling configuration file.
-   * @param taskVertex
-   * @return
    */
 
   public Map<String, Integer> getParallelTaskMap(Vertex taskVertex) {
-
-    Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
-    try {
-      Config config = taskVertex.getConfig();
-      String taskName = taskVertex.getName();
-      Integer parallelTaskCount;
-      if (taskVertex.getParallelism() >= 1) {
-        parallelTaskCount = taskVertex.getParallelism();
-      } else {
-        parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
-      }
-      parallelTaskMap.put(taskName, parallelTaskCount);
-    } catch (Exception ee) {
-      ee.printStackTrace();
+    Map<String, Integer> parallelTaskMap = new TreeMap<>();
+    Config config = taskVertex.getConfig();
+    String taskName = taskVertex.getName();
+    int parallelTaskCount;
+    if (taskVertex.getParallelism() >= 1) {
+      parallelTaskCount = taskVertex.getParallelism();
+    } else {
+      parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
     }
+    parallelTaskMap.put(taskName, parallelTaskCount);
     return parallelTaskMap;
   }
 
 
   /**
    * This method is to calculate the total number of task vertex based on the parallelism value.
-   * @param taskVertex
-   * @return
    */
   public int getTotalNumberOfInstances(Vertex taskVertex) {
 
@@ -194,13 +165,10 @@ public class TaskAttributes {
     return totalNumberOfInstances;
   }
 
-  //This method will be used in the future.
   /**
    * This method retrieve the set of task vertices and check if the task vertex has the user
    * specified network value. If the user doesn't specify the required network configuration it will
    * assign the default network value from the task configuration file and store it in the map.
-   * @param taskVertices
-   * @return
    */
   public Map<String, Double> getTaskNetworkMap(Set<Vertex> taskVertices) {
 

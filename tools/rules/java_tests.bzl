@@ -25,3 +25,16 @@ def java_tests(test_classes, runtime_deps=[], resources=[], data=[], size="mediu
             resources = resources,
             data = data,
         )
+
+def java_tests_debug(test_classes, runtime_deps=[], resources=[], data=[], size="medium"):
+    for test_class in test_classes:
+        print(test_class.split(".")[-1] + "_debug")
+        native.java_test(
+            name = test_class.split(".")[-1] + "_debug",
+            jvm_flags=["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"],
+            runtime_deps = runtime_deps,
+            size = size,
+            test_class = test_class,
+            resources = resources,
+            data = data,
+        )

@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
@@ -52,7 +54,7 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
  * @see InputSplit
  * //@see BaseStatistics
  */
-public interface InputPartitioner<OT, T extends InputSplit<OT>> {
+public interface InputPartitioner<OT, T extends InputSplit<OT>> extends Serializable {
 
   /**
    * Configures this input format. Since input formats are instantiated generically
@@ -79,5 +81,5 @@ public interface InputPartitioner<OT, T extends InputSplit<OT>> {
    * @param inputSplits the input splits to be assigned
    * @return assigner
    */
-  InputSplitAssigner getInputSplitAssigner(T[] inputSplits);
+  InputSplitAssigner<OT> getInputSplitAssigner(T[] inputSplits);
 }

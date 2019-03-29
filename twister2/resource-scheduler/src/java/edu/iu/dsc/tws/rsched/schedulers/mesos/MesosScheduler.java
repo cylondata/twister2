@@ -26,6 +26,9 @@ import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 
 public class MesosScheduler implements Scheduler {
@@ -37,15 +40,20 @@ public class MesosScheduler implements Scheduler {
   private int completedTaskCounter = 0;
   private int totalTaskCount;
   private int workerCounter = 0;
+  private int resourceIndex = 0;
+  private int resourceInstanceCount = 0;
+  private JobAPI.Job job;
   private int[] offerControl = new int[3];
   //private String jobMasterIP;
-  private boolean mpiJob = true;
+  //private boolean mpiJob = false;
 
-  public MesosScheduler(MesosController controller, Config mconfig, String jobName) {
+  public MesosScheduler(MesosController controller, Config mconfig, JobAPI.Job myJob) {
     this.controller = controller;
     this.config = mconfig;
     totalTaskCount = MesosContext.numberOfContainers(config);
-    this.jobName = jobName;
+    this.job = myJob;
+    this.jobName = myJob.getJobName();
+
   }
 
   @Override
@@ -69,22 +77,53 @@ public class MesosScheduler implements Scheduler {
     return false;
   }
 
+  public JobAPI.ComputeResource getResource(JobAPI.Job myJob, int rIndex) {
+
+    JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(myJob, rIndex);
+    if (computeResource == null) {
+      LOG.severe("Something wrong with the job object. Can not get ComputeResource from job"
+          + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++"
+          + "index...:" + rIndex);
+      return null;
+    } else {
+      LOG.info("get instances....:" + computeResource.getInstances());
+    }
+    return computeResource;
+  }
+
   @Override
   public void resourceOffers(SchedulerDriver schedulerDriver,
                              List<Protos.Offer> offers) {
 
     int index = 0;
+    controller.setSchedulerDriver(schedulerDriver);
     String[] desiredNodes = MesosContext.getDesiredNodes(config).split(",");
+
     if (taskIdCounter < totalTaskCount) {
       for (Protos.Offer offer : offers) {
+
+        //get the resource
+        JobAPI.ComputeResource computeResource = getResource(job, resourceIndex);
+        if (computeResource == null) {
+          return;
+        }
+        resourceInstanceCount = resourceInstanceCount + 1;
+        if (resourceInstanceCount == computeResource.getInstances() + 1) {
+          resourceIndex = resourceIndex + 1;
+        }
+//        LOG.info("Offer CPU ...:" + computeResource.getCpu());
+//        LOG.info("Offer MEMORY ...:" + computeResource.getRamMegaBytes());
+//        LOG.info("Offer DISK ...:" + computeResource.getDiskGigaBytes());
+//        LOG.info("Offer WORKER COUNT ...:" + computeResource.getNumberOfWorkers());
+//        LOG.info("Offer INSTANCE COUNT ...:" + resourceInstanceCount);
 
         if (!MesosContext.getDesiredNodes(config).equals("all")
             && !contains(desiredNodes, offer)) {
           continue;
         }
         LOG.info("Offer comes from host ...:" + offer.getHostname());
-        if (controller.isResourceSatisfy(offer)) {
 
+        if (controller.isResourceSatisfy(offer, computeResource)) {
           //creates job directory on nfs
           MesosPersistentVolume pv = new MesosPersistentVolume(
               controller.createPersistentJobDirName(jobName), workerCounter);
@@ -98,14 +137,26 @@ public class MesosScheduler implements Scheduler {
 
             Protos.TaskID taskId = buildNewTaskID();
 
+
             // int begin = MesosContext.getWorkerPort(config) + taskIdCounter * 100;
             // int end = begin + 30;
 
-            Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
+ /*           Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
                 .setTaskId(taskId)
                 .setSlaveId(offer.getSlaveId())
                 .addResources(buildResource("cpus", MesosContext.cpusPerContainer(config)))
                 .addResources(buildResource("mem", MesosContext.ramPerContainer(config)))
+                .addResources(buildResource("disk", MesosContext.diskPerContainer(config)))
+                //.addResources(buildRangeResource("ports", begin, end))
+                .setData(ByteString.copyFromUtf8("" + taskId.getValue()));*/
+
+            Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
+                .setTaskId(taskId)
+                .setSlaveId(offer.getSlaveId())
+                .addResources(buildResource("cpus", computeResource.getCpu()))
+                .addResources(buildResource("mem", computeResource.getRamMegaBytes()))
+                .addResources(buildResource("disk",
+                    computeResource.getDiskGigaBytes() * 1000))
                 //.addResources(buildRangeResource("ports", begin, end))
                 .setData(ByteString.copyFromUtf8("" + taskId.getValue()));
 
@@ -116,10 +167,14 @@ public class MesosScheduler implements Scheduler {
                   .setValue("JOB_NAME=" + jobName).build();
 
               Protos.Parameter workerIdParam = Protos.Parameter.newBuilder().setKey("env")
-                  .setValue("WORKER_ID=" + workerCounter++).build();
+                  .setValue("WORKER_ID=" + (workerCounter - 1)).build();
+              workerCounter++;
 
               Protos.Parameter frameworkIdParam = Protos.Parameter.newBuilder().setKey("env")
                   .setValue("FRAMEWORK_ID=" + offer.getFrameworkId().getValue()).build();
+
+              Protos.Parameter computeResourceParam = Protos.Parameter.newBuilder().setKey("env")
+                  .setValue("COMPUTE_RESOURCE_INDEX=" + resourceIndex).build();
 
               Protos.Parameter classNameParam = null;
 
@@ -133,7 +188,7 @@ public class MesosScheduler implements Scheduler {
                         + "edu.iu.dsc.tws.rsched.schedulers.mesos.master.MesosJobMasterStarter")
                     .build();
               } else {
-                if (mpiJob) {
+                if (SchedulerContext.useOpenMPI(config)) {
                   if (taskId.getValue().equals("1")) {
                     ((TaskInfo.Builder) taskBuilder).setName("MPI Master " + taskId);
                     classNameParam = Protos.Parameter.newBuilder().setKey("env")
@@ -148,11 +203,8 @@ public class MesosScheduler implements Scheduler {
                         .build();
                   }
                 } else {
-                  if (taskId.getValue().equals("1")) {
-                    ((TaskInfo.Builder) taskBuilder).setName("MPI Master " + taskId);
-                  } else {
-                    ((TaskInfo.Builder) taskBuilder).setName("task " + taskId);
-                  }
+
+                  ((TaskInfo.Builder) taskBuilder).setName("task " + taskId);
                   classNameParam = Protos.Parameter.newBuilder().setKey("env")
                       .setValue("CLASS_NAME="
                           + "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosDockerWorker")
@@ -169,6 +221,7 @@ public class MesosScheduler implements Scheduler {
               dockerInfoBuilder.setNetwork(Protos.ContainerInfo.DockerInfo.Network.USER);
               dockerInfoBuilder.addParameters(jobNameParam);
               dockerInfoBuilder.addParameters(workerIdParam);
+              dockerInfoBuilder.addParameters(computeResourceParam);
               dockerInfoBuilder.addParameters(classNameParam);
               dockerInfoBuilder.addParameters(frameworkIdParam);
               Protos.Volume volume = Protos.Volume.newBuilder()
@@ -233,7 +286,17 @@ public class MesosScheduler implements Scheduler {
 
         }
 
-        if (taskIdCounter >= totalTaskCount - 1) {
+        if (taskIdCounter >= totalTaskCount) {
+          LOG.info("taskIdCounter >= totalTaskCount");
+
+//          try {
+//            Thread.sleep(8000);
+//          } catch (InterruptedException e) {
+//          }
+//          MesosController.schedulerDriver.killTask(Protos.TaskID.newBuilder()
+//              .setValue(Integer.toString(2)).build());
+          //totalTaskCount += 3;
+          //MesosController.schedulerDriver.reviveOffers();
           return;
         }
       }

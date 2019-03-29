@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.executor.core.batch;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -21,11 +20,14 @@ import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
+import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SourceBatchInstance implements INodeInstance {
 
@@ -97,7 +99,7 @@ public class SourceBatchInstance implements INodeInstance {
   /**
    * The output edges
    */
-  private Set<String> outputEdges;
+  private Map<String, String> outputEdges;
 
   /**
    * The low watermark for queued messages
@@ -108,10 +110,12 @@ public class SourceBatchInstance implements INodeInstance {
    * The high water mark for messages
    */
   private int highWaterMark;
+  private TaskSchedulePlan taskSchedule;
 
   public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue,
                              Config config, String tName, int tId, int tIndex, int parallel,
-                             int wId, Map<String, Object> cfgs, Set<String> outEdges) {
+                             int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
+                             TaskSchedulePlan taskSchedule) {
     this.batchTask = task;
     this.outBatchQueue = outQueue;
     this.config = config;
@@ -124,13 +128,14 @@ public class SourceBatchInstance implements INodeInstance {
     this.outputEdges = outEdges;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
+    this.taskSchedule = taskSchedule;
   }
 
   public void prepare(Config cfg) {
     outputBatchCollection = new DefaultOutputCollection(outBatchQueue);
 
-    taskContext = new TaskContext(batchTaskIndex, batchTaskId, batchTaskName,
-        parallelism, workerId, outputBatchCollection, nodeConfigs);
+    taskContext = new TaskContextImpl(batchTaskIndex, batchTaskId, batchTaskName,
+        parallelism, workerId, outputBatchCollection, nodeConfigs, outputEdges, taskSchedule);
     batchTask.prepare(cfg, taskContext);
   }
 
@@ -152,7 +157,7 @@ public class SourceBatchInstance implements INodeInstance {
 
       // now check the context
       boolean isDone = true;
-      for (String e : outputEdges) {
+      for (String e : outputEdges.keySet()) {
         if (!taskContext.isDone(e)) {
           // we are done with execution
           isDone = false;
@@ -209,8 +214,16 @@ public class SourceBatchInstance implements INodeInstance {
     return batchTask;
   }
 
+  @Override
+  public void close() {
+    if (batchTask instanceof Closable) {
+      ((Closable) batchTask).close();
+    }
+  }
+
   /**
    * Progress the communication and return weather we need to further progress
+   *
    * @return true if further progress is needed
    */
   public boolean communicationProgress() {

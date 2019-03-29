@@ -11,9 +11,14 @@
 //  limitations under the License.
 import React from "react";
 import "./WorkerInfoComponent.css";
-import {Card, Button, ButtonGroup} from "@blueprintjs/core";
-import {animateScroll} from "react-scroll";
+import {Button, ButtonGroup, Card, Tag} from "@blueprintjs/core";
 import saveAs from 'file-saver';
+import {WorkerService} from "../../../services/WorkerService";
+import {ComputeResourceCard} from "../compute-resource/ComputeResourceCard";
+import NodeTag from "../nodes/NodeTag";
+import ClusterTag from "../clusters/ClusterTag";
+import {Link} from "react-router-dom";
+import LoadingComponent from "../../ui/LoadingComponent";
 
 export default class WorkerInfoComponent extends React.Component {
 
@@ -50,14 +55,25 @@ Starting edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter ....
             logLines: this.logs,
             codeData: "",
             autoUpdate: true,
-            autoScroll: true
+            autoScroll: true,
+            worker: undefined
         };
+
+        console.log(this.props);
 
         this.timer = -1;
 
         this.codeRef = null;
 
     }
+
+    loadWorker = () => {
+        WorkerService.getWorkerById(this.props.match.params.jobId, this.props.match.params.workerId).then(response => {
+            this.setState({
+                worker: response.data
+            })
+        })
+    };
 
     startLogAppending = () => {
         this.timer = setInterval(() => {
@@ -69,7 +85,6 @@ Starting edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter ....
                     currentLogs.shift();
                 }
                 currentLogs.push(this.logs[Math.floor(Math.random() * this.logs.length)]);
-                console.log(currentLogs);
             }
 
             this.setState({
@@ -78,7 +93,9 @@ Starting edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter ....
             }, () => {
                 if (this.state.autoScroll) {
                     let codeDiv = document.getElementById("code-div");
-                    codeDiv.scrollTop = codeDiv.scrollHeight;
+                    if (codeDiv) {
+                        codeDiv.scrollTop = codeDiv.scrollHeight;
+                    }
                 }
             });
         }, 500);
@@ -95,6 +112,7 @@ Starting edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter ....
 
     componentDidMount() {
         this.startLogAppending();
+        this.loadWorker();
     }
 
     toggleAutoUpdate = () => {
@@ -124,25 +142,32 @@ Starting edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter ....
     };
 
     render() {
+        if (!this.state.worker) {
+            return <LoadingComponent/>;
+        }
+
         return (
             <div>
-                <h1 className="t2-page-heading">Worker 1</h1>
+                <h1 className="t2-page-heading">
+                    <Link to={`/jobs/${this.state.worker.job.jobID}`}>
+                        {this.state.worker.job.jobName}</Link>/{this.state.worker.workerID}
+                </h1>
                 <table className="bp3-html-table bp3-html-table-striped" width="100%">
                     <tbody>
                     <tr>
                         <td>
-                            Name
+                            Worker ID
                         </td>
                         <td>
-                            My Twister Worker
+                            {this.state.worker.workerID}
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            Description
+                            Worker IP/Port
                         </td>
                         <td>
-                            Twister2 cluster to run bank fraud detection
+                            {this.state.worker.workerIP}:{this.state.worker.workerPort}
                         </td>
                     </tr>
                     <tr>
@@ -150,8 +175,7 @@ Starting edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter ....
                             Cluster
                         </td>
                         <td>
-                            <Button text="Cluster 1" minimal={true} icon={"layout-sorted-clusters"}
-                                    small={true}/>
+                            <ClusterTag cluster={this.state.worker.node.cluster}/>
                         </td>
                     </tr>
                     <tr>
@@ -159,15 +183,16 @@ Starting edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter ....
                             Node
                         </td>
                         <td>
-                            <Button text="Node 1" minimal={true} icon={"desktop"} small={true}/>
+                            <NodeTag node={this.state.worker.node}/>
                         </td>
                     </tr>
                     <tr>
                         <td>
                             State
                         </td>
-                        <td style={{color: "green"}}>
-                            Running
+                        <td>
+                            <Tag minimal={true}
+                                 intent={this.state.workerStateIntent}>{this.state.worker.state}</Tag>
                         </td>
                     </tr>
                     <tr>
@@ -175,7 +200,27 @@ Starting edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter ....
                             Heartbeat
                         </td>
                         <td>
-                            {new Date().toTimeString()}
+                            {this.state.worker.heartbeatTime}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Compute Resource</td>
+                        <td>
+                            <ComputeResourceCard cr={this.state.worker.computeResource}/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Ports
+                        </td>
+                        <td>
+                            {this.state.worker.workerPorts.map(wp => {
+                                return (
+                                    <Tag large={true}
+                                         minimal={true}
+                                         className="tw-worker-ports-tag">{wp.label} : {wp.port}</Tag>
+                                );
+                            })}
                         </td>
                     </tr>
                     </tbody>

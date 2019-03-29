@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -34,6 +35,8 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
@@ -60,11 +63,11 @@ public class SimpleTaskGraphExample implements IWorker {
 
     // build the job
     Twister2Job twister2Job = Twister2Job.newBuilder()
-            .setJobName("basic-taskgraphJob")
-            .setWorkerClass(SimpleTaskGraphExample.class.getName())
-            .addComputeResource(2, 1024, 1.0, 2)
-            .setConfig(jobConfig)
-            .build();
+        .setJobName("basic-taskgraphJob")
+        .setWorkerClass(SimpleTaskGraphExample.class.getName())
+        .addComputeResource(2, 1024, 1.0, 2)
+        .setConfig(jobConfig)
+        .build();
 
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
@@ -72,11 +75,6 @@ public class SimpleTaskGraphExample implements IWorker {
 
   /**
    * This is the execute method for the task graph.
-   * @param config
-   * @param workerID
-   * @param workerController
-   * @param persistentVolume
-   * @param volatileVolume
    */
   public void execute(Config config, int workerID,
                       IWorkerController workerController,
@@ -96,13 +94,13 @@ public class SimpleTaskGraphExample implements IWorker {
     builder.addTask("task4", taskMerger);
 
     builder.connect("task1", "task2", "partition-edge1",
-            OperationNames.PARTITION);
+        OperationNames.PARTITION);
     builder.connect("task1", "task3", "partition-edge2",
-            OperationNames.PARTITION);
+        OperationNames.PARTITION);
     builder.connect("task2", "task4", "partition-edge3",
-            OperationNames.PARTITION);
+        OperationNames.PARTITION);
     builder.connect("task3", "task4", "partition-edge4",
-            OperationNames.PARTITION);
+        OperationNames.PARTITION);
 
     builder.operationMode(OperationMode.BATCH);
 
@@ -137,7 +135,13 @@ public class SimpleTaskGraphExample implements IWorker {
     builder.addConfiguration("task4", "inputdataset", sourceInputDataset);
 
     DataFlowTaskGraph graph = builder.build();
-    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    WorkerPlan workerPlan = null;
+    try {
+      workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
 
     LOG.info("Generated Dataflow Task Graph Is:" + graph.getTaskVertexSet());
 
@@ -147,18 +151,18 @@ public class SimpleTaskGraphExample implements IWorker {
       taskScheduler.initialize(config);
       TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
-      Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-              = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+      Map<Integer, ContainerPlan> containersMap
+          = taskSchedulePlan.getContainersMap();
+      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
         Integer integer = entry.getKey();
-        TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-        Set<TaskSchedulePlan.TaskInstancePlan> taskInstancePlans
-                = containerPlan.getTaskInstances();
+        ContainerPlan containerPlan = entry.getValue();
+        Set<TaskInstancePlan> taskInstancePlans
+            = containerPlan.getTaskInstances();
         //int containerId = containerPlan.getRequiredResource().getId();
         LOG.info("Task Details for Container Id:" + integer);
-        for (TaskSchedulePlan.TaskInstancePlan ip : taskInstancePlans) {
+        for (TaskInstancePlan ip : taskInstancePlans) {
           LOG.info("Task Id:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
-                  + "\tTask Name:" + ip.getTaskName());
+              + "\tTask Name:" + ip.getTaskName());
         }
       }
     }
@@ -166,7 +170,7 @@ public class SimpleTaskGraphExample implements IWorker {
 
   public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
       Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }

@@ -49,9 +49,9 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
-import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
+import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
@@ -155,7 +155,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
 
       // lists to keep track of messages for destinations
       for (int target : expectedIds.keySet()) {
-        Shuffle sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory,
+        Shuffle sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
             shuffleDirectory, DFWIOUtils.getOperationName(target, operationLeft),
             operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target);
 
@@ -218,8 +218,8 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
     }
 
     // add the object to the map
-    List<KeyedContent> keyedContents = (List<KeyedContent>) object;
-    for (KeyedContent kc : keyedContents) {
+    List<Tuple> tuples = (List<Tuple>) object;
+    for (Tuple kc : tuples) {
       Object data = kc.getValue();
       byte[] d = DataSerializer.serialize(data, kryoSerializer);
 
@@ -267,7 +267,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
    * @return true if all messages have been received and false otherwise
    */
   private boolean checkIfFinished(int target) {
-    return operationLeft.isDelegeteComplete() && operationRight.isDelegeteComplete()
+    return operationLeft.isDelegateComplete() && operationRight.isDelegateComplete()
         && onFinishedSourcesLeft.get(target).equals(sources)
         && onFinishedSourcesRight.get(target).equals(sources);
   }

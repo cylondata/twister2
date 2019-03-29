@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI.ComputeResource;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
+import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.models.V1Affinity;
@@ -68,12 +69,30 @@ public final class RequestObjectBuilder {
 
   private static Config config;
   private static String jobName;
+  private static long jobPackageFileSize;
+  private static String jobMasterIP = null;
 
   private RequestObjectBuilder() { }
 
-  public static void init(Config cnfg, String jName) {
+  public static void init(Config cnfg, String jName, long jpFileSize) {
     config = cnfg;
     jobName = jName;
+    jobPackageFileSize = jpFileSize;
+
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      jobMasterIP = ResourceSchedulerUtils.getHostIP();
+
+      // It is very unlikely for the host to not get localhost IP address
+      // if that happens, we throw RuntimeException
+      // since workers can not connect to JobMaster in that case
+      if (jobMasterIP == null) {
+        throw new RuntimeException("Can not get local host address. ");
+      }
+    }
+  }
+
+  public static String getJobMasterIP() {
+    return jobMasterIP;
   }
 
   /**
@@ -81,7 +100,6 @@ public final class RequestObjectBuilder {
    * @return
    */
   public static V1beta2StatefulSet createStatefulSetForWorkers(ComputeResource computeResource,
-                                                               long jobFileSize,
                                                                String encodedNodeInfoList) {
 
     if (config == null) {
@@ -108,7 +126,7 @@ public final class RequestObjectBuilder {
     // by default they are started sequentially
     setSpec.setPodManagementPolicy("Parallel");
 
-    int numberOfPods = computeResource.getNumberOfWorkers() / computeResource.getWorkersPerPod();
+    int numberOfPods = computeResource.getInstances();
     setSpec.setReplicas(numberOfPods);
 
     // add selector for the job
@@ -119,7 +137,7 @@ public final class RequestObjectBuilder {
 
     // construct the pod template
     V1PodTemplateSpec template = constructPodTemplate(
-        computeResource, serviceLabel, jobFileSize, encodedNodeInfoList);
+        computeResource, serviceLabel, encodedNodeInfoList);
 
     setSpec.setTemplate(template);
 
@@ -131,12 +149,10 @@ public final class RequestObjectBuilder {
   /**
    * construct pod template
    * @param serviceLabel
-   * @param jobFileSize
    * @return
    */
   public static V1PodTemplateSpec constructPodTemplate(ComputeResource computeResource,
                                                        String serviceLabel,
-                                                       long jobFileSize,
                                                        String encodedNodeInfoList) {
 
     V1PodTemplateSpec template = new V1PodTemplateSpec();
@@ -196,7 +212,7 @@ public final class RequestObjectBuilder {
 
     ArrayList<V1Container> containers = new ArrayList<V1Container>();
     for (int i = 0; i < containersPerPod; i++) {
-      containers.add(constructContainer(computeResource, i, jobFileSize, encodedNodeInfoList));
+      containers.add(constructContainer(computeResource, i, encodedNodeInfoList));
     }
     podSpec.setContainers(containers);
 
@@ -261,12 +277,10 @@ public final class RequestObjectBuilder {
   /**
    * construct a container
    * @param containerIndex
-   * @param jobFileSize
    * @return
    */
   public static V1Container constructContainer(ComputeResource computeResource,
                                                int containerIndex,
-                                               long jobFileSize,
                                                String encodedNodeInfoList) {
     // construct container and add it to podSpec
     V1Container container = new V1Container();
@@ -278,14 +292,9 @@ public final class RequestObjectBuilder {
       throw new RuntimeException("Container Image name is null. Config parameter: "
           + "twister2.docker.image.for.kubernetes can not be null");
     }
+
     container.setImage(containerImage);
-
-    // by default: IfNotPresent
-    // can be set to Always from client.yaml
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));
-
-//        container.setArgs(Arrays.asList("1000000")); parameter to the main method
-
     String startScript = null;
     double cpuPerContainer = computeResource.getCpu();
     int ramPerContainer = computeResource.getRamMegaBytes();
@@ -295,7 +304,7 @@ public final class RequestObjectBuilder {
       cpuPerContainer = cpuPerContainer * computeResource.getWorkersPerPod();
       ramPerContainer = ramPerContainer * computeResource.getWorkersPerPod();
     } else {
-      startScript = "./init_nonmpi.sh";
+      startScript = "./init.sh";
     }
     container.setCommand(Arrays.asList(startScript));
 
@@ -339,7 +348,8 @@ public final class RequestObjectBuilder {
 
     container.setVolumeMounts(volumeMounts);
 
-    int containerPort = KubernetesContext.workerBasePort(config) + containerIndex;
+    int containerPort = KubernetesContext.workerBasePort(config)
+        + containerIndex * (SchedulerContext.numberOfAdditionalPorts(config) + 1);
 
     V1ContainerPort port = new V1ContainerPort();
     port.name("port11"); // currently not used
@@ -349,7 +359,7 @@ public final class RequestObjectBuilder {
 
     container.setEnv(
         constructEnvironmentVariables(
-            containerName, jobFileSize, containerPort, encodedNodeInfoList));
+            containerName, containerPort, encodedNodeInfoList));
 
     return container;
   }
@@ -357,10 +367,8 @@ public final class RequestObjectBuilder {
   /**
    * set environment variables for containers
    * @param containerName
-   * @param jobFileSize
    */
   public static List<V1EnvVar> constructEnvironmentVariables(String containerName,
-                                                             long jobFileSize,
                                                              int workerPort,
                                                              String encodedNodeInfoList) {
 
@@ -372,7 +380,7 @@ public final class RequestObjectBuilder {
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.JOB_PACKAGE_FILE_SIZE + "")
-        .value(jobFileSize + ""));
+        .value(jobPackageFileSize + ""));
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.CONTAINER_NAME + "")
@@ -412,13 +420,9 @@ public final class RequestObjectBuilder {
         .name(K8sEnvVariables.HOST_NAME + "")
         .valueFrom(varSource));
 
-    String masterAddress = null;
-    if (JobMasterContext.jobMasterRunsInClient(config)) {
-      masterAddress = KubernetesUtils.getLocalAddress();
-    }
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.JOB_MASTER_IP + "")
-        .value(masterAddress));
+        .value(jobMasterIP));
 
     if (SchedulerContext.useOpenMPI(config)) {
 
@@ -453,9 +457,11 @@ public final class RequestObjectBuilder {
         .name(K8sEnvVariables.UPLOAD_METHOD + "")
         .value(KubernetesContext.uploadMethod(config)));
 
-    envVars.add(new V1EnvVar()
-        .name(K8sEnvVariables.DOWNLOAD_DIRECTORY + "")
-        .value(ScpContext.downloadDirectory(config)));
+    if (!KubernetesContext.clientToPodsUploading(config)) {
+      envVars.add(new V1EnvVar()
+          .name(K8sEnvVariables.DOWNLOAD_DIRECTORY + "")
+          .value(ScpContext.downloadDirectory(config)));
+    }
 
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.ENCODED_NODE_INFO_LIST + "")

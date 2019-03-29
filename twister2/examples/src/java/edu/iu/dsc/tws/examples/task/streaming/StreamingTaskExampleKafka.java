@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,24 +18,18 @@ import java.util.List;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.checkpointmanager.state_backend.FsCheckpointStorage;
-import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.connectors.TwsKafkaConsumer;
-import edu.iu.dsc.tws.connectors.TwsKafkaProducer;
-import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.executor.core.Runtime;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
@@ -48,24 +41,6 @@ public class StreamingTaskExampleKafka implements IWorker {
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
-
-    Path path = new Path(new File(CheckpointContext
-        .getStatebackendDirectoryDefault(config)).toURI());
-    path.getParent();
-
-    Runtime runtime = new Runtime();
-    runtime.setParentpath(path);
-
-    LocalFileSystem localFileSystem = new LocalFileSystem();
-    runtime.setFileSystem(localFileSystem);
-    Config newconfig = runtime.updateConfig(config);
-
-    if (workerID == 1) {
-//      LOG.log(Level.INFO, "Statebackend directory is created for job: " + runtime.getJobName());
-      FsCheckpointStorage newStateBackend = new FsCheckpointStorage(localFileSystem, path,
-          runtime.getJobName(), 0);
-    }
-
     List<String> topics = new ArrayList<>();
     topics.add("sample_topic1");
     List<String> servers = new ArrayList<>();
@@ -75,10 +50,7 @@ public class StreamingTaskExampleKafka implements IWorker {
         servers,
         "test",
         "partition-edge");
-    TwsKafkaProducer<String> r = new TwsKafkaProducer<String>(
-        "outTopic",
-        servers
-    );
+    RecevingTask r = new RecevingTask();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
     builder.addSource("source", g);
@@ -89,9 +61,9 @@ public class StreamingTaskExampleKafka implements IWorker {
         OperationNames.PARTITION);
     builder.operationMode(OperationMode.STREAMING);
 
-    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(newconfig));
-    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(newconfig));
-    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(newconfig));
+    builder.addConfiguration("source", "Ram", GraphConstants.taskInstanceRam(config));
+    builder.addConfiguration("source", "Disk", GraphConstants.taskInstanceDisk(config));
+    builder.addConfiguration("source", "Cpu", GraphConstants.taskInstanceCpu(config));
 
     List<String> sourceInputDataset = new ArrayList<>();
     sourceInputDataset.add("dataset1.txt");
@@ -101,10 +73,10 @@ public class StreamingTaskExampleKafka implements IWorker {
 
     DataFlowTaskGraph graph = builder.build();
 
-    TaskUtils.execute(newconfig, workerID, graph, workerController);
+    TaskUtils.execute(config, workerID, graph, workerController);
   }
 
-  private static class RecevingTask extends SinkCheckpointableTask {
+  private static class RecevingTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -115,11 +87,6 @@ public class StreamingTaskExampleKafka implements IWorker {
       }
       count++;
       return true;
-    }
-
-    @Override
-    public void addCheckpointableStates() {
-      this.addState("trial", 2);
     }
   }
 

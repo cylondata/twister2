@@ -11,12 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.common.config.Config;
 
 /**
  * Output writer to write a output
  */
-public interface OutputWriter<T> {
+public interface OutputWriter<T> extends Serializable {
   /**
    * Configure the output writer
    *

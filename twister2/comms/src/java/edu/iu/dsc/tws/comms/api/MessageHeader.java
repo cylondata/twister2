@@ -29,9 +29,9 @@ public final class MessageHeader {
   private int edge;
 
   /**
-   * Length of the message
+   * Number of objects in this message
    */
-  private int length;
+  private int numberTuples;
 
   /**
    * An integer value used to identify the destination
@@ -46,7 +46,7 @@ public final class MessageHeader {
   private MessageHeader(int srcId, int e, int l) {
     this.sourceId = srcId;
     this.edge = e;
-    this.length = l;
+    this.numberTuples = l;
   }
 
   private MessageHeader(int srcId, int e) {
@@ -62,8 +62,8 @@ public final class MessageHeader {
     return edge;
   }
 
-  public int getLength() {
-    return length;
+  public int getNumberTuples() {
+    return numberTuples;
   }
 
   public int getFlags() {
@@ -93,11 +93,6 @@ public final class MessageHeader {
       header = new MessageHeader(sourceId, edge);
     }
 
-    public Builder reInit(int sourceId, int edge, int length) {
-      header.sourceId = sourceId;
-      return this;
-    }
-
     public Builder destination(int edge) {
       header.destinationIdentifier = edge;
       return this;
@@ -105,11 +100,6 @@ public final class MessageHeader {
 
     public Builder flags(int p) {
       header.flags = p;
-      return this;
-    }
-
-    public Builder length(int l) {
-      header.length = l;
       return this;
     }
 

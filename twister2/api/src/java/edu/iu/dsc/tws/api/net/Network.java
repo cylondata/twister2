@@ -13,9 +13,12 @@ package edu.iu.dsc.tws.api.net;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPContext;
@@ -24,9 +27,12 @@ import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel;
 import edu.iu.dsc.tws.comms.tcp.TWSTCPChannel;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
+import mpi.Intracomm;
 import mpi.MPI;
 
 public final class Network {
+  public static final Logger LOG = Logger.getLogger(Network.class.getName());
+
   private Network() {
   }
 
@@ -41,15 +47,22 @@ public final class Network {
 
   private static TWSChannel initializeMPIChannel(Config config,
                                                  IWorkerController wController) {
+    Object commObject = wController.getRuntimeObject("comm");
+    Intracomm intracomm;
+    if (commObject == null) {
+      intracomm = MPI.COMM_WORLD;
+    } else {
+      intracomm = (Intracomm) commObject;
+    }
     //first get the communication config file
-    return new TWSMPIChannel(config, MPI.COMM_WORLD, wController.getWorkerInfo().getWorkerID());
+    return new TWSMPIChannel(config, intracomm, wController.getWorkerInfo().getWorkerID());
   }
 
   private static TWSChannel initializeTCPNetwork(Config config,
                                                  IWorkerController wController) {
     TCPChannel channel;
     int index = wController.getWorkerInfo().getWorkerID();
-    Integer workerPort = wController.getWorkerInfo().getPort();
+    int workerPort = wController.getWorkerInfo().getPort();
     String localIp = wController.getWorkerInfo().getWorkerIP();
 
     channel = createChannel(config, localIp, workerPort, index);
@@ -57,7 +70,12 @@ public final class Network {
     channel.startListening();
 
     // wait for everyone to start the job master
-    wController.waitOnBarrier();
+    try {
+      wController.waitOnBarrier();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return null;
+    }
 
     // now talk to a central server and get the information about the worker
     // this is a synchronization step

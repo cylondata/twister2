@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.examples.internal.task.checkpoint.barrier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -22,30 +24,33 @@ import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.checkpointmanager.barrier.CheckpointBarrier;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.Operations;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public class TaskBarrierExample implements IWorker {
+  private static final Logger LOG = Logger.getLogger(TaskBarrierExample.class.getName());
+
   @Override
   public void execute(Config config, int workerID,
                       IWorkerController workerController,
@@ -66,13 +71,19 @@ public class TaskBarrierExample implements IWorker {
     RoundRobinTaskScheduler roundRobinTaskScheduling = new RoundRobinTaskScheduler();
     roundRobinTaskScheduling.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
+    WorkerPlan workerPlan = createWorkerPlan(workerList);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduling.schedule(graph, workerPlan);
 
     TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-        workerController.getAllWorkers(),
-        new Communicator(config, network));
+          workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network,
         OperationMode.STREAMING);
@@ -80,7 +91,7 @@ public class TaskBarrierExample implements IWorker {
 
   }
 
-  private static class GeneratorBarrierTask extends BaseStreamSource {
+  private static class GeneratorBarrierTask extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
     private long id = 5555;
 
@@ -97,7 +108,7 @@ public class TaskBarrierExample implements IWorker {
     }
   }
 
-  private static final class RecevingBarrierTask extends BaseStreamSink {
+  private static final class RecevingBarrierTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

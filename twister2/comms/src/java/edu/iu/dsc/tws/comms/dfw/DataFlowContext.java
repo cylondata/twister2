@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.CommunicationContext;
+import edu.iu.dsc.tws.comms.api.CommunicationContext;
 
 /**
  * Read the configuration options
@@ -32,8 +32,8 @@ public class DataFlowContext extends CommunicationContext {
   private static final String NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK =
       "network.partition.message.group.high_water_mark";
 
-  private static final String SHUFFLE_MAX_BYTES_IN_MEMORY = "shuffle.memory.bytes.max";
-  private static final String SHUFFLE_MAX_RECORDS_IN_MEMORY = "shuffle.memory.records.max";
+  public static final String SHUFFLE_MAX_BYTES_IN_MEMORY = "shuffle.memory.bytes.max";
+  public static final String SHUFFLE_MAX_RECORDS_IN_MEMORY = "shuffle.memory.records.max";
 
   public static final int DEFAULT_DESTINATION = 0;
 

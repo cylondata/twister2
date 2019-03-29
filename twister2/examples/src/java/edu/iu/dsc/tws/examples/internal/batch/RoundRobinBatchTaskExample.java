@@ -17,30 +17,28 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
@@ -92,19 +90,19 @@ public class RoundRobinBatchTaskExample implements IWorker {
     GraphBuilder builder = GraphBuilder.newBuilder();
 
     builder.addSource("source", g);
-    builder.setParallelism("source", 4);
+    builder.setParallelism("source", 2);
 
     builder.addSink("sink1", s1);
-    builder.setParallelism("sink1", 3);
+    builder.setParallelism("sink1", 2);
 
     builder.addSink("sink2", s2);
-    builder.setParallelism("sink2", 3);
+    builder.setParallelism("sink2", 2);
 
     builder.addSink("merge", m1);
-    builder.setParallelism("merge", 3);
+    builder.setParallelism("merge", 2);
 
     builder.addSink("final", f1);
-    builder.setParallelism("final", 4);
+    builder.setParallelism("final", 2);
 
     //Task graph Structure
     /**   Source (Two Outgoing Edges)
@@ -146,8 +144,15 @@ public class RoundRobinBatchTaskExample implements IWorker {
     builder.addConfiguration("final", "inputdataset", sourceInputDataset);
 
     DataFlowTaskGraph graph = builder.build();
-    WorkerPlan workerPlan = createWorkerPlan(workerController.getAllWorkers());
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
 
+    WorkerPlan workerPlan = createWorkerPlan(workerList);
     //Assign the "datalocalityaware" or "roundrobin" scheduling mode in config file.
     TaskScheduler taskScheduler = new TaskScheduler();
     taskScheduler.initialize(config);
@@ -156,15 +161,15 @@ public class RoundRobinBatchTaskExample implements IWorker {
     //Just to print the task schedule plan...
     if (workerID == 0) {
       if (taskSchedulePlan != null) {
-        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+        Map<Integer, ContainerPlan> containersMap
                 = taskSchedulePlan.getContainersMap();
-        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+        for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
           Integer integer = entry.getKey();
-          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-          Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
+          ContainerPlan containerPlan = entry.getValue();
+          Set<TaskInstancePlan> containerPlanTaskInstances
                   = containerPlan.getTaskInstances();
           LOG.info("Task Details for Container Id:" + integer);
-          for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
+          for (TaskInstancePlan ip : containerPlanTaskInstances) {
             LOG.info("Task Id:" + ip.getTaskId()
                     + "\tTask Index" + ip.getTaskIndex()
                     + "\tTask Name:" + ip.getTaskName());
@@ -173,12 +178,12 @@ public class RoundRobinBatchTaskExample implements IWorker {
       }
     }
 
-    TWSChannel network = Network.initializeChannel(config, workerController);
+    /*TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-        workerController.getAllWorkers(), new Communicator(config, network));
+          workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network, OperationMode.BATCH);
-    executor.execute();
+    executor.execute();*/
   }
 
   public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
@@ -191,7 +196,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     return new WorkerPlan(workers);
   }
 
-  private static class SourceTask1 extends BaseBatchSource {
+  private static class SourceTask1 extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
     private int count = 0;
 
@@ -209,7 +214,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     }
   }
 
-  private static class SinkTask1 extends BaseBatchSink {
+  private static class SinkTask1 extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -230,7 +235,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     }
   }
 
-  private static class SinkTask2 extends BaseBatchSink {
+  private static class SinkTask2 extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -251,7 +256,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     }
   }
 
-  private static class MergingTask extends BaseBatchSink {
+  private static class MergingTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 
@@ -272,7 +277,7 @@ public class RoundRobinBatchTaskExample implements IWorker {
     }
   }
 
-  private static class FinalTask extends BaseBatchSink {
+  private static class FinalTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;
 

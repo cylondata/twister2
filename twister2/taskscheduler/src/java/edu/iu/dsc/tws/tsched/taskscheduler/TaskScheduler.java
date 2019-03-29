@@ -18,6 +18,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
@@ -77,18 +79,16 @@ public class TaskScheduler implements ITaskScheduler {
       this.schedulingType = TaskSchedulerContext.streamingTaskSchedulingMode(config);
     }
 
-    LOG.info("Task Scheduling Type:" + schedulingType + "(" + "streaming task" + ")");
+    LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "streaming task" + ")");
 
-    TaskSchedulePlan taskSchedulePlan
-            = generateTaskSchedulePlan(TaskSchedulerContext.streamingTaskSchedulingClass(config));
-    return taskSchedulePlan;
+    return generateTaskSchedulePlan(TaskSchedulerContext.streamingTaskSchedulingClass(config));
   }
 
   /**
    * This method invokes the appropriate batch task schedulers based on the scheduling mode
    * specified in the task configuration by the user or else from the default configuration value.
    *
-   * @return
+   * @return Task Schedule Plan
    */
   private TaskSchedulePlan scheduleBatchTask() {
 
@@ -98,11 +98,9 @@ public class TaskScheduler implements ITaskScheduler {
       this.schedulingType = TaskSchedulerContext.batchTaskSchedulingMode(config);
     }
 
-    LOG.info("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
+    LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
 
-    TaskSchedulePlan taskSchedulePlan =
-            generateTaskSchedulePlan(TaskSchedulerContext.batchTaskSchedulingClass(config));
-    return taskSchedulePlan;
+    return generateTaskSchedulePlan(TaskSchedulerContext.batchTaskSchedulingClass(config));
   }
 
   private TaskSchedulePlan generateTaskSchedulePlan(String className) {
@@ -114,35 +112,31 @@ public class TaskScheduler implements ITaskScheduler {
     try {
       taskSchedulerClass = ClassLoader.getSystemClassLoader().loadClass(className);
       Object newInstance = taskSchedulerClass.newInstance();
-
-      LOG.info("Task Scheduler Class:%%%%%%%" + taskSchedulerClass);
-
+      LOG.info("%%%% Task Scheduler Class:%%%%" + taskSchedulerClass);
       method = taskSchedulerClass.getMethod("initialize", new Class<?>[]{Config.class});
       method.invoke(newInstance, config);
-
       method = taskSchedulerClass.getMethod("schedule",
-              new Class<?>[]{DataFlowTaskGraph.class, WorkerPlan.class});
+          new Class<?>[]{DataFlowTaskGraph.class, WorkerPlan.class});
       taskSchedulePlan = (TaskSchedulePlan) method.invoke(newInstance, dataFlowTaskGraph,
-              workerPlan);
-
+          workerPlan);
     } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException
-            | InstantiationException | ClassNotFoundException e) {
-      e.printStackTrace();
+        | InstantiationException | ClassNotFoundException e) {
+      throw new RuntimeException("Task Schedule Plan Not Able to Generate:" + e);
     }
 
     if (taskSchedulePlan != null) {
-      Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
-              = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+      Map<Integer, ContainerPlan> containersMap
+          = taskSchedulePlan.getContainersMap();
+      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
         Integer integer = entry.getKey();
-        TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-        Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
-                = containerPlan.getTaskInstances();
+        ContainerPlan containerPlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances
+            = containerPlan.getTaskInstances();
         LOG.fine("Task Details for Container Id:" + integer);
-        for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
+        for (TaskInstancePlan ip : containerPlanTaskInstances) {
           LOG.fine("Task Id:" + ip.getTaskId()
-                  + "\tTask Index" + ip.getTaskIndex()
-                  + "\tTask Name:" + ip.getTaskName());
+              + "\tTask Index" + ip.getTaskIndex()
+              + "\tTask Name:" + ip.getTaskName());
         }
       }
     }

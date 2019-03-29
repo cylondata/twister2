@@ -17,8 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class MPIWorkerController implements IWorkerController {
@@ -26,14 +25,11 @@ public class MPIWorkerController implements IWorkerController {
 
   private Map<Integer, JobMasterAPI.WorkerInfo> networkInfoMap = new HashMap<>();
 
-  public MPIWorkerController(int thisWorkerID, Map<Integer, String> processNames) {
+  private Map<String, Object> runtimeObjects = new HashMap<>();
+
+  public MPIWorkerController(int thisWorkerID, Map<Integer, JobMasterAPI.WorkerInfo> processNames) {
     this.thisWorkerID = thisWorkerID;
-    for (Map.Entry<Integer, String> e : processNames.entrySet()) {
-      JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(e.getValue(), null, null);
-      JobMasterAPI.WorkerInfo workerInfo =
-          WorkerInfoUtils.createWorkerInfo(e.getKey(), e.getValue(), 0, nodeInfo);
-      networkInfoMap.put(e.getKey(), workerInfo);
-    }
+    this.networkInfoMap = processNames;
   }
 
   @Override
@@ -57,12 +53,20 @@ public class MPIWorkerController implements IWorkerController {
   }
 
   @Override
-  public List<JobMasterAPI.WorkerInfo> getAllWorkers() {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException {
     return new ArrayList<>(networkInfoMap.values());
   }
 
   @Override
-  public boolean waitOnBarrier() {
-    return false;
+  public void waitOnBarrier() throws TimeoutException {
+  }
+
+  public void add(String name, Object obj) {
+    runtimeObjects.put(name, obj);
+  }
+
+  @Override
+  public Object getRuntimeObject(String name) {
+    return runtimeObjects.get(name);
   }
 }

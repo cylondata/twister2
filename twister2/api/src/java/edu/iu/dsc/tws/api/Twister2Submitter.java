@@ -42,6 +42,7 @@ public final class Twister2Submitter {
 
     // save the job to transfer to workers
     JobAPI.Job job = twister2Job.serialize();
+    LOG.info("The job to be submitted: \n" + JobUtils.toString(job));
 
     // update the config object with the values from job
     Config updatedConfig = JobUtils.updateConfigs(job, config);

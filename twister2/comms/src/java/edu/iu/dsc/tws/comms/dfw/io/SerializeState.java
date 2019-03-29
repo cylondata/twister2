@@ -34,9 +34,11 @@ public class SerializeState {
   //The size that should be set as the current header length
   private int curretHeaderLength;
 
+  // the state of each part
   public enum Part {
     INIT,
     HEADER,
+    KEY,
     BODY,
   }
 

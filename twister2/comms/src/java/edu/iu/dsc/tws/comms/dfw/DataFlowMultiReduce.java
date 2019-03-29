@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MultiMessageReceiver;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 
 public class DataFlowMultiReduce implements DataFlowOperation {
   private static final Logger LOG = Logger.getLogger(DataFlowMultiReduce.class.getName());
@@ -57,7 +57,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
 
   private MessageType keyType;
 
-  public DataFlowMultiReduce(TWSChannel chnl,
+  public DataFlowMultiReduce(Config config, TWSChannel chnl, TaskPlan instancePlan,
                              Set<Integer> sources, Set<Integer> destination,
                              MultiMessageReceiver finalRecv,
                              MultiMessageReceiver partialRecv, Set<Integer> es,
@@ -71,6 +71,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     this.reduceMap = new HashMap<>();
     this.keyType = kType;
     this.dataType = dType;
+    init(config, dataType, instancePlan);
   }
 
   @Override
@@ -119,10 +120,10 @@ public class DataFlowMultiReduce implements DataFlowOperation {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     boolean isDone = true;
     for (DataFlowReduce reduce : reduceMap.values()) {
-      isDone = isDone && reduce.isDelegeteComplete();
+      isDone = isDone && reduce.isDelegateComplete();
       if (!isDone) {
         //No need to check further if we already have one false
         return false;
@@ -147,6 +148,17 @@ public class DataFlowMultiReduce implements DataFlowOperation {
 
   @Override
   public void close() {
+    for (DataFlowReduce reduce : reduceMap.values()) {
+      reduce.close();
+    }
+  }
+
+
+  @Override
+  public void clean() {
+    for (DataFlowReduce reduce : reduceMap.values()) {
+      reduce.clean();
+    }
   }
 
   @Override
@@ -166,10 +178,7 @@ public class DataFlowMultiReduce implements DataFlowOperation {
     return String.valueOf(edges.toArray()[0]);
   }
 
-  /**
-   * Initialize
-   */
-  public void init(Config config, MessageType type, TaskPlan instancePlan) {
+  private void init(Config config, MessageType type, TaskPlan instancePlan) {
     executor = instancePlan.getThisExecutor();
     this.taskPlan = instancePlan;
     this.dataType = type;

@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
+//import org.apache.mesos.v1.scheduler.Scheduler;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -63,14 +64,15 @@ public class MesosLauncher implements ILauncher {
   @Override
   public boolean launch(JobAPI.Job job) {
 
-    runFramework(MesosContext.getMesosMasterUri(config), job.getJobName());
+//    runFramework(MesosContext.getMesosMasterUri(config), job.getJobName());
+    runFramework(MesosContext.getMesosMasterUri(config), job);
 
     return false;
   }
 
-  private void runFramework(String mesosMaster, String jobName) {
+  private void runFramework(String mesosMaster, JobAPI.Job job) {
 
-    Scheduler scheduler = new MesosScheduler(controller, config, jobName);
+    Scheduler scheduler = new MesosScheduler(controller, config, job);
     driver = new MesosSchedulerDriver(scheduler, controller.getFrameworkInfo(),
         mesosMaster);
     int status = driver.run() == Protos.Status.DRIVER_STOPPED ? 0 : 1;

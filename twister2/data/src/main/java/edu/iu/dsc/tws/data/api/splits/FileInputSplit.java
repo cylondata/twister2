@@ -91,6 +91,8 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
    */
   protected long openTimeout;
 
+  private Config config;
+
   /**
    * Constructs a split with host information.
    *
@@ -106,6 +108,7 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
     this.file = file;
     this.start = start;
     this.length = length;
+
   }
 
   public boolean isEnumerateNestedFiles() {
@@ -181,13 +184,13 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
   public boolean equals(Object obj) {
     if (obj == this) {
       return true;
-    } else if (obj != null && obj instanceof FileInputSplit && super.equals(obj)) {
+    } else if (obj instanceof FileInputSplit && super.equals(obj)) {
       FileInputSplit other = (FileInputSplit) obj;
 
       return this.start == other.start
           && this.length == other.length
           && (this.file == null ? other.file == null : (other.file != null
-              && this.file.equals(other.file)));
+          && this.file.equals(other.file)));
     } else {
       return false;
     }
@@ -199,6 +202,7 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
   }
 
   public void configure(Config parameters) {
+    this.config = parameters;
   }
 
   @Override
@@ -242,6 +246,35 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
     }
   }
 
+  public void open(Config cfg) throws IOException {
+    this.splitStart = getStart();
+    this.splitLength = getLength();
+    this.config = cfg;
+
+    LOG.log(Level.FINE, "Opening input split " + getPath() + " ["
+        + splitStart + "," + splitLength + "]");
+
+    // open the split in an asynchronous thread
+    //final InputSplitOpenThread isot = new InputSplitOpenThread(this, this.openTimeout);
+    final InputSplitOpenThread isot = new InputSplitOpenThread(this, this.openTimeout, config);
+    isot.start();
+
+    try {
+      this.stream = isot.waitForCompletion();
+      //TODO L3: Check the need to input stream wrapper ( ex for decoding ).
+      // This is not an initial requirement
+      //this.stream = decorateInputStream(this.stream, fileSplit);
+    } catch (Throwable t) {
+      throw new IOException("Error opening the Input Split " + getPath()
+          + " [" + splitStart + "," + splitLength + "]: " + t.getMessage(), t);
+    }
+
+    // get FSDataInputStream
+    if (this.splitStart != 0) {
+      this.stream.seek(this.splitStart);
+    }
+  }
+
   /**
    * Obtains a DataInputStream in an thread that is not interrupted.
    * This is a necessary hack around the problem that the HDFS client is very
@@ -259,20 +292,29 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
 
     private volatile boolean aborted;
 
+    private Config config;
+
     public InputSplitOpenThread(FileInputSplit split, long timeout) {
       super("Transient InputSplit Opener");
       setDaemon(true);
-
       this.split = split;
       this.timeout = timeout;
+    }
+
+    public InputSplitOpenThread(FileInputSplit split, long timeout, Config cfg) {
+      super("Transient InputSplit Opener");
+      setDaemon(true);
+      this.split = split;
+      this.timeout = timeout;
+      this.config = cfg;
     }
 
     @Override
     public void run() {
       try {
-        final FileSystem fs = FileSystem.get(this.split.getPath().toUri());
+        //final FileSystem fs = FileSystem.get(this.split.getPath().toUri());
+        final FileSystem fs = FileSystem.get(this.split.getPath().toUri(), config);
         this.fdis = fs.open(this.split.getPath());
-
         // check for canceling and close the stream in that case, because no one will obtain it
         if (this.aborted) {
           final FSDataInputStream f = this.fdis;

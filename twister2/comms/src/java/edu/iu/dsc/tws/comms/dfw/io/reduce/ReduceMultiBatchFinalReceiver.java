@@ -44,6 +44,7 @@ public class ReduceMultiBatchFinalReceiver implements MultiMessageReceiver {
       receiverMap.put(e.getKey(), finalReceiver);
       finalReceiver.init(cfg, op, e.getValue());
     }
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
   }
 
   @Override

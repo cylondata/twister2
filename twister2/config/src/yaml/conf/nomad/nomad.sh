@@ -18,7 +18,7 @@ echo $debug
 cp ${CORE_PACKAGE_ENV} .
 cp ${JOB_PACKAGE_ENV} .
 
-tar -xvf twister2-core-0.1.0.tar.gz
+tar -xvf twister2-core-0.2.0.tar.gz
 tar -xvf twister2-job.tar.gz --strip 1
 
 profile=

@@ -110,12 +110,12 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
   @SuppressWarnings("unchecked")
   public Object getDataBuffers(Object partialObject, int edge) {
     ChannelMessage message = (ChannelMessage) partialObject;
-    MessageType type = message.getType();
+    MessageType type = message.getDataType();
     //Used when handling multi messages
-    List<KeyedContent> results;
+    List<Tuple> results;
     if (!keyed) {
       return DataDeserializer.getAsByteArray(message.getBuffers(),
-          message.getHeader().getLength(), type);
+          message.getHeader().getNumberTuples(), type);
     } else {
 
       Pair<Integer, Object> keyPair = KeyDeserializer.
@@ -126,24 +126,25 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
 
       if (keyType.isMultiMessageType()) {
         data = DataDeserializer.getAsByteArray(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey()
+            message.getHeader().getNumberTuples() - keyPair.getKey()
                 - MULTI_MESSAGE_KEY_LENGTH_FEILD_SIZE, type, ((List) keyPair.getValue()).size());
         results = new ArrayList<>();
         List<byte[]> keyList = (List<byte[]>) keyPair.getValue();
         List<byte[]> dataList = (List<byte[]>) data;
         for (int i = 0; i < keyList.size(); i++) {
-          results.add(new KeyedContent(keyList.get(i), dataList.get(i),
+          results.add(new Tuple(keyList.get(i), dataList.get(i),
               message.getKeyType(), type));
         }
         return results;
       } else if (!keyType.isPrimitive()) {
         data = DataDeserializer.getAsByteArray(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey() - KEY_LENGTH_FEILD_SIZE, type);
+            message.getHeader().getNumberTuples() - keyPair.getKey()
+                - KEY_LENGTH_FEILD_SIZE, type);
       } else {
         data = DataDeserializer.getAsByteArray(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey(), type);
+            message.getHeader().getNumberTuples() - keyPair.getKey(), type);
       }
-      return new KeyedContent(keyPair.getValue(), data,
+      return new Tuple(keyPair.getValue(), data,
           message.getKeyType(), type);
     }
   }
@@ -156,40 +157,40 @@ public class SingleMessageDeSerializer implements MessageDeSerializer {
    */
   @SuppressWarnings("unchecked")
   private Object buildMessage(ChannelMessage message) {
-    MessageType type = message.getType();
+    MessageType type = message.getDataType();
 
     if (!keyed) {
       return DataDeserializer.deserializeData(message.getBuffers(),
-          message.getHeader().getLength(), deserializer, type);
+          message.getHeader().getNumberTuples(), deserializer, type);
     } else {
       Pair<Integer, Object> keyPair = KeyDeserializer.deserializeKey(message.getKeyType(),
           message.getBuffers(), deserializer);
       MessageType keyType = message.getKeyType();
       Object data;
-      List<KeyedContent> results;
+      List<Tuple> results;
 
       if (keyType.isMultiMessageType()) {
         List<byte[]> keyList = (List<byte[]>) keyPair.getValue();
         data = DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey()
+            message.getHeader().getNumberTuples() - keyPair.getKey()
                 - MULTI_MESSAGE_KEY_LENGTH_FEILD_SIZE, deserializer, type,
             ((List) keyPair.getValue()).size());
         List<byte[]> dataList = (List<byte[]>) data;
         results = new ArrayList<>();
         for (int i = 0; i < keyList.size(); i++) {
-          results.add(new KeyedContent(keyList.get(i), dataList.get(i),
+          results.add(new Tuple(keyList.get(i), dataList.get(i),
               message.getKeyType(), type));
         }
         return results;
       } else if (!keyType.isPrimitive()) {
         Object d = DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey() - KEY_LENGTH_FEILD_SIZE,
+            message.getHeader().getNumberTuples() - keyPair.getKey() - KEY_LENGTH_FEILD_SIZE,
             deserializer, type);
-        return new KeyedContent(keyPair.getValue(), d, message.getKeyType(), type);
+        return new Tuple(keyPair.getValue(), d, message.getKeyType(), type);
       } else {
         Object d = DataDeserializer.deserializeData(message.getBuffers(),
-            message.getHeader().getLength() - keyPair.getKey(), deserializer, type);
-        return new KeyedContent(keyPair.getValue(), d, message.getKeyType(), type);
+            message.getHeader().getNumberTuples() - keyPair.getKey(), deserializer, type);
+        return new Tuple(keyPair.getValue(), d, message.getKeyType(), type);
       }
     }
   }

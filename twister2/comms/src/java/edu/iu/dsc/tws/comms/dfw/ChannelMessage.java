@@ -13,23 +13,21 @@ package edu.iu.dsc.tws.comms.dfw;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class ChannelMessage {
-  private static final Logger LOG = Logger.getLogger(ChannelMessage.class.getName());
   /**
    * List of buffers filled with the message
    */
-  private final List<DataBuffer> buffers = new ArrayList<DataBuffer>();
+  private final List<DataBuffer> buffers = new ArrayList<>();
 
   /**
    * List of byte arrays which are used to copy data from {@link ChannelMessage#buffers}
    * When the system runs out of receive buffers
    */
-  private final List<DataBuffer> overflowBuffers = new ArrayList<DataBuffer>();
+  private final List<DataBuffer> overflowBuffers = new ArrayList<>();
 
   /**
    * Keeps the number of references to this message
@@ -42,7 +40,9 @@ public class ChannelMessage {
    */
   private MessageDirection messageDirection;
 
-
+  /**
+   * We call this to release the buffers
+   */
   private ChannelMessageReleaseCallback releaseListener;
 
   /**
@@ -53,7 +53,7 @@ public class ChannelMessage {
   /**
    * The message header
    */
-  private MessageHeader header;
+  protected MessageHeader header;
 
   /**
    * Keeps track of whether header of the object contained in the buffer was sent or not.
@@ -70,14 +70,14 @@ public class ChannelMessage {
   private boolean isPartial;
 
   /**
-   * Keep whether the message has been fully built
+   * Keep whether we have all the buffers added
    */
-  private boolean complete = false;
+  protected boolean complete = false;
 
   /**
    * Message type
    */
-  private MessageType type;
+  private MessageType dataType;
 
   /**
    * If a keyed message, the key being used
@@ -89,16 +89,16 @@ public class ChannelMessage {
    */
   private int headerSize;
 
-  public enum ReceivedState {
-    INIT,
-    DOWN,
-    RECEIVE
-  }
+  /**
+   * Keep track of accepted external sends
+   */
+  private int acceptedExternalSends = 0;
 
   /**
-   * Received state
+   * Keep track weather out count updated
    */
-  private ReceivedState receivedState;
+  private boolean outCountUpdated = false;
+
 
   public ChannelMessage() {
   }
@@ -111,13 +111,12 @@ public class ChannelMessage {
     this.releaseListener = releaseListener;
     this.originatingId = originatingId;
     this.complete = false;
-    this.type = messageType;
-    this.receivedState = ReceivedState.INIT;
+    this.dataType = messageType;
   }
 
   public List<DataBuffer> getBuffers() {
     if (overflowBuffers.size() > 0) {
-      List<DataBuffer> total = new ArrayList<DataBuffer>();
+      List<DataBuffer> total = new ArrayList<>();
       total.addAll(overflowBuffers);
       total.addAll(buffers);
       return total;
@@ -133,14 +132,12 @@ public class ChannelMessage {
     return buffers;
   }
 
-  public int incrementRefCount() {
+  public void incrementRefCount() {
     refCount++;
-    return refCount;
   }
 
-  public int incrementRefCount(int count) {
+  public void incrementRefCount(int count) {
     refCount += count;
-    return refCount;
   }
 
   public MessageDirection getMessageDirection() {
@@ -165,11 +162,11 @@ public class ChannelMessage {
     buffers.add(buffer);
   }
 
-  protected void addBuffers(List<DataBuffer> bufferList) {
+  public void addBuffers(List<DataBuffer> bufferList) {
     buffers.addAll(bufferList);
   }
 
-  protected void addOverFlowBuffers(List<DataBuffer> bufferList) {
+  public void addOverFlowBuffers(List<DataBuffer> bufferList) {
     overflowBuffers.addAll(bufferList);
   }
 
@@ -214,56 +211,20 @@ public class ChannelMessage {
     this.releaseListener = releaseListener;
   }
 
-  public void setType(MessageType type) {
-    this.type = type;
-  }
-
-  public boolean build() {
-
-    if (header == null && buffers.size() > 0) {
-      return false;
-    }
-
-    if (header != null) {
-      int currentSize = 0;
-      for (DataBuffer buffer : getBuffers()) {
-        currentSize += buffer.getByteBuffer().remaining();
-      }
-//      LOG.info(String.format("Current size %d length %d", currentSize,
-//          header.getLength()));
-      if (currentSize > header.getLength()) {
-        throw new RuntimeException(String.format("source %d target %d ChannelMessage data"
-                + " length %d exceeded expected"
-                + " length in header %d buffer count %d overflow count %d",
-            header.getSourceId(), header.getDestinationIdentifier(), currentSize,
-            header.getLength(), buffers.size(), overflowBuffers.size()));
-      }
-      if (currentSize == header.getLength()) {
-        complete = true;
-        return true;
-      }
-    }
-    return false;
+  public void setDataType(MessageType dataType) {
+    this.dataType = dataType;
   }
 
   public boolean isComplete() {
     return complete;
   }
 
-  public int getCurrentSize() {
-    int currentSize = 0;
-    for (DataBuffer buffer : getBuffers()) {
-      currentSize += buffer.getByteBuffer().position();
-    }
-    return currentSize;
-  }
-
   public void setComplete(boolean complete) {
     this.complete = complete;
   }
 
-  public MessageType getType() {
-    return type;
+  public MessageType getDataType() {
+    return dataType;
   }
 
   public void setHeaderSize(int headerSize) {
@@ -272,14 +233,6 @@ public class ChannelMessage {
 
   public int getHeaderSize() {
     return headerSize;
-  }
-
-  public ReceivedState getReceivedState() {
-    return receivedState;
-  }
-
-  public void setReceivedState(ReceivedState receivedState) {
-    this.receivedState = receivedState;
   }
 
   public void setKeyType(MessageType keyType) {
@@ -304,5 +257,21 @@ public class ChannelMessage {
 
   public void setPartial(boolean partial) {
     isPartial = partial;
+  }
+
+  public int getAcceptedExternalSends() {
+    return acceptedExternalSends;
+  }
+
+  public int incrementAcceptedExternalSends() {
+    return ++acceptedExternalSends;
+  }
+
+  public void setOutCountUpdated(boolean outCountUpdated) {
+    this.outCountUpdated = outCountUpdated;
+  }
+
+  public boolean isOutCountUpdated() {
+    return outCountUpdated;
   }
 }

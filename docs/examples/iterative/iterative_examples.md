@@ -1,8 +1,10 @@
 # Iterative Examples
 
-In this example, we discuss about how to write an iterative example using Twister2 Executor
-API. Here we have a SourceTask which is just doing the generation of data and it is named as 
-IterativeSourceTask and the SinkTask which receives the messages is named as the ParitionTask. 
+The iterative task graph computation is mainly useful to perform the iterative computation process 
+in the big data world. It generally captures the complex relationship between the entities. In this 
+example, we discuss about how to write an iterative example using Twister2 Executor API. Here we 
+have a SourceTask which is just doing the generation of data and it is named as IterativeSourceTask 
+and the SinkTask which receives the messages is named as the ParitionTask. 
 
 
 ```java
@@ -97,9 +99,10 @@ public void execute() {
 
 ```
 
-Run the example using the following command
 
-```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.IterativeJob 
+### To Run Iterative Task Graph Example
 
-```
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.IterativeJob
+
+
+[Iterative Task Graph Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/task/batch/IterativeJob.java)

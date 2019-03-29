@@ -135,7 +135,7 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
   }
 
   @Override
-  public InputSplitAssigner getInputSplitAssigner(FileInputSplit<byte[]>[] inputSplits) {
+  public InputSplitAssigner<byte[]> getInputSplitAssigner(FileInputSplit<byte[]>[] inputSplits) {
     return new LocatableInputSplitAssigner(inputSplits);
   }
 

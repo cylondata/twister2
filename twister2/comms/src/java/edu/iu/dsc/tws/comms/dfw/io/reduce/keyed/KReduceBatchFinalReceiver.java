@@ -13,22 +13,17 @@ package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
-/**
- * Created by pulasthi on 9/20/18.
- */
 public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
-  private static final Logger LOG = Logger.getLogger(KReduceBatchFinalReceiver.class.getName());
-
   /**
    * Final receiver that get the reduced values for the operation
    */
@@ -42,36 +37,39 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
   }
 
   @Override
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
+  }
+
+  @Override
   @SuppressWarnings({"unchecked", "rawtypes"})
   public boolean progress() {
     boolean needsFurtherProgress = false;
-    boolean sourcesFinished = false;
+    boolean sourcesFinished;
     for (int target : messages.keySet()) {
-
       if (batchDone.get(target)) {
         continue;
       }
 
       sourcesFinished = isSourcesFinished(target);
-      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
+      if (!sourcesFinished && !(dataFlowOperation.isDelegateComplete()
           && messages.get(target).isEmpty())) {
         needsFurtherProgress = true;
       }
 
-      if (sourcesFinished && dataFlowOperation.isDelegeteComplete()) {
+      if (sourcesFinished && dataFlowOperation.isDelegateComplete()) {
         batchDone.put(target, true);
         //TODO: check if we can simply remove the data, that is use messages.remove()
         bulkReceiver.receive(target, new ReduceIterator(messages.get(target)));
       }
-
-
     }
 
     return needsFurtherProgress;
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private class ReduceIterator<T extends Pair> implements Iterator<Pair> {
+  private class ReduceIterator implements Iterator<Object> {
 
     private Map<Object, Queue<Object>> messageMap;
     private Queue<Object> keyList = new LinkedList<>();
@@ -87,10 +85,11 @@ public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
     }
 
     @Override
-    public ImmutablePair next() {
+    public Tuple next() {
       Object key = keyList.poll();
       Queue<Object> value = messageMap.remove(key);
-      return new ImmutablePair(key, value.poll());
+      return new Tuple(key, value.poll(), dataFlowOperation.getKeyType(),
+          dataFlowOperation.getDataType());
     }
   }
 }

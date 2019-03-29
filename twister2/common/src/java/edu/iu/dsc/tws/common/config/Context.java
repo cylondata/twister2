@@ -74,6 +74,7 @@ public class Context {
 
 
   public static final String JOB_NAME = "twister2.job.name";
+  public static final String JOB_OBJECT = "twister2.job.object";
 
   // an internal property to represent the container id
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
@@ -97,8 +98,9 @@ public class Context {
   public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
   public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
 
-  public static final String TWISTER2_VERSION = "0.1.0";
+  public static final String TWISTER2_VERSION = "0.2.0";
 
+  public static final String TWISTER2_DIRECT_EDGE = "direct";
 
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);

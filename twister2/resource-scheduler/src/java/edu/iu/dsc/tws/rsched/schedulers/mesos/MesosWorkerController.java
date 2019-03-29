@@ -15,11 +15,13 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -34,6 +36,7 @@ public class MesosWorkerController implements IWorkerController {
   private String jobName;
   private JobAPI.Job job;
   private String workerIp;
+  private int workerIdd;
   private int workerPort;
   private int numberOfWorkers;
   private int containerPerWorker;
@@ -47,6 +50,7 @@ public class MesosWorkerController implements IWorkerController {
     this.job = job;
     this.workerIp = ip;
     this.workerPort = port;
+    workerIdd = workerID;
     numberOfWorkers = MesosContext.numberOfContainers(config) - 1;
     containerPerWorker = MesosContext.containerPerWorker(config);
     workerList = new ArrayList<>();
@@ -54,6 +58,21 @@ public class MesosWorkerController implements IWorkerController {
         SchedulerContext.getNodeInfo(config, ip));
   }
 
+  public MesosWorkerController(Config cfg, JobAPI.Job job, String ip, int port, int workerID,
+                               JobAPI.ComputeResource computeResource,
+                               Map<String, Integer> additionalPorts) {
+    config = cfg;
+    this.jobName = job.getJobName();
+    this.job = job;
+    this.workerIp = ip;
+    this.workerPort = port;
+    workerIdd = workerID;
+    numberOfWorkers = MesosContext.numberOfContainers(config) - 1;
+    containerPerWorker = MesosContext.containerPerWorker(config);
+    workerList = new ArrayList<>();
+    thisWorker = WorkerInfoUtils.createWorkerInfo(workerID, ip, port,
+        SchedulerContext.getNodeInfo(config, ip), computeResource, additionalPorts);
+  }
   /**
    * covert the given string to ip address object
    */
@@ -78,8 +97,11 @@ public class MesosWorkerController implements IWorkerController {
 
   @Override
   public int getNumberOfWorkers() {
-    return zkWorkerController.getNumberOfWorkers();
+    return job.getNumberOfWorkers();
   }
+//  public int getNumberOfWorkers() {
+//    return zkWorkerController.getNumberOfWorkers();
+//  }
 
   @Override
   public List<JobMasterAPI.WorkerInfo> getJoinedWorkers() {
@@ -102,14 +124,14 @@ public class MesosWorkerController implements IWorkerController {
         new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers,
             nodeInfo, computeResource);
 
-    zkWorkerController.initialize();
+    zkWorkerController.initialize(workerIdd);
     long duration = System.currentTimeMillis() - startTime;
     LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerInfo()
         + " took: " + duration + "ms");
   }
 
   @Override
-  public List<JobMasterAPI.WorkerInfo> getAllWorkers() {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException {
 
     LOG.info("Waiting for " + numberOfWorkers + " workers to join .........");
 
@@ -136,8 +158,8 @@ public class MesosWorkerController implements IWorkerController {
   }
 
   @Override
-  public boolean waitOnBarrier() {
-    return zkWorkerController.waitOnBarrier();
+  public void waitOnBarrier() throws TimeoutException {
+    zkWorkerController.waitOnBarrier();
   }
 
   /**

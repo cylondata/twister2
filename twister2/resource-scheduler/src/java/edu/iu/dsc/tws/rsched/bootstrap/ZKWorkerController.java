@@ -34,6 +34,7 @@ import org.apache.curator.utils.CloseableUtils;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
@@ -192,6 +193,81 @@ public class ZKWorkerController implements IWorkerController {
     }
   }
 
+  /**
+   * connect to the server
+   * get a workerID for this worker
+   * append this worker info to the body of job znode
+   * create an ephemeral znode for this client
+   * @return
+   */
+  public boolean initialize(int workerID) {
+
+    try {
+      String zkServerAddresses = ZKContext.zooKeeperServerAddresses(config);
+      client = CuratorFrameworkFactory.newClient(zkServerAddresses,
+          new ExponentialBackoffRetry(1000, 3));
+      client.start();
+
+      String barrierPath = ZKUtil.constructBarrierPath(config, jobName);
+      barrier = new DistributedBarrier(client, barrierPath);
+
+      String daiPathForWorkerID = ZKUtil.constructDaiPathForWorkerID(config, jobName);
+      daiForWorkerID = new DistributedAtomicInteger(client,
+          daiPathForWorkerID, new ExponentialBackoffRetry(1000, 3));
+
+      String daiPathForBarrier = ZKUtil.constructDaiPathForBarrier(config, jobName);
+      daiForBarrier = new DistributedAtomicInteger(client,
+          daiPathForBarrier, new ExponentialBackoffRetry(1000, 3));
+
+      // check whether the job node exist, if not,
+      // it means, this worker is the first worker to join
+      // get a workerID, create the jobZnode, append worker info
+      if (client.checkExists().forPath(jobPath) == null) {
+
+        workerInfo = WorkerInfoUtils.createWorkerInfo(
+            workerID, workerIP, workerPort, nodeInfo, computeResource);
+
+        createWorkerZnode();
+        appendWorkerInfo();
+
+        // if the job node exists, it is not the first worker
+        // check whether this worker joined the job before
+        // whether it is coming from a failure
+      } else {
+        List<WorkerInfo> workers = parseJobZNode();
+        workerInfo = getIfExists(workers);
+
+        // this worker is coming from a failure,
+        // use the workerInfo from job znode, construct worker znode only
+        if (workerInfo != null) {
+          createWorkerZnode();
+          LOG.warning("Worker is coming from a failure. It is using the previous job znode data: "
+              + workerInfo);
+
+          // it has not joined before,
+          // create workerID, append its info to the jobZnode
+        } else {
+          workerInfo = WorkerInfoUtils.createWorkerInfo(
+              workerID, workerIP, workerPort, nodeInfo, computeResource);
+
+          createWorkerZnode();
+          appendWorkerInfo();
+        }
+      }
+
+      // We childrenCache children data for parent path.
+      // So we will listen for all workers in the job
+      childrenCache = new PathChildrenCache(client, jobPath, true);
+      childrenCache.start();
+
+      LOG.info("This worker: " + workerInfo + " initialized successfully.");
+
+      return true;
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Exception when initializing ZKWorkerController", e);
+      return false;
+    }
+  }
   @Override
   public WorkerInfo getWorkerInfo() {
     return workerInfo;
@@ -401,7 +477,7 @@ public class ZKWorkerController implements IWorkerController {
    * return null if the timeLimit is reached or en exception is thrown while waiting
    */
   @Override
-  public List<WorkerInfo> getAllWorkers() {
+  public List<WorkerInfo> getAllWorkers() throws TimeoutException {
 
     long timeLimit = ControllerContext.maxWaitTimeForAllToJoin(config);
     long duration = 0;
@@ -418,8 +494,8 @@ public class ZKWorkerController implements IWorkerController {
       }
     }
 
-    LOG.warning("Waited for all workers to join, but timeLimit has been reached.");
-    return null;
+    throw new TimeoutException("All workers have not joined the job on the specified time limit: "
+        + timeLimit + "ms.");
   }
 
   /**
@@ -504,9 +580,13 @@ public class ZKWorkerController implements IWorkerController {
    * @return
    */
   @Override
-  public boolean waitOnBarrier() {
+  public void waitOnBarrier() throws TimeoutException {
 
-    return incrementBarrierDAI(0, ControllerContext.maxWaitTimeOnBarrier(config));
+    boolean allArrived = incrementBarrierDAI(0, ControllerContext.maxWaitTimeOnBarrier(config));
+    if (!allArrived) {
+      throw new TimeoutException("All workers have not arrived at the barrier on the time limit: "
+          + ControllerContext.maxWaitTimeOnBarrier(config) + "ms.");
+    }
   }
 
 

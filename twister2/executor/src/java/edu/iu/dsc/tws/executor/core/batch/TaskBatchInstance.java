@@ -13,9 +13,7 @@ package edu.iu.dsc.tws.executor.core.batch;
 
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -23,11 +21,14 @@ import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
+import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
  * The class represents the instance of the executing task
@@ -107,12 +108,12 @@ public class TaskBatchInstance implements INodeInstance {
   /**
    * Output edges
    */
-  private Set<String> outputEdges = new HashSet<>();
+  private Map<String, String> outputEdges;
 
   /**
    * Input edges
    */
-  private Set<String> inputEdges = new HashSet<>();
+  private Map<String, String> inputEdges;
 
   /**
    * Task context
@@ -129,11 +130,14 @@ public class TaskBatchInstance implements INodeInstance {
    */
   private int highWaterMark;
 
+  private TaskSchedulePlan taskSchedule;
+
 
   public TaskBatchInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                            BlockingQueue<IMessage> outQueue, Config config, String tName,
                            int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
-                           Set<String> inEdges, Set<String> outEdges) {
+                           Map<String, String> inEdges, Map<String, String> outEdges,
+                           TaskSchedulePlan taskSchedule) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
@@ -148,12 +152,13 @@ public class TaskBatchInstance implements INodeInstance {
     this.outputEdges = outEdges;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
+    this.taskSchedule = taskSchedule;
   }
 
   public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
-    taskContext = new TaskContext(taskIndex, taskId, taskName, parallelism, workerId,
-        outputCollection, nodeConfigs);
+    taskContext = new TaskContextImpl(taskIndex, taskId, taskName, parallelism, workerId,
+        outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule);
     task.prepare(cfg, taskContext);
   }
 
@@ -223,6 +228,7 @@ public class TaskBatchInstance implements INodeInstance {
 
   /**
    * Progress the communication and return weather we need to further progress
+   *
    * @return true if further progress is needed
    */
   public boolean communicationProgress(Map<String, IParallelOperation> ops) {
@@ -243,6 +249,13 @@ public class TaskBatchInstance implements INodeInstance {
   @Override
   public INode getNode() {
     return task;
+  }
+
+  @Override
+  public void close() {
+    if (task instanceof Closable) {
+      ((Closable) task).close();
+    }
   }
 
   public BlockingQueue<IMessage> getInQueue() {

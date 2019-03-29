@@ -49,6 +49,9 @@ public interface InputSplit<OT> extends Serializable {
    */
   void open() throws IOException;
 
+  void open(Config config) throws IOException;
+
+
   /**
    * Method used to check if the end of the input is reached.
    * <p>

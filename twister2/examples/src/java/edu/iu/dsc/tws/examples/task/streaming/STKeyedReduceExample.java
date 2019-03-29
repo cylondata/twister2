@@ -16,15 +16,17 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
+import edu.iu.dsc.tws.task.api.BaseSource;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.typed.streaming.SKeyedReduceCompute;
 
+/**
+ * todo keyedreduce for streaming is not applicable. This will be removed,
+ * or used only with windowing
+ */
 public class STKeyedReduceExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(STKeyedReduceExample.class.getName());
@@ -35,45 +37,26 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     Op operation = Op.SUM;
-    DataType keyType = DataType.OBJECT;
+    DataType keyType = DataType.INTEGER;
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    BaseStreamSource g = new KeyedSourceStreamTask(edge);
-    BaseStreamSink r = new KeyedReduceSinkTask();
+    BaseSource g = new SourceTask(edge, true);
+    ISink r = new KeyedReduceSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class KeyedReduceSinkTask extends BaseStreamSink {
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  protected static class KeyedReduceSinkTask
+      extends SKeyedReduceCompute<Integer, int[]> implements ISink {
+
     private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
-      if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        if (object instanceof KeyedContent) {
-          KeyedContent content = (KeyedContent) object;
-          Object key = content.getKey();
-          Object value = content.getValue();
-          experimentData.setOutput(value);
-          try {
-            verify(OperationNames.KEYED_REDUCE);
-          } catch (VerificationException e) {
-            LOG.info("Exception Message : " + e.getMessage());
-          }
-
-          /*if (value instanceof int[]) {
-            LOG.info("Message Received, Key : " + key + ", Value : "
-                + Arrays.toString((int[]) value));
-          }*/
-        }
-      }
-      count++;
+    public boolean keyedReduce(Tuple<Integer, int[]> content) {
       return true;
     }
   }
-
 }

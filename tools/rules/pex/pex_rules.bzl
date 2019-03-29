@@ -232,7 +232,7 @@ def _pex_binary_impl(ctx):
           # PEX-related environment variables (like PEX_VERBOSE) from the
           # system.
           # Also, what if python is actually in /opt or something?
-          'PATH': '/bin:/usr/bin:/usr/local/bin',
+          'PATH': '/usr/local/bin:/bin:/usr/bin:/usr/local/bin',
           'PEX_VERBOSE': str(ctx.attr.pex_verbosity),
           'PEX_ROOT': '.pex',  # So pex doesn't try to unpack into $HOME/.pex
       },

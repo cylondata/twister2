@@ -24,7 +24,7 @@ import org.apache.commons.cli.Option;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public final class Utils {
@@ -183,7 +183,7 @@ public final class Utils {
 
     Set<Integer> tasksOfExec = plan.getChannelsOfExecutor(exec);
     for (int i = 0; i < noOfTasks; i++) {
-      if (tasksOfExec.contains(i + total)) {
+      if (tasksOfExec != null && tasksOfExec.contains(i + total)) {
         out.add(i + total);
       }
     }

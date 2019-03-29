@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
@@ -192,7 +193,13 @@ public final class AuroraWorkerStarter {
     LOG.info("Waiting for " + numberOfWorkers + " workers to join .........");
 
     long startTime = System.currentTimeMillis();
-    List<JobMasterAPI.WorkerInfo> workerList = zkWorkerController.getAllWorkers();
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = zkWorkerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
     long duration = System.currentTimeMillis() - startTime;
 
     if (workerList == null) {

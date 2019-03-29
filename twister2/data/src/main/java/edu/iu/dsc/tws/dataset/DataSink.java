@@ -26,7 +26,7 @@ public class DataSink<T> {
 
   private OutputWriter<T> outputWriter;
 
-  public DataSink(Config config, DataSet<T> dataSet) {
+  public DataSink(Config config, DataObjectImpl<T> dataSet) {
   }
 
   public DataSink(Config config, OutputWriter<T> output) {

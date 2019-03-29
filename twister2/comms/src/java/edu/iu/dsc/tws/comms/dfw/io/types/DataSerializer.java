@@ -139,7 +139,7 @@ public final class DataSerializer {
     //TODO check if the commented getMessageBytes is faster
   }
 
-  private static boolean copyLong(long[] data, ByteBuffer targetBuffer, SerializeState state) {
+  public static boolean copyLong(long[] data, ByteBuffer targetBuffer, SerializeState state) {
     int totalBytes = state.getTotalBytes();
     int remainingCapacity = targetBuffer.remaining();
     int bytesCopied = state.getBytesCopied();
@@ -155,7 +155,7 @@ public final class DataSerializer {
     return updateState(state, totalBytes, canCopy, remainingToCopy, bytesCopied, Long.BYTES);
   }
 
-  private static boolean copyShort(short[] data, ByteBuffer targetBuffer, SerializeState state) {
+  public static boolean copyShort(short[] data, ByteBuffer targetBuffer, SerializeState state) {
     int totalBytes = state.getTotalBytes();
     int remainingCapacity = targetBuffer.remaining();
     int bytesCopied = state.getBytesCopied();
@@ -172,7 +172,7 @@ public final class DataSerializer {
     return updateState(state, totalBytes, canCopy, remainingToCopy, bytesCopied, Short.BYTES);
   }
 
-  private static boolean copyDoubles(double[] data, ByteBuffer targetBuffer, SerializeState state) {
+  public static boolean copyDoubles(double[] data, ByteBuffer targetBuffer, SerializeState state) {
     int totalBytes = state.getTotalBytes();
     int remainingCapacity = targetBuffer.remaining();
     int bytesCopied = state.getBytesCopied();
@@ -188,7 +188,7 @@ public final class DataSerializer {
     return updateState(state, totalBytes, canCopy, remainingToCopy, bytesCopied, Double.BYTES);
   }
 
-  private static boolean copyIntegers(int[] data, ByteBuffer targetBuffer, SerializeState state) {
+  public static boolean copyIntegers(int[] data, ByteBuffer targetBuffer, SerializeState state) {
     int totalBytes = state.getTotalBytes();
     int remainingCapacity = targetBuffer.remaining();
     int bytesCopied = state.getBytesCopied();
@@ -209,7 +209,7 @@ public final class DataSerializer {
    *
    * @return true if all the data was copied and false if only a part was copied
    */
-  private static boolean copyDataBytes(ByteBuffer targetBuffer, SerializeState state) {
+  public static boolean copyDataBytes(ByteBuffer targetBuffer, SerializeState state) {
     int totalBytes = state.getTotalBytes();
     int remainingCapacity = targetBuffer.remaining();
     int bytesCopied = state.getBytesCopied();

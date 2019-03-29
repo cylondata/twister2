@@ -25,12 +25,16 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.task.api.ICheckPointable;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
+import edu.iu.dsc.tws.task.api.Closable;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
 import edu.iu.dsc.tws.task.api.Snapshot;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SinkStreamingInstance implements INodeInstance {
 
@@ -39,7 +43,7 @@ public class SinkStreamingInstance implements INodeInstance {
   /**
    * The actual streamingTask executing
    */
-  private ISink streamingTask;
+  private ICompute streamingTask;
 
   /**
    * All the inputs will come through a single queue, otherwise we need to look
@@ -87,9 +91,16 @@ public class SinkStreamingInstance implements INodeInstance {
    */
   private int workerId;
 
-  public SinkStreamingInstance(ISink streamingTask, BlockingQueue<IMessage> streamingInQueue,
+  /**
+   * The input edges
+   */
+  private Map<String, String> inEdges;
+  private TaskSchedulePlan taskSchedulePlan;
+
+  public SinkStreamingInstance(ICompute streamingTask, BlockingQueue<IMessage> streamingInQueue,
                                Config config, String tName, int tId, int tIndex, int parallel,
-                               int wId, Map<String, Object> cfgs, Set<String> inEdges) {
+                               int wId, Map<String, Object> cfgs, Map<String, String> inEdges,
+                               TaskSchedulePlan taskSchedulePlan) {
     this.streamingTask = streamingTask;
     this.streamingInQueue = streamingInQueue;
     this.config = config;
@@ -99,6 +110,8 @@ public class SinkStreamingInstance implements INodeInstance {
     this.nodeConfigs = cfgs;
     this.workerId = wId;
     this.taskName = tName;
+    this.inEdges = inEdges;
+    this.taskSchedulePlan = taskSchedulePlan;
     if (CheckpointContext.getCheckpointRecovery(config)) {
       try {
         LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
@@ -112,15 +125,8 @@ public class SinkStreamingInstance implements INodeInstance {
   }
 
   public void prepare(Config cfg) {
-    TaskContext taskContext = new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
-        parallelism, workerId, nodeConfigs);
-
-    streamingTask.prepare(cfg, taskContext);
-
-
-    if (streamingTask instanceof SinkCheckpointableTask) {
-      ((SinkCheckpointableTask) streamingTask).connect(config, taskContext);
-    }
+    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, streamingTaskId, taskName,
+        parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
   }
 
   public boolean execute() {
@@ -165,6 +171,13 @@ public class SinkStreamingInstance implements INodeInstance {
   @Override
   public INode getNode() {
     return streamingTask;
+  }
+
+  @Override
+  public void close() {
+    if (streamingTask instanceof Closable) {
+      ((Closable) streamingTask).close();
+    }
   }
 
   public void registerInParallelOperation(String edge, IParallelOperation op) {

@@ -26,7 +26,7 @@ package edu.iu.dsc.tws.comms.utils;
 import java.util.ArrayList;
 import java.util.Comparator;
 
-import edu.iu.dsc.tws.comms.shuffle.KeyValue;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 public class Heap<K, V> {
 
@@ -42,7 +42,7 @@ public class Heap<K, V> {
     this.keyComparator = kComparator;
   }
 
-  public void insert(KeyValue<K, V> data, int listNo) {
+  public void insert(Tuple<K, V> data, int listNo) {
     this.heapArr.add(new HeapNode<>(data, listNo, this.keyComparator));
     this.bubbleUp();
   }

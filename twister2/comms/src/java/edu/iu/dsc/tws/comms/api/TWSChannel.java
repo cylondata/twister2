@@ -70,4 +70,11 @@ public interface TWSChannel {
    * Close the channel
    */
   void close();
+
+  /**
+   * Release the buffers for worker and edge
+   * @param wId worker
+   * @param e edge
+   */
+  void releaseBuffers(int wId, int e);
 }

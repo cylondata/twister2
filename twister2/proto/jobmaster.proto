@@ -50,7 +50,7 @@ message NodeInfo {
 }
 
 //
-// Networking Data about a Twister2 Worker
+// Information about a worker in a job
 //
 message WorkerInfo {
     oneof required {
@@ -61,21 +61,39 @@ message WorkerInfo {
 
     NodeInfo nodeInfo = 4;
     tws.proto.job.ComputeResource computeResource = 5;
+    map<string, int32> additionalPort = 6;
+}
+
+// this message is sent when the worker is about to start
+// it registers itself with the job master
+// its status in job master becomes: STARTING when this message is received
+message RegisterWorker {
+    oneof idRequired {
+        int32 workerID = 1;
+    }
+    WorkerInfo workerInfo = 2;
+}
+
+message RegisterWorkerResponse {
+    oneof idRequired {
+        int32 workerID = 1;
+    }
+    oneof resultRequired {
+        bool result = 2;
+    }
 }
 
 // a worker informs the master that its state has changed
-// if the worker state becomes STARTING,
-//   the worker has to provide its IP address and the port number
-//   optionally its node info: nodeIP, rackName and dataCenterName
-// for other states, just the workerID and newState is enough
+// this message is not sent for STARTING state, it is covered by RegisterWorker message
+// this message is sent for states: RUNNING and COMPLETED
+// later on, we may add more states
 message WorkerStateChange {
     oneof idRequired {
         int32 workerID = 1;
     }
     oneof stateRequired {
-        WorkerState newState = 2;
+        WorkerState state = 2;
     }
-    WorkerInfo workerInfo = 3;
 }
 
 // sent by the master to the worker
@@ -85,7 +103,7 @@ message WorkerStateChangeResponse {
         int32 workerID = 1;
     }
     oneof stateRequired {
-        WorkerState sentState = 2;
+        WorkerState state = 2;
     }
 }
 
@@ -128,3 +146,55 @@ message BarrierResponse {
         int32 workerID = 1;
     }
 }
+
+// Driver to workers communication related messages
+// let the the workers know that
+// the number of workers in the job has hanged
+// if change is positive, new workers added
+// if change is negative, some worker instances removed
+// numberOfWorkers shows the updated numberOfWorkers in the job
+message WorkersScaled {
+    oneof changeRequired {
+        int32 change = 1;
+    }
+    oneof numberOfWorkersRequired {
+        int32 numberOfWorkers = 2;
+    }
+}
+
+// Job master will send this message to all workers
+// when all workers registered with the job
+//
+// it also sends this message to all workers
+// when all new workers have joined after the scale up
+message WorkersJoined {
+    int32 numberOfWorkers = 2;
+    repeated WorkerInfo worker = 3;
+}
+
+// Driver to worker message
+// Driver can send any byte array to workers including serialized protocol buffer messages
+// It is encoded as a byte array
+message DriverMessage {
+    bytes data = 1;
+}
+
+// Worker to Driver message
+// Worker can send any byte array to the driver including serialized protocol buffer messages
+message WorkerMessage {
+    bytes data = 1;
+    oneof required {
+        int32 workerID = 2;
+    }
+
+}
+
+// WorkerToDriver response message
+// if it fails, reason will have a string explaining the problem
+message WorkerMessageResponse {
+    oneof required {
+        bool succeeded = 1;
+    }
+    string reason = 2;
+}
+

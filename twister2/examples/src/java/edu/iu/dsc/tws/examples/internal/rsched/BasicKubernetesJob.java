@@ -72,7 +72,6 @@ public final class BasicKubernetesJob {
     // load the job parameters from client.yaml file
     // It gets: job-name, worker-class and ComputeResource list from that file
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, jobConfig);
-    LOG.info("The job to be submitted: \n" + twister2Job);
 
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);

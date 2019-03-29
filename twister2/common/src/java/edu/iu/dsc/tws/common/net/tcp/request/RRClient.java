@@ -36,6 +36,12 @@ public class RRClient {
   private static final Logger LOG = Logger.getLogger(RRClient.class.getName());
 
   /**
+   * Workers use this ID in their first message
+   * when they request ID from Job Master
+   */
+  public static final int WORKER_UNASSIGNED_ID = -1000;
+
+  /**
    * The underlying client
    */
   private Client client;
@@ -58,14 +64,14 @@ public class RRClient {
   /**
    * The client id
    */
-  private int workerId;
+  private int workerID;
 
   /**
    * Connection handler
    */
   private ConnectHandler connectHandler;
 
-  private Object responseWaitObject = new Object();
+  private final Object responseWaitObject = new Object();
   private RequestID requestIdOfWaitedResponse = null;
 
   /**
@@ -76,9 +82,13 @@ public class RRClient {
   public RRClient(String host, int port, Config cfg, Progress looper,
                   int wId, ConnectHandler cHandler) {
     this.connectHandler = cHandler;
-    this.workerId = wId;
+    this.workerID = wId;
     this.loop = looper;
     client = new Client(host, port, cfg, looper, new Handler(), false);
+  }
+
+  public void setWorkerID(int workerID) {
+    this.workerID = workerID;
   }
 
   public boolean connect() {
@@ -116,14 +126,14 @@ public class RRClient {
           "Already sending another message.", null);
     }
 
-    RequestID requestID = sendRequest(message);
-    requestIdOfWaitedResponse = requestID;
-    if (requestIdOfWaitedResponse == null) {
-      throw new BlockingSendException(BlockingSendFailureReason.ERROR_WHEN_TRYING_TO_SEND,
-          "Problem when trying to send the message.", null);
-    }
-
     synchronized (responseWaitObject) {
+      RequestID requestID = sendRequest(message);
+      requestIdOfWaitedResponse = requestID;
+      if (requestIdOfWaitedResponse == null) {
+        throw new BlockingSendException(BlockingSendFailureReason.ERROR_WHEN_TRYING_TO_SEND,
+            "Problem when trying to send the message.", null);
+      }
+
       try {
         responseWaitObject.wait(waitLimit);
         if (requestIdOfWaitedResponse != null) {
@@ -135,10 +145,10 @@ public class RRClient {
         throw new BlockingSendException(BlockingSendFailureReason.EXCEPTION_WHEN_WAITING,
             "Exception when waiting the response.", e);
       }
+      return requestID;
     }
-
-    return requestID;
   }
+
   public RequestID sendRequest(Message message) {
     if (!client.isConnected()) {
       return null;
@@ -159,7 +169,7 @@ public class RRClient {
     // pack the name of the message
     ByteUtils.packString(messageType, buffer);
     // pack the worker id
-    buffer.putInt(workerId);
+    buffer.putInt(workerID);
     // pack data
     buffer.put(data);
 
@@ -258,9 +268,10 @@ public class RRClient {
         }
 
         // notify if this response is waited
-        if (requestIdOfWaitedResponse != null && requestID.equals(requestIdOfWaitedResponse)) {
-          requestIdOfWaitedResponse = null;
-          synchronized (responseWaitObject) {
+
+        synchronized (responseWaitObject) {
+          if (requestID.equals(requestIdOfWaitedResponse)) {
+            requestIdOfWaitedResponse = null;
             responseWaitObject.notify();
           }
         }

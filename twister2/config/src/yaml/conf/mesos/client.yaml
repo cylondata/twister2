@@ -16,20 +16,29 @@ twister2.job.name: "basic-mesos"
 
 # A Twister2 job can have multiple sets of compute resources
 # Four fields are mandatory: cpu, ram, disk and instances
-# workersPerPod shows the number of workers on each pod in Kubernetes. May be omitted in other clusters.
-# instances must be divisible by workersPerPod, when workersPerPod is given
+# instances shows the number of compute resources to be started with this specification
+# workersPerPod shows the number of workers on each pod in Kubernetes.
+#    May be omitted in other clusters. default value is 1.
 worker.compute.resources:
-- cpu: 0.4  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+- cpu: 1  # number of cores for each worker, may be fractional such as 0.5 or 2.4
   ram: 1024 # ram for each worker as Mega bytes
   disk: 1.0 # volatile disk for each worker as Giga bytes
-  instances: 6 # number of worker instances with this specification
+  instances: 6 # number of compute resource instances with this specification
 #  workersPerPod: 2 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
 
-- cpu: 0.5  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+- cpu: 2  # number of cores for each worker, may be fractional such as 0.5 or 2.4
   ram: 1024 # ram for each worker as mega bytes
   disk: 1.0 # volatile disk for each worker as giga bytes. May be zero.
-  instances: 4 # number of worker instances with this specification
+  instances: 4 # number of compute resource instances with this specification
 #  workersPerPod: 2 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
+
+# by default each worker has one port
+# additional ports can be requested for all workers in a job
+# please provide the requested port names as a list
+twister2.worker.additional.ports: ["port1", "port2", "port3"]
+
+# driver class to run
+twister2.job.driver.class: "edu.iu.dsc.tws.examples.internal.rsched.DriverExample"
 
 # nfs server address
 nfs.server.address: "149.165.150.81"
@@ -72,3 +81,7 @@ datacenters.list:
 racks.list:
 - blue-rack: ['10.0.0.40', '10.0.0.41', '10.0.0.42', '10.0.0.43', '10.0.0.44', ]
 - green-rack: ['node11.ip', 'node12.ip', 'node13.ip']
+
+# If we need to start the client in remote debugger mode enable this configuration.
+# You can change the address port to different one if needed.
+# twister2.client.debug: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006'

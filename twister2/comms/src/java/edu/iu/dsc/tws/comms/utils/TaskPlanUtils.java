@@ -26,7 +26,7 @@ package edu.iu.dsc.tws.comms.utils;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 
 public final class TaskPlanUtils {
   private TaskPlanUtils() {
@@ -37,7 +37,7 @@ public final class TaskPlanUtils {
     Set<Integer> tasksOfThisExec = new HashSet<>();
 
     for (int t : tasks) {
-      if (allTasksOfThisExec.contains(t)) {
+      if (allTasksOfThisExec != null && allTasksOfThisExec.contains(t)) {
         tasksOfThisExec.add(t);
       }
     }
@@ -52,5 +52,9 @@ public final class TaskPlanUtils {
       workersOfTasks.add(w);
     }
     return workersOfTasks;
+  }
+
+  public static Set<Integer> getThisWorkerTasks(TaskPlan plan) {
+    return plan.getChannelsOfExecutor(plan.getThisExecutor());
   }
 }
