@@ -68,10 +68,7 @@ public class DirectBatchFinalReceiver implements MessageReceiver {
    */
   private int thisWorker;
 
-  /**
-   * sources for this operation
-   */
-  private Set<Integer> sources;
+  private Set<Integer> targets;
 
   public DirectBatchFinalReceiver(BulkReceiver receiver) {
     this.receiver = receiver;
@@ -82,7 +79,7 @@ public class DirectBatchFinalReceiver implements MessageReceiver {
     executor = op.getTaskPlan().getThisExecutor();
     thisWorker = op.getTaskPlan().getThisExecutor();
     this.operation = op;
-    this.sources = op.getSources();
+    this.targets = expectedIds.keySet();
 
     // lists to keep track of messages for destinations
     for (int d : expectedIds.keySet()) {
@@ -159,6 +156,9 @@ public class DirectBatchFinalReceiver implements MessageReceiver {
         } else {
           needsFurtherProgress = true;
         }
+      }
+      if (this.finishedTargets.isEmpty() || this.finishedTargets.size() < this.targets.size()) {
+        needsFurtherProgress = true;
       }
     } finally {
       lock.unlock();
