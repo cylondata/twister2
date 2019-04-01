@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.job;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.logging.Logger;
@@ -37,6 +38,7 @@ import edu.iu.dsc.tws.examples.ml.svm.tset.SvmTestMap;
 import edu.iu.dsc.tws.examples.ml.svm.tset.SvmTrainMap;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
+import edu.iu.dsc.tws.examples.ml.svm.util.ResultsSaver;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -94,13 +96,20 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
 
   private TwisterBatchContext twisterBatchContext;
 
+  private boolean testStatus = false;
+
 
   @Override
   public void execute(TwisterBatchContext tc) {
     this.twisterBatchContext = tc;
     initializeParameters();
+    long time = System.nanoTime();
     CachedTSet<double[][]> trainingData = loadTrainingData();
+    this.dataLoadingTime += ((double) (System.nanoTime() - time)) / NANO_TO_SEC;
+    time = System.nanoTime();
     CachedTSet<double[][]> testingData = loadTestingData();
+    this.dataLoadingTime += ((double) (System.nanoTime() - time)) / NANO_TO_SEC;
+    time = System.nanoTime();
     IterableMapTSet<double[][], double[]> svmTrainTset = trainingData
         .map(new SvmTrainMap(this.binaryBatchModel, this.svmJobParameters));
     //svmTset.addInput("trainingData", testingData);
@@ -114,22 +123,35 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
       return w1;
     });
 
-    CachedTSet<double[]> finalW = reduceTLink
-        .map(new ModelAverager(this.svmJobParameters.getParallelism())).cache();
-    double[] wFinal = finalW.getData().get(0);
-    this.binaryBatchModel.setW(wFinal);
-    LOG.info(String.format("Data : %s", Arrays.toString(wFinal)));
+    // TODO :: Handle the worker 0 senario for getOutput
 
-    IterableMapTSet<double[][], Double> svmTestTset = testingData
-        .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
-    ReduceTLink<Double> reduceTestLink = svmTestTset.reduce((t1, t2) -> {
-      double t = t1 + t2;
-      return t;
-    });
-    CachedTSet<Double> finalAcc = reduceTestLink
-        .map(new AccuracyAverager(this.svmJobParameters.getParallelism())).cache();
-    double acc = finalAcc.getData().get(0);
-    LOG.info(String.format("Training Accuracy : %f ", acc));
+    if (workerId == 0) {
+      CachedTSet<double[]> finalW = reduceTLink
+          .map(new ModelAverager(this.svmJobParameters.getParallelism())).cache();
+      double[] wFinal = finalW.getData().get(0);
+      this.binaryBatchModel.setW(wFinal);
+      this.trainingTime = ((double) (System.nanoTime() - time)) / NANO_TO_SEC;
+      LOG.info(String.format("Data : %s", Arrays.toString(wFinal)));
+      try {
+        saveResults();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+
+    if (testStatus) {
+      IterableMapTSet<double[][], Double> svmTestTset = testingData
+          .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
+      ReduceTLink<Double> reduceTestLink = svmTestTset.reduce((t1, t2) -> {
+        double t = t1 + t2;
+        return t;
+      });
+      CachedTSet<Double> finalAcc = reduceTestLink
+          .map(new AccuracyAverager(this.svmJobParameters.getParallelism())).cache();
+      double acc = finalAcc.getData().get(0);
+      LOG.info(String.format("Training Accuracy : %f ", acc));
+    }
+
   }
 
   /**
@@ -162,5 +184,12 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
         new DataLoadingTask(this.binaryBatchModel, this.svmJobParameters, "test"),
         this.dataStreamerParallelism).setName("testingDataSource").cache();
     return data;
+  }
+
+  public void saveResults() throws IOException {
+    ResultsSaver resultsSaver = new ResultsSaver(this.trainingTime, this.testingTime,
+        this.dataLoadingTime, this.dataLoadingTime + this.trainingTime + this.testingTime,
+        this.svmJobParameters, "tset");
+    resultsSaver.save();
   }
 }

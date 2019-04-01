@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.tset.BaseSource;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
@@ -70,14 +71,16 @@ public class DataLoadingTask extends BaseSource<double[][]> {
   public void prepare() {
     this.config = context.getConfig();
     this.parallelism = context.getParallelism();
+    LOG.info(String.format("%d, %d, %d", this.context.getIndex(),
+        this.svmJobParameters.getParallelism(), this.context.getParallelism()));
     // dimension is +1 features as the input data comes along with the label
     this.dimension = this.binaryBatchModel.getFeatures() + 1;
     if ("train".equalsIgnoreCase(this.dataType)) {
       this.dataSize = this.binaryBatchModel.getSamples();
       this.localPoints = new double[this.dataSize / (this.parallelism + 1)][this.dimension];
-      this.source = new DataSource(config, new LocalFixedInputPartitioner(new
-          Path(this.svmJobParameters.getTrainingDataDir()), this.parallelism, config,
-          this.dataSize), this.parallelism);
+      this.source = new DataSource(config, new LocalTextInputPartitioner(new
+          Path(this.svmJobParameters.getTrainingDataDir()), this.parallelism, config),
+          this.parallelism);
     }
     if ("test".equalsIgnoreCase(this.dataType)) {
       this.dataSize = this.svmJobParameters.getTestingSamples();
