@@ -59,6 +59,8 @@ public final class Constants {
 
     public static final String TASK_RUNNER = "task";
 
+    public static final String COMMS_RUNNER = "comms";
+
 
   }
 }

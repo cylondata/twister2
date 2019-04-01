@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.ml.svm.comms.InputDataStreamer;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdAdvancedRunner;
 import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdTsetRunner;
@@ -204,6 +205,9 @@ public final class SVMRunner {
     }
     if (svmRunType.equalsIgnoreCase(Constants.SimpleGraphConfig.TSET_RUNNER)) {
       jobBuilder.setWorkerClass(SvmSgdTsetRunner.class.getName());
+    }
+    if (svmRunType.equalsIgnoreCase(Constants.SimpleGraphConfig.COMMS_RUNNER)) {
+      jobBuilder.setWorkerClass(InputDataStreamer.class.getName());
     }
 
     jobBuilder.addComputeResource(cpus, ramMb, diskGb, instances);
