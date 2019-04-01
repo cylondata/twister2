@@ -16,6 +16,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -37,7 +38,7 @@ public class BDirectExample extends BenchWorker {
 
   private BDirect direct;
 
-  private boolean directDone = false;
+  private AtomicInteger pendingDirects = new AtomicInteger(0);
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
@@ -108,7 +109,7 @@ public class BDirectExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return directDone && sourcesDone && !direct.hasPending();
+    return pendingDirects.get() == 0 && sourcesDone && !direct.hasPending();
   }
 
   @Override
@@ -126,9 +127,9 @@ public class BDirectExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        directDone = true;
         return;
       }
+      pendingDirects.set(targets.size());
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
     }
 
@@ -140,7 +141,7 @@ public class BDirectExample extends BenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, null);
-      directDone = true;
+      pendingDirects.decrementAndGet();
       return true;
     }
   }
