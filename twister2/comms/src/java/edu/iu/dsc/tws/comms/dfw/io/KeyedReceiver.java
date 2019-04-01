@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -196,7 +195,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
       return false;
     }
 
-    if (object instanceof List) {
+    if (object instanceof AggregatedObjects) {
       List dataList = (List) object;
       Map<Object, List<Object>> tempList = new HashMap<>();
       for (Object dataEntry : dataList) {
@@ -214,9 +213,8 @@ public abstract class KeyedReceiver implements MessageReceiver {
         if (tempList.containsKey(key)) {
           tempList.get(key).add(tuple.getValue());
         } else {
-          tempList.put(key, new ArrayList<>());
+          tempList.put(key, new AggregatedObjects<>());
           tempList.get(key).add(tuple.getValue());
-
         }
 
       }

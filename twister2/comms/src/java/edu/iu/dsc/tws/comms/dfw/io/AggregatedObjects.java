@@ -12,47 +12,17 @@
 package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
-public class AggregatedObjects {
-  private int source;
-
-  private int destination;
-
-  private List<Object> dataList = new ArrayList<>();
-
-  private int flag = 0;
-
-  public AggregatedObjects(int source, int destination) {
-    this.source = source;
-    this.destination = destination;
+public class AggregatedObjects<T> extends ArrayList<T> {
+  public AggregatedObjects(int initialCapacity) {
+    super(initialCapacity);
   }
 
-  public boolean add(int dataFlag, Object data) {
-    if (flag == dataFlag) {
-      dataList.add(data);
-      return true;
-    }
-    return false;
+  public AggregatedObjects() {
   }
 
-  public int size() {
-    return dataList.size();
-  }
-
-  public int getFlag() {
-    return flag;
-  }
-
-  public Object getData(int index) {
-    return dataList.get(index);
-  }
-
-  public int getSource() {
-    return source;
-  }
-
-  public int getDestination() {
-    return destination;
+  public AggregatedObjects(Collection<? extends T> c) {
+    super(c);
   }
 }
