@@ -89,4 +89,9 @@ public class GroupedTSet<K, V> extends BatchBaseTSet<V> {
     this.name = n;
     return this;
   }
+
+  @Override
+  public String getName() {
+    return parent.getName();
+  }
 }

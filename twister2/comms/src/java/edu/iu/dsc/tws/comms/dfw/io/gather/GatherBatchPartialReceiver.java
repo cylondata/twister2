@@ -11,13 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.gather;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 
 public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
   private Map<Integer, Boolean> isEmptySent = new HashMap<>();
@@ -83,7 +83,7 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
         }
 
         if (found) {
-          List<Object> out = new ArrayList<>();
+          List<Object> out = new AggregatedObjects<>();
           for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
             Queue<Object> valueList = e.getValue();
             if (valueList.size() > 0) {

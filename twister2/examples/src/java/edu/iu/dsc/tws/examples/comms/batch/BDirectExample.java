@@ -37,7 +37,6 @@ public class BDirectExample extends BenchWorker {
 
   private BDirect direct;
 
-  private boolean directDone = false;
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
@@ -108,7 +107,7 @@ public class BDirectExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return directDone && sourcesDone && !direct.hasPending();
+    return sourcesDone && !direct.hasPending();
   }
 
   @Override
@@ -126,7 +125,6 @@ public class BDirectExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        directDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -140,7 +138,6 @@ public class BDirectExample extends BenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, null);
-      directDone = true;
       return true;
     }
   }

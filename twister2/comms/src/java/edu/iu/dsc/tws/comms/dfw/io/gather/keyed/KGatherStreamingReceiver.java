@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +19,7 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
@@ -35,7 +35,7 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
    * from the send queue we cannot put them back in if the send fails. So the send messages are
    * kept in the variable until the send method returns true.
    */
-  private List<Object> sendList = new ArrayList<>();
+  private List<Object> sendList = new AggregatedObjects<>();
 
   /**
    * Flags associated with the current sendList
@@ -109,7 +109,7 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
         if (tempList.containsKey(key)) {
           tempList.get(key).add(tuple.getValue());
         } else {
-          tempList.put(key, new ArrayList<>());
+          tempList.put(key, new AggregatedObjects<>());
           tempList.get(key).add(tuple.getValue());
 
         }
@@ -188,7 +188,7 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
 
     if (!sendList.isEmpty()) {
       if (dataFlowOperation.sendPartial(representSource, sendList, flags, target)) {
-        sendList = new ArrayList<>();
+        sendList = new AggregatedObjects<>();
         flags = 0;
       } else {
         needsProgress = true;
