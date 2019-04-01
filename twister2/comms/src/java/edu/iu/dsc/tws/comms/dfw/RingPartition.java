@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
@@ -379,7 +380,7 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
         return true;
       }
 
-      List<Object> messages = merged.computeIfAbsent(target, k -> new ArrayList<>());
+      List<Object> messages = merged.computeIfAbsent(target, k -> new AggregatedObjects<>());
 
       if (message instanceof List) {
         messages.addAll((Collection<?>) message);
@@ -554,7 +555,7 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
   private void swapToReady(int target, List<Object> data) {
     if (!readyToSend.containsKey(target)) {
       if (data.size() > 0) {
-        readyToSend.put(target, new ArrayList<>(data));
+        readyToSend.put(target, new AggregatedObjects<>(data));
       }
     } else {
       List<Object> ready = readyToSend.get(target);

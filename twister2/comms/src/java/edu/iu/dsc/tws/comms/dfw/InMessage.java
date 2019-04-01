@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -19,6 +18,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 public class InMessage {
@@ -147,6 +147,9 @@ public class InMessage {
    */
   private ReceivedState receivedState;
 
+  /**
+   * The worker id
+   */
   private int workerId;
 
   public InMessage(int originatingId, MessageType messageType,
@@ -159,7 +162,7 @@ public class InMessage {
     this.receivedState = ReceivedState.INIT;
     this.header = header;
     if (header.getNumberTuples() > 0) {
-      deserializedData = new ArrayList<>();
+      deserializedData = new AggregatedObjects<>();
     }
   }
 
@@ -173,7 +176,7 @@ public class InMessage {
     this.receivedState = ReceivedState.INIT;
     this.header = header;
     if (header.getNumberTuples() > 0) {
-      deserializedData = new ArrayList<>();
+      deserializedData = new AggregatedObjects<>();
     }
     this.workerId = workerId;
   }

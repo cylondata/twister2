@@ -39,6 +39,8 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -91,6 +93,29 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   private Lock lock = new ReentrantLock();
 
   private Map<Integer, RoutingParameters> routingParametersCache = new HashMap<>();
+
+  /**
+   * The key type
+   */
+  private MessageType keyType;
+
+  public DataFlowBroadcast(TWSChannel channel, int src, Set<Integer> dests,
+                           MessageReceiver finalRcvr, MessageType keyType,
+                           MessageType dataType) {
+    this.source = src;
+    this.destinations = dests;
+    this.finalReceiver = finalRcvr;
+    this.keyType = keyType;
+    this.type = dataType;
+
+    this.delegate = new ChannelDataFlowOperation(channel);
+
+    this.sourceSet = new HashSet<>();
+    sourceSet.add(src);
+
+    this.pendingFinishSources = new HashSet<>();
+    this.finishedSources = new HashSet<>();
+  }
 
   public DataFlowBroadcast(TWSChannel channel, int src, Set<Integer> dests,
                            MessageReceiver finalRcvr) {
@@ -222,7 +247,12 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
           new ArrayBlockingQueue<Pair<Object, OutMessage>>(
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor, type));
+      if (keyType == null) {
+        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor, type));
+      } else {
+        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(),
+            executor, keyType, type));
+      }
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -238,7 +268,13 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
-      deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), executor, type));
+      if (keyType == null) {
+        deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(),
+            executor, type));
+      } else {
+        deSerializerMap.put(e, new UnifiedKeyDeSerializer(new KryoSerializer(),
+            executor, keyType, type));
+      }
     }
 
     calculateRoutingParameters();
