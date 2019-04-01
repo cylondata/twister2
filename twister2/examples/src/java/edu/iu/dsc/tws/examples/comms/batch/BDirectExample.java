@@ -38,7 +38,6 @@ public class BDirectExample extends BenchWorker {
 
   private BDirect direct;
 
-  private AtomicInteger pendingDirects = new AtomicInteger(0);
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
@@ -109,7 +108,7 @@ public class BDirectExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return pendingDirects.get() == 0 && sourcesDone && !direct.hasPending();
+    return sourcesDone && !direct.hasPending();
   }
 
   @Override
@@ -129,7 +128,6 @@ public class BDirectExample extends BenchWorker {
       if (targets.isEmpty()) {
         return;
       }
-      pendingDirects.set(targets.size());
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
     }
 
@@ -141,7 +139,6 @@ public class BDirectExample extends BenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, null);
-      pendingDirects.decrementAndGet();
       return true;
     }
   }
