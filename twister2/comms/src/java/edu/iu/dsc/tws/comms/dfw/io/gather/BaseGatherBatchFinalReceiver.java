@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
+
 public abstract class BaseGatherBatchFinalReceiver extends BaseGatherBatchReceiver {
   /**
    * Final messages gathered
@@ -69,7 +71,7 @@ public abstract class BaseGatherBatchFinalReceiver extends BaseGatherBatchReceiv
       }
 
       if (found) {
-        List<Object> out = new ArrayList<>();
+        List<Object> out = new AggregatedObjects<>();
         for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           Queue<Object> valueList = e.getValue();
           if (valueList.size() > 0) {

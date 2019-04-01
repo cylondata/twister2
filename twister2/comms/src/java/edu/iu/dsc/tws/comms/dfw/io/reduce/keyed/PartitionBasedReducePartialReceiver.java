@@ -23,7 +23,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -42,6 +41,7 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
@@ -311,7 +311,7 @@ public class PartitionBasedReducePartialReceiver implements MessageReceiver {
    * @return a list of keyed content
    */
   private List<Object> createSendList(Map<Object, Object> keyValueMap) {
-    List<Object> results = new ArrayList<>();
+    List<Object> results = new AggregatedObjects<>();
     for (Map.Entry<Object, Object> entry : keyValueMap.entrySet()) {
       results.add(new Tuple(entry.getKey(), entry.getValue(), operation.getKeyType(),
           operation.getDataType()));

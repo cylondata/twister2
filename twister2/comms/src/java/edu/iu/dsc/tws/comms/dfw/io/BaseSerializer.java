@@ -162,7 +162,7 @@ public abstract class BaseSerializer implements MessageSerializer {
       throw new RuntimeException("This targetBuffer is too small to fit a message: " + remaining);
     }
 
-    if (payload instanceof List) {
+    if (payload instanceof AggregatedObjects) {
       List objectList = (List) payload;
       int startIndex = state.getCurrentObject();
       // we will copy until we have space left or we are have serialized all the objects
