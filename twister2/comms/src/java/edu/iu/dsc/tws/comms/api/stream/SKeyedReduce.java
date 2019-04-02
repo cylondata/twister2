@@ -11,19 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api.stream;
 
-import java.util.HashSet;
 import java.util.Set;
 
+import edu.iu.dsc.tws.comms.api.CommunicationContext;
 import edu.iu.dsc.tws.comms.api.Communicator;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowMultiReduce;
+import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.RingPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceMultiStreamingFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceMultiStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceStreamingFinalReceiver;
 
 /**
  * Streaming Keyed Partition Operation
@@ -32,7 +34,7 @@ public class SKeyedReduce {
   /**
    * The actual operation
    */
-  private DataFlowMultiReduce keyedReduce;
+  private DataFlowOperation keyedReduce;
 
   /**
    * Destination selector
@@ -69,15 +71,20 @@ public class SKeyedReduce {
     this.keyType = kType;
     this.dataType = dType;
 
-    Set<Integer> edges = new HashSet<>();
-    for (int i = 0; i < targets.size(); i++) {
-      edges.add(comm.nextEdge());
+    if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
+        CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
+      this.keyedReduce = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
+          plan, sources, targets,
+          new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
+          new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,
+          keyType, keyType, comm.nextEdge());
+    } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
+        CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
+      this.keyedReduce = new RingPartition(comm.getConfig(), comm.getChannel(),
+          plan, sources, targets, new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
+          new KReduceBatchPartialReceiver(0, fnc),
+          dataType, dataType, keyType, keyType, comm.nextEdge());
     }
-
-    this.keyedReduce = new DataFlowMultiReduce(comm.getConfig(), comm.getChannel(),
-        plan, sources, targets,
-        new ReduceMultiStreamingFinalReceiver(fnc, rcvr),
-        new ReduceMultiStreamingPartialReceiver(fnc), edges, keyType, dataType);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, targets);
   }
