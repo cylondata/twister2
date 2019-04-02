@@ -33,9 +33,9 @@ import edu.iu.dsc.tws.comms.dfw.io.types.ObjectKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ShortKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ShortPacker;
-import static edu.iu.dsc.tws.comms.dfw.io.MultiMessageSerializer.HEADER_SIZE;
 
 public final class DFWIOUtils {
+  private static final int HEADER_SIZE = 16;
 
   private DFWIOUtils() {
     throw new UnsupportedOperationException();
