@@ -117,12 +117,13 @@ public class KMeansWorker extends TaskWorker {
     KMeansDataObjectCompute centroidObjectCompute = new KMeansDataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, csize, dimension);
     KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink();
+    TaskGraphBuilder taskGraphBuilder2 = TaskGraphBuilder.newBuilder(config);
 
     //Add source, compute, and sink tasks to the task graph builder for the second task graph
-    taskGraphBuilder.addSource("centroidsource", dataFileReplicatedReadSource, parallelismValue);
-    ComputeConnection centroidComputeConnection = taskGraphBuilder.addCompute("centroidcompute",
+    taskGraphBuilder2.addSource("centroidsource", dataFileReplicatedReadSource, parallelismValue);
+    ComputeConnection centroidComputeConnection = taskGraphBuilder2.addCompute("centroidcompute",
         centroidObjectCompute, parallelismValue);
-    ComputeConnection secondGraphComputeConnection = taskGraphBuilder.addSink(
+    ComputeConnection secondGraphComputeConnection = taskGraphBuilder2.addSink(
         "centroidsink", centroidObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -130,10 +131,10 @@ public class KMeansWorker extends TaskWorker {
         DataType.OBJECT);
     secondGraphComputeConnection.direct("centroidcompute", Context.TWISTER2_DIRECT_EDGE,
         DataType.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
+    taskGraphBuilder2.setMode(OperationMode.BATCH);
 
     //Build the second taskgraph
-    DataFlowTaskGraph centroidsTaskGraph = taskGraphBuilder.build();
+    DataFlowTaskGraph centroidsTaskGraph = taskGraphBuilder2.build();
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
     //Actual execution for the second taskgraph
@@ -146,16 +147,18 @@ public class KMeansWorker extends TaskWorker {
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
 
+    TaskGraphBuilder taskGraphBuilder3 = TaskGraphBuilder.newBuilder(config);
+
     //Add source, and sink tasks to the task graph builder for the third task graph
-    taskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
-    ComputeConnection kMeanscomputeConnection = taskGraphBuilder.addSink(
+    taskGraphBuilder3.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
+    ComputeConnection kMeanscomputeConnection = taskGraphBuilder3.addSink(
         "kmeanssink", kMeansAllReduceTask, parallelismValue);
 
     //Creating the communication edges between the tasks for the third task graph
     kMeanscomputeConnection.allreduce("kmeanssource", "all-reduce",
         new CentroidAggregator(), DataType.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph kmeansTaskGraph = taskGraphBuilder.build();
+    taskGraphBuilder3.setMode(OperationMode.BATCH);
+    DataFlowTaskGraph kmeansTaskGraph = taskGraphBuilder3.build();
 
     //Perform the iterations from 0 to 'n' number of iterations
     for (int i = 0; i < iterations; i++) {
