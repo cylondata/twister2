@@ -31,12 +31,12 @@ import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
 
-public class DataFlowAllReduce implements DataFlowOperation {
-  private static final Logger LOG = Logger.getLogger(DataFlowAllReduce.class.getName());
+public class AllReduce implements DataFlowOperation {
+  private static final Logger LOG = Logger.getLogger(AllReduce.class.getName());
 
   private MToOneTree reduce;
 
-  private TReeBroadcast broadcast;
+  private TreeBroadcast broadcast;
   // the source tasks
   protected Set<Integer> sources;
 
@@ -67,12 +67,12 @@ public class DataFlowAllReduce implements DataFlowOperation {
 
   private boolean streaming;
 
-  public DataFlowAllReduce(TWSChannel chnl,
-                           Set<Integer> sources, Set<Integer> destination, int middleTask,
-                           ReduceFunction reduceFn,
-                           SingularReceiver finalRecv,
-                           int redEdge, int broadEdge,
-                           boolean strm) {
+  public AllReduce(TWSChannel chnl,
+                   Set<Integer> sources, Set<Integer> destination, int middleTask,
+                   ReduceFunction reduceFn,
+                   SingularReceiver finalRecv,
+                   int redEdge, int broadEdge,
+                   boolean strm) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
@@ -98,7 +98,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
     this.taskPlan = instancePlan;
     this.executor = taskPlan.getThisExecutor();
 
-    broadcast = new TReeBroadcast(channel, middleTask, destinations,
+    broadcast = new TreeBroadcast(channel, middleTask, destinations,
         new BCastReceiver(finalReceiver, streaming));
     broadcast.init(config, t, instancePlan, broadCastEdge);
 

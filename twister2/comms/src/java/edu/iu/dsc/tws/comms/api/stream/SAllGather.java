@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowAllGather;
+import edu.iu.dsc.tws.comms.dfw.AllGather;
 
 /**
  * Streaming ALLGather Operation
@@ -26,7 +26,7 @@ public class SAllGather {
   /**
    * The actual operation
    */
-  private DataFlowAllGather gather;
+  private AllGather gather;
 
   /**
    * Construct a Streaming AllGather operation
@@ -51,7 +51,7 @@ public class SAllGather {
 
     int firstSource = sources.iterator().next();
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
-    gather = new DataFlowAllGather(comm.getChannel(), sources, targets, middleTask, rcvr,
+    gather = new AllGather(comm.getChannel(), sources, targets, middleTask, rcvr,
         comm.nextEdge(), comm.nextEdge(), true);
     gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }

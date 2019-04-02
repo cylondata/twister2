@@ -46,8 +46,8 @@ import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-public class TReeBroadcast implements DataFlowOperation, ChannelReceiver {
-  private static final Logger LOG = Logger.getLogger(TReeBroadcast.class.getName());
+public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
+  private static final Logger LOG = Logger.getLogger(TreeBroadcast.class.getName());
 
   private int source;
 
@@ -99,7 +99,7 @@ public class TReeBroadcast implements DataFlowOperation, ChannelReceiver {
    */
   private MessageType keyType;
 
-  public TReeBroadcast(TWSChannel channel, int src, Set<Integer> dests,
+  public TreeBroadcast(TWSChannel channel, int src, Set<Integer> dests,
                        MessageReceiver finalRcvr, MessageType keyType,
                        MessageType dataType) {
     this.source = src;
@@ -117,7 +117,7 @@ public class TReeBroadcast implements DataFlowOperation, ChannelReceiver {
     this.finishedSources = new HashSet<>();
   }
 
-  public TReeBroadcast(TWSChannel channel, int src, Set<Integer> dests,
+  public TreeBroadcast(TWSChannel channel, int src, Set<Integer> dests,
                        MessageReceiver finalRcvr) {
     this.source = src;
     this.destinations = dests;

@@ -11,13 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.allgather;
 
-import edu.iu.dsc.tws.comms.dfw.TReeBroadcast;
+import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.gather.BaseGatherBatchFinalReceiver;
 
 public class AllGatherBatchFinalReceiver extends BaseGatherBatchFinalReceiver {
-  private TReeBroadcast gatherReceiver;
+  private TreeBroadcast gatherReceiver;
 
-  public AllGatherBatchFinalReceiver(TReeBroadcast bCast) {
+  public AllGatherBatchFinalReceiver(TreeBroadcast bCast) {
     this.gatherReceiver = bCast;
   }
 
