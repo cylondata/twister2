@@ -85,7 +85,6 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
 
   private ChannelDataFlowOperation delegete;
   private TaskPlan instancePlan;
-  private int workerId;
   private MessageType dataType;
   private MessageType keyType;
 
@@ -249,7 +248,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.instancePlan = taskPlan;
     this.dataType = t;
-    this.workerId = instancePlan.getThisExecutor();
+    int workerId = instancePlan.getThisExecutor();
     this.edgeValue = edge;
 
     // we only have one path
