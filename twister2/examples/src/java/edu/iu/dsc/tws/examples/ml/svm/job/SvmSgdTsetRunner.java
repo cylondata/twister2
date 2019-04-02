@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.ml.svm.job;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
@@ -33,7 +32,6 @@ import edu.iu.dsc.tws.examples.ml.svm.test.PredictionReduceTask;
 import edu.iu.dsc.tws.examples.ml.svm.test.PredictionSourceTask;
 import edu.iu.dsc.tws.examples.ml.svm.tset.AccuracyAverager;
 import edu.iu.dsc.tws.examples.ml.svm.tset.DataLoadingTask;
-import edu.iu.dsc.tws.examples.ml.svm.tset.ModelAverager;
 import edu.iu.dsc.tws.examples.ml.svm.tset.SvmTestMap;
 import edu.iu.dsc.tws.examples.ml.svm.tset.SvmTrainMap;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
@@ -122,16 +120,20 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
       }
       return w1;
     });
-
+    this.trainingTime = ((double) (System.nanoTime() - time)) / NANO_TO_SEC;
+    LOG.info(String.format("Data Point TaskIndex[%d], Size : %d => Array Size : [%d,%d]",
+        this.workerId,
+        trainingData.getData().size(), trainingData.getData().get(0).length,
+        trainingData.getData().get(0)[0].length));
     // TODO :: Handle the worker 0 senario for getOutput
 
     if (workerId == 0) {
-      CachedTSet<double[]> finalW = reduceTLink
-          .map(new ModelAverager(this.svmJobParameters.getParallelism())).cache();
-      double[] wFinal = finalW.getData().get(0);
-      this.binaryBatchModel.setW(wFinal);
-      this.trainingTime = ((double) (System.nanoTime() - time)) / NANO_TO_SEC;
-      LOG.info(String.format("Data : %s", Arrays.toString(wFinal)));
+//      CachedTSet<double[]> finalW = reduceTLink
+//          .map(new ModelAverager(this.svmJobParameters.getParallelism())).cache();
+//      double[] wFinal = finalW.getData().get(0);
+//      this.binaryBatchModel.setW(wFinal);
+//
+//      LOG.info(String.format("Data : %s", Arrays.toString(wFinal)));
       try {
         saveResults();
       } catch (IOException e) {
