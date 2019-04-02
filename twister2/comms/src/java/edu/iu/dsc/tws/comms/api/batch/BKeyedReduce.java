@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchPartialReceiver;
@@ -45,7 +45,7 @@ public class BKeyedReduce {
     this.keyType = kType;
     this.dataType = dType;
 
-    this.keyedReduce = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
+    this.keyedReduce = new MToNSimple(comm.getConfig(), comm.getChannel(),
         plan, sources, destinations,
         new KReduceBatchFinalReceiver(fnc, rcvr),
         new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,

@@ -47,8 +47,8 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
-  private static final Logger LOG = Logger.getLogger(DataFlowPartition.class.getName());
+public class MToNSimple implements DataFlowOperation, ChannelReceiver {
+  private static final Logger LOG = Logger.getLogger(MToNSimple.class.getName());
 
   /**
    * Sources
@@ -145,9 +145,9 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
    */
   private List<Integer> externalDestinations = new ArrayList<>();
 
-  public DataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
-                           MessageReceiver finalRcvr, MessageReceiver partialRcvr,
-                           MessageType dataType, MessageType keyType) {
+  public MToNSimple(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
+                    MessageReceiver finalRcvr, MessageReceiver partialRcvr,
+                    MessageType dataType, MessageType keyType) {
     this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr);
     this.isKeyed = true;
     this.keyType = keyType;
@@ -156,16 +156,16 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     this.receiveType = dataType;
   }
 
-  public DataFlowPartition(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
-                           MessageReceiver finalRcvr, MessageReceiver partialRcvr,
-                           MessageType dataType) {
+  public MToNSimple(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
+                    MessageReceiver finalRcvr, MessageReceiver partialRcvr,
+                    MessageType dataType) {
     this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr);
     this.dataType = dataType;
   }
 
-  public DataFlowPartition(TWSChannel channel, Set<Integer> srcs,
-                           Set<Integer> dests, MessageReceiver finalRcvr,
-                           MessageReceiver partialRcvr) {
+  public MToNSimple(TWSChannel channel, Set<Integer> srcs,
+                    Set<Integer> dests, MessageReceiver finalRcvr,
+                    MessageReceiver partialRcvr) {
     this.sources = srcs;
     this.destinations = dests;
     this.delegete = new ChannelDataFlowOperation(channel);
@@ -174,22 +174,22 @@ public class DataFlowPartition implements DataFlowOperation, ChannelReceiver {
     this.partialReceiver = partialRcvr;
   }
 
-  public DataFlowPartition(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> srcs,
-                           Set<Integer> dests, MessageReceiver finalRcvr,
-                           MessageReceiver partialRcvr,
-                           MessageType dType, MessageType rcvType,
-                           int e) {
+  public MToNSimple(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> srcs,
+                    Set<Integer> dests, MessageReceiver finalRcvr,
+                    MessageReceiver partialRcvr,
+                    MessageType dType, MessageType rcvType,
+                    int e) {
     this(cfg, channel, tPlan, srcs, dests, finalRcvr, partialRcvr, dType, rcvType,
         null, null, e);
     this.isKeyed = false;
   }
 
-  public DataFlowPartition(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> srcs,
-                           Set<Integer> dests, MessageReceiver finalRcvr,
-                           MessageReceiver partialRcvr,
-                           MessageType dType, MessageType rcvType,
-                           MessageType kType, MessageType rcvKType,
-                           int e) {
+  public MToNSimple(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> srcs,
+                    Set<Integer> dests, MessageReceiver finalRcvr,
+                    MessageReceiver partialRcvr,
+                    MessageType dType, MessageType rcvType,
+                    MessageType kType, MessageType rcvKType,
+                    int e) {
     this.instancePlan = tPlan;
     this.sources = srcs;
     this.destinations = dests;

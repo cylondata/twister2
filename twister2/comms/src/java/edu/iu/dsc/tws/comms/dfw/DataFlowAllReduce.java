@@ -34,9 +34,9 @@ import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
 public class DataFlowAllReduce implements DataFlowOperation {
   private static final Logger LOG = Logger.getLogger(DataFlowAllReduce.class.getName());
 
-  private DataFlowReduce reduce;
+  private MToOneTree reduce;
 
-  private DataFlowBroadcast broadcast;
+  private TReeBroadcast broadcast;
   // the source tasks
   protected Set<Integer> sources;
 
@@ -98,7 +98,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
     this.taskPlan = instancePlan;
     this.executor = taskPlan.getThisExecutor();
 
-    broadcast = new DataFlowBroadcast(channel, middleTask, destinations,
+    broadcast = new TReeBroadcast(channel, middleTask, destinations,
         new BCastReceiver(finalReceiver, streaming));
     broadcast.init(config, t, instancePlan, broadCastEdge);
 
@@ -111,7 +111,7 @@ public class DataFlowAllReduce implements DataFlowOperation {
       receiver = new AllReduceBatchFinalReceiver(reduceFunction, broadcast);
     }
 
-    reduce = new DataFlowReduce(channel, sources, middleTask,
+    reduce = new MToOneTree(channel, sources, middleTask,
         receiver, partialReceiver);
     reduce.init(config, t, instancePlan, reduceEdge);
   }

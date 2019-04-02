@@ -46,7 +46,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -150,7 +150,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
       executor = op.getTaskPlan().getThisExecutor();
       thisWorker = op.getTaskPlan().getThisExecutor();
       this.operationLeft = op;
-      this.sources = ((DataFlowPartition) op).getSources();
+      this.sources = ((MToNSimple) op).getSources();
       this.targets = new HashSet<>(expectedIds.keySet());
 
       // lists to keep track of messages for destinations

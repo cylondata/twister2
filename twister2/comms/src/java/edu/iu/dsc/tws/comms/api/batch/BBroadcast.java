@@ -17,14 +17,14 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
+import edu.iu.dsc.tws.comms.dfw.TReeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectBatchFinalReceiver;
 
 public class BBroadcast {
   /**
    * The actual operation
    */
-  private DataFlowBroadcast bcast;
+  private TReeBroadcast bcast;
 
   /**
    * Construct a Streaming Reduce operation
@@ -39,7 +39,7 @@ public class BBroadcast {
   public BBroadcast(Communicator comm, TaskPlan plan,
                     int sources, Set<Integer> target,
                     BulkReceiver rcvr, MessageType dataType) {
-    bcast = new DataFlowBroadcast(comm.getChannel(), sources, target,
+    bcast = new TReeBroadcast(comm.getChannel(), sources, target,
         new DirectBatchFinalReceiver(rcvr));
     bcast.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }

@@ -12,14 +12,14 @@
 package edu.iu.dsc.tws.comms.dfw.io.allreduce;
 
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
+import edu.iu.dsc.tws.comms.dfw.TReeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingReceiver;
 
 public class AllReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
-  private DataFlowBroadcast bcast;
+  private TReeBroadcast bcast;
 
   public AllReduceStreamingFinalReceiver(ReduceFunction reduceFunction,
-                                         DataFlowBroadcast bcast) {
+                                         TReeBroadcast bcast) {
     super(reduceFunction);
     this.bcast = bcast;
   }
