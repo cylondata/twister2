@@ -11,22 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api.batch;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.CommunicationContext;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowMultiReduce;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceMultiBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceMultiBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchPartialReceiver;
 
@@ -50,25 +45,11 @@ public class BKeyedReduce {
     this.keyType = kType;
     this.dataType = dType;
 
-    if (CommunicationContext.TWISTER2_KEYED_REDUCE_OP_REDUCE.equals(
-        CommunicationContext.batchKeyedReduceOp(comm.getConfig()))) {
-      Set<Integer> edges = new HashSet<>();
-      for (int i = 0; i < destinations.size(); i++) {
-        edges.add(comm.nextEdge());
-      }
-
-      this.keyedReduce = new DataFlowMultiReduce(comm.getConfig(), comm.getChannel(),
-          plan, sources, destinations,
-          new ReduceMultiBatchFinalReceiver(fnc, rcvr),
-          new ReduceMultiBatchPartialReceiver(fnc), edges, keyType, dataType);
-    } else if (CommunicationContext.TWISTER2_KEYED_REDUCE_OP_PARTITION.equals(
-        CommunicationContext.batchKeyedReduceOp(comm.getConfig()))) {
-      this.keyedReduce = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
-          plan, sources, destinations,
-          new KReduceBatchFinalReceiver(fnc, rcvr),
-          new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,
-          keyType, keyType, comm.nextEdge());
-    }
+    this.keyedReduce = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
+        plan, sources, destinations,
+        new KReduceBatchFinalReceiver(fnc, rcvr),
+        new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,
+        keyType, keyType, comm.nextEdge());
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, destinations);
   }

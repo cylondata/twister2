@@ -12,7 +12,6 @@
 
 package edu.iu.dsc.tws.comms.api.stream;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -22,12 +21,9 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.RingPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiStreamingFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiStreamingPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherStreamingPartialReceiver;
 
@@ -74,33 +70,19 @@ public class SKeyedGather {
     this.keyType = kType;
     this.dataType = dType;
 
-
-    if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_GATHER.equals(
-        CommunicationContext.streamKeyedGatherOp(comm.getConfig()))) {
-      Set<Integer> edges = new HashSet<>();
-      for (int i = 0; i < targets.size(); i++) {
-        edges.add(comm.nextEdge());
-      }
-      this.keyedGather = new DataFlowMultiGather(comm.getConfig(), comm.getChannel(),
+    if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
+        CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
+      this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
           plan, sources, targets,
-          new GatherMultiStreamingFinalReceiver(rcvr),
-          new GatherMultiStreamingPartialReceiver(), edges, keyType, dataType);
-    } else if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_PARTITION.equals(
-        CommunicationContext.streamKeyedGatherOp(comm.getConfig()))) {
-      if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
-          CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
-        this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
-            plan, sources, targets,
-            new KGatherStreamingFinalReceiver(rcvr, 100),
-            new KGatherStreamingPartialReceiver(0, 100, 1), dataType, dataType,
-            keyType, keyType, comm.nextEdge());
-      } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
-          CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
-        this.keyedGather = new RingPartition(comm.getConfig(), comm.getChannel(),
-            plan, sources, targets, new KGatherStreamingFinalReceiver(rcvr, 100),
-            new KGatherStreamingPartialReceiver(0, 100, 1),
-            dataType, dataType, keyType, keyType, comm.nextEdge());
-      }
+          new KGatherStreamingFinalReceiver(rcvr, 100),
+          new KGatherStreamingPartialReceiver(0, 100, 1), dataType, dataType,
+          keyType, keyType, comm.nextEdge());
+    } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
+        CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
+      this.keyedGather = new RingPartition(comm.getConfig(), comm.getChannel(),
+          plan, sources, targets, new KGatherStreamingFinalReceiver(rcvr, 100),
+          new KGatherStreamingPartialReceiver(0, 100, 1),
+          dataType, dataType, keyType, keyType, comm.nextEdge());
     }
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, targets);
