@@ -173,12 +173,15 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
           needsFurtherProgress = true;
         }
 
-        if (allValuesFound) {
+        // if we have found all the values from sources or if syncs are present
+        // we need to aggregate
+        if (allValuesFound || allSyncsPresent) {
           if (!aggregate(target, allSyncsPresent)) {
             needsFurtherProgress = true;
           }
         }
 
+        // if we are filled to send, lets send the values
         if (isFilledToSend(target)) {
           if (!sendToTarget(target, allSyncsPresent)) {
             canProgress = false;
@@ -188,6 +191,7 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
           needsFurtherProgress = true;
         }
 
+        // finally if there is a sync, lets forward it
         if (allSyncsPresent && allQueuesEmpty(messagePerTarget)
             && operation.isDelegateComplete()) {
           flushedAfterSync.put(target, true);
