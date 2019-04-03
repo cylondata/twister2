@@ -214,6 +214,13 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
   }
 
   /**
+   * Handle a sync complete event
+   *
+   * @return true if the event is handled
+   */
+  protected abstract boolean handleSyncComplete();
+
+  /**
    * Clear all the buffers for the target, to ready for the next
    *
    * @param target target
