@@ -13,7 +13,7 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 500
+        "value": 50000
       }
     },
     {
@@ -22,7 +22,7 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 4
+        "value": 128
       }
     },
     {
@@ -31,9 +31,9 @@
       "optional": false,
       "values": {
         "type": "steps",
-        "from": 128,
-        "to": 8192,
-        "step": 128
+        "from": 256,
+        "to": 16384,
+        "step": 256
       }
     },
     {
@@ -42,7 +42,7 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 10
+        "value": 10000
       }
     },
     {
