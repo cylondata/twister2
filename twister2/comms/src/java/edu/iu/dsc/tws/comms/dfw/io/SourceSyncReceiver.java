@@ -130,17 +130,9 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
     boolean needsFurtherProgress = false;
     for (int target : messages.keySet()) {
       // if we haven't sent the sync lets send it
-      if (flushedAfterSync.get(target) && !isSyncSent.get(target)) {
-        if (operation.isDelegateComplete() && operation.sendPartial(target,
-            new byte[0], MessageFlags.END, destination)) {
-          isSyncSent.put(target, true);
-          // at this point we call the sync event
-          onSyncEvent(target);
-          // clear the values
-          clearTarget(target);
-        } else {
-          needsFurtherProgress = true;
-        }
+      if (flushedAfterSync.get(target) && !isSyncSent.get(target)
+          && operation.isDelegateComplete()) {
+        needsFurtherProgress = sendSyncForward(needsFurtherProgress, target);
         continue;
       }
 
@@ -195,20 +187,25 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
         if (allSyncsPresent && allQueuesEmpty(messagePerTarget)
             && operation.isDelegateComplete()) {
           flushedAfterSync.put(target, true);
-          if (operation.sendPartial(target, new byte[0],
-              MessageFlags.END, destination)) {
-            isSyncSent.put(target, true);
-            // at this point we call the sync event
-            onSyncEvent(target);
-            // clear the values
-            clearTarget(target);
-          } else {
-            needsFurtherProgress = true;
-          }
+          needsFurtherProgress = sendSyncForward(needsFurtherProgress, target);
         } else {
           needsFurtherProgress = true;
         }
       }
+    }
+    return needsFurtherProgress;
+  }
+
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    if (operation.sendPartial(target, new byte[0],
+        MessageFlags.END, destination)) {
+      isSyncSent.put(target, true);
+      // at this point we call the sync event
+      onSyncEvent(target);
+      // clear the values
+      clearTarget(target);
+    } else {
+      return true;
     }
     return needsFurtherProgress;
   }
