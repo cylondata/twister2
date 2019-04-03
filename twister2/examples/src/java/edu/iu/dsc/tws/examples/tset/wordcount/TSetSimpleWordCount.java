@@ -9,7 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.tset;
+
+package edu.iu.dsc.tws.examples.tset.wordcount;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -31,7 +32,6 @@ import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
@@ -40,8 +40,12 @@ public class TSetSimpleWordCount extends TSetBatchWorker implements Serializable
 
   @Override
   public void execute(TwisterBatchContext tc) {
-    BatchSourceTSet<WordCountPair> source = tc.createSource(new WordSource(), 4)
-        .setName("source");
+    int sourcePar = 4;
+    int sinkPar = 1;
+
+    BatchSourceTSet<WordCountPair> source = tc.createSource(
+        new WordGenerator((int) config.get("NO_OF_SAMPLE_WORDS"), (int) config.get("MAX_CHARS")),
+        sourcePar).setName("source");
 
     GroupedTSet<String, WordCountPair> groupedWords = source.groupBy(new HashingPartitioner<>(),
         (Selector<String, WordCountPair>) WordCountPair::getWord);
@@ -52,49 +56,26 @@ public class TSetSimpleWordCount extends TSetBatchWorker implements Serializable
                 new WordCountPair(t1.getWord(), t1.getCount() + t2.getCount())
         );
 
-    keyedReduce.sink(new BaseSink<WordCountPair>() {
-      @Override
-      public void prepare() {
-      }
-
-      @Override
-      public boolean add(WordCountPair value) {
-        LOG.info(value.toString());
-        return true;
-      }
-    }, 1);
+    keyedReduce.sink(new WordCountLogger(), sinkPar);
   }
 
-  static class WordCountPair implements Serializable {
-    private static final long serialVersionUID = 64226990662415683L;
-
-    private String word;
-    private int count;
-
-    WordCountPair() {
-    }
-
-    WordCountPair(String word, int count) {
-      this.word = word;
-      this.count = count;
-    }
-
-    public String getWord() {
-      return word;
-    }
-
-    public int getCount() {
-      return count;
-    }
-
+  class WordCountLogger extends BaseSink<WordCountPair> {
     @Override
-    public String toString() {
-      return word + ":" + count;
+    public boolean add(WordCountPair value) {
+      LOG.info(value.toString());
+      return true;
     }
   }
 
-  static class WordSource extends BaseSource<WordCountPair> {
+  class WordGenerator extends BaseSource<WordCountPair> {
     private Iterator<String> iter;
+    private int count;
+    private int maxChars;
+
+    WordGenerator(int count, int maxChars) {
+      this.count = count;
+      this.maxChars = maxChars;
+    }
 
     @Override
     public boolean hasNext() {
@@ -108,11 +89,7 @@ public class TSetSimpleWordCount extends TSetBatchWorker implements Serializable
 
     @Override
     public void prepare() {
-      Config config = this.context.getConfig();
-
       Random random = new Random();
-      int count = (int) config.get("NO_OF_SAMPLE_WORDS");
-      int maxChars = (int) config.get("MAX_CHARS");
 
       RandomString randomString = new RandomString(maxChars, random, RandomString.ALPHANUM);
       List<String> wordsList = new ArrayList<>();
@@ -132,7 +109,7 @@ public class TSetSimpleWordCount extends TSetBatchWorker implements Serializable
     jobConfig.put("MAX_CHARS", 5);
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("tset-wordcount");
+    jobBuilder.setJobName("tset-simple-wordcount");
     jobBuilder.setWorkerClass(TSetSimpleWordCount.class);
     jobBuilder.addComputeResource(1, 512, 2);
     jobBuilder.setConfig(jobConfig);
