@@ -33,8 +33,8 @@ import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansCalculator;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGenerator;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 
 public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetJob.class.getName());
@@ -44,6 +44,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     LOG.log(Level.INFO, "TSet worker starting: " + workerId);
 
     KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
+    KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
 
     int parallelismValue = kMeansJobParameters.getParallelismValue();
     int dimension = kMeansJobParameters.getDimension();
@@ -52,19 +53,11 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     int csize = kMeansJobParameters.getCsize();
     int iterations = kMeansJobParameters.getIterations();
 
-    String dinputDirectory = kMeansJobParameters.getDatapointDirectory();
-    String cinputDirectory = kMeansJobParameters.getCentroidDirectory();
+    String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
+    String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
 
-    if (workerId == 0) {
-      try {
-        KMeansDataGenerator.generateData(
-            "txt", new Path(dinputDirectory), numFiles, dsize, 100, dimension, config);
-        KMeansDataGenerator.generateData(
-            "txt", new Path(cinputDirectory), numFiles, csize, 100, dimension, config);
-      } catch (IOException ioe) {
-        throw new RuntimeException("Failed to create input data:", ioe);
-      }
-    }
+    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
+        centroidDirectory);
 
     //TODO: consider what happens when same execEnv is used to create multiple graphs
     CachedTSet<double[][]> points = tc.createSource(
@@ -161,7 +154,8 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
       Config cfg = context.getConfig();
       this.dataSize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
-      String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
+      String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY)
+          + workerId;
       int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
       //The +1 in the array size is because of a data balancing bug
       localPoints = new double[dataSize / para + 1][dimension];
@@ -218,7 +212,8 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     @Override
     public void prepare() {
       Config cfg = context.getConfig();
-      String datainputDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY);
+      String datainputDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY)
+          + workerId;
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
       int csize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.CSIZE));
 
