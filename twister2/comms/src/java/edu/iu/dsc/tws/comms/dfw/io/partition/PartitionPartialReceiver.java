@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.partition;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +28,7 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 /**
@@ -125,7 +125,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
 
     // lists to keep track of messages for destinations
     for (int d : destinations) {
-      destinationMessages.put(d, new ArrayList<>());
+      destinationMessages.put(d, new AggregatedObjects<>());
     }
   }
 
@@ -183,7 +183,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
 
   private void swapToReady(int destination, List<Object> dests) {
     if (!readyToSend.containsKey(destination)) {
-      readyToSend.put(destination, new ArrayList<>(dests));
+      readyToSend.put(destination, new AggregatedObjects<>(dests));
     } else {
       List<Object> ready = readyToSend.get(destination);
       ready.addAll(dests);
@@ -214,7 +214,7 @@ public class PartitionPartialReceiver implements MessageReceiver {
       while (it.hasNext()) {
 
         Map.Entry<Integer, List<Object>> e = it.next();
-        List<Object> send = new ArrayList<>(e.getValue());
+        List<Object> send = new AggregatedObjects<>(e.getValue());
         if (send.size() == 0) {
           e.getValue().clear();
           it.remove();

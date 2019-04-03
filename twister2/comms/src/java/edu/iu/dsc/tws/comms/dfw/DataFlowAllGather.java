@@ -83,8 +83,8 @@ public class DataFlowAllGather implements DataFlowOperation {
     this.executor = instancePlan.getThisExecutor();
     this.dataType = type;
     broadcast = new DataFlowBroadcast(channel, middleTask,
-        destinations, new BCastReceiver(finalReceiver, streaming));
-    broadcast.init(config, MessageType.OBJECT, instancePlan, broadCastEdge);
+        destinations, new BCastReceiver(finalReceiver, streaming), MessageType.INTEGER, type);
+    broadcast.init(config, type, instancePlan, broadCastEdge);
 
     MessageReceiver partialReceiver;
     MessageReceiver finalRecvr;

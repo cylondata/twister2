@@ -11,32 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
-import edu.iu.dsc.tws.comms.dfw.OutMessage;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
-public class KeyedUnifiedSerializerTest {
+public class KeyedUnifiedSerializerTest extends BaseSerializeTest {
   @Test
   public void testBuildLargeIntegerMessage() {
     int numBuffers = 10;
     int size = 1000;
     MessageType type = MessageType.INTEGER;
-    Object data = createData(800, type);
-    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Object data = createKeyedData(800, type);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertEquals((int) deserializedData.getKey(), (int) ((Tuple) data).getKey());
     Assert.assertArrayEquals((int[]) deserializedData.getValue(),
@@ -48,8 +39,8 @@ public class KeyedUnifiedSerializerTest {
     int numBuffers = 10;
     int size = 1000;
     MessageType type = MessageType.DOUBLE;
-    Object data = createData(800, type);
-    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Object data = createKeyedData(800, type);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertEquals((double) deserializedData.getKey(), (double) ((Tuple) data).getKey(),
         0.1);
@@ -62,8 +53,8 @@ public class KeyedUnifiedSerializerTest {
     int numBuffers = 10;
     int size = 1000;
     MessageType type = MessageType.LONG;
-    Object data = createData(800, type);
-    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Object data = createKeyedData(800, type);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertEquals((long) deserializedData.getKey(), (long) ((Tuple) data).getKey());
     Assert.assertArrayEquals((long[]) deserializedData.getValue(),
@@ -75,8 +66,8 @@ public class KeyedUnifiedSerializerTest {
     int numBuffers = 10;
     int size = 1000;
     MessageType type = MessageType.SHORT;
-    Object data = createData(800, type);
-    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Object data = createKeyedData(800, type);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertEquals((short) deserializedData.getKey(), (short) ((Tuple) data).getKey());
     Assert.assertArrayEquals((short[]) deserializedData.getValue(),
@@ -88,8 +79,8 @@ public class KeyedUnifiedSerializerTest {
     int numBuffers = 10;
     int size = 1000;
     MessageType type = MessageType.BYTE;
-    Object data = createData(800, type);
-    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Object data = createKeyedData(800, type);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertArrayEquals((byte[]) deserializedData.getKey(), (byte[]) ((Tuple) data).getKey());
     Assert.assertArrayEquals((byte[]) deserializedData.getValue(),
@@ -101,8 +92,8 @@ public class KeyedUnifiedSerializerTest {
     int numBuffers = 4;
     int size = 1000;
     MessageType type = MessageType.INTEGER;
-    Object data = createData(80, type);
-    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Object data = createKeyedData(80, type);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertEquals((int) deserializedData.getKey(), (int) ((Tuple) data).getKey());
     Assert.assertArrayEquals((int[]) deserializedData.getValue(),
@@ -114,48 +105,13 @@ public class KeyedUnifiedSerializerTest {
     int numBuffers = 4;
     int size = 1000;
     MessageType type = MessageType.OBJECT;
-    Object data = createData(80, type);
-    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Object data = createKeyedData(80, type);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertArrayEquals((byte[]) deserializedData.getKey(),
         (byte[]) ((Tuple) data).getKey());
     Assert.assertArrayEquals((byte[]) deserializedData.getValue(),
         (byte[]) ((Tuple) data).getValue());
-  }
-
-  private InMessage singleValueCase(int numBuffers, int size, MessageType type, Object data) {
-    BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
-
-    OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
-        null, type, null, null);
-
-    UnifiedKeySerializer serializer = new UnifiedKeySerializer(
-        new KryoSerializer(), 0, type, type);
-    serializer.init(Config.newBuilder().build(), bufferQueue, true);
-
-    List<ChannelMessage> messages = new ArrayList<>();
-
-    while (outMessage.getSendState() != OutMessage.SendState.SERIALIZED) {
-      ChannelMessage ch = (ChannelMessage) serializer.build(data, outMessage);
-      messages.add(ch);
-    }
-
-    UnifiedKeyDeSerializer deserializer = new UnifiedKeyDeSerializer(
-        new KryoSerializer(), 0, type, type);
-    deserializer.init(Config.newBuilder().build(), true);
-
-    MessageHeader header = deserializer.buildHeader(
-        messages.get(0).getBuffers().get(0), 1);
-    InMessage inMessage = new InMessage(0, type,
-        null, header);
-    inMessage.setKeyType(type);
-    for (ChannelMessage channelMessage : messages) {
-      for (DataBuffer dataBuffer : channelMessage.getBuffers()) {
-        inMessage.addBufferAndCalculate(dataBuffer);
-      }
-    }
-    deserializer.build(inMessage, 1);
-    return inMessage;
   }
 
   @SuppressWarnings("Unchecked")
@@ -165,7 +121,7 @@ public class KeyedUnifiedSerializerTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageType.INTEGER);
+      Object o = createKeyedData(800, MessageType.INTEGER);
       data.add(o);
     }
 
@@ -190,7 +146,7 @@ public class KeyedUnifiedSerializerTest {
     for (int j = 1; j < 128; j++) {
       List<Object> data = new ArrayList<>();
       for (int i = 0; i < j; i++) {
-        Object o = createData(80, MessageType.INTEGER);
+        Object o = createKeyedData(80, MessageType.INTEGER);
         data.add(o);
       }
 
@@ -218,7 +174,7 @@ public class KeyedUnifiedSerializerTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageType.LONG);
+      Object o = createKeyedData(800, MessageType.LONG);
       data.add(o);
     }
 
@@ -242,7 +198,7 @@ public class KeyedUnifiedSerializerTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageType.DOUBLE);
+      Object o = createKeyedData(800, MessageType.DOUBLE);
       data.add(o);
     }
 
@@ -266,7 +222,7 @@ public class KeyedUnifiedSerializerTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageType.SHORT);
+      Object o = createKeyedData(800, MessageType.SHORT);
       data.add(o);
     }
 
@@ -289,7 +245,7 @@ public class KeyedUnifiedSerializerTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageType.BYTE);
+      Object o = createKeyedData(800, MessageType.BYTE);
       data.add(o);
     }
 
@@ -312,11 +268,11 @@ public class KeyedUnifiedSerializerTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 128; i++) {
-      Object o = createData(320, MessageType.BYTE, MessageType.INTEGER);
+      Object o = createKeyedData(320, MessageType.BYTE, MessageType.INTEGER);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.BYTE,
+    InMessage inMessage = keyedListValueCase(numBuffers, size, data, MessageType.BYTE,
         MessageType.INTEGER);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
@@ -325,128 +281,16 @@ public class KeyedUnifiedSerializerTest {
 
       Assert.assertEquals(deserializedData.getKey(), d.getKey());
       Assert.assertArrayEquals((byte[]) deserializedData.getValue(),
-          (byte[]) ((Tuple) d).getValue());
+          (byte[]) d.getValue());
     }
   }
 
   private InMessage listValueCase(int numBuffers, int size, List<Object> data,
                                   MessageType type) {
-    return listValueCase(numBuffers, size, data, type, type);
+    return keyedListValueCase(numBuffers, size, data, type, type);
   }
 
-  private InMessage listValueCase(int numBuffers, int size, List<Object> data,
-                                  MessageType type, MessageType keyType) {
-    BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
-    OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
-        null, type, null, null);
-
-    UnifiedKeySerializer serializer = new UnifiedKeySerializer(
-        new KryoSerializer(), 0, keyType, type);
-    serializer.init(Config.newBuilder().build(), bufferQueue, true);
-
-    List<ChannelMessage> messages = new ArrayList<>();
-
-
-    while (outMessage.getSendState() != OutMessage.SendState.SERIALIZED) {
-      ChannelMessage ch = (ChannelMessage) serializer.build(data, outMessage);
-      messages.add(ch);
-    }
-
-    UnifiedKeyDeSerializer deserializer = new UnifiedKeyDeSerializer(new KryoSerializer(), 0,
-        keyType, type);
-    deserializer.init(Config.newBuilder().build(), true);
-
-    MessageHeader header = deserializer.buildHeader(
-        messages.get(0).getBuffers().get(0), 1);
-    InMessage inMessage = new InMessage(0, type,
-        null, header);
-    inMessage.setKeyType(keyType);
-    for (ChannelMessage channelMessage : messages) {
-      for (DataBuffer dataBuffer : channelMessage.getBuffers()) {
-        inMessage.addBufferAndCalculate(dataBuffer);
-      }
-    }
-    deserializer.build(inMessage, 1);
-    return inMessage;
-  }
-
-  private Object createData(int size, MessageType dataType) {
-    return createData(size, dataType, dataType);
-  }
-
-  private Object createData(int size, MessageType dataType, MessageType keyType) {
-    Object data = createDataObject(size, dataType);
-    Object key = createKeyObject(keyType);
-    return new Tuple(key, data, keyType, dataType);
-  }
-
-  private Object createDataObject(int size, MessageType dataType) {
-    if (dataType == MessageType.INTEGER) {
-      int[] vals = new int[size];
-      for (int i = 0; i < vals.length; i++) {
-        vals[i] = i;
-      }
-      return vals;
-    } else if (dataType == MessageType.LONG) {
-      long[] vals = new long[size];
-      for (int i = 0; i < vals.length; i++) {
-        vals[i] = i;
-      }
-      return vals;
-    } else if (dataType == MessageType.DOUBLE) {
-      double[] vals = new double[size];
-      for (int i = 0; i < vals.length; i++) {
-        vals[i] = i;
-      }
-      return vals;
-    } else if (dataType == MessageType.SHORT) {
-      short[] vals = new short[size];
-      for (int i = 0; i < vals.length; i++) {
-        vals[i] = (short) i;
-      }
-      return vals;
-    } else if (dataType == MessageType.BYTE) {
-      byte[] vals = new byte[size];
-      for (int i = 0; i < vals.length; i++) {
-        vals[i] = (byte) i;
-      }
-      return vals;
-    } else if (dataType == MessageType.OBJECT) {
-      byte[] vals = new byte[size];
-      for (int i = 0; i < vals.length; i++) {
-        vals[i] = (byte) i;
-      }
-      return vals;
-    } else {
-      return null;
-    }
-  }
-
-  private Object createKeyObject(MessageType dataType) {
-    if (dataType == MessageType.INTEGER) {
-      return 1;
-    } else if (dataType == MessageType.LONG) {
-      return 1L;
-    } else if (dataType == MessageType.DOUBLE) {
-      return 1.0;
-    } else if (dataType == MessageType.SHORT) {
-      return (short) 1;
-    } else if (dataType == MessageType.BYTE) {
-      byte[] vals = new byte[8];
-      for (int i = 0; i < vals.length; i++) {
-        vals[i] = (byte) i;
-      }
-      return vals;
-    } else {
-      return null;
-    }
-  }
-
-  private BlockingQueue<DataBuffer> createDataQueue(int numBuffers, int size) {
-    BlockingQueue<DataBuffer> bufferQueue = new LinkedBlockingQueue<DataBuffer>();
-    for (int i = 0; i < numBuffers; i++) {
-      bufferQueue.offer(new DataBuffer(ByteBuffer.allocate(size)));
-    }
-    return bufferQueue;
+  private Object createKeyedData(int size, MessageType dataType) {
+    return createKeyedData(size, dataType, dataType);
   }
 }

@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.gather;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +24,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 
 public class GatherStreamingPartialReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(
@@ -114,7 +114,7 @@ public class GatherStreamingPartialReceiver implements MessageReceiver {
         }
 
         if (found) {
-          List<Object> out = new ArrayList<>();
+          List<Object> out = new AggregatedObjects<>();
           for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
             Object e1 = e.getValue().peek();
             if (e1 instanceof List) {

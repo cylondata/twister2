@@ -33,6 +33,7 @@ java_tests(
         "edu.iu.dsc.tws.comms.utils.HeapTest",
         "edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializerTest",
         "edu.iu.dsc.tws.comms.dfw.io.KeyedUnifiedSerializerTest",
+        "edu.iu.dsc.tws.comms.dfw.io.AggregatorListTest",
         "edu.iu.dsc.tws.comms.routing.BinaryTreeTest",
     ],
     runtime_deps = [
