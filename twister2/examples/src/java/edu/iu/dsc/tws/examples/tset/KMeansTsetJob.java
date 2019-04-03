@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansCalculator;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGenerator;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 
 public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetJob.class.getName());
@@ -44,6 +45,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     LOG.log(Level.INFO, "TSet worker starting: " + workerId);
 
     KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
+    KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
 
     int parallelismValue = kMeansJobParameters.getParallelismValue();
     int dimension = kMeansJobParameters.getDimension();
@@ -55,16 +57,11 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     String dinputDirectory = kMeansJobParameters.getDatapointDirectory();
     String cinputDirectory = kMeansJobParameters.getCentroidDirectory();
 
-    if (workerId == 0) {
-      try {
-        KMeansDataGenerator.generateData(
-            "txt", new Path(dinputDirectory), numFiles, dsize, 100, dimension, config);
-        KMeansDataGenerator.generateData(
-            "txt", new Path(cinputDirectory), numFiles, csize, 100, dimension, config);
-      } catch (IOException ioe) {
-        throw new RuntimeException("Failed to create input data:", ioe);
-      }
-    }
+    String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
+    String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
+
+    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
+        centroidDirectory);
 
     //TODO: consider what happens when same execEnv is used to create multiple graphs
     CachedTSet<double[][]> points = tc.createSource(
