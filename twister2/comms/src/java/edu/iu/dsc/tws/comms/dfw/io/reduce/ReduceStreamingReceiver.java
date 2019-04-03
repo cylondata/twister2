@@ -21,9 +21,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.dfw.io.SourceReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.SourceSyncReceiver;
 
-public abstract class ReduceStreamingReceiver extends SourceReceiver {
+public abstract class ReduceStreamingReceiver extends SourceSyncReceiver {
   private static final Logger LOG = Logger.getLogger(ReduceStreamingReceiver.class.getName());
 
   protected ReduceFunction reduceFunction;
@@ -48,7 +48,7 @@ public abstract class ReduceStreamingReceiver extends SourceReceiver {
   }
 
   @Override
-  protected boolean sendToTarget(int target) {
+  protected boolean sendToTarget(int target, boolean sync) {
     Queue<Object> reducedValues = this.reducedValuesMap.get(target);
     while (reducedValues.size() > 0) {
       Object previous = reducedValues.peek();
@@ -63,7 +63,7 @@ public abstract class ReduceStreamingReceiver extends SourceReceiver {
   }
 
   @Override
-  protected boolean aggregate(int target) {
+  protected boolean aggregate(int target, boolean sync) {
     Queue<Object> reducedValues = this.reducedValuesMap.get(target);
     Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
 
@@ -84,6 +84,11 @@ public abstract class ReduceStreamingReceiver extends SourceReceiver {
     } else {
       return false;
     }
+  }
+
+  @Override
+  protected boolean isFilledToSend(int target) {
+    return true;
   }
 
   public abstract boolean handleMessage(int source, Object message, int flags, int dest);
