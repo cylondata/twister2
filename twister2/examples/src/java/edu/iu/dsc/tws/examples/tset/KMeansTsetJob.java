@@ -33,7 +33,6 @@ import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansCalculator;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGenerator;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 
@@ -53,9 +52,6 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     int dsize = kMeansJobParameters.getDsize();
     int csize = kMeansJobParameters.getCsize();
     int iterations = kMeansJobParameters.getIterations();
-
-    String dinputDirectory = kMeansJobParameters.getDatapointDirectory();
-    String cinputDirectory = kMeansJobParameters.getCentroidDirectory();
 
     String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
     String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
@@ -158,7 +154,8 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
       Config cfg = context.getConfig();
       this.dataSize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
-      String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
+      String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY)
+          + workerId;
       int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
       //The +1 in the array size is because of a data balancing bug
       localPoints = new double[dataSize / para + 1][dimension];
@@ -217,7 +214,8 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     @Override
     public void prepare() {
       Config cfg = context.getConfig();
-      String datainputDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY);
+      String datainputDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY)
+          + workerId;
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
       int csize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.CSIZE));
 
