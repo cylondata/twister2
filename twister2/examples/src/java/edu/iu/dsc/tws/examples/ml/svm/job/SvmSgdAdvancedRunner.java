@@ -97,6 +97,8 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
 
   private static final double NANO_TO_SEC = 1000000000;
 
+  private static final double B2MB = 1024.0 * 1024.0;
+
 
   @Override
   public void execute() {
@@ -161,6 +163,9 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
         e.printStackTrace();
       }
     }
+    LOG.info(String.format("Rank[%d] Total Memory %f MB, Max Memory %f MB", workerId,
+        ((double) Runtime.getRuntime().totalMemory()) / B2MB,
+        ((double) Runtime.getRuntime().maxMemory()) / B2MB));
 
     if (operationMode.equals(OperationMode.STREAMING)) {
       LOG.info("Not Yet Implemented");
@@ -267,8 +272,11 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     svmComputeConnection
         .direct(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE,
             Constants.SimpleGraphConfig.DATA_EDGE, DataType.OBJECT);
+//    svmReduceConnection
+//        .reduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
+//            new ReduceAggregator(), DataType.OBJECT);
     svmReduceConnection
-        .reduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
+        .allreduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
             new ReduceAggregator(), DataType.OBJECT);
 
     trainingBuilder.setMode(operationMode);

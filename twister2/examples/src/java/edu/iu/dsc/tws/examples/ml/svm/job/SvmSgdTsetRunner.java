@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.ml.svm.job;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
@@ -120,6 +121,23 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
       }
       return w1;
     });
+
+
+//    AllReduceTLink<double[]> allReduceTLink = svmTrainTset.allReduce((t1, t2) -> {
+//      double[] w1 = new double[t1.length];
+//      try {
+//        w1 = Matrix.add(t1, t2);
+//      } catch (MatrixMultiplicationException e) {
+//        e.printStackTrace();
+//      }
+//      return w1;
+//    });
+    // sink must be there to execute the Map task
+    reduceTLink.sink(value -> {
+      LOG.info("Results " + Arrays.toString(value));
+      return false;
+    });
+
     this.trainingTime = ((double) (System.nanoTime() - time)) / NANO_TO_SEC;
     LOG.info(String.format("Data Point TaskIndex[%d], Size : %d => Array Size : [%d,%d]",
         this.workerId,
