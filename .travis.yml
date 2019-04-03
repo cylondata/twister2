@@ -18,44 +18,17 @@ before_install:
   - sudo apt-get install g++
   - sudo apt-get install  python-dev python-pip
 
-
-install:
-  - wget https://github.com/DSC-SPIDAL/twister2-thridparty-bin/raw/master/mpi/openmpi-3.1.2.tar.gz
-  - tar -xzvf openmpi-3.1.2.tar.gz
-  - mkdir build
-  - ls
-  - echo " START INSTALL"
-  - echo "INSTALL OPENMPI VIBHATH"
-  - export BUILD=$PWD/build
-  - export OMPI_312=$PWD/openmpi-3.1.2
-  - export PATH=$BUILD/bin:$PATH
-  - export LD_LIBRARY_PATH=$BUILD/lib:$LD_LIBRARY_PATH
-  - echo "CHECK LS OMP:vb"
-  - ls
-  - cd $OMPI_312
-  - ./configure --prefix=$BUILD --enable-mpi-java
-  - make -j 8
-  - make install
-  - cd ..
-
 script:
-  - echo "*****************************************"
   - echo "PATH CHECK:vb"
-  - echo $OMPI_312
-  - ls $PWD/build
-  - mpirun -version
-  - echo "*****************************************"
-  - mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_312/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.1.2
-  - echo "END OF INSTALL"
   - bazel version
   - echo " BAZEL BUILD START"
-  - bazel build --config=ubuntu twister2/... 
+  - bazel build --config=ubuntu twister2/...
   - echo " BAZEL BUILD END"
   - echo "BAZEL PACKAGE START"
   - bazel build --config=ubuntu //scripts/package:tarpkgs
   - echo "BAZEL PACKAGE END"
   - echo " END ALL "
-  - echo "e:============================================"  
+  - echo "e:============================================"
 
 notifications:
   slack:

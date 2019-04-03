@@ -28,6 +28,7 @@ public class MPIContext extends SchedulerContext {
   public static final String MODE = "twsiter2.resource.scheduler.mpi.mode";
   public static final String NODES_FILE = "twister2.resource.scheduler.mpi.nodes.file";
   public static final String MPIRUN_FILE = "twister2.resource.scheduler.mpi.mpirun.file";
+  public static final String MPI_MAP_BY = "twister2.resource.scheduler.mpi.mapby";
 
   public static final String NODES_ON_SHARED_FS = "twister2.resource.sharedfs";
 
@@ -62,6 +63,10 @@ public class MPIContext extends SchedulerContext {
 
   public static String mpiRunFile(Config cfg) {
     return cfg.getStringValue(MPIRUN_FILE, "mpirun");
+  }
+
+  public static String mpiMapBy(Config cfg) {
+    return cfg.getStringValue(MPI_MAP_BY, "node");
   }
 
   public static boolean isSharedFs(Config cfg) {
