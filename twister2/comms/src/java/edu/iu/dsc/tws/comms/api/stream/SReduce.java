@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowReduce;
+import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
 
@@ -32,7 +32,7 @@ public class SReduce {
   /**
    * The actual operation
    */
-  private DataFlowReduce reduce;
+  private MToOneTree reduce;
 
   /**
    * Construct a Streaming Reduce operation
@@ -48,7 +48,7 @@ public class SReduce {
   public SReduce(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, int target,
                  MessageType dataType, ReduceFunction fnc, SingularReceiver rcvr) {
-    reduce = new DataFlowReduce(comm.getChannel(), sources, target,
+    reduce = new MToOneTree(comm.getChannel(), sources, target,
         new ReduceStreamingFinalReceiver(fnc, rcvr),
         new ReduceStreamingPartialReceiver(target, fnc));
     reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());

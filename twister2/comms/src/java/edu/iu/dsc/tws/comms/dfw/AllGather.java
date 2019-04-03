@@ -32,12 +32,12 @@ import edu.iu.dsc.tws.comms.dfw.io.allgather.AllGatherStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 
-public class DataFlowAllGather implements DataFlowOperation {
-  private static final Logger LOG = Logger.getLogger(DataFlowAllGather.class.getName());
+public class AllGather implements DataFlowOperation {
+  private static final Logger LOG = Logger.getLogger(AllGather.class.getName());
 
-  private DataFlowGather gather;
+  private MToOneTree gather;
 
-  private DataFlowBroadcast broadcast;
+  private TreeBroadcast broadcast;
   // the source tasks
   protected Set<Integer> sources;
 
@@ -61,10 +61,10 @@ public class DataFlowAllGather implements DataFlowOperation {
 
   private MessageType dataType;
 
-  public DataFlowAllGather(TWSChannel chnl,
-                           Set<Integer> sources, Set<Integer> destination, int middleTask,
-                           BulkReceiver finalRecv,
-                           int redEdge, int broadEdge, boolean stream) {
+  public AllGather(TWSChannel chnl,
+                   Set<Integer> sources, Set<Integer> destination, int middleTask,
+                   BulkReceiver finalRecv,
+                   int redEdge, int broadEdge, boolean stream) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
@@ -82,7 +82,7 @@ public class DataFlowAllGather implements DataFlowOperation {
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     this.executor = instancePlan.getThisExecutor();
     this.dataType = type;
-    broadcast = new DataFlowBroadcast(channel, middleTask,
+    broadcast = new TreeBroadcast(channel, middleTask,
         destinations, new BCastReceiver(finalReceiver, streaming), MessageType.INTEGER, type);
     broadcast.init(config, type, instancePlan, broadCastEdge);
 
@@ -96,9 +96,9 @@ public class DataFlowAllGather implements DataFlowOperation {
       partialReceiver = new GatherBatchPartialReceiver(0);
     }
 
-    gather = new DataFlowGather(channel, sources, middleTask,
-        finalRecvr, partialReceiver, 0, 0, config, instancePlan, true, type, type,
-        MessageType.INTEGER, edge);
+    gather = new MToOneTree(channel, sources, middleTask,
+        finalRecvr, partialReceiver, 0, 0, true,
+        MessageType.INTEGER, type);
     gather.init(config, type, instancePlan, gatherEdge);
   }
 

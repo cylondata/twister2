@@ -16,13 +16,13 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
+import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 
 public class AllGatherStreamingFinalReceiver extends GatherStreamingPartialReceiver {
-  private DataFlowBroadcast broadcast;
+  private TreeBroadcast broadcast;
 
-  public AllGatherStreamingFinalReceiver(DataFlowBroadcast broadcast) {
+  public AllGatherStreamingFinalReceiver(TreeBroadcast broadcast) {
     this.broadcast = broadcast;
   }
 
