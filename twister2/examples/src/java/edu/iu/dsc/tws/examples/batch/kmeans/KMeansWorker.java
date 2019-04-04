@@ -184,7 +184,7 @@ public class KMeansWorker extends TaskWorker {
       LOG.info("Data Load time : " + (endTimeCenters - startTime) + "\n"
           + "Total Time : " + (endTime - startTime) + "\n"
           + "Compute Time : " + (endTime - endTimeCenters) + "\n"
-          + "Execute Time" + sumTimme/1000000);
+          + "Execute Time" + sumTimme / 1000000);
     }
   }
 
