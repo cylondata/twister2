@@ -33,20 +33,25 @@ public class CollectorImpl<T> implements Collector<T> {
 
   @Override
   public void collect(T record) {
-    while (pendingRecords.size() > 0) {
-      T remove = pendingRecords.get(0);
-      if (!context.write(edge, remove)) {
+    while (!pendingRecords.isEmpty()) {
+      T remove = pendingRecords.get(0); // peek the top of the list
+      if (context.write(edge, remove)) { // if written, remove
         pendingRecords.remove(0);
-      } else {
+      } else { // else break loop
         break;
       }
     }
-
+/*
     if (pendingRecords.size() == 0) {
-      if (!context.write(edge, record)) {
+      if (context.write(edge, record)) {
         pendingRecords.add(record);
       }
     } else {
+      pendingRecords.add(record);
+    }
+    */
+
+    if (!pendingRecords.isEmpty() || context.write(edge, record)) {
       pendingRecords.add(record);
     }
   }
@@ -57,9 +62,9 @@ public class CollectorImpl<T> implements Collector<T> {
   }
 
   public boolean hasPending() {
-    while (pendingRecords.size() > 0) {
+    while (!pendingRecords.isEmpty()) {
       T remove = pendingRecords.get(0);
-      if (!context.write(edge, remove)) {
+      if (context.write(edge, remove)) {
         pendingRecords.remove(0);
       } else {
         break;
