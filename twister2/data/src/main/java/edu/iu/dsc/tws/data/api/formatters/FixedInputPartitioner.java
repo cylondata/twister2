@@ -178,7 +178,8 @@ public abstract class FixedInputPartitioner<OT>
         continue;
       }
       b = line.getBytes(StandardCharsets.UTF_8);
-      totalBytes += b.length;
+      //Adding 1 byte for the EOL
+      totalBytes += b.length + 1;
       count++;
       if (count == end) {
         break;

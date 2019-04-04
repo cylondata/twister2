@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -77,6 +76,7 @@ public class KMeansWorker extends TaskWorker {
     workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);
 
+    long startTime = System.currentTimeMillis();
     /* First Graph to partition and read the partitioned data points **/
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
@@ -142,6 +142,8 @@ public class KMeansWorker extends TaskWorker {
     DataObject<Object> centroidsDataObject = taskExecutor.getOutput(
         centroidsTaskGraph, secondGraphExecutionPlan, "centroidsink");
 
+    long endTimeData = System.currentTimeMillis();
+
     /* Third Graph to do the actual calculation **/
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
@@ -174,8 +176,14 @@ public class KMeansWorker extends TaskWorker {
 
     DataPartition<?> centroidPartition = centroidsDataObject.getPartitions(workerId);
     double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
-    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
-        + Arrays.deepToString(centroid));
+    long endTime = System.currentTimeMillis();
+    if (workerId == 0) {
+      LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
+          + "Total Time : " + (endTime - startTime)
+          + "Compute Time : " + (endTime - endTimeData));
+    }
+//    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+//        + Arrays.deepToString(centroid));
   }
 
   private static class KMeansSourceTask extends BaseSource implements Receptor {
@@ -206,7 +214,7 @@ public class KMeansWorker extends TaskWorker {
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataObject<?> data) {
-      LOG.log(Level.INFO, "Received input: " + name);
+//      LOG.log(Level.INFO, "Received input: " + name);
       if ("points".equals(name)) {
         this.dataPointsObject = data;
       }
@@ -226,8 +234,8 @@ public class KMeansWorker extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
-          + ":" + context.taskId());
+//      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
+//          + ":" + context.taskId());
       centroids = (double[][]) message.getContent();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {
