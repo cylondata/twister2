@@ -19,10 +19,11 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
-import edu.iu.dsc.tws.comms.dfw.io.SourceReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.SourceSyncReceiver;
 
-public class GatherStreamingPartialReceiver extends SourceReceiver {
+public class GatherStreamingPartialReceiver extends SourceSyncReceiver {
   private Map<Integer, Queue<Object>> gatheredValuesMap = new HashMap<>();
 
   @Override
@@ -35,7 +36,7 @@ public class GatherStreamingPartialReceiver extends SourceReceiver {
   }
 
   @Override
-  protected boolean sendToTarget(int target) {
+  protected boolean sendToTarget(int target, boolean sync) {
     Queue<Object> gatheredValues = this.gatheredValuesMap.get(target);
     while (gatheredValues.size() > 0) {
       Object previous = gatheredValues.peek();
@@ -50,7 +51,7 @@ public class GatherStreamingPartialReceiver extends SourceReceiver {
   }
 
   @Override
-  protected boolean aggregate(int target) {
+  protected boolean aggregate(int target, boolean sync) {
     Queue<Object> reducedValues = this.gatheredValuesMap.get(target);
     Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
 
@@ -69,6 +70,26 @@ public class GatherStreamingPartialReceiver extends SourceReceiver {
     } else {
       return false;
     }
+  }
+
+  @Override
+  protected boolean isFilledToSend(int target) {
+    return true;
+  }
+
+  @Override
+  protected boolean isAllEmpty(int target) {
+    return gatheredValuesMap.get(target).isEmpty();
+  }
+
+  @Override
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    if (operation.sendPartial(target, new byte[0], MessageFlags.END, destination)) {
+      isSyncSent.put(target, true);
+    } else {
+      return true;
+    }
+    return needsFurtherProgress;
   }
 
   protected boolean handleMessage(int task, Object message, int flags, int dest) {
