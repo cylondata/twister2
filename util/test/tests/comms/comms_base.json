@@ -21,8 +21,14 @@
       "name": "Workers",
       "optional": false,
       "values": {
-        "type": "fixed",
-        "value": 128
+        "type": "array",
+        "array": [
+          "${size}",
+          64,
+          128,
+          256,
+          512
+        ]
       }
     },
     {
@@ -30,10 +36,8 @@
       "name": "Data Size",
       "optional": false,
       "values": {
-        "type": "steps",
-        "from": 256,
-        "to": 16384,
-        "step": 256
+        "type": "fixed",
+        "value": 1024
       }
     },
     {
@@ -43,14 +47,6 @@
       "values": {
         "type": "fixed",
         "value": 10000
-      }
-    },
-    {
-      "id": "stream",
-      "name": "Stream",
-      "optional": false,
-      "values": {
-        "type": "none"
       }
     }
   ]
