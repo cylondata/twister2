@@ -41,7 +41,6 @@ public class BinaryTree {
     this.taskPlan = taskPlan;
     this.root = source;
     this.nodes = destinations;
-    this.maxLevelsAtExecutor = 0;
     LOG.fine(String.format("Building tree with root: %d nodes: %s", root, nodes.toString()));
   }
 
@@ -61,12 +60,22 @@ public class BinaryTree {
     return null;
   }
 
+  public static void visit(Node root) {
+    if (root != null) {
+      LOG.info("Node: " + root.getTaskId());
+
+      for (Node n : root.getChildren()) {
+        visit(n);
+      }
+    }
+  }
+
   /**
    * Retrieve the parent of the child
    *
-   * @param root
-   * @param taskId
-   * @return
+   * @param root the node to start search
+   * @param taskId task id
+   * @return the found node, null if not found
    */
   public static Node searchParent(Node root, int taskId) {
     Queue<Node> queue = new LinkedList<>();
@@ -86,8 +95,8 @@ public class BinaryTree {
 
   /**
    * Building the tree
-   * @param index
-   * @return
+   * @param index the index to create a unique tree
+   * @return the root node of the group
    */
   public Node buildInterGroupTree(int index) {
     // first lets get the group hosting the root
@@ -141,12 +150,9 @@ public class BinaryTree {
   private Node buildIntraGroupTree(int groupId, int index) {
     // rotate according to index, this will create a unique tree for each index
     Set<Integer> executorsHostingTask = getExecutorsHostingTask(groupId);
-//    LOG.log(Level.INFO, taskPlan.getThisExecutor() + " Executor before rotate: "
-//        + executorsHostingTask);
     List<Integer> executorIds = rotateList(
         new ArrayList<>(executorsHostingTask), index);
 
-//    LOG.log(Level.INFO, taskPlan.getThisExecutor() + " Executors after rotate: " + executorIds);
     if (executorIds.size() == 0) {
       return null;
     }
@@ -175,8 +181,6 @@ public class BinaryTree {
         current.addChild(e);
         e.setParent(current);
         e.setExecLevel(execLevel);
-//        LOG.info(String.format("%d Create node with parent %s -> %s",
-//            taskPlan.getThisExecutor(), e, current));
         queue.add(e);
         i++;
       } else {

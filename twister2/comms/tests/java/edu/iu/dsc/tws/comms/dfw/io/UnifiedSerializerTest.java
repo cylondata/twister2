@@ -80,13 +80,23 @@ public class UnifiedSerializerTest {
     Assert.assertArrayEquals((byte[]) inMessage.getDeserializedData(), (byte[]) data);
   }
 
+  @Test
+  public void testBuildLargeObjectMessage() {
+    int numBuffers = 20;
+    int size = 1000;
+    MessageType type = MessageType.OBJECT;
+    Object data = createData(800, type);
+    InMessage inMessage = singleValueCase(numBuffers, size, type, data);
+    Assert.assertArrayEquals((int[]) inMessage.getDeserializedData(), (int[]) data);
+  }
+
   private InMessage singleValueCase(int numBuffers, int size, MessageType type, Object data) {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
 
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null);
 
-    UnifiedSerializer serializer = new UnifiedSerializer(new KryoSerializer(), 0);
+    UnifiedSerializer serializer = new UnifiedSerializer(new KryoSerializer(), 0, type);
     serializer.init(Config.newBuilder().build(), bufferQueue, false);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -96,7 +106,7 @@ public class UnifiedSerializerTest {
       messages.add(ch);
     }
 
-    UnifiedDeserializer deserializer = new UnifiedDeserializer(new KryoSerializer(), 0);
+    UnifiedDeserializer deserializer = new UnifiedDeserializer(new KryoSerializer(), 0, type);
     deserializer.init(Config.newBuilder().build(), false);
 
     MessageHeader header = deserializer.buildHeader(
@@ -222,7 +232,7 @@ public class UnifiedSerializerTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null);
 
-    UnifiedSerializer serializer = new UnifiedSerializer(new KryoSerializer(), 0);
+    UnifiedSerializer serializer = new UnifiedSerializer(new KryoSerializer(), 0, type);
     serializer.init(Config.newBuilder().build(), bufferQueue, false);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -233,7 +243,7 @@ public class UnifiedSerializerTest {
       messages.add(ch);
     }
 
-    UnifiedDeserializer deserializer = new UnifiedDeserializer(new KryoSerializer(), 0);
+    UnifiedDeserializer deserializer = new UnifiedDeserializer(new KryoSerializer(), 0, type);
     deserializer.init(Config.newBuilder().build(), false);
 
     MessageHeader header = deserializer.buildHeader(
@@ -278,6 +288,12 @@ public class UnifiedSerializerTest {
       byte[] vals = new byte[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (byte) i;
+      }
+      return vals;
+    } else if (type == MessageType.OBJECT) {
+      int[] vals = new int[size];
+      for (int i = 0; i < vals.length; i++) {
+        vals[i] = i;
       }
       return vals;
     } else {

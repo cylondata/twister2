@@ -11,10 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -24,9 +26,12 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BBroadcast;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
-import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 
 public class BBroadcastExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BBroadcastExample.class.getName());
@@ -34,11 +39,16 @@ public class BBroadcastExample extends BenchWorker {
   private BBroadcast bcast;
 
   private boolean bCastDone;
+  private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
   protected void execute() {
     TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
         jobParameters.getTaskStages(), workerList);
+    if (jobParameters.getTaskStages().get(0) != 1) {
+      LOG.warning("Setting no of senders to 1");
+      jobParameters.getTaskStages().set(0, 1);
+    }
 
     Set<Integer> targets = new HashSet<>();
     Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
@@ -58,6 +68,22 @@ public class BBroadcastExample extends BenchWorker {
     }
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
+    }
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
+      List<int[]> expectedData = new ArrayList<>();
+      for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
+        expectedData.add(ints);
+      }
+      return expectedData.iterator();
+    }, new IteratorComparator<>(
+        IntArrayComparator.getInstance()
+    ));
+
+    Set<Integer> sinksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+        jobParameters.getTaskStages(), 1);
+    if (sinksOfExecutor.isEmpty()) {
+      bCastDone = true;
     }
 
     // the map thread where data is produced
@@ -96,54 +122,27 @@ public class BBroadcastExample extends BenchWorker {
   }
 
   public class BCastReceiver implements BulkReceiver {
-    private int count = 0;
-    private int expected = 0;
+    private int lowestTarget = 0;
 
     @Override
     public void init(Config cfg, Set<Integer> targets) {
-      expected = targets.size() * jobParameters.getIterations();
+      if (targets.isEmpty()) {
+        bCastDone = true;
+        return;
+      }
+      this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
     }
 
     @Override
     public boolean receive(int target, Iterator<Object> object) {
-//      if (count % jobParameters.getPrintInterval() == 0) {
-//        LOG.log(Level.INFO, String.format("%d Received message to %d - %d",
-//            workerId, target, count));
-//      }
-      while (object.hasNext()) {
-        count++;
-
-        LOG.log(Level.INFO, String.format("%d Received message to %d - %d",
-            workerId, target, count));
-
-        experimentData.setTaskId(target);
-
-        experimentData.setOutput(object.next());
-
-        try {
-          verify();
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
-        }
-      }
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV,
+          workerId == 0 && target == lowestTarget);
+      BenchmarkUtils.markTotalTime(resultsRecorder, workerId == 0
+          && target == lowestTarget);
+      resultsRecorder.writeToCSV();
+      verifyResults(resultsVerifier, object, null);
       bCastDone = true;
       return true;
-    }
-  }
-
-  public void verify() throws VerificationException {
-    boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified;
-    if (doVerify) {
-      LOG.info("Verifying results ...");
-      ExperimentVerification experimentVerification
-          = new ExperimentVerification(experimentData, OperationNames.BROADCAST);
-      isVerified = experimentVerification.isVerified();
-      if (isVerified) {
-        LOG.info("Results generated from the experiment are verified.");
-      } else {
-        throw new VerificationException("Results do not match");
-      }
     }
   }
 }

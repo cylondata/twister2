@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,6 +28,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -129,10 +133,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    * Pending deserialization
    */
   private Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations;
+
   /**
-   * Non grouped current messages
+   * Non grouped current messages, workerId, source, inMessage
    */
-  private Map<Integer, InMessage> currentMessages = new HashMap<>();
+  private Table<Integer, Integer, InMessage> currentMessages = HashBasedTable.create();
 
   /**
    * These are the workers from which we receive messages
@@ -150,14 +155,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private ProgressionTracker sendProgressTracker;
 
   /**
-   * Receive communicationProgress tracker
-   */
-  private ProgressionTracker receiveProgressTracker;
-
-  /**
    * Deserialize communicationProgress track
    */
-  private ProgressionTracker deserializeProgressTracker;
+  private ProgressionTracker receiveProgressTracker;
 
   private AtomicInteger externalSendsPending = new AtomicInteger(0);
 
@@ -165,10 +165,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     this.channel = channel;
   }
 
-
-  /**
-   * init method
-   */
   public void init(Config cfg, MessageType messageType, MessageType rcvDataType,
                    MessageType kType, MessageType rcvKeyType, TaskPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
@@ -219,9 +215,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     initProgressTrackers();
   }
 
-  /**
-   * init method
-   */
   public void init(Config cfg, MessageType messageType, TaskPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
                    ChannelReceiver msgReceiver,
@@ -251,10 +244,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     sendProgressTracker = new ProgressionTracker(sendItems);
 
     Set<Integer> receiveItems = pendingReceiveMessagesPerSource.keySet();
-    receiveProgressTracker = new ProgressionTracker(receiveItems);
-
     Set<Integer> desrializeItems = pendingReceiveDeSerializations.keySet();
-    deserializeProgressTracker = new ProgressionTracker(desrializeItems);
+    Set<Integer> items = new HashSet<>(receiveItems);
+    items.addAll(desrializeItems);
+
+    receiveProgressTracker = new ProgressionTracker(items);
   }
 
   /**
@@ -285,7 +279,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   }
 
   /**
-   * Sends a message from a partil location
+   * Sends a message from a partial location
    *
    * @param source source id
    * @param message the actual message
@@ -296,7 +290,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   protected boolean sendMessagePartial(int source, Object message, int target,
                                     int flags, RoutingParameters routingParameters) {
-//    LOG.log(Level.INFO, String.format("%d Partial send %d -> %d", executor, source, target));
     // for partial sends we use minus value to find the correct queue
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);
@@ -321,15 +314,10 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (pendingSendMessages == null) {
       throw new RuntimeException(String.format("%d No send messages %d", executor, source));
     }
-    boolean offer = offerForSend(source, message, target, flags,
+    return offerForSend(source, message, target, flags,
         routingParameters, pendingSendMessages);
-//  LOG.log(Level.INFO, String.format("%d FULL send %d -> %d %b", executor, source, target, offer));
-    return offer;
   }
 
-  private int completedReceives = 0;
-
-  private int buffersReceived = 0;
   @Override
   public void onReceiveComplete(int id, int e, DataBuffer buffer, boolean releaseBuffer) {
     // we need to try to build the message here, we may need many more messages to complete
@@ -337,7 +325,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     byteBuffer.position(buffer.getSize());
     byteBuffer.flip();
 
-    InMessage currentMessage = currentMessages.get(id);
+    // we have the source of the message at 0th position as an integer
+    int source = byteBuffer.getInt(0);
+    InMessage currentMessage = currentMessages.get(id, source);
     if (currentMessage == null) {
       MessageHeader header = messageDeSerializer.get(id).buildHeader(buffer, e);
 
@@ -345,8 +335,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       if (isKeyed) {
         currentMessage.setKeyType(receiveKeyType);
       }
-      currentMessages.put(id, currentMessage);
-//      LOG.info(String.format("%d number of messages %d", executor, header.getNumberTuples()));
+      currentMessages.put(id, source, currentMessage);
       // we add the message immediately to the deserialization as we can deserialize partially
       Queue<InMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
       if (!deserializeQueue.offer(currentMessage)) {
@@ -354,18 +343,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             + deserializeQueue.size());
       }
     }
-    buffersReceived++;
     if (currentMessage.addBufferAndCalculate(buffer)) {
-      completedReceives++;
-      currentMessages.remove(id);
+      currentMessages.remove(id, source);
     }
-//    LOG.info(String.format("%d completed recvs %d buffers %d", executor,
-//        completedReceives, buffersReceived));
-
-    // we need to free the buffer because we don't have space
-    // if (releaseBuffer) {
-    //   freeReceiveBuffers(id);
-    // }
   }
 
   /**
@@ -408,20 +388,20 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       }
     }
 
-    if (deserializeProgressTracker.canProgress()) {
-      int deserializeId = deserializeProgressTracker.next();
-      if (deserializeId != Integer.MIN_VALUE) {
-        receiveDeserializeProgress(
-            pendingReceiveDeSerializations.get(deserializeId), deserializeId);
-        deserializeProgressTracker.finish(deserializeId);
-      }
-    }
-
     if (receiveProgressTracker.canProgress()) {
-      int receiveId = receiveProgressTracker.next();
-      if (receiveId != Integer.MIN_VALUE) {
-        receiveProgress(pendingReceiveMessagesPerSource.get(receiveId));
-        receiveProgressTracker.finish(receiveId);
+      int deserializeId = receiveProgressTracker.next();
+      if (deserializeId != Integer.MIN_VALUE) {
+        Queue<InMessage> msgQueue = pendingReceiveDeSerializations.get(deserializeId);
+        if (msgQueue != null) {
+          receiveDeserializeProgress(msgQueue, deserializeId);
+        }
+
+        Queue<Pair<Object, InMessage>> pendingReceiveMessages =
+            pendingReceiveMessagesPerSource.get(deserializeId);
+        if (pendingReceiveMessages != null) {
+          receiveProgress(pendingReceiveMessages);
+        }
+        receiveProgressTracker.finish(deserializeId);
       }
     }
   }
@@ -466,14 +446,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private void sendProgress(Queue<Pair<Object, OutMessage>> pendingSendMessages, int sendId) {
     boolean canProgress = true;
 
-//    StringBuilder s = new StringBuilder();
-//    for (Map.Entry<Integer, Queue<DataBuffer>> e : receiveBuffers.entrySet()) {
-//      s.append(e.getKey()).append(": ").append(e.getValue().size());
-//    }
-//
-//    LOG.log(Level.INFO, String.format("%d SEND PROGRESS sendBuffers: %d recvBuffers: %s",
-//        executor, sendBuffers.size(), s.toString()));
-
     while (pendingSendMessages.size() > 0 && canProgress) {
       // take out pending messages
       Pair<Object, OutMessage> pair = pendingSendMessages.peek();
@@ -512,6 +484,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
             // we are done
             pendingSendMessages.poll();
             channelMessages.poll();
+            // the send is completed, we need to notify
+            receiver.sendCompleted(outMessage);
           }
         } else if (outMessage.getSendState() == OutMessage.SendState.PARTIALLY_SERIALIZED) {
           int startOfExternalRouts = chMessage.getAcceptedExternalSends();
@@ -524,9 +498,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         } else {
           break;
         }
-      }/* else {
-        LOG.info(String.format("%d CANNOT SENT INTERNALLY", executor));
-      }*/
+      }
     }
   }
 
@@ -595,7 +567,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (currentMessage.getReceivedState() == InMessage.ReceivedState.INIT
         || currentMessage.getReceivedState() == InMessage.ReceivedState.BUILDING) {
       int id = currentMessage.getOriginatingId();
-      MessageHeader header = currentMessage.getHeader();
       Object object = DataFlowContext.EMPTY_OBJECT;
 
       if (currentMessage.getReceivedState() == InMessage.ReceivedState.INIT) {
@@ -627,12 +598,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
   }
 
-  private int releaseAttemtCount = 0;
-  private int receiveCount = 0;
-
   private void receiveProgress(Queue<Pair<Object, InMessage>> pendingReceiveMessages) {
-//    LOG.info(String.format("%d RELEASE COUNT %d attempts %d receive %d", executor, releaseCount,
-//        releaseAttemtCount, receiveCount));
     boolean canProgress = true;
     while (pendingReceiveMessages.size() > 0 && canProgress) {
       Pair<Object, InMessage> pair = pendingReceiveMessages.peek();
@@ -652,7 +618,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
               }
               ChannelMessage releaseMsg = currentMessage.getBuiltMessages().poll();
               Objects.requireNonNull(releaseMsg).release();
-              releaseAttemtCount++;
             }
           }
 
@@ -667,7 +632,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           if (!receiver.receiveMessage(currentMessage.getHeader(), object)) {
             break;
           }
-          receiveCount++;
           currentMessage.setReceivedState(InMessage.ReceivedState.DONE);
           pendingReceiveMessages.poll();
         } else {
@@ -681,8 +645,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
   private boolean sendMessageToTarget(ChannelMessage channelMessage, int i) {
     int e = instancePlan.getExecutorForChannel(i);
-//    LOG.log(Level.INFO, String.format("%d Sending message to target %d -> %d", executor,
-//        channelMessage.getOriginatingId(), e));
     return channel.sendMessage(e, channelMessage, this);
   }
 
@@ -697,55 +659,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   @Override
   public void onSendComplete(int id, int messageStream, ChannelMessage message) {
     // ok we don't have anything else to do
-//    LOG.log(Level.INFO, String.format("%d Release: %d", executor, id));
     message.release();
     externalSendsPending.getAndDecrement();
   }
-
-  private void freeReceiveBuffers(int id) {
-    InMessage currentMessage = currentMessages.get(id);
-    if (currentMessage == null) {
-      return;
-    }
-    Queue<DataBuffer> buffers = currentMessage.getBuffers();
-    DataBuffer channelMessage = buffers.peek();
-    if (channelMessage == null) {
-      LOG.info("There are no receive buffers to be released for rank : " + id);
-      return;
-    }
-    //Need to reuse created byte[]'s
-    DataBuffer local;
-    int receiveBufferSize = DataFlowContext.bufferSize(config);
-    if (localReceiveBuffers.size() == 0) {
-      local = new DataBuffer(ByteBuffer.allocate(receiveBufferSize));
-    } else {
-      local = localReceiveBuffers.poll();
-    }
-
-    // we should always have a buffer
-    copyToLocalBuffer(id, Objects.requireNonNull(buffers.poll()), local, currentMessage);
-  }
-
-  private void copyToLocalBuffer(int id, DataBuffer dataBuffer, DataBuffer localBuffer,
-                                 InMessage message) {
-    ByteBuffer original = dataBuffer.getByteBuffer();
-    ByteBuffer local = localBuffer.getByteBuffer();
-    int position = original.position();
-    original.rewind();
-    local.put(original);
-    local.flip();
-    local.position(position);
-    localBuffer.setSize(dataBuffer.getSize());
-    message.addOverFlowBuffer(localBuffer);
-    original.clear();
-    Queue<DataBuffer> list = receiveBuffers.get(id);
-    if (!list.offer(dataBuffer)) {
-      throw new RuntimeException(String.format("%d Buffer release failed for target %d",
-          executor, message.getHeader().getDestinationIdentifier()));
-    }
-  }
-
-  private int releaseCount = 0;
 
   private void releaseTheBuffers(int id, ChannelMessage message) {
     if (MessageDirection.IN == message.getMessageDirection()) {
@@ -753,7 +669,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       for (DataBuffer buffer : message.getNormalBuffers()) {
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
-        releaseCount++;
         if (!list.offer(buffer)) {
           throw new RuntimeException(String.format("%d Buffer release failed for target %d",
               executor, message.getHeader().getDestinationIdentifier()));

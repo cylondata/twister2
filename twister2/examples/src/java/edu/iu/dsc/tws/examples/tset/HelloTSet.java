@@ -14,33 +14,50 @@ package edu.iu.dsc.tws.examples.tset;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.logging.Logger;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.api.tset.Source;
-import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetBuilder;
+import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
+import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
+import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class HelloTSet extends TaskWorker implements Serializable {
+public class HelloTSet extends TSetBatchWorker implements Serializable {
+  private static final Logger LOG = Logger.getLogger(HelloTSet.class.getName());
+
   private static final long serialVersionUID = -2;
+
   @Override
-  public void execute() {
-    TSetBuilder builder = TSetBuilder.newBuilder(config);
-    TSet<int[]> source = builder.createSource(new Source<int[]>() {
+  public void execute(TwisterBatchContext tc) {
+    LOG.info("Strating Hello TSet Example");
+    int para = config.getIntegerValue("para", 4);
+    BatchSourceTSet<int[]> source = tc.createSource(new Source<int[]>() {
+
+      @Override
+      public void prepare() {
+
+      }
 
       private int count = 0;
 
       @Override
       public boolean hasNext() {
-        return count < 1;
+        return count < para;
       }
 
       @Override
@@ -48,36 +65,52 @@ public class HelloTSet extends TaskWorker implements Serializable {
         count++;
         return new int[]{1, 1, 1};
       }
-    }).setName("Source");
+    }, para).setName("Source");
 
-    TSet<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
+    PartitionTLink<int[]> partitioned = source.
+        partition(new LoadBalancePartitioner<>());
+    IterableMapTSet<int[], int[]> mapedPartition =
+        partitioned.map((IterableMapFunction<int[], int[]>) ints -> {
+          LOG.info("tests");
+          if (ints.iterator().hasNext()) {
+            return ints.iterator().next();
+          } else {
+            return new int[0];
+          }
+        },
+            para);
 
-    TSet<int[]> reduce = partitioned.reduce((t1, t2) -> {
+    ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];
       for (int i = 0; i < t1.length; i++) {
         ret[i] = t1[i] + t2[i];
       }
       return ret;
-    }).setName("Reduce");
+    });
 
     reduce.sink(value -> {
-      System.out.println(Arrays.toString(value));
+      LOG.info("Results " + Arrays.toString(value));
       return false;
     });
 
-    builder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph graph = builder.build();
+    LOG.info("Ending  Hello TSet Example");
 
-    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, executionPlan);
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws ParseException {
     // first load the configurations from command line and config files
+    Options options = new Options();
+    options.addOption("para", true, "Workers");
+    CommandLineParser commandLineParser = new DefaultParser();
+    CommandLine cmd = commandLineParser.parse(options, args);
+
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
+    int para = Integer.parseInt(cmd.getOptionValue("para"));
     // build JobConfig
+
     JobConfig jobConfig = new JobConfig();
-    submitJob(config, 4, jobConfig, HelloTSet.class.getName());
+    jobConfig.put("para", Integer.toString(para));
+    submitJob(config, para, jobConfig, HelloTSet.class.getName());
   }
 
   private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {

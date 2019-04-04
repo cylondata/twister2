@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.IExecutor;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
@@ -57,6 +58,21 @@ public abstract class ThreadSharingExecutor implements  IExecutor {
     return runExecution();
   }
 
+  public IExecution iExecute(Config cfg, ExecutionPlan plan, TWSChannel ch) {
+    this.numThreads = ExecutorContext.threadsPerContainer(cfg);
+    this.channel = ch;
+    this.executionPlan = plan;
+
+    // lets create the runtime object
+    ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(cfg), plan, ch);
+    // updated config
+    this.config = Config.newBuilder().putAll(cfg).
+        put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
+
+    // go through the instances
+    return runIExecution();
+  }
+
   /**
    * Specific implementation needs to implement this method
    * @return weather we executed successfully
@@ -64,19 +80,8 @@ public abstract class ThreadSharingExecutor implements  IExecutor {
   public abstract boolean runExecution();
 
   /**
-   * Progress the communications
+   * Specific implementation needs to implement this method
+   * @return weather we executed successfully
    */
-  protected void progressStreamComm() {
-    while (true) {
-      this.channel.progress();
-    }
-  }
-
-  /**
-   * We are done executing
-   * @return weather we are done
-   */
-  public boolean isDone() {
-    return false;
-  }
+  public abstract IExecution runIExecution();
 }

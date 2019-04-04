@@ -26,13 +26,13 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
-import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
+import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -66,7 +66,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * The operation
    */
-  private DataFlowPartition partition;
+  private DataFlowOperation partition;
 
   /**
    * Weather a keyed operation is used
@@ -125,7 +125,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
 
     thisWorker = op.getTaskPlan().getThisExecutor();
     finishedSources = new HashMap<>();
-    partition = (DataFlowPartition) op;
+    partition = op;
     keyed = partition.getKeyType() != null;
     targets = new HashSet<>(expectedIds.keySet());
 
@@ -137,7 +137,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
             DFWIOUtils.getOperationName(target, partition), partition.getDataType());
       } else {
         if (sorted) {
-          sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory,
+          sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
               shuffleDirectory, DFWIOUtils.getOperationName(target, partition),
               partition.getKeyType(), partition.getDataType(), comparator, target);
         } else {
@@ -180,8 +180,12 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       List<Tuple> tuples = (List<Tuple>) object;
       for (Tuple kc : tuples) {
         Object data = kc.getValue();
-        byte[] d = DataSerializer.serialize(data, kryoSerializer);
-
+        byte[] d;
+        if (partition.getReceiveDataType() != MessageType.BYTE || !(data instanceof byte[])) {
+          d = DataSerializer.serialize(data, kryoSerializer);
+        } else {
+          d = (byte[]) data;
+        }
         sortedMerger.add(kc.getKey(), d, d.length);
       }
       int total = totalReceives.get(target);
@@ -190,7 +194,12 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     } else {
       List<Object> contents = (List<Object>) object;
       for (Object kc : contents) {
-        byte[] d = DataSerializer.serialize(kc, kryoSerializer);
+        byte[] d;
+        if (partition.getReceiveDataType() != MessageType.BYTE) {
+          d = DataSerializer.serialize(kc, kryoSerializer);
+        } else {
+          d = (byte[]) kc;
+        }
         sortedMerger.add(d, d.length);
       }
       int total = totalReceives.get(target);

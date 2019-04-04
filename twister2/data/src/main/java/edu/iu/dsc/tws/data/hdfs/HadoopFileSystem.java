@@ -29,18 +29,20 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
   private static final Logger LOG = Logger.getLogger(HadoopFileSystem.class.getName());
 
   private org.apache.hadoop.conf.Configuration conf;
-  private org.apache.hadoop.fs.FileSystem fileSystem;
+  private org.apache.hadoop.fs.FileSystem hadoopFileSystem;
 
   public HadoopFileSystem(
       org.apache.hadoop.conf.Configuration hadoopConfig,
-      org.apache.hadoop.fs.FileSystem hadoopFileSystem) {
+      org.apache.hadoop.fs.FileSystem hadoopfileSystem) {
 
     this.conf = checkNotNull(hadoopConfig, "hadoopConfig");
-    this.fileSystem = checkNotNull(hadoopFileSystem, "hadoopFileSystem");
+    this.hadoopFileSystem = checkNotNull(hadoopfileSystem, "fileSystem");
   }
 
-  public HadoopFileSystem() {
-    super();
+  public void initialize(org.apache.hadoop.conf.Configuration hadoopConfig,
+                         org.apache.hadoop.fs.FileSystem hadoopfileSystem) {
+    this.conf = checkNotNull(hadoopConfig, "hadoopConfig");
+    this.hadoopFileSystem = checkNotNull(hadoopfileSystem, "fileSystem");
   }
 
   private static Class<? extends FileSystem> getFileSystemByName(String className)
@@ -54,7 +56,7 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
   }
 
   public org.apache.hadoop.fs.FileSystem getHadoopFileSystem() {
-    return this.fileSystem;
+    return this.hadoopFileSystem;
   }
 
   private Configuration getHadoopConfiguration() {
@@ -66,7 +68,7 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
    */
   @Override
   public Path getWorkingDirectory() {
-    return new Path(this.fileSystem.getWorkingDirectory().toUri());
+    return new Path(this.hadoopFileSystem.getWorkingDirectory().toUri());
   }
 
   /**
@@ -79,7 +81,7 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
 
   @Override
   public URI getUri() {
-    return fileSystem.getUri();
+    return hadoopFileSystem.getUri();
   }
 
   /**
@@ -99,9 +101,10 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
    * @throws IOException
    */
   @Override
-  public FileStatus getFileStatus(final Path f) throws IOException {
-    org.apache.hadoop.fs.FileStatus status = this.fileSystem.getFileStatus(toHadoopPath(f));
-    return new HadoopFileStatus(status);
+  public FileStatus getFileStatus(Path f) throws IOException {
+    org.apache.hadoop.fs.FileStatus status = this.hadoopFileSystem.getFileStatus(toHadoopPath(f));
+    final FileStatus[] fileStatuses = listStatus(f);
+    return fileStatuses[0];
   }
 
   @Override
@@ -114,7 +117,7 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
 
     final HadoopFileStatus f = (HadoopFileStatus) file;
     final org.apache.hadoop.fs.BlockLocation[] blkLocations =
-        fileSystem.getFileBlockLocations(f.getInternalFileStatus(), start, len);
+        hadoopFileSystem.getFileBlockLocations(f.getInternalFileStatus(), start, len);
     final HadoopBlockLocation[] distBlkLocations = new HadoopBlockLocation[blkLocations.length];
     for (int i = 0; i < distBlkLocations.length; i++) {
       distBlkLocations[i] = new HadoopBlockLocation(blkLocations[i]);
@@ -126,7 +129,7 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
   public HadoopDataInputStream open(final Path f, final int bufferSize) throws IOException {
     final org.apache.hadoop.fs.Path directoryPath = toHadoopPath(f);
     final org.apache.hadoop.fs.FSDataInputStream fsDataInputStream =
-        this.fileSystem.open(directoryPath, bufferSize);
+        this.hadoopFileSystem.open(directoryPath, bufferSize);
     return new HadoopDataInputStream(fsDataInputStream);
   }
 
@@ -138,40 +141,39 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
    */
   @Override
   public HadoopDataInputStream open(final Path f) throws IOException {
-    final org.apache.hadoop.fs.Path directoryPath = toHadoopPath(f);
-    final org.apache.hadoop.fs.FSDataInputStream fsDataInputStream = fileSystem.open(directoryPath);
+    final org.apache.hadoop.fs.FSDataInputStream fsDataInputStream
+        = hadoopFileSystem.open(toHadoopPath(f));
     return new HadoopDataInputStream(fsDataInputStream);
   }
 
   @Override
   public HadoopDataOutputStream create(final Path f) throws IOException {
     final org.apache.hadoop.fs.FSDataOutputStream fsDataOutputStream =
-        this.fileSystem.create(toHadoopPath(f));
+        this.hadoopFileSystem.create(toHadoopPath(f));
     return new HadoopDataOutputStream(fsDataOutputStream);
   }
 
   public HadoopDataOutputStream append(Path path) throws IOException {
     final org.apache.hadoop.fs.FSDataOutputStream fsDataOutputStream =
-        this.fileSystem.append(toHadoopPath(path));
+        this.hadoopFileSystem.append(toHadoopPath(path));
     return new HadoopDataOutputStream(fsDataOutputStream);
   }
 
   @Override
   public boolean delete(final Path f, final boolean recursive) throws IOException {
-    return this.fileSystem.delete(toHadoopPath(f), recursive);
+    return this.hadoopFileSystem.delete(toHadoopPath(f), recursive);
   }
 
   @Override
   public boolean exists(Path f) throws IOException {
-    return this.fileSystem.exists(toHadoopPath(f));
+    return this.hadoopFileSystem.exists(toHadoopPath(f));
   }
 
   @Override
   public FileStatus[] listStatus(final Path f) throws IOException {
     final org.apache.hadoop.fs.FileStatus[] hadoopFiles =
-        this.fileSystem.listStatus(toHadoopPath(f));
+        this.hadoopFileSystem.listStatus(toHadoopPath(f));
     final FileStatus[] files = new FileStatus[hadoopFiles.length];
-
     for (int i = 0; i < files.length; i++) {
       files[i] = new HadoopFileStatus(hadoopFiles[i]);
     }
@@ -180,18 +182,18 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
 
   @Override
   public boolean mkdirs(final Path f) throws IOException {
-    return this.fileSystem.mkdirs(toHadoopPath(f));
+    return this.hadoopFileSystem.mkdirs(toHadoopPath(f));
   }
 
   @Override
   public boolean rename(final Path src, final Path dst) throws IOException {
-    return this.fileSystem.rename(toHadoopPath(src), toHadoopPath(dst));
+    return this.hadoopFileSystem.rename(toHadoopPath(src), toHadoopPath(dst));
   }
 
   @SuppressWarnings("deprecation")
   @Override
   public long getDefaultBlockSize() {
-    return this.fileSystem.getDefaultBlockSize();
+    return this.hadoopFileSystem.getDefaultBlockSize();
   }
 
   @Override
@@ -212,7 +214,7 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
   }
 
   public void close() throws IOException {
-    this.fileSystem.close();
+    this.hadoopFileSystem.close();
   }
 }
 

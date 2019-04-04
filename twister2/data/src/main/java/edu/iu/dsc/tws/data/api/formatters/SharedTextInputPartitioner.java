@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.formatters;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.api.splits.TextInputSplit;
@@ -23,6 +24,10 @@ public class SharedTextInputPartitioner extends FileInputPartitioner<String> {
 
   public SharedTextInputPartitioner(Path filePath) {
     super(filePath);
+  }
+
+  public SharedTextInputPartitioner(Path filePath, int numTasks, Config config) {
+    super(filePath, config);
   }
 
   @Override

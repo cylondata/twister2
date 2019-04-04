@@ -70,7 +70,7 @@ public class FileSource<T> implements Source<T> {
     }
 
     try {
-      return (T) currentSplit.nextRecord(null);
+      return currentSplit.nextRecord(null);
     } catch (IOException e) {
       throw new RuntimeException("Failed to ");
     }

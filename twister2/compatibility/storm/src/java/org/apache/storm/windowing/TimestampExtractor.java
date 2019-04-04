@@ -23,5 +23,19 @@
 //  limitations under the License.
 package org.apache.storm.windowing;
 
-public class TimestampExtractor {
+import java.io.Serializable;
+
+import org.apache.storm.tuple.Tuple;
+
+/**
+ * Interface to be implemented for extracting timestamp from a tuple.
+ */
+public interface TimestampExtractor extends Serializable {
+  /**
+   * Return the tuple timestamp indicating the time when the event happened.
+   *
+   * @param tuple the tuple
+   * @return the timestamp
+   */
+  long extractTimestamp(Tuple tuple);
 }

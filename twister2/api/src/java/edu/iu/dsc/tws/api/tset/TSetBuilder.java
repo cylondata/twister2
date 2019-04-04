@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingSourceTSet;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -26,7 +29,7 @@ public final class TSetBuilder {
   /**
    * List of sources added to this builder
    */
-  private List<SourceTSet<?>> sources;
+  private List<BaseTSet<?>> sources;
 
   /**
    * Operation mode
@@ -59,22 +62,41 @@ public final class TSetBuilder {
     return new TSetBuilder(cfg);
   }
 
+  public OperationMode getOpMode() {
+    return opMode;
+  }
+
   public TSetBuilder setMode(OperationMode mode) {
     this.opMode = mode;
     return this;
   }
 
-  public <T> TSet<T> createSource(Source<T> source) {
-    SourceTSet<T> tSourceTSet = new SourceTSet<>(config, builder, source);
+  public <T> BatchSourceTSet<T> createBatchSource(Source<T> source, int parallelism,
+                                                  TSetEnv tSetEnv) {
+    builder.setMode(opMode);
+    BatchSourceTSet<T> tSourceTSet = new BatchSourceTSet<>(config, tSetEnv, source, parallelism);
+    sources.add(tSourceTSet);
+    return tSourceTSet;
+  }
+
+  public <T> StreamingSourceTSet<T> createStreamingSource(Source<T> source, int parallelism,
+                                                          TSetEnv tSetEnv) {
+    builder.setMode(opMode);
+    StreamingSourceTSet<T> tSourceTSet = new StreamingSourceTSet<>(config, tSetEnv,
+        source, parallelism);
     sources.add(tSourceTSet);
     return tSourceTSet;
   }
 
   public DataFlowTaskGraph build() {
     builder.setMode(opMode);
-    for (SourceTSet<?> set : sources) {
+    for (BaseTSet<?> set : sources) {
       set.build();
     }
     return builder.build();
+  }
+
+  public TaskGraphBuilder getTaskGraphBuilder() {
+    return builder;
   }
 }

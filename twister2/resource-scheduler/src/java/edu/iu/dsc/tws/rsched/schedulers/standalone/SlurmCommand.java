@@ -57,7 +57,7 @@ public class SlurmCommand extends MPICommand {
     String nodesFileName = MPIContext.nodeFiles(config);
 
     // lets construct the mpi command to launch
-    List<String> mpiCommand = mpiCommand(getScriptPath(), 1);
+    List<String> mpiCommand = mpiCommand(getScriptPath(), 1, MPIContext.partition(config));
     Map<String, Object> map = mpiCommandArguments(config, job);
 
     mpiCommand.add(map.get("procs").toString());
@@ -70,7 +70,6 @@ public class SlurmCommand extends MPICommand {
     mpiCommand.add(MPIContext.mpiRunFile(config));
     mpiCommand.add("-Xmx" + getMemory(job) + "m");
     mpiCommand.add("-Xms" + getMemory(job) + "m");
-
     return mpiCommand;
   }
 
@@ -82,14 +81,17 @@ public class SlurmCommand extends MPICommand {
    * Construct the SLURM Command
    * @param slurmScript slurm script name
    * @param containers number of containers
+   * @param slurm partition name
    * @return list with the command
    */
   private List<String> mpiCommand(String slurmScript,
-                                  long containers) {
+                                  long containers, String partitionName) {
+
     String nTasks = String.format("--ntasks=%d", containers);
+    String pName = String.format("--partition=%s", partitionName);
     List<String> slurmCmd;
     slurmCmd = new ArrayList<>(Arrays.asList("sbatch", "-N",
-        Long.toString(containers), nTasks, slurmScript));
+        Long.toString(containers), nTasks, pName, slurmScript));
     return slurmCmd;
   }
 }

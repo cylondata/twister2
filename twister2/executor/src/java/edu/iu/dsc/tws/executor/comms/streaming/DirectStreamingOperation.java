@@ -15,28 +15,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SDirect;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class DirectStreamingOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(PartitionStreamingOperation.class.getName());
-
   protected SDirect op;
 
   public DirectStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
-                                     Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                                     DataType dataType, String edgeName) {
+                                  Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+                                  Edge edge) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
 
@@ -53,9 +50,10 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
     ArrayList<Integer> targets = new ArrayList<>(dests);
     Collections.sort(targets);
 
-    op = new SDirect(channel, taskPlan, sources, targets,
-        Utils.dataTypeToMessageType(dataType), new DirectReceiver());
-    communicationEdge = e.generate(edgeName);
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    op = new SDirect(newComm, taskPlan, sources, targets,
+        Utils.dataTypeToMessageType(edge.getDataType()), new DirectReceiver());
+    communicationEdge = e.generate(edge.getName());
   }
 
   public boolean send(int source, IMessage message, int flags) {
@@ -72,7 +70,7 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
     public boolean receive(int target, Object object) {
       BlockingQueue<IMessage> messages = outMessages.get(target);
 
-      TaskMessage msg = new TaskMessage(object,
+      TaskMessage msg = new TaskMessage<>(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return messages.offer(msg);
     }

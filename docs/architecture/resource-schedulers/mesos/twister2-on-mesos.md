@@ -135,7 +135,7 @@ The last thing we do is to submit this job.
 Twister2Submitter.submitContainerJob(basicJob, config);
 ```
 
-Mesos we can run more than one workers(tasks) in Executors. The choice
+In mesos, we can run more than one workers(tasks) in Executors. The choice
 is left to the user and can be configured through configuration files.
 Possible configuration options are;
 
@@ -156,11 +156,11 @@ in executors will be a faster solution.
 
 **Job Package**
 
-Twister core package and job package are transferred to the node where
+Twister2 core package and job package are transferred to the node where
 the Mesos master is running. Twister2 core package and the job package
 will be transferred to each executors on agents over HTTP protocol.
 Therefore, each executor needs the core and job package to be able to
-run twiter2 jobs.
+run twister2 jobs.
 
 When a client submits a job, job and core files uploaded to the machine
 which serves as Mesos master. Then Mesos-executors and sandboxes are
@@ -169,5 +169,5 @@ created. Mesos has built-in fetcher (See
 files to the sandbox. It supports HTTP, HTTPS, FTP and FTPS protocols.
 To fetch twister2-core, job file into sandbox directory, upload
 directory on the master must be shared via an HTTP server. After
-fetching, Mesos unpack these files, read the job file and starts the
+fetching, Mesos unpacks these files, reads the job file and starts the
 job.

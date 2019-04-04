@@ -193,6 +193,81 @@ public class ZKWorkerController implements IWorkerController {
     }
   }
 
+  /**
+   * connect to the server
+   * get a workerID for this worker
+   * append this worker info to the body of job znode
+   * create an ephemeral znode for this client
+   * @return
+   */
+  public boolean initialize(int workerID) {
+
+    try {
+      String zkServerAddresses = ZKContext.zooKeeperServerAddresses(config);
+      client = CuratorFrameworkFactory.newClient(zkServerAddresses,
+          new ExponentialBackoffRetry(1000, 3));
+      client.start();
+
+      String barrierPath = ZKUtil.constructBarrierPath(config, jobName);
+      barrier = new DistributedBarrier(client, barrierPath);
+
+      String daiPathForWorkerID = ZKUtil.constructDaiPathForWorkerID(config, jobName);
+      daiForWorkerID = new DistributedAtomicInteger(client,
+          daiPathForWorkerID, new ExponentialBackoffRetry(1000, 3));
+
+      String daiPathForBarrier = ZKUtil.constructDaiPathForBarrier(config, jobName);
+      daiForBarrier = new DistributedAtomicInteger(client,
+          daiPathForBarrier, new ExponentialBackoffRetry(1000, 3));
+
+      // check whether the job node exist, if not,
+      // it means, this worker is the first worker to join
+      // get a workerID, create the jobZnode, append worker info
+      if (client.checkExists().forPath(jobPath) == null) {
+
+        workerInfo = WorkerInfoUtils.createWorkerInfo(
+            workerID, workerIP, workerPort, nodeInfo, computeResource);
+
+        createWorkerZnode();
+        appendWorkerInfo();
+
+        // if the job node exists, it is not the first worker
+        // check whether this worker joined the job before
+        // whether it is coming from a failure
+      } else {
+        List<WorkerInfo> workers = parseJobZNode();
+        workerInfo = getIfExists(workers);
+
+        // this worker is coming from a failure,
+        // use the workerInfo from job znode, construct worker znode only
+        if (workerInfo != null) {
+          createWorkerZnode();
+          LOG.warning("Worker is coming from a failure. It is using the previous job znode data: "
+              + workerInfo);
+
+          // it has not joined before,
+          // create workerID, append its info to the jobZnode
+        } else {
+          workerInfo = WorkerInfoUtils.createWorkerInfo(
+              workerID, workerIP, workerPort, nodeInfo, computeResource);
+
+          createWorkerZnode();
+          appendWorkerInfo();
+        }
+      }
+
+      // We childrenCache children data for parent path.
+      // So we will listen for all workers in the job
+      childrenCache = new PathChildrenCache(client, jobPath, true);
+      childrenCache.start();
+
+      LOG.info("This worker: " + workerInfo + " initialized successfully.");
+
+      return true;
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Exception when initializing ZKWorkerController", e);
+      return false;
+    }
+  }
   @Override
   public WorkerInfo getWorkerInfo() {
     return workerInfo;

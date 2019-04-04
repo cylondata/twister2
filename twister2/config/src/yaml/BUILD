@@ -44,3 +44,8 @@ filegroup(
     name = "conf-nomad-yaml",
     srcs = glob(["conf/nomad/*"]),
 )
+
+filegroup(
+    name = "conf-dashboard",
+    srcs = glob(["conf/dashboard/*"]),
+)

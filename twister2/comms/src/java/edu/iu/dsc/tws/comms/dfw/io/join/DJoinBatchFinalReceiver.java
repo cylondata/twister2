@@ -23,7 +23,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.join;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,10 +47,11 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
-import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger;
+import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
@@ -155,14 +155,14 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
 
       // lists to keep track of messages for destinations
       for (int target : expectedIds.keySet()) {
-        Shuffle sortedMerger = new FSKeyedSortedMerger(maxBytesInMemory, maxRecordsInMemory,
+        Shuffle sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
             shuffleDirectory, DFWIOUtils.getOperationName(target, operationLeft),
             operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target);
 
         sortedMergers.put(target, sortedMerger);
         targetDone.put(target, false);
-        targetMessagesLeft.put(target, new ArrayList<>());
-        targetMessagesRight.put(target, new ArrayList<>());
+        targetMessagesLeft.put(target, new AggregatedObjects<>());
+        targetMessagesRight.put(target, new AggregatedObjects<>());
         onFinishedSourcesLeft.put(target, new HashSet<>());
         onFinishedSourcesRight.put(target, new HashSet<>());
       }
@@ -267,7 +267,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
    * @return true if all messages have been received and false otherwise
    */
   private boolean checkIfFinished(int target) {
-    return operationLeft.isDelegeteComplete() && operationRight.isDelegeteComplete()
+    return operationLeft.isDelegateComplete() && operationRight.isDelegateComplete()
         && onFinishedSourcesLeft.get(target).equals(sources)
         && onFinishedSourcesRight.get(target).equals(sources);
   }

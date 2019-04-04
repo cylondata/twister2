@@ -62,6 +62,8 @@ public class DefaultScheduler implements ICDFWScheduler {
       scheduledGraphMap.put(graphJob[0], workerList);
 
     } else if (graphJob.length > 1) {
+      LOG.info("Graph Resource Requirements:" + graphJob[0].getWorkers()
+          + "\t" + graphJob[1].getWorkers());
       for (DataFlowGraph graph : graphJob) {
         workerList = scheduleGraphs(graph);
         scheduledGraphMap.put(graph, workerList);

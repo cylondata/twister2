@@ -16,8 +16,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import edu.iu.dsc.tws.api.tset.PartitionFunction;
-
 /**
  * Go from one task to a corresponding task
  */

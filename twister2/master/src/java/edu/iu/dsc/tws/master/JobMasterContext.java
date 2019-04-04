@@ -120,4 +120,11 @@ public class JobMasterContext extends Context {
     return cfg.getBooleanValue(JOB_MASTER_USED, true);
   }
 
+  public static Config updateDashboardHost(Config cfg, String dashAddress) {
+    return Config.newBuilder().
+        putAll(cfg).
+        put(DASHBOARD_HOST, dashAddress).
+        build();
+  }
+
 }

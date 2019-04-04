@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.join;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +34,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 public class JoinBatchFinalReceiver implements MessageReceiver {
@@ -108,8 +108,8 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
       // lists to keep track of messages for destinations
       for (int target : expectedIds.keySet()) {
         targetDone.put(target, false);
-        targetMessagesLeft.put(target, new ArrayList<>());
-        targetMessagesRight.put(target, new ArrayList<>());
+        targetMessagesLeft.put(target, new AggregatedObjects<>());
+        targetMessagesRight.put(target, new AggregatedObjects<>());
         onFinishedSourcesLeft.put(target, new HashSet<>());
         onFinishedSourcesRight.put(target, new HashSet<>());
       }
@@ -222,7 +222,7 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
       if (joined.containsKey(key)) {
         joined.get(key).add(((Tuple) entry).getValue());
       } else {
-        joined.put(key, new ArrayList<Object>());
+        joined.put(key, new AggregatedObjects<>());
         joined.get(key).add(((Tuple) entry).getValue());
       }
     }
@@ -232,7 +232,7 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
       if (joined.containsKey(key)) {
         joined.get(key).add(((Tuple) entry).getValue());
       } else {
-        joined.put(key, new ArrayList<Object>());
+        joined.put(key, new AggregatedObjects<>());
         joined.get(key).add(((Tuple) entry).getValue());
       }
     }
@@ -246,7 +246,7 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
    * @return true if all messages have been received and false otherwise
    */
   private boolean checkIfFinished(int target) {
-    return operationLeft.isDelegeteComplete() && operationRight.isDelegeteComplete()
+    return operationLeft.isDelegateComplete() && operationRight.isDelegateComplete()
         && onFinishedSourcesLeft.get(target).equals(sources)
         && onFinishedSourcesRight.get(target).equals(sources);
   }

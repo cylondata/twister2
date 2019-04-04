@@ -21,19 +21,19 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BDirect;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class DirectBatchOperation extends AbstractParallelOperation {
   private BDirect op;
 
   public DirectBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                                 Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                                 DataType dataType, String edgeName) {
+                              Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
+                              Edge edge) {
     super(config, network, tPlan);
     this.edgeGenerator = e;
 
@@ -43,9 +43,10 @@ public class DirectBatchOperation extends AbstractParallelOperation {
     ArrayList<Integer> targets = new ArrayList<>(dests);
     Collections.sort(targets);
 
-    op = new BDirect(channel, taskPlan, sources, targets,
-        new PartitionReceiver(), Utils.dataTypeToMessageType(dataType));
-    communicationEdge = e.generate(edgeName);
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    op = new BDirect(newComm, taskPlan, sources, targets,
+        new PartitionReceiver(), Utils.dataTypeToMessageType(edge.getDataType()));
+    communicationEdge = e.generate(edge.getName());
   }
 
   public void send(int source, IMessage message) {
@@ -63,7 +64,7 @@ public class DirectBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage(it,
+      TaskMessage msg = new TaskMessage<>(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
     }

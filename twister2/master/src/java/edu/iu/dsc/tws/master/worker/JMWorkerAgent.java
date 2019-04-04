@@ -263,16 +263,14 @@ public final class JMWorkerAgent {
     // first initialize the client, connect to Job Master
     init();
 
-    Thread jmThread = new Thread() {
-      public void run() {
-        startLooping();
-      }
-    };
+    Thread jmThread = new Thread(this::startLooping);
 
+    jmThread.setName("JM Agent");
     jmThread.start();
 
     boolean registered = registerWorker();
     if (!registered) {
+      this.close();
       throw new RuntimeException("Could not register JobMaster with Dashboard. Exiting .....");
     }
 
@@ -442,7 +440,8 @@ public final class JMWorkerAgent {
       rrClient.sendRequestWaitResponse(workerStateChange,
           JobMasterContext.responseWaitDuration(config));
     } catch (BlockingSendException e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
+      LOG.log(Level.SEVERE, String.format("%d Worker completed message failed",
+          thisWorker.getWorkerID()), e);
       return false;
     }
 

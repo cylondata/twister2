@@ -11,20 +11,20 @@ twister2.job.name: "t2-job"
 # workersPerPod shows the number of workers on each pod in Kubernetes.
 #    May be omitted in other clusters. default value is 1.
 worker.compute.resources:
-- cpu: 0.4  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+- cpu: 0.2  # number of cores for each worker, may be fractional such as 0.5 or 2.4
   ram: 1024 # ram for each worker as Mega bytes
   disk: 1.0 # volatile disk for each worker as Giga bytes
-  instances: 2 # number of compute resource instances with this specification
-  scalable: false # only one ComputeResource can be scalable in a job
+  instances: 8 # number of compute resource instances with this specification
+  scalable: true # only one ComputeResource can be scalable in a job
   workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
                    # number of workers using this compute resource: instances * workersPerPod
 
-- cpu: 0.5  # number of cores for each worker, may be fractional such as 0.5 or 2.4
-  ram: 1024 # ram for each worker as Mega bytes
-  disk: 1.0 # volatile disk for each worker as Giga bytes
-  instances: 2 # number of compute resource instances with this specification
-  scalable: true # only one ComputeResource can be scalable in a job
-  workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
+#- cpu: 0.5  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+#  ram: 1024 # ram for each worker as Mega bytes
+#  disk: 1.0 # volatile disk for each worker as Giga bytes
+#  instances: 2 # number of compute resource instances with this specification
+#  scalable: false # only one ComputeResource can be scalable in a job
+#  workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
 
 # driver class to run
 twister2.job.driver.class: "edu.iu.dsc.tws.examples.internal.rsched.DriverExample"

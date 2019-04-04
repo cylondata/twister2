@@ -126,6 +126,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
    */
   private Map<Integer, Integer> sourcesToDestinations = new HashMap<>();
 
+
   public DataFlowDirect(TWSChannel channel,
                         List<Integer> src, List<Integer> target,
                         MessageReceiver finalRcvr, Config cfg, MessageType t,
@@ -165,11 +166,6 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     return finalReceiver.onMessage(source, path, target, flags, message);
   }
 
-  @Override
-  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
-    return false;
-  }
-
   protected Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return this.router.receiveExpectedTaskIds();
   }
@@ -193,12 +189,13 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
           DataFlowContext.sendPendingMax(config)));
       pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
-      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), taskPlan.getThisExecutor()));
+      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(),
+          taskPlan.getThisExecutor(), type));
     }
 
     for (int tar : targets) {
       MessageDeSerializer messageDeSerializer = new UnifiedDeserializer(new KryoSerializer(),
-          taskPlan.getThisExecutor());
+          taskPlan.getThisExecutor(), type);
       deSerializerMap.put(tar, messageDeSerializer);
     }
 
@@ -237,11 +234,17 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean progress() {
     boolean partialNeedsProgress = false;
-    boolean needFinishProgress;
+    boolean needFinishProgress = true;
     boolean done;
     try {
       // lets send the finished one
-      needFinishProgress = handleFinish();
+      if (lock.tryLock()) {
+        try {
+          needFinishProgress = handleFinish();
+        } finally {
+          lock.unlock();
+        }
+      }
 
       delegate.progress();
       done = delegate.isComplete();
@@ -275,7 +278,7 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     return delegate.isComplete();
   }
 
@@ -315,7 +318,12 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
     if (!thisSources.contains(source)) {
       throw new RuntimeException("Invalid source completion: " + source);
     }
-    pendingFinishSources.add(source);
+    lock.lock();
+    try {
+      pendingFinishSources.add(source);
+    } finally {
+      lock.unlock();
+    }
   }
 
   @Override

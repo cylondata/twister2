@@ -11,16 +11,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-import edu.iu.dsc.tws.common.config.Config;
-
-public abstract class BaseSource implements ISource {
-  protected TaskContext context;
-
-  protected Config config;
-
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    this.context = ctx;
-    this.config = cfg;
-  }
+public abstract class BaseSource extends BaseNode implements ISource {
 }

@@ -168,11 +168,13 @@ public class Client implements SelectHandler {
     }
 
     channel.forceFlush();
+    progress.removeAllInterest(socketChannel);
 
     try {
       socketChannel.close();
       // we call the onclose with null value
       channelHandler.onClose(socketChannel);
+      isConnected = false;
     } catch (IOException e) {
       LOG.log(Level.SEVERE, "Failed to stop Client", e);
     }
@@ -249,6 +251,8 @@ public class Client implements SelectHandler {
   public void handleError(SelectableChannel ch) {
     channel.clear();
     progress.removeAllInterest(ch);
+
+    LOG.log(Level.SEVERE, "Error on channel " + ch);
 
     try {
       ch.close();

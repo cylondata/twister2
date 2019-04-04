@@ -82,8 +82,11 @@ public class MesosScheduler implements Scheduler {
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(myJob, rIndex);
     if (computeResource == null) {
       LOG.severe("Something wrong with the job object. Can not get ComputeResource from job"
-          + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
+          + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++"
+          + "index...:" + rIndex);
       return null;
+    } else {
+      LOG.info("get instances....:" + computeResource.getInstances());
     }
     return computeResource;
   }
@@ -93,7 +96,7 @@ public class MesosScheduler implements Scheduler {
                              List<Protos.Offer> offers) {
 
     int index = 0;
-
+    controller.setSchedulerDriver(schedulerDriver);
     String[] desiredNodes = MesosContext.getDesiredNodes(config).split(",");
 
     if (taskIdCounter < totalTaskCount) {
@@ -133,6 +136,7 @@ public class MesosScheduler implements Scheduler {
             pv.getWorkerDir();
 
             Protos.TaskID taskId = buildNewTaskID();
+
 
             // int begin = MesosContext.getWorkerPort(config) + taskIdCounter * 100;
             // int end = begin + 30;
@@ -282,7 +286,17 @@ public class MesosScheduler implements Scheduler {
 
         }
 
-        if (taskIdCounter >= totalTaskCount - 1) {
+        if (taskIdCounter >= totalTaskCount) {
+          LOG.info("taskIdCounter >= totalTaskCount");
+
+//          try {
+//            Thread.sleep(8000);
+//          } catch (InterruptedException e) {
+//          }
+//          MesosController.schedulerDriver.killTask(Protos.TaskID.newBuilder()
+//              .setValue(Integer.toString(2)).build());
+          //totalTaskCount += 3;
+          //MesosController.schedulerDriver.reviveOffers();
           return;
         }
       }

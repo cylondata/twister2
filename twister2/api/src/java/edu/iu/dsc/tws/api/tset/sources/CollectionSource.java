@@ -82,4 +82,9 @@ public class CollectionSource<T> implements Source<T> {
       currentIndex++;
     }
   }
+
+  @Override
+  public void prepare() {
+
+  }
 }

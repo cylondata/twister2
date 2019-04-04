@@ -30,7 +30,7 @@ import java.util.Map;
 import com.google.gson.Gson;
 
 import org.apache.storm.generated.StormTopology;
-import org.apache.storm.topology.twister2.Twister2TaskWorker;
+import org.apache.storm.topology.twister2.Twister2StormWorker;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
@@ -69,7 +69,7 @@ public final class StormSubmitter {
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName(name);
-    jobBuilder.setWorkerClass(Twister2TaskWorker.class.getName());
+    jobBuilder.setWorkerClass(Twister2StormWorker.class.getName());
     jobBuilder.setConfig(jobConfig);
     jobBuilder.addComputeResource(1, 512, 1);
 

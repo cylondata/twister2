@@ -11,16 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
+import edu.iu.dsc.tws.task.api.typed.batch.BPartitionCompute;
 
 public class BTPartitionExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTPartitionExample.class.getName());
@@ -32,54 +42,59 @@ public class BTPartitionExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
     DataType dataType = DataType.INTEGER;
     String edge = "edge";
-    BaseSource g = new SourceBatchTask(edge);
-    BaseSink r = new PartitionSinkTask();
+    BaseSource g = new SourceTask(edge);
+    ISink r = new PartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class PartitionSinkTask extends BaseSink {
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  protected static class PartitionSinkTask extends BPartitionCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
+
+    private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
+    private boolean verified = true;
+    private boolean timingCondition;
 
     @Override
-    public boolean execute(IMessage message) {
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SINK, context);
 
-      Object object = message.getContent();
+      int totalSinks = ctx.getTasksByName(SINK).size();
+      long noOfSources = ctx.getTasksByName(SOURCE).stream().map(
+          TaskInstancePlan::getTaskIndex
+      ).filter(ti -> ti % totalSinks == ctx.taskIndex()).count();
 
-      if (message.getContent() instanceof Iterator) {
-        while (((Iterator) message.getContent()).hasNext()) {
-          ((Iterator) message.getContent()).next();
-          count++;
-        }
-        /*if (count % jobParameters.getPrintInterval() == 0) {
-          Object object = message.getContent();
-          experimentData.setOutput(object);
-          try {
-            verify(OperationNames.PARTITION);
-          } catch (VerificationException e) {
-            LOG.info("Exception Message : " + e.getMessage());
+      if (jobParameters.getTotalIterations() % totalSinks != 0) {
+        LOG.warning("Total iterations is not divisible by total sinks. "
+            + "Verification won't run for this configuration.");
+      } else {
+        resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
+          List<int[]> expectedData = new ArrayList<>();
+
+          for (long i = 0; i < noOfSources * jobParameters.getTotalIterations(); i++) {
+            expectedData.add(ints);
           }
-        }*/
-        if (count % jobParameters.getPrintInterval() == 0) {
-          LOG.info("Received : " + object.getClass().getName());
-          if (object instanceof Iterator<?>) {
-            Iterator<?> itr = (Iterator<?>) object;
-            LOG.info("INstance : " + itr.getClass().getName());
-            LOG.info("ITr next : " + itr.hasNext());
-            while (itr.hasNext()) {
-              Object res = itr.next();
-              LOG.info("Message Partition Received : " + res.getClass().getName()
-                  + ", Count : " + count);
-            }
-          }
-        }
+          return expectedData.iterator();
+        }, new IteratorComparator<>(
+            IntArrayComparator.getInstance()
+        ));
       }
+    }
 
+    @Override
+    public boolean partition(Iterator<int[]> content) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      LOG.info(String.format("%d received partition %d", context.getWorkerId(), context.taskId()));
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+      if (resultsVerifier != null) {
+        this.verified = verifyResults(resultsVerifier, content, null, verified);
+      }
       return true;
     }
   }
-
 }

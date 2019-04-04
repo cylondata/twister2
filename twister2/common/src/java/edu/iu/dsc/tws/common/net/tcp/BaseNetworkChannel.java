@@ -208,7 +208,6 @@ public abstract class BaseNetworkChannel {
       return -1;
     }
     if (read < 0) {
-      LOG.log(Level.SEVERE, "channel read returned negative " + read);
       return read;
     } else {
       return remaining - read;

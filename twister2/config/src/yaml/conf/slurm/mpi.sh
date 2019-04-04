@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#SBATCH --ntasks-per-node=1+1166665
+#SBATCH --ntasks-per-node=1
 #SBATCH --time=00:30:00
 
 em="\"\""

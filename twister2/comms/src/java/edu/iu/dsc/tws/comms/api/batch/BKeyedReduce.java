@@ -11,26 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api.batch;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowMultiReduce;
+import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceMultiBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceMultiBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchPartialReceiver;
 
 /**
  * Example class for Batch keyed reduce. The reduce destination for each data point will be
  * based on the key value related to that data point.
  */
 public class BKeyedReduce {
-  private DataFlowMultiReduce keyedReduce;
+  private DataFlowOperation keyedReduce;
 
   private DestinationSelector destinationSelector;
 
@@ -44,23 +44,19 @@ public class BKeyedReduce {
                       DestinationSelector destSelector) {
     this.keyType = kType;
     this.dataType = dType;
-    Set<Integer> edges = new HashSet<>();
-    for (int i = 0; i < destinations.size(); i++) {
-      edges.add(comm.nextEdge());
-    }
-    this.keyedReduce = new DataFlowMultiReduce(comm.getChannel(), sources, destinations,
-        new ReduceMultiBatchFinalReceiver(fnc, rcvr),
-        new ReduceMultiBatchPartialReceiver(fnc), edges, keyType, dataType);
-    this.keyedReduce.init(comm.getConfig(), dataType, plan);
+
+    this.keyedReduce = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
+        plan, sources, destinations,
+        new KReduceBatchFinalReceiver(fnc, rcvr),
+        new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,
+        keyType, keyType, comm.nextEdge());
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, destinations);
-
   }
 
   public boolean reduce(int src, Object key, Object data, int flags) {
     int dest = destinationSelector.next(src, key, data);
-    return keyedReduce.send(src, new Tuple(key, data, keyType,
-        dataType), flags, dest);
+    return keyedReduce.send(src, new Tuple<>(key, data, keyType, dataType), flags, dest);
   }
 
   public boolean hasPending() {

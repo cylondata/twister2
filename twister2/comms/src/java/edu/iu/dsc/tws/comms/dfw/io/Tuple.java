@@ -16,16 +16,24 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 /**
  * Keyed content is serialized given priority and serialized as two parts of key and object.
  */
-public class Tuple {
-  private Object key;
+public class Tuple<K, V> {
+  private K key;
 
-  private Object value;
+  private V value;
 
   private MessageType keyType;
 
   private MessageType contentType;
 
-  public Tuple(Object k, Object data,
+  public Tuple() {
+  }
+
+  public Tuple(K key, V value) {
+    this.key = key;
+    this.value = value;
+  }
+
+  public Tuple(K k, V data,
                MessageType keyType, MessageType dataType) {
     this.key = k;
     this.value = data;
@@ -41,15 +49,37 @@ public class Tuple {
     this.keyType = keyType;
   }
 
-  public Object getKey() {
+  public K getKey() {
     return key;
   }
 
-  public Object getValue() {
+  public V getValue() {
     return value;
   }
 
   public MessageType getContentType() {
     return contentType;
+  }
+
+  public void setKey(K key) {
+    this.key = key;
+  }
+
+  public void setValue(V value) {
+    this.value = value;
+  }
+
+  public void setContentType(MessageType contentType) {
+    this.contentType = contentType;
+  }
+
+  @Override
+  public String toString() {
+    return "KeyValue{"
+        + "key="
+        + key
+        + ", value="
+        + value
+        + '}';
   }
 }

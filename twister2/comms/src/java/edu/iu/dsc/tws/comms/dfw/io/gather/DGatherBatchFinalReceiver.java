@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
@@ -168,7 +169,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
       }
 
       if (found) {
-        List<Object> out = new ArrayList<>();
+        List<Object> out = new AggregatedObjects<>();
         for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           Queue<Object> valueList = e.getValue();
           if (valueList.size() > 0) {

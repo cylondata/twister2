@@ -49,11 +49,12 @@ public class DataParallelTask extends BaseSource {
         int count = 0;
         while (!inputSplit.reachedEnd()) {
           String value = inputSplit.nextRecord(null);
-          LOG.info("We read value: " + value);
-
-          sink.add(context.taskIndex(), value);
-          count += 1;
-          totalCount += 1;
+          if (value != null) {
+            LOG.fine("We read value: " + value);
+            sink.add(context.taskIndex(), value);
+            count += 1;
+            totalCount += 1;
+          }
         }
         splitCount += 1;
         inputSplit = source.getNextSplit(context.taskIndex());

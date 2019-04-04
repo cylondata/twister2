@@ -11,34 +11,35 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.stream;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.collect.Iterators;
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.api.stream.SKeyedGather;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
-import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_RECV;
 
+/**
+ * todo not applicable for streaming, without window
+ */
 public class SKeyedGatherExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(SKeyedGatherExample.class.getName());
 
   private SKeyedGather keyedGather;
 
   private boolean gatherDone;
-
-  private int count;
 
   @Override
   protected void execute() {
@@ -58,23 +59,28 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
 
     keyedGather = new SKeyedGather(communicator, taskPlan, sources, targets,
         MessageType.OBJECT, MessageType.OBJECT,
-        new GatherBulkReceiver(), new SimpleKeyBasedSelector());
+        new GatherBulkReceiver(), new LoadBalanceSelector());
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> sourceTasks = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
-    for (int t : tasksOfExecutor) {
+    for (int t : sourceTasks) {
       finishedSources.put(t, false);
     }
-    if (tasksOfExecutor.size() == 0) {
+    if (sourceTasks.size() == 0) {
       sourcesDone = true;
     }
 
-    LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
-        workerId, sources, 1, tasksOfExecutor));
+    Set<Integer> sinkTasks = Utils.getTasksOfExecutor(workerId, taskPlan,
+        jobParameters.getTaskStages(), 1);
+
+    LOG.log(Level.INFO, String.format("Worker[%d], Source Tasks %s , Sink Tasks %s",
+        workerId, sourceTasks, sinkTasks));
     // now initialize the workers
-    for (int t : tasksOfExecutor) {
+    for (int t : sourceTasks) {
       // the map thread where data is produced
-      Thread mapThread = new Thread(new MapWorker(t));
+      MapWorker mapWorker = new MapWorker(t);
+      mapWorker.setTimingForLowestTargetOnly(true);
+      Thread mapThread = new Thread(mapWorker);
       mapThread.start();
     }
 
@@ -101,37 +107,83 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
 
   public class GatherBulkReceiver implements BulkReceiver {
     private int count = 0;
-    private int expected;
+    private int countToLowest = 0;
+
+    //expected for timing target
+    private int expectedIterations;
+    private int warmupIterations;
+
+    //for all targets
+    private int expectedTotalIterations;
+
+    private int lowestTarget = -1;
+
+    private int getExpectedForId(int iterations, int id, int lowestId, int totalIds,
+                                 int totalSource) {
+      int adjustedId = id - lowestId;
+      int total = iterations / totalIds;
+      if (iterations % totalIds > 0 && iterations % totalIds > adjustedId) {
+        total++;
+      }
+      return total * totalSource;
+    }
 
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
-      expected = expectedIds.size() * jobParameters.getIterations();
+      if (expectedIds.isEmpty()) {
+        gatherDone = true;
+        return;
+      }
+      this.lowestTarget = expectedIds.stream().min(
+          Comparator.comparingInt(o -> (Integer) o)
+      ).get();
+      int totalSources = jobParameters.getTaskStages().get(0);
+      expectedTotalIterations = expectedIds.stream().map(id -> getExpectedForId(
+          jobParameters.getTotalIterations(),
+          id,
+          lowestTarget,
+          jobParameters.getTaskStages().get(1),
+          totalSources
+      )).reduce(0, (integer, integer2) -> integer + integer2);
+      expectedIterations = getExpectedForId(
+          jobParameters.getTotalIterations(),
+          lowestTarget,
+          lowestTarget,
+          jobParameters.getTaskStages().get(1),
+          totalSources
+      );
+      warmupIterations = getExpectedForId(
+          jobParameters.getTotalIterations(),
+          lowestTarget,
+          lowestTarget,
+          jobParameters.getTaskStages().get(1),
+          totalSources
+      );
     }
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      int size = Iterators.size(it);
-      count += size;
-      LOG.log(Level.INFO, String.format("%d Received message %d count %d totalCount %d",
-          workerId, target, size, count));
-//      gatherDone = true;
-      return true;
-    }
-  }
+      count++;
+      //do timing and benchmark only on lowest target
+      if (target == lowestTarget && workerId == 0) {
+        System.out.println(count + "," + countToLowest);
+        countToLowest++;
+        if (countToLowest > warmupIterations) {
+          Timing.mark(TIMING_MESSAGE_RECV, workerId == 0);
+        }
 
-  public void verify() throws VerificationException {
-    boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
-    if (doVerify) {
-      LOG.info("Verifying results ...");
-      ExperimentVerification experimentVerification
-          = new ExperimentVerification(experimentData, OperationNames.KEYED_REDUCE);
-      isVerified = experimentVerification.isVerified();
-      if (isVerified) {
-        LOG.info("Results generated from the experiment are verified.");
-      } else {
-        throw new VerificationException("Results do not match");
+        if (countToLowest == expectedIterations + warmupIterations) {
+          Timing.mark(TIMING_ALL_RECV, workerId == 0);
+          BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0);
+          resultsRecorder.writeToCSV();
+          LOG.info(() -> String.format("Target %d received count %d", target, count));
+        }
       }
+      if (expectedTotalIterations == count) {
+        gatherDone = true;
+      }
+      System.out.println("Total count : " + count + " , WorkerID : " + workerId);
+      return true;
     }
   }
 }

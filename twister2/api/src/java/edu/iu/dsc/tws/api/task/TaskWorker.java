@@ -110,6 +110,8 @@ public abstract class TaskWorker implements IWorker {
     }
     // lets terminate the network
     communicator.close();
+    // we are done executing
+    LOG.log(Level.FINE, String.format("%d Worker done", workerID));
   }
 
   /**

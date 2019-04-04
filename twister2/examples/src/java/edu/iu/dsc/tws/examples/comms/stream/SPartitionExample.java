@@ -12,27 +12,32 @@
 package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.api.stream.SPartition;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 
+/**
+ * todo add timing, and terminating conditions
+ */
 public class SPartitionExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SPartitionExample.class.getName());
 
   private SPartition partition;
 
   private boolean partitionDone = false;
+
+  private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
   protected void execute() {
@@ -52,8 +57,10 @@ public class SPartitionExample extends BenchWorker {
 
     // create the communication
     partition = new SPartition(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, new PartitionStreamingFinalReceiver(new PartitionReceiver()),
-        new LoadBalanceSelector());
+        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector());
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
+        (ints, args) -> ints, IntArrayComparator.getInstance());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -84,22 +91,21 @@ public class SPartitionExample extends BenchWorker {
     return true;
   }
 
-  public class PartitionReceiver implements BulkReceiver {
+  public class PartitionReceiver implements SingularReceiver {
+
     private int count = 0;
     private int expected;
 
     @Override
     public void init(Config cfg, Set<Integer> targets) {
-      expected = jobParameters.getTaskStages().get(0)
-          * jobParameters.getIterations() / jobParameters.getTaskStages().get(1);
+      expected = (jobParameters.getIterations() * jobParameters.getTaskStages().get(0)
+          / jobParameters.getTaskStages().get(1)) * targets.size();
+      //roughly, could be more than this
     }
 
     @Override
-    public boolean receive(int target, Iterator<Object> it) {
-      while (it.hasNext()) {
-        Object object = it.next();
-        count += 1;
-      }
+    public boolean receive(int target, Object it) {
+      count += 1;
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, count, expected));
       //Since this is a streaming example we will simply stop after a number of messages are
@@ -107,6 +113,8 @@ public class SPartitionExample extends BenchWorker {
       if (count >= expected) {
         partitionDone = true;
       }
+
+      verifyResults(resultsVerifier, it, null);
 
       return true;
     }

@@ -12,33 +12,27 @@
 package edu.iu.dsc.tws.executor.comms.streaming;
 
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SAllGather;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class AllGatherStreamingOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(AllGatherStreamingOperation.class.getName());
-
   protected SAllGather op;
 
   public AllGatherStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                      Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
-                                     DataType dataType, String edgeName) {
+                                     Edge edge) {
     super(config, network, tPlan);
 
     if (sources.size() == 0) {
@@ -49,10 +43,11 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
       throw new IllegalArgumentException("Targets should have more than 0 elements");
     }
 
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
     this.edgeGenerator = e;
-    op = new SAllGather(channel, taskPlan, sources, dest,
-        new FinalReduceReceive(), Utils.dataTypeToMessageType(dataType));
-    communicationEdge = e.generate(edgeName);
+    op = new SAllGather(newComm, taskPlan, sources, dest,
+        new FinalReduceReceive(), Utils.dataTypeToMessageType(edge.getDataType()));
+    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -66,10 +61,6 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
   }
 
   private class FinalReduceReceive implements BulkReceiver {
-    public void init(Config cfg, DataFlowOperation operation,
-                     Map<Integer, List<Integer>> expectedIds) {
-    }
-
     @Override
     public void init(Config cfg, Set<Integer> targets) {
 
@@ -77,7 +68,7 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage(it,
+      TaskMessage msg = new TaskMessage<>(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {

@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedReduce;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
@@ -36,7 +35,7 @@ import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.api.TaskPartitioner;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedReduceBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(KeyedReduceBatchOperation.class.getName());
@@ -47,24 +46,24 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
 
   public KeyedReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                    Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                   DataType dataType, DataType keyType,
-                                   String edgeName, IFunction function,
-                                   TaskPartitioner partitioner, TaskKeySelector selec) {
+                                   Edge edge) {
     super(config, network, tPlan);
-    this.selector = selec;
+    this.selector = edge.getSelector();
     this.edgeGenerator = e;
 
-    DestinationSelector destSelector = null;
-    if (selec != null) {
-      destSelector = new DefaultDestinationSelector(partitioner);
+    DestinationSelector destSelector;
+    if (selector != null) {
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
     } else {
       destSelector = new HashingSelector();
     }
 
-    op = new BKeyedReduce(channel, taskPlan, sources, dests, new ReduceFunctionImpl(function),
-        new BulkReceiverImpl(), Utils.dataTypeToMessageType(keyType),
-        Utils.dataTypeToMessageType(dataType), destSelector);
-    communicationEdge = e.generate(edgeName);
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    op = new BKeyedReduce(newComm, taskPlan, sources, dests,
+        new ReduceFunctionImpl(edge.getFunction()),
+        new BulkReceiverImpl(), Utils.dataTypeToMessageType(edge.getKeyType()),
+        Utils.dataTypeToMessageType(edge.getDataType()), destSelector);
+    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -104,13 +103,13 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage(it,
+      TaskMessage msg = new TaskMessage<>(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
     }
 
     public boolean receive(int target, Object object) {
-      TaskMessage msg = new TaskMessage(object,
+      TaskMessage msg = new TaskMessage<>(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {

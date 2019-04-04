@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.DGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchPartialReceiver;
@@ -31,6 +32,11 @@ public class BGather {
    * The actual operation
    */
   private DataFlowGather gather;
+
+  /**
+   * The data type
+   */
+  private MessageType dataType;
 
   /**
    * Construct a Streaming Gather operation
@@ -53,9 +59,11 @@ public class BGather {
     } else {
       finalRcvr = new DGatherBatchFinalReceiver(rcvr, comm.getPersistentDirectory());
     }
+    this.dataType = dataType;
     this.gather = new DataFlowGather(comm.getChannel(), sources, target,
         finalRcvr, new GatherBatchPartialReceiver(target),
-        0, 0, comm.getConfig(), dataType, plan, comm.nextEdge());
+        0, 0, comm.getConfig(), plan, true, dataType, dataType,
+        MessageType.INTEGER, comm.nextEdge());
     this.gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
@@ -68,7 +76,8 @@ public class BGather {
    * @return true if the message is accepted
    */
   public boolean gather(int source, Object message, int flags) {
-    return gather.send(source, message, flags);
+    Tuple tuple = new Tuple(source, message, MessageType.INTEGER, dataType);
+    return gather.send(source, tuple, flags);
   }
 
   /**

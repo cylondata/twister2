@@ -16,6 +16,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -120,6 +121,13 @@ public class ResourceAllocator {
         putAll(environmentProperties).
         putAll(cfg).
         build();
+  }
+
+  /**
+   * Returns the default configuration
+   */
+  public static Config getDefaultConfig() {
+    return loadConfig(new HashMap<>());
   }
 
   /**

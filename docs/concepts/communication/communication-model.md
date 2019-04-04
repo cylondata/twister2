@@ -1,18 +1,41 @@
-# Communication Model 
+# Operator Model 
 
-Twister2 supports a dataflow communication model. A dataflow program models a computation as a graph with nodes of the graph doing user-defined computations and edges representing the communication links between the nodes. The data flowing through this graph is termed as events or messages. It is important to note that even though by definition dataflow programming means data is flowing through a graph, it may not necessarily be the case physically, especially in batch applications. Big data systems employ different APIs for creating the dataflow graph. For example, Flink and Spark provide distributed dataset-based APIs for creating the graph while systems such as Storm and Hadoop provide task-level APIs.
+Twister2 supports a DataFlow model for operators. A DataFlow program models a computation as a graph with nodes of the graph doing user-defined computations and edges representing the communication links between the nodes. The data flowing through this graph is termed as events or messages. It is important to note that even though by definition dataflow programming means data is flowing through a graph, it may not necessarily be the case physically, especially in batch applications. Big data systems employ different APIs for creating the dataflow graph. For example, Flink and Spark provide distributed dataset-based APIs for creating the graph while systems such as Storm and Hadoop provide task-level APIs.
 
-We support the following dataflow operations.
+We support the following operators for batch and streaming applications. The operators can go from M to N tasks, M to 1 task or 1 to N tasks.
 
-1. Reduce
-2. Gather
-3. AllReduce
-4. AllGather
-5. Partition
-6. Broadcast
-7. Keyed Reduce
-8. Keyed Partition
-9. Keyed Gather
+## Twister2 Batch Operations
+
+The batch operators work on set of input data from a source. All this input data will be processed in a single operator.
+
+| Operator | Semantics | 
+| ------------- | ------------- |
+| Reduce | M tasks to 1, reduce the values to a single value |
+| Gather | M tasks to 1, gather the values from M tasks |
+| Broadcast | 1 task to N, Broadcast a value from 1 to N tasks |
+| Partition | M tasks to N, distribute the values in M tasks to N tasks according to a user-specified criteria |
+| AllReduce | M tasks to N, Reduce values from N tasks and broadcast to N tasks |
+| AllGather | M tasks to N, Gathers values from M tasks and broadcast to N tasks |
+| KeyedReduce | M tasks to N, Reduce values of a certain key, only available with Windowed data sets |
+| KeyedGather | M tasks to N, Gathers according to a user-specified Key, keys can be sorted, only available with Windowed data sets |
+| Join | M tasks to N, Jons values based on a user-specified key |
+
+
+## Twister2 Streaming Operations
+
+The streaming operators work on single data items. 
+
+| Operator | Semantics | 
+| ------------- | ------------- |
+| Reduce | M tasks to 1, reduce the values to a single value |
+| Gather | M tasks to 1, gather the values from M tasks |
+| Broadcast | 1 task to N, Broadcast a value from 1 to N tasks |
+| Partition | M tasks to N, distribute the values in M tasks to N tasks according to a user-specified criteria |
+| AllReduce | M tasks to N, Reduce values from N tasks and broadcast to N tasks |
+| AllGather | M tasks to N, Gathers values from M tasks and broadcast to N tasks |
+| KeyedReduce | M tasks to N, Reduce values of a certain key, only available with Windowed data sets |
+| KeyedGather | M tasks to N, Gathers according to a user-specified Key, keys can be sorted, only available with Windowed data sets |
+| Join | M tasks to N, Joins values based on a user-specified key |
 
 Dataflow communications are overlaid on top of worker processes using logical ids.
 
@@ -132,27 +155,23 @@ distributes the data. And example assigment might look as follows.
 The broadcast operation sends out messages from a single task to 1 or more tasks. Messages are send directly to each
 receiving task. 
 
-## TaskPlan
+### KeyedReduce
 
-Task plan represents how the IDs are overlyed on top of the workers. A worker process will have a unique ID.
+The values are grouped according to a user specified key first. For each key all the values are reduced to a single value.
+The keys determine the receiving task of the operators (this can be configured by used).
 
-## Streaming
+### KeyedGather
 
-Streaming communication is a continuous flow of data.
+The values are grouped according to a user specified key first. For each key all the values are gathered. 
+The keys determine the receiving task of the operators (this can be configured by used).
 
-## Batch
+### KeyedPartition
 
-A batch operation works on a finite amount of data. Hence it terminates after the data sending is completed.
+The keys determine the receiving task of the operators (this can be configured by used). Keyed partition 
+only sends the data to the destination according to key and no further operations are performed.
+
 
 ## Shuffle Engine
 
 In case of in-sufficient memory, we can persist the data to disk.
-
-## Communication Operation
-
-A communication operation is defined by, set of source IDs, set of target IDs, a message receiver, a partial message receiver and set of edge IDs.
-
-## Detecting termination
-
-Because we are working on a distributed setting with a communication having multiple steps, termination of the operation needs to be detected.
 

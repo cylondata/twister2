@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 
 import org.apache.storm.topology.twister2.EdgeFieldMap;
 import org.apache.storm.tuple.Fields;
+import org.apache.storm.tuple.Twister2TupleWrapper;
 import org.apache.storm.utils.Utils;
 
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -84,13 +85,15 @@ public class SpoutOutputCollector implements ISpoutOutputCollector {
   @Override
   public List<Integer> emit(String streamId, List<Object> tuple, Object messageId) {
     LOG.finest("Writing to the stream " + streamId + " data : " + tuple);
+    //todo remove tupleWrapper once core level List handling issue is fixed
+    Twister2TupleWrapper tupleWrapper = new Twister2TupleWrapper(tuple);
     if (!this.keyedOutEdges.containsKey(streamId)) {
-      this.taskContext.write(streamId, tuple);
+      this.taskContext.write(streamId, tupleWrapper);
     } else {
       Fields allFields = outFieldsForEdge.get(streamId);
       Fields fieldsForKey = keyedOutEdges.get(streamId);
       List<Object> key = allFields.select(fieldsForKey, tuple);
-      this.taskContext.write(streamId, key, tuple);
+      this.taskContext.write(streamId, key, tupleWrapper);
     }
     //todo return task ids, not yet supported by twister2
     return Collections.singletonList(0);

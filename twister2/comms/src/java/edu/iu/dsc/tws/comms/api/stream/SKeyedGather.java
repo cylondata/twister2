@@ -12,18 +12,20 @@
 
 package edu.iu.dsc.tws.comms.api.stream;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.CommunicationContext;
 import edu.iu.dsc.tws.comms.api.Communicator;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
+import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.RingPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiStreamingFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherStreamingPartialReceiver;
 
 /**
  * Streaming Keyed Partition Operation
@@ -32,7 +34,7 @@ public class SKeyedGather {
   /**
    * The actual operation
    */
-  private DataFlowMultiGather keyedGather;
+  private DataFlowOperation keyedGather;
 
   /**
    * Destination selector
@@ -68,15 +70,20 @@ public class SKeyedGather {
     this.keyType = kType;
     this.dataType = dType;
 
-    Set<Integer> edges = new HashSet<>();
-    for (int i = 0; i < targets.size(); i++) {
-      edges.add(comm.nextEdge());
+    if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
+        CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
+      this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
+          plan, sources, targets,
+          new KGatherStreamingFinalReceiver(rcvr, 100),
+          new KGatherStreamingPartialReceiver(0, 100, 1), dataType, dataType,
+          keyType, keyType, comm.nextEdge());
+    } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
+        CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
+      this.keyedGather = new RingPartition(comm.getConfig(), comm.getChannel(),
+          plan, sources, targets, new KGatherStreamingFinalReceiver(rcvr, 100),
+          new KGatherStreamingPartialReceiver(0, 100, 1),
+          dataType, dataType, keyType, keyType, comm.nextEdge());
     }
-
-    this.keyedGather = new DataFlowMultiGather(comm.getChannel(), sources, targets,
-        new GatherMultiStreamingFinalReceiver(rcvr),
-        new GatherMultiStreamingPartialReceiver(), edges, keyType, dataType);
-    this.keyedGather.init(comm.getConfig(), dataType, plan);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, targets);
 

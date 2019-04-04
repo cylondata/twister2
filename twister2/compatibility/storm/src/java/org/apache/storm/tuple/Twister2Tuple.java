@@ -13,6 +13,8 @@ package org.apache.storm.tuple;
 
 import java.util.List;
 
+import org.apache.storm.generated.GlobalStreamId;
+
 import edu.iu.dsc.tws.task.api.IMessage;
 
 public class Twister2Tuple implements Tuple {
@@ -157,6 +159,11 @@ public class Twister2Tuple implements Tuple {
   @Override
   public List<Object> getValues() {
     return this.values;
+  }
+
+  @Override
+  public GlobalStreamId getSourceGlobalStreamId() {
+    return new GlobalStreamId(getSourceComponent(), getSourceStreamId());
   }
 
   @Override

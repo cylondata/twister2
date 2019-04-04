@@ -23,7 +23,7 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.topology.base.BaseRichSpout;
-import org.apache.storm.topology.twister2.Twister2TaskWorker;
+import org.apache.storm.topology.twister2.Twister2StormWorker;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
@@ -31,16 +31,17 @@ import org.apache.storm.tuple.Values;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 /**
  * This is a basic example of a Storm topology.
  */
-public final class MultiSpoutTopology extends Twister2TaskWorker {
+public final class MultiSpoutTopology extends Twister2StormWorker {
 
   public static void main(String[] args) {
-    edu.iu.dsc.tws.common.config.Config config = ResourceAllocator.loadConfig(
+    Config config = ResourceAllocator.loadConfig(
         Collections.emptyMap()
     );
 
@@ -86,7 +87,7 @@ public final class MultiSpoutTopology extends Twister2TaskWorker {
     @Override
     public void nextTuple() {
       spoutOutputCollector.emit(new Values(randomString.nextString()
-          + " from " + topologyContext.getThisComponentId()));
+          + " from " + topologyContext.getThisComponentId(), System.currentTimeMillis()));
       try {
         Thread.sleep(100);
       } catch (InterruptedException e) {
@@ -96,7 +97,7 @@ public final class MultiSpoutTopology extends Twister2TaskWorker {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-      declarer.declare(new Fields("word"));
+      declarer.declare(new Fields("word", "time"));
     }
   }
 
@@ -112,7 +113,8 @@ public final class MultiSpoutTopology extends Twister2TaskWorker {
 
     @Override
     public void execute(Tuple tuple) {
-      System.out.println("Tuple received : " + tuple.getString(0));
+      System.out.println("Tuple received : " + tuple.getString(0)
+          + " | sent at " + tuple.getLong(1));
     }
 
     @Override

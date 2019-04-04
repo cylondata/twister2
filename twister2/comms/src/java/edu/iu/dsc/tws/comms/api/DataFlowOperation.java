@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -80,7 +81,7 @@ public interface DataFlowOperation {
     return false;
   }
 
-  default boolean isDelegeteComplete() {
+  default boolean isDelegateComplete() {
     return false;
   }
 
@@ -100,11 +101,30 @@ public interface DataFlowOperation {
   }
 
   /**
+   * returns the key type that is associated with the data flow operation
+   *
+   * @return the MessageType or an UnsupportedOperationException
+   */
+  default MessageType getReceiveKeyType() {
+    throw new UnsupportedOperationException("method not supported");
+  }
+
+
+  /**
    * returns the data type that is associated with the data flow operation
    *
    * @return the MessageType or an UnsupportedOperationException
    */
   default MessageType getDataType() {
+    throw new UnsupportedOperationException("method not supported");
+  }
+
+  /**
+   * returns the data type that is associated with the data flow operation
+   *
+   * @return the MessageType or an UnsupportedOperationException
+   */
+  default MessageType getReceiveDataType() {
     throw new UnsupportedOperationException("method not supported");
   }
 
@@ -128,7 +148,7 @@ public interface DataFlowOperation {
    * @return source set
    */
   default Set<Integer> getSources() {
-    return null;
+    return Collections.emptySet();
   }
 
   /**
@@ -136,6 +156,6 @@ public interface DataFlowOperation {
    * @return target set
    */
   default Set<Integer> getTargets() {
-    return null;
+    return Collections.emptySet();
   }
 }

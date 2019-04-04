@@ -11,10 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.stream;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -22,18 +23,29 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SAllGather;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
-import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
 
 public class SAllGatherExample extends BenchWorker {
-  private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(SAllGatherExample.class.getName());
 
   private SAllGather gather;
 
-  private boolean gatherDone = false;
+  private volatile boolean gatherDone = true;
+
+  private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
+
+  private int receiverInWorker0 = -1; //any recv scheduled in worker 0
 
   @Override
   protected void execute() {
@@ -52,21 +64,45 @@ public class SAllGatherExample extends BenchWorker {
     }
     // create the communication
     gather = new SAllGather(communicator, taskPlan, sources, targets,
-        new FinalReduceReceiver(jobParameters.getIterations()),
+        new FinalReduceReceiver(),
         MessageType.OBJECT);
 
-
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> sourceTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
-    for (int t : tasksOfExecutor) {
+    for (int t : sourceTasksOfExecutor) {
       finishedSources.put(t, false);
     }
-    if (tasksOfExecutor.size() == 0) {
+    if (sourceTasksOfExecutor.size() == 0) {
       sourcesDone = true;
     }
 
+    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+        jobParameters.getTaskStages(), 1);
+    for (int taskId : targetTasksOfExecutor) {
+      if (targets.contains(taskId)) {
+        gatherDone = false;
+
+        if (workerId == 0) {
+          receiverInWorker0 = taskId;
+        }
+      }
+    }
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (dataArray, args) -> {
+      List<Tuple<Integer, int[]>> listOfArrays = new ArrayList<>();
+      for (int i = 0; i < noOfSourceTasks; i++) {
+        listOfArrays.add(new Tuple<>(i, dataArray));
+      }
+      return listOfArrays.iterator();
+    }, new IteratorComparator<>(
+        new TupleComparator<>(
+            IntComparator.getInstance(),
+            IntArrayComparator.getInstance()
+        )
+    ));
+
     // now initialize the workers
-    for (int t : tasksOfExecutor) {
+    for (int t : sourceTasksOfExecutor) {
       // the map thread where data is produced
       Thread mapThread = new Thread(new BenchWorker.MapWorker(t));
       mapThread.start();
@@ -93,54 +129,45 @@ public class SAllGatherExample extends BenchWorker {
   }
 
   public class FinalReduceReceiver implements BulkReceiver {
-    private int count = 0;
-    private int expected;
 
-    public FinalReduceReceiver(int expected) {
-      this.expected = expected;
-    }
+    private int count = 0;
+    private int countToLowest = 0;
+
+    private int totalExpectedCount = 0;
 
     @Override
     public void init(Config cfg, Set<Integer> targets) {
-      expected = expected * targets.size();
+      this.totalExpectedCount = targets.size() * jobParameters.getTotalIterations();
     }
 
     @Override
-    public boolean receive(int target, Iterator<Object> it) {
+    public boolean receive(int target, Iterator<Object> itr) {
       count++;
-      if (count == expected) {
-        LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
+      if (receiverInWorker0 == target) {
+        this.countToLowest++;
+        if (countToLowest > jobParameters.getWarmupIterations()) {
+          Timing.mark(BenchmarkConstants.TIMING_MESSAGE_RECV, workerId == 0
+              && target == receiverInWorker0);
+        }
+
+        if (countToLowest == jobParameters.getTotalIterations()) {
+          Timing.mark(TIMING_ALL_RECV, workerId == 0
+              && target == receiverInWorker0);
+          BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0
+              && target == receiverInWorker0);
+          resultsRecorder.writeToCSV();
+          LOG.info(() -> String.format("Target %d received ALL %d", target, count));
+        }
+      }
+
+      LOG.info(() -> String.format("Target %d received count %d", target, count));
+
+      verifyResults(resultsVerifier, itr, null);
+
+      if (count == totalExpectedCount) {
         gatherDone = true;
       }
-      Object object = it.next();
-      experimentData.setOutput(object);
-      experimentData.setWorkerId(workerId);
-      experimentData.setNumOfWorkers(jobParameters.getContainers());
-
-      try {
-        if (workerId == 0) {
-          verify();
-        }
-      } catch (VerificationException e) {
-        LOG.info("Exception Message : " + e.getMessage());
-      }
       return true;
-    }
-  }
-
-  public void verify() throws VerificationException {
-    boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
-    if (doVerify) {
-      LOG.info("Verifying results ...");
-      ExperimentVerification experimentVerification
-          = new ExperimentVerification(experimentData, OperationNames.ALLGATHER);
-      isVerified = experimentVerification.isVerified();
-      if (isVerified) {
-        LOG.info("Results generated from the experiment are verified.");
-      } else {
-        throw new VerificationException("Results do not match");
-      }
     }
   }
 }

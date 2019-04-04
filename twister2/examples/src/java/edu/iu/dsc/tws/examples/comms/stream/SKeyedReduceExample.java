@@ -32,6 +32,9 @@ import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
+/**
+ * todo not applicable for streaming, without window
+ */
 public class SKeyedReduceExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(SKeyedReduceExample.class.getName());
 

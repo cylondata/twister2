@@ -116,8 +116,8 @@ public class JobController {
 
   @RequestMapping(value = "/{jobId}/scale/", method = RequestMethod.POST,
       consumes = MediaType.APPLICATION_JSON_VALUE)
-  public void createComputeResource(
-      @PathVariable String jobId,
+  public void scaleComputeResource(
+      @PathVariable("jobId") String jobId,
       @RequestBody ScaleWorkersRequest scaleWorkersRequest) {
     jobService.scale(jobId, scaleWorkersRequest);
   }

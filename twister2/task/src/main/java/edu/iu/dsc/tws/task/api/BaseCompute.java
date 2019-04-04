@@ -11,17 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-import edu.iu.dsc.tws.common.config.Config;
+public abstract class BaseCompute<T> extends BaseNode implements ICompute<T> {
 
-public abstract class BaseCompute implements ICompute {
-  protected TaskContext context;
-
-  protected Config config;
-
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    this.config = cfg;
-    this.context = ctx;
-  }
 }
 

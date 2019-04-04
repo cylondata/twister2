@@ -46,6 +46,7 @@ public final class DataParallelJob {
     options.addOption(Constants.ARGS_SIZE, true, "Size of the file");
     options.addOption(Constants.ARGS_NUMBER_OF_FILES, true, "Number of files");
     options.addOption(Constants.ARGS_SHARED_FILE_SYSTEM, false, "Shared file system");
+    options.addOption(Constants.ARGS_PARALLEL, true, "parallelism value");
     options.addOption(Utils.createOption(Constants.ARGS_INPUT_DIRECTORY,
         true, "Input directory", true));
     options.addOption(Utils.createOption(Constants.ARGS_OUTPUT_DIRECTORY,
@@ -59,6 +60,7 @@ public final class DataParallelJob {
     String outDir = cmd.getOptionValue(Constants.ARGS_OUTPUT_DIRECTORY);
     int numFiles = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_NUMBER_OF_FILES));
     boolean shared = cmd.hasOption(Constants.ARGS_SHARED_FILE_SYSTEM);
+    int parallel = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_PARALLEL));
 
     // we we are a shared file system, lets generate data at the client
     if (shared) {
@@ -73,6 +75,7 @@ public final class DataParallelJob {
     jobConfig.put(Constants.ARGS_OUTPUT_DIRECTORY, outDir);
     jobConfig.put(Constants.ARGS_NUMBER_OF_FILES, numFiles);
     jobConfig.put(Constants.ARGS_SHARED_FILE_SYSTEM, shared);
+    jobConfig.put(Constants.ARGS_PARALLEL, parallel);
 
     // build the job
     submitJob(config, workers, jobConfig, DataParallelWorker.class.getName());

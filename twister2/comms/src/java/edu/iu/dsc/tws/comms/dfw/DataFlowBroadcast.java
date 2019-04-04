@@ -39,6 +39,8 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
@@ -91,6 +93,29 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   private Lock lock = new ReentrantLock();
 
   private Map<Integer, RoutingParameters> routingParametersCache = new HashMap<>();
+
+  /**
+   * The key type
+   */
+  private MessageType keyType;
+
+  public DataFlowBroadcast(TWSChannel channel, int src, Set<Integer> dests,
+                           MessageReceiver finalRcvr, MessageType keyType,
+                           MessageType dataType) {
+    this.source = src;
+    this.destinations = dests;
+    this.finalReceiver = finalRcvr;
+    this.keyType = keyType;
+    this.type = dataType;
+
+    this.delegate = new ChannelDataFlowOperation(channel);
+
+    this.sourceSet = new HashSet<>();
+    sourceSet.add(src);
+
+    this.pendingFinishSources = new HashSet<>();
+    this.finishedSources = new HashSet<>();
+  }
 
   public DataFlowBroadcast(TWSChannel channel, int src, Set<Integer> dests,
                            MessageReceiver finalRcvr) {
@@ -164,7 +189,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     for (int i = receiveIndex; i < receiveTasks.size(); i++) {
       if (!finalReceiver.onMessage(
           header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
-          receiveTasks.get(receiveIndex), header.getFlags(), object)) {
+          receiveTasks.get(i), header.getFlags(), object)) {
         done = false;
         allSent = false;
         break;
@@ -222,7 +247,12 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
           new ArrayBlockingQueue<Pair<Object, OutMessage>>(
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor));
+      if (keyType == null) {
+        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor, type));
+      } else {
+        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(),
+            executor, keyType, type));
+      }
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -238,7 +268,13 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
               capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
-      deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), executor));
+      if (keyType == null) {
+        deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(),
+            executor, type));
+      } else {
+        deSerializerMap.put(e, new UnifiedKeyDeSerializer(new KryoSerializer(),
+            executor, keyType, type));
+      }
     }
 
     calculateRoutingParameters();
@@ -304,31 +340,32 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean progress() {
-    boolean partialNeedsProgress = false;
+    boolean partialNeedsProgress;
     boolean needFinishProgress;
     boolean done;
     boolean needReceiveProgress;
-    try {
-      // lets send the finished one
-      needFinishProgress = handleFinish();
+    if (lock.tryLock()) {
+      try {
+        // lets send the finished one
+        needFinishProgress = handleFinish();
 
-      // send the messages to targets
-      needReceiveProgress = receiveProgressMessage();
+        // send the messages to targets
+        needReceiveProgress = receiveProgressMessage();
 
-      delegate.progress();
-      done = delegate.isComplete();
-      if (lock.tryLock()) {
+        delegate.progress();
+        done = delegate.isComplete();
         try {
           partialNeedsProgress = finalReceiver.progress();
         } finally {
           lock.unlock();
         }
+      } catch (Throwable t) {
+        LOG.log(Level.SEVERE, "un-expected error", t);
+        throw new RuntimeException(String.format("%d exception", executor), t);
       }
-    } catch (Throwable t) {
-      LOG.log(Level.SEVERE, "un-expected error", t);
-      throw new RuntimeException(String.format("%d exception", executor), t);
+      return partialNeedsProgress || !done || needFinishProgress || needReceiveProgress;
     }
-    return partialNeedsProgress || !done || needFinishProgress || needReceiveProgress;
+    return true;
   }
 
   private boolean handleFinish() {
@@ -346,7 +383,7 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public boolean isDelegeteComplete() {
+  public boolean isDelegateComplete() {
     return delegate.isComplete();
   }
 
@@ -388,40 +425,6 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     // now try to put this into pending
     return pendingSendMessages.offer(
         new ImmutablePair<>(DataFlowContext.EMPTY_OBJECT, sendMessage));
-  }
-
-  public boolean passMessageDownstream(Object object, ChannelMessage currentMessage) {
-    int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-        DataFlowContext.DEFAULT_DESTINATION);
-
-    RoutingParameters routingParameters;
-    if (routingParametersCache.containsKey(src)) {
-      routingParameters = routingParametersCache.get(src);
-    } else {
-      routingParameters = sendRoutingParameters(src, DataFlowContext.DEFAULT_DESTINATION);
-    }
-
-    ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
-        pendingSendMessagesPerSource.get(src);
-
-    // create a send message to keep track of the serialization
-    // at the intial stage the sub-edge is 0
-    int di = -1;
-    if (routingParameters.getExternalRoutes().size() > 0) {
-      di = routingParameters.getDestinationId();
-    }
-    OutMessage sendMessage = new OutMessage(src,
-        currentMessage.getHeader().getEdge(),
-        di, DataFlowContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
-        routingParameters.getInternalRoutes(),
-        routingParameters.getExternalRoutes(), type, null, delegate);
-    sendMessage.getChannelMessages().offer(currentMessage);
-    // this is a complete message
-    sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
-
-    // now try to put this into pending
-    return pendingSendMessages.offer(
-        new ImmutablePair<>(object, sendMessage));
   }
 
   private RoutingParameters sendRoutingParameters(int s, int path) {

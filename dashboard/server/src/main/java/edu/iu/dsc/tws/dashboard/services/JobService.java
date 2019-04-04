@@ -15,6 +15,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -51,7 +52,19 @@ public class JobService {
 
   public Job createJob(Job job) {
     job.getWorkers().forEach(worker -> worker.setJob(job));
-    job.getComputeResources().forEach(computeResource -> computeResource.setJob(job));
+
+    AtomicInteger scalableResourcesCount = new AtomicInteger(0);
+    job.getComputeResources().forEach(computeResource -> {
+      if (computeResource.isScalable()) {
+        scalableResourcesCount.incrementAndGet();
+      }
+      computeResource.setJob(job);
+    });
+
+    if (scalableResourcesCount.get() != 1) {
+      throw new RuntimeException("Job should have exactly one "
+          + "scalable resource. Found : " + scalableResourcesCount);
+    }
 
     //create non existing nodes : todo not appropriate, resolve once twister2 support nodes
     //if node is defined without rack and data center, replace them with prefix+jobId
@@ -73,9 +86,9 @@ public class JobService {
   public Page<Job> searchJobs(List<JobState> states, String keyword, int page) {
     PageRequest pageRequest = PageRequest.of(page, 25);
     return this.jobRepository.findAllByStateInAndJobNameContainingOrderByCreatedTimeDesc(
-            states,
-            keyword,
-            pageRequest
+        states,
+        keyword,
+        pageRequest
     );
   }
 
@@ -108,7 +121,12 @@ public class JobService {
   @Transactional
   public void scale(String jobId, ScaleWorkersRequest scaleWorkersRequest) {
     ComputeResource cr = this.computeResourceService
-            .getScalableComputeResourceForJob(jobId);
+        .getScalableComputeResourceForJob(jobId);
+
+    if (cr == null) {
+      throw new EntityNotFoundException("Couldn't find the scalable "
+          + "compute resource for job : " + jobId);
+    }
 
     cr.setInstances(cr.getInstances() + scaleWorkersRequest.getChange());
     this.computeResourceService.save(cr);
@@ -117,9 +135,9 @@ public class JobService {
     wState.setState(WorkerState.KILLED_BY_SCALE_DOWN);
     for (Long killedWorker : scaleWorkersRequest.getKilledWorkers()) {
       this.workerService.changeState(
-              jobId,
-              killedWorker,
-              wState
+          jobId,
+          killedWorker,
+          wState
       );
     }
 

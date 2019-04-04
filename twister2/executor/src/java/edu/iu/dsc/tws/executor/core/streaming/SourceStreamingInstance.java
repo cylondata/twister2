@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.executor.core.streaming;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -21,12 +20,13 @@ import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
-import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SourceStreamingInstance implements INodeInstance {
   /**
@@ -94,9 +94,16 @@ public class SourceStreamingInstance implements INodeInstance {
    */
   private int highWaterMark;
 
+  /**
+   * The output edges
+   */
+  private Map<String, String> outEdges;
+  private TaskSchedulePlan taskSchedule;
+
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
                                  Config config, String tName, int tId, int tIndex, int parallel,
-                                 int wId, Map<String, Object> cfgs, Set<String> outEdges) {
+                                 int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
+                                 TaskSchedulePlan taskSchedule) {
     this.streamingTask = streamingTask;
     this.outStreamingQueue = outStreamingQueue;
     this.config = config;
@@ -108,13 +115,15 @@ public class SourceStreamingInstance implements INodeInstance {
     this.workerId = wId;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
+    this.outEdges = outEdges;
+    this.taskSchedule = taskSchedule;
   }
 
   public void prepare(Config cfg) {
     outputStreamingCollection = new DefaultOutputCollection(outStreamingQueue);
 
-    streamingTask.prepare(cfg, new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
-        parallelism, workerId, outputStreamingCollection, nodeConfigs));
+    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, streamingTaskId, taskName,
+        parallelism, workerId, outputStreamingCollection, nodeConfigs, outEdges, taskSchedule));
   }
 
   /**

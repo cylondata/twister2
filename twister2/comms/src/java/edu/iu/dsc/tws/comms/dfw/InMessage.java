@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -19,6 +18,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 public class InMessage {
@@ -43,11 +43,6 @@ public class InMessage {
   private Queue<DataBuffer> buffers = new LinkedBlockingQueue<>();
 
   /**
-   * The overflow buffers created
-   */
-  private Queue<DataBuffer> overFlowBuffers = new LinkedBlockingQueue<>();
-
-  /**
    * We call this to release the buffers
    */
   private ChannelMessageReleaseCallback releaseListener;
@@ -65,7 +60,7 @@ public class InMessage {
   /**
    * Keep whether we have all the buffers added
    */
-  protected boolean complete = false;
+  protected boolean complete;
 
   /**
    * Message type
@@ -152,6 +147,11 @@ public class InMessage {
    */
   private ReceivedState receivedState;
 
+  /**
+   * The worker id
+   */
+  private int workerId;
+
   public InMessage(int originatingId, MessageType messageType,
                    ChannelMessageReleaseCallback releaseListener,
                    MessageHeader header) {
@@ -162,8 +162,23 @@ public class InMessage {
     this.receivedState = ReceivedState.INIT;
     this.header = header;
     if (header.getNumberTuples() > 0) {
-      deserializedData = new ArrayList<>();
+      deserializedData = new AggregatedObjects<>();
     }
+  }
+
+  public InMessage(int originatingId, MessageType messageType,
+                   ChannelMessageReleaseCallback releaseListener,
+                   MessageHeader header, int workerId) {
+    this.releaseListener = releaseListener;
+    this.originatingId = originatingId;
+    this.complete = false;
+    this.dataType = messageType;
+    this.receivedState = ReceivedState.INIT;
+    this.header = header;
+    if (header.getNumberTuples() > 0) {
+      deserializedData = new AggregatedObjects<>();
+    }
+    this.workerId = workerId;
   }
 
   public void setDataType(MessageType dataType) {
@@ -214,7 +229,10 @@ public class InMessage {
       remaining = remaining - Integer.BYTES - 16;
       currentLocation += Integer.BYTES;
     } else if (bufferCurrentObjectLength == -1) {
-      bufferCurrentObjectLength = buffer.getByteBuffer().getInt(0);
+      bufferCurrentObjectLength = buffer.getByteBuffer().getInt(4);
+      remaining = remaining - 2 * Integer.BYTES;
+      currentLocation += 2 * Integer.BYTES;
+    } else {
       remaining = remaining - Integer.BYTES;
       currentLocation += Integer.BYTES;
     }
@@ -235,27 +253,33 @@ public class InMessage {
 
       // if we have seen all, lets break
       if (Math.abs(expectedObjects) == bufferSeenObjects) {
+        if (remaining > 0) {
+          String msg = String.format("%d -> %d Something wrong, a buffer "
+                  + "cannot have leftover: %d expected %d addedBuffers %d",
+              originatingId, workerId, remaining, expectedObjects, addedBuffers);
+          LOG.severe("Un-expected error - " + msg);
+          throw new RuntimeException(msg);
+        }
         complete = true;
         break;
       }
 
       // we can read another object
       if (remaining >= Integer.BYTES) {
-        try {
-          bufferCurrentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-          bufferPreviousReadForObject = 0;
-          currentLocation += Integer.BYTES;
-          remaining = remaining - Integer.BYTES;
-        } catch (IndexOutOfBoundsException e) {
-          LOG.info(String.format("Exception remaining %d size %d currentLoc %d", remaining,
-              buffer.getSize(), currentLocation));
-          throw e;
-        }
-      } else {
+        bufferCurrentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
+        bufferPreviousReadForObject = 0;
+        currentLocation += Integer.BYTES;
+        remaining = remaining - Integer.BYTES;
+      } else if (remaining == 0) {
         // we need to break, we set the length to -1 because we need to read the length
         // in next buffer
         bufferCurrentObjectLength = -1;
         break;
+      } else {
+        String msg = String.format("%d Something wrong, a buffer "
+            + "cannot have leftover: %d", workerId, remaining);
+        LOG.severe("Un-expected error - " + msg);
+        throw new RuntimeException(msg);
       }
     }
     buffers.add(buffer);
@@ -333,14 +357,6 @@ public class InMessage {
     this.deserializingKey = deserializingKey;
   }
 
-  public void addOverFlowBuffer(DataBuffer buffer) {
-    overFlowBuffers.offer(buffer);
-  }
-
-  public int getBufferSeenObjects() {
-    return bufferSeenObjects;
-  }
-
   public int getUnPkCurrentObjectLength() {
     return unPkCurrentObjectLength;
   }
@@ -369,16 +385,17 @@ public class InMessage {
     unPkBuffers++;
   }
 
-  public int getUnPkCurrentIndex() {
+  public int getUnPkCurrentBytes() {
     return unPkCurrentIndex;
   }
 
-  public void addUnPkCurrentIndex(int index) {
-    unPkCurrentIndex = unPkCurrentIndex + index;
+  public int addUnPkCurrentBytes(int bytes) {
+    unPkCurrentIndex = unPkCurrentIndex + bytes;
+    return unPkCurrentIndex;
   }
 
-  public void setUnPkCurrentIndex(int unPkCurrentIndex) {
-    this.unPkCurrentIndex = unPkCurrentIndex;
+  public void setUnPkCurrentBytes(int unPkCurrentBytes) {
+    this.unPkCurrentIndex = unPkCurrentBytes;
   }
 
   public void resetUnPk() {

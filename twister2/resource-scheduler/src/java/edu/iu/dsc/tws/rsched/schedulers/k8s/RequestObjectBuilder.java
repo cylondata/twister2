@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI.ComputeResource;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
+import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.models.V1Affinity;
@@ -69,6 +70,7 @@ public final class RequestObjectBuilder {
   private static Config config;
   private static String jobName;
   private static long jobPackageFileSize;
+  private static String jobMasterIP = null;
 
   private RequestObjectBuilder() { }
 
@@ -76,6 +78,21 @@ public final class RequestObjectBuilder {
     config = cnfg;
     jobName = jName;
     jobPackageFileSize = jpFileSize;
+
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      jobMasterIP = ResourceSchedulerUtils.getHostIP();
+
+      // It is very unlikely for the host to not get localhost IP address
+      // if that happens, we throw RuntimeException
+      // since workers can not connect to JobMaster in that case
+      if (jobMasterIP == null) {
+        throw new RuntimeException("Can not get local host address. ");
+      }
+    }
+  }
+
+  public static String getJobMasterIP() {
+    return jobMasterIP;
   }
 
   /**
@@ -403,13 +420,9 @@ public final class RequestObjectBuilder {
         .name(K8sEnvVariables.HOST_NAME + "")
         .valueFrom(varSource));
 
-    String masterAddress = null;
-    if (JobMasterContext.jobMasterRunsInClient(config)) {
-      masterAddress = KubernetesUtils.getLocalAddress();
-    }
     envVars.add(new V1EnvVar()
         .name(K8sEnvVariables.JOB_MASTER_IP + "")
-        .value(masterAddress));
+        .value(jobMasterIP));
 
     if (SchedulerContext.useOpenMPI(config)) {
 

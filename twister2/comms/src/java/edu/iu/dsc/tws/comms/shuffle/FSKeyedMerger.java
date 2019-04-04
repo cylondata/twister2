@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -25,10 +24,17 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
+/**
+ * Un sorted merger
+ *
+ * @deprecated This merger can't output data in the expected format Iterator<Tuple<Key,Iterator>>
+ */
 @SuppressWarnings({"unchecked", "rawtypes"})
+@Deprecated
 public class FSKeyedMerger implements Shuffle {
   private static final Logger LOG = Logger.getLogger(FSKeyedMerger.class.getName());
 
@@ -66,17 +72,17 @@ public class FSKeyedMerger implements Shuffle {
   /**
    * List of bytes in the memory so far
    */
-  private List<KeyValue> recordsInMemory = new ArrayList<>();
+  private List<Tuple> recordsInMemory = new ArrayList<>();
 
   /**
    * The deserialized objects in memory
    */
-  private List<KeyValue> objectsInMemory = new ArrayList<>();
+  private List<Tuple> objectsInMemory = new ArrayList<>();
 
   /**
    * The number of total bytes in each file part written to disk
    */
-  private List<Integer> filePartBytes = new ArrayList<>();
+  private List<Long> filePartBytes = new ArrayList<>();
 
   /**
    * Amount of bytes in the memory
@@ -94,7 +100,6 @@ public class FSKeyedMerger implements Shuffle {
   private MessageType dataType;
 
   private Lock lock = new ReentrantLock();
-  private Condition notFull = lock.newCondition();
 
   /**
    * The kryo serializer
@@ -130,14 +135,10 @@ public class FSKeyedMerger implements Shuffle {
 
     lock.lock();
     try {
-      recordsInMemory.add(new KeyValue(key, data));
+      recordsInMemory.add(new Tuple(key, data));
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
-      if (numOfBytesInMemory > maxBytesToKeepInMemory
-          || recordsInMemory.size() > maxRecordsInMemory) {
-        notFull.signal();
-      }
     } finally {
       lock.unlock();
     }
@@ -156,9 +157,9 @@ public class FSKeyedMerger implements Shuffle {
 
   private void deserializeObjects() {
     for (int i = 0; i < recordsInMemory.size(); i++) {
-      KeyValue kv = recordsInMemory.get(i);
+      Tuple kv = recordsInMemory.get(i);
       Object o = DataDeserializer.deserialize(dataType, kryoSerializer, (byte[]) kv.getValue());
-      objectsInMemory.add(new KeyValue(kv.getKey(), o));
+      objectsInMemory.add(new Tuple(kv.getKey(), o));
     }
   }
 
@@ -172,7 +173,7 @@ public class FSKeyedMerger implements Shuffle {
       if (numOfBytesInMemory > maxBytesToKeepInMemory
           || recordsInMemory.size() > maxRecordsInMemory) {
         // save the bytes to disk
-        int totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
+        long totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
             numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
         filePartBytes.add(totalSize);
 
@@ -200,9 +201,9 @@ public class FSKeyedMerger implements Shuffle {
     // Index of the current file
     private int currentIndex = 0;
     // the iterator for list of bytes in memory
-    private Iterator<KeyValue> it;
+    private Iterator<Tuple> it;
     // the current values
-    private List<KeyValue> openValue;
+    private List<Tuple> openValue;
 
     FSIterator() {
       it = objectsInMemory.iterator();
@@ -253,14 +254,14 @@ public class FSKeyedMerger implements Shuffle {
     }
 
     @Override
-    public KeyValue next() {
+    public Tuple next() {
       // we are reading from in memory
       if (currentFileIndex == -1) {
         return it.next();
       }
 
       if (currentFileIndex >= 0) {
-        KeyValue kv = openValue.get(currentIndex);
+        Tuple kv = openValue.get(currentIndex);
         currentIndex++;
         return kv;
       }

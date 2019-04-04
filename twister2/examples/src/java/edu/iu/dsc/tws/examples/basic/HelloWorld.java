@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
  * where it spawns set of parallel workers.
  */
 public class HelloWorld implements IWorker {
+
   private static final Logger LOG = Logger.getLogger(HelloWorld.class.getName());
 
   @Override

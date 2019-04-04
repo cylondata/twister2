@@ -57,6 +57,7 @@ public class StandaloneCommand extends MPICommand {
     mpiCommand.add("-Xms" + getMemory(job) + "m");
     mpiCommand.add(config.getIntegerValue("__job_master_port__", 0) + "");
     mpiCommand.add(config.getStringValue("__job_master_ip__", "ip"));
+    mpiCommand.add(MPIContext.mpiMapBy(config));
     return mpiCommand;
   }
 

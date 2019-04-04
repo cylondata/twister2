@@ -23,6 +23,7 @@
 //  limitations under the License.
 package org.apache.storm.task;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -41,12 +42,33 @@ public class OutputCollector implements IOutputCollector {
     return this.listener.emit(streamId, anchors, tuple);
   }
 
+  /**
+   * Emits a new tuple to a specific stream with a single anchor. The emitted values must be immutable.
+   *
+   * @param streamId the stream to emit to
+   * @param anchor the tuple to anchor to
+   * @param tuple the new output tuple from this bolt
+   * @return the list of task ids that this new tuple was sent to
+   */
+  public List<Integer> emit(String streamId, Tuple anchor, List<Object> tuple) {
+    return emit(streamId, Arrays.asList(anchor), tuple);
+  }
+
+
+  public List<Integer> emit(String streamId, List<Object> tuple) {
+    return emit(streamId, (List) null, tuple);
+  }
+
   @Override
   public void emitDirect(int taskId,
                          String streamId,
                          Collection<Tuple> anchors,
                          List<Object> tuple) {
     this.listener.emitDirect(taskId, streamId, anchors, tuple);
+  }
+
+  public void emitDirect(int taskId, String streamId, List<Object> tuple) {
+    emitDirect(taskId, streamId, null, tuple);
   }
 
   @Override

@@ -44,8 +44,6 @@ public final class OperationUtils {
                                        MessageReceiver partialReceiver) {
     boolean finalNeedsProgress = false;
     boolean partialNeedsProgress = false;
-//    LOG.info(String.format("%d PROGRESS RECEIEVERS ENTER",
-//        delegate.getInstancePlan().getThisExecutor()));
     try {
       delegate.progress();
       if (lock.tryLock()) {
@@ -67,9 +65,6 @@ public final class OperationUtils {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-//    LOG.info(String.format("%d PROGRESS RECEIEVERS EXIT",
-//        delegate.getInstancePlan().getThisExecutor()));
-//    LOG.info("Receivers: " + finalNeedsProgress + " " + partialNeedsProgress);
     return finalNeedsProgress || partialNeedsProgress;
   }
 

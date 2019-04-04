@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.partition;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +28,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 
 public class PartitionBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
@@ -87,10 +87,11 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
     // lists to keep track of messages for destinations
     for (int d : expectedIds.keySet()) {
-      targetMessages.put(d, new ArrayList<>());
+      targetMessages.put(d, new AggregatedObjects<>());
       onFinishedSources.put(d, new HashSet<>());
     }
 
+    this.receiver.init(cfg, expectedIds.keySet());
     LOG.log(Level.INFO, String.format("%d Expected ids %s", executor, expectedIds));
   }
 
@@ -124,7 +125,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
       List<Object> targetMsgList = targetMessages.get(target);
       if (targetMsgList == null) {
-        throw new RuntimeException(String.format("%d target not exisits %d %s", executor, target,
+        throw new RuntimeException(String.format("%d target not exists %d %s", executor, target,
             operation.getTaskPlan()));
       }
       if (object instanceof List) {
@@ -146,7 +147,7 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
       for (Map.Entry<Integer, Set<Integer>> entry : onFinishedSources.entrySet()) {
         Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(entry.getKey());
 
-        if (operation.isDelegeteComplete()
+        if (operation.isDelegateComplete()
             && onFinishedSrcsTarget.equals(sources)) {
           Iterator<Map.Entry<Integer, List<Object>>> it = targetMessages.entrySet().iterator();
           while (it.hasNext()) {

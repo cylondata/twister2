@@ -49,11 +49,7 @@ public class RecordSource implements Runnable {
 
         // lets try to process if send doesn't succeed
         while (!operation.partition(taskId, word.getKey(), word.getData(), flags)) {
-          try {
-            Thread.sleep(1);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
+          operation.progress();
         }
       }
     } catch (Throwable t) {

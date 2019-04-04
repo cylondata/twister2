@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
@@ -63,6 +64,7 @@ public class TaskExecutor {
 
   /**
    * Creates a task executor.
+   *
    * @param cfg the configuration
    * @param wId the worker id
    * @param net communicator
@@ -82,11 +84,17 @@ public class TaskExecutor {
    * @return the data set
    */
   public ExecutionPlan plan(DataFlowTaskGraph graph) {
+
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
+    //TaskScheduler taskScheduler = new TaskScheduler();
+    //taskScheduler.initialize(config);
+
     WorkerPlan workerPlan = createWorkerPlan();
+
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
+    //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator);
@@ -125,7 +133,22 @@ public class TaskExecutor {
   }
 
   /**
+   * Execute a plan and a graph. This call blocks until the execution finishes. In case of
+   * streaming, this call doesn't return while for batch computations it returns after
+   * the execution is done.
+   *
+   * @param graph the dataflow graph
+   * @param plan the execution plan
+   */
+  public IExecution iExecute(DataFlowTaskGraph graph, ExecutionPlan plan) {
+    Executor executor = new Executor(config, workerID, plan, communicator.getChannel(),
+        graph.getOperationMode());
+    return executor.iExecute();
+  }
+
+  /**
    * Add input to the the task instances
+   *
    * @param graph task graph
    * @param plan execution plan
    * @param taskName task name
@@ -153,13 +176,14 @@ public class TaskExecutor {
 
   /**
    * Add input to the the task instances
+   *
    * @param graph task graph
    * @param plan execution plan
    * @param inputKey inputkey
    * @param input input
    */
   public void addSourceInput(DataFlowTaskGraph graph, ExecutionPlan plan,
-                       String inputKey, DataObject<Object> input) {
+                             String inputKey, DataObject<Object> input) {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
     if (nodes == null) {
       throw new RuntimeException(String.format("%d Failed to set input for non-existing "
@@ -215,7 +239,7 @@ public class TaskExecutor {
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
   public <T> DataObject<T> getSinkOutput(DataFlowTaskGraph graph, ExecutionPlan plan,
-                                              String dataName) {
+                                         String dataName) {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     DataObject<T> dataSet = new DataObjectImpl<>(config);
@@ -246,7 +270,7 @@ public class TaskExecutor {
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
   public <T> DataObject<T> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan,
-                                          String taskName, String dataName) {
+                                     String taskName, String dataName) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {
       throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);

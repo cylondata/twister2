@@ -12,11 +12,11 @@
 
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 
 /**
@@ -28,7 +28,7 @@ public class KGatherBatchPartialReceiver extends KeyedReceiver {
    * from the send queue we cannot put them back in if the send fails. So the send messages are
    * kept in the variable until the send method returns true.
    */
-  private List<Object> sendList = new ArrayList<>();
+  private List<Object> sendList = new AggregatedObjects<>();
 
   /**
    * Flags associated with the current sendList
@@ -79,9 +79,9 @@ public class KGatherBatchPartialReceiver extends KeyedReceiver {
     }
 
     if (!sendList.isEmpty()) {
-      if (dataFlowOperation.sendPartial(target, sendList, flags, destination)) {
-        System.out.println("Sent Partial executor : " + executor + "size" + sendList.size());
-        sendList = new ArrayList<>();
+      if (dataFlowOperation.sendPartial(representSource, sendList, flags, target)) {
+//        System.out.println("Sent Partial executor : " + executor + "size" + sendList.size());
+        sendList = new AggregatedObjects<>();
         flags = 0;
       } else {
         needsProgress = true;

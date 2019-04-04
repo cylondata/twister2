@@ -23,19 +23,13 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -43,6 +37,8 @@ import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.GraphConstants;
@@ -94,19 +90,19 @@ public class RoundRobinBatchTaskExample implements IWorker {
     GraphBuilder builder = GraphBuilder.newBuilder();
 
     builder.addSource("source", g);
-    builder.setParallelism("source", 4);
+    builder.setParallelism("source", 2);
 
     builder.addSink("sink1", s1);
-    builder.setParallelism("sink1", 3);
+    builder.setParallelism("sink1", 2);
 
     builder.addSink("sink2", s2);
-    builder.setParallelism("sink2", 3);
+    builder.setParallelism("sink2", 2);
 
     builder.addSink("merge", m1);
-    builder.setParallelism("merge", 3);
+    builder.setParallelism("merge", 2);
 
     builder.addSink("final", f1);
-    builder.setParallelism("final", 4);
+    builder.setParallelism("final", 2);
 
     //Task graph Structure
     /**   Source (Two Outgoing Edges)
@@ -165,15 +161,15 @@ public class RoundRobinBatchTaskExample implements IWorker {
     //Just to print the task schedule plan...
     if (workerID == 0) {
       if (taskSchedulePlan != null) {
-        Map<Integer, TaskSchedulePlan.ContainerPlan> containersMap
+        Map<Integer, ContainerPlan> containersMap
                 = taskSchedulePlan.getContainersMap();
-        for (Map.Entry<Integer, TaskSchedulePlan.ContainerPlan> entry : containersMap.entrySet()) {
+        for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
           Integer integer = entry.getKey();
-          TaskSchedulePlan.ContainerPlan containerPlan = entry.getValue();
-          Set<TaskSchedulePlan.TaskInstancePlan> containerPlanTaskInstances
+          ContainerPlan containerPlan = entry.getValue();
+          Set<TaskInstancePlan> containerPlanTaskInstances
                   = containerPlan.getTaskInstances();
           LOG.info("Task Details for Container Id:" + integer);
-          for (TaskSchedulePlan.TaskInstancePlan ip : containerPlanTaskInstances) {
+          for (TaskInstancePlan ip : containerPlanTaskInstances) {
             LOG.info("Task Id:" + ip.getTaskId()
                     + "\tTask Index" + ip.getTaskIndex()
                     + "\tTask Name:" + ip.getTaskName());
@@ -182,12 +178,12 @@ public class RoundRobinBatchTaskExample implements IWorker {
       }
     }
 
-    TWSChannel network = Network.initializeChannel(config, workerController);
+    /*TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
           workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, network, OperationMode.BATCH);
-    executor.execute();
+    executor.execute();*/
   }
 
   public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {

@@ -12,33 +12,37 @@
 package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.api.stream.SAllReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
-import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.GeneratorUtils;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_RECV;
 
 public class SAllReduceExample extends BenchWorker {
-  private static final Logger LOG = Logger.getLogger(SReduceExample.class.getName());
+
+  private static final Logger LOG = Logger.getLogger(SAllReduceExample.class.getName());
 
   private SAllReduce reduce;
 
-  private boolean reduceDone = false;
+  private boolean reduceDone = true;
+
+  private ResultsVerifier<int[], int[]> resultsVerifier;
+
+  private int receiverInWorker0 = -1; //any recv scheduled in worker 0
 
   @Override
   protected void execute() {
@@ -58,7 +62,7 @@ public class SAllReduceExample extends BenchWorker {
     // create the communication
     reduce = new SAllReduce(communicator, taskPlan, sources, targets, MessageType.INTEGER,
         new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
-        new FinalSingularReceiver(jobParameters.getIterations()));
+        new FinalSingularReceiver());
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -66,9 +70,25 @@ public class SAllReduceExample extends BenchWorker {
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
-    if (tasksOfExecutor.size() == 0) {
-      sourcesDone = true;
+
+    sourcesDone = tasksOfExecutor.size() == 0;
+
+    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+        jobParameters.getTaskStages(), 1);
+    for (int taskId : targetTasksOfExecutor) {
+      if (targets.contains(taskId)) {
+        reduceDone = false;
+      }
+
+      if (workerId == 0) {
+        receiverInWorker0 = taskId;
+      }
     }
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (array, args) -> {
+      int sourcesCount = jobParameters.getTaskStages().get(0);
+      return GeneratorUtils.multiplyIntArray(array, sourcesCount);
+    }, IntArrayComparator.getInstance());
 
     // now initialize the workers
     for (int t : tasksOfExecutor) {
@@ -98,68 +118,43 @@ public class SAllReduceExample extends BenchWorker {
   }
 
   public class FinalSingularReceiver implements SingularReceiver {
-    private int count = 0;
-    private int expected;
 
-    public FinalSingularReceiver(int expected) {
-      this.expected = expected;
-    }
+    private int count = 0;
+    private int countToLowest = 0;
+
+    private int totalExpectedCount = 0;
 
     @Override
-    public void init(Config cfg, Set<Integer> expectedIds) {
-      expected = expected * expectedIds.size();
+    public void init(Config cfg, Set<Integer> targets) {
+      this.totalExpectedCount = targets.size() * jobParameters.getTotalIterations();
     }
 
     @Override
     public boolean receive(int target, Object object) {
       count++;
-      if (count == expected) {
-        LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
+      if (target == receiverInWorker0) {
+        this.countToLowest++;
+        if (this.countToLowest > jobParameters.getWarmupIterations()) {
+          Timing.mark(TIMING_MESSAGE_RECV, workerId == 0 && target == receiverInWorker0);
+        }
+
+        if (countToLowest == jobParameters.getTotalIterations()) {
+          Timing.mark(TIMING_ALL_RECV, workerId == 0 && target == receiverInWorker0);
+          BenchmarkUtils.markTotalAndAverageTime(resultsRecorder,
+              workerId == 0 && target == receiverInWorker0);
+          resultsRecorder.writeToCSV();
+        }
+      }
+
+      LOG.info(() -> String.format("Target %d received count %d", target, count));
+
+      verifyResults(resultsVerifier, object, null);
+
+      if (count == this.totalExpectedCount) {
         reduceDone = true;
       }
 
-      experimentData.setOutput(object);
-      experimentData.setWorkerId(workerId);
-      experimentData.setNumOfWorkers(jobParameters.getContainers());
-
-      try {
-        if (workerId == 0) {
-          verify();
-        }
-      } catch (VerificationException e) {
-        LOG.info("Exception Message : " + e.getMessage());
-      }
-
       return true;
-    }
-  }
-
-  public class IdentityFunction implements ReduceFunction {
-    private int count = 0;
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    }
-
-    @Override
-    public Object reduce(Object t1, Object t2) {
-//      LOG.log(Level.INFO, String.format("%d Received %d", id, ++count));
-      return t1;
-    }
-  }
-
-  public void verify() throws VerificationException {
-    boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
-    if (doVerify) {
-      LOG.info("Verifying results ...");
-      ExperimentVerification experimentVerification
-          = new ExperimentVerification(experimentData, OperationNames.ALLREDUCE);
-      isVerified = experimentVerification.isVerified();
-      if (isVerified) {
-        LOG.info("Results generated from the experiment are verified.");
-      } else {
-        throw new VerificationException("Results do not match");
-      }
     }
   }
 }

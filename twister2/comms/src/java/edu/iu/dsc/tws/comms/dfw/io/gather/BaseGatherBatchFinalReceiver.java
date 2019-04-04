@@ -11,11 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.gather;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 
 public abstract class BaseGatherBatchFinalReceiver extends BaseGatherBatchReceiver {
   /**
@@ -30,11 +31,12 @@ public abstract class BaseGatherBatchFinalReceiver extends BaseGatherBatchReceiv
   @Override
   protected void init() {
     for (Map.Entry<Integer, List<Integer>> e : expIds.entrySet()) {
-      finalMessages.put(e.getKey(), new ArrayList<>());
+      finalMessages.put(e.getKey(), new AggregatedObjects<>());
       batchDone.put(e.getKey(), false);
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;
@@ -68,7 +70,7 @@ public abstract class BaseGatherBatchFinalReceiver extends BaseGatherBatchReceiv
       }
 
       if (found) {
-        List<Object> out = new ArrayList<>();
+        List<Object> out = new AggregatedObjects<>();
         for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           Queue<Object> valueList = e.getValue();
           if (valueList.size() > 0) {

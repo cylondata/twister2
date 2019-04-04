@@ -13,11 +13,14 @@ package edu.iu.dsc.tws.data.api.splits;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.fs.Path;
 
 public class TextInputSplit extends DelimitedInputSplit<String> {
+
+  private static final Logger LOG = Logger.getLogger(TextInputSplit.class.getName());
   /**
    * Code of \r, used to remove \r from a line when the line ends with \r\n.
    */
@@ -79,7 +82,6 @@ public class TextInputSplit extends DelimitedInputSplit<String> {
         && bytes[readOffset + curNumBytes - 1] == CARRIAGE_RETURN) {
       curNumBytes -= 1;
     }
-
     return new String(bytes, readOffset, curNumBytes, this.charsetName);
   }
 }

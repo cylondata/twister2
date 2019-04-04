@@ -23,4 +23,9 @@ public class IdentitySelector<T> implements Selector<T, T> {
   @Override
   public void prepare(TSetContext context) {
   }
+
+  @Override
+  public void prepare() {
+
+  }
 }

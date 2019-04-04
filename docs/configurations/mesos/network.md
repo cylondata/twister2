@@ -32,3 +32,20 @@
 **shuffle.memory.records.max**
 <table><tr><td>default</td><td>10240</td><tr><td>description</td><td>the maximum number of records kept in memory for operations that goes to dist</td></table>
 
+**the keyed reduce algorithm**
+<table><tr><td>default</td><td>partition</td><tr><td>description</td><td></td></table>
+
+**the algorithm for gathering data**
+<table><tr><td>default</td><td>partition</td><tr><td>description</td><td></td></table>
+
+**the partitioning algorithm**
+<table><tr><td>default</td><td>simple</td><tr><td>description</td><td></td></table>
+
+**the keyed reduce algorithm**
+<table><tr><td>default</td><td>partition</td><tr><td>description</td><td></td></table>
+
+**the algorithm for gathering data**
+<table><tr><td>default</td><td>partition</td><tr><td>description</td><td></td></table>
+
+**the partitioning algorithm**
+<table><tr><td>default</td><td>simple</td><tr><td>description</td><td></td></table>

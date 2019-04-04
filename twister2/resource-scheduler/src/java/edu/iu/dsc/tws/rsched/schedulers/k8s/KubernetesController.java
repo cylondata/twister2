@@ -320,6 +320,29 @@ public class KubernetesController {
   }
 
   /**
+   * get the IP address of the given service
+   * otherwise return null
+   */
+  public String getServiceIP(String serviceName) {
+    V1ServiceList serviceList = null;
+    try {
+      serviceList = coreApi.listNamespacedService(namespace,
+          null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting service list.", e);
+      throw new RuntimeException(e);
+    }
+
+    for (V1Service service : serviceList.getItems()) {
+      if (serviceName.equals(service.getMetadata().getName())) {
+        return service.getSpec().getClusterIP();
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * sending a command to shell
    */
   public static boolean runProcess(String[] command) {

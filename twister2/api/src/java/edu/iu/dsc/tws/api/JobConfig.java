@@ -20,4 +20,20 @@ import java.util.HashMap;
  */
 public class JobConfig extends HashMap<String, Object> {
   private static final long serialVersionUID = 6585146860991205058L;
+
+  //todo refactor tws.api such that it doesn't depend on other packages.
+  // Till that keeping below properties(unused) here
+  /**
+   * Twister2 has the support to use disk for some operations. For example,
+   * keyed gather in batch mode can disk to handle tera bytes of data. This flag can be used
+   * to signal engine to use disk whenever possible. Please note that, this option is
+   * not applicable for all the operations and not intended to use directly.
+   */
+  public static final String USE_DISK = "use-disk";
+
+  /**
+   * Twister2 keyed operations sometimes requires to compare keys. This property
+   * can be set to define key comparator for such operations.
+   */
+  public static final String KEY_COMPARATOR = "key-comparator";
 }

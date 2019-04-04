@@ -15,14 +15,19 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.examples.task.batch.verifiers.ReduceVerifier;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.typed.ReduceCompute;
 
 public class BTReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTReduceExample.class.getName());
@@ -34,8 +39,8 @@ public class BTReduceExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
 
     String edge = "edge";
-    BaseSource g = new SourceBatchTask(edge);
-    BaseSink r = new ReduceSinkTask();
+    BaseSource g = new SourceTask(edge);
+    ISink r = new ReduceSinkTask();
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
@@ -43,23 +48,29 @@ public class BTReduceExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  protected static class ReduceSinkTask extends BaseSink {
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  protected static class ReduceSinkTask extends ReduceCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
 
-    private int count = 0;
+    private boolean timingCondition;
+
+    private ResultsVerifier<int[], int[]> resultsVerifier;
+    private boolean verified = true;
 
     @Override
-    public boolean execute(IMessage message) {
-      count++;
-      if (count % jobParameters.getPrintInterval() == 0) {
-        Object object = message.getContent();
-        experimentData.setOutput(object);
-        try {
-          verify(OperationNames.REDUCE);
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
-        }
-      }
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SINK, context);
+      resultsVerifier = new ReduceVerifier(inputDataArray, ctx, SOURCE, jobParameters);
+    }
+
+    @Override
+    public boolean reduce(int[] content) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      LOG.info(String.format("%d received reduce %d", context.getWorkerId(), context.taskId()));
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+      this.verified = verifyResults(resultsVerifier, content, null, verified);
       return true;
     }
   }

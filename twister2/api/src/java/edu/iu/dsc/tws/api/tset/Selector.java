@@ -14,15 +14,15 @@ package edu.iu.dsc.tws.api.tset;
 /**
  * Given a data T, selects a Key K
  *
- * @param <T> data type
+ * @param <V> data type
  * @param <K> key type
  */
-public interface Selector<T, K> extends TFunction {
+public interface Selector<K, V> extends TFunction {
   /**
    * Select key value from data t
    *
    * @param t data
    * @return key
    */
-  K select(T t);
+  K select(V t);
 }

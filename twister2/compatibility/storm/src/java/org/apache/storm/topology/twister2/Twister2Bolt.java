@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.storm.task.IOutputCollector;
@@ -36,9 +37,12 @@ import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.BasicOutputCollector;
 import org.apache.storm.topology.IBasicBolt;
 import org.apache.storm.topology.IRichBolt;
+import org.apache.storm.topology.WindowedBoltExecutor;
+import org.apache.storm.topology.base.BaseWindowedBolt;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Twister2Tuple;
+import org.apache.storm.tuple.Twister2TupleWrapper;
 import org.apache.storm.tuple.Values;
 import org.apache.storm.utils.Utils;
 
@@ -52,8 +56,13 @@ public class Twister2Bolt implements ICompute, ISink, Twister2StormNode {
 
   private static final Logger LOG = Logger.getLogger(Twister2Bolt.class.getName());
 
+  //todo unify below
   private IRichBolt stormBolt;
   private IBasicBolt stormBasicBolt;
+
+  //windowing
+  private BaseWindowedBolt stormWindowedBolt;
+  private WindowedBoltExecutor stormWindowedBoltExecutor;
 
   private Twister2BoltDeclarer boltDeclarer;
   private Integer parallelism = 1;
@@ -75,6 +84,10 @@ public class Twister2Bolt implements ICompute, ISink, Twister2StormNode {
     if (bolt instanceof IRichBolt) {
       this.stormBolt = (IRichBolt) bolt;
       this.stormBolt.declareOutputFields(this.outFieldsForEdge);
+    } else if (bolt instanceof BaseWindowedBolt) {
+      this.stormWindowedBolt = (BaseWindowedBolt) bolt;
+      this.stormWindowedBolt.declareOutputFields(this.outFieldsForEdge);
+      this.stormWindowedBoltExecutor = new WindowedBoltExecutor(this.stormWindowedBolt);
     } else {
       this.stormBasicBolt = (IBasicBolt) bolt;
       this.stormBasicBolt.declareOutputFields(this.outFieldsForEdge);
@@ -117,14 +130,21 @@ public class Twister2Bolt implements ICompute, ISink, Twister2StormNode {
   }
 
   private void createAndFireTuple(Object values, IMessage iMessage) {
-    if (values instanceof Values) {
+    Object extractedValues = values;
+    //todo temp fix
+    if (values instanceof Twister2TupleWrapper) {
+      extractedValues = ((Twister2TupleWrapper) values).getStormValue();
+    }
+    if (extractedValues instanceof Values) {
       Twister2Tuple twister2Tuple = new Twister2Tuple(
           this.inboundEdgeToFieldsMap.get(iMessage.edge()),
-          (Values) values,
+          (Values) extractedValues,
           iMessage
       );
       if (this.stormBolt != null) {
         this.stormBolt.execute(twister2Tuple);
+      } else if (this.stormWindowedBolt != null) {
+        this.stormWindowedBoltExecutor.execute(twister2Tuple);
       } else {
         this.stormBasicBolt.execute(twister2Tuple, this.basicOutputCollector);
       }
@@ -163,7 +183,18 @@ public class Twister2Bolt implements ICompute, ISink, Twister2StormNode {
           );
         }
       }
+    } else if (messageContent instanceof edu.iu.dsc.tws.comms.dfw.io.Tuple) {
+      this.createAndFireTuple(
+          ((edu.iu.dsc.tws.comms.dfw.io.Tuple) messageContent).getValue(),
+          message
+      );
+    } else if (messageContent instanceof Twister2TupleWrapper) {
+      this.createAndFireTuple(
+          messageContent,
+          message
+      );
     } else {
+      System.out.println(messageContent.getClass());
       throw new RuntimeException("Unexpected message content format.");
     }
     return false;
@@ -177,13 +208,17 @@ public class Twister2Bolt implements ICompute, ISink, Twister2StormNode {
       public List<Integer> emit(String streamId,
                                 Collection<Tuple> anchors,
                                 List<Object> tuple) {
+        //todo remove tupleWrapper once core level List handling issue is fixed
+        Twister2TupleWrapper tupleWrapper = new Twister2TupleWrapper(tuple);
         if (!keyedOutEdges.containsKey(streamId)) { //not keyed
-          context.write(streamId, tuple);
+          context.write(streamId, tupleWrapper);
+          //context.write(streamId, tuple);
         } else { //generate the key and write
           Fields allFields = outFieldsForEdge.get(streamId);
           Fields fieldsForKey = keyedOutEdges.get(streamId);
           List<Object> key = allFields.select(fieldsForKey, tuple);
-          context.write(streamId, key, tuple);
+          context.write(streamId, key, tupleWrapper);
+          //context.write(streamId, key, tuple);
         }
         return Collections.singletonList(0);
       }
@@ -214,10 +249,20 @@ public class Twister2Bolt implements ICompute, ISink, Twister2StormNode {
     });
 
     TopologyContext topologyContext = new TopologyContext(context);
+    topologyContext.setTempBoltDeclarer(getBoltDeclarer());
 
     if (stormBolt != null) {
       this.stormBolt.prepare(
           cfg.toMap(),
+          topologyContext,
+          this.outputCollector
+      );
+    } else if (stormWindowedBolt != null) {
+      Map<String, Object> windowConfiguration = this.stormWindowedBolt.getComponentConfiguration();
+      Map<String, Object> tw2Configs = cfg.toMap();
+      windowConfiguration.putAll(tw2Configs);
+      this.stormWindowedBoltExecutor.prepare(
+          windowConfiguration,
           topologyContext,
           this.outputCollector
       );
