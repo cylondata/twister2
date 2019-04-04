@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
+import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.DGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchFinalReceiver;
@@ -31,7 +31,7 @@ public class BGather {
   /**
    * The actual operation
    */
-  private DataFlowGather gather;
+  private MToOneTree gather;
 
   /**
    * The data type
@@ -60,10 +60,9 @@ public class BGather {
       finalRcvr = new DGatherBatchFinalReceiver(rcvr, comm.getPersistentDirectory());
     }
     this.dataType = dataType;
-    this.gather = new DataFlowGather(comm.getChannel(), sources, target,
+    this.gather = new MToOneTree(comm.getChannel(), sources, target,
         finalRcvr, new GatherBatchPartialReceiver(target),
-        0, 0, comm.getConfig(), plan, true, dataType, dataType,
-        MessageType.INTEGER, comm.nextEdge());
+        0, 0, true, MessageType.INTEGER, dataType);
     this.gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 

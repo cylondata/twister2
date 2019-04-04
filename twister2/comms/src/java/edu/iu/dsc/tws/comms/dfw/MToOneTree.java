@@ -46,21 +46,37 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
-  private static final Logger LOG = Logger.getLogger(DataFlowReduce.class.getName());
+public class MToOneTree implements DataFlowOperation, ChannelReceiver {
+  private static final Logger LOG = Logger.getLogger(MToOneTree.class.getName());
 
-  // the source tasks
+  /**
+   * the source tasks
+   */
   protected Set<Integer> sources;
 
-  // the destination task
+  /**
+   * The target tast
+   */
   protected int destination;
 
+  /**
+   * The edge to be used
+   */
   private int edgeValue;
 
+  /**
+   * The router
+   */
   private InvertedBinaryTreeRouter router;
 
+  /**
+   * Final receiver
+   */
   private MessageReceiver finalReceiver;
 
+  /**
+   * The local receiver
+   */
   private MessageReceiver partialReceiver;
 
   private int index = 0;
@@ -68,9 +84,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   private int pathToUse = DataFlowContext.DEFAULT_DESTINATION;
 
   private ChannelDataFlowOperation delegete;
-  private Config config;
   private TaskPlan instancePlan;
-  private int executor;
   private MessageType dataType;
   private MessageType keyType;
 
@@ -82,9 +96,9 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
   private Lock lock = new ReentrantLock();
   private Lock partialLock = new ReentrantLock();
 
-  public DataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
-                        MessageReceiver finalRcvr,
-                        MessageReceiver partialRcvr, int indx, int p) {
+  public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
+                    MessageReceiver finalRcvr,
+                    MessageReceiver partialRcvr, int indx, int p) {
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
@@ -94,10 +108,10 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     this.delegete = new ChannelDataFlowOperation(channel);
   }
 
-  public DataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
-                        MessageReceiver finalRcvr,
-                        MessageReceiver partialRcvr, int indx, int p, boolean keyed,
-                        MessageType kType, MessageType dType) {
+  public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
+                    MessageReceiver finalRcvr,
+                    MessageReceiver partialRcvr, int indx, int p, boolean keyed,
+                    MessageType kType, MessageType dType) {
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
@@ -110,24 +124,20 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
     this.dataType = dType;
   }
 
-  public DataFlowReduce(TWSChannel channel, Set<Integer> sources, int destination,
-                        MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
+  public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
+                    MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
     this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
   }
 
-  private boolean isLast(int source, int path, int taskIdentifier) {
-    return router.isLastReceiver();
-  }
 
   /**
    * We can receive messages from internal tasks or an external task, we allways receive messages
-   * to the main task of the executor and we go from there
+   * to the main task of the workerId and we go from there
    */
   public boolean receiveMessage(MessageHeader header, Object object) {
     // we always receive to the main task
-    int messageDestId = header.getDestinationIdentifier();
     // check weather this message is for a sub task
-    if (!isLast(header.getSourceId(), header.getFlags(), messageDestId)
+    if (!router.isLastReceiver()
         && partialReceiver != null) {
       return partialReceiver.onMessage(header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
@@ -185,7 +195,7 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
         throw new RuntimeException("Un-expected message from source: " + source);
       }
 
-      // we are going to add source if we are the main executor
+      // we are going to add source if we are the main workerId
       if (router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
           DataFlowContext.DEFAULT_DESTINATION) == source) {
         routingParameters.addInteranlRoute(source);
@@ -201,10 +211,6 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
       routingParamCache.put(source, path, routingParameters);
       return routingParameters;
     }
-  }
-
-  protected boolean isLastReceiver() {
-    return router.isLastReceiver();
   }
 
   public boolean receiveSendInternally(int source, int target, int path, int flags,
@@ -241,9 +247,8 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
    */
   public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
     this.instancePlan = taskPlan;
-    this.config = cfg;
     this.dataType = t;
-    this.executor = instancePlan.getThisExecutor();
+    int workerId = instancePlan.getThisExecutor();
     this.edgeValue = edge;
 
     // we only have one path
@@ -251,16 +256,16 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
         destination, sources, index);
 
     // initialize the receive
-    if (this.partialReceiver != null && !isLastReceiver()) {
+    if (this.partialReceiver != null && !router.isLastReceiver()) {
       partialReceiver.init(cfg, this, receiveExpectedTaskIds());
     }
 
-    if (this.finalReceiver != null && isLastReceiver()) {
+    if (this.finalReceiver != null && router.isLastReceiver()) {
       this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
     }
 
     LOG.log(Level.FINE, String.format("%d reduce sources %s dest %d send tasks: %s",
-        executor, sources, destination, router.sendQueueIds()));
+        workerId, sources, destination, router.sendQueueIds()));
 
     Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
         new HashMap<>();
@@ -278,10 +283,10 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       if (isKeyed) {
-        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(), executor,
+        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(), workerId,
             keyType, dataType));
       } else {
-        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor, dataType));
+        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), workerId, dataType));
       }
     }
 
@@ -300,9 +305,9 @@ public class DataFlowReduce implements DataFlowOperation, ChannelReceiver {
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
         deSerializerMap.put(e, new UnifiedKeyDeSerializer(new KryoSerializer(),
-            executor, keyType, dataType));
+            workerId, keyType, dataType));
       } else {
-        deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), executor, dataType));
+        deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), workerId, dataType));
       }
     }
 

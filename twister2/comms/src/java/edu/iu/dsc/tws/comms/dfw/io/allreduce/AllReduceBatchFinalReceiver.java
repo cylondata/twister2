@@ -12,13 +12,13 @@
 package edu.iu.dsc.tws.comms.dfw.io.allreduce;
 
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
+import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.BaseReduceBatchFinalReceiver;
 
 public class AllReduceBatchFinalReceiver extends BaseReduceBatchFinalReceiver {
-  private DataFlowBroadcast reduceReceiver;
+  private TreeBroadcast reduceReceiver;
 
-  public AllReduceBatchFinalReceiver(ReduceFunction reduce, DataFlowBroadcast receiver) {
+  public AllReduceBatchFinalReceiver(ReduceFunction reduce, TreeBroadcast receiver) {
     super(reduce);
     this.reduceReceiver = receiver;
   }

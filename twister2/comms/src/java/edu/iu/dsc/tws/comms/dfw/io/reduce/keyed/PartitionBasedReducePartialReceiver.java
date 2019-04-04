@@ -40,7 +40,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
@@ -143,7 +143,7 @@ public class PartitionBasedReducePartialReceiver implements MessageReceiver {
     executor = op.getTaskPlan().getThisExecutor();
     TaskPlan taskPlan = op.getTaskPlan();
     thisWorkerSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan,
-        ((DataFlowPartition) op).getSources());
+        ((MToNSimple) op).getSources());
     for (int s : thisWorkerSources) {
       finishedDestinations.put(s, new HashSet<>());
     }

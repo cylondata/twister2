@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver;
@@ -35,12 +35,12 @@ public class BJoin {
   /**
    * Left partition of the join
    */
-  private DataFlowPartition partitionLeft;
+  private MToNSimple partitionLeft;
 
   /**
    * Right partition of the join
    */
-  private DataFlowPartition partitionRight;
+  private MToNSimple partitionRight;
 
   /**
    * Destination selector
@@ -74,11 +74,11 @@ public class BJoin {
     }
 
 
-    this.partitionLeft = new DataFlowPartition(comm.getChannel(), sources, targets,
+    this.partitionLeft = new MToNSimple(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(0, finalRcvr), new PartitionPartialReceiver(),
         dataType, keyType);
 
-    this.partitionRight = new DataFlowPartition(comm.getChannel(), sources, targets,
+    this.partitionRight = new MToNSimple(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
         dataType, keyType);
 

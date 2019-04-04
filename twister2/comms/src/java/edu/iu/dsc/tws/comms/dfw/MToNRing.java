@@ -46,8 +46,8 @@ import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-public class RingPartition implements DataFlowOperation, ChannelReceiver {
-  private static final Logger LOG = Logger.getLogger(RingPartition.class.getName());
+public class MToNRing implements DataFlowOperation, ChannelReceiver {
+  private static final Logger LOG = Logger.getLogger(MToNRing.class.getName());
 
   /**
    * Locally merged results
@@ -190,11 +190,11 @@ public class RingPartition implements DataFlowOperation, ChannelReceiver {
    * @param rcvKType receive key type
    * @param edge the edge
    */
-  public RingPartition(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> sources,
-                       Set<Integer> targets, MessageReceiver finalRcvr,
-                       MessageReceiver partialRcvr,
-                       MessageType dType, MessageType rcvType,
-                       MessageType kType, MessageType rcvKType, int edge) {
+  public MToNRing(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> sources,
+                  Set<Integer> targets, MessageReceiver finalRcvr,
+                  MessageReceiver partialRcvr,
+                  MessageType dType, MessageType rcvType,
+                  MessageType kType, MessageType rcvKType, int edge) {
     this.merger = partialRcvr;
     this.finalReceiver = finalRcvr;
     this.taskPlan = tPlan;
