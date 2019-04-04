@@ -39,7 +39,7 @@ public class IterableFlatMapTSet<I, O> extends BatchBaseTSet<O> {
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = parallelism;
-    this.name = "iflatmap-" + parent.getName();
+    this.name = "i-flat-map" + parent.getName();
   }
 
   public <O1> IterableMapTSet<O, O1> map(IterableMapFunction<O, O1> mFn) {

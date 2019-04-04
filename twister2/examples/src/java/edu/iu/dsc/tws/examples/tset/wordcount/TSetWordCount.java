@@ -51,7 +51,7 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
 
   @Override
   public void execute(TwisterBatchContext tc) {
-    int sourcePar = 1;
+    int sourcePar = 4;
     int sinkPar = 1;
 
     BatchSourceTSet<String> source =
@@ -62,12 +62,15 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
         source.flatMap(new BaseIterableFlatMapFunction<String, WordCountPair>() {
           @Override
           public void flatMap(Iterable<String> t, Collector<WordCountPair> collector) {
+//            int k = 0;
             for (String s : t) {
               StringTokenizer itr = new StringTokenizer(s);
               while (itr.hasMoreTokens()) {
                 collector.collect(new WordCountPair(itr.nextToken(), 1));
               }
+//              k++;
             }
+//            LOG.info("K= " + k);
           }
         });
 
@@ -187,7 +190,7 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("tset-wordcount");
     jobBuilder.setWorkerClass(TSetWordCount.class);
-    jobBuilder.addComputeResource(1, 512, 1);
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
