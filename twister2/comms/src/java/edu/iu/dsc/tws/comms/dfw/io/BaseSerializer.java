@@ -79,7 +79,7 @@ public abstract class BaseSerializer implements MessageSerializer {
         // we set the state here, because we can set it to serialized below
         sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
         // build the header
-        if (data instanceof List) {
+        if (data instanceof AggregatedObjects) {
           // for list message we need to put the size of the list
           DFWIOUtils.buildHeader(buffer, sendMessage, ((List) data).size());
           buildHeader(sendMessage, channelMessage, ((List) data).size());

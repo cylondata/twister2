@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.dfw.io.reduce;
 
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 
 public class ReduceStreamingPartialReceiver extends ReduceStreamingReceiver {
@@ -27,5 +28,15 @@ public class ReduceStreamingPartialReceiver extends ReduceStreamingReceiver {
   @Override
   public boolean handleMessage(int source, Object message, int flags, int dest) {
     return this.operation.sendPartial(source, message, flags, dest);
+  }
+
+  @Override
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    if (operation.sendPartial(target, new byte[0], MessageFlags.END, destination)) {
+      isSyncSent.put(target, true);
+    } else {
+      return true;
+    }
+    return needsFurtherProgress;
   }
 }
