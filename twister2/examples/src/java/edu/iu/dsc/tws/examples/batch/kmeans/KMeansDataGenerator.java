@@ -82,15 +82,15 @@ public final class KMeansDataGenerator {
       StringBuilder line = new StringBuilder();
       for (int j = 0; j < dimension; j++) {
         double randomValue = r.nextDouble();
-        line.append(randomValue);
+        line.append(String.format("%1$,.8f", randomValue));
         if (j == 0) {
           line.append(",").append("\t");
         }
       }
       datapoints.append(line);
-      if (i < numPoints - 1) {
-        datapoints.append("\n");
-      }
+//      if (i < numPoints - 1) {
+      datapoints.append("\n");
+//      }
     }
     return datapoints.toString();
   }

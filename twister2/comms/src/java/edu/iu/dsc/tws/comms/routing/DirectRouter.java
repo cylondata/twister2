@@ -92,7 +92,7 @@ public class DirectRouter {
   }
 
   public Set<Integer> receivingExecutors() {
-    LOG.info(taskPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
+    LOG.fine(taskPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
     return receiveExecutors;
   }
 
