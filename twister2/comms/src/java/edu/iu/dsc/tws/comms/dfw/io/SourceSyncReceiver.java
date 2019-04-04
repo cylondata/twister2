@@ -276,4 +276,12 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
     }
     return true;
   }
+
+  @Override
+  public void onFinish(int source) {
+    for (Integer target : syncReceived.keySet()) {
+      Map<Integer, Boolean> finishedMessages = syncReceived.get(target);
+      finishedMessages.put(source, true);
+    }
+  }
 }
