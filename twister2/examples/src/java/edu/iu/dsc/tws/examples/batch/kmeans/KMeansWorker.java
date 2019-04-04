@@ -160,7 +160,10 @@ public class KMeansWorker extends TaskWorker {
     kmeansTaskGraphBuilder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph kmeansTaskGraph = kmeansTaskGraphBuilder.build();
 
+    long endTimeCenters = System.currentTimeMillis();
     //Perform the iterations from 0 to 'n' number of iterations
+    long sumTimme = 0;
+    long stime = 0;
     for (int i = 0; i < iterations; i++) {
       ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
       //add the datapoints and centroids as input to the kmeanssource task.
@@ -169,21 +172,20 @@ public class KMeansWorker extends TaskWorker {
       taskExecutor.addInput(
           kmeansTaskGraph, plan, "kmeanssource", "centroids", centroidsDataObject);
       //actual execution of the third task graph
+      stime = System.nanoTime();
       taskExecutor.execute(kmeansTaskGraph, plan);
+      sumTimme += System.nanoTime() - stime;
       //retrieve the new centroid value for the next iterations
       centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
     }
 
-    DataPartition<?> centroidPartition = centroidsDataObject.getPartitions(workerId);
-    double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
     long endTime = System.currentTimeMillis();
     if (workerId == 0) {
-      LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
-          + "Total Time : " + (endTime - startTime)
-          + "Compute Time : " + (endTime - endTimeData));
+      LOG.info("Data Load time : " + (endTimeCenters - startTime) + "\n"
+          + "Total Time : " + (endTime - startTime) + "\n"
+          + "Compute Time : " + (endTime - endTimeCenters) + "\n"
+          + "Execute Time" + sumTimme/1000000);
     }
-//    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
-//        + Arrays.deepToString(centroid));
   }
 
   private static class KMeansSourceTask extends BaseSource implements Receptor {
