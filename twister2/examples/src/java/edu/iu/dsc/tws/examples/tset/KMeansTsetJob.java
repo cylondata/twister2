@@ -59,12 +59,14 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);
 
+    long startTime = System.currentTimeMillis();
     //TODO: consider what happens when same execEnv is used to create multiple graphs
     CachedTSet<double[][]> points = tc.createSource(
         new PointsSource(), parallelismValue).setName("dataSource").cache();
     CachedTSet<double[][]> centers = tc.createSource(
         new CenterSource(), parallelismValue).cache();
 
+    long endTimeData = System.currentTimeMillis();
 
     for (int i = 0; i < iterations; i++) {
       IterableMapTSet<double[][], double[][]> kmeansTSet = points.map(new KMeansMap());
@@ -83,6 +85,12 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
       centers = reduced.map(new AverageCenters(), parallelismValue).cache();
     }
 
+    long endTime = System.currentTimeMillis();
+    if (workerId == 0) {
+      LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
+          + "Total Time : " + (endTime - startTime)
+          + "Compute Time : " + (endTime - endTimeData));
+    }
     LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
         + Arrays.deepToString(centers.getData().get(0)));
   }
@@ -114,8 +122,8 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
     @Override
     public double[][] map(double[][] centers) {
-      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
-          + ":" + context.getIndex());
+//      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
+//          + ":" + context.getIndex());
       //The centers that are received at this map is a the sum of all points assigned to each
       //center and the number of points as the next element. So if the centers are 2D points
       //each entry will have 3 doubles where the last double is number of points assigned to
@@ -148,7 +156,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
     @Override
     public void prepare() {
-      LOG.info("Context Prepare Data Task Index:" + context.getIndex());
+//      LOG.info("Context Prepare Data Task Index:" + context.getIndex());
 
       int para = context.getParallelism();
       Config cfg = context.getConfig();
@@ -171,7 +179,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
     @Override
     public double[][] next() {
-      LOG.fine("Context Prepare Center Task Index:" + context.getIndex());
+//      LOG.fine("Context Prepare Center Task Index:" + context.getIndex());
       InputSplit inputSplit = source.getNextSplit(context.getIndex());
       int totalCount = 0;
       while (inputSplit != null) {
@@ -190,7 +198,6 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
               count += 1;
             }
           }
-          LOG.info(context.getIndex() + " Counts : " + count);
           inputSplit = source.getNextSplit(context.getIndex());
         } catch (IOException e) {
           LOG.log(Level.SEVERE, "Failed to read the input", e);
@@ -235,7 +242,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
     @Override
     public double[][] next() {
-      LOG.fine("Context Task Index:" + context.getIndex());
+//      LOG.fine("Context Task Index:" + context.getIndex());
       InputSplit inputSplit = source.getNextSplit(context.getIndex());
       int totalCount = 0;
       while (inputSplit != null) {
