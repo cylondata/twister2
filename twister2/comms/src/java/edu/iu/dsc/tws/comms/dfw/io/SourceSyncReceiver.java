@@ -133,6 +133,11 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
       if (flushedAfterSync.get(target) && !isSyncSent.get(target)
           && operation.isDelegateComplete()) {
         needsFurtherProgress = sendSyncForward(needsFurtherProgress, target);
+        if (!needsFurtherProgress) {
+          // at this point we call the sync event
+          onSyncEvent(target);
+          clearTarget(target);
+        }
         continue;
       }
 
@@ -147,8 +152,7 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
 
         boolean moreThanOne = false;
         for (Map.Entry<Integer, Queue<Object>> sourceQueues : messagePerTarget.entrySet()) {
-          if (sourceQueues.getValue().size() == 0
-              && !finishedForTarget.get(sourceQueues.getKey())) {
+          if (sourceQueues.getValue().size() == 0) {
             allValuesFound = false;
             canProgress = false;
           } else if (sourceQueues.getValue().size() > 0) {
@@ -171,6 +175,8 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
           if (!aggregate(target, allSyncsPresent)) {
             needsFurtherProgress = true;
           }
+        } else {
+          needsFurtherProgress = true;
         }
 
         // if we are filled to send, lets send the values
@@ -188,6 +194,11 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
             && operation.isDelegateComplete()) {
           flushedAfterSync.put(target, true);
           needsFurtherProgress = sendSyncForward(needsFurtherProgress, target);
+          if (!needsFurtherProgress) {
+            // at this point we call the sync event
+            onSyncEvent(target);
+            clearTarget(target);
+          }
         } else {
           needsFurtherProgress = true;
         }
@@ -196,26 +207,7 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
     return needsFurtherProgress;
   }
 
-  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
-    if (operation.sendPartial(target, new byte[0],
-        MessageFlags.END, destination)) {
-      isSyncSent.put(target, true);
-      // at this point we call the sync event
-      onSyncEvent(target);
-      // clear the values
-      clearTarget(target);
-    } else {
-      return true;
-    }
-    return needsFurtherProgress;
-  }
-
-  /**
-   * Handle a sync complete event
-   *
-   * @return true if the event is handled
-   */
-  protected abstract boolean handleSyncComplete();
+  protected abstract boolean sendSyncForward(boolean needsFurtherProgress, int target);
 
   /**
    * Clear all the buffers for the target, to ready for the next

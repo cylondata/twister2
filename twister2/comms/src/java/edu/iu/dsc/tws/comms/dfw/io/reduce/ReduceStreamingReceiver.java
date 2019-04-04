@@ -87,7 +87,7 @@ public abstract class ReduceStreamingReceiver extends SourceSyncReceiver {
   }
 
   @Override
-  protected boolean handleSyncComplete() {
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
     return false;
   }
 
