@@ -296,28 +296,27 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
       if (this.readPos >= this.limit) {
         // readBuffer is completely consumed. Fill it again but keep partially read delimiter bytes.
         if (!fillBuffer(delimPos)) {
-          int countInReadBuffer = delimPos;
-          if (countInWrapBuffer + countInReadBuffer > 0) {
+          if (countInWrapBuffer + delimPos > 0) {
             // we have bytes left to emit
-            if (countInReadBuffer > 0) {
+            if (delimPos > 0) {
               // we have bytes left in the readBuffer. Move them into the wrapBuffer
-              if (this.wrapBuffer.length - countInWrapBuffer < countInReadBuffer) {
+              if (this.wrapBuffer.length - countInWrapBuffer < delimPos) {
                 // reallocate
-                byte[] tmp = new byte[countInWrapBuffer + countInReadBuffer];
+                byte[] tmp = new byte[countInWrapBuffer + delimPos];
                 System.arraycopy(this.wrapBuffer, 0, tmp, 0, countInWrapBuffer);
                 this.wrapBuffer = tmp;
               }
               // copy readBuffer bytes to wrapBuffer
               System.arraycopy(this.readBuffer, 0, this.wrapBuffer,
-                  countInWrapBuffer, countInReadBuffer);
-              countInWrapBuffer += countInReadBuffer;
+                  countInWrapBuffer, delimPos);
+              countInWrapBuffer += delimPos;
             }
 
             this.offset += countInWrapBuffer;
             setResult(this.wrapBuffer, 0, countInWrapBuffer);
             return true;
           } else {
-            return true;
+            return false;
           }
         }
       }
