@@ -63,27 +63,32 @@ public abstract class ReduceStreamingReceiver extends SourceSyncReceiver {
   }
 
   @Override
-  protected boolean aggregate(int target, boolean sync) {
+  protected boolean aggregate(int target, boolean sync, boolean allValuesFound) {
     Queue<Object> reducedValues = this.reducedValuesMap.get(target);
     Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
 
-    if (reducedValues.size() < sendPendingMax) {
-      Object previous = null;
-      for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
-        if (previous == null) {
-          previous = e.getValue().poll();
-        } else {
-          Object current = e.getValue().poll();
-          previous = reduceFunction.reduce(previous, current);
+    if (allValuesFound || sync) {
+      if (reducedValues.size() < sendPendingMax) {
+        Object previous = null;
+        for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+          if (previous == null) {
+            previous = e.getValue().poll();
+          } else {
+            Object current = e.getValue().poll();
+            if (current != null) {
+              previous = reduceFunction.reduce(previous, current);
+            }
+          }
         }
+        if (previous != null) {
+          reducedValues.offer(previous);
+        }
+        return true;
+      } else {
+        return false;
       }
-      if (previous != null) {
-        reducedValues.offer(previous);
-      }
-      return true;
-    } else {
-      return false;
     }
+    return true;
   }
 
   @Override

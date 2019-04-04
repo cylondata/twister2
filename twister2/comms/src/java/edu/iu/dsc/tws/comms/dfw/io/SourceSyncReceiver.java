@@ -149,11 +149,14 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
       while (canProgress) {
         boolean allValuesFound = true;
         boolean allSyncsPresent = true;
+        boolean anyValueFound = false;
 
         for (Map.Entry<Integer, Queue<Object>> sourceQueues : messagePerTarget.entrySet()) {
           if (sourceQueues.getValue().size() == 0) {
             allValuesFound = false;
             canProgress = false;
+          } else {
+            anyValueFound = true;
           }
           // we need to check weather there is a sync for all the sources
           if (!finishedForTarget.get(sourceQueues.getKey())) {
@@ -163,8 +166,8 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
 
         // if we have found all the values from sources or if syncs are present
         // we need to aggregate
-        if (allValuesFound || allSyncsPresent) {
-          aggregate(target, allSyncsPresent);
+        if (allValuesFound || (allSyncsPresent && anyValueFound)) {
+          aggregate(target, allSyncsPresent, allValuesFound);
         }
 
         // if we are filled to send, lets send the values
@@ -250,7 +253,7 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
    * @param sync true if all the syncs are present
    * @return true if there are no more elements to aggregate
    */
-  protected abstract boolean aggregate(int target, boolean sync);
+  protected abstract boolean aggregate(int target, boolean sync, boolean allValuesFound);
 
   /**
    * Return true if we are filled to send

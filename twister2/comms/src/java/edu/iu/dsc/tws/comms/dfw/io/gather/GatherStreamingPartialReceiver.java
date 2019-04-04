@@ -51,24 +51,35 @@ public class GatherStreamingPartialReceiver extends SourceSyncReceiver {
   }
 
   @Override
-  protected boolean aggregate(int target, boolean sync) {
+  protected boolean aggregate(int target, boolean sync, boolean allValuesFound) {
     Queue<Object> reducedValues = this.gatheredValuesMap.get(target);
     Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
 
-    if (reducedValues.size() < sendPendingMax) {
-      List<Object> out = new AggregatedObjects<>();
-      for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
-        Object value = e.getValue().poll();
-        if (value instanceof AggregatedObjects) {
-          out.addAll((List) value);
-        } else {
-          out.add(value);
+    if (allValuesFound || sync) {
+      if (reducedValues.size() < sendPendingMax) {
+        List<Object> out = new AggregatedObjects<>();
+        for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+          Object value = e.getValue().poll();
+
+          if (value == null) {
+            continue;
+          }
+
+          if (value instanceof AggregatedObjects) {
+            out.addAll((List) value);
+          } else {
+            out.add(value);
+          }
         }
+        if (out.size() > 0) {
+          gatheredValuesMap.get(target).add(out);
+        }
+        return true;
+      } else {
+        return false;
       }
-      gatheredValuesMap.get(target).add(out);
-      return true;
     } else {
-      return false;
+      return true;
     }
   }
 
