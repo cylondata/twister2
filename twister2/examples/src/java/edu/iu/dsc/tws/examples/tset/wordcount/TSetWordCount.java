@@ -220,24 +220,20 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
       }
     }
 
+    boolean valid = true;
     for (Map.Entry<String, Integer> e : trusted.entrySet()) {
       int t = test1.get(e.getKey());
       if (t != e.getValue()) {
-        LOG.severe(String.format("Expected: %s %d Got: %s %d", e.getKey(), e.getValue(),
+        LOG.severe(String.format("Expected: %s %d     Got: %s %d", e.getKey(), e.getValue(),
             e.getKey(), t));
+        valid = false;
       }
     }
 
-/*    if (test1.equals(trusted)) {
+    if (valid) {
       LOG.info("RESULTS VALID!");
     } else {
       LOG.severe("UNSUCCESSFUL!");
-
-      try (BufferedWriter br = new BufferedWriter(new FileWriter(output + ".trusted"))) {
-        for (Map.Entry<String, Integer> e : trusted.entrySet()) {
-          br.write(String.format("%s %d\n", e.getKey(), e.getValue()));
-        }
-      }
-    }*/
+    }
   }
 }
