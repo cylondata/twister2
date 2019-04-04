@@ -13,12 +13,12 @@ package edu.iu.dsc.tws.examples.ml.svm.job;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
@@ -93,6 +93,8 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
 
   private static final double NANO_TO_SEC = 1000000000;
 
+  private static final double B2MB = 1024.0 * 1024.0;
+
   private TwisterBatchContext twisterBatchContext;
 
   private boolean testStatus = false;
@@ -112,18 +114,7 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
     IterableMapTSet<double[][], double[]> svmTrainTset = trainingData
         .map(new SvmTrainMap(this.binaryBatchModel, this.svmJobParameters));
     //svmTset.addInput("trainingData", testingData);
-    ReduceTLink<double[]> reduceTLink = svmTrainTset.reduce((t1, t2) -> {
-      double[] w1 = new double[t1.length];
-      try {
-        w1 = Matrix.add(t1, t2);
-      } catch (MatrixMultiplicationException e) {
-        e.printStackTrace();
-      }
-      return w1;
-    });
-
-
-//    AllReduceTLink<double[]> allReduceTLink = svmTrainTset.allReduce((t1, t2) -> {
+//    ReduceTLink<double[]> reduceTLink = svmTrainTset.reduce((t1, t2) -> {
 //      double[] w1 = new double[t1.length];
 //      try {
 //        w1 = Matrix.add(t1, t2);
@@ -132,19 +123,37 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
 //      }
 //      return w1;
 //    });
-    // sink must be there to execute the Map task
-    reduceTLink.sink(value -> {
-      LOG.info("Results " + Arrays.toString(value));
-      return false;
+//    reduceTLink.sink(value -> {
+//      //LOG.info("Results " + Arrays.toString(value));
+//      return false;
+//    });
+//
+
+    AllReduceTLink<double[]> allReduceTLink = svmTrainTset.allReduce((t1, t2) -> {
+      double[] w1 = new double[t1.length];
+      try {
+        w1 = Matrix.add(t1, t2);
+      } catch (MatrixMultiplicationException e) {
+        e.printStackTrace();
+      }
+      return w1;
     });
+    // sink must be there to execute the Map task
+    allReduceTLink.sink(value -> {
+      return true;
+    }, this.svmJobParameters.getParallelism());
+
 
     this.trainingTime = ((double) (System.nanoTime() - time)) / NANO_TO_SEC;
-    LOG.info(String.format("Data Point TaskIndex[%d], Size : %d => Array Size : [%d,%d]",
-        this.workerId,
-        trainingData.getData().size(), trainingData.getData().get(0).length,
-        trainingData.getData().get(0)[0].length));
+//    LOG.info(String.format("Data Point TaskIndex[%d], Size : %d => Array Size : [%d,%d]",
+//        this.workerId,
+//        trainingData.getData().size(), trainingData.getData().get(0).length,
+//        trainingData.getData().get(0)[0].length));
     // TODO :: Handle the worker 0 senario for getOutput
-
+    LOG.info(String.format("Rank[%d][%d] Total Memory %f MB, Max Memory %f MB, Training Completed! "
+            + "=> Data Loading Time %f , Training Time : %f ", workerId,
+        trainingData.getData().get(0).length, ((double) Runtime.getRuntime().totalMemory()) / B2MB,
+        ((double) Runtime.getRuntime().maxMemory()) / B2MB, dataLoadingTime, trainingTime));
     if (workerId == 0) {
 //      CachedTSet<double[]> finalW = reduceTLink
 //          .map(new ModelAverager(this.svmJobParameters.getParallelism())).cache();
