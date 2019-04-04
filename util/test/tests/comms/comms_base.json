@@ -23,7 +23,7 @@
       "values": {
         "type": "array",
         "array": [
-          "${size}",
+          32,
           64,
           128,
           256,
