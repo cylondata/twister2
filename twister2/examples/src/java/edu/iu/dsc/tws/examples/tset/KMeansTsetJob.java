@@ -166,11 +166,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
     @Override
     public boolean hasNext() {
-      if (!read) {
-        read = true;
-        return true;
-      }
-      return false;
+      return !read;
     }
 
     @Override
@@ -200,6 +196,8 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
           LOG.log(Level.SEVERE, "Failed to read the input", e);
         }
       }
+
+      read = true;
       return localPoints;
     }
   }

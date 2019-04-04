@@ -32,7 +32,7 @@ public abstract class TBaseFunction implements TFunction {
     prepare();
   }
 
-  public abstract void prepare();
+//  public abstract void prepare();
 
   /**
    * Gets the input value for the given key from the input map
