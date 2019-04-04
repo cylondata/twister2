@@ -183,8 +183,8 @@ public class KMeansWorker extends TaskWorker {
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
     }
-    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
-        + Arrays.deepToString(centroid));
+//    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+//        + Arrays.deepToString(centroid));
   }
 
   private static class KMeansSourceTask extends BaseSource implements Receptor {

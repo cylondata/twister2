@@ -91,8 +91,8 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
     }
-    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
-        + Arrays.deepToString(centers.getData().get(0)));
+//    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+//        + Arrays.deepToString(centers.getData().get(0)));
   }
 
   public class KMeansMap extends BaseIterableMapFunction<double[][], double[][]> {
