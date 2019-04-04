@@ -15,126 +15,83 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
-import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
+import edu.iu.dsc.tws.comms.dfw.io.SourceSyncReceiver;
 
-public abstract class BaseGatherBatchReceiver implements MessageReceiver {
+public abstract class BaseGatherBatchReceiver extends SourceSyncReceiver {
   private static final Logger LOG = Logger.getLogger(BaseGatherBatchReceiver.class.getName());
 
-  /**
-   * for each task we need to keep track of incoming messages from different sources
-   * [task, [source, queue]]
-   */
-  protected Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
-  /**
-   * We have received finish messages
-   * [task, [source, bool]]
-   */
-  protected Map<Integer, Map<Integer, Boolean>> finished = new HashMap<>();
-
-  /**
-   * Keep track of counts for debug purposes
-   * [task, [source, count]
-   */
-  protected Map<Integer, Map<Integer, Integer>> counts = new HashMap<>();
-
-  /**
-   * The dataflow operation
-   */
-  protected DataFlowOperation dataFlowOperation;
-
-  /**
-   * Worker id
-   */
-  protected int workerId;
-
-  /**
-   * Number of items pending before we flush
-   */
-  protected int sendPendingMax = 128;
-
-  /**
-   * Configuration
-   */
-  protected Config config;
-
-  /**
-   * Expected sources for targets
-   * [target, [sources]]
-   */
-  protected Map<Integer, List<Integer>> expIds;
+  protected Map<Integer, List<Object>> gatheredValuesMap = new HashMap<>();
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    workerId = op.getTaskPlan().getThisExecutor();
-    sendPendingMax = DataFlowContext.sendPendingMax(cfg);
-    LOG.fine(String.format("%d expected ids %s", workerId, expectedIds));
+    super.init(cfg, op, expectedIds);
+
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-      Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
-      Map<Integer, Boolean> finishedPerTask = new HashMap<>();
-      Map<Integer, Integer> countsPerTask = new HashMap<>();
-
-      for (int i : e.getValue()) {
-        messagesPerTask.put(i, new ArrayBlockingQueue<>(sendPendingMax));
-        finishedPerTask.put(i, false);
-        countsPerTask.put(i, 0);
-      }
-      messages.put(e.getKey(), messagesPerTask);
-      finished.put(e.getKey(), finishedPerTask);
-      counts.put(e.getKey(), countsPerTask);
+      gatheredValuesMap.put(e.getKey(), new AggregatedObjects<>(sendPendingMax));
     }
-    this.dataFlowOperation = op;
-    this.expIds = expectedIds;
-    this.workerId = dataFlowOperation.getTaskPlan().getThisExecutor();
-    // subclass specific initializations
-    init();
   }
-
-  protected abstract void init();
 
   @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    // add the object to the map
-    boolean canAdd = true;
-
-    // there is something wrong in the operation configuration
-    if (messages.get(target) == null) {
-      throw new RuntimeException(String.format("%d Partial receive error %d", workerId, target));
+  protected boolean sendToTarget(int target, boolean sync) {
+    List<Object> gatheredValues = this.gatheredValuesMap.get(target);
+    if (gatheredValues != null) {
+      boolean handle = handleMessage(target, gatheredValues, 0, destination);
+      if (handle) {
+        gatheredValuesMap.put(target, null);
+      } else {
+        return false;
+      }
     }
+    return true;
+  }
 
-    // get the queue for target and source
-    Queue<Object> m = messages.get(target).get(source);
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
-      // finished messages
-      Map<Integer, Boolean> finishedMessages = finished.get(target);
-      finishedMessages.put(source, true);
+  @Override
+  protected boolean aggregate(int target, boolean sync, boolean allValuesFound) {
+    List<Object> reducedValues = this.gatheredValuesMap.get(target);
+    Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
+
+    if (allValuesFound || sync) {
+      List<Object> out = new AggregatedObjects<>();
+      for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+        Object value = e.getValue().poll();
+
+        if (value == null) {
+          continue;
+        }
+
+        if (value instanceof AggregatedObjects) {
+          out.addAll((List) value);
+        } else {
+          out.add(value);
+        }
+      }
+      if (out.size() > 0) {
+        if (reducedValues == null) {
+          reducedValues = new AggregatedObjects<>();
+          gatheredValuesMap.put(target, reducedValues);
+        }
+        reducedValues.addAll(out);
+      }
+      return true;
+    } else {
       return true;
     }
-
-    // we cannot add further
-    if (m.size() >= sendPendingMax) {
-      canAdd = false;
-    } else {
-      if (object instanceof ChannelMessage) {
-        ((ChannelMessage) object).incrementRefCount();
-      }
-      Integer c = counts.get(target).get(source);
-      counts.get(target).put(source, c + 1);
-
-      m.add(object);
-      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
-        // finished messages
-        Map<Integer, Boolean> finishedMessages = finished.get(target);
-        finishedMessages.put(source, true);
-      }
-    }
-    return canAdd;
   }
+
+  @Override
+  protected boolean isFilledToSend(int target) {
+    return gatheredValuesMap.get(target) != null && gatheredValuesMap.get(target).size() > 0;
+  }
+
+  @Override
+  protected boolean isAllEmpty(int target) {
+    return gatheredValuesMap.get(target) != null && gatheredValuesMap.get(target).isEmpty();
+  }
+
+  protected abstract boolean handleMessage(int task, Object message, int flags, int dest);
 }

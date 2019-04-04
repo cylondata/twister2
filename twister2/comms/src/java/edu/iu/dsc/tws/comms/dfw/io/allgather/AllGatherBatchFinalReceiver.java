@@ -12,9 +12,9 @@
 package edu.iu.dsc.tws.comms.dfw.io.allgather;
 
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
-import edu.iu.dsc.tws.comms.dfw.io.gather.BaseGatherBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.gather.BaseGatherBatchReceiver;
 
-public class AllGatherBatchFinalReceiver extends BaseGatherBatchFinalReceiver {
+public class AllGatherBatchFinalReceiver extends BaseGatherBatchReceiver {
   private TreeBroadcast gatherReceiver;
 
   public AllGatherBatchFinalReceiver(TreeBroadcast bCast) {
@@ -22,10 +22,18 @@ public class AllGatherBatchFinalReceiver extends BaseGatherBatchFinalReceiver {
   }
 
   @Override
-  protected void handleFinish(int t) {
-    if (gatherReceiver.send(t, finalMessages.get(t), 0)) {
-      batchDone.put(t, true);
-      onFinish(t);
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    return false;
+  }
+
+  @Override
+  protected boolean handleMessage(int task, Object message, int flags, int dest) {
+    if (gatherReceiver.send(task, gatheredValuesMap.get(task), flags)) {
+      gatheredValuesMap.put(task, null);
+      onFinish(task);
+    } else {
+      return false;
     }
+    return true;
   }
 }

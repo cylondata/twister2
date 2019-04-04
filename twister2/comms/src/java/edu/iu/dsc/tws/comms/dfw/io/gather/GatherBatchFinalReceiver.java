@@ -11,9 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.gather;
 
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import java.util.List;
+import java.util.Map;
 
-public class GatherBatchFinalReceiver extends BaseGatherBatchFinalReceiver {
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+
+public class GatherBatchFinalReceiver extends BaseGatherBatchReceiver {
   /**
    * Final receiver accepts a bulk receiver
    */
@@ -28,16 +33,21 @@ public class GatherBatchFinalReceiver extends BaseGatherBatchFinalReceiver {
   }
 
   @Override
-  protected void init() {
-    super.init();
-    bulkReceiver.init(config, expIds.keySet());
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    bulkReceiver.init(cfg, expectedIds.keySet());
   }
 
   @Override
-  protected void handleFinish(int t) {
-    batchDone.put(t, true);
-    bulkReceiver.receive(t, finalMessages.get(t).iterator());
-    // we can call on finish at this point
-    onFinish(t);
+  protected boolean handleMessage(int task, Object message, int flags, int dest) {
+    if (message instanceof List) {
+      return bulkReceiver.receive(task, ((List<Object>) message).iterator());
+    }
+    return false;
+  }
+
+  @Override
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    return bulkReceiver.sync(target, 0);
   }
 }
