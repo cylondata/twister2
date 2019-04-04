@@ -162,7 +162,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
       this.dataSize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
       String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY)
-          + workerId;
+          + context.getWorkerId();
       int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
       //The +1 in the array size is because of a data balancing bug
       localPoints = new double[dataSize / para][dimension];
@@ -220,7 +220,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     public void prepare() {
       Config cfg = context.getConfig();
       String datainputDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY)
-          + workerId;
+          + context.getWorkerId();
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
       int csize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.CSIZE));
 
