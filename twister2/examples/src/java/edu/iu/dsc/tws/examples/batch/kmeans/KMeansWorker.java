@@ -200,8 +200,8 @@ public class KMeansWorker extends TaskWorker {
 
     @Override
     public void execute() {
+      long sTimet = System.nanoTime();
       int dim = Integer.parseInt(config.getStringValue("dim"));
-
       DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
       datapoints = (double[][]) dataPartition.getConsumer().next();
 
@@ -210,7 +210,15 @@ public class KMeansWorker extends TaskWorker {
 
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
+      if (context.getWorkerId() == 0) {
+        LOG.info("KMeansSourceTask time " + (System.nanoTime() - sTimet));
+      }
+      sTimet = System.nanoTime();
       context.writeEnd("all-reduce", kMeansCenters);
+      if (context.getWorkerId() == 0) {
+        LOG.info("KMeansSourceTask time 2 " + (System.nanoTime() - sTimet));
+      }
+
     }
 
     @SuppressWarnings("unchecked")
