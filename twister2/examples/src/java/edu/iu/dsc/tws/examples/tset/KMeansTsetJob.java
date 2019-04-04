@@ -158,7 +158,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
           + workerId;
       int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
       //The +1 in the array size is because of a data balancing bug
-      localPoints = new double[dataSize / para + 1][dimension];
+      localPoints = new double[dataSize / para][dimension];
       this.source = new DataSource(cfg, new LocalFixedInputPartitioner(new
           Path(datainputDirectory), context.getParallelism(), cfg, datasize),
           context.getParallelism());
@@ -194,6 +194,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
               count += 1;
             }
           }
+          LOG.info(context.getIndex() + " Counts : " + count);
           inputSplit = source.getNextSplit(context.getIndex());
         } catch (IOException e) {
           LOG.log(Level.SEVERE, "Failed to read the input", e);
@@ -255,7 +256,6 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
               count += 1;
             }
           }
-          LOG.info(context.getIndex() + " Counts : " + count);
           inputSplit = source.getNextSplit(context.getIndex());
         } catch (IOException e) {
           LOG.log(Level.SEVERE, "Failed to read the input", e);
