@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.tset;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
