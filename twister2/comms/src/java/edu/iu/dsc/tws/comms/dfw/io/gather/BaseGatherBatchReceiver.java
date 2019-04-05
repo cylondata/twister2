@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.SourceSyncReceiver;
 
 public abstract class BaseGatherBatchReceiver extends SourceSyncReceiver {
-  private static final Logger LOG = Logger.getLogger(BaseGatherBatchReceiver.class.getName());
+  protected static final Logger LOG = Logger.getLogger(BaseGatherBatchReceiver.class.getName());
 
   protected Map<Integer, List<Object>> gatheredValuesMap = new HashMap<>();
 
@@ -55,42 +55,33 @@ public abstract class BaseGatherBatchReceiver extends SourceSyncReceiver {
     List<Object> reducedValues = this.gatheredValuesMap.get(target);
     Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
 
-    if (allValuesFound || sync) {
-      List<Object> out = new AggregatedObjects<>();
-      for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
-        Object value = e.getValue().poll();
+    List<Object> out = new AggregatedObjects<>();
+    for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+      Object value = e.getValue().poll();
 
-        if (value == null) {
-          continue;
-        }
+      if (value == null) {
+        continue;
+      }
 
-        if (value instanceof AggregatedObjects) {
-          out.addAll((List) value);
-        } else {
-          out.add(value);
-        }
+      if (value instanceof AggregatedObjects) {
+        out.addAll((List) value);
+      } else {
+        out.add(value);
       }
-      if (out.size() > 0) {
-        if (reducedValues == null) {
-          reducedValues = new AggregatedObjects<>();
-          gatheredValuesMap.put(target, reducedValues);
-        }
-        reducedValues.addAll(out);
-      }
-      return true;
-    } else {
-      return true;
     }
-  }
-
-  @Override
-  protected boolean isFilledToSend(int target) {
-    return gatheredValuesMap.get(target) != null && gatheredValuesMap.get(target).size() > 0;
+    if (out.size() > 0) {
+      if (reducedValues == null) {
+        reducedValues = new AggregatedObjects<>();
+        gatheredValuesMap.put(target, reducedValues);
+      }
+      reducedValues.addAll(out);
+    }
+    return true;
   }
 
   @Override
   protected boolean isAllEmpty(int target) {
-    return gatheredValuesMap.get(target) != null && gatheredValuesMap.get(target).isEmpty();
+    return gatheredValuesMap.get(target) == null || gatheredValuesMap.get(target).isEmpty();
   }
 
   protected abstract boolean handleMessage(int task, Object message, int flags, int dest);

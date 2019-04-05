@@ -20,6 +20,7 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
   @Override
   protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
     if (operation.sendPartial(target, new byte[0], MessageFlags.END, destination)) {
+      LOG.info(String.format("Sent sync forward %d", target));
       isSyncSent.put(target, true);
     } else {
       return true;
@@ -31,5 +32,11 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
   protected boolean handleMessage(int task, Object message, int flags, int dest) {
     return operation.sendPartial(task, message, flags, dest);
   }
+
+  @Override
+  protected boolean isFilledToSend(int target, boolean sync) {
+    return gatheredValuesMap.get(target) != null && gatheredValuesMap.get(target).size() > 0;
+  }
+
 }
 

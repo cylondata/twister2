@@ -36,4 +36,12 @@ public class AllGatherBatchFinalReceiver extends BaseGatherBatchReceiver {
     }
     return true;
   }
+
+  @Override
+  protected boolean isFilledToSend(int target, boolean sync) {
+    if (!sync) {
+      return false;
+    }
+    return gatheredValuesMap.get(target) != null && gatheredValuesMap.get(target).size() > 0;
+  }
 }

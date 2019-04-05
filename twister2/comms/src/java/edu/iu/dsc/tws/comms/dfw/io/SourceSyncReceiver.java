@@ -134,6 +134,7 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
           && operation.isDelegateComplete()) {
         needsFurtherProgress = sendSyncForward(needsFurtherProgress, target);
         if (!needsFurtherProgress) {
+          LOG.info("Synced");
           // at this point we call the sync event
           onSyncEvent(target);
           clearTarget(target);
@@ -166,23 +167,23 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
 
         // if we have found all the values from sources or if syncs are present
         // we need to aggregate
-        if (allValuesFound || (allSyncsPresent && anyValueFound)) {
-          aggregate(target, allSyncsPresent, allValuesFound);
-        }
+        aggregate(target, allSyncsPresent, allValuesFound);
 
         // if we are filled to send, lets send the values
-        if (isFilledToSend(target)) {
+        if (isFilledToSend(target, allSyncsPresent)) {
           if (!sendToTarget(target, allSyncsPresent)) {
             canProgress = false;
           }
         }
 
-        // finally if there is a sync, lets forward it
+        // finally if there is a sync, and all queues are empty
         if (allSyncsPresent && allQueuesEmpty(messagePerTarget)
-            && operation.isDelegateComplete()) {
+            && operation.isDelegateComplete()
+            && isAllEmpty(target)) {
           flushedAfterSync.put(target, true);
           needsFurtherProgress = sendSyncForward(needsFurtherProgress, target);
           if (!needsFurtherProgress) {
+            LOG.info("Synced");
             // at this point we call the sync event
             onSyncEvent(target);
             clearTarget(target);
@@ -260,7 +261,7 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
    *
    * @return true if we are filled enough to send
    */
-  protected abstract boolean isFilledToSend(int target);
+  protected abstract boolean isFilledToSend(int target, boolean sync);
 
   /**
    * Check weather there is nothing left in the queues

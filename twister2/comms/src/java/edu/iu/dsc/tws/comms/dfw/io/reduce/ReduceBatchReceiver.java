@@ -97,7 +97,7 @@ public abstract class ReduceBatchReceiver extends SourceSyncReceiver {
   }
 
   @Override
-  protected boolean isFilledToSend(int target) {
+  protected boolean isFilledToSend(int target, boolean sync) {
     return reducedValueMap.get(target) != null;
   }
 }
