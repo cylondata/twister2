@@ -178,7 +178,7 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
     this.offset = splitStart;
     if (this.splitStart != 0) {
       this.stream.seek(offset);
-      //readLine();
+      // readLine(); // todo: check this!
       // if the first partial record already pushes the stream over
       // the limit of our split, then no record starts within this split
       if (this.overLimit) {
