@@ -42,6 +42,8 @@ public class CollectorImpl<T> implements Collector<T> {
       }
     }
 /*
+    pendingRecords.removeIf(t --> context.write(edge, t));
+
     if (pendingRecords.size() == 0) {
       if (context.write(edge, record)) {
         pendingRecords.add(record);
@@ -51,7 +53,7 @@ public class CollectorImpl<T> implements Collector<T> {
     }
     */
 
-    if (!pendingRecords.isEmpty() || context.write(edge, record)) {
+    if (!pendingRecords.isEmpty() || !context.write(edge, record)) {
       pendingRecords.add(record);
     }
   }
