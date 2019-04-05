@@ -51,26 +51,20 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
 
   @Override
   public void execute(TwisterBatchContext tc) {
-    int sourcePar = 4;
-    int sinkPar = 1;
-
     BatchSourceTSet<String> source =
         tc.createSource(new WordCountFileSource((String) tc.getConfig().get("INPUT_FILE")),
-            sourcePar).setName("source");
+            tc.getConfig().getIntegerValue("SOURCE_PARALLELISM", 4)).setName("source");
 
     IterableFlatMapTSet<String, WordCountPair> mappedSource =
         source.flatMap(new BaseIterableFlatMapFunction<String, WordCountPair>() {
           @Override
           public void flatMap(Iterable<String> t, Collector<WordCountPair> collector) {
-//            int k = 0;
             for (String s : t) {
               StringTokenizer itr = new StringTokenizer(s);
               while (itr.hasMoreTokens()) {
                 collector.collect(new WordCountPair(itr.nextToken(), 1));
               }
-//              k++;
             }
-//            LOG.info("K= " + k);
           }
         });
 
@@ -84,7 +78,7 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
                 new WordCountPair(t1.getWord(), t1.getCount() + t2.getCount())
         );
 
-    keyedReduce.sink(new WordCountFileLogger((String) tc.getConfig().get("OUTPUT_FILE")), sinkPar);
+    keyedReduce.sink(new WordCountFileLogger((String) tc.getConfig().get("OUTPUT_FILE")), 1);
   }
 
   class WordCountFileSource extends BaseSource<String> {
@@ -174,18 +168,16 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
 
   public static void main(String[] args) throws IOException {
 
+    // todo: set these as cmd params
     String input = "/tmp/wordcount.in";
     String output = "/tmp/wordcount.out";
 
-/*    Files.copy(Paths.get(Objects.requireNonNull(Thread.currentThread().getContextClassLoader()
-            .getResource("pride_and_predjudice.txt")).toURI()),
-        Paths.get(input),
-        StandardCopyOption.REPLACE_EXISTING);*/
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.put("INPUT_FILE", input);
     jobConfig.put("OUTPUT_FILE", output);
+    jobConfig.put("SOURCE_PARALLELISM", 4);
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("tset-wordcount");
@@ -233,7 +225,7 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
       }
     }
 
-    if (valid) {
+    if (valid && trusted.size() == test1.size()) {
       LOG.info("RESULTS VALID!");
     } else {
       LOG.severe("UNSUCCESSFUL!");
