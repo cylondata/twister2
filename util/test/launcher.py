@@ -7,6 +7,7 @@ import sys
 from tree.node import Node
 from util.config_parser import parse_configs
 from util.file_iterator import process_directory
+from util.variable_resolver import resolve_variables
 from values.array import handle_array_arg
 from values.fixed import handle_fixed_arg
 from values.none import handle_none_arg
@@ -76,6 +77,7 @@ for test in configs['tests']:
     command = ""
     for leaf_node in leaf_nodes:
         command = leaf_node.get_code("")
+        command = resolve_variables(leaf_node, command)
         args = [t2_bin, "submit", "standalone", "jar", jar, class_name]
         args.extend(command.strip().split(" "))
         args.extend(["-bmeta", base64.b64encode(json.dumps(meta).encode("utf-8"))])
