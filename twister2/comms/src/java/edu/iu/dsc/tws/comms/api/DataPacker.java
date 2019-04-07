@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 /**
  * The data packer interface. An implementation class should be stateless.
  */
-public interface DataPacker {
+public interface DataPacker<D> {
 
   /**
    * Pack the data and return the size of the data in bytes once packed
@@ -29,7 +29,7 @@ public interface DataPacker {
    * @param state state
    * @return the size of the packed data in bytes
    */
-  int packData(Object data, SerializeState state);
+  int packData(D data, SerializeState state);
 
 
   /**
@@ -39,7 +39,7 @@ public interface DataPacker {
    * @param state this can be used to keep the sate about the packing object
    * @return true if all the data is packed
    */
-  boolean writeDataToBuffer(Object data,
+  boolean writeDataToBuffer(D data,
                         ByteBuffer targetBuffer, SerializeState state);
 
   /**
@@ -47,7 +47,7 @@ public interface DataPacker {
    * @param length byte length
    * @return the object created
    */
-  Object initializeUnPackDataObject(int length);
+  D initializeUnPackDataObject(int length);
 
   /**
    * Read the data from the buffer

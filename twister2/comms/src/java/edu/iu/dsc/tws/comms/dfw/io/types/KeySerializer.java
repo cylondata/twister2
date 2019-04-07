@@ -17,6 +17,13 @@ import java.util.List;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import static edu.iu.dsc.tws.comms.api.MessageType.BYTE;
+import static edu.iu.dsc.tws.comms.api.MessageType.DOUBLE;
+import static edu.iu.dsc.tws.comms.api.MessageType.INTEGER;
+import static edu.iu.dsc.tws.comms.api.MessageType.LONG;
+import static edu.iu.dsc.tws.comms.api.MessageType.OBJECT;
+import static edu.iu.dsc.tws.comms.api.MessageType.SHORT;
+import static edu.iu.dsc.tws.comms.api.MessageType.STRING;
 
 public final class KeySerializer {
   private KeySerializer() {
@@ -25,6 +32,7 @@ public final class KeySerializer {
   /**
    * Calculates the length of the key based on the type of key. If the key is not a primitive
    * type this method will serialize the key object and save it in the {@code state}
+   *
    * @param key the key of which the length is calculated
    * @param type the type of the key
    * @param state the state object that records the state of the message
@@ -33,38 +41,30 @@ public final class KeySerializer {
    */
   public static int serializeKey(Object key, MessageType type,
                                  SerializeState state, KryoSerializer serializer) {
-    switch (type) {
-      case INTEGER:
-        return Integer.BYTES;
-      case SHORT:
-        return Short.BYTES;
-      case LONG:
-        return Long.BYTES;
-      case DOUBLE:
-        return Double.BYTES;
-      case OBJECT:
-        if (state.getKey() == null) {
-          byte[] serialize = serializer.serialize(key);
-          state.setKey(serialize);
-        }
-        return state.getKey().length;
-      case BYTE:
-        if (state.getKey() == null) {
-          state.setKey((byte[]) key);
-        }
-        return state.getKey().length;
-      case STRING:
-        if (state.getKey() == null) {
-          state.setKey(((String) key).getBytes());
-        }
-        return state.getKey().length;
-      case MULTI_FIXED_BYTE:
-        if (state.getKey() == null) {
-          state.setKey(getMultiBytes(key));
-        }
-        return state.getKey().length;
-      default:
-        break;
+    if (INTEGER.equals(type)) {
+      return Integer.BYTES;
+    } else if (SHORT.equals(type)) {
+      return Short.BYTES;
+    } else if (LONG.equals(type)) {
+      return Long.BYTES;
+    } else if (DOUBLE.equals(type)) {
+      return Double.BYTES;
+    } else if (OBJECT.equals(type)) {
+      if (state.getKey() == null) {
+        byte[] serialize = serializer.serialize(key);
+        state.setKey(serialize);
+      }
+      return state.getKey().length;
+    } else if (BYTE.equals(type)) {
+      if (state.getKey() == null) {
+        state.setKey((byte[]) key);
+      }
+      return state.getKey().length;
+    } else if (STRING.equals(type)) {
+      if (state.getKey() == null) {
+        state.setKey(((String) key).getBytes());
+      }
+      return state.getKey().length;
     }
     return 0;
   }
@@ -72,6 +72,7 @@ public final class KeySerializer {
   /**
    * Copys the key to the buffer that is passed to this method. If the object has been already been
    * serilized then it will be retrieved from the state object.
+   *
    * @param key the key to be copied
    * @param keyType the type of the key
    * @param targetBuffer the buffer to which the key will be copied
@@ -84,66 +85,54 @@ public final class KeySerializer {
                                         ByteBuffer targetBuffer, SerializeState state,
                                         KryoSerializer serializer) {
     // LOG.info(String.format("%d copy key: %d", executor, targetBuffer.position()));
-    switch (keyType) {
-      case INTEGER:
-        if (targetBuffer.remaining() > Integer.BYTES) {
-          targetBuffer.putInt((Integer) key);
-          state.setTotalBytes(state.getTotalBytes() + Integer.BYTES);
-          state.setCurretHeaderLength(state.getCurretHeaderLength() + Integer.BYTES);
-          state.setKeySize(Integer.BYTES);
-          return true;
-        }
-        break;
-      case SHORT:
-        if (targetBuffer.remaining() > Short.BYTES) {
-          targetBuffer.putShort((short) key);
-          state.setTotalBytes(state.getTotalBytes() + Short.BYTES);
-          state.setCurretHeaderLength(state.getCurretHeaderLength() + Short.BYTES);
-          state.setKeySize(Short.BYTES);
-          return true;
-        }
-        break;
-      case LONG:
-        if (targetBuffer.remaining() > Long.BYTES) {
-          targetBuffer.putLong((Long) key);
-          state.setTotalBytes(state.getTotalBytes() + Long.BYTES);
-          state.setCurretHeaderLength(state.getCurretHeaderLength() + Long.BYTES);
-          state.setKeySize(Long.BYTES);
-          return true;
-        }
-        break;
-      case DOUBLE:
-        if (targetBuffer.remaining() > Double.BYTES) {
-          targetBuffer.putDouble((Double) key);
-          state.setTotalBytes(state.getTotalBytes() + Double.BYTES);
-          state.setCurretHeaderLength(state.getCurretHeaderLength() + Double.BYTES);
-          state.setKeySize(Double.BYTES);
-          return true;
-        }
-        break;
-      case OBJECT:
-        if (state.getKey() == null) {
-          byte[] serialize = serializer.serialize(key);
-          state.setKey(serialize);
-        }
-        return copyKeyBytes(targetBuffer, state);
-      case BYTE:
-        if (state.getKey() == null) {
-          state.setKey((byte[]) key);
-        }
-        return copyKeyBytes(targetBuffer, state);
-      case STRING:
-        if (state.getKey() == null) {
-          state.setKey(((String) key).getBytes());
-        }
-        return copyKeyBytes(targetBuffer, state);
-      case MULTI_FIXED_BYTE:
-        if (state.getKey() == null) {
-          state.setKey(getMultiBytes(key));
-        }
-        return copyMultiKeyBytes(targetBuffer, state, ((List<byte[]>) key).size());
-      default:
-        break;
+    if (INTEGER.equals(keyType)) {
+      if (targetBuffer.remaining() > Integer.BYTES) {
+        targetBuffer.putInt((Integer) key);
+        state.setTotalBytes(state.getTotalBytes() + Integer.BYTES);
+        state.setCurretHeaderLength(state.getCurretHeaderLength() + Integer.BYTES);
+        state.setKeySize(Integer.BYTES);
+        return true;
+      }
+    } else if (SHORT.equals(keyType)) {
+      if (targetBuffer.remaining() > Short.BYTES) {
+        targetBuffer.putShort((short) key);
+        state.setTotalBytes(state.getTotalBytes() + Short.BYTES);
+        state.setCurretHeaderLength(state.getCurretHeaderLength() + Short.BYTES);
+        state.setKeySize(Short.BYTES);
+        return true;
+      }
+    } else if (LONG.equals(keyType)) {
+      if (targetBuffer.remaining() > Long.BYTES) {
+        targetBuffer.putLong((Long) key);
+        state.setTotalBytes(state.getTotalBytes() + Long.BYTES);
+        state.setCurretHeaderLength(state.getCurretHeaderLength() + Long.BYTES);
+        state.setKeySize(Long.BYTES);
+        return true;
+      }
+    } else if (DOUBLE.equals(keyType)) {
+      if (targetBuffer.remaining() > Double.BYTES) {
+        targetBuffer.putDouble((Double) key);
+        state.setTotalBytes(state.getTotalBytes() + Double.BYTES);
+        state.setCurretHeaderLength(state.getCurretHeaderLength() + Double.BYTES);
+        state.setKeySize(Double.BYTES);
+        return true;
+      }
+    } else if (OBJECT.equals(keyType)) {
+      if (state.getKey() == null) {
+        byte[] serialize = serializer.serialize(key);
+        state.setKey(serialize);
+      }
+      return copyKeyBytes(targetBuffer, state);
+    } else if (BYTE.equals(keyType)) {
+      if (state.getKey() == null) {
+        state.setKey((byte[]) key);
+      }
+      return copyKeyBytes(targetBuffer, state);
+    } else if (STRING.equals(keyType)) {
+      if (state.getKey() == null) {
+        state.setKey(((String) key).getBytes());
+      }
+      return copyKeyBytes(targetBuffer, state);
     }
     return false;
   }

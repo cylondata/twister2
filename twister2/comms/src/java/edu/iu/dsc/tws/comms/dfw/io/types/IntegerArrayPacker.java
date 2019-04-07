@@ -13,28 +13,38 @@ package edu.iu.dsc.tws.comms.dfw.io.types;
 
 import java.nio.ByteBuffer;
 
-import edu.iu.dsc.tws.comms.api.DataPacker;
+import edu.iu.dsc.tws.comms.api.ArrayPacker;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
-public class IntegerDataPacker implements DataPacker {
-  public IntegerDataPacker() {
+public final class IntegerArrayPacker implements ArrayPacker<int[]> {
+
+  private static volatile IntegerArrayPacker instance;
+
+  private IntegerArrayPacker() {
+  }
+
+  public static IntegerArrayPacker getInstance() {
+    if (instance == null) {
+      instance = new IntegerArrayPacker();
+    }
+    return instance;
   }
 
   @Override
-  public int packData(Object data, SerializeState state) {
-    return ((int[]) data).length * Integer.BYTES;
+  public int packData(int[] data, SerializeState state) {
+    return data.length * Integer.BYTES;
   }
 
   @Override
-  public boolean writeDataToBuffer(Object data,
+  public boolean writeDataToBuffer(int[] data,
                                    ByteBuffer targetBuffer, SerializeState state) {
-    return DataSerializer.copyIntegers((int[]) data, targetBuffer, state);
+    return DataSerializer.copyIntegers(data, targetBuffer, state);
   }
 
 
-  public Object initializeUnPackDataObject(int length) {
+  public int[] initializeUnPackDataObject(int length) {
     return new int[length / Integer.BYTES];
   }
 
@@ -48,5 +58,8 @@ public class IntegerDataPacker implements DataPacker {
         val, startIndex, currentLocation);
   }
 
-
+  @Override
+  public int[] initializeEmptyArrayForByteLength(int byteLength) {
+    return new int[byteLength / Integer.SIZE];
+  }
 }

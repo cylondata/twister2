@@ -19,48 +19,77 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
-public interface KeyPacker {
+/**
+ * Key packer will be removed in future releases
+ *
+ * @deprecated Will be removed
+ */
+@Deprecated
+public interface KeyPacker<D> {
   /**
    * Pack the key and return the size of the data in bytes once packed
    *
    * @param key the key (can be Integer, Object etc)
    * @param state state
    * @return the size of the packed data in bytes
+   * @deprecated Will be removed
    */
-  int packKey(Object key, SerializeState state);
+  @Deprecated
+  int packKey(D key, SerializeState state);
 
   /**
    * Transfer the data to the buffer
+   *
    * @param key the key
    * @param targetBuffer target buffer
    * @param state this can be used to keep the sate about the packing object
    * @return true if all the data is packed
+   * @deprecated Will be removed
    */
-  boolean writeKeyToBuffer(Object key,
+  @Deprecated
+  boolean writeKeyToBuffer(D key,
                            ByteBuffer targetBuffer, SerializeState state);
 
   /**
    * Initialize the key
+   *
    * @param message the message
    * @param buffer the data buffer
    * @param location the current location of the buffer
    * @return keyLength and readBytes
+   * @deprecated Will be removed
    */
+  @Deprecated
   Pair<Integer, Integer> getKeyLength(InMessage message, DataBuffer buffer, int location);
 
 
-  Object initializeUnPackKeyObject(int size);
+  /**
+   * Initialize an empty object
+   *
+   * @deprecated Will be removed
+   */
+  @Deprecated
+  D initializeUnPackKeyObject(int size);
 
   /**
    * Read the data from the buffer
+   *
    * @param currentMessage the current message
    * @param currentLocation current location
    * @param buffer buffer
    * @param currentObjectLength the current object length
    * @return the number of bytes read
+   * @deprecated Will be removed
    */
+  @Deprecated
   int readKeyFromBuffer(InMessage currentMessage, int currentLocation,
                         DataBuffer buffer, int currentObjectLength);
 
+  /**
+   * Return true if header is required
+   *
+   * @deprecated Will be removed
+   */
+  @Deprecated
   boolean isKeyHeaderRequired();
 }

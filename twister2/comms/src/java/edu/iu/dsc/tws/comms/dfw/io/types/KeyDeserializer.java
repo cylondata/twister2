@@ -23,6 +23,13 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
+import static edu.iu.dsc.tws.comms.api.MessageType.BYTE;
+import static edu.iu.dsc.tws.comms.api.MessageType.DOUBLE;
+import static edu.iu.dsc.tws.comms.api.MessageType.INTEGER;
+import static edu.iu.dsc.tws.comms.api.MessageType.LONG;
+import static edu.iu.dsc.tws.comms.api.MessageType.OBJECT;
+import static edu.iu.dsc.tws.comms.api.MessageType.SHORT;
+import static edu.iu.dsc.tws.comms.api.MessageType.STRING;
 
 public final class KeyDeserializer {
   private static final Logger LOG = Logger.getLogger(KeyDeserializer.class.getName());
@@ -47,51 +54,35 @@ public final class KeyDeserializer {
     //Used when there are multiple keys
     int keyCount;
     // first we need to read the key type
-    switch (keyType) {
-      case INTEGER:
-        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-        ByteBuffer byteBuffer = buffers.get(currentIndex).getByteBuffer();
-        key = byteBuffer.getInt();
-        keyLength = 4;
-        break;
-      case SHORT:
-        currentIndex = getReadIndex(buffers, currentIndex, Short.BYTES);
-        key = buffers.get(currentIndex).getByteBuffer().getShort();
-        keyLength = 2;
-        break;
-      case LONG:
-        currentIndex = getReadIndex(buffers, currentIndex, Long.BYTES);
-        key = buffers.get(currentIndex).getByteBuffer().getLong();
-        keyLength = 8;
-        break;
-      case DOUBLE:
-        currentIndex = getReadIndex(buffers, currentIndex, Double.BYTES);
-        key = buffers.get(currentIndex).getByteBuffer().getDouble();
-        keyLength = 8;
-        break;
-      case OBJECT:
-        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        key = DataDeserializer.deserializeObject(buffers, keyLength, deserializer);
-        break;
-      case BYTE:
-        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        key = readBytes(buffers, keyLength);
-        break;
-      case STRING:
-        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        key = new String(readBytes(buffers, keyLength));
-        break;
-      case MULTI_FIXED_BYTE:
-        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES * 2);
-        keyCount = buffers.get(currentIndex).getByteBuffer().getInt();
-        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        key = readMultiBytes(buffers, keyLength, keyCount);
-        break;
-      default:
-        break;
+    if (INTEGER.equals(keyType)) {
+      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
+      ByteBuffer byteBuffer = buffers.get(currentIndex).getByteBuffer();
+      key = byteBuffer.getInt();
+      keyLength = 4;
+    } else if (SHORT.equals(keyType)) {
+      currentIndex = getReadIndex(buffers, currentIndex, Short.BYTES);
+      key = buffers.get(currentIndex).getByteBuffer().getShort();
+      keyLength = 2;
+    } else if (LONG.equals(keyType)) {
+      currentIndex = getReadIndex(buffers, currentIndex, Long.BYTES);
+      key = buffers.get(currentIndex).getByteBuffer().getLong();
+      keyLength = 8;
+    } else if (DOUBLE.equals(keyType)) {
+      currentIndex = getReadIndex(buffers, currentIndex, Double.BYTES);
+      key = buffers.get(currentIndex).getByteBuffer().getDouble();
+      keyLength = 8;
+    } else if (OBJECT.equals(keyType)) {
+      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
+      keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
+      key = DataDeserializer.deserializeObject(buffers, keyLength, deserializer);
+    } else if (BYTE.equals(keyType)) {
+      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
+      keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
+      key = readBytes(buffers, keyLength);
+    } else if (STRING.equals(keyType)) {
+      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
+      keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
+      key = new String(readBytes(buffers, keyLength));
     }
     return new ImmutablePair<>(keyLength, key);
   }
@@ -111,55 +102,40 @@ public final class KeyDeserializer {
     byte[] tempArray = null;
     Object key = null;
     int keyLength = 0;
-    switch (keyType) {
-      case INTEGER:
-        tempArray = new byte[Integer.BYTES];
-        keyLength = Integer.BYTES;
-        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-        buffers.get(currentIndex).getByteBuffer().get(tempArray);
-        break;
-      case SHORT:
-        tempArray = new byte[Short.BYTES];
-        keyLength = Short.BYTES;
-        currentIndex = getReadIndex(buffers, currentIndex, Short.BYTES);
-        buffers.get(currentIndex).getByteBuffer().get(tempArray);
-        break;
-      case LONG:
-        tempArray = new byte[Long.BYTES];
-        keyLength = Long.BYTES;
-        currentIndex = getReadIndex(buffers, currentIndex, Long.BYTES);
-        buffers.get(currentIndex).getByteBuffer().get(tempArray);
-        break;
-      case DOUBLE:
-        tempArray = new byte[Double.BYTES];
-        keyLength = Double.BYTES;
-        currentIndex = getReadIndex(buffers, currentIndex, Double.BYTES);
-        buffers.get(currentIndex).getByteBuffer().get(tempArray);
-        break;
-      case OBJECT:
-        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        tempArray = readBytes(buffers, keyLength);
-        break;
-      case BYTE:
-        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        tempArray = readBytes(buffers, keyLength);
-        break;
-      case STRING:
-        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        tempArray = readBytes(buffers, keyLength);
-        break;
-      case MULTI_FIXED_BYTE:
-        currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES * 2);
-        keyCount = buffers.get(currentIndex).getByteBuffer().getInt();
-        keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-        key = readMultiBytes(buffers, keyLength, keyCount);
-        return new ImmutablePair<>(keyLength, key);
-      default:
-        tempArray = new byte[0];
-        break;
+    if (INTEGER.equals(keyType)) {
+      tempArray = new byte[Integer.BYTES];
+      keyLength = Integer.BYTES;
+      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
+      buffers.get(currentIndex).getByteBuffer().get(tempArray);
+    } else if (SHORT.equals(keyType)) {
+      tempArray = new byte[Short.BYTES];
+      keyLength = Short.BYTES;
+      currentIndex = getReadIndex(buffers, currentIndex, Short.BYTES);
+      buffers.get(currentIndex).getByteBuffer().get(tempArray);
+    } else if (LONG.equals(keyType)) {
+      tempArray = new byte[Long.BYTES];
+      keyLength = Long.BYTES;
+      currentIndex = getReadIndex(buffers, currentIndex, Long.BYTES);
+      buffers.get(currentIndex).getByteBuffer().get(tempArray);
+    } else if (DOUBLE.equals(keyType)) {
+      tempArray = new byte[Double.BYTES];
+      keyLength = Double.BYTES;
+      currentIndex = getReadIndex(buffers, currentIndex, Double.BYTES);
+      buffers.get(currentIndex).getByteBuffer().get(tempArray);
+    } else if (OBJECT.equals(keyType)) {
+      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
+      keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
+      tempArray = readBytes(buffers, keyLength);
+    } else if (BYTE.equals(keyType)) {
+      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
+      keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
+      tempArray = readBytes(buffers, keyLength);
+    } else if (STRING.equals(keyType)) {
+      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
+      keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
+      tempArray = readBytes(buffers, keyLength);
+    } else {
+      tempArray = new byte[0];
     }
     return new ImmutablePair<>(keyLength, tempArray);
   }

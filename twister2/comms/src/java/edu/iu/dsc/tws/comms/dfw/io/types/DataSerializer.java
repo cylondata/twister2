@@ -18,8 +18,16 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.data.memory.MemoryManagerContext;
+import static edu.iu.dsc.tws.comms.api.MessageType.BYTE;
+import static edu.iu.dsc.tws.comms.api.MessageType.DOUBLE;
+import static edu.iu.dsc.tws.comms.api.MessageType.INTEGER;
+import static edu.iu.dsc.tws.comms.api.MessageType.LONG;
+import static edu.iu.dsc.tws.comms.api.MessageType.OBJECT;
+import static edu.iu.dsc.tws.comms.api.MessageType.SHORT;
+import static edu.iu.dsc.tws.comms.api.MessageType.STRING;
 
 public final class DataSerializer {
+
   private DataSerializer() {
   }
 
@@ -37,39 +45,31 @@ public final class DataSerializer {
    */
   public static int serializeData(Object content, MessageType type,
                                   SerializeState state, KryoSerializer serializer) {
-    switch (type) {
-      case INTEGER:
-        return ((int[]) content).length * Integer.BYTES;
-      case SHORT:
-        return ((short[]) content).length * Short.BYTES;
-      case LONG:
-        return ((long[]) content).length * Long.BYTES;
-      case DOUBLE:
-        return ((double[]) content).length * Double.BYTES;
-      case OBJECT:
-        if (state.getData() == null) {
-          byte[] serialize = serializer.serialize(content);
-          state.setData(serialize);
-        }
-        return state.getData().length;
-      case BYTE:
-        if (state.getData() == null) {
-          state.setData((byte[]) content);
-        }
-        return state.getData().length;
-      case STRING:
-        if (state.getData() == null) {
-          byte[] serialize = ((String) content).getBytes(MemoryManagerContext.DEFAULT_CHARSET);
-          state.setData(serialize);
-        }
-        return state.getData().length;
-      case MULTI_FIXED_BYTE:
-        if (state.getData() == null) {
-          state.setData(getBytes(content));
-        }
-        return state.getData().length;
-      default:
-        break;
+    if (INTEGER.equals(type)) {
+      return ((int[]) content).length * Integer.BYTES;
+    } else if (SHORT.equals(type)) {
+      return ((short[]) content).length * Short.BYTES;
+    } else if (LONG.equals(type)) {
+      return ((long[]) content).length * Long.BYTES;
+    } else if (DOUBLE.equals(type)) {
+      return ((double[]) content).length * Double.BYTES;
+    } else if (OBJECT.equals(type)) {
+      if (state.getData() == null) {
+        byte[] serialize = serializer.serialize(content);
+        state.setData(serialize);
+      }
+      return state.getData().length;
+    } else if (BYTE.equals(type)) {
+      if (state.getData() == null) {
+        state.setData((byte[]) content);
+      }
+      return state.getData().length;
+    } else if (STRING.equals(type)) {
+      if (state.getData() == null) {
+        byte[] serialize = ((String) content).getBytes(MemoryManagerContext.DEFAULT_CHARSET);
+        state.setData(serialize);
+      }
+      return state.getData().length;
     }
     return 0;
   }
@@ -90,38 +90,31 @@ public final class DataSerializer {
                                          ByteBuffer targetBuffer, SerializeState state,
                                          KryoSerializer serializer) {
     // LOG.info(String.format("%d copy key: %d", executor, targetBuffer.position()));
-    switch (messageType) {
-      case INTEGER:
-        return copyIntegers((int[]) data, targetBuffer, state);
-      case SHORT:
-        return copyShort((short[]) data, targetBuffer, state);
-      case LONG:
-        return copyLong((long[]) data, targetBuffer, state);
-      case DOUBLE:
-        return copyDoubles((double[]) data, targetBuffer, state);
-      case OBJECT:
-        if (state.getData() == null) {
-          byte[] serialize = serializer.serialize(data);
-          state.setData(serialize);
-        }
-        return copyDataBytes(targetBuffer, state);
-      case BYTE:
-        if (state.getData() == null) {
-          state.setData((byte[]) data);
-        }
-        return copyDataBytes(targetBuffer, state);
-      case STRING:
-        if (state.getData() == null) {
-          state.setData(((String) data).getBytes(MemoryManagerContext.DEFAULT_CHARSET));
-        }
-        return copyDataBytes(targetBuffer, state);
-      case MULTI_FIXED_BYTE:
-        if (state.getData() == null) {
-          state.setData(getBytes(data));
-        }
-        return copyDataBytes(targetBuffer, state);
-      default:
-        break;
+    //todo change
+    if (INTEGER.equals(messageType)) {
+      return copyIntegers((int[]) data, targetBuffer, state);
+    } else if (SHORT.equals(messageType)) {
+      return copyShort((short[]) data, targetBuffer, state);
+    } else if (LONG.equals(messageType)) {
+      return copyLong((long[]) data, targetBuffer, state);
+    } else if (DOUBLE.equals(messageType)) {
+      return copyDoubles((double[]) data, targetBuffer, state);
+    } else if (OBJECT.equals(messageType)) {
+      if (state.getData() == null) {
+        byte[] serialize = serializer.serialize(data);
+        state.setData(serialize);
+      }
+      return copyDataBytes(targetBuffer, state);
+    } else if (BYTE.equals(messageType)) {
+      if (state.getData() == null) {
+        state.setData((byte[]) data);
+      }
+      return copyDataBytes(targetBuffer, state);
+    } else if (STRING.equals(messageType)) {
+      if (state.getData() == null) {
+        state.setData(((String) data).getBytes(MemoryManagerContext.DEFAULT_CHARSET));
+      }
+      return copyDataBytes(targetBuffer, state);
     }
     return false;
   }

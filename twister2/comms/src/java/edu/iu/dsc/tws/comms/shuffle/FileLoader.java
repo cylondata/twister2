@@ -71,24 +71,7 @@ public final class FileLoader {
   }
 
   private static int sizeOf(MessageType messageType) {
-    switch (messageType) {
-      case BYTE:
-        return Byte.BYTES;
-      case DOUBLE:
-        return Double.BYTES;
-      case INTEGER:
-        return Integer.BYTES;
-      case LONG:
-        return Long.BYTES;
-      case CHAR:
-        return Character.BYTES;
-      case SHORT:
-        return Short.BYTES;
-      case EMPTY:
-        return 0;
-      default:
-        throw new RuntimeException("size check of an unknown or non primitive message type");
-    }
+    return messageType.getUnitSize();
   }
 
 
@@ -209,7 +192,7 @@ public final class FileLoader {
         keyValues.add(new Tuple(key, value));
 
         totalRead += Integer.BYTES + keySize + dataSize;
-        if (keyType == MessageType.OBJECT || keyType == MessageType.MULTI_FIXED_BYTE) {
+        if (keyType == MessageType.OBJECT) {
           //had to read an additional int to read the key size
           totalRead += Integer.BYTES;
         }

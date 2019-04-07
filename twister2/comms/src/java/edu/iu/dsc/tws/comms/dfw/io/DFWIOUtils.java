@@ -25,8 +25,7 @@ import edu.iu.dsc.tws.comms.dfw.io.types.ByteKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.BytePacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.DoubleKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.DoublePacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.IntegerDataPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.IntegerKeyPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.IntegerPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.LongKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.LongPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectKeyPacker;
@@ -48,6 +47,7 @@ public final class DFWIOUtils {
 
   /**
    * Reset the serialize state
+   *
    * @param state state
    * @param completed weather completed
    * @return if completed
@@ -117,6 +117,7 @@ public final class DFWIOUtils {
 
   /**
    * Create a copy of the channel message
+   *
    * @param channelMessage message
    * @return the copy
    */
@@ -137,34 +138,48 @@ public final class DFWIOUtils {
     return copy;
   }
 
-  public static DataPacker createPacker(MessageType dataType) {
-    if (dataType == MessageType.CUSTOM) {
-      return dataType.getDataPacker();
+  /**
+   * This method will not be necessary. Use {@link MessageType#getDataPacker()} instead
+   *
+   * @return Data packer
+   * @deprecated Use {@link MessageType#getDataPacker()} instead
+   */
+  @Deprecated
+  public static DataPacker createPacker(MessageType messageType) {
+    if (messageType == MessageType.CUSTOM) {
+      return messageType.getDataPacker();
     }
 
-    if (dataType == MessageType.INTEGER) {
-      return new IntegerDataPacker();
-    } else if (dataType == MessageType.LONG) {
+    if (messageType == MessageType.INTEGER) {
+      return messageType.getDataPacker();
+    } else if (messageType == MessageType.LONG) {
       return new LongPacker();
-    } else if (dataType == MessageType.SHORT) {
+    } else if (messageType == MessageType.SHORT) {
       return new ShortPacker();
-    } else if (dataType == MessageType.DOUBLE) {
+    } else if (messageType == MessageType.DOUBLE) {
       return new DoublePacker();
-    } else if (dataType == MessageType.BYTE) {
+    } else if (messageType == MessageType.BYTE) {
       return new BytePacker();
-    } else if (dataType == MessageType.OBJECT) {
+    } else if (messageType == MessageType.OBJECT) {
       return new ObjectPacker();
     }
     return null;
   }
 
+  /**
+   * This method will not be necessary. Use {@link MessageType#getDataPacker()} instead
+   *
+   * @return Key packer
+   * @deprecated Use {@link MessageType#getDataPacker()} instead
+   */
+  @Deprecated
   public static KeyPacker createKeyPacker(MessageType dataType) {
     if (dataType == MessageType.CUSTOM) {
       return dataType.getKeyPacker();
     }
 
     if (dataType == MessageType.INTEGER) {
-      return new IntegerKeyPacker();
+      return IntegerPacker.getInstance();
     } else if (dataType == MessageType.LONG) {
       return new LongKeyPacker();
     } else if (dataType == MessageType.SHORT) {
@@ -177,10 +192,6 @@ public final class DFWIOUtils {
       return new ObjectKeyPacker();
     }
     return null;
-  }
-
-  public static boolean containsFlag(int flags, int flag) {
-    return (flags & flag) == flag;
   }
 }
 

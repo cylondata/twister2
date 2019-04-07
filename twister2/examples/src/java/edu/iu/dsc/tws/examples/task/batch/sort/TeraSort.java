@@ -83,7 +83,7 @@ public class TeraSort extends TaskWorker {
     Receiver receiver = new Receiver();
     tgb.addSink(TASK_RECV, receiver, 1)
         .keyedGather(TASK_SOURCE, EDGE,
-            DataType.INTEGER, DataType.BYTE, true,
+            DataType.INTEGER_ARRAY, DataType.BYTE_ARRAY, true,
             Comparator.comparingInt(o -> (Integer) o));
 
     DataFlowTaskGraph dataFlowTaskGraph = tgb.build();

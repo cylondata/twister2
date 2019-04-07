@@ -11,36 +11,85 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-public enum MessageType {
-  INTEGER(true),
-  CHAR(true),
-  BYTE,
-  MULTI_FIXED_BYTE(false, true),
-  STRING,
-  LONG(true),
-  DOUBLE(true),
-  OBJECT,
-  EMPTY,
-  SHORT(true),
-  CUSTOM;
+import java.lang.reflect.Array;
 
-  private boolean isMultiMessageType;
+import edu.iu.dsc.tws.comms.api.types.TypeDefinition;
+import edu.iu.dsc.tws.comms.dfw.io.types.IntegerArrayPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.IntegerPacker;
+
+public final class MessageType<T> implements TypeDefinition<T> {
+
+  public static final MessageType<Integer> INTEGER = new MessageType<>(
+      true, Integer.SIZE, Integer.class, IntegerPacker.getInstance()
+  );
+  public static final MessageType<int[]> INTEGER_ARRAY = new MessageType<>(
+      true, Integer.SIZE, int[].class, IntegerArrayPacker.getInstance()
+  );
+
+  public static final MessageType<Character> CHAR = new MessageType<>(
+      true, Character.SIZE, Character.class, null
+  );
+  public static final MessageType<char[]> CHAR_ARRAY = new MessageType<>(
+      true, Character.SIZE, char[].class, null
+  );
+
+  public static final MessageType<Byte> BYTE = new MessageType<>(
+      true, Byte.SIZE, Byte.class, null
+  );
+  public static final MessageType<byte[]> BYTE_ARRAY = new MessageType<>(
+      true, Byte.SIZE, byte[].class, null
+  );
+
+  public static final MessageType<Long> LONG = new MessageType<>(
+      true, Long.SIZE, Long.class, null
+  );
+  public static final MessageType<long[]> LONG_ARRAY = new MessageType<>(
+      true, Long.SIZE, long[].class, null
+  );
+
+  public static final MessageType<Double> DOUBLE = new MessageType<>(
+      true, Double.SIZE, Double.class, null
+  );
+  public static final MessageType<double[]> DOUBLE_ARRAY = new MessageType<>(
+      true, Double.SIZE, double[].class, null
+  );
+
+  public static final MessageType<Short> SHORT = new MessageType<>(
+      true, Short.SIZE, Short.class, null
+  );
+  public static final MessageType<short[]> SHORT_ARRAY = new MessageType<>(
+      true, Short.SIZE, short[].class, null
+  );
+
+  public static final MessageType<String> STRING = new MessageType<>(
+      true, Character.SIZE, String.class, null
+  );
+
+  public static final MessageType<Object> OBJECT = new MessageType<>(
+      true, 0, Object.class, null
+  );
+
+  public static final MessageType<Object> EMPTY = new MessageType<>(
+      true, 0, Object.class, null
+  );
+
+  public static final MessageType<Object> CUSTOM = new MessageType<>(
+      true, 0, Object.class, null
+  );
+
   private boolean isPrimitive;
-  private DataPacker dataPacker;
+  private int size;
+  private Class<T> clazz;
+  private DataPacker<T> dataPacker;
+
+  //todo remove
   private KeyPacker keyPacker;
 
-  MessageType() {
-    this(false, false);
-  }
-
-  MessageType(boolean isPrimitive) {
-    this(isPrimitive, false);
-  }
-
-
-  MessageType(boolean isPrimitive, boolean isMultiMessageType) {
-    this.isPrimitive = isPrimitive;
-    this.isMultiMessageType = isMultiMessageType;
+  private MessageType(boolean primitive, int size, Class<T> clazz, DataPacker<T> dataPacker) {
+    this.isPrimitive = primitive;
+    this.size = size;
+    this.clazz = clazz;
+    this.dataPacker = dataPacker;
   }
 
   /**
@@ -51,25 +100,49 @@ public enum MessageType {
     return isPrimitive;
   }
 
+  @Override
+  public int getUnitSize() {
+    return this.size;
+  }
+
+  @Override
+  public int getDataSize(T data) {
+    if (!this.isArray()) {
+      return this.getUnitSize();
+    } else {
+      return Array.getLength(data) * this.getUnitSize();
+    }
+  }
+
   /**
    * checks if the type is a multi message, not to be confused with the aggregated multi-messages
    * that are passed through the network when optimized communications such as reduce are performed
    * this refers to the original type of the message
+   *
+   * @deprecated This will be removed in future releases
    */
+  @Deprecated
   public boolean isMultiMessageType() {
-    return this.isMultiMessageType;
+    return false;
   }
 
   /**
    * Specify a custom data packer
+   *
    * @return a custom data packer
    */
-  public DataPacker getDataPacker() {
+  public DataPacker<T> getDataPacker() {
     return dataPacker;
+  }
+
+  @Override
+  public boolean isArray() {
+    return false;
   }
 
   /**
    * Set the custom data packer
+   *
    * @param customPacker set the custom packer
    */
   public void setCustomPacker(DataPacker customPacker) {
@@ -78,6 +151,7 @@ public enum MessageType {
 
   /**
    * Get the key packer associated with this type
+   *
    * @return the key packer
    */
   public KeyPacker getKeyPacker() {
@@ -86,9 +160,25 @@ public enum MessageType {
 
   /**
    * Set the key packer associated with this type
+   *
    * @param keyPacker key packer
    */
   public void setKeyPacker(KeyPacker keyPacker) {
     this.keyPacker = keyPacker;
+  }
+
+  /**
+   * Size of an unit
+   *
+   * @return the size of an unit
+   * @deprecated use {@link #getUnitSize()} instead
+   */
+  @Deprecated
+  public int getSize() {
+    return size;
+  }
+
+  public Class<T> getClazz() {
+    return clazz;
   }
 }

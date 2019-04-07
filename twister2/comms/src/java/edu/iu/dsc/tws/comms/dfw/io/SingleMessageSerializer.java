@@ -167,8 +167,8 @@ public class SingleMessageSerializer implements MessageSerializer {
       return serializeData(payload, sendMessage.getSerializationState(), targetBuffer, type);
     } else {
       if (type == MessageType.OBJECT || type == MessageType.INTEGER || type == MessageType.LONG
-          || type == MessageType.DOUBLE || type == MessageType.BYTE || type == MessageType.STRING
-          || type == MessageType.MULTI_FIXED_BYTE) {
+          || type == MessageType.DOUBLE || type == MessageType.BYTE
+          || type == MessageType.STRING) {
         if (!keyed) {
           return serializeData(payload, sendMessage.getSerializationState(), targetBuffer, type);
         } else {

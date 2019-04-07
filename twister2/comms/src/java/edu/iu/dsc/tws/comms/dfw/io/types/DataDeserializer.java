@@ -21,6 +21,12 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.io.ByteArrayInputStream;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
+import static edu.iu.dsc.tws.comms.api.MessageType.BYTE;
+import static edu.iu.dsc.tws.comms.api.MessageType.DOUBLE;
+import static edu.iu.dsc.tws.comms.api.MessageType.INTEGER;
+import static edu.iu.dsc.tws.comms.api.MessageType.LONG;
+import static edu.iu.dsc.tws.comms.api.MessageType.OBJECT;
+import static edu.iu.dsc.tws.comms.api.MessageType.SHORT;
 
 public final class DataDeserializer {
   private DataDeserializer() {
@@ -39,23 +45,18 @@ public final class DataDeserializer {
   public static Object deserializeData(List<DataBuffer> buffers, int length,
                                        KryoSerializer deserializer, MessageType type, int count) {
 
-    switch (type) {
-      case INTEGER:
-        return deserializeInteger(buffers, length);
-      case DOUBLE:
-        return deserializeDouble(buffers, length);
-      case SHORT:
-        return deserializeShort(buffers, length);
-      case BYTE:
-        return deserializeBytes(buffers, length);
-      case LONG:
-        return deserializeLong(buffers, length);
-      case OBJECT:
-        return deserializeObject(buffers, length, deserializer);
-      case MULTI_FIXED_BYTE:
-        return deserializeMultiBytes(buffers, length, count);
-      default:
-        break;
+    if (INTEGER.equals(type)) {
+      return deserializeInteger(buffers, length);
+    } else if (DOUBLE.equals(type)) {
+      return deserializeDouble(buffers, length);
+    } else if (SHORT.equals(type)) {
+      return deserializeShort(buffers, length);
+    } else if (BYTE.equals(type)) {
+      return deserializeBytes(buffers, length);
+    } else if (LONG.equals(type)) {
+      return deserializeLong(buffers, length);
+    } else if (OBJECT.equals(type)) {
+      return deserializeObject(buffers, length, deserializer);
     }
     return null;
   }
@@ -72,21 +73,18 @@ public final class DataDeserializer {
   public static Object deserializeData(List<DataBuffer> buffers, int length,
                                        KryoSerializer deserializer, MessageType type) {
 
-    switch (type) {
-      case INTEGER:
-        return deserializeInteger(buffers, length);
-      case DOUBLE:
-        return deserializeDouble(buffers, length);
-      case SHORT:
-        return deserializeShort(buffers, length);
-      case BYTE:
-        return deserializeBytes(buffers, length);
-      case LONG:
-        return deserializeLong(buffers, length);
-      case OBJECT:
-        return deserializeObject(buffers, length, deserializer);
-      default:
-        break;
+    if (INTEGER.equals(type)) {
+      return deserializeInteger(buffers, length);
+    } else if (DOUBLE.equals(type)) {
+      return deserializeDouble(buffers, length);
+    } else if (SHORT.equals(type)) {
+      return deserializeShort(buffers, length);
+    } else if (BYTE.equals(type)) {
+      return deserializeBytes(buffers, length);
+    } else if (LONG.equals(type)) {
+      return deserializeLong(buffers, length);
+    } else if (OBJECT.equals(type)) {
+      return deserializeObject(buffers, length, deserializer);
     }
     return null;
   }

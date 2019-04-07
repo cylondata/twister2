@@ -15,24 +15,34 @@ import java.nio.ByteBuffer;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.KeyPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
-public class IntegerKeyPacker implements KeyPacker {
+public final class IntegerPacker implements KeyPacker<Integer>, DataPacker<Integer> {
 
-  public IntegerKeyPacker() {
+  private static volatile IntegerPacker instance;
+
+  private IntegerPacker() {
+  }
+
+  public static IntegerPacker getInstance() {
+    if (instance == null) {
+      instance = new IntegerPacker();
+    }
+    return instance;
   }
 
   @Override
-  public int packKey(Object key, SerializeState state) {
-    return Integer.BYTES;
+  public int packKey(Integer key, SerializeState state) {
+    return this.packData(key, state);
   }
 
   @Override
-  public boolean writeKeyToBuffer(Object key,
+  public boolean writeKeyToBuffer(Integer key,
                                   ByteBuffer targetBuffer, SerializeState state) {
     return KeySerializer.copyKeyToBuffer(key, MessageType.INTEGER, targetBuffer,
         state, null);
@@ -52,12 +62,34 @@ public class IntegerKeyPacker implements KeyPacker {
   }
 
   @Override
-  public Object initializeUnPackKeyObject(int size) {
-    return PartialKeyDeSerializer.createKeyObject(MessageType.INTEGER, size);
+  public Integer initializeUnPackKeyObject(int size) {
+    return null;
   }
 
   @Override
   public boolean isKeyHeaderRequired() {
     return false;
+  }
+
+  @Override
+  public int packData(Integer data, SerializeState state) {
+    return Integer.BYTES;
+  }
+
+  @Override
+  public boolean writeDataToBuffer(Integer data, ByteBuffer targetBuffer, SerializeState state) {
+    return false;
+  }
+
+  @Override
+  public Integer initializeUnPackDataObject(int length) {
+    return null;
+  }
+
+  @Override
+  public int readDataFromBuffer(InMessage currentMessage,
+                                int currentLocation, DataBuffer buffer,
+                                int currentObjectLength) {
+    return 0;
   }
 }

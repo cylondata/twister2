@@ -16,6 +16,13 @@ import java.nio.ByteBuffer;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import static edu.iu.dsc.tws.comms.api.MessageType.BYTE;
+import static edu.iu.dsc.tws.comms.api.MessageType.CHAR;
+import static edu.iu.dsc.tws.comms.api.MessageType.DOUBLE;
+import static edu.iu.dsc.tws.comms.api.MessageType.INTEGER;
+import static edu.iu.dsc.tws.comms.api.MessageType.LONG;
+import static edu.iu.dsc.tws.comms.api.MessageType.OBJECT;
+import static edu.iu.dsc.tws.comms.api.MessageType.SHORT;
 
 public final class PartialDataDeserializer {
   private PartialDataDeserializer() {
@@ -25,101 +32,93 @@ public final class PartialDataDeserializer {
                                    DataBuffer buffer, int currentObjectLength,
                                    KryoSerializer serializer) {
     int startIndex = currentMessage.getUnPkCurrentBytes();
-    switch (currentMessage.getDataType()) {
-      case INTEGER:
-        startIndex = startIndex / Integer.BYTES;
-        int[] val = (int[]) currentMessage.getDeserializingObject();
-        return PartialDataDeserializer.deserializeInteger(buffer, currentObjectLength,
-            val, startIndex, currentLocation);
-      case LONG:
-        startIndex = startIndex / Long.BYTES;
-        long[] longVal = (long[]) currentMessage.getDeserializingObject();
-        return PartialDataDeserializer.deserializeLong(buffer, currentObjectLength,
-            longVal, startIndex, currentLocation);
-      case DOUBLE:
-        startIndex = startIndex / Double.BYTES;
-        double[] doubleVal = (double[]) currentMessage.getDeserializingObject();
-        return PartialDataDeserializer.deserializeDouble(buffer, currentObjectLength,
-            doubleVal, startIndex, currentLocation);
-      case SHORT:
-        startIndex = startIndex / Short.BYTES;
-        short[] shortVal = (short[]) currentMessage.getDeserializingObject();
-        return PartialDataDeserializer.deserializeShort(buffer, currentObjectLength,
-            shortVal, startIndex, currentLocation);
-      case BYTE:
-        byte[] byteVal = (byte[]) currentMessage.getDeserializingObject();
-        return PartialDataDeserializer.deserializeByte(buffer, currentObjectLength,
-            byteVal, startIndex, currentLocation);
-      case OBJECT:
-        byte[] objectVal = (byte[]) currentMessage.getDeserializingObject();
-        int value = PartialDataDeserializer.deserializeByte(buffer, currentObjectLength,
-            objectVal, startIndex, currentLocation);
-        // at the end we switch to the actual object
-        int totalBytesRead = startIndex + value;
-        if (totalBytesRead == currentObjectLength) {
-          Object kryoValue = serializer.deserialize(objectVal);
-          currentMessage.setDeserializingObject(kryoValue);
-        }
-        return value;
-      default:
-        return 0;
+    if (INTEGER.equals(currentMessage.getDataType())) {
+      startIndex = startIndex / Integer.BYTES;
+      int[] val = (int[]) currentMessage.getDeserializingObject();
+      return PartialDataDeserializer.deserializeInteger(buffer, currentObjectLength,
+          val, startIndex, currentLocation);
+    } else if (LONG.equals(currentMessage.getDataType())) {
+      startIndex = startIndex / Long.BYTES;
+      long[] longVal = (long[]) currentMessage.getDeserializingObject();
+      return PartialDataDeserializer.deserializeLong(buffer, currentObjectLength,
+          longVal, startIndex, currentLocation);
+    } else if (DOUBLE.equals(currentMessage.getDataType())) {
+      startIndex = startIndex / Double.BYTES;
+      double[] doubleVal = (double[]) currentMessage.getDeserializingObject();
+      return PartialDataDeserializer.deserializeDouble(buffer, currentObjectLength,
+          doubleVal, startIndex, currentLocation);
+    } else if (SHORT.equals(currentMessage.getDataType())) {
+      startIndex = startIndex / Short.BYTES;
+      short[] shortVal = (short[]) currentMessage.getDeserializingObject();
+      return PartialDataDeserializer.deserializeShort(buffer, currentObjectLength,
+          shortVal, startIndex, currentLocation);
+    } else if (BYTE.equals(currentMessage.getDataType())) {
+      byte[] byteVal = (byte[]) currentMessage.getDeserializingObject();
+      return PartialDataDeserializer.deserializeByte(buffer, currentObjectLength,
+          byteVal, startIndex, currentLocation);
+    } else if (OBJECT.equals(currentMessage.getDataType())) {
+      byte[] objectVal = (byte[]) currentMessage.getDeserializingObject();
+      int value = PartialDataDeserializer.deserializeByte(buffer, currentObjectLength,
+          objectVal, startIndex, currentLocation);
+      // at the end we switch to the actual object
+      int totalBytesRead = startIndex + value;
+      if (totalBytesRead == currentObjectLength) {
+        Object kryoValue = serializer.deserialize(objectVal);
+        currentMessage.setDeserializingObject(kryoValue);
+      }
+      return value;
     }
+    return 0;
   }
 
   public static Object createDataObject(InMessage currentMessage, int length) {
-    switch (currentMessage.getDataType()) {
-      case INTEGER:
-        return new int[length / Integer.BYTES];
-      case LONG:
-        return new long[length / Long.BYTES];
-      case DOUBLE:
-        return new double[length / Double.BYTES];
-      case SHORT:
-        return new short[length / Short.BYTES];
-      case CHAR:
-        return new char[length / Character.BYTES];
-      case BYTE:
-        return new byte[length];
-      case OBJECT:
-        return new byte[length];
-      default:
-        break;
+    if (INTEGER.equals(currentMessage.getDataType())) {
+      return new int[length / Integer.BYTES];
+    } else if (LONG.equals(currentMessage.getDataType())) {
+      return new long[length / Long.BYTES];
+    } else if (DOUBLE.equals(currentMessage.getDataType())) {
+      return new double[length / Double.BYTES];
+    } else if (SHORT.equals(currentMessage.getDataType())) {
+      return new short[length / Short.BYTES];
+    } else if (CHAR.equals(currentMessage.getDataType())) {
+      return new char[length / Character.BYTES];
+    } else if (BYTE.equals(currentMessage.getDataType())) {
+      return new byte[length];
+    } else if (OBJECT.equals(currentMessage.getDataType())) {
+      return new byte[length];
     }
     return null;
   }
 
   public static int totalBytesRead(InMessage msg, int valsRead) {
-    switch (msg.getDataType()) {
-      case INTEGER:
-        int i = valsRead + msg.getUnPkCurrentBytes() * Integer.BYTES;
-        msg.addUnPkCurrentBytes(valsRead / Integer.BYTES);
-        return i;
-      case DOUBLE:
-        int i1 = valsRead + msg.getUnPkCurrentBytes() * Double.BYTES;
-        msg.addUnPkCurrentBytes(valsRead / Double.BYTES);
-        return i1;
-      case LONG:
-        int i2 = valsRead + msg.getUnPkCurrentBytes() * Long.BYTES;
-        msg.addUnPkCurrentBytes(valsRead / Long.BYTES);
-        return i2;
-      case SHORT:
-        int i3 = valsRead + msg.getUnPkCurrentBytes() * Short.BYTES;
-        msg.addUnPkCurrentBytes(valsRead / Short.BYTES);
-        return i3;
-      case CHAR:
-        int i4 = valsRead + msg.getUnPkCurrentBytes() * Character.BYTES;
-        msg.addUnPkCurrentBytes(valsRead / Character.BYTES);
-        return i4;
-      case BYTE:
-        int i5 = valsRead + msg.getUnPkCurrentBytes();
-        msg.addUnPkCurrentBytes(valsRead);
-        return i5;
-      case OBJECT:
-        int i6 = valsRead + msg.getUnPkCurrentBytes();
-        msg.addUnPkCurrentBytes(valsRead);
-        return i6;
-      default:
-        break;
+    if (INTEGER.equals(msg.getDataType())) {
+      int i = valsRead + msg.getUnPkCurrentBytes() * Integer.BYTES;
+      msg.addUnPkCurrentBytes(valsRead / Integer.BYTES);
+      return i;
+    } else if (DOUBLE.equals(msg.getDataType())) {
+      int i1 = valsRead + msg.getUnPkCurrentBytes() * Double.BYTES;
+      msg.addUnPkCurrentBytes(valsRead / Double.BYTES);
+      return i1;
+    } else if (LONG.equals(msg.getDataType())) {
+      int i2 = valsRead + msg.getUnPkCurrentBytes() * Long.BYTES;
+      msg.addUnPkCurrentBytes(valsRead / Long.BYTES);
+      return i2;
+    } else if (SHORT.equals(msg.getDataType())) {
+      int i3 = valsRead + msg.getUnPkCurrentBytes() * Short.BYTES;
+      msg.addUnPkCurrentBytes(valsRead / Short.BYTES);
+      return i3;
+    } else if (CHAR.equals(msg.getDataType())) {
+      int i4 = valsRead + msg.getUnPkCurrentBytes() * Character.BYTES;
+      msg.addUnPkCurrentBytes(valsRead / Character.BYTES);
+      return i4;
+    } else if (BYTE.equals(msg.getDataType())) {
+      int i5 = valsRead + msg.getUnPkCurrentBytes();
+      msg.addUnPkCurrentBytes(valsRead);
+      return i5;
+    } else if (OBJECT.equals(msg.getDataType())) {
+      int i6 = valsRead + msg.getUnPkCurrentBytes();
+      msg.addUnPkCurrentBytes(valsRead);
+      return i6;
     }
     return 0;
   }
