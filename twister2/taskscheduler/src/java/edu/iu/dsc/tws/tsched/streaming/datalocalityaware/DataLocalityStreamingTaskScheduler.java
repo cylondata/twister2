@@ -83,6 +83,16 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
   }
 
+
+  private int workerId = 0;
+
+  public void initialize(Config cfg, int workerid) {
+    this.workerId = workerid;
+    this.config = cfg;
+    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
+    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
+    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
+  }
   /**
    * This is the base method for the data locality aware task scheduling for scheduling the
    * streaming task instances. It retrieves the task vertex set of the task graph and send the set
@@ -151,6 +161,24 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
               new HashSet<>(taskInstancePlanMap.values()), containerResource);
       containerPlans.add(taskContainerPlan);
     }
+
+    TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0, containerPlans);
+    if (taskSchedulePlan != null) {
+      Map<Integer, ContainerPlan> containersMap
+          = taskSchedulePlan.getContainersMap();
+      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+        Integer integer = entry.getKey();
+        ContainerPlan containerPlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances
+            = containerPlan.getTaskInstances();
+        LOG.info("Task Details for Container Id:" + integer);
+        for (TaskInstancePlan ip : containerPlanTaskInstances) {
+          LOG.info("Task Id:" + ip.getTaskId()
+              + "\tTask Index" + ip.getTaskIndex()
+              + "\tTask Name:" + ip.getTaskName());
+        }
+      }
+    }
     return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
   }
 
@@ -173,6 +201,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
     //Total task instances in the taskgraph
     int totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
+    LOG.info("Task Scheduling Details:" + containerCapacity + "\t" + totalTask);
 
     //Map to hold the allocation of task instances into the containers/workers
     Map<Integer, List<InstanceId>> dataAwareAllocationMap = new HashMap<>();
@@ -194,11 +223,10 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
 
     if (config.get("dinput") != null) {
-
       for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
         for (Vertex vertex : taskVertexSet) {
-
           if (aTaskEntrySet.getKey().equals(vertex.getName())) {
+
             int totalTaskInstances = vertex.getParallelism();
             int maxContainerTaskObjectSize = 0;
 
@@ -236,29 +264,19 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     List<DataTransferTimeCalculator> dataTransferTimeCalculatorList;
     List<String> datanodesList;
     List<String> inputDataList = new ArrayList<>();
-    List<FileStatus> files = new ArrayList<>();
 
     String directory = String.valueOf(config.get("dinput"));
-    final Path path = new Path(directory + "0"); //todo:add the worker id
+    final Path path = new Path(directory + workerId);
     final FileSystem fs;
     try {
       fs = path.getFileSystem(config);
-      final FileStatus pathFile = fs.getFileStatus(path);
       for (FileStatus file : fs.listFiles(path)) {
-        if (file.isDir()) {
-          String name = file.getPath().getName();
-          LOG.info("File name is:" + name);
-          if (!name.startsWith(".")) {
-            inputDataList.add(name);
-          }
-        }
+        String filename = String.valueOf(file.getPath());
+        inputDataList.add(filename);
       }
     } catch (IOException e) {
       e.printStackTrace();
     }
-
-
-
 
      /*If the index is zero, simply calculate the distance between the worker node and the
     datanodes. Else, if the index values is greater than 0, check the container has reached

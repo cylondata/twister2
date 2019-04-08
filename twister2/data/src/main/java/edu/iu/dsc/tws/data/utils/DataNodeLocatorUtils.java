@@ -47,12 +47,16 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
   public List<String> findDataNodesLocation(List<String> inputFileList) {
 
     LOG.info("Input Files List:" + inputFileList.get(0));
+
     Configuration conf = new Configuration(false);
     conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
     hdfsUtils = new HdfsUtils(config);
     HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
 
     List<String> dataNodes = new ArrayList<>();
+    //Just for testing
+    dataNodes.add("kannan-Precision-5820-Tower-X-Series");
+
     for (int i = 0; i < inputFileList.size(); i++) {
       this.datasetName = inputFileList.get(i);
       String[] fName;
@@ -71,7 +75,6 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
           String fileURL = fileStatus.getPath().toString();
           String datanodeName = hdfsUtils.getDFSCK(fName);
           //dataNodes.add(datanodeName);
-          dataNodes.add("kannan-Precision-5820-Tower-X-Series");
           LOG.info("HDFS URL:" + fileURL + "\tDataNode:" + datanodeName);
         }
       } catch (IOException ioe) {
@@ -80,6 +83,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
         throw new RuntimeException("Datanode not able to retrieve:", npe);
       }
     }
+    LOG.info("Datanodes list:" + dataNodes.get(0));
     return dataNodes;
   }
 
