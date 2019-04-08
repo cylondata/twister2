@@ -46,7 +46,7 @@ public class PartitionStreamingPartialReceiver extends TargetSyncReceiver {
     // if we send this list successfully
     if (operation.sendPartial(representSource, sendList, 0, target)) {
       // lets remove from ready list and clear the list
-      sendList.clear();
+      readyToSend.put(target, null);
       return true;
     }
 
