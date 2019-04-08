@@ -27,4 +27,9 @@ public class AllReduceBatchFinalReceiver extends BaseReduceBatchFinalReceiver {
   protected boolean handleFinished(int task, Object value) {
     return reduceReceiver.send(task, value, 0);
   }
+
+  @Override
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    return false;
+  }
 }

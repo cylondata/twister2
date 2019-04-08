@@ -31,9 +31,4 @@ public abstract class BaseReduceBatchFinalReceiver extends ReduceBatchReceiver {
    * @return true if success
    */
   protected abstract boolean handleFinished(int task, Object value);
-
-  @Override
-  public void onFinish(int source) {
-    super.onFinish(source);
-  }
 }

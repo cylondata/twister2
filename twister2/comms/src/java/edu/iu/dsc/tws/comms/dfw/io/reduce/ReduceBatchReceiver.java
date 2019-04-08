@@ -41,6 +41,7 @@ public abstract class ReduceBatchReceiver extends SourceSyncReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       reducedValueMap.put(e.getKey(), null);
     }
@@ -66,22 +67,19 @@ public abstract class ReduceBatchReceiver extends SourceSyncReceiver {
   protected boolean aggregate(int target, boolean sync, boolean allValuesFound) {
     Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
 
-    if (allValuesFound || sync) {
-      Object previous = reducedValueMap.get(target);
-      for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
-        if (previous == null) {
-          previous = e.getValue().poll();
-        } else {
-          Object current = e.getValue().poll();
-          if (current != null) {
-            previous = reduceFunction.reduce(previous, current);
-          }
+    Object previous = reducedValueMap.get(target);
+    for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
+      if (previous == null) {
+        previous = e.getValue().poll();
+      } else {
+        Object current = e.getValue().poll();
+        if (current != null) {
+          previous = reduceFunction.reduce(previous, current);
         }
       }
-      if (previous != null) {
-        reducedValueMap.put(target, previous);
-      }
-      return true;
+    }
+    if (previous != null) {
+      reducedValueMap.put(target, previous);
     }
     return true;
   }
@@ -92,12 +90,11 @@ public abstract class ReduceBatchReceiver extends SourceSyncReceiver {
   }
 
   @Override
-  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
-    return false;
-  }
-
-  @Override
   protected boolean isFilledToSend(int target, boolean sync) {
-    return reducedValueMap.get(target) != null;
+    if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+        && allQueuesEmpty(messages.get(target))) {
+      return reducedValueMap.get(target) != null;
+    }
+    return false;
   }
 }

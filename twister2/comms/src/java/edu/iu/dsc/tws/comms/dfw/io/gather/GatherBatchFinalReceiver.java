@@ -48,19 +48,15 @@ public class GatherBatchFinalReceiver extends BaseGatherBatchReceiver {
 
   @Override
   protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
-    return !bulkReceiver.sync(target, 0);
+    return false;
   }
 
   @Override
   protected boolean isFilledToSend(int target, boolean sync) {
-    if (!sync) {
-      return false;
+    if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+        && allQueuesEmpty(messages.get(target))) {
+      return gatheredValuesMap.get(target) != null && gatheredValuesMap.get(target).size() > 0;
     }
-
-    if (!allQueuesEmpty(messages.get(target))) {
-      return false;
-    }
-
-    return gatheredValuesMap.get(target) != null && gatheredValuesMap.get(target).size() > 0;
+    return false;
   }
 }
