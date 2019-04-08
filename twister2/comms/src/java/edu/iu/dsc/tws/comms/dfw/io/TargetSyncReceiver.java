@@ -11,12 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.logging.Logger;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -25,14 +25,12 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
-public abstract class SourceSyncReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(SourceSyncReceiver.class.getName());
-
+public abstract class TargetSyncReceiver implements MessageReceiver {
   /**
    * Lets keep track of the messages, we need to keep track of the messages for each target
    * and source, Map<target, map<source, Queue<messages>>
    */
-  protected Map<Integer, Map<Integer, Queue<Object>>> messages = new HashMap<>();
+  protected Map<Integer, Queue<Object>> messages = new HashMap<>();
 
   /**
    * The worker id this receiver is in
@@ -45,11 +43,6 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
   protected DataFlowOperation operation;
 
   /**
-   * The pending max per source
-   */
-  protected int sendPendingMax;
-
-  /**
    * The destination
    */
   protected int destination;
@@ -58,6 +51,11 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
    * Keep weather we have received a sync from a source
    */
   protected Map<Integer, Map<Integer, Boolean>> syncReceived = new HashMap<>();
+
+  /**
+   * Keep the list of tuple [Object, Source, Flags] for each destination
+   */
+  protected Map<Integer, List<Object>> readyToSend = new HashMap<>();
 
   /**
    * Weather sync messages are forwarded from the partial receivers
@@ -69,18 +67,38 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
    */
   protected Map<Integer, ReceiverState> targetStates = new HashMap<>();
 
+  /**
+   * The source task connected to this partial receiver
+   */
+  protected int representSource;
+
+  /**
+   * Keep weather source is set
+   */
+  private boolean representSourceSet = false;
+
+  /**
+   * Low water mark
+   */
+  private int lowWaterMark = 8;
+
+  /**
+   * High water mark to keep track of objects
+   */
+  private int highWaterMark = 16;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     workerId = op.getTaskPlan().getThisExecutor();
-    sendPendingMax = DataFlowContext.sendPendingMax(cfg);
     this.operation = op;
+    lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
+    highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
 
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-      Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
+      Queue<Object> messagesPerTask = new LinkedBlockingQueue<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
 
       for (int task : e.getValue()) {
-        messagesPerTask.put(task, new ArrayBlockingQueue<>(sendPendingMax));
         finishedPerTask.put(task, false);
       }
       messages.put(e.getKey(), messagesPerTask);
@@ -92,6 +110,11 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
+    if (!representSourceSet) {
+      this.representSource = source;
+      representSourceSet = true;
+    }
+
     Map<Integer, Boolean> syncsPerTarget = syncReceived.get(target);
     if ((flags & MessageFlags.END) == MessageFlags.END) {
       syncsPerTarget.put(source, true);
@@ -108,23 +131,42 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
       return false;
     }
 
-    Queue<Object> msgQueue = messages.get(target).get(source);
-    if (msgQueue.size() >= sendPendingMax) {
+    Queue<Object> msgQueue = messages.get(target);
+    if (msgQueue.size() >= highWaterMark) {
       return false;
-    } else {
-      if (object instanceof ChannelMessage) {
-        ((ChannelMessage) object).incrementRefCount();
-      }
+    }
 
+    if (object instanceof ChannelMessage) {
+      ((ChannelMessage) object).incrementRefCount();
+    }
+
+    if (object instanceof AggregatedObjects) {
+      msgQueue.addAll((Collection<?>) object);
+    } else {
       msgQueue.add(object);
-      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
-        syncsPerTarget.put(source, true);
-        if (allSyncsPresent(syncsPerTarget)) {
-          targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
-        }
+    }
+
+    if (msgQueue.size() > lowWaterMark) {
+      swapToReady(target, msgQueue);
+    }
+
+    if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
+      syncsPerTarget.put(source, true);
+      if (allSyncsPresent(syncsPerTarget)) {
+        targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
       }
     }
     return true;
+  }
+
+  protected void swapToReady(int dest, Queue<Object> dests) {
+    if (!readyToSend.containsKey(dest)) {
+      readyToSend.put(dest, new AggregatedObjects<>(dests));
+    } else {
+      List<Object> ready = readyToSend.get(dest);
+      ready.addAll(dests);
+    }
+    dests.clear();
   }
 
   @Override
@@ -132,33 +174,19 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
     boolean needsFurtherProgress = false;
     for (int target : messages.keySet()) {
       // now check weather we have the messages for this source
-      Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
+      Queue<Object> messagePerTarget = messages.get(target);
       Map<Integer, Boolean> finishedForTarget = syncReceived.get(target);
       boolean canProgress = true;
 
       while (canProgress) {
-        boolean allValuesFound = true;
-        boolean allSyncsPresent = true;
-        boolean anyValuesFound = false;
-
-        for (Map.Entry<Integer, Queue<Object>> sourceQueues : messagePerTarget.entrySet()) {
-          if (sourceQueues.getValue().size() == 0) {
-            allValuesFound = false;
-            canProgress = false;
-          } else {
-            anyValuesFound = true;
-          }
-
-          // we need to check weather there is a sync for all the sources
-          if (!finishedForTarget.get(sourceQueues.getKey())) {
-            allSyncsPresent = false;
-          }
-        }
+        boolean allSyncsPresent = allSyncsPresent(finishedForTarget);
 
         // if we have found all the values from sources or if syncs are present
         // we need to aggregate
-        if (anyValuesFound) {
-          aggregate(target, allSyncsPresent, allValuesFound);
+        if (messagePerTarget.size() > 0) {
+          aggregate(target, allSyncsPresent);
+        } else {
+          canProgress = false;
         }
 
         // if we are filled to send, lets send the values
@@ -166,6 +194,8 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
           if (!sendToTarget(target, allSyncsPresent)) {
             canProgress = false;
           }
+        } else {
+          canProgress = false;
         }
 
         // finally if there is a sync, and all queues are empty
@@ -209,10 +239,9 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
    * @param target target
    */
   private void clearTarget(int target) {
-    Map<Integer, Queue<Object>> messagesPerTarget = messages.get(target);
-    for (Map.Entry<Integer, Queue<Object>> mEntry : messagesPerTarget.entrySet()) {
-      mEntry.getValue().clear();
-    }
+    Queue<Object> messagesPerTarget = messages.get(target);
+    messagesPerTarget.clear();
+
     isSyncSent.put(target, false);
 
     Map<Integer, Boolean> syncs = syncReceived.get(target);
@@ -234,7 +263,7 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
    * @param sync true if all the syncs are present
    * @return true if there are no more elements to aggregate
    */
-  protected abstract boolean aggregate(int target, boolean sync, boolean allValuesFound);
+  protected abstract boolean aggregate(int target, boolean sync);
 
   /**
    * Return true if we are filled to send
@@ -248,14 +277,8 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
    * @param messagePerTarget the queues for the target
    * @return true if no values left
    */
-  protected boolean allQueuesEmpty(Map<Integer, Queue<Object>> messagePerTarget) {
-    for (Map.Entry<Integer, Queue<Object>> e : messagePerTarget.entrySet()) {
-      Queue<Object> valueList = e.getValue();
-      if (valueList.size() > 0) {
-        return false;
-      }
-    }
-    return true;
+  protected boolean allQueuesEmpty(Queue<Object> messagePerTarget) {
+    return messagePerTarget.size() == 0;
   }
 
   /**

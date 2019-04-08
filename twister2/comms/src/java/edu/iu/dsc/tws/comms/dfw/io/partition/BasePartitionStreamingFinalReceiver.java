@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 
 public abstract class BasePartitionStreamingFinalReceiver {
   private static final Logger LOG = Logger.getLogger(
@@ -55,7 +56,7 @@ public abstract class BasePartitionStreamingFinalReceiver {
         return true;
       }
 
-      if (object instanceof List) {
+      if (object instanceof AggregatedObjects) {
         messages.get(target).addAll((Collection<?>) object);
       } else {
         messages.get(target).add(object);

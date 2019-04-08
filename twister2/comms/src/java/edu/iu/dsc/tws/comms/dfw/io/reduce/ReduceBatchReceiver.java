@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.SourceSyncReceiver;
 
 public abstract class ReduceBatchReceiver extends SourceSyncReceiver {
