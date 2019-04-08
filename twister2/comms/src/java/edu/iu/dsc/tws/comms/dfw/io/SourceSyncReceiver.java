@@ -72,10 +72,10 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
   protected enum ReceiverState {
     // we are in the receiving state initially
     RECEIVING,
-    // we starts to receive syncs
-    SYNC_RECEIVING,
     // all the syncs required are received
     ALL_SYNCS_RECEIVED,
+    // we have synced
+    SYNCED
   }
 
   protected Map<Integer, ReceiverState> targetStates = new HashMap<>();
@@ -108,15 +108,14 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
       syncsPerTarget.put(source, true);
       if (allSyncsPresent(syncsPerTarget)) {
         targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
-      } else {
-        targetStates.put(target, ReceiverState.SYNC_RECEIVING);
       }
       return true;
     }
 
     // if we have a sync from this source we cannot accept more data
     // until we finish this sync
-    if (syncsPerTarget.get(source)) {
+    if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+        || targetStates.get(target) == ReceiverState.SYNCED) {
       return false;
     }
 
@@ -133,8 +132,6 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
         syncsPerTarget.put(source, true);
         if (allSyncsPresent(syncsPerTarget)) {
           targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
-        } else {
-          targetStates.put(target, ReceiverState.SYNC_RECEIVING);
         }
       }
     }
@@ -189,29 +186,17 @@ public abstract class SourceSyncReceiver implements MessageReceiver {
             && operation.isDelegateComplete()) {
           needsFurtherProgress = sendSyncForward(needsFurtherProgress, target);
           if (!needsFurtherProgress) {
-            LOG.info("Synced");
+            targetStates.put(target, ReceiverState.SYNCED);
             // at this point we call the sync event
             onSyncEvent(target);
             clearTarget(target);
-            targetStates.put(target, ReceiverState.RECEIVING);
           }
         }
       }
 
-      needsFurtherProgress = !allQueuesEmpty(messagePerTarget)
-          || !isAllEmpty(target) || !syncsEmpty(target);
+      needsFurtherProgress = targetStates.get(target) != ReceiverState.SYNCED;
     }
     return needsFurtherProgress;
-  }
-
-  private boolean syncsEmpty(int target) {
-    Map<Integer, Boolean> syncs = syncReceived.get(target);
-    for (Boolean b : syncs.values()) {
-      if (b) {
-        return true;
-      }
-    }
-    return !isSyncSent.get(target);
   }
 
   /**
