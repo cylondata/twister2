@@ -71,7 +71,7 @@ public final class FileLoader {
   }
 
   private static int sizeOf(MessageType messageType) {
-    return messageType.getUnitSize();
+    return messageType.getUnitSizeInBytes();
   }
 
 

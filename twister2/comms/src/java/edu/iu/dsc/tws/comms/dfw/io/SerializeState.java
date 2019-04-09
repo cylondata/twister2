@@ -32,7 +32,7 @@ public class SerializeState {
   // length of the serialized key
   private int keySize;
   //The size that should be set as the current header length
-  private int curretHeaderLength;
+  private int currentHeaderLength;
 
   // the state of each part
   public enum Part {
@@ -122,11 +122,11 @@ public class SerializeState {
     this.keySize = keySize;
   }
 
-  public int getCurretHeaderLength() {
-    return curretHeaderLength;
+  public int getCurrentHeaderLength() {
+    return currentHeaderLength;
   }
 
-  public void setCurretHeaderLength(int curretHeaderLength) {
-    this.curretHeaderLength = curretHeaderLength;
+  public void setCurrentHeaderLength(int currentHeaderLength) {
+    this.currentHeaderLength = currentHeaderLength;
   }
 }

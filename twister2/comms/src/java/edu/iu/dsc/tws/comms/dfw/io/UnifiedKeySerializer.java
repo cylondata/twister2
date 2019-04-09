@@ -76,13 +76,13 @@ public class UnifiedKeySerializer extends BaseSerializer {
       int keyLength = keyPacker.packKey(key, state);
       // okay we need to serialize the data
       int dataLength = dataPacker.packData(payload, state);
-      state.setCurretHeaderLength(dataLength + keyLength);
+      state.setCurrentHeaderLength(dataLength + keyLength);
       state.setPart(SerializeState.Part.HEADER);
     }
 
     if (state.getPart() == SerializeState.Part.HEADER) {
       // first we need to copy the data size to buffer
-      if (buildSubMessageHeader(targetBuffer, state.getCurretHeaderLength())) {
+      if (buildSubMessageHeader(targetBuffer, state.getCurrentHeaderLength())) {
         // now set the size of the buffer
         targetBuffer.setSize(byteBuffer.position());
         return false;

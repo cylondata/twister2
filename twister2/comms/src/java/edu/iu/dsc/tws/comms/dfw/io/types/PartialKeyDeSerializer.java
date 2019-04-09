@@ -69,7 +69,7 @@ public final class PartialKeyDeSerializer {
     //todo replace if else with below code
 //    if (messageType.getDataPacker() instanceof ArrayPacker) {
 //      return ((ArrayPacker) messageType.getDataPacker())
-//          .initializeEmptyArrayForByteLength(length);
+//          .wrapperForByteLength(length);
 //    } else {
 //      return null;
 //    }

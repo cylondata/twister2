@@ -25,13 +25,13 @@ import edu.iu.dsc.tws.comms.dfw.io.types.ByteKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.BytePacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.DoubleKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.DoublePacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.IntegerPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.LongKeyPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.LongPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ShortKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ShortPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.LongArrayPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.LongPacker;
 
 public final class DFWIOUtils {
   private static final int HEADER_SIZE = 16;
@@ -153,7 +153,7 @@ public final class DFWIOUtils {
     if (messageType == MessageType.INTEGER) {
       return messageType.getDataPacker();
     } else if (messageType == MessageType.LONG) {
-      return new LongPacker();
+      return new LongArrayPacker();
     } else if (messageType == MessageType.SHORT) {
       return new ShortPacker();
     } else if (messageType == MessageType.DOUBLE) {
@@ -162,8 +162,9 @@ public final class DFWIOUtils {
       return new BytePacker();
     } else if (messageType == MessageType.OBJECT) {
       return new ObjectPacker();
+    } else {
+      return messageType.getDataPacker();
     }
-    return null;
   }
 
   /**
@@ -181,7 +182,7 @@ public final class DFWIOUtils {
     if (dataType == MessageType.INTEGER) {
       return IntegerPacker.getInstance();
     } else if (dataType == MessageType.LONG) {
-      return new LongKeyPacker();
+      return LongPacker.getInstance();
     } else if (dataType == MessageType.SHORT) {
       return new ShortKeyPacker();
     } else if (dataType == MessageType.DOUBLE) {

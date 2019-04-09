@@ -132,7 +132,7 @@ public class SingleMessageSerializer implements MessageSerializer {
         ChannelMessage channelMessage = sendMessage.getChannelMessages().peek();
         SerializeState state = sendMessage.getSerializationState();
         if (!channelMessage.isHeaderSent()) {
-          int totalBytes = state.getCurretHeaderLength();
+          int totalBytes = state.getCurrentHeaderLength();
           channelMessage.getBuffers().get(0).getByteBuffer().putInt(HEADER_SIZE - Integer.BYTES,
               totalBytes);
 
@@ -203,7 +203,7 @@ public class SingleMessageSerializer implements MessageSerializer {
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(payload,
           messageType, state, serializer);
-      state.setCurretHeaderLength(dataLength + keyLength);
+      state.setCurrentHeaderLength(dataLength + keyLength);
     }
 
     if (state.getPart() == SerializeState.Part.INIT
@@ -250,7 +250,7 @@ public class SingleMessageSerializer implements MessageSerializer {
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
       int dataLength = DataSerializer.serializeData(payload, messageType, state, serializer);
-      state.setCurretHeaderLength(dataLength);
+      state.setCurrentHeaderLength(dataLength);
       // add the header bytes to the total bytes
       state.setPart(SerializeState.Part.BODY);
     }

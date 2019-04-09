@@ -25,13 +25,13 @@ public interface TypeDefinition<T> {
   boolean isPrimitive();
 
   /**
-   * For arrays this method should return the size of an element
+   * For arrays this method should return the size of an element in bytes
    *
    * @return the size of an unit.
    */
-  int getUnitSize();
+  int getUnitSizeInBytes();
 
-  int getDataSize(T data);
+  int getDataSizeInBytes(T data);
 
   Class<T> getClazz();
 

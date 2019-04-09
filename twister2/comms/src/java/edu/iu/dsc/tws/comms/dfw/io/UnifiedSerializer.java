@@ -92,7 +92,7 @@ public class UnifiedSerializer extends BaseSerializer {
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
       int dataLength = packer.packData(payload, state);
-      state.setCurretHeaderLength(dataLength);
+      state.setCurrentHeaderLength(dataLength);
 
       // add the header bytes to the total bytes
       state.setPart(SerializeState.Part.HEADER);
@@ -100,7 +100,7 @@ public class UnifiedSerializer extends BaseSerializer {
 
     if (state.getPart() == SerializeState.Part.HEADER) {
       // first we need to copy the data size to buffer
-      if (buildSubMessageHeader(targetBuffer, state.getCurretHeaderLength())) {
+      if (buildSubMessageHeader(targetBuffer, state.getCurrentHeaderLength())) {
         return false;
       }
       state.setPart(SerializeState.Part.BODY);

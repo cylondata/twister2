@@ -12,5 +12,8 @@
 package edu.iu.dsc.tws.comms.api;
 
 public interface ArrayPacker<T> extends DataPacker<T> {
-  T initializeEmptyArrayForByteLength(int byteLength);
+  /**
+   * Returns an empty wrapper(array) to hold byteLength amount of type T
+   */
+  T wrapperForByteLength(int byteLength);
 }

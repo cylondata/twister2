@@ -34,23 +34,28 @@ public interface DataPacker<D> {
 
   /**
    * Transfer the data to the buffer
+   *
    * @param data the data
    * @param targetBuffer target buffer
    * @param state this can be used to keep the sate about the packing object
    * @return true if all the data is packed
    */
   boolean writeDataToBuffer(D data,
-                        ByteBuffer targetBuffer, SerializeState state);
+                            ByteBuffer targetBuffer, SerializeState state);
 
   /**
    * Initialize the object that we are going to create
+   *
    * @param length byte length
    * @return the object created
+   * @deprecated Use {@link ArrayPacker#wrapperForByteLength(int)}
    */
+  @Deprecated
   D initializeUnPackDataObject(int length);
 
   /**
    * Read the data from the buffer
+   *
    * @param currentMessage the current message
    * @param currentLocation current location
    * @param buffer buffer

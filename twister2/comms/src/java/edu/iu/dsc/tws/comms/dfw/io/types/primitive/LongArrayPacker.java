@@ -9,32 +9,47 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io.types;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 
 import java.nio.ByteBuffer;
 
-import edu.iu.dsc.tws.comms.api.DataPacker;
+import edu.iu.dsc.tws.comms.api.ArrayPacker;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
+import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.types.PartialDataDeserializer;
 
-public class LongPacker implements DataPacker {
-  public LongPacker() {
+public class LongArrayPacker implements ArrayPacker<long[]> {
+
+  public LongArrayPacker() {
   }
 
   @Override
-  public int packData(Object data, SerializeState state) {
-    return ((long[]) data).length * Long.BYTES;
+  public int packData(long[] data, SerializeState state) {
+    return data.length * Long.BYTES;
   }
 
   @Override
-  public boolean writeDataToBuffer(Object data,
+  public boolean writeDataToBuffer(long[] data,
                                    ByteBuffer targetBuffer, SerializeState state) {
-    return DataSerializer.copyLong((long[]) data, targetBuffer, state);
+    return DataSerializer.copyLong(data, targetBuffer, state);
   }
 
-  public Object initializeUnPackDataObject(int length) {
-    return new long[length / Long.BYTES];
+  public long[] initializeUnPackDataObject(int length) {
+    return this.wrapperForByteLength(length);
   }
 
   @Override
@@ -45,5 +60,10 @@ public class LongPacker implements DataPacker {
     long[] val = (long[]) currentMessage.getDeserializingObject();
     return PartialDataDeserializer.deserializeLong(buffer, currentObjectLength,
         val, startIndex, currentLocation);
+  }
+
+  @Override
+  public long[] wrapperForByteLength(int byteLength) {
+    return new long[byteLength / Long.BYTES];
   }
 }

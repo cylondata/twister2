@@ -170,7 +170,7 @@ public abstract class BaseSerializer implements MessageSerializer {
         Object o = objectList.get(i);
         boolean complete = serializeSingleMessage(o, sendMessage, targetBuffer);
         if (complete) {
-          state.setCurretHeaderLength(state.getTotalBytes());
+          state.setCurrentHeaderLength(state.getTotalBytes());
           state.setCurrentObject(i + 1);
         } else {
           break;

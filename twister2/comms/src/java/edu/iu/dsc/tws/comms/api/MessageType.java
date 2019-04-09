@@ -14,55 +14,55 @@ package edu.iu.dsc.tws.comms.api;
 import java.lang.reflect.Array;
 
 import edu.iu.dsc.tws.comms.api.types.TypeDefinition;
-import edu.iu.dsc.tws.comms.dfw.io.types.IntegerArrayPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.IntegerPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerArrayPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerPacker;
 
 public final class MessageType<T> implements TypeDefinition<T> {
 
   public static final MessageType<Integer> INTEGER = new MessageType<>(
-      true, Integer.SIZE, Integer.class, IntegerPacker.getInstance()
+      true, Integer.BYTES, Integer.class, IntegerPacker.getInstance()
   );
   public static final MessageType<int[]> INTEGER_ARRAY = new MessageType<>(
-      true, Integer.SIZE, int[].class, IntegerArrayPacker.getInstance()
+      true, Integer.BYTES, int[].class, IntegerArrayPacker.getInstance()
   );
 
   public static final MessageType<Character> CHAR = new MessageType<>(
-      true, Character.SIZE, Character.class, null
+      true, Character.BYTES, Character.class, null
   );
   public static final MessageType<char[]> CHAR_ARRAY = new MessageType<>(
-      true, Character.SIZE, char[].class, null
+      true, Character.BYTES, char[].class, null
   );
 
   public static final MessageType<Byte> BYTE = new MessageType<>(
-      true, Byte.SIZE, Byte.class, null
+      true, Byte.BYTES, Byte.class, null
   );
   public static final MessageType<byte[]> BYTE_ARRAY = new MessageType<>(
-      true, Byte.SIZE, byte[].class, null
+      true, Byte.BYTES, byte[].class, null
   );
 
   public static final MessageType<Long> LONG = new MessageType<>(
-      true, Long.SIZE, Long.class, null
+      true, Long.BYTES, Long.class, null
   );
   public static final MessageType<long[]> LONG_ARRAY = new MessageType<>(
-      true, Long.SIZE, long[].class, null
+      true, Long.BYTES, long[].class, null
   );
 
   public static final MessageType<Double> DOUBLE = new MessageType<>(
-      true, Double.SIZE, Double.class, null
+      true, Double.BYTES, Double.class, null
   );
   public static final MessageType<double[]> DOUBLE_ARRAY = new MessageType<>(
-      true, Double.SIZE, double[].class, null
+      true, Double.BYTES, double[].class, null
   );
 
   public static final MessageType<Short> SHORT = new MessageType<>(
-      true, Short.SIZE, Short.class, null
+      true, Short.BYTES, Short.class, null
   );
   public static final MessageType<short[]> SHORT_ARRAY = new MessageType<>(
-      true, Short.SIZE, short[].class, null
+      true, Short.BYTES, short[].class, null
   );
 
   public static final MessageType<String> STRING = new MessageType<>(
-      true, Character.SIZE, String.class, null
+      true, Character.BYTES, String.class, null
   );
 
   public static final MessageType<Object> OBJECT = new MessageType<>(
@@ -101,16 +101,16 @@ public final class MessageType<T> implements TypeDefinition<T> {
   }
 
   @Override
-  public int getUnitSize() {
+  public int getUnitSizeInBytes() {
     return this.size;
   }
 
   @Override
-  public int getDataSize(T data) {
+  public int getDataSizeInBytes(T data) {
     if (!this.isArray()) {
-      return this.getUnitSize();
+      return this.getUnitSizeInBytes();
     } else {
-      return Array.getLength(data) * this.getUnitSize();
+      return Array.getLength(data) * this.getUnitSizeInBytes();
     }
   }
 
@@ -171,7 +171,7 @@ public final class MessageType<T> implements TypeDefinition<T> {
    * Size of an unit
    *
    * @return the size of an unit
-   * @deprecated use {@link #getUnitSize()} instead
+   * @deprecated use {@link #getUnitSizeInBytes()} instead
    */
   @Deprecated
   public int getSize() {
