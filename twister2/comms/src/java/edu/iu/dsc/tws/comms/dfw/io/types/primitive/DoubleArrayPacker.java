@@ -13,40 +13,40 @@ package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 
 import java.nio.ByteBuffer;
 
-import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.InMessage;
-import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.types.PartialDataDeserializer;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
-public class DoubleArrayPacker implements DataPacker {
+public final class DoubleArrayPacker implements PrimitiveArrayPacker<double[]> {
 
-  public DoubleArrayPacker() {
+  private static volatile DoubleArrayPacker instance;
+
+  private DoubleArrayPacker() {
+
+  }
+
+  public static DoubleArrayPacker getInstance() {
+    if (instance == null) {
+      instance = new DoubleArrayPacker();
+    }
+    return instance;
   }
 
   @Override
-  public int packData(Object data, SerializeState state) {
-    return ((double[]) data).length * Double.BYTES;
+  public MessageType<double[]> getMessageType() {
+    return MessageType.DOUBLE_ARRAY;
   }
 
   @Override
-  public boolean writeDataToBuffer(Object data,
-                                   ByteBuffer targetBuffer, SerializeState state) {
-    return DataSerializer.copyDoubles((double[]) data, targetBuffer, state);
-  }
-
-  public Object initializeUnPackDataObject(int length) {
-    return new double[length / Double.BYTES];
+  public ByteBuffer addToBuffer(ByteBuffer byteBuffer, double[] data, int index) {
+    return byteBuffer.putDouble(data[index]);
   }
 
   @Override
-  public int readDataFromBuffer(InMessage currentMessage, int currentLocation,
-                                DataBuffer buffer, int currentObjectLength) {
-    int startIndex = currentMessage.getUnPkCurrentBytes();
-    startIndex = startIndex / Double.BYTES;
-    double[] val = (double[]) currentMessage.getDeserializingObject();
-    return PartialDataDeserializer.deserializeDouble(buffer, currentObjectLength,
-        val, startIndex, currentLocation);
+  public void readFromBufferAndSet(ByteBuffer byteBuffer, int offset, double[] array, int index) {
+    array[index] = byteBuffer.getDouble(offset);
+  }
+
+  @Override
+  public double[] wrapperForLength(int length) {
+    return new double[length];
   }
 }
