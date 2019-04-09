@@ -36,12 +36,12 @@ public class PartitionStreamingFinalReceiver extends TargetFinalReceiver {
   @Override
   protected boolean sendToTarget(int source, int target, List<Object> values) {
     // if we send this list successfully
-    if (receiver.receive(target, values)) {
-      // lets remove from ready list and clear the list
-      readyToSend.remove(target);
-      return true;
+    for (int i = 0; i < values.size(); i++) {
+      if (!receiver.receive(target, values.get(i))) {
+        return false;
+      }
     }
 
-    return false;
+    return true;
   }
 }
