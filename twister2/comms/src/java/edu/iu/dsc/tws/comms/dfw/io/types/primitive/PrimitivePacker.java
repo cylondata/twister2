@@ -128,4 +128,9 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
   default boolean isHeaderRequired() {
     return false;
   }
+
+  @Override
+  default T unpackFromBuffer(ByteBuffer byteBuffer, int byteLength) {
+    return this.getFromBuffer(byteBuffer, 0);
+  }
 }

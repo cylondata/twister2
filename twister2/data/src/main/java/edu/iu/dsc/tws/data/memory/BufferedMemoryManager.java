@@ -32,10 +32,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * Inserts into the memory store in batches. Only one instance per executor.
@@ -554,14 +554,14 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType keyType, DataMessageType valueType,
-                                      KryoMemorySerializer deSerializer, ByteOrder order) {
+                                      KryoSerializer deSerializer, ByteOrder order) {
     flushAll(opID);
     return memoryManager.getIterator(opID, keyType, valueType, deSerializer, order);
   }
 
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType valueType,
-                                      KryoMemorySerializer deSerializer, ByteOrder order) {
+                                      KryoSerializer deSerializer, ByteOrder order) {
     flushAll(opID);
     return memoryManager.getIterator(opID, valueType, deSerializer, order);
   }

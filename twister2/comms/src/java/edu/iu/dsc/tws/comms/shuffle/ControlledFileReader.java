@@ -24,11 +24,11 @@ import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 public class ControlledFileReader implements Iterator, Comparable<ControlledFileReader> {
 
@@ -42,7 +42,7 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
 
   private MessageType keyType;
   private MessageType dataType;
-  private KryoMemorySerializer deserializer;
+  private KryoSerializer deserializer;
   private Comparator keyComparator;
 
   private Queue<Object> keysQ = new LinkedList<>();
@@ -57,7 +57,7 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
                               String filePath,
                               MessageType keyType,
                               MessageType dataType,
-                              KryoMemorySerializer deserializer,
+                              KryoSerializer deserializer,
                               Comparator keyComparator) {
     this.filePath = filePath;
     this.meta = meta;

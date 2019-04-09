@@ -63,5 +63,7 @@ public interface DataPacker<D> {
   D wrapperForByteLength(int byteLength);
 
   boolean isHeaderRequired();
+
+  D unpackFromBuffer(ByteBuffer byteBuffer, int byteLength);
 }
 

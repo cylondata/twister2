@@ -13,80 +13,15 @@ package edu.iu.dsc.tws.comms.dfw.io.types;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.io.ByteArrayInputStream;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
-import static edu.iu.dsc.tws.comms.api.MessageType.BYTE;
-import static edu.iu.dsc.tws.comms.api.MessageType.DOUBLE;
-import static edu.iu.dsc.tws.comms.api.MessageType.INTEGER;
-import static edu.iu.dsc.tws.comms.api.MessageType.LONG;
-import static edu.iu.dsc.tws.comms.api.MessageType.OBJECT;
-import static edu.iu.dsc.tws.comms.api.MessageType.SHORT;
 
 public final class DataDeserializer {
   private DataDeserializer() {
-  }
-
-  /**
-   * Deserialize's the message from the list of data buffers.Used when there are more than 1
-   * data object types other than multi types return as normal
-   *
-   * @param buffers the buffer which contain the message data
-   * @param length the length of the object that needs to be extracted
-   * @param deserializer the deserializer to be used if the object needs to be deserialized
-   * @param type the type of the message
-   * @param count the number of data objects in multi types
-   */
-  public static Object deserializeData(List<DataBuffer> buffers, int length,
-                                       KryoSerializer deserializer, MessageType type, int count) {
-
-    if (INTEGER.equals(type)) {
-      return deserializeInteger(buffers, length);
-    } else if (DOUBLE.equals(type)) {
-      return deserializeDouble(buffers, length);
-    } else if (SHORT.equals(type)) {
-      return deserializeShort(buffers, length);
-    } else if (BYTE.equals(type)) {
-      return deserializeBytes(buffers, length);
-    } else if (LONG.equals(type)) {
-      return deserializeLong(buffers, length);
-    } else if (OBJECT.equals(type)) {
-      return deserializeObject(buffers, length, deserializer);
-    }
-    return null;
-  }
-
-  /**
-   * Deserialize's the message from the list of data buffers.
-   *
-   * @param buffers the buffer which contain the message data
-   * @param length the length of the object that needs to be extracted
-   * @param deserializer the deserializer to be used if the object needs to be deserialized
-   * @param type the type of the message
-   * @return the object that was deserialized
-   */
-  public static Object deserializeData(List<DataBuffer> buffers, int length,
-                                       KryoSerializer deserializer, MessageType type) {
-
-    if (INTEGER.equals(type)) {
-      return deserializeInteger(buffers, length);
-    } else if (DOUBLE.equals(type)) {
-      return deserializeDouble(buffers, length);
-    } else if (SHORT.equals(type)) {
-      return deserializeShort(buffers, length);
-    } else if (BYTE.equals(type)) {
-      return deserializeBytes(buffers, length);
-    } else if (LONG.equals(type)) {
-      return deserializeLong(buffers, length);
-    } else if (OBJECT.equals(type)) {
-      return deserializeObject(buffers, length, deserializer);
-    }
-    return null;
   }
 
   /**
@@ -129,16 +64,6 @@ public final class DataDeserializer {
     return tempByteArray;
   }
 
-  public static List<byte[]> getAsByteArray(List<DataBuffer> buffers, int length,
-                                            MessageType type, int count) {
-    List<byte[]> data = new ArrayList<>();
-    int singleDataLength = length / count;
-    for (int i = 0; i < count; i++) {
-      data.add(getAsByteArray(buffers, singleDataLength, type));
-    }
-    return data;
-  }
-
   public static Object deserializeObject(List<DataBuffer> buffers, int length,
                                          KryoSerializer serializer) {
     ByteArrayInputStream input = null;
@@ -155,127 +80,6 @@ public final class DataDeserializer {
     }
   }
 
-  private static byte[] deserializeBytes(List<DataBuffer> buffers, int length) {
-    byte[] returnBytes = new byte[length];
-    int bufferIndex = 0;
-    int copiedBytes = 0;
-    while (copiedBytes < length) {
-      ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
-      int remaining = byteBuffer.remaining();
-      int remainingToCopy = length - copiedBytes;
-      if (remaining > remainingToCopy) {
-        byteBuffer.get(returnBytes, copiedBytes, remainingToCopy);
-        copiedBytes += remainingToCopy;
-      } else {
-        byteBuffer.get(returnBytes, copiedBytes, remaining);
-        copiedBytes += remaining;
-        bufferIndex++;
-      }
-    }
-    return returnBytes;
-  }
-
-  private static Object deserializeMultiBytes(List<DataBuffer> buffers, int length, int count) {
-    List<byte[]> data = new ArrayList<>();
-    int singleDataLength = length / count;
-    for (int i = 0; i < count; i++) {
-      data.add(deserializeBytes(buffers, singleDataLength));
-    }
-    return data;
-  }
-
-
-  private static double[] deserializeDouble(List<DataBuffer> buffers, int byteLength) {
-    int noOfDoubles = byteLength / Double.BYTES;
-    double[] returnInts = new double[noOfDoubles];
-    int bufferIndex = 0;
-    for (int i = 0; i < noOfDoubles; i++) {
-      ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
-      int remaining = byteBuffer.remaining();
-      if (remaining >= Double.BYTES) {
-        returnInts[i] = byteBuffer.getDouble();
-      } else {
-        bufferIndex = getReadBuffer(buffers, Double.BYTES, bufferIndex);
-        if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the doubles");
-        }
-      }
-    }
-    return returnInts;
-  }
-
-  private static int[] deserializeInteger(List<DataBuffer> buffers, int byteLength) {
-    int noOfInts = byteLength / Integer.BYTES;
-    int[] returnInts = new int[noOfInts];
-    int bufferIndex = 0;
-    for (int i = 0; i < noOfInts; i++) {
-      ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
-      int remaining = byteBuffer.remaining();
-      if (remaining >= Integer.BYTES) {
-        returnInts[i] = byteBuffer.getInt();
-      } else {
-        bufferIndex = getReadBuffer(buffers, Integer.BYTES, bufferIndex);
-        if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the ints");
-        }
-      }
-    }
-    return returnInts;
-  }
-
-  private static short[] deserializeShort(List<DataBuffer> buffers, int byteLength) {
-    int noOfShorts = byteLength / Short.BYTES;
-    short[] returnShorts = new short[noOfShorts];
-    int bufferIndex = 0;
-    for (int i = 0; i < noOfShorts; i++) {
-      ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
-      int remaining = byteBuffer.remaining();
-      if (remaining >= Short.BYTES) {
-        returnShorts[i] = byteBuffer.getShort();
-      } else {
-        bufferIndex = getReadBuffer(buffers, Short.BYTES, bufferIndex);
-        if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the shorts");
-        }
-      }
-    }
-    return returnShorts;
-  }
-
-  private static long[] deserializeLong(List<DataBuffer> buffers, int byteLength) {
-    int noOfLongs = byteLength / Long.BYTES;
-    long[] returnLongs = new long[noOfLongs];
-    int bufferIndex = 0;
-    for (int i = 0; i < noOfLongs; i++) {
-      ByteBuffer byteBuffer = buffers.get(bufferIndex).getByteBuffer();
-      int remaining = byteBuffer.remaining();
-      if (remaining >= Long.BYTES) {
-        returnLongs[i] = byteBuffer.getLong();
-      } else {
-        bufferIndex = getReadBuffer(buffers, Long.BYTES, bufferIndex);
-        if (bufferIndex < 0) {
-          throw new RuntimeException("We should always have the longs");
-        }
-      }
-    }
-    return returnLongs;
-  }
-
-  private static int getReadBuffer(List<DataBuffer> bufs, int size,
-                                   int currentBufferIndex) {
-
-    for (int i = currentBufferIndex; i < bufs.size(); i++) {
-      ByteBuffer byteBuffer = bufs.get(i).getByteBuffer();
-      // now check if we need to go to the next buffer
-      if (byteBuffer.remaining() > size) {
-        // if we are at the end we need to move to next
-        byteBuffer.rewind();
-        return i;
-      }
-    }
-    return -1;
-  }
-
   /**
    * Deserialize's the given data in the ByteBuffer based on the dataType
    *
@@ -285,8 +89,9 @@ public final class DataDeserializer {
    * @param dataSize the length of the current data object to be extracted
    * @return the deserialized object
    */
-  public static Object deserialize(MessageType dataType, KryoMemorySerializer deserializer,
+  public static Object deserialize(MessageType dataType, KryoSerializer deserializer,
                                    ByteBuffer os, int dataSize) {
+
     Object data = null;
     if (dataType == MessageType.OBJECT) {
       byte[] bytes = new byte[dataSize];
@@ -342,7 +147,7 @@ public final class DataDeserializer {
    * @param dataBytes the byte[] that contains the data
    * @return the deserialized object
    */
-  public static Object deserialize(MessageType dataType, KryoMemorySerializer deserializer,
+  public static Object deserialize(MessageType dataType, KryoSerializer deserializer,
                                    byte[] dataBytes) {
     Object data = null;
     ByteBuffer byteBuffer = ByteBuffer.wrap(dataBytes);

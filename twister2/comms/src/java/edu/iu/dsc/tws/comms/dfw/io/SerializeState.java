@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
-import edu.iu.dsc.tws.comms.api.types.TypeDefinition;
-
 /**
  * Keep track of the serialization state of the list of objects
  */
@@ -35,10 +33,6 @@ public class SerializeState {
   private int keySize;
   //The size that should be set as the current header length
   private int currentHeaderLength;
-
-  public SerializeState(TypeDefinition keyType, TypeDefinition valueType){
-
-  }
 
   // the state of each part
   public enum Part {

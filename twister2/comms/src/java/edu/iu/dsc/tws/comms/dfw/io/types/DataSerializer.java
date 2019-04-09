@@ -14,9 +14,9 @@ package edu.iu.dsc.tws.comms.dfw.io.types;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.data.memory.MemoryManagerContext;
 import static edu.iu.dsc.tws.comms.api.MessageType.BYTE;
 import static edu.iu.dsc.tws.comms.api.MessageType.DOUBLE;

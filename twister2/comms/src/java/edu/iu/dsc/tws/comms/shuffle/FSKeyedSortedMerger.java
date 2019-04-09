@@ -27,12 +27,12 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.utils.Heap;
 import edu.iu.dsc.tws.comms.utils.HeapNode;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * Sorted merger implementation
@@ -118,7 +118,7 @@ public class FSKeyedSortedMerger implements Shuffle {
   /**
    * The kryo serializer
    */
-  private KryoMemorySerializer kryoSerializer;
+  private KryoSerializer kryoSerializer;
 
   private enum FSStatus {
     WRITING,
@@ -141,7 +141,7 @@ public class FSKeyedSortedMerger implements Shuffle {
     this.keyType = kType;
     this.dataType = dType;
     this.keyComparator = kComparator;
-    this.kryoSerializer = new KryoMemorySerializer();
+    this.kryoSerializer = new KryoSerializer();
     this.target = tar;
   }
 

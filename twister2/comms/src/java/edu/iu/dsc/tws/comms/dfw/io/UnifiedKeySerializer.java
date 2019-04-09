@@ -16,12 +16,12 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.KeyPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class UnifiedKeySerializer extends BaseSerializer {
   private static final Logger LOG = Logger.getLogger(UnifiedKeySerializer.class.getName());
@@ -53,7 +53,7 @@ public class UnifiedKeySerializer extends BaseSerializer {
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
   public boolean serializeSingleMessage(Object payload,
-                                         OutMessage sendMessage, DataBuffer targetBuffer) {
+                                        OutMessage sendMessage, DataBuffer targetBuffer) {
     Tuple tuple = (Tuple) payload;
     return serializeKeyedData(tuple.getValue(), tuple.getKey(),
         sendMessage.getSerializationState(), targetBuffer);

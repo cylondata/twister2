@@ -14,35 +14,35 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import java.nio.ByteBuffer;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 /**
  * Builds the message and copies it into data buffers.The structure of the message depends on the
  * type of message that is sent, for example if it is a keyed message or not.
- *
+ * <p>
  * The main structure of the built message is |Header|Body|.
- *
+ * <p>
  * The header has the following structure
  * |source|flags|destinationID|numberOfMessages|,
  * source - source of the message
  * flags - message flags
  * destinationId - where the message is sent
  * numberOfMessages - number of messages
- *
+ * <p>
  * Header can be followed by 0 or more messages, each message will have the following structure
  * |length(integer)|message body|
- *
+ * <p>
  * For a keyed message the message body consists of two parts
  * |key|body|
- *
+ * <p>
  * For some keys we need to send the length of the key, i.e. byte arrays and objects. In that case
  * key consists of two parts
  * |key length(integer)|actual key|
- *
+ * <p>
  * For other cases such as integer or double keys, we know the length of the key, so we only send
  * the key.
  */
@@ -73,7 +73,7 @@ public class UnifiedSerializer extends BaseSerializer {
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
   public boolean serializeSingleMessage(Object payload,
-                                OutMessage sendMessage, DataBuffer targetBuffer) {
+                                        OutMessage sendMessage, DataBuffer targetBuffer) {
     return serializeData(payload, sendMessage.getSerializationState(), targetBuffer);
   }
 

@@ -16,8 +16,8 @@ import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * This controls the memory manager for a single operation. An example of an operation is a
@@ -43,7 +43,7 @@ public class OperationMemoryManager {
 
   private DataMessageType messageType;
 
-  private KryoMemorySerializer deSerializer;
+  private KryoSerializer deSerializer;
 
   private ByteOrder byteOrder = ByteOrder.BIG_ENDIAN;
 
@@ -51,7 +51,7 @@ public class OperationMemoryManager {
     this.operationID = opID;
     this.memoryManager = parentMM;
     this.messageType = type;
-    this.deSerializer = new KryoMemorySerializer();
+    this.deSerializer = new KryoSerializer();
     deSerializer.init(new HashMap<String, Object>());
     isKeyed = false;
     init();
@@ -63,7 +63,7 @@ public class OperationMemoryManager {
     this.memoryManager = parentMM;
     this.messageType = type;
     this.keyType = keyType;
-    this.deSerializer = new KryoMemorySerializer();
+    this.deSerializer = new KryoSerializer();
     deSerializer.init(new HashMap<String, Object>());
     isKeyed = true;
     init();

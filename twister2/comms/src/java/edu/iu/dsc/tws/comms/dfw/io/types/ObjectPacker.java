@@ -13,11 +13,11 @@ package edu.iu.dsc.tws.comms.dfw.io.types;
 
 import java.nio.ByteBuffer;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class ObjectPacker implements DataPacker {
 
@@ -71,5 +71,11 @@ public class ObjectPacker implements DataPacker {
   @Override
   public boolean isHeaderRequired() {
     return true;
+  }
+
+  @Override
+  public Object unpackFromBuffer(ByteBuffer byteBuffer, int byteLength) {
+
+    return null;
   }
 }

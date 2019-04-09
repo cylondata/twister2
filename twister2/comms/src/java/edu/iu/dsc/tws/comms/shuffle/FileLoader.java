@@ -26,11 +26,11 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class FileLoader {
@@ -85,7 +85,7 @@ public final class FileLoader {
    */
   public static long saveKeyValues(List<Tuple> records, List<Integer> sizes,
                                    long size, String outFileName, MessageType keyType,
-                                   KryoMemorySerializer serializer) {
+                                   KryoSerializer serializer) {
     try {
       long maxRecord = Long.MIN_VALUE; //max size of a tuple saved to this file
 
@@ -167,7 +167,7 @@ public final class FileLoader {
   }
 
   public static List<Tuple> readFile(String fileName, MessageType keyType,
-                                     MessageType dataType, KryoMemorySerializer deserializer) {
+                                     MessageType dataType, KryoSerializer deserializer) {
     String outFileName = Paths.get(fileName).toString();
     FileChannel rwChannel;
     try {
@@ -207,7 +207,7 @@ public final class FileLoader {
   }
 
   public static List<Object> readFile(String fileName, MessageType dataType,
-                                      KryoMemorySerializer deserializer) {
+                                      KryoSerializer deserializer) {
     String outFileName = Paths.get(fileName).toString();
     FileChannel rwChannel;
     try {
@@ -238,7 +238,7 @@ public final class FileLoader {
   public static Triple<List<Tuple>, Long, Long> openFilePart(String fileName, long startOffSet,
                                                              int maxSize, MessageType keyType,
                                                              MessageType dataType,
-                                                             KryoMemorySerializer deserializer) {
+                                                             KryoSerializer deserializer) {
     List<Tuple> keyValues = new ArrayList<>();
     String outFileName = Paths.get(fileName).toString();
     FileChannel rwChannel;
@@ -293,7 +293,7 @@ public final class FileLoader {
   public static OpenFilePart openPart(String fileName, long startOffSet,
                                       long maxSize, MessageType keyType,
                                       MessageType dataType,
-                                      KryoMemorySerializer deserializer) {
+                                      KryoSerializer deserializer) {
     List<Tuple> keyValues = new ArrayList<>();
     String outFileName = Paths.get(fileName).toString();
     FileChannel rwChannel;

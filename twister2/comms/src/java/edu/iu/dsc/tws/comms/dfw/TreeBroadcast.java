@@ -24,11 +24,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -43,7 +43,6 @@ import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
@@ -208,10 +207,6 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
   /**
    * Initialize
-   * @param cfg
-   * @param t
-   * @param tPlan
-   * @param ed
    */
   public void init(Config cfg, MessageType t, TaskPlan tPlan, int ed) {
     this.config = cfg;

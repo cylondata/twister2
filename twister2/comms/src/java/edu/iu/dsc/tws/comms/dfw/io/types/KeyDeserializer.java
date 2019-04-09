@@ -19,10 +19,9 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import static edu.iu.dsc.tws.comms.api.MessageType.BYTE;
 import static edu.iu.dsc.tws.comms.api.MessageType.DOUBLE;
 import static edu.iu.dsc.tws.comms.api.MessageType.INTEGER;
@@ -188,7 +187,7 @@ public final class KeyDeserializer {
    * @param os the buffer that contains the data
    * @return the deserialized object
    */
-  public static Object deserialize(MessageType dataType, KryoMemorySerializer deserializer,
+  public static Object deserialize(MessageType dataType, KryoSerializer deserializer,
                                    ByteBuffer os, int dataSize) {
     Object data;
     if (dataType == MessageType.OBJECT) {

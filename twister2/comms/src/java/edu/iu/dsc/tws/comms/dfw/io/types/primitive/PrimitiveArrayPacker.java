@@ -114,4 +114,15 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
   default boolean isHeaderRequired() {
     return true;
   }
+
+  @Override
+  default A unpackFromBuffer(ByteBuffer byteBuffer, int byteLength) {
+    A array = this.wrapperForByteLength(byteLength);
+    int noOfElements = byteLength / this.getMessageType().getUnitSizeInBytes();
+    int unitSize = this.getMessageType().getUnitSizeInBytes();
+    for (int i = 0; i < noOfElements; i++) {
+      this.readFromBufferAndSet(byteBuffer, i * unitSize, array, i);
+    }
+    return array;
+  }
 }

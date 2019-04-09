@@ -18,7 +18,6 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.KeyPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
@@ -109,29 +108,6 @@ public final class DFWIOUtils {
     byteBuffer.putInt(noOfMessages);
     // lets set the size for 16 for now
     buffer.setSize(HEADER_SIZE);
-  }
-
-  /**
-   * Create a copy of the channel message
-   *
-   * @param channelMessage message
-   * @return the copy
-   */
-  public static ChannelMessage createChannelMessageCopy(ChannelMessage channelMessage) {
-    ChannelMessage copy = new ChannelMessage();
-    //Values that are not copied: refCount,
-    copy.setMessageDirection(channelMessage.getMessageDirection());
-    copy.setReleaseListener(channelMessage.getReleaseListener());
-    copy.setOriginatingId(channelMessage.getOriginatingId());
-    copy.setHeader(channelMessage.getHeader());
-    copy.setComplete(channelMessage.isComplete());
-    copy.setDataType(channelMessage.getDataType());
-    copy.setKeyType(channelMessage.getKeyType());
-    copy.setHeaderSize(channelMessage.getHeaderSize());
-    copy.addBuffers(channelMessage.getNormalBuffers());
-    copy.addOverFlowBuffers(channelMessage.getOverflowBuffers());
-
-    return copy;
   }
 
   /**
