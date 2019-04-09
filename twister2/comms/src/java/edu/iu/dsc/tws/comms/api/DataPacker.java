@@ -61,5 +61,7 @@ public interface DataPacker<D> {
    * Returns an empty wrapper to hold byteLength amount of type T
    */
   D wrapperForByteLength(int byteLength);
+
+  boolean isHeaderRequired();
 }
 

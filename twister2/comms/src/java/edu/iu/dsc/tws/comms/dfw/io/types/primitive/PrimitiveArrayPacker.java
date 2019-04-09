@@ -109,4 +109,9 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
     }
     return byteArray;
   }
+
+  @Override
+  default boolean isHeaderRequired() {
+    return true;
+  }
 }

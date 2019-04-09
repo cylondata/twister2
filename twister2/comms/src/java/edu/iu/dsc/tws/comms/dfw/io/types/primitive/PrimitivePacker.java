@@ -102,13 +102,13 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
   @Override
   default boolean isKeyHeaderRequired() {
     //will be false for primitive
-    return false;
+    return this.isHeaderRequired();
   }
 
   @Override
   default T initializeUnPackKeyObject(int size) {
     //will be null for primitive
-    return null;
+    return this.wrapperForByteLength(size);
   }
 
   @Override
@@ -122,5 +122,10 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
   @Override
   default T wrapperForByteLength(int byteLength) {
     return null;
+  }
+
+  @Override
+  default boolean isHeaderRequired() {
+    return false;
   }
 }

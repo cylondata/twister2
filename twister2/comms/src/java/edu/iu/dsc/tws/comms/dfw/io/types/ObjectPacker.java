@@ -67,4 +67,9 @@ public class ObjectPacker implements DataPacker {
   public Object wrapperForByteLength(int byteLength) {
     return new byte[byteLength];
   }
+
+  @Override
+  public boolean isHeaderRequired() {
+    return true;
+  }
 }

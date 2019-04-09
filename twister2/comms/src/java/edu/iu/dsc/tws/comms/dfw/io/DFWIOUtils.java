@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
-import edu.iu.dsc.tws.comms.dfw.io.types.ObjectKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.BytePacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.DoublePacker;
@@ -188,8 +187,6 @@ public final class DFWIOUtils {
       return FloatPacker.getInstance();
     } else if (dataType == MessageType.BYTE) {
       return BytePacker.getInstance();
-    } else if (dataType == MessageType.OBJECT) {
-      return new ObjectKeyPacker();
     }
     return null;
   }

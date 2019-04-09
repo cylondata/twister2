@@ -28,9 +28,9 @@ public abstract class BaseSerializer implements MessageSerializer {
   private static final Logger LOG = Logger.getLogger(BaseSerializer.class.getName());
 
   // we need to put the message length and key length if keyed message
-  protected static final int MAX_SUB_MESSAGE_HEADER_SPACE = 4 + 4;
+  protected static final int MAX_SUB_MESSAGE_HEADER_SPACE = Integer.BYTES + Integer.BYTES;
   // for s normal message we only put the length
-  protected static final int NORMAL_SUB_MESSAGE_HEADER_SIZE = 4;
+  protected static final int NORMAL_SUB_MESSAGE_HEADER_SIZE = Integer.BYTES;
 
   /**
    * The DataBuffers available
@@ -123,6 +123,7 @@ public abstract class BaseSerializer implements MessageSerializer {
 
   /**
    * Build the header to set for channel messages laters
+   *
    * @param sendMessage messages
    * @param channelMessage channel message
    * @param numMessages number of messages
@@ -209,5 +210,5 @@ public abstract class BaseSerializer implements MessageSerializer {
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
   public abstract boolean serializeSingleMessage(Object payload,
-                                         OutMessage sendMessage, DataBuffer targetBuffer);
+                                                 OutMessage sendMessage, DataBuffer targetBuffer);
 }
