@@ -243,6 +243,13 @@ public final class DataSerializer {
     }
   }
 
+  /**
+   * Now packers has this method
+   * {@link edu.iu.dsc.tws.comms.dfw.io.types.primitive.PrimitiveArrayPacker#toByteArray(Object)}
+   *
+   * @deprecated Use packer's method instead
+   */
+  @Deprecated
   public static byte[] serialize(Object data, KryoSerializer serializer) {
 
     if (data instanceof byte[]) {

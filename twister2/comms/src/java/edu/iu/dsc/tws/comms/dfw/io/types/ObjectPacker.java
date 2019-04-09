@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class ObjectPacker implements DataPacker {
+
   private KryoSerializer serializer;
 
   public ObjectPacker() {
@@ -41,10 +42,6 @@ public class ObjectPacker implements DataPacker {
     return DataSerializer.copyDataBytes(targetBuffer, state);
   }
 
-  public Object initializeUnPackDataObject(int length) {
-    return new byte[length];
-  }
-
   @Override
   public int readDataFromBuffer(InMessage currentMessage, int currentLocation,
                                 DataBuffer buffer, int currentObjectLength) {
@@ -59,5 +56,15 @@ public class ObjectPacker implements DataPacker {
       currentMessage.setDeserializingObject(kryoValue);
     }
     return value;
+  }
+
+  @Override
+  public byte[] toByteArray(Object data) {
+    return this.serializer.serialize(data);
+  }
+
+  @Override
+  public Object wrapperForByteLength(int byteLength) {
+    return new byte[byteLength];
   }
 }

@@ -85,7 +85,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
         currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
         remaining = remaining - Integer.BYTES;
         currentLocation += Integer.BYTES;
-        Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
+        Object value = dataPacker.wrapperForByteLength(currentObjectLength);
         currentMessage.setDeserializingObject(value);
         currentMessage.setUnPkCurrentBytes(0);
         currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
@@ -116,7 +116,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
           remaining = remaining - Integer.BYTES;
           currentLocation += Integer.BYTES;
 
-          Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
+          Object value = dataPacker.wrapperForByteLength(currentObjectLength);
           currentMessage.setDeserializingObject(value);
           currentMessage.setUnPkCurrentBytes(0);
 

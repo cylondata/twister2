@@ -115,7 +115,7 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
         currentMessage.setUnPkCurrentBytes(0);
 
         try {
-          Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
+          Object value = dataPacker.wrapperForByteLength(currentObjectLength);
           currentMessage.setDeserializingObject(value);
           currentMessage.setUnPkCurrentBytes(0);
 
@@ -185,7 +185,7 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
             currentMessage.setDeserializingKey(keyValue);
             currentMessage.setUnPkCurrentBytes(0);
 
-            Object value = dataPacker.initializeUnPackDataObject(currentObjectLength);
+            Object value = dataPacker.wrapperForByteLength(currentObjectLength);
             currentMessage.setDeserializingObject(value);
             currentMessage.setUnPkCurrentBytes(0);
 

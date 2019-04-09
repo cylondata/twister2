@@ -21,11 +21,11 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
-import edu.iu.dsc.tws.comms.dfw.io.types.ByteKeyPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.BytePacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.BytePacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.DoublePacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.FloatPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.LongPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.ShortPacker;
@@ -156,7 +156,7 @@ public final class DFWIOUtils {
     } else if (messageType == MessageType.DOUBLE) {
       return messageType.getDataPacker();
     } else if (messageType == MessageType.BYTE) {
-      return new BytePacker();
+      return messageType.getDataPacker();
     } else if (messageType == MessageType.OBJECT) {
       return new ObjectPacker();
     } else {
@@ -184,8 +184,10 @@ public final class DFWIOUtils {
       return ShortPacker.getInstance();
     } else if (dataType == MessageType.DOUBLE) {
       return DoublePacker.getInstance();
+    } else if (dataType == MessageType.FLOAT) {
+      return FloatPacker.getInstance();
     } else if (dataType == MessageType.BYTE) {
-      return new ByteKeyPacker();
+      return BytePacker.getInstance();
     } else if (dataType == MessageType.OBJECT) {
       return new ObjectKeyPacker();
     }

@@ -11,16 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 
-import edu.iu.dsc.tws.comms.api.ArrayPacker;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
-public interface PrimitiveArrayPacker<A> extends DataPacker<A>, ArrayPacker<A> {
+public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
 
   MessageType<A> getMessageType();
 
@@ -38,10 +38,6 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A>, ArrayPacker<A> {
   @Override
   default int packData(A data, SerializeState state) {
     return this.getMessageType().getDataSizeInBytes(data);
-  }
-
-  default A initializeUnPackDataObject(int length) {
-    return this.wrapperForByteLength(length);
   }
 
   @Override
@@ -103,5 +99,14 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A>, ArrayPacker<A> {
       }
     }
     return bytesRead;
+  }
+
+  default byte[] toByteArray(A data) {
+    byte[] byteArray = new byte[this.getMessageType().getDataSizeInBytes(data)];
+    ByteBuffer wrapper = ByteBuffer.wrap(byteArray);
+    for (int i = 0; i < Array.getLength(data); i++) {
+      this.addToBuffer(wrapper, data, i);
+    }
+    return byteArray;
   }
 }

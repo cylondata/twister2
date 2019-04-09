@@ -44,16 +44,6 @@ public interface DataPacker<D> {
                             ByteBuffer targetBuffer, SerializeState state);
 
   /**
-   * Initialize the object that we are going to create
-   *
-   * @param length byte length
-   * @return the object created
-   * @deprecated Use {@link ArrayPacker#wrapperForByteLength(int)}
-   */
-  @Deprecated
-  D initializeUnPackDataObject(int length);
-
-  /**
    * Read the data from the buffer
    *
    * @param currentMessage the current message
@@ -64,5 +54,12 @@ public interface DataPacker<D> {
    */
   int readDataFromBuffer(InMessage currentMessage, int currentLocation,
                          DataBuffer buffer, int currentObjectLength);
+
+  byte[] toByteArray(D data);
+
+  /**
+   * Returns an empty wrapper to hold byteLength amount of type T
+   */
+  D wrapperForByteLength(int byteLength);
 }
 

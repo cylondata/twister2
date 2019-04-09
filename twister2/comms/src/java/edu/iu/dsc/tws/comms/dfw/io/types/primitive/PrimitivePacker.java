@@ -112,8 +112,15 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
   }
 
   @Override
-  default T initializeUnPackDataObject(int length) {
-    //will be null for primitive
+  default byte[] toByteArray(T data) {
+    byte[] byteArray = new byte[this.getMessageType().getDataSizeInBytes(data)];
+    ByteBuffer wrapper = ByteBuffer.wrap(byteArray);
+    this.addToBuffer(wrapper, data);
+    return byteArray;
+  }
+
+  @Override
+  default T wrapperForByteLength(int byteLength) {
     return null;
   }
 }

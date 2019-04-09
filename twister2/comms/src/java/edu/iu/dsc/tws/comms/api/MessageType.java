@@ -14,8 +14,12 @@ package edu.iu.dsc.tws.comms.api;
 import java.lang.reflect.Array;
 
 import edu.iu.dsc.tws.comms.api.types.TypeDefinition;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.ByteArrayPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.BytePacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.DoubleArrayPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.DoublePacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.FloatArrayPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.FloatPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerArrayPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.LongArrayPacker;
@@ -40,10 +44,10 @@ public final class MessageType<T> implements TypeDefinition<T> {
   );
 
   public static final MessageType<Byte> BYTE = new MessageType<>(
-      true, Byte.BYTES, Byte.class, null
+      true, Byte.BYTES, Byte.class, BytePacker.getInstance()
   );
   public static final MessageType<byte[]> BYTE_ARRAY = new MessageType<>(
-      true, Byte.BYTES, byte[].class, null
+      true, Byte.BYTES, byte[].class, ByteArrayPacker.getInstance()
   );
 
   public static final MessageType<Long> LONG = new MessageType<>(
@@ -58,6 +62,13 @@ public final class MessageType<T> implements TypeDefinition<T> {
   );
   public static final MessageType<double[]> DOUBLE_ARRAY = new MessageType<>(
       true, Double.BYTES, double[].class, DoubleArrayPacker.getInstance()
+  );
+
+  public static final MessageType<Float> FLOAT = new MessageType<>(
+      true, Float.BYTES, Float.class, FloatPacker.getInstance()
+  );
+  public static final MessageType<float[]> FLOAT_ARRAY = new MessageType<>(
+      true, Float.BYTES, float[].class, FloatArrayPacker.getInstance()
   );
 
   public static final MessageType<Short> SHORT = new MessageType<>(
