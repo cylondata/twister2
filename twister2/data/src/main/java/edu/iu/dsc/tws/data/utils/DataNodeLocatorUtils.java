@@ -25,6 +25,8 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.ClientProtocol;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
+import org.apache.hadoop.hdfs.tools.DFSck;
+import org.apache.hadoop.util.ToolRunner;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
@@ -115,6 +117,9 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     return dataNodes;
   }
 
+  /**
+   * This method retrieve all the datanodes of a hdfs cluster
+   */
   private List<String> getDataNodes() throws IOException {
 
     Configuration conf = new Configuration(false);
@@ -135,6 +140,12 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
   }
 
 
+  /**
+   * This method retrieve the datanode name of the file in the hdfs cluster
+   * @param fName
+   * @return
+   * @throws IOException
+   */
   private List<String> getDataNodes(String[] fName) throws IOException {
 
     Configuration conf = new Configuration(false);
@@ -154,7 +165,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
       datanodesList.add(di.getHostName());
     }
 
-    /* To retrieve the datanode name of the respective file
+    //To retrieve the datanode name of the respective file
     try {
       ToolRunner.run(new DFSck(conf, out), fName);
       out.println();
@@ -162,7 +173,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
       throw new RuntimeException("Exception Occured:" + e.getMessage());
     }
     bStream.close();
-    out.close();*/
+    out.close();
     return datanodesList;
   }
 }
