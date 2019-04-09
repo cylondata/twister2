@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.dfw.io.partition;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -34,10 +35,25 @@ public class PartitionStreamingFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected boolean sendToTarget(int source, int target, List<Object> values) {
+  protected boolean sendToTarget(int source, int target) {
+    Queue<Object> values = readyToSend.get(target);
+
+    if (values == null || values.isEmpty()) {
+      return false;
+    }
+
     // if we send this list successfully
-    for (int i = 0; i < values.size(); i++) {
-      if (!receiver.receive(target, values.get(i))) {
+    Object val = values.peek();
+
+    if (val == null) {
+      return false;
+    }
+
+    while (val != null) {
+      if (receiver.receive(target, val)) {
+        values.poll();
+        val = values.peek();
+      } else {
         return false;
       }
     }

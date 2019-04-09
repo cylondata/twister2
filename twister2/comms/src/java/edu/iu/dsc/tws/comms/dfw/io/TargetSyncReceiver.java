@@ -53,11 +53,6 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
   protected int destination;
 
   /**
-   * Keep the list of tuples for each target
-   */
-  protected Map<Integer, List<Object>> readyToSend = new HashMap<>();
-
-  /**
    * The source task connected to this partial receiver
    */
   protected int representSource;
@@ -91,8 +86,6 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
    * The destinations we are sending messages to
    */
   protected Set<Integer> thisDestinations;
-
-  protected Map<Integer, Integer> counts = new HashMap<>();
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -129,16 +122,12 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
       Queue<Object> msgQueue = messages.get(target);
       if (object instanceof AggregatedObjects) {
         msgQueue.addAll((Collection<?>) object);
-        int count = counts.get(target) != null ? counts.get(target) : 0;
-        counts.put(target, count + ((AggregatedObjects) object).size());
       } else {
         msgQueue.add(object);
-        int count = counts.get(target) != null ? counts.get(target) : 0;
-        counts.put(target, count + 1);
       }
 
       if (msgQueue.size() > lowWaterMark) {
-        swapToReady(target, msgQueue);
+        merge(target, msgQueue);
       }
 
       if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
@@ -170,15 +159,7 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
    * @param dest the target
    * @param dests message queue to switch to ready
    */
-  private void swapToReady(int dest, Queue<Object> dests) {
-    if (!readyToSend.containsKey(dest)) {
-      readyToSend.put(dest, new AggregatedObjects<>(dests));
-    } else {
-      List<Object> ready = readyToSend.get(dest);
-      ready.addAll(dests);
-    }
-    dests.clear();
-  }
+  protected abstract void merge(int dest, Queue<Object> dests);
 
   @Override
   public synchronized boolean progress() {
@@ -187,19 +168,15 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
     lock.lock();
     try {
       for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
-        swapToReady(e.getKey(), e.getValue());
+        merge(e.getKey(), e.getValue());
 
-        List<Object> send = readyToSend.get(e.getKey());
         // check weather we are ready to send and we have values to send
-        if (send == null || send.size() == 0 || !isFilledToSend(e.getKey())) {
+        if (!isFilledToSend(e.getKey())) {
           continue;
         }
 
         // if we send this list successfully
-        if (sendToTarget(representSource, e.getKey(), send)) {
-          // lets remove from ready list and clear the list
-          readyToSend.remove(e.getKey());
-        } else {
+        if (!sendToTarget(representSource, e.getKey())) {
           needsFurtherProgress = true;
         }
       }
@@ -225,14 +202,8 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
    * Check weather all the other information is flushed
    * @return true if there is nothing to process
    */
-  private boolean isAllEmpty() {
+  protected boolean isAllEmpty() {
     for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
-      if (e.getValue().size() > 0) {
-        return false;
-      }
-    }
-
-    for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
       if (e.getValue().size() > 0) {
         return false;
       }
@@ -249,21 +220,15 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
   protected void clearTarget(int target) {
     Queue<Object> messagesPerTarget = messages.get(target);
     messagesPerTarget.clear();
-
-    List<Object> sends = readyToSend.get(target);
-    if (sends != null) {
-      sends.clear();
-    }
   }
 
   /**
    * Send the values to a target
    * @param source the sources
    * @param target the target
-   * @param values the values
    * @return true if all the values are sent successfully
    */
-  protected abstract boolean sendToTarget(int source, int target, List<Object> values);
+  protected abstract boolean sendToTarget(int source, int target);
 
   /**
    * Return true if we are filled to send

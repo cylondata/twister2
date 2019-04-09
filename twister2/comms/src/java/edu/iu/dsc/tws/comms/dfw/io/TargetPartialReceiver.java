@@ -37,6 +37,11 @@ public abstract class TargetPartialReceiver extends TargetSyncReceiver {
    */
   protected Map<Integer, Set<Integer>> syncSent = new HashMap<>();
 
+  /**
+   * Keep the list of tuples for each target
+   */
+  protected Map<Integer, List<Object>> readyToSend = new HashMap<>();
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
@@ -52,16 +57,43 @@ public abstract class TargetPartialReceiver extends TargetSyncReceiver {
     }
   }
 
-  @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    boolean b = super.onMessage(source, path, target, flags, object);
-    LOG.info("Counts : " + counts);
-    return b;
+  /**
+   * Swap the messages to the ready queue
+   * @param dest the target
+   * @param dests message queue to switch to ready
+   */
+  protected void merge(int dest, Queue<Object> dests) {
+    if (!readyToSend.containsKey(dest)) {
+      readyToSend.put(dest, new AggregatedObjects<>(dests));
+    } else {
+      List<Object> ready = readyToSend.get(dest);
+      ready.addAll(dests);
+    }
+    dests.clear();
   }
 
   @Override
-  protected boolean sendToTarget(int source, int target, List<Object> values) {
-    return operation.sendPartial(source, values, 0, target);
+  protected boolean sendToTarget(int source, int target) {
+    List<Object> values = readyToSend.get(target);
+    if (values != null && values.size() > 0) {
+      if (operation.sendPartial(source, values, 0, target)) {
+        readyToSend.remove(target);
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Override
+  protected boolean isAllEmpty() {
+    boolean b = super.isAllEmpty();
+    for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
+      }
+    }
+    return b;
   }
 
   @Override
