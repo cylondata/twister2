@@ -11,56 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.partition;
 
-import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.dfw.io.TargetSyncReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.TargetPartialReceiver;
 
-public class PartitionStreamingPartialReceiver extends TargetSyncReceiver {
+public class PartitionStreamingPartialReceiver extends TargetPartialReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionPartialReceiver.class.getName());
-
-  @Override
-  protected boolean isAllEmpty(int target) {
-    return readyToSend.get(target) == null || readyToSend.get(target).isEmpty();
-  }
-
-  @Override
-  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
-    if (operation.sendPartial(representSource, new byte[0], MessageFlags.END, target)) {
-      isSyncSent.put(target, true);
-    } else {
-      return true;
-    }
-    return needsFurtherProgress;
-  }
-
-  @Override
-  protected boolean sendToTarget(int target, boolean sync) {
-    List<Object> sendList = readyToSend.get(target);
-
-    if (sendList == null || sendList.isEmpty()) {
-      return false;
-    }
-
-    // if we send this list successfully
-    if (operation.sendPartial(representSource, sendList, 0, target)) {
-      // lets remove from ready list and clear the list
-      readyToSend.put(target, null);
-      return true;
-    }
-
-    return false;
-  }
-
-  @Override
-  protected boolean aggregate(int target, boolean sync) {
-    swapToReady(target, messages.get(target));
-    return true;
-  }
-
-  @Override
-  protected boolean isFilledToSend(int target, boolean sync) {
-    return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
-  }
 }

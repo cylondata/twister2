@@ -16,9 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -28,6 +29,8 @@ import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 public abstract class TargetSyncReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(TargetSyncReceiver.class.getName());
+
   /**
    * Lets keep track of the messages, we need to keep track of the messages for each target
    * and source, Map<target, map<source, Queue<messages>>
@@ -50,24 +53,9 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
   protected int destination;
 
   /**
-   * Keep weather we have received a sync from a source
-   */
-  protected Map<Integer, Map<Integer, Boolean>> syncReceived = new HashMap<>();
-
-  /**
-   * Keep the list of tuple [Object, Source, Flags] for each destination
+   * Keep the list of tuples for each target
    */
   protected Map<Integer, List<Object>> readyToSend = new HashMap<>();
-
-  /**
-   * Weather sync messages are forwarded from the partial receivers
-   */
-  protected Map<Integer, Boolean> isSyncSent = new HashMap<>();
-
-  /**
-   * Keep state about the targets
-   */
-  protected Map<Integer, ReceiverState> targetStates = new HashMap<>();
 
   /**
    * The source task connected to this partial receiver
@@ -87,32 +75,31 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
   /**
    * High water mark to keep track of objects
    */
-  private int highWaterMark = 16;
+  protected int highWaterMark = 16;
 
   /**
    * The lock
    */
   private Lock lock = new ReentrantLock();
 
+  /**
+   * Sources we are expecting messages from
+   */
+  protected Set<Integer> thisSources;
+
+  /**
+   * The destinations we are sending messages to
+   */
+  protected Set<Integer> thisDestinations;
+
+  protected Map<Integer, Integer> counts = new HashMap<>();
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     workerId = op.getTaskPlan().getThisExecutor();
-    this.operation = op;
+    operation = op;
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
     highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
-
-    for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-      Queue<Object> messagesPerTask = new LinkedBlockingQueue<>();
-      Map<Integer, Boolean> finishedPerTask = new HashMap<>();
-
-      for (int task : e.getValue()) {
-        finishedPerTask.put(task, false);
-      }
-      messages.put(e.getKey(), messagesPerTask);
-      syncReceived.put(e.getKey(), finishedPerTask);
-      isSyncSent.put(e.getKey(), false);
-      targetStates.put(e.getKey(), ReceiverState.RECEIVING);
-    }
   }
 
   @Override
@@ -124,24 +111,14 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
         representSourceSet = true;
       }
 
-      Map<Integer, Boolean> syncsPerTarget = syncReceived.get(target);
       if ((flags & MessageFlags.END) == MessageFlags.END) {
-        syncsPerTarget.put(source, true);
-        if (allSyncsPresent(syncsPerTarget)) {
-          targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
-        }
+        addSyncMessage(source, target);
         return true;
       }
 
       // if we have a sync from this source we cannot accept more data
       // until we finish this sync
-      if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
-          || targetStates.get(target) == ReceiverState.SYNCED) {
-        return false;
-      }
-
-      Queue<Object> msgQueue = messages.get(target);
-      if (msgQueue.size() >= highWaterMark) {
+      if (!canAcceptMessage(source, target)) {
         return false;
       }
 
@@ -149,10 +126,15 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
         ((ChannelMessage) object).incrementRefCount();
       }
 
+      Queue<Object> msgQueue = messages.get(target);
       if (object instanceof AggregatedObjects) {
         msgQueue.addAll((Collection<?>) object);
+        int count = counts.get(target) != null ? counts.get(target) : 0;
+        counts.put(target, count + ((AggregatedObjects) object).size());
       } else {
         msgQueue.add(object);
+        int count = counts.get(target) != null ? counts.get(target) : 0;
+        counts.put(target, count + 1);
       }
 
       if (msgQueue.size() > lowWaterMark) {
@@ -160,18 +142,35 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
       }
 
       if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
-        syncsPerTarget.put(source, true);
-        if (allSyncsPresent(syncsPerTarget)) {
-          targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
-        }
+        addSyncMessage(source, target);
       }
+
       return true;
     } finally {
       lock.unlock();
     }
   }
 
-  protected void swapToReady(int dest, Queue<Object> dests) {
+  /**
+   * Add a sync message
+   * @param source source
+   * @param target target
+   */
+  protected abstract void addSyncMessage(int source, int target);
+
+  /**
+   * Check weather we can accept a message
+   * @param source source
+   * @param target target
+   */
+  protected abstract boolean canAcceptMessage(int source, int target);
+
+  /**
+   * Swap the messages to the ready queue
+   * @param dest the target
+   * @param dests message queue to switch to ready
+   */
+  private void swapToReady(int dest, Queue<Object> dests) {
     if (!readyToSend.containsKey(dest)) {
       readyToSend.put(dest, new AggregatedObjects<>(dests));
     } else {
@@ -182,141 +181,99 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
   }
 
   @Override
-  public boolean progress() {
+  public synchronized boolean progress() {
+    boolean needsFurtherProgress = false;
+
     lock.lock();
     try {
-      boolean needsFurtherProgress = false;
-      for (int target : messages.keySet()) {
-        // now check weather we have the messages for this source
-        Queue<Object> messagePerTarget = messages.get(target);
-        Map<Integer, Boolean> finishedForTarget = syncReceived.get(target);
-        boolean canProgress = true;
+      for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
+        swapToReady(e.getKey(), e.getValue());
 
-        while (canProgress) {
-          boolean allSyncsPresent = allSyncsPresent(finishedForTarget);
-
-          // if we have found all the values from sources or if syncs are present
-          // we need to aggregate
-          if (messagePerTarget.size() > 0) {
-            aggregate(target, allSyncsPresent);
-          } else {
-            canProgress = false;
-          }
-
-          // if we are filled to send, lets send the values
-          if (isFilledToSend(target, allSyncsPresent)) {
-            if (!sendToTarget(target, allSyncsPresent)) {
-              canProgress = false;
-            }
-          } else {
-            canProgress = false;
-          }
-
-          // finally if there is a sync, and all queues are empty
-          if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
-              && allQueuesEmpty(messagePerTarget)
-              && isAllEmpty(target)
-              && operation.isDelegateComplete()) {
-            needsFurtherProgress = sendSyncForward(needsFurtherProgress, target);
-            if (!needsFurtherProgress) {
-              targetStates.put(target, ReceiverState.SYNCED);
-              // at this point we call the sync event
-              onSyncEvent(target);
-              clearTarget(target);
-            }
-          }
+        List<Object> send = readyToSend.get(e.getKey());
+        // check weather we are ready to send and we have values to send
+        if (send == null || send.size() == 0 || !isFilledToSend(e.getKey())) {
+          continue;
         }
 
-        needsFurtherProgress = targetStates.get(target) != ReceiverState.SYNCED;
+        // if we send this list successfully
+        if (sendToTarget(representSource, e.getKey(), send)) {
+          // lets remove from ready list and clear the list
+          readyToSend.remove(e.getKey());
+        } else {
+          needsFurtherProgress = true;
+        }
       }
-      return needsFurtherProgress;
+
+      if (!isAllEmpty() || !sync() || !operation.isDelegateComplete()) {
+        needsFurtherProgress = true;
+      }
     } finally {
       lock.unlock();
     }
+
+    return needsFurtherProgress;
   }
 
   /**
-   * Check weather all the other information is flushed
-   * @param target target
-   * @return true if there is nothing to process
+   * Handle the sync
+   *
+   * @return true if everything is synced
    */
-  protected abstract boolean isAllEmpty(int target);
+  protected abstract boolean sync();
 
   /**
-   * Handle the sync
-   * @param needsFurtherProgress the current value of need progress
-   * @param target target
-   * @return the needFurtherProgress
+   * Check weather all the other information is flushed
+   * @return true if there is nothing to process
    */
-  protected abstract boolean sendSyncForward(boolean needsFurtherProgress, int target);
+  private boolean isAllEmpty() {
+    for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
+      }
+    }
+
+    for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   /**
    * Clear all the buffers for the target, to ready for the next
    *
    * @param target target
    */
-  private void clearTarget(int target) {
+  protected void clearTarget(int target) {
     Queue<Object> messagesPerTarget = messages.get(target);
     messagesPerTarget.clear();
 
-    isSyncSent.put(target, false);
-
-    Map<Integer, Boolean> syncs = syncReceived.get(target);
-    for (Integer source : syncs.keySet()) {
-      syncs.put(source, false);
+    List<Object> sends = readyToSend.get(target);
+    if (sends != null) {
+      sends.clear();
     }
   }
 
   /**
    * Send the values to a target
+   * @param source the sources
    * @param target the target
+   * @param values the values
    * @return true if all the values are sent successfully
    */
-  protected abstract boolean sendToTarget(int target, boolean sync);
-
-  /**
-   * Aggregate values from sources for a target, assumes every source has a value
-   * @param target target
-   * @param sync true if all the syncs are present
-   * @return true if there are no more elements to aggregate
-   */
-  protected abstract boolean aggregate(int target, boolean sync);
+  protected abstract boolean sendToTarget(int source, int target, List<Object> values);
 
   /**
    * Return true if we are filled to send
    *
    * @return true if we are filled enough to send
    */
-  protected abstract boolean isFilledToSend(int target, boolean sync);
-
-  /**
-   * Check weather there is nothing left in the queues
-   * @param messagePerTarget the queues for the target
-   * @return true if no values left
-   */
-  protected boolean allQueuesEmpty(Queue<Object> messagePerTarget) {
-    return messagePerTarget.size() == 0;
-  }
-
-  /**
-   * Checks weather all syncs are present
-   * @param syncs the syncs map
-   * @return true if all syncs are present
-   */
-  protected boolean allSyncsPresent(Map<Integer, Boolean> syncs) {
-    for (Boolean sync : syncs.values()) {
-      if (!sync) {
-        return false;
-      }
-    }
-    return true;
-  }
+  protected abstract boolean isFilledToSend(int target);
 
   @Override
   public void onFinish(int source) {
-    for (Integer target : syncReceived.keySet()) {
-      Map<Integer, Boolean> finishedMessages = syncReceived.get(target);
-      finishedMessages.put(source, true);
-    }
+    throw new RuntimeException("Not implemented");
   }
 }

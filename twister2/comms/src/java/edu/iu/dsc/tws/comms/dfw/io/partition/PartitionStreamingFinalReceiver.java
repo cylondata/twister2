@@ -16,11 +16,10 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
 
-public class PartitionStreamingFinalReceiver extends BasePartitionStreamingFinalReceiver
-    implements MessageReceiver {
+public class PartitionStreamingFinalReceiver extends TargetFinalReceiver {
   // the receiver
   private SingularReceiver receiver;
 
@@ -28,7 +27,6 @@ public class PartitionStreamingFinalReceiver extends BasePartitionStreamingFinal
     this.receiver = receiver;
   }
 
-  @Override
   public void init(Config cfg, DataFlowOperation operation,
                    Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, operation, expectedIds);
@@ -36,17 +34,14 @@ public class PartitionStreamingFinalReceiver extends BasePartitionStreamingFinal
   }
 
   @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    return super.onMessage(source, path, target, flags, object);
-  }
+  protected boolean sendToTarget(int source, int target, List<Object> values) {
+    // if we send this list successfully
+    if (receiver.receive(target, values)) {
+      // lets remove from ready list and clear the list
+      readyToSend.remove(target);
+      return true;
+    }
 
-  @Override
-  public boolean progress() {
-    return super.progress();
-  }
-
-  @Override
-  public boolean receive(int target, Object message) {
-    return receiver.receive(target, message);
+    return false;
   }
 }
