@@ -22,7 +22,8 @@ class Node:
 
     def add_to_leaves(self, node):
         if len(self.children) == 0:
-            self.temp_children.append(copy.deepcopy(node))
+            copied_node = copy.deepcopy(node)
+            self.temp_children.append(copied_node)
         else:
             for child in self.children:
                 child.add_to_leaves(node)
@@ -35,6 +36,16 @@ class Node:
         else:
             for child in self.children:
                 child.finalize_iteration()
+
+    def resolve_variables(self, command):
+        new_command = command
+        if not self.flag is None:
+            new_command = command.replace("${" + self.flag + "}", str(self.value))
+
+        if self.parent is None:
+            return new_command
+        else:
+            return self.parent.resolve_variables(new_command)
 
     def get_code(self, command):
         if self.parent is None:
