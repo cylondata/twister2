@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.utils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -62,6 +64,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
         if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {
           FileStatus fileStatus = fileSystem.getFileStatus(new Path(datasetName));
           if (!fileStatus.getPath().isNullOrEmpty()) {
+            //dataNodes = getDataNodes(new String[]{this.datasetName});
             dataNodes = getDataNodes();
           }
         } else if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
@@ -128,6 +131,38 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     for (DatanodeInfo di : datanodeReport) {
       datanodesList.add(di.getHostName());
     }
+    return datanodesList;
+  }
+
+
+  private List<String> getDataNodes(String[] fName) throws IOException {
+
+    Configuration conf = new Configuration(false);
+    conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
+    ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+    PrintStream out = new PrintStream(bStream, true);
+
+    List<String> datanodesList = new ArrayList<>();
+    InetSocketAddress namenodeAddress = new InetSocketAddress(
+        HdfsDataContext.getHdfsNamenodeDefault(config),
+        HdfsDataContext.getHdfsNamenodePortDefault(config));
+    DFSClient dfsClient = new DFSClient(namenodeAddress, conf);
+    ClientProtocol nameNode = dfsClient.getNamenode();
+    DatanodeInfo[] datanodeReport =
+        nameNode.getDatanodeReport(HdfsConstants.DatanodeReportType.ALL);
+    for (DatanodeInfo di : datanodeReport) {
+      datanodesList.add(di.getHostName());
+    }
+
+    /* To retrieve the datanode name of the respective file
+    try {
+      ToolRunner.run(new DFSck(conf, out), fName);
+      out.println();
+    } catch (Exception e) {
+      throw new RuntimeException("Exception Occured:" + e.getMessage());
+    }
+    bStream.close();
+    out.close();*/
     return datanodesList;
   }
 }
