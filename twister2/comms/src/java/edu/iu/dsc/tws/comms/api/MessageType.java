@@ -33,49 +33,49 @@ public final class MessageType<T> implements TypeDefinition<T> {
       true, Integer.BYTES, Integer.class, IntegerPacker.getInstance()
   );
   public static final MessageType<int[]> INTEGER_ARRAY = new MessageType<>(
-      true, Integer.BYTES, int[].class, IntegerArrayPacker.getInstance()
+      true, Integer.BYTES, int[].class, IntegerArrayPacker.getInstance(), true
   );
 
   public static final MessageType<Character> CHAR = new MessageType<>(
       true, Character.BYTES, Character.class, null
   );
   public static final MessageType<char[]> CHAR_ARRAY = new MessageType<>(
-      true, Character.BYTES, char[].class, null
+      true, Character.BYTES, char[].class, null, true
   );
 
   public static final MessageType<Byte> BYTE = new MessageType<>(
       true, Byte.BYTES, Byte.class, BytePacker.getInstance()
   );
   public static final MessageType<byte[]> BYTE_ARRAY = new MessageType<>(
-      true, Byte.BYTES, byte[].class, ByteArrayPacker.getInstance()
+      true, Byte.BYTES, byte[].class, ByteArrayPacker.getInstance(), true
   );
 
   public static final MessageType<Long> LONG = new MessageType<>(
       true, Long.BYTES, Long.class, LongPacker.getInstance()
   );
   public static final MessageType<long[]> LONG_ARRAY = new MessageType<>(
-      true, Long.BYTES, long[].class, LongArrayPacker.getInstance()
+      true, Long.BYTES, long[].class, LongArrayPacker.getInstance(), true
   );
 
   public static final MessageType<Double> DOUBLE = new MessageType<>(
       true, Double.BYTES, Double.class, DoublePacker.getInstance()
   );
   public static final MessageType<double[]> DOUBLE_ARRAY = new MessageType<>(
-      true, Double.BYTES, double[].class, DoubleArrayPacker.getInstance()
+      true, Double.BYTES, double[].class, DoubleArrayPacker.getInstance(), true
   );
 
   public static final MessageType<Float> FLOAT = new MessageType<>(
       true, Float.BYTES, Float.class, FloatPacker.getInstance()
   );
   public static final MessageType<float[]> FLOAT_ARRAY = new MessageType<>(
-      true, Float.BYTES, float[].class, FloatArrayPacker.getInstance()
+      true, Float.BYTES, float[].class, FloatArrayPacker.getInstance(), true
   );
 
   public static final MessageType<Short> SHORT = new MessageType<>(
       true, Short.BYTES, Short.class, ShortPacker.getInstance()
   );
   public static final MessageType<short[]> SHORT_ARRAY = new MessageType<>(
-      true, Short.BYTES, short[].class, ShortArrayPacker.getInstance()
+      true, Short.BYTES, short[].class, ShortArrayPacker.getInstance(), true
   );
 
   public static final MessageType<String> STRING = new MessageType<>(
@@ -98,6 +98,7 @@ public final class MessageType<T> implements TypeDefinition<T> {
   private int size;
   private Class<T> clazz;
   private DataPacker<T> dataPacker;
+  private boolean isArray = false;
 
   //todo remove
   private KeyPacker keyPacker;
@@ -107,6 +108,15 @@ public final class MessageType<T> implements TypeDefinition<T> {
     this.size = size;
     this.clazz = clazz;
     this.dataPacker = dataPacker;
+  }
+
+  private MessageType(boolean primitive, int size, Class<T> clazz,
+                      DataPacker<T> dataPacker, boolean isArray) {
+    this.isPrimitive = primitive;
+    this.size = size;
+    this.clazz = clazz;
+    this.dataPacker = dataPacker;
+    this.isArray = isArray;
   }
 
   /**
@@ -154,7 +164,7 @@ public final class MessageType<T> implements TypeDefinition<T> {
 
   @Override
   public boolean isArray() {
-    return false;
+    return this.isArray;
   }
 
   /**

@@ -49,7 +49,7 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
     int lengthOfData = this.getMessageType().getDataSizeInBytes(data);
     int unitSize = this.getMessageType().getUnitSizeInBytes();
 
-    int remainingToCopy = lengthOfData * unitSize - bytesCopied;
+    int remainingToCopy = lengthOfData - bytesCopied;
 
     int canCopy = (remainingCapacity > remainingToCopy ? remainingToCopy
         : remainingCapacity) / unitSize; // amount that can be copied to this buffer
@@ -62,7 +62,7 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
 
     //updating state
     totalBytes = totalBytes + canCopy * unitSize;
-    // we set the tolal bytes copied so far
+    // we set the total bytes copied so far
     state.setTotalBytes(totalBytes);
     // we copied everything
     if ((canCopy * unitSize) == remainingToCopy) {
