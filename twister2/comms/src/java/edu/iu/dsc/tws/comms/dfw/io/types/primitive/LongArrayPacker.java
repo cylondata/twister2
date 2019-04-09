@@ -9,61 +9,44 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 
 import java.nio.ByteBuffer;
 
-import edu.iu.dsc.tws.comms.api.ArrayPacker;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.InMessage;
-import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.types.PartialDataDeserializer;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
-public class LongArrayPacker implements ArrayPacker<long[]> {
+public final class LongArrayPacker implements PrimitiveArrayPacker<long[]> {
 
-  public LongArrayPacker() {
+  private static volatile LongArrayPacker instance;
+
+  private LongArrayPacker() {
+
+  }
+
+  public static LongArrayPacker getInstance() {
+    if (instance == null) {
+      instance = new LongArrayPacker();
+    }
+    return instance;
   }
 
   @Override
-  public int packData(long[] data, SerializeState state) {
-    return data.length * Long.BYTES;
+  public MessageType<long[]> getMessageType() {
+    return MessageType.LONG_ARRAY;
   }
 
   @Override
-  public boolean writeDataToBuffer(long[] data,
-                                   ByteBuffer targetBuffer, SerializeState state) {
-    return DataSerializer.copyLong(data, targetBuffer, state);
-  }
-
-  public long[] initializeUnPackDataObject(int length) {
-    return this.wrapperForByteLength(length);
+  public ByteBuffer addToBuffer(ByteBuffer byteBuffer, long[] data, int index) {
+    return byteBuffer.putLong(data[index]);
   }
 
   @Override
-  public int readDataFromBuffer(InMessage currentMessage, int currentLocation,
-                                DataBuffer buffer, int currentObjectLength) {
-    int startIndex = currentMessage.getUnPkCurrentBytes();
-    startIndex = startIndex / Long.BYTES;
-    long[] val = (long[]) currentMessage.getDeserializingObject();
-    return PartialDataDeserializer.deserializeLong(buffer, currentObjectLength,
-        val, startIndex, currentLocation);
+  public void readFromBufferAndSet(ByteBuffer byteBuffer, int offset, long[] array, int index) {
+    array[index] = byteBuffer.getLong(offset);
   }
 
   @Override
-  public long[] wrapperForByteLength(int byteLength) {
-    return new long[byteLength / Long.BYTES];
+  public long[] wrapperForLength(int length) {
+    return new long[length];
   }
 }

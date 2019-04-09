@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io.types;
+package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 
 import java.nio.ByteBuffer;
 
@@ -17,9 +17,12 @@ import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
+import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.types.PartialDataDeserializer;
 
-public class DoublePacker implements DataPacker {
-  public DoublePacker() {
+public class DoubleArrayPacker implements DataPacker {
+
+  public DoubleArrayPacker() {
   }
 
   @Override
