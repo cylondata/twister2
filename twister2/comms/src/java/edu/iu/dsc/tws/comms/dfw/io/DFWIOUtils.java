@@ -25,11 +25,10 @@ import edu.iu.dsc.tws.comms.dfw.io.types.ByteKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.BytePacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectKeyPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.ShortKeyPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.ShortPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.DoublePacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.LongPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.ShortPacker;
 
 public final class DFWIOUtils {
   private static final int HEADER_SIZE = 16;
@@ -153,7 +152,7 @@ public final class DFWIOUtils {
     } else if (messageType == MessageType.LONG) {
       return messageType.getDataPacker();
     } else if (messageType == MessageType.SHORT) {
-      return new ShortPacker();
+      return messageType.getDataPacker();
     } else if (messageType == MessageType.DOUBLE) {
       return messageType.getDataPacker();
     } else if (messageType == MessageType.BYTE) {
@@ -182,7 +181,7 @@ public final class DFWIOUtils {
     } else if (dataType == MessageType.LONG) {
       return LongPacker.getInstance();
     } else if (dataType == MessageType.SHORT) {
-      return new ShortKeyPacker();
+      return ShortPacker.getInstance();
     } else if (dataType == MessageType.DOUBLE) {
       return DoublePacker.getInstance();
     } else if (dataType == MessageType.BYTE) {
