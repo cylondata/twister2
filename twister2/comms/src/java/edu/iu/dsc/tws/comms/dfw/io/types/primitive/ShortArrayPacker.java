@@ -27,7 +27,7 @@ import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 
-public class ShortArrayPacker implements PrimitiveArrayPacker<short[]> {
+public final class ShortArrayPacker implements PrimitiveArrayPacker<short[]> {
 
   private static volatile ShortArrayPacker instance;
 

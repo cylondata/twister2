@@ -20,6 +20,8 @@ import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerArrayPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.LongArrayPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.LongPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.ShortArrayPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.ShortPacker;
 
 public final class MessageType<T> implements TypeDefinition<T> {
 
@@ -59,10 +61,10 @@ public final class MessageType<T> implements TypeDefinition<T> {
   );
 
   public static final MessageType<Short> SHORT = new MessageType<>(
-      true, Short.BYTES, Short.class, null
+      true, Short.BYTES, Short.class, ShortPacker.getInstance()
   );
   public static final MessageType<short[]> SHORT_ARRAY = new MessageType<>(
-      true, Short.BYTES, short[].class, null
+      true, Short.BYTES, short[].class, ShortArrayPacker.getInstance()
   );
 
   public static final MessageType<String> STRING = new MessageType<>(

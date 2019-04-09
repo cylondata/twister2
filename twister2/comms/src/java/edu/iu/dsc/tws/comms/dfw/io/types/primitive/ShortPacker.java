@@ -27,7 +27,7 @@ import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 
-public class ShortPacker implements PrimitivePacker<Short> {
+public final class ShortPacker implements PrimitivePacker<Short> {
 
   private static volatile ShortPacker instance;
 
