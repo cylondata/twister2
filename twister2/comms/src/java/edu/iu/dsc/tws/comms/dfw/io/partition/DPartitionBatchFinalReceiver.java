@@ -181,7 +181,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       for (Tuple kc : tuples) {
         Object data = kc.getValue();
         byte[] d;
-        if (partition.getReceiveDataType() != MessageType.BYTE || !(data instanceof byte[])) {
+        if (partition.getReceiveDataType() != MessageType.BYTE_ARRAY || !(data instanceof byte[])) {
           d = DataSerializer.serialize(data, kryoSerializer);
         } else {
           d = (byte[]) data;
@@ -195,7 +195,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       List<Object> contents = (List<Object>) object;
       for (Object kc : contents) {
         byte[] d;
-        if (partition.getReceiveDataType() != MessageType.BYTE) {
+        if (partition.getReceiveDataType() != MessageType.BYTE_ARRAY) {
           d = DataSerializer.serialize(kc, kryoSerializer);
         } else {
           d = (byte[]) kc;

@@ -120,8 +120,9 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
     A array = this.wrapperForByteLength(byteLength);
     int noOfElements = byteLength / this.getMessageType().getUnitSizeInBytes();
     int unitSize = this.getMessageType().getUnitSizeInBytes();
+    int initialBufferPosition = byteBuffer.position();
     for (int i = 0; i < noOfElements; i++) {
-      this.readFromBufferAndSet(byteBuffer, i * unitSize, array, i);
+      this.readFromBufferAndSet(byteBuffer, initialBufferPosition + i * unitSize, array, i);
     }
     return array;
   }

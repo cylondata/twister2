@@ -12,131 +12,17 @@
 package edu.iu.dsc.tws.comms.dfw.io.types;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import static edu.iu.dsc.tws.comms.api.MessageType.BYTE;
-import static edu.iu.dsc.tws.comms.api.MessageType.DOUBLE;
-import static edu.iu.dsc.tws.comms.api.MessageType.INTEGER;
-import static edu.iu.dsc.tws.comms.api.MessageType.LONG;
-import static edu.iu.dsc.tws.comms.api.MessageType.OBJECT;
-import static edu.iu.dsc.tws.comms.api.MessageType.SHORT;
-import static edu.iu.dsc.tws.comms.api.MessageType.STRING;
 
 public final class KeyDeserializer {
   private static final Logger LOG = Logger.getLogger(KeyDeserializer.class.getName());
 
   private KeyDeserializer() {
-  }
-
-  /**
-   * Deserializers the key that is contained in the buffer list passed to the method
-   *
-   * @param keyType the type of the key to be retrieved
-   * @param buffers the buffers that belong to the message, the key is contained in these buffers
-   * @param deserializer the deserializer to be used if the object needs to be deserialized
-   * @return a pair of key length and the key
-   */
-  public static Pair<Integer, Object> deserializeKey(MessageType keyType,
-                                                     List<DataBuffer> buffers,
-                                                     KryoSerializer deserializer) {
-    int currentIndex = 0;
-    int keyLength = 0;
-    Object key = null;
-    //Used when there are multiple keys
-    int keyCount;
-    // first we need to read the key type
-    if (INTEGER.equals(keyType)) {
-      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-      ByteBuffer byteBuffer = buffers.get(currentIndex).getByteBuffer();
-      key = byteBuffer.getInt();
-      keyLength = 4;
-    } else if (SHORT.equals(keyType)) {
-      currentIndex = getReadIndex(buffers, currentIndex, Short.BYTES);
-      key = buffers.get(currentIndex).getByteBuffer().getShort();
-      keyLength = 2;
-    } else if (LONG.equals(keyType)) {
-      currentIndex = getReadIndex(buffers, currentIndex, Long.BYTES);
-      key = buffers.get(currentIndex).getByteBuffer().getLong();
-      keyLength = 8;
-    } else if (DOUBLE.equals(keyType)) {
-      currentIndex = getReadIndex(buffers, currentIndex, Double.BYTES);
-      key = buffers.get(currentIndex).getByteBuffer().getDouble();
-      keyLength = 8;
-    } else if (OBJECT.equals(keyType)) {
-      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-      keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-      key = DataDeserializer.deserializeObject(buffers, keyLength, deserializer);
-    } else if (BYTE.equals(keyType)) {
-      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-      keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-      key = readBytes(buffers, keyLength);
-    } else if (STRING.equals(keyType)) {
-      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-      keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-      key = new String(readBytes(buffers, keyLength));
-    }
-    return new ImmutablePair<>(keyLength, key);
-  }
-
-  /**
-   * reads the next key of given type in the MPIBuffers and returns it as a byte[]
-   *
-   * @param keyType type of the key
-   * @param buffers buffers that contain the data
-   * @return key as ByteBuffer
-   */
-  public static Pair<Integer, Object> getKeyAsByteArray(MessageType keyType,
-                                                        List<DataBuffer> buffers) {
-    int currentIndex = 0;
-    //Used when there are multiple keys
-    int keyCount;
-    byte[] tempArray = null;
-    Object key = null;
-    int keyLength = 0;
-    if (INTEGER.equals(keyType)) {
-      tempArray = new byte[Integer.BYTES];
-      keyLength = Integer.BYTES;
-      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-      buffers.get(currentIndex).getByteBuffer().get(tempArray);
-    } else if (SHORT.equals(keyType)) {
-      tempArray = new byte[Short.BYTES];
-      keyLength = Short.BYTES;
-      currentIndex = getReadIndex(buffers, currentIndex, Short.BYTES);
-      buffers.get(currentIndex).getByteBuffer().get(tempArray);
-    } else if (LONG.equals(keyType)) {
-      tempArray = new byte[Long.BYTES];
-      keyLength = Long.BYTES;
-      currentIndex = getReadIndex(buffers, currentIndex, Long.BYTES);
-      buffers.get(currentIndex).getByteBuffer().get(tempArray);
-    } else if (DOUBLE.equals(keyType)) {
-      tempArray = new byte[Double.BYTES];
-      keyLength = Double.BYTES;
-      currentIndex = getReadIndex(buffers, currentIndex, Double.BYTES);
-      buffers.get(currentIndex).getByteBuffer().get(tempArray);
-    } else if (OBJECT.equals(keyType)) {
-      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-      keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-      tempArray = readBytes(buffers, keyLength);
-    } else if (BYTE.equals(keyType)) {
-      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-      keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-      tempArray = readBytes(buffers, keyLength);
-    } else if (STRING.equals(keyType)) {
-      currentIndex = getReadIndex(buffers, currentIndex, Integer.BYTES);
-      keyLength = buffers.get(currentIndex).getByteBuffer().getInt();
-      tempArray = readBytes(buffers, keyLength);
-    } else {
-      tempArray = new byte[0];
-    }
-    return new ImmutablePair<>(keyLength, tempArray);
   }
 
   private static byte[] readBytes(List<DataBuffer> buffers, int length) {
@@ -157,26 +43,6 @@ public final class KeyDeserializer {
       }
     }
     return bytes;
-  }
-
-  private static int getReadIndex(List<DataBuffer> buffers, int currentIndex, int expectedSize) {
-    for (int i = currentIndex; i < buffers.size(); i++) {
-      ByteBuffer byteBuffer = buffers.get(i).getByteBuffer();
-      int remaining = byteBuffer.remaining();
-      if (remaining > expectedSize) {
-        return i;
-      }
-    }
-    throw new RuntimeException("Something is wrong in the buffer management");
-  }
-
-  private static Object readMultiBytes(List<DataBuffer> buffers, int keyLength, int keyCount) {
-    List<byte[]> keys = new ArrayList<>();
-    int singleKeyLength = keyLength / keyCount;
-    for (int i = 0; i < keyCount; i++) {
-      keys.add(readBytes(buffers, singleKeyLength));
-    }
-    return keys;
   }
 
   /**

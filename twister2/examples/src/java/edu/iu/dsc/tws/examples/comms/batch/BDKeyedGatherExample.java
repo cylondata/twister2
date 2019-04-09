@@ -68,7 +68,7 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
     }
     // create the communication
     keyedGather = new BKeyedGather(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, MessageType.INTEGER, new FinalReduceReceiver(),
+        MessageType.INTEGER, MessageType.INTEGER_ARRAY, new FinalReduceReceiver(),
         new SimpleKeyBasedSelector(), true, Comparator.comparingInt(o -> (Integer) o));
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -174,6 +174,7 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
 
     @Override
     public boolean receive(int target, Iterator<Object> object) {
+      System.out.println("gather recevied");
       Timing.mark(BenchmarkConstants.TIMING_ALL_RECV,
           workerId == 0 && target == lowestTarget);
       BenchmarkUtils.markTotalTime(resultsRecorder, workerId == 0

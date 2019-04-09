@@ -38,7 +38,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 
 /**
  * Sorted merger implementation
@@ -207,7 +206,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private void deserializeObjects() {
     for (int i = 0; i < recordsInMemory.size(); i++) {
       Tuple kv = recordsInMemory.get(i);
-      Object o = DataDeserializer.deserialize(dataType, kryoSerializer, (byte[]) kv.getValue());
+      Object o = dataType.getDataPacker().unpackFromByteArray((byte[]) kv.getValue());
       objectsInMemory.add(new Tuple(kv.getKey(), o));
     }
   }

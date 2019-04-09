@@ -65,5 +65,9 @@ public interface DataPacker<D> {
   boolean isHeaderRequired();
 
   D unpackFromBuffer(ByteBuffer byteBuffer, int byteLength);
+
+  default D unpackFromByteArray(byte[] array) {
+    return this.unpackFromBuffer(ByteBuffer.wrap(array), array.length);
+  }
 }
 

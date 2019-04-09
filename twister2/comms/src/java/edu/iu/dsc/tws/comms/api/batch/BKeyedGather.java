@@ -75,7 +75,7 @@ public class BKeyedGather {
     if (!useDisk) {
       finalReceiver = new KGatherBatchFinalReceiver(rcvr, 100);
     } else {
-      receiveDataType = MessageType.BYTE;
+      receiveDataType = MessageType.BYTE_ARRAY;
       finalReceiver = new DPartitionBatchFinalReceiver(
           rcvr, true, comm.getPersistentDirectory(), comparator);
     }

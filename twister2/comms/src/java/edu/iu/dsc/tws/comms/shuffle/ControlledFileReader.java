@@ -27,7 +27,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 
 public class ControlledFileReader implements Iterator, Comparable<ControlledFileReader> {
@@ -169,9 +168,8 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
   private Object readNextValue() {
     if (!this.inMemory && this.buffer.hasRemaining()) {
       int dataSize = this.buffer.getInt();
-      Object nextValue = DataDeserializer.deserialize(
-          dataType, deserializer, this.buffer, dataSize
-      );
+      Object nextValue = dataType.getDataPacker().unpackFromBuffer(this.buffer, dataSize);
+
       this.valuesQ.add(nextValue);
       this.valueSizeQ.add(dataSize);
 

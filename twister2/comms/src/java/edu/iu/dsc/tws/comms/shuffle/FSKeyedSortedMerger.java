@@ -30,7 +30,6 @@ import org.apache.commons.io.FileUtils;
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.utils.Heap;
 import edu.iu.dsc.tws.comms.utils.HeapNode;
 
@@ -196,7 +195,7 @@ public class FSKeyedSortedMerger implements Shuffle {
   private void deserializeObjects() {
     for (int i = 0; i < recordsInMemory.size(); i++) {
       Tuple kv = recordsInMemory.get(i);
-      Object o = DataDeserializer.deserialize(dataType, kryoSerializer, (byte[]) kv.getValue());
+      Object o = dataType.getDataPacker().unpackFromByteArray((byte[]) kv.getValue());
       objectsInMemory.add(new Tuple(kv.getKey(), o));
     }
   }

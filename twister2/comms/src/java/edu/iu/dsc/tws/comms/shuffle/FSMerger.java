@@ -26,7 +26,6 @@ import org.apache.commons.io.FileUtils;
 
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 
 /**
  * Save the records to file system and retrieve them, this is just values, so no
@@ -146,7 +145,7 @@ public class FSMerger implements Shuffle {
 
   private void deserializeObjects() {
     for (int i = 0; i < bytesInMemory.size(); i++) {
-      Object o = DataDeserializer.deserialize(valueType, kryoSerializer, bytesInMemory.get(i));
+      Object o = valueType.getDataPacker().unpackFromByteArray(bytesInMemory.get(i));
       objectsInMemory.add(o);
     }
   }
