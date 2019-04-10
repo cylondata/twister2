@@ -256,9 +256,40 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
       int index, WorkerPlan workerPlan, Map<Integer, List<InstanceId>> aMap,
       int containerIndex, int maxTasksPerContainer) {
 
+    List<String> inputDataList = getInputFilesList();
+    Map<String, List<DataTransferTimeCalculator>> workerDatanodeDistanceMap;
+    List<DataTransferTimeCalculator> dataTransferTimeCalculatorList = null;
+    List<String> datanodesList;
+    DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
+
+    /*If the index is zero, simply calculate the distance between the worker node and the
+    datanodes. Else, if the index values is greater than 0, check the container has reached
+    the maximum task instances per container. If it is yes, then calculationList the container to
+    the allocatedWorkers list which will not be considered for the next scheduling cycle.*/
+    if (inputDataList.size() > 0) {
+      if (index == 0) {
+        datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
+        workerDatanodeDistanceMap = distanceCalculator(datanodesList, workerPlan, index,
+            allocatedWorkers);
+        dataTransferTimeCalculatorList = findBestWorkerNode(workerDatanodeDistanceMap);
+      } else {
+        datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
+        Worker worker = workerPlan.getWorker(containerIndex);
+        if (aMap.get(containerIndex).size() >= maxTasksPerContainer) {
+          allocatedWorkers.add(worker.getId());
+        }
+        workerDatanodeDistanceMap = distanceCalculator(datanodesList, workerPlan, index,
+            allocatedWorkers);
+        dataTransferTimeCalculatorList = findBestWorkerNode(workerDatanodeDistanceMap);
+      }
+    }
+    return dataTransferTimeCalculatorList;
+  }
+
+
+  private List<String> getInputFilesList() {
     List<String> inputDataList = new ArrayList<>();
     String directory = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
-
     final Path path = new Path(directory + workerId);
     final FileSystem fileSystem;
     try {
@@ -278,43 +309,18 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     } catch (IOException e) {
       throw new RuntimeException("IOException Occured");
     }
-
-    /*If the index is zero, simply calculate the distance between the worker node and the
-    datanodes. Else, if the index values is greater than 0, check the container has reached
-    the maximum task instances per container. If it is yes, then calculationList the container to
-    the allocatedWorkers list which will not be considered for the next scheduling cycle.*/
-    Map<String, List<DataTransferTimeCalculator>> workersDistanceMap;
-    List<DataTransferTimeCalculator> dataTransferTimeCalculatorList = null;
-    List<String> datanodesList;
-
-    DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
-    if (inputDataList.size() > 0) {
-      if (index == 0) {
-        datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
-        workersDistanceMap = workerDistanceMap(datanodesList, workerPlan, index, allocatedWorkers);
-        dataTransferTimeCalculatorList = findBestWorkerNode(workersDistanceMap);
-      } else {
-        datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
-        Worker worker = workerPlan.getWorker(containerIndex);
-        if (aMap.get(containerIndex).size() >= maxTasksPerContainer) {
-          allocatedWorkers.add(worker.getId());
-        }
-        workersDistanceMap = workerDistanceMap(datanodesList, workerPlan, index, allocatedWorkers);
-        dataTransferTimeCalculatorList = findBestWorkerNode(workersDistanceMap);
-      }
-    }
-    return dataTransferTimeCalculatorList;
+    return inputDataList;
   }
+
 
   /**
    * It calculates the distance between the data nodes and the worker node which is based on
    * the available bandwidth, latency, and the file size.
    */
-  private Map<String, List<DataTransferTimeCalculator>> workerDistanceMap(
+  private Map<String, List<DataTransferTimeCalculator>> distanceCalculator(
       List<String> datanodesList, WorkerPlan workers, int index, List<Integer> assignedWorkers) {
 
     Map<String, List<DataTransferTimeCalculator>> workerDistanceMap = new HashMap<>();
-
     //distance between datanode and worker node
     double calculateDistance = 0.0;
     for (String nodesList : datanodesList) {

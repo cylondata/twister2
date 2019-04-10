@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.batch.datalocalityaware;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,7 +23,12 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.data.fs.FileStatus;
+import edu.iu.dsc.tws.data.fs.FileSystem;
+import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.utils.DataNodeLocatorUtils;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.Resource;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
@@ -65,6 +71,9 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
   //Config object
   private Config config;
 
+  //WorkerId
+  private int workerId;
+
   /**
    * This method first initialize the task instance values with default task instance ram, disk, and
    * cpu values from the task scheduler context.
@@ -76,6 +85,15 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
     this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
   }
+
+  public void initialize(Config cfg, int workerid) {
+    this.workerId = workerid;
+    this.config = cfg;
+    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
+    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
+    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
+  }
+
 
   /**
    * This is the base method for the data locality aware task scheduling for scheduling the batch
@@ -169,6 +187,23 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     int taskSchedulePlanId = 0;
     taskSchedulePlan = new TaskSchedulePlan(
         taskSchedulePlanId, new HashSet<>(containerPlans.values()));
+
+    //TODO: Just for validation purpose and it will be removed finally
+    if (taskSchedulePlan != null) {
+      Map<Integer, ContainerPlan> containersMap
+          = taskSchedulePlan.getContainersMap();
+      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+        Integer integer = entry.getKey();
+        ContainerPlan containerPlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances
+            = containerPlan.getTaskInstances();
+        LOG.info("Task Details for Container Id:" + integer);
+        for (TaskInstancePlan ip : containerPlanTaskInstances) {
+          LOG.info("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+              + "\tTask Name:" + ip.getTaskName());
+        }
+      }
+    }
     return taskSchedulePlan;
   }
 
@@ -199,15 +234,12 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       Map<String, List<DataTransferTimeCalculator>> workerPlanMap;
       String taskName = aTaskEntrySet.getKey();
 
-      if (taskVertex.getName().equals(taskName)
-          && (taskVertex.getConfig().getListValue("inputdataset") != null)) {
-
+      if (taskVertex.getName().equals(taskName)) {
         int totalTaskInstances = taskVertex.getParallelism();
-        List<String> datanodesList = dataNodeLocatorUtils.
-            findDataNodesLocation(taskVertex.getConfig().getListValue("inputdataset"));
+        List<String> inputDataList = getInputFilesList();
+        List<String> datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
         workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx);
         List<DataTransferTimeCalculator> cal = findBestWorkerNode(taskVertex, workerPlanMap);
-
         /* This loop allocate the task instances to the respective container, before allocation
         it will check whether the container has reached maximum task instance size which is
         able to hold. */
@@ -224,6 +256,31 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       }
     }
     return dataAwareAllocationMap;
+  }
+
+  private List<String> getInputFilesList() {
+    List<String> inputDataList = new ArrayList<>();
+    String directory = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
+    final Path path = new Path(directory + workerId);
+    final FileSystem fileSystem;
+    try {
+      fileSystem = path.getFileSystem(config);
+      if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {
+        final FileStatus pathFile = fileSystem.getFileStatus(path);
+        inputDataList.add(String.valueOf(pathFile.getPath()));
+      } else if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
+          Context.TWISTER2_LOCAL_FILESYSTEM)) {
+        for (FileStatus file : fileSystem.listFiles(path)) {
+          String filename = String.valueOf(file.getPath());
+          if (filename != null) {
+            inputDataList.add(filename);
+          }
+        }
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("IOException Occured");
+    }
+    return inputDataList;
   }
 
   /**
@@ -256,15 +313,13 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       /*If the vertex has the input data set list, get the status and path of the file in HDFS.*/
       for (Vertex vertex : taskVertexSet) {
         if (vertex.getName().equals(taskName)) {
-
-          List<String> inputDataList = vertex.getConfig().getListValue("inputdataset");
-          List<String> datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
-
           int totalNumberOfInstances = vertex.getParallelism();
+          //List<String> inputDataList = vertex.getConfig().getListValue("inputdataset");
+          List<String> inputDataList = getInputFilesList();
+          List<String> datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
 
           workerPlanMap = distanceCalculation(datanodesList, workerPlan, cIdx);
           List<DataTransferTimeCalculator> cal = findBestWorkerNode(vertex, workerPlanMap);
-
           for (int i = 0; i < totalNumberOfInstances; i++) {
             containerIndex = Integer.parseInt(cal.get(i).getNodeName().trim());
             dataAwareAllocationMap.get(containerIndex).add(
