@@ -11,10 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
+import java.util.HashMap;
+
 /**
  * Keep track of the serialization state of the list of objects
  */
-public class SerializeState {
+public class SerializeState extends HashMap {
   // the current object
   private int currentObject;
   // bytes copied of the current object
