@@ -68,11 +68,6 @@ public final class FileLoader {
     }
   }
 
-  private static int sizeOf(MessageType messageType) {
-    return messageType.getUnitSizeInBytes();
-  }
-
-
   /**
    * Save the list of records to the file system
    *
@@ -90,14 +85,17 @@ public final class FileLoader {
       // first serialize keys
       long totalSize = 0;
       List<byte[]> byteKeys = new ArrayList<>();
-      if (keyType == MessageType.OBJECT) {
+      if (keyType.isPrimitive() && !keyType.isArray()) {
+        totalSize += records.size() * keyType.getUnitSizeInBytes();
+      } else {
         for (Tuple record : records) {
-          byte[] data = serializer.serialize(record.getKey());
-          totalSize += data.length + Integer.BYTES; // data + length of key
+          byte[] data = keyType.getDataPacker().packToByteArray(record.getKey());
+          totalSize += data.length; // data + length of key
+          if (keyType.getDataPacker().isHeaderRequired()) {
+            totalSize += Integer.BYTES;
+          }
           byteKeys.add(data);
         }
-      } else {
-        totalSize += records.size() * sizeOf(keyType);
       }
 
       long sizeSum = 0; //just to check whether sizes match
@@ -114,31 +112,17 @@ public final class FileLoader {
         long positionBefore = os.position(); //position of os before writing this tuple
 
         Tuple keyValue = records.get(i);
-        byte[] r = (byte[]) keyValue.getValue();
-        // serialize key with its length
-        if (keyType == MessageType.OBJECT) {
-          byte[] src = byteKeys.get(i);
-          os.putInt(src.length);
-          os.put(src);
-        } else if (keyType == MessageType.BYTE) {
-          byte key = (byte) keyValue.getKey();
+        byte[] r = (byte[]) keyValue.getValue(); //this has been already serialized
+        if (keyType.isPrimitive() && !keyType.isArray()) {
+          keyType.getDataPacker().packToByteBuffer(os, keyValue.getKey());
+        } else {
+          byte[] key = byteKeys.get(i);
+          if (keyType.getDataPacker().isHeaderRequired()) {
+            os.putInt(key.length);
+          }
           os.put(key);
-        } else if (keyType == MessageType.DOUBLE) {
-          double kd = (double) keyValue.getKey();
-          os.putDouble(kd);
-        } else if (keyType == MessageType.INTEGER) {
-          int kd = (int) keyValue.getKey();
-          os.putInt(kd);
-        } else if (keyType == MessageType.LONG) {
-          long kd = (long) keyValue.getKey();
-          os.putLong(kd);
-        } else if (keyType == MessageType.CHAR) {
-          char kd = (char) keyValue.getKey();
-          os.putChar(kd);
-        } else if (keyType == MessageType.SHORT) {
-          short kd = (short) keyValue.getKey();
-          os.putShort(kd);
         }
+
         sizeSum += sizes.get(i);
         os.putInt(sizes.get(i));
         os.put(r, 0, sizes.get(i));

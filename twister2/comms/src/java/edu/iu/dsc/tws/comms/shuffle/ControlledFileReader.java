@@ -40,7 +40,6 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
 
   private MessageType keyType;
   private MessageType dataType;
-  private KryoSerializer deserializer;
   private Comparator keyComparator;
 
   private Queue<Object> keysQ = new LinkedList<>();
@@ -55,11 +54,9 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
                               String filePath,
                               MessageType keyType,
                               MessageType dataType,
-                              KryoSerializer deserializer,
                               Comparator keyComparator) {
     this.filePath = filePath;
     this.meta = meta;
-    this.deserializer = deserializer;
     this.keyComparator = keyComparator;
     this.keyType = keyType;
     this.dataType = dataType;
@@ -79,7 +76,6 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
       Comparator keyComparator) {
     ControlledFileReader cfr = new ControlledFileReader(
         meta,
-        null,
         null,
         null,
         null,
@@ -218,9 +214,7 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
   }
 
   private int getNextKeySize() {
-    if (keyType == MessageType.OBJECT) {
-      return buffer.getInt();
-    } else if (keyType.isPrimitive()) {
+    if (keyType.isPrimitive() && !keyType.isArray()) {
       return 0;
     } else {
       return buffer.getInt();

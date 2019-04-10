@@ -332,7 +332,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
             getSaveFileName(i),
             keyType,
             dataType,
-            kryoSerializer,
             keyComparator
         );
         if (fr.hasNext()) {
