@@ -40,6 +40,11 @@ public final class IntegerArrayPacker implements PrimitiveArrayPacker<int[]> {
   }
 
   @Override
+  public ByteBuffer addToBuffer(ByteBuffer byteBuffer, int offset, int[] data, int index) {
+    return byteBuffer.putInt(offset, data[index]);
+  }
+
+  @Override
   public void readFromBufferAndSet(ByteBuffer byteBuffer, int offset, int[] array, int index) {
     array[index] = byteBuffer.getInt(offset);
   }

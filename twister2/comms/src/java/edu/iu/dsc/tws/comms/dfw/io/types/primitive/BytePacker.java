@@ -52,6 +52,12 @@ public final class BytePacker implements PrimitivePacker<Byte> {
   }
 
   @Override
+  public ByteBuffer addToBuffer(ByteBuffer byteBuffer, int index, Byte data) {
+    return byteBuffer.put(index, data);
+  }
+
+
+  @Override
   public Byte getFromBuffer(ByteBuffer byteBuffer, int offset) {
     return byteBuffer.get(offset);
   }

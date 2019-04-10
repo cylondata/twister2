@@ -52,6 +52,11 @@ public final class DoublePacker implements PrimitivePacker<Double> {
   }
 
   @Override
+  public ByteBuffer addToBuffer(ByteBuffer byteBuffer, int index, Double data) {
+    return byteBuffer.putDouble(index, data);
+  }
+
+  @Override
   public Double getFromBuffer(ByteBuffer byteBuffer, int offset) {
     return byteBuffer.getDouble(offset);
   }

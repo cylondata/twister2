@@ -41,6 +41,11 @@ public final class LongPacker implements PrimitivePacker<Long> {
   }
 
   @Override
+  public ByteBuffer addToBuffer(ByteBuffer byteBuffer, int index, Long data) {
+    return byteBuffer.putLong(index, data);
+  }
+
+  @Override
   public Long getFromBuffer(ByteBuffer byteBuffer, int offset) {
     return byteBuffer.getLong(offset);
   }

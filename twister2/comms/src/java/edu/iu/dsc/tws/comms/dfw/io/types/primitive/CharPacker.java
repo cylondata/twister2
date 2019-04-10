@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 
-public class CharPacker implements PrimitivePacker<Character> {
+public final class CharPacker implements PrimitivePacker<Character> {
 
   private static volatile CharPacker instance;
 
@@ -37,6 +37,11 @@ public class CharPacker implements PrimitivePacker<Character> {
   @Override
   public ByteBuffer addToBuffer(ByteBuffer byteBuffer, Character data) {
     return byteBuffer.putChar(data);
+  }
+
+  @Override
+  public ByteBuffer addToBuffer(ByteBuffer byteBuffer, int index, Character data) {
+    return byteBuffer.putChar(index, data);
   }
 
   @Override

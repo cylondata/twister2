@@ -39,7 +39,7 @@ public class ObjectPacker implements DataPacker {
   @Override
   public boolean writeDataToBuffer(Object data,
                                    ByteBuffer targetBuffer, SerializeState state) {
-    return DataSerializer.copyDataBytes(targetBuffer, state);
+    return state.copyDataToByteBuffer(targetBuffer);
   }
 
   @Override
@@ -66,6 +66,15 @@ public class ObjectPacker implements DataPacker {
   @Override
   public ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, Object data) {
     return byteBuffer.put(this.packToByteArray(data));
+  }
+
+  @Override
+  public ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, int offset, Object data) {
+    byte[] packedData = this.packToByteArray(data);
+    for (int i = 0; i < packedData.length; i++) {
+      byteBuffer.put(offset + i, packedData[i]);
+    }
+    return byteBuffer;
   }
 
   @Override

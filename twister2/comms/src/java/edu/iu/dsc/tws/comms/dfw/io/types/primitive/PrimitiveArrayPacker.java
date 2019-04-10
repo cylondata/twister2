@@ -24,7 +24,15 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
 
   MessageType<A> getMessageType();
 
+  /**
+   * Adds data[index] to the byteBuffer, position will be updated
+   */
   ByteBuffer addToBuffer(ByteBuffer byteBuffer, A data, int index);
+
+  /**
+   * Adds data[index] to the byteBuffer, position will not be updated
+   */
+  ByteBuffer addToBuffer(ByteBuffer byteBuffer, int offset, A data, int index);
 
   /**
    * Read data from buffer and set to the array. Buffer position shouldn't be affected
@@ -129,6 +137,15 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
   default ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, A data) {
     for (int i = 0; i < Array.getLength(data); i++) {
       this.addToBuffer(byteBuffer, data, i);
+    }
+    return byteBuffer;
+  }
+
+  @Override
+  default ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, int offset, A data) {
+    for (int i = 0; i < Array.getLength(data); i++) {
+      this.addToBuffer(byteBuffer, offset + i * getMessageType().getUnitSizeInBytes(),
+          data, i);
     }
     return byteBuffer;
   }

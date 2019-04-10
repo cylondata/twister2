@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 /**
@@ -142,6 +143,29 @@ public class SerializeState extends HashMap {
       this.clear();
       return true;
     } else {
+      return false;
+    }
+  }
+
+  /**
+   * This method copies data to targetBuffer till targetBuffer fills or nothing is left to copy
+   */
+  public boolean copyDataToByteBuffer(ByteBuffer targetBuffer) {
+    int remainingCapacity = targetBuffer.remaining();
+    int remainingToCopy = data.length - bytesCopied;
+    int canCopy = remainingCapacity > remainingToCopy ? remainingToCopy : remainingCapacity;
+    // copy
+    targetBuffer.put(data, bytesCopied, canCopy);
+
+    totalBytes += canCopy; //total bytes copied so far
+
+    // we will use this size later
+    if (canCopy == remainingToCopy) {
+      data = null;
+      bytesCopied = 0;
+      return true;
+    } else {
+      bytesCopied += canCopy;
       return false;
     }
   }

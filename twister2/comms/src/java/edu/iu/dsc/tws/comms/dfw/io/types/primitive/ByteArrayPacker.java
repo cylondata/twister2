@@ -52,6 +52,11 @@ public final class ByteArrayPacker implements PrimitiveArrayPacker<byte[]> {
   }
 
   @Override
+  public ByteBuffer addToBuffer(ByteBuffer byteBuffer, int offset, byte[] data, int index) {
+    return byteBuffer.put(offset, data[index]);
+  }
+
+  @Override
   public void readFromBufferAndSet(ByteBuffer byteBuffer, int offset, byte[] array, int index) {
     array[index] = byteBuffer.get(offset);
   }

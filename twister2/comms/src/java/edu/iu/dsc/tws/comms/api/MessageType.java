@@ -16,6 +16,8 @@ import java.lang.reflect.Array;
 import edu.iu.dsc.tws.comms.api.types.TypeDefinition;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.ByteArrayPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.BytePacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.CharArrayPacker;
+import edu.iu.dsc.tws.comms.dfw.io.types.primitive.CharPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.DoubleArrayPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.DoublePacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.FloatArrayPacker;
@@ -37,10 +39,10 @@ public final class MessageType<T> implements TypeDefinition<T> {
   );
 
   public static final MessageType<Character> CHAR = new MessageType<>(
-      true, Character.BYTES, Character.class, null
+      true, Character.BYTES, Character.class, CharPacker.getInstance()
   );
   public static final MessageType<char[]> CHAR_ARRAY = new MessageType<>(
-      true, Character.BYTES, char[].class, null, true
+      true, Character.BYTES, char[].class, CharArrayPacker.getInstance(), true
   );
 
   public static final MessageType<Byte> BYTE = new MessageType<>(

@@ -27,7 +27,15 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
 
   MessageType<T> getMessageType();
 
+  /**
+   * This method should put data to byteBuffer and update the position of buffer
+   */
   ByteBuffer addToBuffer(ByteBuffer byteBuffer, T data);
+
+  /**
+   * This method should insert to byteBuffer's index. Position shouldn't be affected
+   */
+  ByteBuffer addToBuffer(ByteBuffer byteBuffer, int index, T data);
 
   /**
    * Read a value from offset. Buffer's position shouldn't be affected
@@ -130,6 +138,11 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
   @Override
   default ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, T data) {
     return this.addToBuffer(byteBuffer, data);
+  }
+
+  @Override
+  default ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, int index, T data) {
+    return this.addToBuffer(byteBuffer, index, data);
   }
 
   @Override

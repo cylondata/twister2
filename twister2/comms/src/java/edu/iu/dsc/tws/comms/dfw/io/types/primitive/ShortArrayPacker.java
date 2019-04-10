@@ -53,6 +53,11 @@ public final class ShortArrayPacker implements PrimitiveArrayPacker<short[]> {
   }
 
   @Override
+  public ByteBuffer addToBuffer(ByteBuffer byteBuffer, int offset, short[] data, int index) {
+    return byteBuffer.putShort(offset, data[index]);
+  }
+
+  @Override
   public void readFromBufferAndSet(ByteBuffer byteBuffer, int offset, short[] array, int index) {
     array[index] = byteBuffer.getShort(offset);
   }

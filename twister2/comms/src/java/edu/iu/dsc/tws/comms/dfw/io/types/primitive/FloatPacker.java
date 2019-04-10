@@ -40,6 +40,11 @@ public final class FloatPacker implements PrimitivePacker<Float> {
   }
 
   @Override
+  public ByteBuffer addToBuffer(ByteBuffer byteBuffer, int index, Float data) {
+    return byteBuffer.putFloat(index, data);
+  }
+
+  @Override
   public Float getFromBuffer(ByteBuffer byteBuffer, int offset) {
     return byteBuffer.getFloat(offset);
   }

@@ -40,6 +40,11 @@ public final class IntegerPacker implements PrimitivePacker<Integer> {
   }
 
   @Override
+  public ByteBuffer addToBuffer(ByteBuffer byteBuffer, int index, Integer data) {
+    return byteBuffer.putInt(index, data);
+  }
+
+  @Override
   public Integer getFromBuffer(ByteBuffer byteBuffer, int offset) {
     return byteBuffer.getInt(offset);
   }

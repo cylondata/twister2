@@ -41,6 +41,11 @@ public final class DoubleArrayPacker implements PrimitiveArrayPacker<double[]> {
   }
 
   @Override
+  public ByteBuffer addToBuffer(ByteBuffer byteBuffer, int offset, double[] data, int index) {
+    return byteBuffer.putDouble(offset, data[index]);
+  }
+
+  @Override
   public void readFromBufferAndSet(ByteBuffer byteBuffer, int offset, double[] array, int index) {
     array[index] = byteBuffer.getDouble(offset);
   }

@@ -63,7 +63,18 @@ public interface DataPacker<D> {
 
   byte[] packToByteArray(D data);
 
+  /**
+   * This method puts a value to the {@link ByteBuffer}.
+   * The position of byteBuffer should be updated.
+   */
   ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, D data);
+
+  /**
+   * This method puts a value to the {@link ByteBuffer}, starting from specified
+   * index of the buffer.
+   * The position of the buffer shouldn't be affected
+   */
+  ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, int offset, D data);
 
   /**
    * Returns an empty wrapper to hold byteLength amount of type T
