@@ -29,7 +29,7 @@ public class PartitionStreamingFinalReceiver extends TargetFinalReceiver {
   /**
    * Keep the list of tuples for each target
    */
-  protected Map<Integer, Queue<Object>> readyToSend = new HashMap<>();
+  private Map<Integer, Queue<Object>> readyToSend = new HashMap<>();
 
   public PartitionStreamingFinalReceiver(SingularReceiver receiver) {
     this.receiver = receiver;

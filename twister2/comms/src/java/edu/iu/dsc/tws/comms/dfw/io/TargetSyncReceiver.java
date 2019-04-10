@@ -55,7 +55,7 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
   /**
    * The source task connected to this partial receiver
    */
-  protected int representSource;
+  private int representSource;
 
   /**
    * Keep weather source is set

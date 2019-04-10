@@ -22,14 +22,13 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public abstract class TargetFinalReceiver extends TargetSyncReceiver {
   private static final Logger LOG = Logger.getLogger(TargetFinalReceiver.class.getName());
   /**
    * Keep weather we have received a sync from a source
    */
-  private Map<Integer, Set<Integer>> syncReceived = new HashMap<>();
+  protected Map<Integer, Set<Integer>> syncReceived = new HashMap<>();
 
   /**
    * Keep state about the targets
@@ -45,7 +44,7 @@ public abstract class TargetFinalReceiver extends TargetSyncReceiver {
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
     thisSources = op.getSources();
-    thisDestinations = TaskPlanUtils.getTasksOfThisWorker(op.getTaskPlan(), op.getTargets());
+    thisDestinations = expectedIds.keySet();
 
     for (Integer target : expectedIds.keySet()) {
       syncReceived.put(target, new HashSet<>());
