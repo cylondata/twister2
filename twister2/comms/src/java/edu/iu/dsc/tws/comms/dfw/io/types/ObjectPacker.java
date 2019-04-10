@@ -75,7 +75,8 @@ public class ObjectPacker implements DataPacker {
 
   @Override
   public Object unpackFromBuffer(ByteBuffer byteBuffer, int byteLength) {
-
-    return null;
+    byte[] bytes = new byte[byteLength];
+    byteBuffer.get(bytes);
+    return this.serializer.deserialize(bytes);
   }
 }
