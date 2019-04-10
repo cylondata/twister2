@@ -36,6 +36,7 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
@@ -73,6 +74,7 @@ public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector
     for (double[][] value : values) {
       dataPointsLocal = value;
     }
+    LOG.info("Received Datapoint values are:" + Arrays.deepToString(dataPointsLocal));
     return true;
   }
 

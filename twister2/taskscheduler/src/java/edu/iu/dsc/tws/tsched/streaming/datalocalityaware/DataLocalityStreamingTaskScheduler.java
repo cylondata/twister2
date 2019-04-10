@@ -288,10 +288,13 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
 
   private List<String> getInputFilesList() {
+
     List<String> inputDataList = new ArrayList<>();
     String directory = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
+
     final Path path = new Path(directory + workerId);
     final FileSystem fileSystem;
+
     try {
       fileSystem = path.getFileSystem(config);
       if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {

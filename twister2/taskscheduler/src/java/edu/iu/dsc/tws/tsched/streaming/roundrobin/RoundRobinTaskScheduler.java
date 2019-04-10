@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.tsched.streaming.roundrobin;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -92,6 +91,10 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
     //To get the vertex set from the taskgraph
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
 
+    for (Vertex vertex : taskVertexSet) {
+      LOG.info("Received Task Vertex:" + vertex.getName());
+    }
+
     //Allocate the task instances into the logical containers.
     Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
         roundRobinSchedulingAlgorithm(taskVertexSet, workerPlan.getNumberOfWorkers());
@@ -151,8 +154,25 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       //Schedule the task instance plan into the task container plan.
       ContainerPlan taskContainerPlan =
           new ContainerPlan(containerId,
-              new HashSet<>(taskInstancePlanMap.values()), containerResource);
+              new LinkedHashSet<>(taskInstancePlanMap.values()), containerResource);
       containerPlans.add(taskContainerPlan);
+    }
+
+    //TODO: Just for validation purpose and it will be removed finally
+    TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0, containerPlans);
+    if (taskSchedulePlan != null) {
+      Map<Integer, ContainerPlan> containersMap
+          = taskSchedulePlan.getContainersMap();
+      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+        Integer integer = entry.getKey();
+        ContainerPlan containerPlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+        LOG.info("Task Details for Container Id:" + integer);
+        for (TaskInstancePlan ip : containerPlanTaskInstances) {
+          LOG.info("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+              + "\tTask Name:" + ip.getTaskName());
+        }
+      }
     }
     return new TaskSchedulePlan(0, containerPlans);
   }
@@ -172,8 +192,16 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       roundrobinAllocation.put(i, new ArrayList<>());
     }
 
+    for (Vertex vertex : taskVertexSet) {
+      LOG.info("Before ordering:" + vertex.getName());
+    }
+
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
     orderedTaskSet.addAll(taskVertexSet);
+
+    for (Vertex vertex : taskVertexSet) {
+      LOG.info("After ordering:" + vertex.getName());
+    }
 
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(orderedTaskSet);
     int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
@@ -181,6 +209,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       int globalTaskIndex = 0;
       for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
         String task = e.getKey();
+        LOG.info("%%%%%%%%%%%%%%Task name:" + task);
         int numberOfInstances = e.getValue();
         int containerIndex;
         for (int i = 0; i < numberOfInstances; i++) {
@@ -189,6 +218,10 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
         }
         globalTaskIndex++;
       }
+    }
+
+    for (Map.Entry<Integer, List<InstanceId>> allocation : roundrobinAllocation.entrySet()) {
+      LOG.info("allocation values:" + allocation.getKey() + "\t" + allocation.getValue());
     }
     return roundrobinAllocation;
   }

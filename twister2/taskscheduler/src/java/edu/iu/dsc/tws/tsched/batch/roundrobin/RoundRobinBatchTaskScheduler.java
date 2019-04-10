@@ -71,12 +71,23 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   //Config object
   private Config config;
 
+  //Worker Id
+  private int workerId;
+
   /**
    * This method initialize the task instance values with the values specified in the task config
    * object.
    */
   @Override
   public void initialize(Config cfg) {
+    this.config = cfg;
+    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(config);
+    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(config);
+    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(config);
+  }
+
+
+  public void initialize(Config cfg, int workerid) {
     this.config = cfg;
     this.instanceRAM = TaskSchedulerContext.taskInstanceRam(config);
     this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(config);
@@ -171,6 +182,24 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
           taskContainerPlan = new ContainerPlan(
               containerId, new HashSet<>(taskInstancePlanMap.values()), containerResource);
           containerPlans.put(containerId, taskContainerPlan);
+        }
+      }
+    }
+
+    TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0,
+        new HashSet<>(containerPlans.values()));
+    if (taskSchedulePlan != null) {
+      Map<Integer, ContainerPlan> containersMap
+          = taskSchedulePlan.getContainersMap();
+      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+        Integer integer = entry.getKey();
+        ContainerPlan containerPlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances
+            = containerPlan.getTaskInstances();
+        LOG.info("Task Details for Container Id:" + integer);
+        for (TaskInstancePlan ip : containerPlanTaskInstances) {
+          LOG.info("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+              + "\tTask Name:" + ip.getTaskName());
         }
       }
     }

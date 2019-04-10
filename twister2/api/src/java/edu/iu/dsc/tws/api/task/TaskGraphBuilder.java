@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.api.task;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -34,7 +34,7 @@ public final class TaskGraphBuilder {
   /**
    * Keep track of the nodes with their names
    */
-  private Map<String, Vertex> nodes = new HashMap<>();
+  private Map<String, Vertex> nodes = new LinkedHashMap<>();
 
   /**
    * The parent edges of a node

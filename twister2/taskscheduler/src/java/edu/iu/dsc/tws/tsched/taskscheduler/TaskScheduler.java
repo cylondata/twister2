@@ -112,7 +112,7 @@ public class TaskScheduler implements ITaskScheduler {
     try {
       taskSchedulerClass = ClassLoader.getSystemClassLoader().loadClass(className);
       Object newInstance = taskSchedulerClass.newInstance();
-      LOG.info("%%%% Task Scheduler Class:%%%%" + taskSchedulerClass);
+      LOG.info("%%%% Instantiated Task Scheduler Class:%%%%" + taskSchedulerClass);
       method = taskSchedulerClass.getMethod("initialize", new Class<?>[]{Config.class});
       method.invoke(newInstance, config);
       method = taskSchedulerClass.getMethod("schedule",
@@ -121,7 +121,7 @@ public class TaskScheduler implements ITaskScheduler {
           workerPlan);
     } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException
         | InstantiationException | ClassNotFoundException e) {
-      throw new RuntimeException("Task Schedule Plan Not Able to Generate:" + e);
+      throw new RuntimeException("Task Schedule Plan Not Able to Generate:" + e.getMessage());
     }
 
     if (taskSchedulePlan != null) {

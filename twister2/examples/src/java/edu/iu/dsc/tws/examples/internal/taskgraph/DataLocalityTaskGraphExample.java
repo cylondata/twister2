@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectCompute;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectDirectSink;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
@@ -84,11 +83,16 @@ public class DataLocalityTaskGraphExample extends TaskWorker {
     DataFlowTaskGraph datapointsTaskGraph = datapointsTaskGraphBuilder.build();
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+    LOG.info("execution plan:" + firstGraphExecutionPlan);
     //Actual execution for the first taskgraph
-    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
-    //Retrieve the output of the first task graph
-    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
-        datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
-    LOG.info("Retrieved Datapoints object values:" + dataPointsObject);
+//    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
+//    //Retrieve the output of the first task graph
+//    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
+//        datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
+//    LOG.fine("Retrieved Datapoints object values:"
+//        + Arrays.deepToString(dataPointsObject.getPartitions()));
+//    for (int i = 0; i < dataPointsObject.getPartitions().length; i++) {
+//      LOG.info("Datapoints values:" + Arrays.deepToString(dataPointsObject.getPartitions()));
+//    }
   }
 }

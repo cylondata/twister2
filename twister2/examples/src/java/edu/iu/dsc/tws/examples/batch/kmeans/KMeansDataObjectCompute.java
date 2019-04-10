@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
@@ -100,9 +101,9 @@ public class KMeansDataObjectCompute extends BaseCompute {
 
   @Override
   public boolean execute(IMessage message) {
+    double[][] datapoint = new double[0][];
     if (message.getContent() instanceof Iterator) {
       int value = 0;
-      double[][] datapoint;
       if (getParallel() > 0) {
         datapoint = new double[getDatasize() / getParallel()][getDimension()];
       } else {
@@ -118,6 +119,7 @@ public class KMeansDataObjectCompute extends BaseCompute {
         context.write(getEdgeName(), datapoint);
       }
     }
+    LOG.info("Datapoint values are:::" + Arrays.deepToString(datapoint));
     context.end(getEdgeName());
     return true;
   }
