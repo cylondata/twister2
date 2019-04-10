@@ -63,7 +63,7 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
 
     // create the communication
     join = new BJoin(communicator, taskPlan, sources, targets, MessageType.INTEGER,
-        MessageType.INTEGER, new JoinReceiver(), new SimpleKeyBasedSelector(), false);
+        MessageType.INTEGER_ARRAY, new JoinReceiver(), new SimpleKeyBasedSelector(), false);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);

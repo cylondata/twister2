@@ -26,7 +26,6 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
@@ -127,7 +126,7 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
     while (!targetSendQueue.isEmpty()) {
       Tuple kc = (Tuple) targetSendQueue.poll();
       Object data = kc.getValue();
-      byte[] d = DataSerializer.serialize(data, kryoSerializer);
+      byte[] d = dataFlowOperation.getDataType().getDataPacker().toByteArray(data);
       sortedMerger.add(kc.getKey(), d, d.length);
     }
 

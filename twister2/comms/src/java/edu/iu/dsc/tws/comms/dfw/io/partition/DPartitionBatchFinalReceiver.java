@@ -31,7 +31,6 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
@@ -182,7 +181,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
         Object data = kc.getValue();
         byte[] d;
         if (partition.getReceiveDataType() != MessageType.BYTE_ARRAY || !(data instanceof byte[])) {
-          d = DataSerializer.serialize(data, kryoSerializer);
+          d = partition.getDataType().getDataPacker().toByteArray(data);
         } else {
           d = (byte[]) data;
         }
@@ -196,7 +195,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       for (Object kc : contents) {
         byte[] d;
         if (partition.getReceiveDataType() != MessageType.BYTE_ARRAY) {
-          d = DataSerializer.serialize(kc, kryoSerializer);
+          d = partition.getDataType().getDataPacker().toByteArray(kc);
         } else {
           d = (byte[]) kc;
         }

@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 
@@ -182,7 +181,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
           }
         }
         for (Object o : out) {
-          byte[] d = DataSerializer.serialize(o, kryoSerializer);
+          byte[] d = gather.getDataType().getDataPacker().toByteArray(o);
           fsMerger.add(d, d.length);
         }
       } else {

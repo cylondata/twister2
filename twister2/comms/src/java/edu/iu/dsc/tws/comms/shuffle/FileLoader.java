@@ -29,7 +29,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -188,7 +187,7 @@ public final class FileLoader {
             keySize - Integer.BYTES);
 
         int dataSize = os.getInt();
-        value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
+        value = dataType.getDataPacker().unpackFromBuffer(os, dataSize);
         keyValues.add(new Tuple(key, value));
 
         totalRead += Integer.BYTES + keySize + dataSize;
@@ -217,15 +216,13 @@ public final class FileLoader {
       List<Object> values = new ArrayList<>();
       // lets read the key values
       long totalRead = 0;
-      int count = 0;
       while (totalRead < rwChannel.size()) {
         Object value;
 
         int dataSize = os.getInt();
-        value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
+        value = dataType.getDataPacker().unpackFromBuffer(os, dataSize);
         values.add(value);
         totalRead += Integer.BYTES + dataSize;
-        count++;
       }
       rwChannel.force(true);
       rwChannel.close();
@@ -254,7 +251,7 @@ public final class FileLoader {
         Object value;
 
         int keySize = os.getInt();
-        key = DataDeserializer.deserialize(keyType, deserializer, os, keySize);
+        key = keyType.getDataPacker().unpackFromBuffer(os, keySize);
 
         // we cannot read further
         if (totalRead + keySize > size) {
@@ -262,7 +259,7 @@ public final class FileLoader {
         }
 
         int dataSize = os.getInt();
-        value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
+        value = dataType.getDataPacker().unpackFromBuffer(os, dataSize);
 
         // we cannot read further
         if (totalRead + keySize + dataSize > size) {
@@ -332,7 +329,7 @@ public final class FileLoader {
         if (totalRead + keySize + dataSize + Integer.BYTES > size) {
           break;
         }
-        value = DataDeserializer.deserialize(dataType, deserializer, os, dataSize);
+        value = dataType.getDataPacker().unpackFromBuffer(os, dataSize);
 
         keyValues.add(new Tuple(key, value));
         totalRead += Integer.BYTES + keySize + dataSize;
