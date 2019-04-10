@@ -36,6 +36,11 @@ public abstract class TargetFinalReceiver extends TargetSyncReceiver {
    */
   protected Map<Integer, ReceiverState> targetStates = new HashMap<>();
 
+  /**
+   * State is cleared
+   */
+  protected boolean stateCleared = false;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
@@ -88,6 +93,17 @@ public abstract class TargetFinalReceiver extends TargetSyncReceiver {
         targetStates.put(target, ReceiverState.SYNCED);
       }
     }
+
+    if (allSynced && !stateCleared) {
+      for (int t : thisDestinations) {
+        clearTarget(t);
+      }
+      for (Map.Entry<Integer, Set<Integer>> e : syncReceived.entrySet()) {
+        e.getValue().clear();
+      }
+      stateCleared = true;
+    }
+
     return allSynced;
   }
 }

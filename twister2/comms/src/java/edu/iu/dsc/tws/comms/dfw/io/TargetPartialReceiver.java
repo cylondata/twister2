@@ -42,6 +42,11 @@ public class TargetPartialReceiver extends TargetSyncReceiver {
    */
   protected Map<Integer, List<Object>> readyToSend = new HashMap<>();
 
+  /**
+   * State is cleared
+   */
+  protected boolean stateCleared = false;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
@@ -156,6 +161,18 @@ public class TargetPartialReceiver extends TargetSyncReceiver {
           }
         }
       }
+    }
+
+    if (allSynced && !stateCleared) {
+      for (int t : thisDestinations) {
+        clearTarget(t);
+      }
+
+      for (Map.Entry<Integer, Set<Integer>> e : syncSent.entrySet()) {
+        e.getValue().clear();
+      }
+
+      stateCleared = true;
     }
 
     return allSynced;
