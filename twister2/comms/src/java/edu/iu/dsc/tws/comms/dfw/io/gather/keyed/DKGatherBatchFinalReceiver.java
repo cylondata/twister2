@@ -126,7 +126,7 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
     while (!targetSendQueue.isEmpty()) {
       Tuple kc = (Tuple) targetSendQueue.poll();
       Object data = kc.getValue();
-      byte[] d = dataFlowOperation.getDataType().getDataPacker().toByteArray(data);
+      byte[] d = dataFlowOperation.getDataType().getDataPacker().packToByteArray(data);
       sortedMerger.add(kc.getKey(), d, d.length);
     }
 

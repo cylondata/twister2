@@ -57,7 +57,7 @@ public final class BytePacker implements PrimitivePacker<Byte> {
   }
 
   @Override
-  public byte[] toByteArray(Byte data) {
+  public byte[] packToByteArray(Byte data) {
     return new byte[]{data};
   }
 }

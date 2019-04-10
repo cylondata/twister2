@@ -41,27 +41,6 @@ public final class DFWIOUtils {
   }
 
   /**
-   * Reset the serialize state
-   *
-   * @param state state
-   * @param completed weather completed
-   * @return if completed
-   */
-  public static boolean resetState(SerializeState state, boolean completed) {
-    if (completed) {
-      // add the key size at the end to total size
-      state.setBytesCopied(0);
-      state.setBufferNo(0);
-      state.setData(null);
-      state.setPart(SerializeState.Part.INIT);
-      state.setKeySize(0);
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  /**
    * Builds the header of the message. The length value is inserted later so 0 is added as a place
    * holder value. The header structure is |source|flags|destinationID|length|
    *

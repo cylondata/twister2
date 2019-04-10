@@ -23,17 +23,23 @@ import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 public interface DataPacker<D> {
 
   /**
-   * Pack the data and return the size of the data in bytes once packed
+   * Pack the data and return the size of the data in bytes once packed.
+   * However, packing(converting to byte[]) and saving to state inside this method is optional.
+   * If your have primitives that can be efficiently copied to the buffers later in
+   * {@link DataPacker#writeDataToBuffer(Object, ByteBuffer, SerializeState)}, you may just
+   * return the byte size of data from this method.
    *
    * @param data the data (can be Integer, Object etc)
    * @param state state
    * @return the size of the packed data in bytes
    */
-  int packData(D data, SerializeState state);
+  int packToState(D data, SerializeState state);
 
 
   /**
-   * Transfer the data to the buffer
+   * Transfer the data to the buffer. If you have already packed data to state
+   * with {@link DataPacker#packToState(Object, SerializeState)}, you may transfer data from state
+   * to targetBuffer. If not, you may directly transfer data to the targetBuffer.
    *
    * @param data the data
    * @param targetBuffer target buffer
@@ -55,7 +61,7 @@ public interface DataPacker<D> {
   int readDataFromBuffer(InMessage currentMessage, int currentLocation,
                          DataBuffer buffer, int currentObjectLength);
 
-  byte[] toByteArray(D data);
+  byte[] packToByteArray(D data);
 
   /**
    * Returns an empty wrapper to hold byteLength amount of type T

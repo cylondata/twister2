@@ -66,11 +66,11 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
 
   @Override
   default int packKey(T key, SerializeState state) {
-    return this.packData(key, state);
+    return this.packToState(key, state);
   }
 
   @Override
-  default int packData(T data, SerializeState state) {
+  default int packToState(T data, SerializeState state) {
     return this.getMessageType().getUnitSizeInBytes();
   }
 
@@ -112,7 +112,7 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
   }
 
   @Override
-  default byte[] toByteArray(T data) {
+  default byte[] packToByteArray(T data) {
     byte[] byteArray = new byte[this.getMessageType().getDataSizeInBytes(data)];
     ByteBuffer wrapper = ByteBuffer.wrap(byteArray);
     this.addToBuffer(wrapper, data);

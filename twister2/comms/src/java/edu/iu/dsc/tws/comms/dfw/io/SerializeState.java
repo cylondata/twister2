@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import java.util.HashMap;
 
 /**
- * Keep track of the serialization state of the list of objects
+ * Keep track of the serialization state of the list of objects.
  */
 public class SerializeState extends HashMap {
   // the current object
@@ -130,5 +130,19 @@ public class SerializeState extends HashMap {
 
   public void setCurrentHeaderLength(int currentHeaderLength) {
     this.currentHeaderLength = currentHeaderLength;
+  }
+
+  public boolean reset(boolean completed) {
+    if (completed) {
+      this.setBytesCopied(0);
+      this.setBufferNo(0);
+      this.setData(null);
+      this.setPart(SerializeState.Part.INIT);
+      this.setKeySize(0);
+      this.clear();
+      return true;
+    } else {
+      return false;
+    }
   }
 }

@@ -36,7 +36,7 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
   }
 
   @Override
-  default int packData(A data, SerializeState state) {
+  default int packToState(A data, SerializeState state) {
     return this.getMessageType().getDataSizeInBytes(data);
   }
 
@@ -101,7 +101,7 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
     return bytesRead;
   }
 
-  default byte[] toByteArray(A data) {
+  default byte[] packToByteArray(A data) {
     byte[] byteArray = new byte[this.getMessageType().getDataSizeInBytes(data)];
     ByteBuffer wrapper = ByteBuffer.wrap(byteArray);
     for (int i = 0; i < Array.getLength(data); i++) {

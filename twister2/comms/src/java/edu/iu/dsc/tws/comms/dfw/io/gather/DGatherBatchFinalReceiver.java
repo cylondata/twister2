@@ -181,7 +181,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
           }
         }
         for (Object o : out) {
-          byte[] d = gather.getDataType().getDataPacker().toByteArray(o);
+          byte[] d = gather.getDataType().getDataPacker().packToByteArray(o);
           fsMerger.add(d, d.length);
         }
       } else {

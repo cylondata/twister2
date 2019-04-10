@@ -91,7 +91,7 @@ public class UnifiedSerializer extends BaseSerializer {
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
-      int dataLength = packer.packData(payload, state);
+      int dataLength = packer.packToState(payload, state);
       state.setCurrentHeaderLength(dataLength);
 
       // add the header bytes to the total bytes
@@ -118,7 +118,7 @@ public class UnifiedSerializer extends BaseSerializer {
     targetBuffer.setSize(byteBuffer.position());
 
     // okay we are done with the message
-    return DFWIOUtils.resetState(state, completed);
+    return state.reset(completed);
   }
 
   /**

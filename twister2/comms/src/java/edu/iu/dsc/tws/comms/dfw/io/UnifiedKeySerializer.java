@@ -75,7 +75,7 @@ public class UnifiedKeySerializer extends BaseSerializer {
     if (state.getPart() == SerializeState.Part.INIT) {
       int keyLength = keyPacker.packKey(key, state);
       // okay we need to serialize the data
-      int dataLength = dataPacker.packData(payload, state);
+      int dataLength = dataPacker.packToState(payload, state);
       state.setCurrentHeaderLength(dataLength + keyLength);
       state.setPart(SerializeState.Part.HEADER);
     }
@@ -113,7 +113,7 @@ public class UnifiedKeySerializer extends BaseSerializer {
     targetBuffer.setSize(byteBuffer.position());
 
     // okay we are done with the message
-    return DFWIOUtils.resetState(state, completed);
+    return state.reset(completed);
   }
 
   /**

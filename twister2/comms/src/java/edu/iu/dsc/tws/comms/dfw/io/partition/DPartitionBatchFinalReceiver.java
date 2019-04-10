@@ -181,7 +181,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
         Object data = kc.getValue();
         byte[] d;
         if (partition.getReceiveDataType() != MessageType.BYTE_ARRAY || !(data instanceof byte[])) {
-          d = partition.getDataType().getDataPacker().toByteArray(data);
+          d = partition.getDataType().getDataPacker().packToByteArray(data);
         } else {
           d = (byte[]) data;
         }
@@ -195,7 +195,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       for (Object kc : contents) {
         byte[] d;
         if (partition.getReceiveDataType() != MessageType.BYTE_ARRAY) {
-          d = partition.getDataType().getDataPacker().toByteArray(kc);
+          d = partition.getDataType().getDataPacker().packToByteArray(kc);
         } else {
           d = (byte[]) kc;
         }

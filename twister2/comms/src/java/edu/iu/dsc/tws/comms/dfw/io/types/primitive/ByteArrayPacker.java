@@ -62,7 +62,7 @@ public final class ByteArrayPacker implements PrimitiveArrayPacker<byte[]> {
   }
 
   @Override
-  public byte[] toByteArray(byte[] data) {
+  public byte[] packToByteArray(byte[] data) {
     return data;
   }
 }

@@ -288,7 +288,8 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean delete(int opID, long key) {
-    deleteFromBMM(opID, new String(Longs.toByteArray(key),java.nio.charset.StandardCharsets.UTF_8));
+    deleteFromBMM(opID, new String(Longs.packToByteArray(key),
+    java.nio.charset.StandardCharsets.UTF_8));
     return memoryManager.delete(opID, key);
   }*/
 
@@ -443,7 +444,8 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean flush(int opID, long key) {
-    return flush(opID, new String(Longs.toByteArray(key), java.nio.charset.StandardCharsets.UTF_8));
+    return flush(opID, new String(Longs.packToByteArray(key),
+    java.nio.charset.StandardCharsets.UTF_8));
   }*/
 
   /**
@@ -534,7 +536,8 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean close(int opID, long key) {
-    return close(opID, new String(Longs.toByteArray(key), java.nio.charset.StandardCharsets.UTF_8));
+    return close(opID, new String(Longs.packToByteArray(key),
+    java.nio.charset.StandardCharsets.UTF_8));
   }*/
 
   /**

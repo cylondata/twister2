@@ -28,7 +28,7 @@ public class ObjectPacker implements DataPacker {
   }
 
   @Override
-  public int packData(Object data, SerializeState state) {
+  public int packToState(Object data, SerializeState state) {
     if (state.getData() == null) {
       byte[] serialize = serializer.serialize(data);
       state.setData(serialize);
@@ -59,7 +59,7 @@ public class ObjectPacker implements DataPacker {
   }
 
   @Override
-  public byte[] toByteArray(Object data) {
+  public byte[] packToByteArray(Object data) {
     return this.serializer.serialize(data);
   }
 

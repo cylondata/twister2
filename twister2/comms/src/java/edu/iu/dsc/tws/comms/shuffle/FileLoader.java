@@ -29,7 +29,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class FileLoader {
@@ -183,8 +182,7 @@ public final class FileLoader {
 
         // for object type we read the object bytes + 4
         int keySize = getKeySize(keyType, os);
-        key = KeyDeserializer.deserialize(keyType, deserializer, os,
-            keySize - Integer.BYTES);
+        key = keyType.getDataPacker().unpackFromBuffer(os, keySize - Integer.BYTES);
 
         int dataSize = os.getInt();
         value = dataType.getDataPacker().unpackFromBuffer(os, dataSize);
@@ -317,8 +315,7 @@ public final class FileLoader {
         if (totalRead + keySize > size) {
           break;
         }
-        key = KeyDeserializer.deserialize(keyType, deserializer, os,
-            keySize - Integer.BYTES);
+        key = keyType.getDataPacker().unpackFromBuffer(os, keySize - Integer.BYTES);
 
         if (totalRead + keySize + Integer.BYTES > size) {
           break;

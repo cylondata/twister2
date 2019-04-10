@@ -50,7 +50,6 @@ import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 
@@ -220,7 +219,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
     List<Tuple> tuples = (List<Tuple>) object;
     for (Tuple kc : tuples) {
       Object data = kc.getValue();
-      byte[] d = operationLeft.getDataType().getDataPacker().toByteArray(data);
+      byte[] d = operationLeft.getDataType().getDataPacker().packToByteArray(data);
 
       sortedMerger.add(kc.getKey(), d, d.length);
     }
