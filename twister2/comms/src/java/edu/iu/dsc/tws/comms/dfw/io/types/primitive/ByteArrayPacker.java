@@ -57,6 +57,11 @@ public final class ByteArrayPacker implements PrimitiveArrayPacker<byte[]> {
   }
 
   @Override
+  public void readFromBufferAndSet(ByteBuffer byteBuffer, byte[] array, int index) {
+    array[index] = byteBuffer.get();
+  }
+
+  @Override
   public byte[] wrapperForLength(int length) {
     return new byte[length];
   }

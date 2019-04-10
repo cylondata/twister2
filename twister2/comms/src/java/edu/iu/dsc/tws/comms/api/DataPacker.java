@@ -63,13 +63,32 @@ public interface DataPacker<D> {
 
   byte[] packToByteArray(D data);
 
+  ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, D data);
+
   /**
    * Returns an empty wrapper to hold byteLength amount of type T
    */
   D wrapperForByteLength(int byteLength);
 
+  /**
+   * Indicates whether length should be packed before the actual key
+   */
   boolean isHeaderRequired();
 
+  /**
+   * This method will extract a value from buffer starting from the position specified.
+   * Buffer position shouldn't be affected by this method
+   *
+   * @param byteBuffer {@link ByteBuffer} instance
+   * @param bufferOffset position to start reading from buffer
+   * @param byteLength amount of data to read
+   */
+  D unpackFromBuffer(ByteBuffer byteBuffer, int bufferOffset, int byteLength);
+
+  /**
+   * This method will extract a value from buffer starting from buffer's current position.
+   * Buffer position should be updated.
+   */
   D unpackFromBuffer(ByteBuffer byteBuffer, int byteLength);
 
   default D unpackFromByteArray(byte[] array) {

@@ -57,6 +57,11 @@ public final class FloatArrayPacker implements PrimitiveArrayPacker<float[]> {
   }
 
   @Override
+  public void readFromBufferAndSet(ByteBuffer byteBuffer, float[] array, int index) {
+    array[index] = byteBuffer.getFloat();
+  }
+
+  @Override
   public float[] wrapperForLength(int length) {
     return new float[length];
   }

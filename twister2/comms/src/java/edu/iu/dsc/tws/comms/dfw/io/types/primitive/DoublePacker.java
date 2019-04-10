@@ -55,4 +55,9 @@ public final class DoublePacker implements PrimitivePacker<Double> {
   public Double getFromBuffer(ByteBuffer byteBuffer, int offset) {
     return byteBuffer.getDouble(offset);
   }
+
+  @Override
+  public Double getFromBuffer(ByteBuffer byteBuffer) {
+    return byteBuffer.getDouble();
+  }
 }

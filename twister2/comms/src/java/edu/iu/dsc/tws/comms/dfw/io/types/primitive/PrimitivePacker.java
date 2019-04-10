@@ -29,7 +29,15 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
 
   ByteBuffer addToBuffer(ByteBuffer byteBuffer, T data);
 
+  /**
+   * Read a value from offset. Buffer's position shouldn't be affected
+   */
   T getFromBuffer(ByteBuffer byteBuffer, int offset);
+
+  /**
+   * Read a value from buffer. Buffer's position should be updated
+   */
+  T getFromBuffer(ByteBuffer byteBuffer);
 
   @Override
   default boolean writeKeyToBuffer(T key, ByteBuffer targetBuffer, SerializeState state) {
@@ -120,6 +128,11 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
   }
 
   @Override
+  default ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, T data) {
+    return this.addToBuffer(byteBuffer, data);
+  }
+
+  @Override
   default T wrapperForByteLength(int byteLength) {
     return null;
   }
@@ -130,7 +143,12 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
   }
 
   @Override
+  default T unpackFromBuffer(ByteBuffer byteBuffer, int bufferOffset, int byteLength) {
+    return this.getFromBuffer(byteBuffer, bufferOffset);
+  }
+
+  @Override
   default T unpackFromBuffer(ByteBuffer byteBuffer, int byteLength) {
-    return this.getFromBuffer(byteBuffer, 0);
+    return this.getFromBuffer(byteBuffer);
   }
 }

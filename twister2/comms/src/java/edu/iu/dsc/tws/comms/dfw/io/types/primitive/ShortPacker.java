@@ -56,4 +56,9 @@ public final class ShortPacker implements PrimitivePacker<Short> {
   public Short getFromBuffer(ByteBuffer byteBuffer, int offset) {
     return byteBuffer.getShort(offset);
   }
+
+  @Override
+  public Short getFromBuffer(ByteBuffer byteBuffer) {
+    return byteBuffer.getShort();
+  }
 }

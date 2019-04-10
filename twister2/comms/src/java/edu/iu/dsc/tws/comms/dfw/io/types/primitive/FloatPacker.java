@@ -43,4 +43,9 @@ public final class FloatPacker implements PrimitivePacker<Float> {
   public Float getFromBuffer(ByteBuffer byteBuffer, int offset) {
     return byteBuffer.getFloat(offset);
   }
+
+  @Override
+  public Float getFromBuffer(ByteBuffer byteBuffer) {
+    return byteBuffer.getFloat();
+  }
 }

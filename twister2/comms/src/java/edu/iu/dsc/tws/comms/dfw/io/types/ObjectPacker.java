@@ -64,6 +64,11 @@ public class ObjectPacker implements DataPacker {
   }
 
   @Override
+  public ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, Object data) {
+    return byteBuffer.put(this.packToByteArray(data));
+  }
+
+  @Override
   public Object wrapperForByteLength(int byteLength) {
     return new byte[byteLength];
   }
@@ -74,9 +79,20 @@ public class ObjectPacker implements DataPacker {
   }
 
   @Override
+  public Object unpackFromBuffer(ByteBuffer byteBuffer, int bufferOffset, int byteLength) {
+    byte[] bytes = new byte[byteLength];
+    // intentionally not using byteBuffer.get(byte[]). The contract of this method is not to update
+    // buffer position
+    for (int i = 0; i < byteLength; i++) {
+      bytes[i] = byteBuffer.get(bufferOffset + i);
+    }
+    return this.serializer.deserialize(bytes);
+  }
+
+  @Override
   public Object unpackFromBuffer(ByteBuffer byteBuffer, int byteLength) {
     byte[] bytes = new byte[byteLength];
-    byteBuffer.get(bytes);
-    return this.serializer.deserialize(bytes);
+    byteBuffer.get(bytes, 0, byteLength);
+    return null;
   }
 }

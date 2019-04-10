@@ -26,7 +26,24 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
 
   ByteBuffer addToBuffer(ByteBuffer byteBuffer, A data, int index);
 
+  /**
+   * Read data from buffer and set to the array. Buffer position shouldn't be affected
+   *
+   * @param byteBuffer {@link ByteBuffer} instance
+   * @param offset offset of byteBuffer
+   * @param array destination array
+   * @param index index of array to update
+   */
   void readFromBufferAndSet(ByteBuffer byteBuffer, int offset, A array, int index);
+
+  /**
+   * Read data from buffer and set to the array. Buffer position should be updated.
+   *
+   * @param byteBuffer {@link ByteBuffer} instance
+   * @param array destination array
+   * @param index index of array to update
+   */
+  void readFromBufferAndSet(ByteBuffer byteBuffer, A array, int index);
 
   A wrapperForLength(int length);
 
@@ -104,10 +121,16 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
   default byte[] packToByteArray(A data) {
     byte[] byteArray = new byte[this.getMessageType().getDataSizeInBytes(data)];
     ByteBuffer wrapper = ByteBuffer.wrap(byteArray);
-    for (int i = 0; i < Array.getLength(data); i++) {
-      this.addToBuffer(wrapper, data, i);
-    }
+    this.packToByteBuffer(wrapper, data);
     return byteArray;
+  }
+
+  @Override
+  default ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, A data) {
+    for (int i = 0; i < Array.getLength(data); i++) {
+      this.addToBuffer(byteBuffer, data, i);
+    }
+    return byteBuffer;
   }
 
   @Override
@@ -116,13 +139,24 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
   }
 
   @Override
-  default A unpackFromBuffer(ByteBuffer byteBuffer, int byteLength) {
+  default A unpackFromBuffer(ByteBuffer byteBuffer, int bufferOffset, int byteLength) {
     A array = this.wrapperForByteLength(byteLength);
     int noOfElements = byteLength / this.getMessageType().getUnitSizeInBytes();
     int unitSize = this.getMessageType().getUnitSizeInBytes();
     int initialBufferPosition = byteBuffer.position();
     for (int i = 0; i < noOfElements; i++) {
-      this.readFromBufferAndSet(byteBuffer, initialBufferPosition + i * unitSize, array, i);
+      this.readFromBufferAndSet(byteBuffer,
+          bufferOffset + initialBufferPosition + i * unitSize, array, i);
+    }
+    return array;
+  }
+
+  @Override
+  default A unpackFromBuffer(ByteBuffer byteBuffer, int byteLength) {
+    A array = this.wrapperForByteLength(byteLength);
+    int noOfElements = byteLength / this.getMessageType().getUnitSizeInBytes();
+    for (int i = 0; i < noOfElements; i++) {
+      this.readFromBufferAndSet(byteBuffer, array, i);
     }
     return array;
   }

@@ -43,4 +43,9 @@ public final class IntegerPacker implements PrimitivePacker<Integer> {
   public Integer getFromBuffer(ByteBuffer byteBuffer, int offset) {
     return byteBuffer.getInt(offset);
   }
+
+  @Override
+  public Integer getFromBuffer(ByteBuffer byteBuffer) {
+    return byteBuffer.getInt();
+  }
 }

@@ -46,6 +46,11 @@ public final class LongArrayPacker implements PrimitiveArrayPacker<long[]> {
   }
 
   @Override
+  public void readFromBufferAndSet(ByteBuffer byteBuffer, long[] array, int index) {
+    array[index] = byteBuffer.getLong();
+  }
+
+  @Override
   public long[] wrapperForLength(int length) {
     return new long[length];
   }
