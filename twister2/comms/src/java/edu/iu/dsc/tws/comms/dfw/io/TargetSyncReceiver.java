@@ -168,7 +168,9 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
     lock.lock();
     try {
       for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
-        merge(e.getKey(), e.getValue());
+        if (e.getValue().size() > 0) {
+          merge(e.getKey(), e.getValue());
+        }
 
         // check weather we are ready to send and we have values to send
         if (!isFilledToSend(e.getKey())) {
