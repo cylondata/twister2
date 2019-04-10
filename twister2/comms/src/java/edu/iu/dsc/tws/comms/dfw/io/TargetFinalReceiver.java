@@ -34,12 +34,7 @@ public abstract class TargetFinalReceiver extends TargetSyncReceiver {
   /**
    * Keep state about the targets
    */
-  private Map<Integer, ReceiverState> targetStates = new HashMap<>();
-
-  /**
-   * Keep the list of tuples for each target
-   */
-  protected Map<Integer, Queue<Object>> readyToSend = new HashMap<>();
+  protected Map<Integer, ReceiverState> targetStates = new HashMap<>();
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -55,32 +50,6 @@ public abstract class TargetFinalReceiver extends TargetSyncReceiver {
     for (int target : thisDestinations) {
       messages.put(target, new LinkedBlockingQueue<>());
     }
-  }
-
-  /**
-   * Swap the messages to the ready queue
-   * @param dest the target
-   * @param dests message queue to switch to ready
-   */
-  protected void merge(int dest, Queue<Object> dests) {
-    if (!readyToSend.containsKey(dest)) {
-      readyToSend.put(dest, new LinkedBlockingQueue<>(dests));
-    } else {
-      Queue<Object> ready = readyToSend.get(dest);
-      ready.addAll(dests);
-    }
-    dests.clear();
-  }
-
-  @Override
-  protected boolean isAllEmpty() {
-    boolean b = super.isAllEmpty();
-    for (Map.Entry<Integer, Queue<Object>> e : readyToSend.entrySet()) {
-      if (e.getValue().size() > 0) {
-        return false;
-      }
-    }
-    return b;
   }
 
   @Override
@@ -120,10 +89,5 @@ public abstract class TargetFinalReceiver extends TargetSyncReceiver {
       }
     }
     return allSynced;
-  }
-
-  @Override
-  protected boolean isFilledToSend(int target) {
-    return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
   }
 }

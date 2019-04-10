@@ -11,9 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.partition;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -24,6 +26,11 @@ public class PartitionStreamingFinalReceiver extends TargetFinalReceiver {
   // the receiver
   private SingularReceiver receiver;
 
+  /**
+   * Keep the list of tuples for each target
+   */
+  protected Map<Integer, Queue<Object>> readyToSend = new HashMap<>();
+
   public PartitionStreamingFinalReceiver(SingularReceiver receiver) {
     this.receiver = receiver;
   }
@@ -32,6 +39,32 @@ public class PartitionStreamingFinalReceiver extends TargetFinalReceiver {
                    Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, operation, expectedIds);
     this.receiver.init(cfg, expectedIds.keySet());
+  }
+
+  /**
+   * Swap the messages to the ready queue
+   * @param dest the target
+   * @param dests message queue to switch to ready
+   */
+  protected void merge(int dest, Queue<Object> dests) {
+    if (!readyToSend.containsKey(dest)) {
+      readyToSend.put(dest, new LinkedBlockingQueue<>(dests));
+    } else {
+      Queue<Object> ready = readyToSend.get(dest);
+      ready.addAll(dests);
+    }
+    dests.clear();
+  }
+
+  @Override
+  protected boolean isAllEmpty() {
+    boolean b = super.isAllEmpty();
+    for (Map.Entry<Integer, Queue<Object>> e : readyToSend.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
+      }
+    }
+    return b;
   }
 
   @Override
@@ -59,5 +92,10 @@ public class PartitionStreamingFinalReceiver extends TargetFinalReceiver {
     }
 
     return true;
+  }
+
+  @Override
+  protected boolean isFilledToSend(int target) {
+    return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
   }
 }
