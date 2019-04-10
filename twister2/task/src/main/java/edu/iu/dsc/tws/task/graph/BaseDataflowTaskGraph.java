@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -25,7 +26,7 @@ import java.util.logging.Logger;
  * outward task edges, incoming and outgoing task edges.
  */
 public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
-  private Set<TV> vertices;
+  private LinkedHashSet<TV> vertices;
   private Set<DirectedEdge<TV, TE>> directedEdges;
 
   private Comparator<TV> vertexComparator;
@@ -37,7 +38,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   }
 
   public BaseDataflowTaskGraph(Comparator<TV> comparator, Comparator<TE> eComparator) {
-    this.vertices = new HashSet<>();
+    this.vertices = new LinkedHashSet<>();
     this.directedEdges = new HashSet<>();
     this.vertexComparator = comparator;
     this.edgeComparator = eComparator;
