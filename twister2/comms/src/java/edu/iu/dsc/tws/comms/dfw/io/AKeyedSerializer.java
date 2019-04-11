@@ -46,14 +46,14 @@ import edu.iu.dsc.tws.comms.dfw.OutMessage;
  * For other cases such as integer or double keys, we know the length of the key, so we only send
  * the key.
  */
-public class UnifiedSerializer extends BaseSerializer {
-  private static final Logger LOG = Logger.getLogger(UnifiedSerializer.class.getName());
+public class AKeyedSerializer extends BaseSerializer {
+  private static final Logger LOG = Logger.getLogger(AKeyedSerializer.class.getName());
 
   private MessageType dataType;
 
   private DataPacker packer;
 
-  public UnifiedSerializer(KryoSerializer serializer, int executor, MessageType dataType) {
+  public AKeyedSerializer(KryoSerializer serializer, int executor, MessageType dataType) {
     super(serializer, executor);
     this.serializer = serializer;
     this.dataType = dataType;

@@ -22,15 +22,18 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
-public class UnifiedKeySerializer extends BaseSerializer {
-  private static final Logger LOG = Logger.getLogger(UnifiedKeySerializer.class.getName());
+/**
+ * This serializer will be used to serialize messages with keys
+ */
+public class KeyedSerializer extends BaseSerializer {
+  private static final Logger LOG = Logger.getLogger(KeyedSerializer.class.getName());
 
   private DataPacker dataPacker;
 
   private DataPacker keyPacker;
 
-  public UnifiedKeySerializer(KryoSerializer serializer, int executor,
-                              MessageType keyType, MessageType dataType) {
+  public KeyedSerializer(KryoSerializer serializer, int executor,
+                         MessageType keyType, MessageType dataType) {
     super(serializer, executor);
     this.serializer = serializer;
     dataPacker = dataType.getDataPacker();

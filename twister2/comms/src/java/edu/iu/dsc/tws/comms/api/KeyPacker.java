@@ -15,7 +15,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
-import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
 /**
  * Key packer will be removed in future releases
@@ -24,16 +23,6 @@ import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
  */
 @Deprecated
 public interface KeyPacker<D> {
-  /**
-   * Pack the key and return the size of the data in bytes once packed
-   *
-   * @param key the key (can be Integer, Object etc)
-   * @param state state
-   * @return the size of the packed data in bytes
-   * @deprecated Will be removed
-   */
-  @Deprecated
-  int packKey(D key, SerializeState state);
 
   /**
    * Initialize the key

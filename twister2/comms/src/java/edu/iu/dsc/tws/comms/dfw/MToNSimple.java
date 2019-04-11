@@ -37,12 +37,12 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.PartitionRouter;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
@@ -271,10 +271,10 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(cfg)));
       if (isKeyed) {
-        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(), executor,
+        serializerMap.put(s, new KeyedSerializer(new KryoSerializer(), executor,
             keyType, dataType));
       } else {
-        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor, dataType));
+        serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(), executor, dataType));
       }
     }
 
@@ -292,8 +292,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
         deSerializerMap.put(ex, new UnifiedKeyDeSerializer(new KryoSerializer(),
             executor, keyType, receiveType));
       } else {
-        deSerializerMap.put(ex, new UnifiedDeserializer(new KryoSerializer(),
-            executor, receiveType));
+        deSerializerMap.put(ex, new UnifiedDeserializer(executor, receiveType));
       }
     }
 

@@ -20,7 +20,7 @@ import org.junit.Test;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 
-public class KeyedUnifiedSerializerTest extends BaseSerializeTest {
+public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   @Test
   public void testBuildLargeIntegerMessage() {
     int numBuffers = 10;

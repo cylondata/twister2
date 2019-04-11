@@ -34,10 +34,10 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.DirectRouter;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
@@ -189,12 +189,12 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
           DataFlowContext.sendPendingMax(config)));
       pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
-      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(),
+      serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(),
           taskPlan.getThisExecutor(), type));
     }
 
     for (int tar : targets) {
-      MessageDeSerializer messageDeSerializer = new UnifiedDeserializer(new KryoSerializer(),
+      MessageDeSerializer messageDeSerializer = new UnifiedDeserializer(
           taskPlan.getThisExecutor(), type);
       deSerializerMap.put(tar, messageDeSerializer);
     }

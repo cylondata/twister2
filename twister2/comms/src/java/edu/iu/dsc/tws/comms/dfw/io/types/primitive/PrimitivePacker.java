@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.PackerStore;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
-import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
 @SuppressWarnings("ReturnValueIgnored")
 public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
@@ -61,11 +60,6 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
   default Pair<Integer, Integer> getKeyLength(InMessage message,
                                               DataBuffer buffer, int location) {
     return Pair.of(this.getMessageType().getUnitSizeInBytes(), 0);
-  }
-
-  @Override
-  default int packKey(T key, SerializeState state) {
-    return this.determineLength(key, state);
   }
 
   @Override

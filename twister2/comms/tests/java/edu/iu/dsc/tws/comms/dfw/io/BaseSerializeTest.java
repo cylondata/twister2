@@ -33,7 +33,7 @@ public class BaseSerializeTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null);
 
-    UnifiedKeySerializer serializer = new UnifiedKeySerializer(
+    KeyedSerializer serializer = new KeyedSerializer(
         new KryoSerializer(), 0, keyType, type);
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
@@ -70,7 +70,7 @@ public class BaseSerializeTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, keyType, null);
 
-    UnifiedKeySerializer serializer = new UnifiedKeySerializer(
+    KeyedSerializer serializer = new KeyedSerializer(
         new KryoSerializer(), 0, keyType, type);
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 

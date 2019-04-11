@@ -17,7 +17,6 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -31,7 +30,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
 
   private DataPacker dataPacker;
 
-  public UnifiedDeserializer(KryoSerializer kryoSerializer, int exec, MessageType dataType) {
+  public UnifiedDeserializer(int exec, MessageType dataType) {
     dataPacker = dataType.getDataPacker();
     LOG.fine("Initializing serializer on worker: " + exec);
   }
