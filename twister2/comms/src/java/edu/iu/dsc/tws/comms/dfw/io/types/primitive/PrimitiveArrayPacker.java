@@ -16,9 +16,9 @@ import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.PackerStore;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
-import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
 public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
 
@@ -61,42 +61,23 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
   }
 
   @Override
-  default int packToState(A data, SerializeState state) {
+  default int determineLength(A data, PackerStore store) {
     return this.getMessageType().getDataSizeInBytes(data);
   }
 
   @Override
-  default boolean writeDataToBuffer(A data, ByteBuffer targetBuffer, SerializeState state) {
-    int totalBytes = state.getTotalBytes(); // total bytes copied so far
-    int remainingCapacity = targetBuffer.remaining();
-    int bytesCopied = state.getBytesCopied(); // total bytes copied for this list
-
-    int lengthOfData = this.getMessageType().getDataSizeInBytes(data);
+  default void writeDataToBuffer(A data, PackerStore packerStore, int alreadyCopied,
+                                 int leftToCopy, int spaceLeft, ByteBuffer targetBuffer) {
     int unitSize = this.getMessageType().getUnitSizeInBytes();
+    int elementsCopied = alreadyCopied / unitSize;
+    int elementsLeft = leftToCopy / unitSize;
 
-    int remainingToCopy = lengthOfData - bytesCopied;
+    int spacePermitsFor = spaceLeft / unitSize;
 
-    int canCopy = (remainingCapacity > remainingToCopy ? remainingToCopy
-        : remainingCapacity) / unitSize; // amount that can be copied to this buffer
+    int willCopy = Math.min(spacePermitsFor, elementsLeft);
 
-    // copy
-    int offSet = bytesCopied / unitSize;
-    for (int i = 0; i < canCopy; i++) {
-      this.addToBuffer(targetBuffer, data, i + offSet);
-    }
-
-    //updating state
-    totalBytes = totalBytes + canCopy * unitSize;
-    // we set the total bytes copied so far
-    state.setTotalBytes(totalBytes);
-    // we copied everything
-    if ((canCopy * unitSize) == remainingToCopy) {
-      state.setData(null);
-      state.setBytesCopied(0);
-      return true;
-    } else {
-      state.setBytesCopied(canCopy * unitSize + bytesCopied);
-      return false;
+    for (int i = 0; i < willCopy; i++) {
+      this.addToBuffer(targetBuffer, data, i + elementsCopied);
     }
   }
 

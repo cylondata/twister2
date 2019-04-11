@@ -18,6 +18,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.KeyPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.PackerStore;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
@@ -48,30 +49,12 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
   T getFromBuffer(ByteBuffer byteBuffer);
 
   @Override
-  default boolean writeKeyToBuffer(T key, ByteBuffer targetBuffer, SerializeState state) {
+  default void writeDataToBuffer(T data, PackerStore packerStore, int alreadyCopied,
+                                 int leftToCopy, int spaceLeft, ByteBuffer targetBuffer) {
     int unitDataSize = this.getMessageType().getUnitSizeInBytes();
-    if (targetBuffer.remaining() > unitDataSize) {
-      this.addToBuffer(targetBuffer, key);
-      state.setTotalBytes(state.getTotalBytes() + unitDataSize);
-      state.setCurrentHeaderLength(state.getCurrentHeaderLength() + unitDataSize);
-      state.setKeySize(unitDataSize);
-      return true;
-    }
-    return false;
-  }
-
-  @Override
-  default boolean writeDataToBuffer(T data, ByteBuffer targetBuffer, SerializeState state) {
-    int unitDataSize = this.getMessageType().getUnitSizeInBytes();
-    if (targetBuffer.remaining() > unitDataSize) {
+    if (spaceLeft > unitDataSize) {
       this.addToBuffer(targetBuffer, data);
-      state.setTotalBytes(state.getTotalBytes() + unitDataSize);
-      //since it's a single value.
-      state.setData(null);
-      state.setBytesCopied(0);
-      return true;
     }
-    return false;
   }
 
   @Override
@@ -82,11 +65,11 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
 
   @Override
   default int packKey(T key, SerializeState state) {
-    return this.packToState(key, state);
+    return this.determineLength(key, state);
   }
 
   @Override
-  default int packToState(T data, SerializeState state) {
+  default int determineLength(T data, PackerStore store) {
     return this.getMessageType().getUnitSizeInBytes();
   }
 

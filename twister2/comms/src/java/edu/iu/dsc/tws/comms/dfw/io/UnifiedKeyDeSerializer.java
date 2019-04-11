@@ -40,7 +40,7 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
 
   public UnifiedKeyDeSerializer(KryoSerializer kryoSerializer, int exec,
                                 MessageType keyType, MessageType dataType) {
-    dataPacker = DFWIOUtils.createPacker(dataType);
+    dataPacker = dataType.getDataPacker();
     keyPacker = DFWIOUtils.createKeyPacker(keyType);
     this.workerId = exec;
 

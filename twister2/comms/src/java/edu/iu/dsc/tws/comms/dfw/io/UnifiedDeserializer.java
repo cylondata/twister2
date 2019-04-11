@@ -32,7 +32,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
   private DataPacker dataPacker;
 
   public UnifiedDeserializer(KryoSerializer kryoSerializer, int exec, MessageType dataType) {
-    dataPacker = DFWIOUtils.createPacker(dataType);
+    dataPacker = dataType.getDataPacker();
     LOG.fine("Initializing serializer on worker: " + exec);
   }
 
@@ -70,7 +70,7 @@ public class UnifiedDeserializer implements MessageDeSerializer {
         break;
       }
 
-      // if we are at the begining
+      // if we are at the beginning
       int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
 
       if (currentMessage.getUnPkBuffers() == 0) {

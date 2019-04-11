@@ -15,7 +15,6 @@ import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
-import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
 /**
  * The data packer interface. An implementation class should be stateless.
@@ -24,30 +23,30 @@ public interface DataPacker<D> {
 
   /**
    * Pack the data and return the size of the data in bytes once packed.
-   * However, packing(converting to byte[]) and saving to state inside this method is optional.
+   * However, packing(converting to byte[]) and saving to store inside this method is optional.
    * If your have primitives that can be efficiently copied to the buffers later in
-   * {@link DataPacker#writeDataToBuffer(Object, ByteBuffer, SerializeState)}, you may just
+   * {@link DataPacker#writeDataToBuffer}, you may just
    * return the byte size of data from this method.
    *
    * @param data the data (can be Integer, Object etc)
-   * @param state state
+   * @param store A store to temporary store the serialized data,
+   * if you had to serialize data to determine length.
    * @return the size of the packed data in bytes
    */
-  int packToState(D data, SerializeState state);
-
+  int determineLength(D data, PackerStore store);
 
   /**
    * Transfer the data to the buffer. If you have already packed data to state
-   * with {@link DataPacker#packToState(Object, SerializeState)}, you may transfer data from state
-   * to targetBuffer. If not, you may directly transfer data to the targetBuffer.
-   *
-   * @param data the data
-   * @param targetBuffer target buffer
-   * @param state this can be used to keep the sate about the packing object
-   * @return true if all the data is packed
+   * * with {@link DataPacker#determineLength(Object, PackerStore)},
+   * you may transfer data from state
+   * * to targetBuffer. If not, you may directly transfer data to the targetBuffer.
    */
-  boolean writeDataToBuffer(D data,
-                            ByteBuffer targetBuffer, SerializeState state);
+  void writeDataToBuffer(D data,
+                         edu.iu.dsc.tws.comms.api.PackerStore packerStore,
+                         int alreadyCopied,
+                         int leftToCopy,
+                         int spaceLeft,
+                         ByteBuffer targetBuffer);
 
   /**
    * Read the data from the buffer

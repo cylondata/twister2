@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-import java.nio.ByteBuffer;
-
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
@@ -36,19 +34,6 @@ public interface KeyPacker<D> {
    */
   @Deprecated
   int packKey(D key, SerializeState state);
-
-  /**
-   * Transfer the data to the buffer
-   *
-   * @param key the key
-   * @param targetBuffer target buffer
-   * @param state this can be used to keep the sate about the packing object
-   * @return true if all the data is packed
-   * @deprecated Will be removed
-   */
-  @Deprecated
-  boolean writeKeyToBuffer(D key,
-                           ByteBuffer targetBuffer, SerializeState state);
 
   /**
    * Initialize the key

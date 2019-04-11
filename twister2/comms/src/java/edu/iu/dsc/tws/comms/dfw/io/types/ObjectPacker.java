@@ -15,9 +15,9 @@ import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataPacker;
+import edu.iu.dsc.tws.comms.api.PackerStore;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
-import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
 public class ObjectPacker implements DataPacker {
 
@@ -28,18 +28,20 @@ public class ObjectPacker implements DataPacker {
   }
 
   @Override
-  public int packToState(Object data, SerializeState state) {
-    if (state.getData() == null) {
+  public int determineLength(Object data, PackerStore store) {
+    if (store.retrieve() == null) {
       byte[] serialize = serializer.serialize(data);
-      state.setData(serialize);
+      store.store(serialize);
     }
-    return state.getData().length;
+    return store.retrieve().length;
   }
 
   @Override
-  public boolean writeDataToBuffer(Object data,
-                                   ByteBuffer targetBuffer, SerializeState state) {
-    return state.copyDataToByteBuffer(targetBuffer);
+  public void writeDataToBuffer(Object data, edu.iu.dsc.tws.comms.api.PackerStore packerStore,
+                                int alreadyCopied, int leftToCopy, int spaceLeft,
+                                ByteBuffer targetBuffer) {
+    byte[] datBytes = packerStore.retrieve();
+    targetBuffer.put(datBytes, alreadyCopied, Math.min(leftToCopy, spaceLeft));
   }
 
   @Override
@@ -47,8 +49,8 @@ public class ObjectPacker implements DataPacker {
                                 DataBuffer buffer, int currentObjectLength) {
     int startIndex = currentMessage.getUnPkCurrentBytes();
     byte[] objectVal = (byte[]) currentMessage.getDeserializingObject();
-    int value = PartialDataDeserializer.deserializeByte(buffer, currentObjectLength,
-        objectVal, startIndex, currentLocation);
+    int value = buffer.copyPartToByteArray(currentLocation, objectVal,
+        startIndex, currentObjectLength);
     // at the end we switch to the actual object
     int totalBytesRead = startIndex + value;
     if (totalBytesRead == currentObjectLength) {

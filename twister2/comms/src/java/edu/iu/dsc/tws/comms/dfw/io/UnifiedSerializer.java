@@ -58,7 +58,7 @@ public class UnifiedSerializer extends BaseSerializer {
     this.serializer = serializer;
     this.dataType = dataType;
 
-    packer = DFWIOUtils.createPacker(dataType);
+    packer = dataType.getDataPacker();
 
     LOG.fine("Initializing serializer on worker: " + executor);
   }
@@ -91,7 +91,9 @@ public class UnifiedSerializer extends BaseSerializer {
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
-      int dataLength = packer.packToState(payload, state);
+      int dataLength = packer.determineLength(payload, state);
+      state.getActive().setTotalToCopy(dataLength);
+
       state.setCurrentHeaderLength(dataLength);
 
       // add the header bytes to the total bytes
@@ -113,7 +115,13 @@ public class UnifiedSerializer extends BaseSerializer {
       return false;
     }
 
-    boolean completed = packer.writeDataToBuffer(payload, byteBuffer, state);
+    boolean completed = PackerProxy.writeDataToBuffer(
+        packer,
+        payload,
+        byteBuffer,
+        state
+    );
+
     // now set the size of the buffer
     targetBuffer.setSize(byteBuffer.position());
 

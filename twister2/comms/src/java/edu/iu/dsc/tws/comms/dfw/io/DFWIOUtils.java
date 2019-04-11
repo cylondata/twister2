@@ -15,12 +15,10 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.KeyPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
-import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.BytePacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.DoublePacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.FloatPacker;
@@ -87,35 +85,6 @@ public final class DFWIOUtils {
     byteBuffer.putInt(noOfMessages);
     // lets set the size for 16 for now
     buffer.setSize(HEADER_SIZE);
-  }
-
-  /**
-   * This method will not be necessary. Use {@link MessageType#getDataPacker()} instead
-   *
-   * @return Data packer
-   * @deprecated Use {@link MessageType#getDataPacker()} instead
-   */
-  @Deprecated
-  public static DataPacker createPacker(MessageType messageType) {
-    if (messageType == MessageType.CUSTOM) {
-      return messageType.getDataPacker();
-    }
-
-    if (messageType == MessageType.INTEGER) {
-      return messageType.getDataPacker();
-    } else if (messageType == MessageType.LONG) {
-      return messageType.getDataPacker();
-    } else if (messageType == MessageType.SHORT) {
-      return messageType.getDataPacker();
-    } else if (messageType == MessageType.DOUBLE) {
-      return messageType.getDataPacker();
-    } else if (messageType == MessageType.BYTE) {
-      return messageType.getDataPacker();
-    } else if (messageType == MessageType.OBJECT) {
-      return new ObjectPacker();
-    } else {
-      return messageType.getDataPacker();
-    }
   }
 
   /**

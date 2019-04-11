@@ -81,19 +81,15 @@ public final class MessageType<T> implements TypeDefinition<T> {
   );
 
   public static final MessageType<String> STRING = new MessageType<>(
-      true, Character.BYTES, String.class, null
+      false, Character.BYTES, String.class, null
   );
 
   public static final MessageType<Object> OBJECT = new MessageType<>(
-      true, 0, Object.class, null
-  );
-
-  public static final MessageType<Object> EMPTY = new MessageType<>(
-      true, 0, Object.class, null
+      false, 0, Object.class, null
   );
 
   public static final MessageType<Object> CUSTOM = new MessageType<>(
-      true, 0, Object.class, null
+      false, 0, Object.class, null
   );
 
   private boolean isPrimitive;
@@ -170,30 +166,12 @@ public final class MessageType<T> implements TypeDefinition<T> {
   }
 
   /**
-   * Set the custom data packer
-   *
-   * @param customPacker set the custom packer
-   */
-  public void setCustomPacker(DataPacker customPacker) {
-    this.dataPacker = customPacker;
-  }
-
-  /**
    * Get the key packer associated with this type
    *
    * @return the key packer
    */
   public KeyPacker getKeyPacker() {
     return keyPacker;
-  }
-
-  /**
-   * Set the key packer associated with this type
-   *
-   * @param keyPacker key packer
-   */
-  public void setKeyPacker(KeyPacker keyPacker) {
-    this.keyPacker = keyPacker;
   }
 
   /**

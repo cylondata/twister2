@@ -165,14 +165,13 @@ public abstract class BaseSerializer implements MessageSerializer {
 
     if (payload instanceof AggregatedObjects) {
       List objectList = (List) payload;
-      int startIndex = state.getCurrentObject();
+      int startIndex = state.getCurrentObjectIndex();
       // we will copy until we have space left or we are have serialized all the objects
       for (int i = startIndex; i < objectList.size(); i++) {
         Object o = objectList.get(i);
         boolean complete = serializeSingleMessage(o, sendMessage, targetBuffer);
         if (complete) {
-          state.setCurrentHeaderLength(state.getTotalBytes());
-          state.setCurrentObject(i + 1);
+          state.setCurrentObjectIndex(i + 1);
         } else {
           break;
         }
@@ -180,15 +179,15 @@ public abstract class BaseSerializer implements MessageSerializer {
         // check how much space left in this targetBuffer
         remaining = targetBuffer.getByteBuffer().remaining();
         // if we have less than this amount of space, that means we may not be able to put the next
-        // header in a contigous space, so we cannot use this targetBuffer anymore
+        // header in a contiguous space, so we cannot use this targetBuffer anymore
         if (!(remaining > MAX_SUB_MESSAGE_HEADER_SPACE
-            && state.getCurrentObject() < objectList.size())) {
+            && state.getCurrentObjectIndex() < objectList.size())) {
           break;
         }
       }
 
       // we have serialized all the objects
-      if (state.getCurrentObject() == objectList.size()) {
+      if (state.getCurrentObjectIndex() == objectList.size()) {
         sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
       } else {
         sendMessage.setSendState(OutMessage.SendState.PARTIALLY_SERIALIZED);
