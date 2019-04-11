@@ -120,11 +120,7 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
       }
 
       Queue<Object> msgQueue = messages.get(target);
-      if (object instanceof AggregatedObjects) {
-        msgQueue.addAll((Collection<?>) object);
-      } else {
-        msgQueue.add(object);
-      }
+      addMessage(msgQueue, object);
 
       if (msgQueue.size() > lowWaterMark) {
         merge(target, msgQueue);
@@ -137,6 +133,14 @@ public abstract class TargetSyncReceiver implements MessageReceiver {
       return true;
     } finally {
       lock.unlock();
+    }
+  }
+
+  protected void addMessage(Queue<Object> msgQueue, Object value) {
+    if (value instanceof AggregatedObjects) {
+      msgQueue.addAll((Collection<?>) value);
+    } else {
+      msgQueue.add(value);
     }
   }
 

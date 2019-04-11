@@ -11,9 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,6 +25,8 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.allreduce.BcastReduceBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.allreduce.BcastReduceStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
 
@@ -98,8 +97,13 @@ public class AllReduce implements DataFlowOperation {
     this.taskPlan = instancePlan;
     this.executor = taskPlan.getThisExecutor();
 
-    broadcast = new TreeBroadcast(channel, middleTask, destinations,
-        new BCastReceiver(finalReceiver, streaming));
+    MessageReceiver finalRcvr;
+    if (streaming) {
+      finalRcvr = new BcastReduceStreamingFinalReceiver(finalReceiver);
+    } else {
+      finalRcvr = new BcastReduceBatchFinalReceiver(finalReceiver);
+    }
+    broadcast = new TreeBroadcast(channel, middleTask, destinations, finalRcvr);
     broadcast.init(config, t, instancePlan, broadCastEdge);
 
     MessageReceiver receiver;
@@ -187,49 +191,5 @@ public class AllReduce implements DataFlowOperation {
   @Override
   public String getUniqueId() {
     return String.valueOf(reduceEdge);
-  }
-
-  private static class BCastReceiver implements MessageReceiver {
-    private SingularReceiver singularReceiver;
-
-    private Map<Integer, Boolean> finished = new HashMap<>();
-
-    private boolean strm;
-
-    BCastReceiver(SingularReceiver reduceRcvr, boolean strm) {
-      this.singularReceiver = reduceRcvr;
-      this.strm = strm;
-    }
-
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      this.singularReceiver.init(cfg, expectedIds.keySet());
-      for (int i : expectedIds.keySet()) {
-        finished.put(i, false);
-      }
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      boolean offer = singularReceiver.receive(target, object);
-      if (offer) {
-        finished.put(target, true);
-      }
-      return offer;
-    }
-
-    @Override
-    public boolean progress() {
-      if (strm) {
-        return false;
-      } else {
-        for (Boolean b : finished.values()) {
-          if (!b) {
-            return true;
-          }
-        }
-        return false;
-      }
-    }
   }
 }
