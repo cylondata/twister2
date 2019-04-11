@@ -19,7 +19,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -90,10 +89,6 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
 
     //To get the vertex set from the taskgraph
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
-
-    for (Vertex vertex : taskVertexSet) {
-      LOG.info("Received Task Vertex:" + vertex.getName());
-    }
 
     //Allocate the task instances into the logical containers.
     Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
@@ -192,24 +187,15 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       roundrobinAllocation.put(i, new ArrayList<>());
     }
 
-    for (Vertex vertex : taskVertexSet) {
-      LOG.info("Before ordering:" + vertex.getName());
-    }
+    //TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
+    //orderedTaskSet.addAll(taskVertexSet);
 
-    TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
-    orderedTaskSet.addAll(taskVertexSet);
-
-    for (Vertex vertex : taskVertexSet) {
-      LOG.info("After ordering:" + vertex.getName());
-    }
-
-    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(orderedTaskSet);
+    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
     int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
     if (numberOfContainers <= totalTaskInstances) {
       int globalTaskIndex = 0;
       for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
         String task = e.getKey();
-        LOG.info("%%%%%%%%%%%%%%Task name:" + task);
         int numberOfInstances = e.getValue();
         int containerIndex;
         for (int i = 0; i < numberOfInstances; i++) {
@@ -218,10 +204,6 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
         }
         globalTaskIndex++;
       }
-    }
-
-    for (Map.Entry<Integer, List<InstanceId>> allocation : roundrobinAllocation.entrySet()) {
-      LOG.info("allocation values:" + allocation.getKey() + "\t" + allocation.getValue());
     }
     return roundrobinAllocation;
   }

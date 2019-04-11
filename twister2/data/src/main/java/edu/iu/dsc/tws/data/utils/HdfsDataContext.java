@@ -19,7 +19,7 @@ public final class HdfsDataContext extends Context {
 
   private static final String HDFS_URL = "twister2.hdfs.url";
   private static final String HDFS_URL_DEFAULT
-      = "hdfs:/kannan-Precision-5820-Tower-X-Series.iu.edu:9000//";
+      = "hostaname:9000//";
 
   public static final String HADOOP_HOME = "twister2.hadoop.home";
   public static final String HADOOP_HOME_DEFAULT = "${HADOOP_HOME}";
@@ -38,7 +38,7 @@ public final class HdfsDataContext extends Context {
   private static final String HDFS_DATA_DIRECTORY_DEFAULT = "/user/kannan";
 
   private static final String HDFS_NAMENODE_NAME = "twister2.hdfs.namenode";
-  private static final String HDFS_NAMENODE_DEFAULT = "kannan-Precision-5820-Tower-X-Series.iu.edu";
+  private static final String HDFS_NAMENODE_DEFAULT = "hostaname";
 
   private static final String HDFS_NAMENODE_PORT = "twister2.hdfs.namenode.port";
   private static final Integer HDFS_NAMENODE_PORT_DEFAULT = 9000;

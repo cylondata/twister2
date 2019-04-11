@@ -212,7 +212,6 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
   private Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
       Vertex taskVertex, int numberOfContainers, WorkerPlan workerPlan) {
 
-    LOG.fine("%%%%%%%% Task Vertex Name:%%%%%%%%%" + taskVertex.getName());
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     TaskAttributes taskAttributes = new TaskAttributes();
 
@@ -240,9 +239,6 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
         workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx);
         List<DataTransferTimeCalculator> cal = findBestWorkerNode(workerPlanMap);
-        for (DataTransferTimeCalculator dataTransferTimeCalculator : cal) {
-          LOG.info("Index values are:" + dataTransferTimeCalculator.getTaskIndex());
-        }
 
         /* This loop allocate the task instances to the respective container but, before allocation
         it will check whether the container has reached maximum task instance size which is

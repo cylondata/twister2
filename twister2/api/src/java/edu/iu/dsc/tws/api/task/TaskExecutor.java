@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler;
+import edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -87,28 +88,25 @@ public class TaskExecutor {
    */
   public ExecutionPlan plan(DataFlowTaskGraph graph) {
 
-    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
-    roundRobinTaskScheduler.initialize(config);
-
     TaskScheduler taskScheduler = new TaskScheduler();
     taskScheduler.initialize(config);
 
     WorkerPlan workerPlan = createWorkerPlan();
 
+    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
+    roundRobinTaskScheduler.initialize(config);
+
     //For testing added on April, 08, 2019
     //DataLocalityStreamingTaskScheduler dtaskScheduler = new DataLocalityStreamingTaskScheduler();
     DataLocalityBatchTaskScheduler dtaskScheduler = new DataLocalityBatchTaskScheduler();
     dtaskScheduler.initialize(config, workerID);
-    //TaskSchedulePlan taskSchedulePlan = dtaskScheduler.schedule(graph, workerPlan);
+    TaskSchedulePlan taskSchedulePlan = dtaskScheduler.schedule(graph, workerPlan);
 
-    //TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
-    //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
-
-    //RoundRobinBatchTaskScheduler roundRobinBatchTaskScheduler = new RoundRobinBatchTaskScheduler();
-    //roundRobinBatchTaskScheduler.initialize(config);
+    RoundRobinBatchTaskScheduler roundRobinBatchTaskScheduler = new RoundRobinBatchTaskScheduler();
+    roundRobinBatchTaskScheduler.initialize(config);
     //TaskSchedulePlan taskSchedulePlan = roundRobinBatchTaskScheduler.schedule(graph, workerPlan);
 
-    TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
+    //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator);
     return executionPlanBuilder.build(config, graph, taskSchedulePlan);
@@ -140,7 +138,6 @@ public class TaskExecutor {
    * @param plan the execution plan
    */
   public void execute(DataFlowTaskGraph graph, ExecutionPlan plan) {
-    LOG.info("%%%%%% Graph Operation Mode:%%%%%%%%%%%%" + graph.getOperationMode());
     Executor executor = new Executor(config, workerID, plan, communicator.getChannel(),
         graph.getOperationMode());
     executor.execute();

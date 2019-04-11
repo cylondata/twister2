@@ -105,7 +105,7 @@ public class TaskInstanceMapCalculation {
         for (InstanceId instanceId : instancesToBeCalculated) {
           containerRam.put(instanceId, instanceRequiredRam);
         }
-        LOG.info("Instances Required Ram:\t" + instanceRequiredRam + "\n");
+        LOG.fine("Instances Required Ram:\t" + instanceRequiredRam + "\n");
       }
     }
     return instancesRamContainerMap;
@@ -155,7 +155,7 @@ public class TaskInstanceMapCalculation {
         for (InstanceId instanceId : instancesToBeCalculated) {
           containerDisk.put(instanceId, instanceRequiredDisk);
         }
-        LOG.info("Instances Required Disk:\t" + instanceRequiredDisk);
+        LOG.fine("Instances Required Disk:\t" + instanceRequiredDisk);
       }
     }
     return instancesDiskContainerMap;
@@ -204,7 +204,7 @@ public class TaskInstanceMapCalculation {
         for (InstanceId instanceId : instancesToBeCalculated) {
           containerCPUMap.put(instanceId, instanceRequiredCpu);
         }
-        LOG.info("Instances Required CPU:\t" + instanceRequiredCpu);
+        LOG.fine("Instances Required CPU:\t" + instanceRequiredCpu);
       }
     }
     return instancesCpuContainerMap;

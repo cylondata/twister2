@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.internal.taskgraph;
 
 
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,6 +22,7 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectCompute;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectDirectSink;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
@@ -33,9 +35,10 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
  * This is the first part of the k-means algorithm which has been ported here to test
  * and accomodate the local file system for the data locality task scheduling.
  */
-public class DataLocalityTaskGraphExample extends TaskWorker {
+public class DataLocalityBatchTaskGraphExample extends TaskWorker {
 
-  private static final Logger LOG = Logger.getLogger(DataLocalityTaskGraphExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(
+      DataLocalityBatchTaskGraphExample.class.getName());
 
   @SuppressWarnings("unchecked")
   @Override
@@ -77,22 +80,19 @@ public class DataLocalityTaskGraphExample extends TaskWorker {
         DataType.OBJECT);
     firstGraphComputeConnection.direct("datapointcompute", Context.TWISTER2_DIRECT_EDGE,
         DataType.OBJECT);
-    datapointsTaskGraphBuilder.setMode(OperationMode.STREAMING);
+    datapointsTaskGraphBuilder.setMode(OperationMode.BATCH);
 
     //Build the first taskgraph
     DataFlowTaskGraph datapointsTaskGraph = datapointsTaskGraphBuilder.build();
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
-    LOG.info("execution plan:" + firstGraphExecutionPlan);
     //Actual execution for the first taskgraph
-//    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
-//    //Retrieve the output of the first task graph
-//    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
-//        datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
-//    LOG.fine("Retrieved Datapoints object values:"
-//        + Arrays.deepToString(dataPointsObject.getPartitions()));
-//    for (int i = 0; i < dataPointsObject.getPartitions().length; i++) {
-//      LOG.info("Datapoints values:" + Arrays.deepToString(dataPointsObject.getPartitions()));
-//    }
+    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
+    //Retrieve the output of the first task graph
+    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
+        datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
+    for (int i = 0; i < dataPointsObject.getPartitions().length; i++) {
+      LOG.info("Datapoints values:" + Arrays.deepToString(dataPointsObject.getPartitions()));
+    }
   }
 }

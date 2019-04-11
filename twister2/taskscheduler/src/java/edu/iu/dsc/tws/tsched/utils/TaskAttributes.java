@@ -12,9 +12,10 @@
 package edu.iu.dsc.tws.tsched.utils;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.graph.Vertex;
@@ -28,6 +29,7 @@ import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
  */
 public class TaskAttributes {
 
+  private static final Logger LOG = Logger.getLogger(TaskAttributes.class.getName());
   /**
    * This method retrieve the set of task vertices and check if the task vertex has the user
    * specified ram value. If the user doesn't specify the required ram configuration it will
@@ -56,7 +58,7 @@ public class TaskAttributes {
    * assign the default disk value from the task configuration file and store it in the map.
    */
   public Map<String, Double> getTaskDiskMap(Set<Vertex> taskVertices) {
-    Map<String, Double> taskDiskMap = new HashMap<>();
+    Map<String, Double> taskDiskMap = new LinkedHashMap<>();
     Object disk;
     double requiredDisk;
     for (Vertex task : taskVertices) {
@@ -78,7 +80,7 @@ public class TaskAttributes {
    * the default cpu value from the task configuration file and store it in the map.
    */
   public Map<String, Double> getTaskCPUMap(Set<Vertex> taskVertices) {
-    Map<String, Double> taskCPUMap = new HashMap<>();
+    Map<String, Double> taskCPUMap = new LinkedHashMap<>();
     Object cpu;
     double requiredCpu;
     for (Vertex task : taskVertices) {
@@ -115,7 +117,7 @@ public class TaskAttributes {
    * vertex from the task scheduling configuration file.
    */
   public Map<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet) {
-    Map<String, Integer> parallelTaskMap = new TreeMap<>();
+    Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
     for (Vertex task : iTaskSet) {
       Config config = task.getConfig();
       String taskName = task.getName();
@@ -138,7 +140,7 @@ public class TaskAttributes {
    */
 
   public Map<String, Integer> getParallelTaskMap(Vertex taskVertex) {
-    Map<String, Integer> parallelTaskMap = new TreeMap<>();
+    Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
     Config config = taskVertex.getConfig();
     String taskName = taskVertex.getName();
     int parallelTaskCount;
@@ -156,7 +158,6 @@ public class TaskAttributes {
    * This method is to calculate the total number of task vertex based on the parallelism value.
    */
   public int getTotalNumberOfInstances(Vertex taskVertex) {
-
     Map<String, Integer> parallelTaskMap = getParallelTaskMap(taskVertex);
     int totalNumberOfInstances = 0;
     for (int instances : parallelTaskMap.values()) {
@@ -171,8 +172,7 @@ public class TaskAttributes {
    * assign the default network value from the task configuration file and store it in the map.
    */
   public Map<String, Double> getTaskNetworkMap(Set<Vertex> taskVertices) {
-
-    Map<String, Double> taskNetworkMap = new HashMap<>();
+    Map<String, Double> taskNetworkMap = new LinkedHashMap<>();
     Object network;
     double requiredNetwork;
     for (Vertex task : taskVertices) {
