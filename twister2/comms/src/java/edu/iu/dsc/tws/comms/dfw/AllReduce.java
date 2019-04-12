@@ -25,8 +25,8 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceStreamingFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.allreduce.BcastReduceBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.allreduce.BcastReduceStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.bcast.BcastBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.bcast.BcastStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
 
@@ -99,9 +99,9 @@ public class AllReduce implements DataFlowOperation {
 
     MessageReceiver finalRcvr;
     if (streaming) {
-      finalRcvr = new BcastReduceStreamingFinalReceiver(finalReceiver);
+      finalRcvr = new BcastStreamingFinalReceiver(finalReceiver);
     } else {
-      finalRcvr = new BcastReduceBatchFinalReceiver(finalReceiver);
+      finalRcvr = new BcastBatchFinalReceiver(finalReceiver);
     }
     broadcast = new TreeBroadcast(channel, middleTask, destinations, finalRcvr);
     broadcast.init(config, t, instancePlan, broadCastEdge);

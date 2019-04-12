@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io.allreduce;
+package edu.iu.dsc.tws.comms.dfw.io.bcast;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
 
-public class BcastReduceStreamingFinalReceiver extends TargetFinalReceiver {
+public class BcastBatchFinalReceiver extends TargetFinalReceiver {
   // the receiver
   private SingularReceiver receiver;
 
@@ -32,7 +32,7 @@ public class BcastReduceStreamingFinalReceiver extends TargetFinalReceiver {
    */
   private Map<Integer, Queue<Object>> readyToSend = new HashMap<>();
 
-  public BcastReduceStreamingFinalReceiver(SingularReceiver receiver) {
+  public BcastBatchFinalReceiver(SingularReceiver receiver) {
     this.receiver = receiver;
   }
 
@@ -40,11 +40,6 @@ public class BcastReduceStreamingFinalReceiver extends TargetFinalReceiver {
                    Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, operation, expectedIds);
     this.receiver.init(cfg, expectedIds.keySet());
-  }
-
-  @Override
-  protected void addMessage(Queue<Object> msgQueue, Object value) {
-    msgQueue.add(value);
   }
 
   /**
@@ -63,6 +58,16 @@ public class BcastReduceStreamingFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
+  protected void addSyncMessage(int source, int target) {
+    targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
+  }
+
+  @Override
+  protected void addMessage(Queue<Object> msgQueue, Object value) {
+    msgQueue.add(value);
+  }
+
+  @Override
   protected boolean isAllEmpty() {
     boolean b = super.isAllEmpty();
     for (Map.Entry<Integer, Queue<Object>> e : readyToSend.entrySet()) {
@@ -71,11 +76,6 @@ public class BcastReduceStreamingFinalReceiver extends TargetFinalReceiver {
       }
     }
     return b;
-  }
-
-  @Override
-  protected void addSyncMessage(int source, int target) {
-    targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
   }
 
   @Override
@@ -107,6 +107,7 @@ public class BcastReduceStreamingFinalReceiver extends TargetFinalReceiver {
 
   @Override
   protected boolean isFilledToSend(int target) {
-    return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
+    return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+        && messages.get(target).isEmpty();
   }
 }
