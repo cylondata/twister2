@@ -87,6 +87,8 @@ public class Context {
 
   public static final String TWISTER2_DIRECT_EDGE = "direct";
 
+  public static final String TWISTER2_PARTITION_EDGE = "partition";
+
   public static final String TWISTER2_LOCAL_FILESYSTEM = "local";
 
   public static final String TWISTER2_HDFS_FILESYSTEM = "hdfs";
