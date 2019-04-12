@@ -11,29 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.taskgraph;
 
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
+public class DataLocalityStreamingExample extends TaskWorker {
 
-  private static final Logger LOG = Logger.getLogger(
-      DataLocalityStreamingTaskGraphExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(DataLocalityStreamingExample.class.getName());
 
   @SuppressWarnings("unchecked")
   @Override
@@ -55,8 +52,12 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
     workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);
 
-    GeneratorTask dataObjectSource = new GeneratorTask();
-    ReceivingTask dataObjectSink = new ReceivingTask();
+
+    /* First Graph to partition and read the partitioned data points **/
+    DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
+        dataDirectory);
+    DataLocalitySinkTask dataObjectSink = new DataLocalitySinkTask(
+        Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
 
     TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
@@ -76,56 +77,39 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     //Actual execution for the first taskgraph
     taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
+
+    //Creating the communication edges between the tasks for the second task graph
+    datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
+        DataType.OBJECT);
+    datapointsTaskGraphBuilder.setMode(OperationMode.STREAMING);
+    //Retrieve the output of the first task graph
+    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
+        datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
+    for (int i = 0; i < dataPointsObject.getPartitions().length; i++) {
+      LOG.info("Datapoints values:" + Arrays.deepToString(dataPointsObject.getPartitions()));
+    }
+
+
+    /*GeneratorTask dataObjectSource = new GeneratorTask();
+    ReceivingTask dataObjectSink = new ReceivingTask();
+
+    TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+
+    //Add source, compute, and sink tasks to the task graph builder for the first task graph
+    datapointsTaskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
+    ComputeConnection datapointComputeConnection = datapointsTaskGraphBuilder.addSink(
+        "datapointsink", dataObjectSink, parallelismValue);
+
+    //Creating the communication edges between the tasks for the second task graph
+    datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
+        DataType.OBJECT);
+    datapointsTaskGraphBuilder.setMode(OperationMode.STREAMING);
+
+    //Build the first taskgraph
+    DataFlowTaskGraph datapointsTaskGraph = datapointsTaskGraphBuilder.build();
+    //Get the execution plan for the first task graph
+    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+    //Actual execution for the first taskgraph
+    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);*/
   }
-
-  private static class GeneratorTask extends BaseSource {
-
-    private static final long serialVersionUID = -254264903510284748L;
-    private int count = 0;
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void prepare(Config cfg, TaskContext ctx) {
-      this.context = ctx;
-      this.config = cfg;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void execute() {
-      boolean wrote = context.write(Context.TWISTER2_DIRECT_EDGE, "Hello");
-      if (wrote) {
-        count++;
-        if (count % 100 == 0) {
-          LOG.info(String.format("%d %d Message sent count : %d", context.getWorkerId(),
-              context.taskId(), count));
-        }
-      }
-    }
-  }
-
-  private static class ReceivingTask extends BaseSink {
-
-    private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void prepare(Config cfg, TaskContext ctx) {
-      this.context = ctx;
-      this.config = cfg;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public boolean execute(IMessage message) {
-      if (message.getContent() instanceof String) {
-        count += ((String) message.getContent()).length();
-      }
-      LOG.info(String.format("%d %d Message Received count: %d", context.getWorkerId(),
-          context.taskId(), count));
-      return true;
-    }
-  }
-
 }

@@ -11,9 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.taskgraph;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.Collector;
@@ -99,17 +96,19 @@ public class DataLocalitySinkTask extends BaseSink implements Collector {
     this.edgeName = edgeName;
   }
 
+  private String rValue;
 
   @Override
   public boolean execute(IMessage message) {
-    LOG.info("Received message type:" + message.getContent().getClass());
-    List<double[][]> values = new ArrayList<>();
-    while (((Iterator) message.getContent()).hasNext()) {
-      values.add((double[][]) ((Iterator) message.getContent()).next());
+    if (message.getContent() instanceof String) {
+      rValue = String.valueOf(message.getContent());
     }
-    dataPointsLocal = new double[values.size()][];
-    for (double[][] value : values) {
-      dataPointsLocal = value;
+    LOG.info("Received Values Are:" + rValue);
+    int value = 0;
+    String[] data = rValue.split(",");
+    dataPointsLocal = new double[data.length][dimension];
+    for (int i = 0; i < getDimension(); i++) {
+      dataPointsLocal[value][i] = Double.parseDouble(data[i].trim());
     }
     return true;
   }
@@ -118,6 +117,7 @@ public class DataLocalitySinkTask extends BaseSink implements Collector {
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
   }
+
 
   @Override
   public DataPartition<double[][]> get() {

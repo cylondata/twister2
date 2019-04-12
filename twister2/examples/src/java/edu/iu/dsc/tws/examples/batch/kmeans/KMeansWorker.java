@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -182,8 +183,8 @@ public class KMeansWorker extends TaskWorker {
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
     }
-//    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
-//        + Arrays.deepToString(centroid));
+    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+        + Arrays.deepToString(centroid));
   }
 
   private static class KMeansSourceTask extends BaseSource implements Receptor {

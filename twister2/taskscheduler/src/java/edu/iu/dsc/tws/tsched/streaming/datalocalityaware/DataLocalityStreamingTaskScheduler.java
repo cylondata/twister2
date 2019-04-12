@@ -204,8 +204,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     //Total task instances in the taskgraph
     int totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
 
-    LOG.info("Container Capacity:" + containerCapacity + "\tTotal Task:" + totalTask);
-
     //Map to hold the allocation of task instances into the containers/workers
     Map<Integer, List<InstanceId>> dataAwareAllocationMap = new HashMap<>();
 
@@ -227,10 +225,8 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
       for (Vertex vertex : taskVertexSet) {
         if (aTaskEntrySet.getKey().equals(vertex.getName())) {
-
           int totalTaskInstances = vertex.getParallelism();
           int maxContainerTaskObjectSize = 0;
-
           List<DataTransferTimeCalculator> calList = dataTransferTimecalculatorList(localIndex,
               workerPlan, dataAwareAllocationMap, containerIndex, instancesPerContainer);
 
@@ -294,7 +290,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
     final Path path = new Path(directory + workerId);
     final FileSystem fileSystem;
-
     try {
       fileSystem = path.getFileSystem(config);
       if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {
