@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.taskgraph;
 
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.Collector;
@@ -58,12 +59,6 @@ public class DataLocalitySinkTask extends BaseSink implements Collector {
     this.dimension = dim;
   }
 
-  public DataLocalitySinkTask(String edgename, int size, int dim) {
-    this.edgeName = edgename;
-    this.datasize = size;
-    this.dimension = dim;
-  }
-
   public int getDatasize() {
     return datasize;
   }
@@ -103,13 +98,13 @@ public class DataLocalitySinkTask extends BaseSink implements Collector {
     if (message.getContent() instanceof String) {
       rValue = String.valueOf(message.getContent());
     }
-    LOG.info("Received Values Are:" + rValue);
     int value = 0;
     String[] data = rValue.split(",");
-    dataPointsLocal = new double[data.length][dimension];
+    dataPointsLocal = new double[data.length - 1][dimension];
     for (int i = 0; i < getDimension(); i++) {
       dataPointsLocal[value][i] = Double.parseDouble(data[i].trim());
     }
+    LOG.info("Received Datapoints:" + Arrays.deepToString(dataPointsLocal));
     return true;
   }
 
@@ -124,3 +119,4 @@ public class DataLocalitySinkTask extends BaseSink implements Collector {
     return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
   }
 }
+

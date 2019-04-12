@@ -57,11 +57,11 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
     DataLocalitySinkTask dataObjectSink = new DataLocalitySinkTask(
         Context.TWISTER2_PARTITION_EDGE, dsize, parallelismValue, dimension);
 
-    TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
-    datapointsTaskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
-    ComputeConnection datapointComputeConnection = datapointsTaskGraphBuilder.addSink(
+    taskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
+    ComputeConnection datapointComputeConnection = taskGraphBuilder.addSink(
         "datapointsink", dataObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -69,13 +69,13 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
     //    DataType.OBJECT);
     datapointComputeConnection.partition("datapointsource", Context.TWISTER2_PARTITION_EDGE,
         DataType.OBJECT);
-    datapointsTaskGraphBuilder.setMode(OperationMode.STREAMING);
+    taskGraphBuilder.setMode(OperationMode.STREAMING);
 
     //Build the first taskgraph
-    DataFlowTaskGraph datapointsTaskGraph = datapointsTaskGraphBuilder.build();
+    DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
     //Get the execution plan for the first task graph
-    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+    ExecutionPlan executionPlan = taskExecutor.plan(taskGraph);
     //Actual execution for the first taskgraph
-    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
+    taskExecutor.execute(taskGraph, executionPlan);
   }
 }
