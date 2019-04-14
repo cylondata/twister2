@@ -9,31 +9,33 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io.direct;
+package edu.iu.dsc.tws.comms.dfw.io.allgather;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
 
-public class DirectStreamingFinalReceiver extends TargetFinalReceiver {
-  // the receiver
-  private SingularReceiver receiver;
+public class BcastGatheStreamingReceiver extends TargetFinalReceiver {
+  /**
+   * The receiver to be used to deliver the message
+   */
+  private BulkReceiver receiver;
 
   /**
    * Keep the list of tuples for each target
    */
   private Map<Integer, Queue<Object>> readyToSend = new HashMap<>();
 
-  public DirectStreamingFinalReceiver(SingularReceiver receiver) {
+  public BcastGatheStreamingReceiver(BulkReceiver receiver) {
     this.receiver = receiver;
   }
 
@@ -45,9 +47,12 @@ public class DirectStreamingFinalReceiver extends TargetFinalReceiver {
 
   @Override
   protected void addSyncMessage(int source, int target) {
-    Set<Integer> sources = syncReceived.get(target);
-    sources.add(source);
     targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
+  }
+
+  @Override
+  protected void addMessage(Queue<Object> msgQueue, Object value) {
+    msgQueue.add(value);
   }
 
   /**
@@ -76,6 +81,7 @@ public class DirectStreamingFinalReceiver extends TargetFinalReceiver {
     return b;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   protected boolean sendToTarget(int source, int target) {
     Queue<Object> values = readyToSend.get(target);
@@ -92,7 +98,11 @@ public class DirectStreamingFinalReceiver extends TargetFinalReceiver {
     }
 
     while (val != null) {
-      if (receiver.receive(target, val)) {
+      if (!(val instanceof AggregatedObjects)) {
+        throw new RuntimeException("Failed to receive this type: " + val.getClass());
+      }
+
+      if (receiver.receive(target, ((AggregatedObjects<Object>) val).iterator())) {
         values.poll();
         val = values.peek();
       } else {

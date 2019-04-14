@@ -40,10 +40,9 @@ public interface SingularReceiver {
    * A sync event has occurred
    * @param target the target id
    * @param flag flag for sync event
-   * @param data data
    * @return true if sync event is accepted
    */
-  default boolean sync(int target, MessageFlags flag, Object data) {
+  default boolean sync(int target, int flag) {
     return true;
   }
 }

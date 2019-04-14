@@ -21,7 +21,7 @@ public abstract class BaseReduceBatchFinalReceiver extends ReduceBatchReceiver {
 
   @Override
   public boolean handleMessage(int source, Object message, int flags, int dest) {
-    return handleFinished(dest, message);
+    return handleFinished(source, message);
   }
 
   /**
@@ -31,9 +31,4 @@ public abstract class BaseReduceBatchFinalReceiver extends ReduceBatchReceiver {
    * @return true if success
    */
   protected abstract boolean handleFinished(int task, Object value);
-
-  @Override
-  public void onFinish(int source) {
-    super.onFinish(source);
-  }
 }

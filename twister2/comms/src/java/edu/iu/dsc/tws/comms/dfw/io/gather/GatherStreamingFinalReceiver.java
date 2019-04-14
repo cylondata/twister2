@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 
 public class GatherStreamingFinalReceiver extends GatherStreamingPartialReceiver {
   private static final Logger LOG = Logger.getLogger(GatherStreamingFinalReceiver.class.getName());
@@ -38,7 +39,7 @@ public class GatherStreamingFinalReceiver extends GatherStreamingPartialReceiver
   @SuppressWarnings({"rawtypes", "unchecked"})
   @Override
   protected boolean handleMessage(int task, Object message, int flags, int dest) {
-    if (message instanceof List) {
+    if (message instanceof AggregatedObjects) {
       return receiver.receive(task, ((List) message).iterator());
     } else {
       LOG.log(Level.WARNING, "Messages should be in list format");

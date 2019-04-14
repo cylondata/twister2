@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.allreduce;
 
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.BaseReduceBatchFinalReceiver;
@@ -26,5 +27,15 @@ public class AllReduceBatchFinalReceiver extends BaseReduceBatchFinalReceiver {
   @Override
   protected boolean handleFinished(int task, Object value) {
     return reduceReceiver.send(task, value, 0);
+  }
+
+  @Override
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    if (reduceReceiver.send(target, new byte[0], MessageFlags.END)) {
+      isSyncSent.put(target, true);
+    } else {
+      return true;
+    }
+    return needsFurtherProgress;
   }
 }
