@@ -18,7 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
@@ -58,8 +58,8 @@ public class BAllReduceExample extends BenchWorker {
     }
     // create the communication
     reduce = new BAllReduce(communicator, taskPlan, sources, targets,
-        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER), new FinalSingularReceiver(),
-        MessageType.INTEGER);
+        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER), new FinalSingularReceiver(),
+        MessageTypes.INTEGER);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
