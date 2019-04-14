@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -83,7 +84,7 @@ public class AllGather implements DataFlowOperation {
     this.executor = instancePlan.getThisExecutor();
     this.dataType = type;
     broadcast = new TreeBroadcast(channel, middleTask,
-        destinations, new BCastReceiver(finalReceiver, streaming), MessageType.INTEGER, type);
+        destinations, new BCastReceiver(finalReceiver, streaming), MessageTypes.INTEGER, type);
     broadcast.init(config, type, instancePlan, broadCastEdge);
 
     MessageReceiver partialReceiver;
@@ -98,7 +99,7 @@ public class AllGather implements DataFlowOperation {
 
     gather = new MToOneTree(channel, sources, middleTask,
         finalRecvr, partialReceiver, 0, 0, true,
-        MessageType.INTEGER, type);
+        MessageTypes.INTEGER, type);
     gather.init(config, type, instancePlan, gatherEdge);
   }
 
@@ -109,7 +110,7 @@ public class AllGather implements DataFlowOperation {
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    Tuple tuple = new Tuple(source, message, MessageType.INTEGER, dataType);
+    Tuple tuple = new Tuple(source, message, MessageTypes.INTEGER, dataType);
     return gather.send(source, tuple, flags);
   }
 
