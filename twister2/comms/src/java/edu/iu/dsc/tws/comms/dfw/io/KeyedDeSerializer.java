@@ -21,7 +21,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.comms.api.KeyPacker;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
@@ -29,19 +28,22 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 
-public class UnifiedKeyDeSerializer implements MessageDeSerializer {
-  private static final Logger LOG = Logger.getLogger(UnifiedKeyDeSerializer.class.getName());
+public class KeyedDeSerializer implements MessageDeSerializer {
+  private static final Logger LOG = Logger.getLogger(KeyedDeSerializer.class.getName());
 
   private DataPacker dataPacker;
 
-  private KeyPacker keyPacker;
+  private DataPacker keyPacker;
+
+  private MessageType keyType;
 
   private int workerId;
 
-  public UnifiedKeyDeSerializer(KryoSerializer kryoSerializer, int exec,
-                                MessageType keyType, MessageType dataType) {
-    dataPacker = dataType.getDataPacker();
-    keyPacker = DFWIOUtils.createKeyPacker(keyType);
+  public KeyedDeSerializer(KryoSerializer kryoSerializer, int exec,
+                           MessageType keyType, MessageType dataType) {
+    this.dataPacker = dataType.getDataPacker();
+    this.keyPacker = keyType.getDataPacker();
+    this.keyType = keyType;
     this.workerId = exec;
 
     LOG.fine("Initializing serializer on worker: " + exec);
@@ -81,7 +83,7 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
         break;
       }
 
-      // if we are at the begining
+      // if we are at the beginning
       int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
       int currentKeyLength = currentMessage.getUnPkCurrentKeyLength();
 
@@ -101,8 +103,9 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
 
       if (currentKeyLength == -1) {
         // we assume we can read the key length from here
-        Pair<Integer, Integer> keyLength = keyPacker.getKeyLength(
-            currentMessage, buffer, currentLocation);
+        Pair<Integer, Integer> keyLength = DataPackerProxy.getKeyLength(
+            keyType, buffer, currentLocation
+        );
         remaining = remaining - keyLength.getRight();
         currentLocation += keyLength.getRight();
 
@@ -110,17 +113,10 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
         currentObjectLength = currentObjectLength - keyLength.getLeft() - keyLength.getRight();
         currentKeyLength = keyLength.getLeft();
 
-        Object keyValue = keyPacker.initializeUnPackKeyObject(keyLength.getLeft());
-        currentMessage.setDeserializingKey(keyValue);
-        currentMessage.setUnPkCurrentBytes(0);
+        currentMessage.getKeyBuilder().init(keyPacker, currentKeyLength);
 
         try {
-          Object value = dataPacker.wrapperForByteLength(currentObjectLength);
-          currentMessage.setDeserializingObject(value);
-          currentMessage.setUnPkCurrentBytes(0);
-
-          currentMessage.setUnPkCurrentKeyLength(currentKeyLength);
-          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
+          currentMessage.getDataBuilder().init(dataPacker, currentObjectLength);
           // we are going to read the key first
           currentMessage.setReadingKey(true);
         } catch (NegativeArraySizeException e) {
@@ -130,39 +126,50 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
 
       while (remaining > 0) {
         if (currentMessage.isReadingKey()) {
-          int valsRead = keyPacker.readKeyFromBuffer(currentMessage, currentLocation,
-              buffer, currentKeyLength);
-          int totalBytesRead = currentMessage.addUnPkCurrentBytes(valsRead);
-          currentLocation += valsRead;
-          remaining = remaining - valsRead;
+          ObjectBuilderImpl keyBuilder = currentMessage.getKeyBuilder();
+          int bytesRead = keyPacker.readDataFromBuffer(
+              keyBuilder,
+              currentLocation,
+              buffer
+          );
+          keyBuilder.incrementCompletedSizeBy(bytesRead);
 
-          if (totalBytesRead == currentKeyLength) {
-            currentMessage.resetUnPkKey();
+          currentLocation += bytesRead;
+          remaining = remaining - bytesRead;
+
+          currentMessage.setReadingKey(!keyBuilder.isBuilt());
+
+          if (keyBuilder.isBuilt()) {
+            //done reading key
+            currentMessage.setReadingKey(false);
           } else {
             break;
           }
         }
 
         if (!currentMessage.isReadingKey()) {
+          ObjectBuilderImpl dataBuilder = currentMessage.getDataBuilder();
           // read the values from the buffer
-          int valsRead = dataPacker.readDataFromBuffer(currentMessage, currentLocation,
-              buffer, currentObjectLength);
-          int totalBytesRead = currentMessage.addUnPkCurrentBytes(valsRead);
-          currentLocation += valsRead;
-          remaining = remaining - valsRead;
+          int byteRead = dataPacker.readDataFromBuffer(
+              dataBuilder,
+              currentLocation,
+              buffer
+          );
+          dataBuilder.incrementCompletedSizeBy(byteRead);
+
+          currentLocation += byteRead;
+          remaining = remaining - byteRead;
           // okay we are done with this object
-          if (totalBytesRead == currentObjectLength) {
+          if (dataBuilder.isBuilt()) {
             // lets add the object
             currentMessage.addCurrentKeyedObject();
-            // lets reset to read the next
-            currentMessage.resetUnPk();
           } else {
             // lets break the inner while loop
             break;
           }
 
           int bytesToReadKey = 0;
-          if (keyPacker.isKeyHeaderRequired()) {
+          if (keyPacker.isHeaderRequired()) {
             bytesToReadKey += Integer.BYTES;
           }
 
@@ -172,8 +179,11 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
             currentLocation += Integer.BYTES;
 
             // we assume we can read the key length from here
-            Pair<Integer, Integer> keyLength = keyPacker.getKeyLength(
-                currentMessage, buffer, currentLocation);
+            Pair<Integer, Integer> keyLength = DataPackerProxy.getKeyLength(
+                keyType,
+                buffer,
+                currentLocation
+            );
             remaining = remaining - keyLength.getRight();
             currentLocation += keyLength.getRight();
 
@@ -181,16 +191,9 @@ public class UnifiedKeyDeSerializer implements MessageDeSerializer {
             currentObjectLength = currentObjectLength - keyLength.getLeft() - keyLength.getRight();
             currentKeyLength = keyLength.getLeft();
 
-            Object keyValue = keyPacker.initializeUnPackKeyObject(keyLength.getLeft());
-            currentMessage.setDeserializingKey(keyValue);
-            currentMessage.setUnPkCurrentBytes(0);
+            currentMessage.getKeyBuilder().init(keyPacker, currentKeyLength);
 
-            Object value = dataPacker.wrapperForByteLength(currentObjectLength);
-            currentMessage.setDeserializingObject(value);
-            currentMessage.setUnPkCurrentBytes(0);
-
-            currentMessage.setUnPkCurrentKeyLength(currentKeyLength);
-            currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
+            currentMessage.getDataBuilder().init(dataPacker, currentObjectLength);
             // we are going to read the key first
             currentMessage.setReadingKey(true);
           } else if (remaining >= Integer.BYTES) {

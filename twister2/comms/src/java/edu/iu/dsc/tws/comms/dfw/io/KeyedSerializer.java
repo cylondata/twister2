@@ -103,7 +103,7 @@ public class KeyedSerializer extends BaseSerializer {
 
     if (state.getPart() == SerializeState.Part.KEY) {
       // this call will copy the key length to buffer as well
-      boolean complete = PackerProxy.writeDataToBuffer(
+      boolean complete = DataPackerProxy.writeDataToBuffer(
           keyPacker,
           key,
           byteBuffer,
@@ -125,7 +125,7 @@ public class KeyedSerializer extends BaseSerializer {
     }
 
     // now lets copy the actual data
-    boolean completed = PackerProxy.writeDataToBuffer(
+    boolean completed = DataPackerProxy.writeDataToBuffer(
         dataPacker,
         payload,
         byteBuffer,
