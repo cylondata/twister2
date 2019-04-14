@@ -115,7 +115,7 @@ public class AKeyedSerializer extends BaseSerializer {
       return false;
     }
 
-    boolean completed = PackerProxy.writeDataToBuffer(
+    boolean completed = DataPackerProxy.writeDataToBuffer(
         packer,
         payload,
         byteBuffer,

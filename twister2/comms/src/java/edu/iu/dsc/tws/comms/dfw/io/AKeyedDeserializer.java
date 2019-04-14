@@ -25,12 +25,12 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 
-public class UnifiedDeserializer implements MessageDeSerializer {
-  private static final Logger LOG = Logger.getLogger(UnifiedDeserializer.class.getName());
+public class AKeyedDeserializer implements MessageDeSerializer {
+  private static final Logger LOG = Logger.getLogger(AKeyedDeserializer.class.getName());
 
   private DataPacker dataPacker;
 
-  public UnifiedDeserializer(int exec, MessageType dataType) {
+  public AKeyedDeserializer(int exec, MessageType dataType) {
     dataPacker = dataType.getDataPacker();
     LOG.fine("Initializing serializer on worker: " + exec);
   }
@@ -84,42 +84,38 @@ public class UnifiedDeserializer implements MessageDeSerializer {
         currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
         remaining = remaining - Integer.BYTES;
         currentLocation += Integer.BYTES;
-        Object value = dataPacker.wrapperForByteLength(currentObjectLength);
-        currentMessage.setDeserializingObject(value);
-        currentMessage.setUnPkCurrentBytes(0);
-        currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
+
+        // starting to build a new object
+        currentMessage.getDataBuilder().init(dataPacker, currentObjectLength);
       }
 
 
       while (remaining > 0) {
         // read the values from the buffer
-        int valsRead = dataPacker.readDataFromBuffer(currentMessage, currentLocation,
-            buffer, currentObjectLength);
-        int totalBytesRead = currentMessage.addUnPkCurrentBytes(valsRead);
+        ObjectBuilderImpl dataBuilder = currentMessage.getDataBuilder();
+        int bytesRead = dataPacker.readDataFromBuffer(
+            dataBuilder, currentLocation,
+            buffer
+        );
+        dataBuilder.incrementCompletedSizeBy(bytesRead);
 
-        currentLocation += valsRead;
-        remaining = remaining - valsRead;
+        currentLocation += bytesRead;
+        remaining = remaining - bytesRead;
         // okay we are done with this object
-        if (totalBytesRead == currentObjectLength) {
-          // lets add the object
+        if (dataBuilder.isBuilt()) {
           currentMessage.addCurrentObject();
-          // lets reset to read the next
-          currentMessage.resetUnPk();
         } else {
           // lets break the inner while loop
           break;
         }
 
+        // could have next object length?
         if (remaining >= Integer.BYTES) {
           currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
           remaining = remaining - Integer.BYTES;
           currentLocation += Integer.BYTES;
 
-          Object value = dataPacker.wrapperForByteLength(currentObjectLength);
-          currentMessage.setDeserializingObject(value);
-          currentMessage.setUnPkCurrentBytes(0);
-
-          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
+          currentMessage.getDataBuilder().init(dataPacker, currentObjectLength);
         } else {
           // we have to break here as we cannot read further
           break;
