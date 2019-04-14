@@ -66,8 +66,8 @@ public class WordCountWorker implements IWorker {
 
     // create the communication
     keyGather = new SKeyedReduce(channel, taskPlan, sources, destinations,
-        MessageType.OBJECT, MessageType.INTEGER,
-        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
+        MessageTypes.OBJECT, MessageTypes.INTEGER,
+        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER),
         new WordAggregate(), new HashingSelector());
 
     scheduleTasks();
