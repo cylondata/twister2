@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
@@ -34,7 +35,7 @@ public class AKeyedSerializerTest {
   public void testBuildLargeIntegerMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageType.INTEGER;
+    MessageType type = MessageTypes.INTEGER;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
     Assert.assertArrayEquals((int[]) inMessage.getDeserializedData(), (int[]) data);
@@ -44,7 +45,7 @@ public class AKeyedSerializerTest {
   public void testBuildLargeDoubleMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageType.DOUBLE;
+    MessageType type = MessageTypes.DOUBLE;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
     Assert.assertArrayEquals((double[]) inMessage.getDeserializedData(), (double[]) data, .01);
@@ -54,7 +55,7 @@ public class AKeyedSerializerTest {
   public void testBuildLargeLongMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageType.LONG;
+    MessageType type = MessageTypes.LONG;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
     Assert.assertArrayEquals((long[]) inMessage.getDeserializedData(), (long[]) data);
@@ -64,7 +65,7 @@ public class AKeyedSerializerTest {
   public void testBuildLargeShortMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageType.SHORT;
+    MessageType type = MessageTypes.SHORT;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
     Assert.assertArrayEquals((short[]) inMessage.getDeserializedData(), (short[]) data);
@@ -74,7 +75,7 @@ public class AKeyedSerializerTest {
   public void testBuildLargeByteMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageType.BYTE;
+    MessageType type = MessageTypes.BYTE;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
     Assert.assertArrayEquals((byte[]) inMessage.getDeserializedData(), (byte[]) data);
@@ -84,7 +85,7 @@ public class AKeyedSerializerTest {
   public void testBuildLargeObjectMessage() {
     int numBuffers = 20;
     int size = 1000;
-    MessageType type = MessageType.OBJECT;
+    MessageType type = MessageTypes.OBJECT;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
     Assert.assertArrayEquals((int[]) inMessage.getDeserializedData(), (int[]) data);
@@ -106,7 +107,7 @@ public class AKeyedSerializerTest {
       messages.add(ch);
     }
 
-    UnifiedDeserializer deserializer = new UnifiedDeserializer(0, type);
+    AKeyedDeserializer deserializer = new AKeyedDeserializer(0, type);
     deserializer.init(Config.newBuilder().build(), false);
 
     MessageHeader header = deserializer.buildHeader(
@@ -129,11 +130,11 @@ public class AKeyedSerializerTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageType.INTEGER);
+      Object o = createData(800, MessageTypes.INTEGER);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.INTEGER);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.INTEGER);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Object exp = result.get(i);
@@ -150,11 +151,11 @@ public class AKeyedSerializerTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageType.LONG);
+      Object o = createData(800, MessageTypes.LONG);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.LONG);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.LONG);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Object exp = result.get(i);
@@ -171,11 +172,11 @@ public class AKeyedSerializerTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageType.DOUBLE);
+      Object o = createData(800, MessageTypes.DOUBLE);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.DOUBLE);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.DOUBLE);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Object exp = result.get(i);
@@ -192,11 +193,11 @@ public class AKeyedSerializerTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageType.SHORT);
+      Object o = createData(800, MessageTypes.SHORT);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.SHORT);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.SHORT);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Object exp = result.get(i);
@@ -213,11 +214,11 @@ public class AKeyedSerializerTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageType.BYTE);
+      Object o = createData(800, MessageTypes.BYTE);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.BYTE);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.BYTE);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Object exp = result.get(i);
@@ -243,7 +244,7 @@ public class AKeyedSerializerTest {
       messages.add(ch);
     }
 
-    UnifiedDeserializer deserializer = new UnifiedDeserializer(0, type);
+    AKeyedDeserializer deserializer = new AKeyedDeserializer(0, type);
     deserializer.init(Config.newBuilder().build(), false);
 
     MessageHeader header = deserializer.buildHeader(
@@ -260,37 +261,37 @@ public class AKeyedSerializerTest {
   }
 
   public static Object createData(int size, MessageType type) {
-    if (type == MessageType.INTEGER) {
+    if (type == MessageTypes.INTEGER) {
       int[] vals = new int[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
       return vals;
-    } else if (type == MessageType.LONG) {
+    } else if (type == MessageTypes.LONG) {
       long[] vals = new long[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
       return vals;
-    } else if (type == MessageType.DOUBLE) {
+    } else if (type == MessageTypes.DOUBLE) {
       double[] vals = new double[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
       return vals;
-    } else if (type == MessageType.SHORT) {
+    } else if (type == MessageTypes.SHORT) {
       short[] vals = new short[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (short) i;
       }
       return vals;
-    } else if (type == MessageType.BYTE) {
+    } else if (type == MessageTypes.BYTE) {
       byte[] vals = new byte[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (byte) i;
       }
       return vals;
-    } else if (type == MessageType.OBJECT) {
+    } else if (type == MessageTypes.OBJECT) {
       int[] vals = new int[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
