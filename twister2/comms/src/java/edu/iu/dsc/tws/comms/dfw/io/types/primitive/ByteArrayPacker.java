@@ -26,6 +26,7 @@ package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 
 public final class ByteArrayPacker implements PrimitiveArrayPacker<byte[]> {
 
@@ -42,8 +43,8 @@ public final class ByteArrayPacker implements PrimitiveArrayPacker<byte[]> {
   }
 
   @Override
-  public MessageType<byte[]> getMessageType() {
-    return MessageType.BYTE_ARRAY;
+  public MessageType<byte[], byte[]> getMessageType() {
+    return MessageTypes.BYTE_ARRAY;
   }
 
   @Override
