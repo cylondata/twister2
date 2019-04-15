@@ -11,67 +11,93 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
+import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
+import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 /**
  * Final receiver for keyed gather
  */
-public class KGatherBatchFinalReceiver extends KeyedReceiver {
+public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
   /**
    * Final receiver that get the reduced values for the operation
    */
   private BulkReceiver bulkReceiver;
 
+  /**
+   * The reduced values for each target and key
+   */
+  protected Map<Integer, Map<Object, List<Object>>> gathered = new HashMap<>();
+
   public KGatherBatchFinalReceiver(BulkReceiver receiver,
                                    int limitPerKey) {
     this.bulkReceiver = receiver;
-    this.limitPerKey = limitPerKey;
-    this.isFinalBatchReceiver = true;
   }
 
   @Override
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  public boolean progress() {
-    boolean needsFurtherProgress = false;
-    boolean sourcesFinished = false;
-    for (int target : messages.keySet()) {
-
-      if (batchDone.get(target)) {
-        continue;
-      }
-
-      sourcesFinished = isSourcesFinished(target);
-      if (!sourcesFinished && !(dataFlowOperation.isDelegateComplete()
-          && messages.get(target).isEmpty())) {
-        needsFurtherProgress = true;
-      }
-
-      if (sourcesFinished && dataFlowOperation.isDelegateComplete()) {
-        batchDone.put(target, true);
-        //TODO: check if we can simply remove the data, that is use messages.remove()
-        bulkReceiver.receive(target, new GatherIterator(messages.get(target)));
-      }
-
-
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
+    for (int t : expectedIds.keySet()) {
+      gathered.put(t, new HashMap<>());
     }
+  }
 
-    return needsFurtherProgress;
+  @Override
+  protected void merge(int dest, Queue<Object> dests) {
+    Map<Object, List<Object>> targetValues = gathered.get(dest);
+
+    while (dests.size() > 0) {
+      Object val = dests.poll();
+      Tuple t;
+
+      if (val instanceof Tuple) {
+        t = (Tuple) val;
+      } else {
+        throw new RuntimeException("Un-expected type: " + val.getClass());
+      }
+
+      List<Object> currentVal = targetValues.get(t.getKey());
+      if (currentVal == null) {
+        currentVal = new AggregatedObjects<>();
+      }
+      currentVal.add(t);
+    }
+  }
+
+  @Override
+  protected boolean sendToTarget(int source, int target) {
+    boolean send = bulkReceiver.receive(target, new GatherIterator(gathered.get(target)));
+    if (send) {
+      gathered.remove(target);
+    }
+    return send;
+  }
+
+  @Override
+  protected boolean isFilledToSend(int target) {
+    return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+        && messages.get(target).isEmpty();
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   private class GatherIterator implements Iterator<Object> {
 
-    private Map<Object, Queue<Object>> messageMap;
+    private Map<Object, List<Object>> messageMap;
     private Queue<Object> keyList = new LinkedList<>();
 
-    GatherIterator(Map<Object, Queue<Object>> messageMap) {
+    GatherIterator(Map<Object, List<Object>> messageMap) {
       this.messageMap = messageMap;
       keyList.addAll(messageMap.keySet());
     }
@@ -84,9 +110,9 @@ public class KGatherBatchFinalReceiver extends KeyedReceiver {
     @Override
     public Object next() {
       Object key = keyList.poll();
-      Queue value = messageMap.remove(key);
+      List value = messageMap.remove(key);
       return new Tuple(key, value.iterator(),
-          dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
+          operation.getKeyType(), operation.getDataType());
     }
   }
 }
