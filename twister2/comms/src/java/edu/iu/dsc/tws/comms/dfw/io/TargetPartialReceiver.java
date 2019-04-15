@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-public class TargetPartialReceiver extends TargetSyncReceiver {
+public class TargetPartialReceiver extends TargetReceiver {
   private static final Logger LOG = Logger.getLogger(TargetPartialReceiver.class.getName());
   /**
    * Keep state about the targets

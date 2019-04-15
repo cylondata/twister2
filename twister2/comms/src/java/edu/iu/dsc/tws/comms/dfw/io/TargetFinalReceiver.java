@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 
-public abstract class TargetFinalReceiver extends TargetSyncReceiver {
+public abstract class TargetFinalReceiver extends TargetReceiver {
   private static final Logger LOG = Logger.getLogger(TargetFinalReceiver.class.getName());
   /**
    * Keep weather we have received a sync from a source

@@ -21,9 +21,9 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
-import edu.iu.dsc.tws.comms.dfw.io.SourceSyncReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.SourceReceiver;
 
-public class GatherStreamingPartialReceiver extends SourceSyncReceiver {
+public class GatherStreamingPartialReceiver extends SourceReceiver {
   private Map<Integer, Queue<Object>> gatheredValuesMap = new HashMap<>();
 
   @Override

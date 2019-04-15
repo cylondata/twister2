@@ -28,8 +28,8 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
-public abstract class TargetSyncReceiver implements MessageReceiver {
-  private static final Logger LOG = Logger.getLogger(TargetSyncReceiver.class.getName());
+public abstract class TargetReceiver implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(TargetReceiver.class.getName());
 
   /**
    * Lets keep track of the messages, we need to keep track of the messages for each target
