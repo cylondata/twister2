@@ -15,16 +15,25 @@ import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataPacker;
+import edu.iu.dsc.tws.comms.api.ObjectBuilder;
 import edu.iu.dsc.tws.comms.api.PackerStore;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.InMessage;
 
-public class ObjectPacker implements DataPacker {
+public final class ObjectPacker implements DataPacker<Object, byte[]> {
+
+  private static volatile ObjectPacker instance;
 
   private KryoSerializer serializer;
 
-  public ObjectPacker() {
+  private ObjectPacker() {
     serializer = new KryoSerializer();
+  }
+
+  public static DataPacker<Object, byte[]> getInstance() {
+    if (instance == null) {
+      instance = new ObjectPacker();
+    }
+    return instance;
   }
 
   @Override
@@ -37,25 +46,27 @@ public class ObjectPacker implements DataPacker {
   }
 
   @Override
-  public void writeDataToBuffer(Object data, edu.iu.dsc.tws.comms.api.PackerStore packerStore,
+  public void writeDataToBuffer(Object data, PackerStore packerStore,
                                 int alreadyCopied, int leftToCopy, int spaceLeft,
                                 ByteBuffer targetBuffer) {
     byte[] datBytes = packerStore.retrieve();
     targetBuffer.put(datBytes, alreadyCopied, Math.min(leftToCopy, spaceLeft));
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public int readDataFromBuffer(InMessage currentMessage, int currentLocation,
-                                DataBuffer buffer, int currentObjectLength) {
-    int startIndex = currentMessage.getUnPkCurrentBytes();
-    byte[] objectVal = (byte[]) currentMessage.getDeserializingObject();
-    int value = buffer.copyPartToByteArray(currentLocation, objectVal,
-        startIndex, currentObjectLength);
+  public int readDataFromBuffer(ObjectBuilder objectBuilder,
+                                int currentBufferLocation, DataBuffer dataBuffer) {
+    int totalObjectLength = objectBuilder.getTotalSize();
+    int startIndex = objectBuilder.getCompletedSize();
+    byte[] objectVal = (byte[]) objectBuilder.getPartialDataHolder();
+    int value = dataBuffer.copyPartToByteArray(currentBufferLocation, objectVal,
+        startIndex, totalObjectLength);
     // at the end we switch to the actual object
     int totalBytesRead = startIndex + value;
-    if (totalBytesRead == currentObjectLength) {
+    if (totalBytesRead == totalObjectLength) {
       Object kryoValue = serializer.deserialize(objectVal);
-      currentMessage.setDeserializingObject(kryoValue);
+      objectBuilder.setFinalObject(kryoValue);
     }
     return value;
   }
@@ -80,7 +91,7 @@ public class ObjectPacker implements DataPacker {
   }
 
   @Override
-  public Object wrapperForByteLength(int byteLength) {
+  public byte[] wrapperForByteLength(int byteLength) {
     return new byte[byteLength];
   }
 
