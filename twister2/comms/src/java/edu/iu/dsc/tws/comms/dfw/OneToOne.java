@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
 import edu.iu.dsc.tws.comms.routing.DirectRouter;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
@@ -194,7 +194,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     }
 
     for (int tar : targets) {
-      MessageDeSerializer messageDeSerializer = new UnifiedDeserializer(
+      MessageDeSerializer messageDeSerializer = new AKeyedDeserializer(
           taskPlan.getThisExecutor(), type);
       deSerializerMap.put(tar, messageDeSerializer);
     }
