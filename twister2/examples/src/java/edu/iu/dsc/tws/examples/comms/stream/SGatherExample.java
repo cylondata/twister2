@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SGather;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -59,7 +59,7 @@ public class SGatherExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    gather = new SGather(communicator, taskPlan, sources, target, MessageType.INTEGER,
+    gather = new SGather(communicator, taskPlan, sources, target, MessageTypes.INTEGER,
         new FinalReduceReceiver());
 
 

@@ -9,7 +9,7 @@
       "values": {
         "type": "array",
         "array": [
-          "128,128"
+          "${workers},${workers}"
         ]
       }
     }

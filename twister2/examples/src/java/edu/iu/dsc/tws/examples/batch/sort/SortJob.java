@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedPartition;
@@ -86,7 +86,7 @@ public class SortJob implements IWorker {
     setupTasks();
 
     partition = new BKeyedPartition(channel, taskPlan, sources, destinations,
-        MessageType.BYTE, MessageType.INTEGER,
+        MessageTypes.BYTE, MessageTypes.INTEGER,
         new RecordSave(), new HashingSelector(), new IntegerComparator());
 
     // start the threads

@@ -110,7 +110,7 @@ public class TaskCheckpointExample implements IWorker {
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-          workerList, new Communicator(config, channel));
+        workerList, new Communicator(config, channel));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, plan, channel);
     executor.execute();
@@ -164,7 +164,7 @@ public class TaskCheckpointExample implements IWorker {
 
       CheckpointBarrier cb = (CheckpointBarrier) message.getContent();
       System.out.println(cb.getId() + " from taskId : " + taskId);
-//      channel.direct(newCfg, MessageType.OBJECT, 0, )
+//      channel.direct(newCfg, MessageTypes.OBJECT, 0, )
       return true;
     }
 
@@ -176,7 +176,7 @@ public class TaskCheckpointExample implements IWorker {
 
   public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
       Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }

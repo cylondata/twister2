@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
@@ -54,8 +54,8 @@ public class SReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    reduce = new SReduce(communicator, taskPlan, sources, target, MessageType.INTEGER,
-        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
+    reduce = new SReduce(communicator, taskPlan, sources, target, MessageTypes.INTEGER,
+        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER),
         new FinalSingularReceiver()
     );
 

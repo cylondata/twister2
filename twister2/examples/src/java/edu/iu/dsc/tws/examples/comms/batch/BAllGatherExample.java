@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BAllGather;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -63,7 +63,7 @@ public class BAllGatherExample extends BenchWorker {
     }
     // create the communication
     gather = new BAllGather(communicator, taskPlan, sources, targets, new FinalSingularReceiver(),
-        MessageType.INTEGER);
+        MessageTypes.INTEGER);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);

@@ -21,16 +21,15 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class DGatherBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(
@@ -182,7 +181,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
           }
         }
         for (Object o : out) {
-          byte[] d = DataSerializer.serialize(o, kryoSerializer);
+          byte[] d = gather.getDataType().getDataPacker().packToByteArray(o);
           fsMerger.add(d, d.length);
         }
       } else {

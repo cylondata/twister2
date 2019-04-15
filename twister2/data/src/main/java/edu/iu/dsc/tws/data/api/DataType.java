@@ -14,9 +14,11 @@ package edu.iu.dsc.tws.data.api;
 public enum DataType {
   OBJECT,
   BYTE,
+  BYTE_ARRAY,
   INTEGER,
-  SHORT,
-  DOUBLE,
-  LONG,
-  CHAR
+  INTEGER_ARRAY,
+  SHORT_ARRAY,
+  DOUBLE_ARRAY,
+  LONG_ARRAY,
+  CHAR_ARRAY
 }

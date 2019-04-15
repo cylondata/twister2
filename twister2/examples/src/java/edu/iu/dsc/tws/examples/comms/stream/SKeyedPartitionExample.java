@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
@@ -59,7 +59,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
 
     // create the communication
     partition = new SKeyedPartition(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, MessageType.INTEGER,
+        MessageTypes.INTEGER, MessageTypes.INTEGER,
         new PartitionReceiver(), new HashingSelector());
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,

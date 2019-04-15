@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -35,18 +36,18 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class MToNRing implements DataFlowOperation, ChannelReceiver {
+
   private static final Logger LOG = Logger.getLogger(MToNRing.class.getName());
 
   /**
@@ -172,7 +173,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
   /**
    * Sources of this worker
    */
-  private Set<Integer> thisWorkerSources = new HashSet<>();
+  private Set<Integer> thisWorkerSources;
 
   /**
    * Create a ring partition communication
@@ -273,10 +274,10 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(cfg)));
       if (isKeyed) {
-        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(), thisWorker,
+        serializerMap.put(s, new KeyedSerializer(new KryoSerializer(), thisWorker,
             keyType, dataType));
       } else {
-        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), thisWorker, dataType));
+        serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(), thisWorker, dataType));
       }
     }
 
@@ -290,11 +291,10 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
-        deSerializerMap.put(ex, new UnifiedKeyDeSerializer(new KryoSerializer(),
+        deSerializerMap.put(ex, new KeyedDeSerializer(new KryoSerializer(),
             thisWorker, keyType, dataType));
       } else {
-        deSerializerMap.put(ex, new UnifiedDeserializer(
-            new KryoSerializer(), thisWorker, dataType));
+        deSerializerMap.put(ex, new AKeyedDeserializer(thisWorker, dataType));
       }
     }
     // create the delegate

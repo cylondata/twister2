@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -52,7 +53,7 @@ public class BKeyedPartition {
     this.partition = new MToNSimple(comm.getConfig(), comm.getChannel(), plan,
         sources, destinations,
         new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
-        new PartitionPartialReceiver(), dataType, MessageType.BYTE, keyType,
+        new PartitionPartialReceiver(), dataType, MessageTypes.BYTE, keyType,
         keyType, e);
     this.partition.init(comm.getConfig(), dataType, plan, e);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());

@@ -77,7 +77,7 @@ public final class BasicMpiJob {
       System.out.printf("inside openmpi: Openmpi has started");
       MPI.Init(args);
       int myrank = MPI.COMM_WORLD.getRank();
-      int size = MPI.COMM_WORLD.getSize();
+      int size = MPI.COMM_WORLD.getUnitSizeInBytes();
       System.out.println("Hello world from rank " + myrank + " of " + size);
 
       MPI.Finalize();

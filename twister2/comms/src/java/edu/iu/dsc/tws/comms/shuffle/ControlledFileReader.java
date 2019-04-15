@@ -26,9 +26,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.types.KeyDeserializer;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 public class ControlledFileReader implements Iterator, Comparable<ControlledFileReader> {
 
@@ -42,7 +39,6 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
 
   private MessageType keyType;
   private MessageType dataType;
-  private KryoMemorySerializer deserializer;
   private Comparator keyComparator;
 
   private Queue<Object> keysQ = new LinkedList<>();
@@ -57,11 +53,9 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
                               String filePath,
                               MessageType keyType,
                               MessageType dataType,
-                              KryoMemorySerializer deserializer,
                               Comparator keyComparator) {
     this.filePath = filePath;
     this.meta = meta;
-    this.deserializer = deserializer;
     this.keyComparator = keyComparator;
     this.keyType = keyType;
     this.dataType = dataType;
@@ -81,7 +75,6 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
       Comparator keyComparator) {
     ControlledFileReader cfr = new ControlledFileReader(
         meta,
-        null,
         null,
         null,
         null,
@@ -154,9 +147,7 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
   private Object readNextKey() {
     if (!this.inMemory && this.buffer.hasRemaining()) {
       int nextKeySize = this.getNextKeySize();
-      Object nextKey = KeyDeserializer.deserialize(
-          this.keyType, this.deserializer, this.buffer, nextKeySize
-      );
+      Object nextKey = this.keyType.getDataPacker().unpackFromBuffer(this.buffer, nextKeySize);
       this.keysQ.add(nextKey);
       return nextKey;
     }
@@ -169,9 +160,8 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
   private Object readNextValue() {
     if (!this.inMemory && this.buffer.hasRemaining()) {
       int dataSize = this.buffer.getInt();
-      Object nextValue = DataDeserializer.deserialize(
-          dataType, deserializer, this.buffer, dataSize
-      );
+      Object nextValue = dataType.getDataPacker().unpackFromBuffer(this.buffer, dataSize);
+
       this.valuesQ.add(nextValue);
       this.valueSizeQ.add(dataSize);
 
@@ -223,9 +213,7 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
   }
 
   private int getNextKeySize() {
-    if (keyType == MessageType.OBJECT) {
-      return buffer.getInt();
-    } else if (keyType.isPrimitive()) {
+    if (keyType.isPrimitive() && !keyType.isArray()) {
       return 0;
     } else {
       return buffer.getInt();

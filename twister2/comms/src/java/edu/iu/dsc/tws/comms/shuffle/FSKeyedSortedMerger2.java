@@ -35,10 +35,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * Sorted merger implementation
@@ -125,7 +124,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   /**
    * The kryo serializer
    */
-  private KryoMemorySerializer kryoSerializer;
+  private KryoSerializer kryoSerializer;
 
   private enum FSStatus {
     WRITING,
@@ -149,7 +148,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     this.dataType = dType;
     this.keyComparator = kComparator;
     this.comparatorWrapper = new ComparatorWrapper(keyComparator);
-    this.kryoSerializer = new KryoMemorySerializer();
+    this.kryoSerializer = new KryoSerializer();
     this.target = tar;
     LOG.info("Disk merger configured. Folder : " + folder
         + ", Bytes in memory :" + maxBytesInMemory + ", Records in memory : " + maxRecsInMemory);
@@ -207,7 +206,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private void deserializeObjects() {
     for (int i = 0; i < recordsInMemory.size(); i++) {
       Tuple kv = recordsInMemory.get(i);
-      Object o = DataDeserializer.deserialize(dataType, kryoSerializer, (byte[]) kv.getValue());
+      Object o = dataType.getDataPacker().unpackFromByteArray((byte[]) kv.getValue());
       objectsInMemory.add(new Tuple(kv.getKey(), o));
     }
   }
@@ -333,7 +332,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
             getSaveFileName(i),
             keyType,
             dataType,
-            kryoSerializer,
             keyComparator
         );
         if (fr.hasNext()) {

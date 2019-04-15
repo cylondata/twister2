@@ -47,6 +47,9 @@ public class RandomString {
 
   public String nextRandomSizeString() {
     int next = (int) (random.nextDouble() * maxLength);
+    if (next == 0) {
+      next = 1;
+    }
     char[] chars = new char[next];
     for (int idx = 0; idx < chars.length; ++idx) {
       chars[idx] = symbols[random.nextInt(symbols.length)];

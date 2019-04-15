@@ -29,6 +29,7 @@ import com.google.common.collect.Table;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -36,14 +37,13 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.PartitionRouter;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
@@ -271,10 +271,10 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(cfg)));
       if (isKeyed) {
-        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(), executor,
+        serializerMap.put(s, new KeyedSerializer(new KryoSerializer(), executor,
             keyType, dataType));
       } else {
-        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor, dataType));
+        serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(), executor, dataType));
       }
     }
 
@@ -289,11 +289,10 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
-        deSerializerMap.put(ex, new UnifiedKeyDeSerializer(new KryoSerializer(),
+        deSerializerMap.put(ex, new KeyedDeSerializer(new KryoSerializer(),
             executor, keyType, receiveType));
       } else {
-        deSerializerMap.put(ex, new UnifiedDeserializer(new KryoSerializer(),
-            executor, receiveType));
+        deSerializerMap.put(ex, new AKeyedDeserializer(executor, receiveType));
       }
     }
 

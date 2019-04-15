@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SAllGather;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -65,7 +65,7 @@ public class SAllGatherExample extends BenchWorker {
     // create the communication
     gather = new SAllGather(communicator, taskPlan, sources, targets,
         new FinalReduceReceiver(),
-        MessageType.OBJECT);
+        MessageTypes.OBJECT);
 
     Set<Integer> sourceTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
