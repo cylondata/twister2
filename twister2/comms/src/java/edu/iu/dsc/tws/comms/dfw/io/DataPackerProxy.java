@@ -13,17 +13,21 @@ package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.nio.ByteBuffer;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import edu.iu.dsc.tws.comms.api.DataPacker;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 
-public final class PackerProxy {
+public final class DataPackerProxy {
 
-  private PackerProxy() {
+  private DataPackerProxy() {
   }
 
-  public static boolean writeDataToBuffer(DataPacker dataPacker,
-                                          Object data,
-                                          ByteBuffer byteBuffer,
-                                          SerializeState state) {
+  static boolean writeDataToBuffer(DataPacker dataPacker,
+                                   Object data,
+                                   ByteBuffer byteBuffer,
+                                   SerializeState state) {
 
     SerializeState.StoredData activeStoredData = state.getActive();
 
@@ -45,5 +49,14 @@ public final class PackerProxy {
       return true;
     }
     return false;
+  }
+
+  static Pair<Integer, Integer> getKeyLength(MessageType typeDefinition,
+                                             DataBuffer buffer, int location) {
+    if (!typeDefinition.getDataPacker().isHeaderRequired()) {
+      return Pair.of(typeDefinition.getUnitSizeInBytes(), 0);
+    } else {
+      return Pair.of(buffer.getByteBuffer().getInt(location), Integer.SIZE);
+    }
   }
 }
