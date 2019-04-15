@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 
 public final class FloatPacker implements PrimitivePacker<Float> {
 
@@ -30,8 +31,8 @@ public final class FloatPacker implements PrimitivePacker<Float> {
   }
 
   @Override
-  public MessageType<Float> getMessageType() {
-    return MessageType.FLOAT;
+  public MessageType<Float, Float> getMessageType() {
+    return MessageTypes.FLOAT;
   }
 
   @Override

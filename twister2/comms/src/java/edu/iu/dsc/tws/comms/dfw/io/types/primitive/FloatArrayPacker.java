@@ -26,6 +26,7 @@ package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 
 public final class FloatArrayPacker implements PrimitiveArrayPacker<float[]> {
 
@@ -42,8 +43,8 @@ public final class FloatArrayPacker implements PrimitiveArrayPacker<float[]> {
   }
 
   @Override
-  public MessageType<float[]> getMessageType() {
-    return MessageType.FLOAT_ARRAY;
+  public MessageType<float[], float[]> getMessageType() {
+    return MessageTypes.FLOAT_ARRAY;
   }
 
   @Override
