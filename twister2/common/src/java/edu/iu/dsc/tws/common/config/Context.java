@@ -93,6 +93,10 @@ public class Context {
 
   public static final String TWISTER2_HDFS_FILESYSTEM = "hdfs";
 
+  public static final String TWISTER2_BANDWIDTH = "bandwidth";
+
+  public static final String TWISTER2_LATENCY = "latency";
+
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
     substitutions.put("HOME", HOME);

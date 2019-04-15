@@ -170,10 +170,8 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
    * configuration values.
    */
   private ArrayList<RequiredRam> getSortedRAMInstances(Set<String> taskNameSet) {
-
     ArrayList<RequiredRam> ramRequirements = new ArrayList<>();
     Map<String, Double> taskRamMap = taskAttributes.getTaskRamMap(this.taskVertexSet);
-
     for (String taskName : taskNameSet) {
       Resource resource = TaskScheduleUtils.getResourceRequirement(
           taskName, taskRamMap, this.defaultResourceValue,
@@ -202,7 +200,3 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
     }
   }
 }
-
-
-
-

@@ -267,9 +267,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
   private Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
       Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan) {
 
-    DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     TaskAttributes taskAttributes = new TaskAttributes();
-
     int cIdx = 0;
     int containerIndex;
 
@@ -281,10 +279,10 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       dataAwareAllocationMap.put(i, new ArrayList<>());
     }
 
+    DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
       Map<String, List<DataTransferTimeCalculator>> workerPlanMap;
       String taskName = aTaskEntrySet.getKey();
-
       /*If the vertex has the input data set list, get the status and path of the file in HDFS.*/
       for (Vertex vertex : taskVertexSet) {
         if (vertex.getName().equals(taskName)) {
@@ -353,9 +351,10 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
         DataTransferTimeCalculator calculateDataTransferTime =
             new DataTransferTimeCalculator(nodesList, calculateDistance);
 
-        if (worker.getProperty("bandwidth") != null && worker.getProperty("latency") != null) {
-          workerBandwidth = (double) worker.getProperty("bandwidth");
-          workerLatency = (double) worker.getProperty("latency");
+        if (worker.getProperty(Context.TWISTER2_BANDWIDTH) != null
+            && worker.getProperty(Context.TWISTER2_LATENCY) != null) {
+          workerBandwidth = (double) worker.getProperty(Context.TWISTER2_BANDWIDTH);
+          workerLatency = (double) worker.getProperty(Context.TWISTER2_LATENCY);
         } else {
           workerBandwidth = TaskSchedulerContext.containerInstanceBandwidth(config);
           workerLatency = TaskSchedulerContext.containerInstanceLatency(config);

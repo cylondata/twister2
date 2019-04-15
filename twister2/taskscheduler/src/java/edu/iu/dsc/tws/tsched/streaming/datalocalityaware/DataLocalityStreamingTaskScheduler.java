@@ -14,11 +14,13 @@ package edu.iu.dsc.tws.tsched.streaming.datalocalityaware;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -174,9 +176,9 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
         ContainerPlan containerPlan = entry.getValue();
         Set<TaskInstancePlan> containerPlanTaskInstances
             = containerPlan.getTaskInstances();
-        LOG.info("Task Details for Container Id:" + integer);
+        LOG.fine("Task Details for Container Id:" + integer);
         for (TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.info("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+          LOG.fine("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
               + "\tTask Name:" + ip.getTaskName());
         }
       }
@@ -220,6 +222,9 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     }
 
     //Parallel Task Map for the complete task graph
+    TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
+    orderedTaskSet.addAll(taskVertexSet);
+
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
     Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
     for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
@@ -229,8 +234,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
           int maxContainerTaskObjectSize = 0;
           List<DataTransferTimeCalculator> calList = dataTransferTimecalculatorList(localIndex,
               workerPlan, dataAwareAllocationMap, containerIndex, instancesPerContainer);
-
-          /* This loop allocate the task instances to the respective container, before allocation
+          /*This loop allocate the task instances to the respective container, before allocation
           it will check whether the container has reached maximum task instance size */
           for (int i = 0; i < totalTaskInstances; i++) {
             containerIndex = Integer.parseInt(Collections.min(calList).getNodeName().trim());
@@ -248,20 +252,29 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     return dataAwareAllocationMap;
   }
 
-  private List<DataTransferTimeCalculator> dataTransferTimecalculatorList(
-      int index, WorkerPlan workerPlan, Map<Integer, List<InstanceId>> aMap,
-      int containerIndex, int maxTasksPerContainer) {
+  private static class VertexComparator implements Comparator<Vertex> {
+    @Override
+    public int compare(Vertex o1, Vertex o2) {
+      return o1.getName().compareTo(o2.getName());
+    }
+  }
 
+  private List<DataTransferTimeCalculator> dataTransferTimecalculatorList(int index,
+                                                                          WorkerPlan workerPlan,
+                                                                          Map<Integer,
+                                                                              List<InstanceId>> map,
+                                                                          int containerIndex,
+                                                                          int maxTaskPerContainer) {
     List<String> inputDataList = getInputFilesList();
     Map<String, List<DataTransferTimeCalculator>> workerDatanodeDistanceMap;
     List<DataTransferTimeCalculator> dataTransferTimeCalculatorList = null;
     List<String> datanodesList;
-    DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
 
     /*If the index is zero, simply calculate the distance between the worker node and the
     datanodes. Else, if the index values is greater than 0, check the container has reached
     the maximum task instances per container. If it is yes, then calculationList the container to
     the allocatedWorkers list which will not be considered for the next scheduling cycle.*/
+    DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     if (inputDataList.size() > 0) {
       if (index == 0) {
         datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
@@ -271,7 +284,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
       } else {
         datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
         Worker worker = workerPlan.getWorker(containerIndex);
-        if (aMap.get(containerIndex).size() >= maxTasksPerContainer) {
+        if (map.get(containerIndex).size() >= maxTaskPerContainer) {
           allocatedWorkers.add(worker.getId());
         }
         workerDatanodeDistanceMap = distanceCalculator(datanodesList, workerPlan, index,
@@ -282,12 +295,9 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     return dataTransferTimeCalculatorList;
   }
 
-
   private List<String> getInputFilesList() {
-
     List<String> inputDataList = new ArrayList<>();
     String directory = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
-
     final Path path = new Path(directory + workerId);
     final FileSystem fileSystem;
     try {
@@ -305,7 +315,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
         }
       }
     } catch (IOException e) {
-      throw new RuntimeException("IOException Occured");
+      throw new RuntimeException("IOException Occured" + e.getMessage());
     }
     return inputDataList;
   }
@@ -378,9 +388,10 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
         //TODO: Change "bandwidth" and "latency" into parameters
         if (index == 0) {
-          if (worker.getProperty("bandwidth") != null && worker.getProperty("latency") != null) {
-            workerBandwidth = (double) worker.getProperty("bandwidth");
-            workerLatency = (double) worker.getProperty("latency");
+          if (worker.getProperty(Context.TWISTER2_BANDWIDTH) != null
+              && worker.getProperty(Context.TWISTER2_LATENCY) != null) {
+            workerBandwidth = (double) worker.getProperty(Context.TWISTER2_BANDWIDTH);
+            workerLatency = (double) worker.getProperty(Context.TWISTER2_LATENCY);
           } else {
             workerBandwidth = TaskSchedulerContext.containerInstanceBandwidth(config);
             workerLatency = TaskSchedulerContext.containerInstanceLatency(config);
@@ -390,9 +401,10 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
           calculatedVal.add(calculateDataTransferTime);
         } else {
           if (!assignedWorkers.contains(worker.getId())) {
-            if (worker.getProperty("bandwidth") != null && worker.getProperty("latency") != null) {
-              workerBandwidth = (double) worker.getProperty("bandwidth");
-              workerLatency = (double) worker.getProperty("latency");
+            if (worker.getProperty(Context.TWISTER2_BANDWIDTH) != null
+                && worker.getProperty(Context.TWISTER2_LATENCY) != null) {
+              workerBandwidth = (double) worker.getProperty(Context.TWISTER2_BANDWIDTH);
+              workerLatency = (double) worker.getProperty(Context.TWISTER2_LATENCY);
             } else {
               workerBandwidth = TaskSchedulerContext.containerInstanceBandwidth(config);
               workerLatency = TaskSchedulerContext.containerInstanceLatency(config);
@@ -434,7 +446,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
    */
   private static List<DataTransferTimeCalculator> findBestWorkerNode(Map<String,
       List<DataTransferTimeCalculator>> workerPlanMap) {
-
     List<DataTransferTimeCalculator> cal = new ArrayList<>();
     for (Map.Entry<String, List<DataTransferTimeCalculator>> entry : workerPlanMap.entrySet()) {
       String key = entry.getKey();
@@ -445,3 +456,4 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     return cal;
   }
 }
+

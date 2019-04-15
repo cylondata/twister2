@@ -19,6 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -187,8 +188,8 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       roundrobinAllocation.put(i, new ArrayList<>());
     }
 
-    //TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
-    //orderedTaskSet.addAll(taskVertexSet);
+    TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
+    orderedTaskSet.addAll(taskVertexSet);
 
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
     int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
