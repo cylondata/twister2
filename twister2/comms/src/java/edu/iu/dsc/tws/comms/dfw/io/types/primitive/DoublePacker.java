@@ -26,6 +26,7 @@ package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 
 public final class DoublePacker implements PrimitivePacker<Double> {
 
@@ -42,8 +43,8 @@ public final class DoublePacker implements PrimitivePacker<Double> {
   }
 
   @Override
-  public MessageType<Double> getMessageType() {
-    return MessageType.DOUBLE;
+  public MessageType<Double, Double> getMessageType() {
+    return MessageTypes.DOUBLE;
   }
 
   @Override
