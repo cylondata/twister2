@@ -15,16 +15,8 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.KeyPacker;
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
-import edu.iu.dsc.tws.comms.dfw.io.types.primitive.BytePacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.primitive.DoublePacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.primitive.FloatPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.primitive.LongPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.primitive.ShortPacker;
 
 public final class DFWIOUtils {
   private static final int HEADER_SIZE = 16;
@@ -85,34 +77,6 @@ public final class DFWIOUtils {
     byteBuffer.putInt(noOfMessages);
     // lets set the size for 16 for now
     buffer.setSize(HEADER_SIZE);
-  }
-
-  /**
-   * This method will not be necessary. Use {@link MessageType#getDataPacker()} instead
-   *
-   * @return Key packer
-   * @deprecated Use {@link MessageType#getDataPacker()} instead
-   */
-  @Deprecated
-  public static KeyPacker createKeyPacker(MessageType dataType) {
-    if (dataType == MessageType.CUSTOM) {
-      return dataType.getKeyPacker();
-    }
-
-    if (dataType == MessageType.INTEGER) {
-      return IntegerPacker.getInstance();
-    } else if (dataType == MessageType.LONG) {
-      return LongPacker.getInstance();
-    } else if (dataType == MessageType.SHORT) {
-      return ShortPacker.getInstance();
-    } else if (dataType == MessageType.DOUBLE) {
-      return DoublePacker.getInstance();
-    } else if (dataType == MessageType.FLOAT) {
-      return FloatPacker.getInstance();
-    } else if (dataType == MessageType.BYTE) {
-      return BytePacker.getInstance();
-    }
-    return null;
   }
 }
 
