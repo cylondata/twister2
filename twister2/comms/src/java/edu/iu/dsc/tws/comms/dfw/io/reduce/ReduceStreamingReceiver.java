@@ -102,7 +102,7 @@ public abstract class ReduceStreamingReceiver extends SourceSyncReceiver {
   }
 
   @Override
-  protected boolean isFilledToSend(int target) {
+  protected boolean isFilledToSend(int target, boolean sync) {
     return true;
   }
 

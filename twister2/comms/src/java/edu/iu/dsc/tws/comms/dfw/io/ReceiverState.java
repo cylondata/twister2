@@ -9,12 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io.partition;
+package edu.iu.dsc.tws.comms.dfw.io;
 
-import java.util.logging.Logger;
-
-import edu.iu.dsc.tws.comms.dfw.io.TargetPartialReceiver;
-
-public class PartitionStreamingPartialReceiver extends TargetPartialReceiver {
-  private static final Logger LOG = Logger.getLogger(PartitionPartialReceiver.class.getName());
+public enum ReceiverState {
+  // we are in the receiving state initially
+  RECEIVING,
+  // all the syncs required are received
+  ALL_SYNCS_RECEIVED,
+  // we have synced
+  SYNCED
 }

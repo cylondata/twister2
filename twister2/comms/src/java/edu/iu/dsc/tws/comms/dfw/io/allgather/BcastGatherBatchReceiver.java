@@ -9,13 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io.partition;
+package edu.iu.dsc.tws.comms.dfw.io.allgather;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -24,9 +23,7 @@ import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
 
-public class PartitionBatchFinalReceiver extends TargetFinalReceiver {
-  private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
-
+public class BcastGatherBatchReceiver extends TargetFinalReceiver {
   /**
    * The receiver to be used to deliver the message
    */
@@ -37,7 +34,7 @@ public class PartitionBatchFinalReceiver extends TargetFinalReceiver {
    */
   private Map<Integer, List<Object>> readyToSend = new HashMap<>();
 
-  public PartitionBatchFinalReceiver(BulkReceiver receiver) {
+  public BcastGatherBatchReceiver(BulkReceiver receiver) {
     this.receiver = receiver;
   }
 
@@ -45,6 +42,11 @@ public class PartitionBatchFinalReceiver extends TargetFinalReceiver {
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
     receiver.init(cfg, expectedIds.keySet());
+  }
+
+  @Override
+  protected void addSyncMessage(int source, int target) {
+    targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
   }
 
   @Override

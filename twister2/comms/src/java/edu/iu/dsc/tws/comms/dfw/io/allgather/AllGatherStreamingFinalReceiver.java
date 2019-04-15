@@ -16,6 +16,7 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 
@@ -34,5 +35,15 @@ public class AllGatherStreamingFinalReceiver extends GatherStreamingPartialRecei
   @Override
   protected boolean handleMessage(int task, Object message, int flags, int dest) {
     return broadcast.send(task, message, flags, dest);
+  }
+
+  @Override
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    if (broadcast.send(target, new byte[0], MessageFlags.END)) {
+      isSyncSent.put(target, true);
+    } else {
+      return true;
+    }
+    return needsFurtherProgress;
   }
 }
