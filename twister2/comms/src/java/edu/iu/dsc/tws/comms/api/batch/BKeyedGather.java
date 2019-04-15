@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.MToNRing;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
@@ -75,7 +76,7 @@ public class BKeyedGather {
     if (!useDisk) {
       finalReceiver = new KGatherBatchFinalReceiver(rcvr, 100);
     } else {
-      receiveDataType = MessageType.BYTE_ARRAY;
+      receiveDataType = MessageTypes.BYTE_ARRAY;
       finalReceiver = new DPartitionBatchFinalReceiver(
           rcvr, true, comm.getPersistentDirectory(), comparator);
     }
