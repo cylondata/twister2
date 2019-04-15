@@ -26,7 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 
 public class FSMergerTest {
   private static final Logger LOG = Logger.getLogger(FSMergerTest.class.getName());
@@ -48,7 +48,7 @@ public class FSMergerTest {
   @Before
   public void before() throws Exception {
     fsMerger = new FSMerger(1000, 100, "/tmp",
-        "fsmerger", MessageType.OBJECT);
+        "fsmerger", MessageTypes.OBJECT);
     random = new Random();
     serializer = new KryoSerializer();
   }
