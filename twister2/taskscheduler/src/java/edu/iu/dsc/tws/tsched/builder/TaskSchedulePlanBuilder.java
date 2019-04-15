@@ -135,7 +135,6 @@ public class TaskSchedulePlanBuilder {
                                      TaskInstancePlan taskInstancePlan,
                                      Map<String, TreeSet<Integer>> taskIndexes,
                                      Set<Integer> taskIds) throws TaskSchedulerException {
-
     container.add(taskInstancePlan);
     String taskName = taskInstancePlan.getTaskName();
 
@@ -152,7 +151,7 @@ public class TaskSchedulePlanBuilder {
     int taskIndex = taskIndexes.get(taskName) != null
         ? taskIndexes.get(taskName).last() + 1 : 0;
 
-
+    LOG.info("Task Id:" + taskId + "\t" + taskName);
     TaskInstanceId taskInstanceId = new TaskInstanceId(taskName, taskId, taskIndex);
     Resource resource = TaskScheduleUtils.getResourceRequirement(
         taskName, this.taskRamMap, this.instanceDefaultResourceValue,
@@ -168,7 +167,7 @@ public class TaskSchedulePlanBuilder {
           taskInstanceId, resource, containerId), e);
     }
 
-    LOG.fine("Task id, index, name:" + taskId + "\t" + taskIndex + "\t" + taskName
+    LOG.info("Task id, index, name:" + taskId + "\t" + taskIndex + "\t" + taskName
         + "\tadded to Container:" + containers.get(containerId));
     return this;
   }
@@ -225,7 +224,7 @@ public class TaskSchedulePlanBuilder {
    * This method first initialize the container map values, task index values, and task id sets.
    */
   private void initContainers() {
-    //assertResourceSettings();
+    assertResourceSettings();
     Map<Integer, Container> containerMap = this.containers;
     HashMap<String, TreeSet<Integer>> taskindexes = this.taskIndexes;
     TreeSet<Integer> taskids = this.taskIds;
@@ -363,12 +362,10 @@ public class TaskSchedulePlanBuilder {
 
     Map<Integer, Container> containerMap = new HashMap<>();
     Resource resource = previoustaskschedulePlan.getMaxContainerResources();
-    for (ContainerPlan currentContainerPlan
-        : previoustaskschedulePlan.getContainers()) {
-      Container container = new Container(
-          currentContainerPlan.getContainerId(), resource, requestedContainerPadding);
-      for (TaskInstancePlan instancePlan
-          : currentContainerPlan.getTaskInstances()) {
+    for (ContainerPlan currentContainerPlan : previoustaskschedulePlan.getContainers()) {
+      Container container = new Container(currentContainerPlan.getContainerId(), resource,
+          requestedContainerPadding);
+      for (TaskInstancePlan instancePlan : currentContainerPlan.getTaskInstances()) {
         try {
           addToContainer(container, instancePlan, taskIndexes, taskIds);
         } catch (TaskSchedulerException e) {
@@ -379,7 +376,6 @@ public class TaskSchedulePlanBuilder {
       }
       containerMap.put(currentContainerPlan.getContainerId(), container);
     }
-    LOG.info("Container Map Values Size Is:" + containerMap.entrySet());
     return containerMap;
   }
 

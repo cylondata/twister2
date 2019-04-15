@@ -52,11 +52,10 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
         centroidDirectory);
 
     /* First Graph to partition and read the partitioned data points **/
-    DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_PARTITION_EDGE,
+    DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     DataLocalitySinkTask dataObjectSink = new DataLocalitySinkTask(
-        Context.TWISTER2_PARTITION_EDGE, dsize, parallelismValue, dimension);
-
+        Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
@@ -67,7 +66,7 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
     //Creating the communication edges between the tasks for the second task graph
     //datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
     //    DataType.OBJECT);
-    datapointComputeConnection.partition("datapointsource", Context.TWISTER2_PARTITION_EDGE,
+    datapointComputeConnection.partition("datapointsource", Context.TWISTER2_DIRECT_EDGE,
         DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 
@@ -76,6 +75,6 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan = taskExecutor.plan(taskGraph);
     //Actual execution for the first taskgraph
-    taskExecutor.execute(taskGraph, executionPlan);
+    //taskExecutor.execute(taskGraph, executionPlan);
   }
 }

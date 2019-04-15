@@ -78,9 +78,7 @@ public class TaskScheduler implements ITaskScheduler {
     } else {
       this.schedulingType = TaskSchedulerContext.streamingTaskSchedulingMode(config);
     }
-
     LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "streaming task" + ")");
-
     return generateTaskSchedulePlan(TaskSchedulerContext.streamingTaskSchedulingClass(config));
   }
 
@@ -97,9 +95,7 @@ public class TaskScheduler implements ITaskScheduler {
     } else {
       this.schedulingType = TaskSchedulerContext.batchTaskSchedulingMode(config);
     }
-
     LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
-
     return generateTaskSchedulePlan(TaskSchedulerContext.batchTaskSchedulingClass(config));
   }
 
@@ -107,8 +103,7 @@ public class TaskScheduler implements ITaskScheduler {
 
     Class<?> taskSchedulerClass;
     Method method;
-    TaskSchedulePlan taskSchedulePlan = null;
-
+    TaskSchedulePlan taskSchedulePlan;
     try {
       taskSchedulerClass = ClassLoader.getSystemClassLoader().loadClass(className);
       Object newInstance = taskSchedulerClass.newInstance();
@@ -121,7 +116,7 @@ public class TaskScheduler implements ITaskScheduler {
           workerPlan);
     } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException
         | InstantiationException | ClassNotFoundException e) {
-      throw new RuntimeException("Lesser resources than the job requirements:" + e.getMessage());
+      throw new RuntimeException("Task Schedule Plan Not Able to Create:" + e.getMessage());
     }
 
     if (taskSchedulePlan != null) {
@@ -132,9 +127,9 @@ public class TaskScheduler implements ITaskScheduler {
         ContainerPlan containerPlan = entry.getValue();
         Set<TaskInstancePlan> containerPlanTaskInstances
             = containerPlan.getTaskInstances();
-        LOG.fine("Task Details for Container Id:" + integer);
+        LOG.info("Task Details for Container Id:" + integer);
         for (TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.fine("Task Id:" + ip.getTaskId()
+          LOG.info("Task Id:" + ip.getTaskId()
               + "\tTask Index" + ip.getTaskIndex()
               + "\tTask Name:" + ip.getTaskName());
         }
@@ -143,5 +138,3 @@ public class TaskScheduler implements ITaskScheduler {
     return taskSchedulePlan;
   }
 }
-
-
