@@ -72,14 +72,22 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
       Object currentVal = targetValues.get(t.getKey());
       if (currentVal != null) {
         Object newVal = reduceFunction.reduce(currentVal, t.getValue());
-        t.setValue(newVal);
+        targetValues.put(t.getKey(), newVal);
+      } else {
+        targetValues.put(t.getKey(), t.getValue());
       }
     }
   }
 
   @Override
   protected boolean sendToTarget(int source, int target) {
-    boolean send = bulkReceiver.receive(target, new ReduceIterator(reduced.get(target)));
+    Map<Object, Object> values = reduced.get(target);
+
+    if (values == null || values.isEmpty()) {
+      return true;
+    }
+
+    boolean send = bulkReceiver.receive(target, new ReduceIterator(values));
     if (send) {
       reduced.remove(target);
     }
@@ -107,7 +115,9 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
 
     @Override
     public Tuple next() {
-      return (Tuple) it.next();
+      Map.Entry<Object, Object> entry = it.next();
+      return new Tuple(entry.getKey(), entry.getValue(),
+          operation.getKeyType(), operation.getDataType());
     }
   }
 }
