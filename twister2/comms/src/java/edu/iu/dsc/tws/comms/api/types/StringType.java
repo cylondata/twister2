@@ -13,8 +13,9 @@ package edu.iu.dsc.tws.comms.api.types;
 
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.dfw.io.types.StringPacker;
 
-public class StringType implements MessageType<String, StringBuilder> {
+public class StringType implements MessageType<String, char[]> {
 
   @Override
   public boolean isPrimitive() {
@@ -37,8 +38,8 @@ public class StringType implements MessageType<String, StringBuilder> {
   }
 
   @Override
-  public DataPacker<String, StringBuilder> getDataPacker() {
-    return null;
+  public DataPacker<String, char[]> getDataPacker() {
+    return StringPacker.getInstance();
   }
 
   @Override
