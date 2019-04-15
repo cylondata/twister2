@@ -14,16 +14,14 @@ package edu.iu.dsc.tws.comms.api;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 
-import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
-
 /**
  * <p>When generating sending buffers, we need to first append the length of the
  * message as a header. In order to do that, packers might have to serialize
  * data first, so engine can retrieve the length via
- * {@link DataPacker#determineLength(Object, SerializeState)}. Twister2 will pass
+ * {@link DataPacker#determineLength(Object, PackerStore)}. Twister2 will pass
  * {@link PackerStore} to this method, so packer can store the serialized data
  * temporarily to store and use later when writing to the buffer when
- * {@link DataPacker#writeDataToBuffer(Object, ByteBuffer, SerializeState)} is called by engine.
+ * {@link DataPacker#writeDataToBuffer(Object, PackerStore, int, int, int, ByteBuffer)} is called by engine.
  * <p>
  * <p>
  * Additionally, user can consider {@link PackerStore} as an instance of {@link java.util.Map},
