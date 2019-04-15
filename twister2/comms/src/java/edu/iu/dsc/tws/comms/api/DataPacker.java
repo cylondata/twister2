@@ -14,12 +14,14 @@ package edu.iu.dsc.tws.comms.api;
 import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.InMessage;
 
 /**
  * The data packer interface. An implementation class should be stateless.
+ *
+ * @param <D> data type
+ * @param <W> wrapper to hold partially read data
  */
-public interface DataPacker<D> {
+public interface DataPacker<D, W> {
 
   /**
    * Pack the data and return the size of the data in bytes once packed.
@@ -42,23 +44,19 @@ public interface DataPacker<D> {
    * * to targetBuffer. If not, you may directly transfer data to the targetBuffer.
    */
   void writeDataToBuffer(D data,
-                         edu.iu.dsc.tws.comms.api.PackerStore packerStore,
+                         PackerStore packerStore,
                          int alreadyCopied,
                          int leftToCopy,
                          int spaceLeft,
                          ByteBuffer targetBuffer);
 
   /**
-   * Read the data from the buffer
-   *
-   * @param currentMessage the current message
-   * @param currentLocation current location
-   * @param buffer buffer
-   * @param currentObjectLength the current object length
-   * @return the number of bytes read
+   * Read the buffer and build the actual object. This method will be called multiple times
+   * per object until this method explicitly call {@link ObjectBuilder#setFinalObject(Object)}
+   * to set and mark the end of the current object
    */
-  int readDataFromBuffer(InMessage currentMessage, int currentLocation,
-                         DataBuffer buffer, int currentObjectLength);
+  int readDataFromBuffer(ObjectBuilder<D, W> objectBuilder,
+                         int currentBufferLocation, DataBuffer dataBuffer);
 
   byte[] packToByteArray(D data);
 
@@ -78,7 +76,7 @@ public interface DataPacker<D> {
   /**
    * Returns an empty wrapper to hold byteLength amount of type T
    */
-  D wrapperForByteLength(int byteLength);
+  W wrapperForByteLength(int byteLength);
 
   /**
    * Indicates whether length should be packed before the actual key
