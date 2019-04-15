@@ -26,6 +26,7 @@ package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 
 public final class ShortArrayPacker implements PrimitiveArrayPacker<short[]> {
 
@@ -43,8 +44,8 @@ public final class ShortArrayPacker implements PrimitiveArrayPacker<short[]> {
   }
 
   @Override
-  public MessageType<short[]> getMessageType() {
-    return MessageType.SHORT_ARRAY;
+  public MessageType<short[], short[]> getMessageType() {
+    return MessageTypes.SHORT_ARRAY;
   }
 
   @Override
