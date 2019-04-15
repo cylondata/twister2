@@ -20,9 +20,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
-import edu.iu.dsc.tws.comms.dfw.io.SourceSyncReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.SourceReceiver;
 
-public abstract class BaseGatherBatchReceiver extends SourceSyncReceiver {
+public abstract class BaseGatherBatchReceiver extends SourceReceiver {
   protected static final Logger LOG = Logger.getLogger(BaseGatherBatchReceiver.class.getName());
 
   protected Map<Integer, List<Object>> gatheredValuesMap = new HashMap<>();

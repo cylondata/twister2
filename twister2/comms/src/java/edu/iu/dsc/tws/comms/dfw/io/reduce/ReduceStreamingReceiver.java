@@ -21,9 +21,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.dfw.io.SourceSyncReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.SourceReceiver;
 
-public abstract class ReduceStreamingReceiver extends SourceSyncReceiver {
+public abstract class ReduceStreamingReceiver extends SourceReceiver {
   private static final Logger LOG = Logger.getLogger(ReduceStreamingReceiver.class.getName());
 
   protected ReduceFunction reduceFunction;
