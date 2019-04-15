@@ -71,14 +71,21 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
       List<Object> currentVal = targetValues.get(t.getKey());
       if (currentVal == null) {
         currentVal = new AggregatedObjects<>();
+        targetValues.put(t.getKey(), currentVal);
       }
-      currentVal.add(t);
+      currentVal.add(t.getValue());
     }
   }
 
   @Override
   protected boolean sendToTarget(int source, int target) {
-    boolean send = bulkReceiver.receive(target, new GatherIterator(gathered.get(target)));
+    Map<Object, List<Object>> values = gathered.get(target);
+
+    if (values == null || values.isEmpty()) {
+      return true;
+    }
+
+    boolean send = bulkReceiver.receive(target, new GatherIterator(values));
     if (send) {
       gathered.remove(target);
     }
