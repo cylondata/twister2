@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 
 public final class CharArrayPacker implements PrimitiveArrayPacker<char[]> {
 
@@ -30,8 +31,8 @@ public final class CharArrayPacker implements PrimitiveArrayPacker<char[]> {
   }
 
   @Override
-  public MessageType<char[]> getMessageType() {
-    return MessageType.CHAR_ARRAY;
+  public MessageType<char[], char[]> getMessageType() {
+    return MessageTypes.CHAR_ARRAY;
   }
 
   @Override
