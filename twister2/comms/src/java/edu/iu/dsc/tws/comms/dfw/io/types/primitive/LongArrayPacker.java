@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 
 public final class LongArrayPacker implements PrimitiveArrayPacker<long[]> {
 
@@ -31,8 +32,8 @@ public final class LongArrayPacker implements PrimitiveArrayPacker<long[]> {
   }
 
   @Override
-  public MessageType<long[]> getMessageType() {
-    return MessageType.LONG_ARRAY;
+  public MessageType<long[], long[]> getMessageType() {
+    return MessageTypes.LONG_ARRAY;
   }
 
   @Override
