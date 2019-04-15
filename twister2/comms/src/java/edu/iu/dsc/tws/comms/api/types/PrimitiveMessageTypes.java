@@ -36,7 +36,8 @@ public final class PrimitiveMessageTypes<T> implements MessageType<T, T> {
   private DataPacker<T, T> dataPacker;
   private boolean isArray = false;
 
-  public PrimitiveMessageTypes(boolean primitive, int size, Class<T> clazz, DataPacker<T, T> dataPacker) {
+  public PrimitiveMessageTypes(boolean primitive, int size, Class<T> clazz,
+                               DataPacker<T, T> dataPacker) {
     this.isPrimitive = primitive;
     this.size = size;
     this.clazz = clazz;

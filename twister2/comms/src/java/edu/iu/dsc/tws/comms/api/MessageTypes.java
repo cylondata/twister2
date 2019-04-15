@@ -29,7 +29,10 @@ import edu.iu.dsc.tws.comms.dfw.io.types.primitive.LongPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.ShortArrayPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.ShortPacker;
 
-public class MessageTypes {
+public final class MessageTypes {
+
+  private MessageTypes() {
+  }
 
   public static final PrimitiveMessageTypes<Integer> INTEGER = new PrimitiveMessageTypes<>(
       true, Integer.BYTES, Integer.class, IntegerPacker.getInstance()

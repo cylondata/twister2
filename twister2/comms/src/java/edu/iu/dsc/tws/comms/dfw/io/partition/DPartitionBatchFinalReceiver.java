@@ -180,7 +180,8 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       for (Tuple kc : tuples) {
         Object data = kc.getValue();
         byte[] d;
-        if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY || !(data instanceof byte[])) {
+        if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY
+            || !(data instanceof byte[])) {
           d = partition.getDataType().getDataPacker().packToByteArray(data);
         } else {
           d = (byte[]) data;
