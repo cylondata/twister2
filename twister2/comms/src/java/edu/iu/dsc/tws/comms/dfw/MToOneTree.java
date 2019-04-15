@@ -40,8 +40,8 @@ import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDeSerializer;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
@@ -304,10 +304,10 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
-        deSerializerMap.put(e, new UnifiedKeyDeSerializer(new KryoSerializer(),
+        deSerializerMap.put(e, new KeyedDeSerializer(new KryoSerializer(),
             workerId, keyType, dataType));
       } else {
-        deSerializerMap.put(e, new UnifiedDeserializer(workerId, dataType));
+        deSerializerMap.put(e, new AKeyedDeserializer(workerId, dataType));
       }
     }
 
