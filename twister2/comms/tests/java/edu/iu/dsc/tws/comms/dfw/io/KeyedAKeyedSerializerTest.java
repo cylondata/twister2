@@ -18,6 +18,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 
 public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
@@ -25,7 +26,7 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeIntegerMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageType.INTEGER;
+    MessageType type = MessageTypes.INTEGER;
     Object data = createKeyedData(800, type);
     InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
@@ -38,7 +39,7 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeDoubleMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageType.DOUBLE;
+    MessageType type = MessageTypes.DOUBLE;
     Object data = createKeyedData(800, type);
     InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
@@ -52,7 +53,7 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeLongMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageType.LONG;
+    MessageType type = MessageTypes.LONG;
     Object data = createKeyedData(800, type);
     InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
@@ -65,7 +66,7 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeShortMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageType.SHORT;
+    MessageType type = MessageTypes.SHORT;
     Object data = createKeyedData(800, type);
     InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
@@ -78,7 +79,7 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeByteMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageType.BYTE;
+    MessageType type = MessageTypes.BYTE;
     Object data = createKeyedData(800, type);
     InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
@@ -91,7 +92,7 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildIntegerMessage() {
     int numBuffers = 4;
     int size = 1000;
-    MessageType type = MessageType.INTEGER;
+    MessageType type = MessageTypes.INTEGER;
     Object data = createKeyedData(80, type);
     InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
@@ -104,7 +105,7 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildObjectMessage() {
     int numBuffers = 4;
     int size = 1000;
-    MessageType type = MessageType.OBJECT;
+    MessageType type = MessageTypes.OBJECT;
     Object data = createKeyedData(80, type);
     InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
@@ -121,11 +122,11 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createKeyedData(800, MessageType.INTEGER);
+      Object o = createKeyedData(800, MessageTypes.INTEGER);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.INTEGER);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.INTEGER);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Tuple exp = (Tuple) result.get(i);
@@ -146,11 +147,11 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
     for (int j = 1; j < 128; j++) {
       List<Object> data = new ArrayList<>();
       for (int i = 0; i < j; i++) {
-        Object o = createKeyedData(80, MessageType.INTEGER);
+        Object o = createKeyedData(80, MessageTypes.INTEGER);
         data.add(o);
       }
 
-      InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.INTEGER);
+      InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.INTEGER);
       try {
         List<Object> result = (List<Object>) inMessage.getDeserializedData();
         for (int i = 0; i < result.size(); i++) {
@@ -174,11 +175,11 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createKeyedData(800, MessageType.LONG);
+      Object o = createKeyedData(800, MessageTypes.LONG);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.LONG);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.LONG);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Tuple deserializedData = (Tuple) result.get(i);
@@ -198,11 +199,11 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createKeyedData(800, MessageType.DOUBLE);
+      Object o = createKeyedData(800, MessageTypes.DOUBLE);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.DOUBLE);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.DOUBLE);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Tuple deserializedData = (Tuple) result.get(i);
@@ -222,11 +223,11 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createKeyedData(800, MessageType.SHORT);
+      Object o = createKeyedData(800, MessageTypes.SHORT);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.SHORT);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.SHORT);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Tuple deserializedData = (Tuple) result.get(i);
@@ -245,11 +246,11 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createKeyedData(800, MessageType.BYTE);
+      Object o = createKeyedData(800, MessageTypes.BYTE);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageType.BYTE);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.BYTE);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Tuple deserializedData = (Tuple) result.get(i);
@@ -268,12 +269,12 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
     int size = 1000;
     List<Object> data = new ArrayList<>();
     for (int i = 0; i < 128; i++) {
-      Object o = createKeyedData(320, MessageType.BYTE, MessageType.INTEGER);
+      Object o = createKeyedData(320, MessageTypes.BYTE, MessageTypes.INTEGER);
       data.add(o);
     }
 
-    InMessage inMessage = keyedListValueCase(numBuffers, size, data, MessageType.BYTE,
-        MessageType.INTEGER);
+    InMessage inMessage = keyedListValueCase(numBuffers, size, data, MessageTypes.BYTE,
+        MessageTypes.INTEGER);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Tuple deserializedData = (Tuple) result.get(i);
