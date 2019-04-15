@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -180,7 +180,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       for (Tuple kc : tuples) {
         Object data = kc.getValue();
         byte[] d;
-        if (partition.getReceiveDataType() != MessageType.BYTE_ARRAY || !(data instanceof byte[])) {
+        if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY || !(data instanceof byte[])) {
           d = partition.getDataType().getDataPacker().packToByteArray(data);
         } else {
           d = (byte[]) data;
@@ -194,7 +194,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       List<Object> contents = (List<Object>) object;
       for (Object kc : contents) {
         byte[] d;
-        if (partition.getReceiveDataType() != MessageType.BYTE_ARRAY) {
+        if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY) {
           d = partition.getDataType().getDataPacker().packToByteArray(kc);
         } else {
           d = (byte[]) kc;

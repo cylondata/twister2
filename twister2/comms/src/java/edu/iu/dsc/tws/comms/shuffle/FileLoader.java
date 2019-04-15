@@ -28,6 +28,7 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -173,7 +174,7 @@ public final class FileLoader {
         keyValues.add(new Tuple(key, value));
 
         totalRead += Integer.BYTES + keySize + dataSize;
-        if (keyType == MessageType.OBJECT) {
+        if (keyType == MessageTypes.OBJECT) {
           //had to read an additional int to read the key size
           totalRead += Integer.BYTES;
         }
@@ -288,7 +289,7 @@ public final class FileLoader {
         Object value;
 
         // for object type we have to read the length of the bytes first
-        if (keyType == MessageType.OBJECT && totalRead + Integer.BYTES > size) {
+        if (keyType == MessageTypes.OBJECT && totalRead + Integer.BYTES > size) {
           break;
         }
 
@@ -327,19 +328,19 @@ public final class FileLoader {
 
   private static int getKeySize(MessageType dataType, ByteBuffer os) {
     int size;
-    if (dataType == MessageType.OBJECT) {
+    if (dataType == MessageTypes.OBJECT) {
       size = os.getInt() + Integer.BYTES;
-    } else if (dataType == MessageType.BYTE) {
+    } else if (dataType == MessageTypes.BYTE) {
       size = Byte.BYTES;
-    } else if (dataType == MessageType.DOUBLE) {
+    } else if (dataType == MessageTypes.DOUBLE) {
       size = Double.BYTES;
-    } else if (dataType == MessageType.INTEGER) {
+    } else if (dataType == MessageTypes.INTEGER) {
       size = Integer.BYTES;
-    } else if (dataType == MessageType.LONG) {
+    } else if (dataType == MessageTypes.LONG) {
       size = Long.BYTES;
-    } else if (dataType == MessageType.SHORT) {
+    } else if (dataType == MessageTypes.SHORT) {
       size = Short.BYTES;
-    } else if (dataType == MessageType.CHAR) {
+    } else if (dataType == MessageTypes.CHAR) {
       size = Character.BYTES;
     } else {
       size = os.getInt() + Integer.BYTES;
@@ -402,14 +403,5 @@ public final class FileLoader {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  public static Object convertKeyToArray(MessageType keyType, Object key) {
-    if (keyType == MessageType.INTEGER) {
-      return new int[]{(int) key};
-    } else if (keyType == MessageType.SHORT) {
-      return new short[]{(short) key};
-    }
-    return null;
   }
 }
