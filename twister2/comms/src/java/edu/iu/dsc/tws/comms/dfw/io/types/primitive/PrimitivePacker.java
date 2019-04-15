@@ -13,19 +13,16 @@ package edu.iu.dsc.tws.comms.dfw.io.types.primitive;
 
 import java.nio.ByteBuffer;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.comms.api.KeyPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.ObjectBuilder;
 import edu.iu.dsc.tws.comms.api.PackerStore;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.InMessage;
 
 @SuppressWarnings("ReturnValueIgnored")
-public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
+public interface PrimitivePacker<T> extends DataPacker<T, T> {
 
-  MessageType<T> getMessageType();
+  MessageType<T, T> getMessageType();
 
   /**
    * This method should put data to byteBuffer and update the position of buffer
@@ -57,51 +54,23 @@ public interface PrimitivePacker<T> extends KeyPacker<T>, DataPacker<T> {
   }
 
   @Override
-  default Pair<Integer, Integer> getKeyLength(InMessage message,
-                                              DataBuffer buffer, int location) {
-    return Pair.of(this.getMessageType().getUnitSizeInBytes(), 0);
-  }
-
-  @Override
   default int determineLength(T data, PackerStore store) {
     return this.getMessageType().getUnitSizeInBytes();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  default int readDataFromBuffer(InMessage currentMessage, int currentLocation,
-                                 DataBuffer buffers, int currentObjectLength) {
-    ByteBuffer byteBuffer = buffers.getByteBuffer();
-    int remaining = buffers.getSize() - currentLocation;
+  default int readDataFromBuffer(ObjectBuilder objectBuilder,
+                                 int currentBufferLocation, DataBuffer dataBuffer) {
+    ByteBuffer byteBuffer = dataBuffer.getByteBuffer();
+    int remaining = dataBuffer.getSize() - currentBufferLocation;
     if (remaining >= this.getMessageType().getUnitSizeInBytes()) {
-      T val = this.getFromBuffer(byteBuffer, currentLocation);
-      currentMessage.setDeserializingKey(val);
+      T val = this.getFromBuffer(byteBuffer, currentBufferLocation);
+      objectBuilder.setFinalObject(val);
       return this.getMessageType().getUnitSizeInBytes();
     } else {
       return 0;
     }
-  }
-
-  @Override
-  default int readKeyFromBuffer(InMessage currentMessage, int currentLocation,
-                                DataBuffer buffer, int currentObjectLength) {
-    return this.readDataFromBuffer(
-        currentMessage,
-        currentLocation,
-        buffer,
-        currentObjectLength
-    );
-  }
-
-  @Override
-  default boolean isKeyHeaderRequired() {
-    //will be false for primitive
-    return this.isHeaderRequired();
-  }
-
-  @Override
-  default T initializeUnPackKeyObject(int size) {
-    //will be null for primitive
-    return this.wrapperForByteLength(size);
   }
 
   @Override

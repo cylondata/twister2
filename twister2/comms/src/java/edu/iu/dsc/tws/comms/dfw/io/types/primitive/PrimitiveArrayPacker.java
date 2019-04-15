@@ -16,13 +16,13 @@ import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.ObjectBuilder;
 import edu.iu.dsc.tws.comms.api.PackerStore;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.InMessage;
 
-public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
+public interface PrimitiveArrayPacker<A> extends DataPacker<A, A> {
 
-  MessageType<A> getMessageType();
+  MessageType<A, A> getMessageType();
 
   /**
    * Adds data[index] to the byteBuffer, position will be updated
@@ -81,21 +81,23 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  default int readDataFromBuffer(InMessage currentMessage, int currentLocation,
-                                 DataBuffer buffer, int currentObjectLength) {
-    int startIndex = currentMessage.getUnPkCurrentBytes();
+  default int readDataFromBuffer(ObjectBuilder objectBuilder,
+                                 int currentBufferLocation, DataBuffer dataBuffer) {
+    int totalDataLength = objectBuilder.getTotalSize();
+    int startIndex = objectBuilder.getCompletedSize();
     int unitSize = this.getMessageType().getUnitSizeInBytes();
     startIndex = startIndex / unitSize;
-    A val = (A) currentMessage.getDeserializingObject();
+    A val = (A) objectBuilder.getPartialDataHolder();
 
     //deserializing
-    int noOfElements = currentObjectLength / unitSize;
-    int bufferPosition = currentLocation;
+    int noOfElements = totalDataLength / unitSize;
+    int bufferPosition = currentBufferLocation;
     int bytesRead = 0;
     for (int i = startIndex; i < noOfElements; i++) {
-      ByteBuffer byteBuffer = buffer.getByteBuffer();
-      int remaining = buffer.getSize() - bufferPosition;
+      ByteBuffer byteBuffer = dataBuffer.getByteBuffer();
+      int remaining = dataBuffer.getSize() - bufferPosition;
       if (remaining >= unitSize) {
         this.readFromBufferAndSet(byteBuffer, bufferPosition, val, i);
         bytesRead += unitSize;
@@ -103,6 +105,9 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A> {
       } else {
         break;
       }
+    }
+    if (totalDataLength == bytesRead + startIndex) {
+      objectBuilder.setFinalObject(val);
     }
     return bytesRead;
   }
