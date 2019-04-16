@@ -41,18 +41,30 @@ public final class Utils {
     switch (type) {
       case OBJECT:
         return MessageTypes.OBJECT;
-      case BYTE_ARRAY:
+      case BYTE:
         return MessageTypes.BYTE;
-      case INTEGER_ARRAY:
+      case BYTE_ARRAY:
+        return MessageTypes.BYTE_ARRAY;
+      case INTEGER:
         return MessageTypes.INTEGER;
-      case DOUBLE_ARRAY:
+      case INTEGER_ARRAY:
+        return MessageTypes.INTEGER_ARRAY;
+      case DOUBLE:
         return MessageTypes.DOUBLE;
-      case CHAR_ARRAY:
+      case DOUBLE_ARRAY:
+        return MessageTypes.DOUBLE_ARRAY;
+      case CHAR:
         return MessageTypes.CHAR;
-      case LONG_ARRAY:
+      case CHAR_ARRAY:
+        return MessageTypes.CHAR_ARRAY;
+      case LONG:
         return MessageTypes.LONG;
-      case SHORT_ARRAY:
+      case LONG_ARRAY:
+        return MessageTypes.LONG_ARRAY;
+      case SHORT:
         return MessageTypes.SHORT;
+      case SHORT_ARRAY:
+        return MessageTypes.SHORT_ARRAY;
       default:
         throw new RuntimeException("Un-expected type");
     }

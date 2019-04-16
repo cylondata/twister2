@@ -57,7 +57,7 @@ public class SPartitionExample extends BenchWorker {
 
     // create the communication
     partition = new SPartition(communicator, taskPlan, sources, targets,
-        MessageTypes.INTEGER, new PartitionReceiver(), new LoadBalanceSelector());
+        MessageTypes.INTEGER_ARRAY, new PartitionReceiver(), new LoadBalanceSelector());
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
         (ints, args) -> ints, IntArrayComparator.getInstance());

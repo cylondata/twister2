@@ -59,7 +59,7 @@ public class SGatherExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    gather = new SGather(communicator, taskPlan, sources, target, MessageTypes.INTEGER,
+    gather = new SGather(communicator, taskPlan, sources, target, MessageTypes.INTEGER_ARRAY,
         new FinalReduceReceiver());
 
 

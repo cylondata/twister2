@@ -65,7 +65,7 @@ public class SAllGatherExample extends BenchWorker {
     // create the communication
     gather = new SAllGather(communicator, taskPlan, sources, targets,
         new FinalReduceReceiver(),
-        MessageTypes.OBJECT);
+        MessageTypes.INTEGER_ARRAY);
 
     Set<Integer> sourceTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);

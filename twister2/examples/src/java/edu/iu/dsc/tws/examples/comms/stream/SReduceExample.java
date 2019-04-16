@@ -54,8 +54,8 @@ public class SReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    reduce = new SReduce(communicator, taskPlan, sources, target, MessageTypes.INTEGER,
-        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER),
+    reduce = new SReduce(communicator, taskPlan, sources, target, MessageTypes.INTEGER_ARRAY,
+        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver()
     );
 

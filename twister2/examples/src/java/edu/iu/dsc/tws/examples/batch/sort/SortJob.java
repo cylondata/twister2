@@ -86,7 +86,7 @@ public class SortJob implements IWorker {
     setupTasks();
 
     partition = new BKeyedPartition(channel, taskPlan, sources, destinations,
-        MessageTypes.BYTE, MessageTypes.INTEGER,
+        MessageTypes.INTEGER, MessageTypes.BYTE_ARRAY,
         new RecordSave(), new HashingSelector(), new IntegerComparator());
 
     // start the threads

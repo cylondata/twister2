@@ -54,8 +54,9 @@ public class BReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
     // create the communication
     reduce = new BReduce(communicator, taskPlan, sources, target,
-        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER), new FinalSingularReceiver(),
-        MessageTypes.INTEGER);
+        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
+        new FinalSingularReceiver(),
+        MessageTypes.INTEGER_ARRAY);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
