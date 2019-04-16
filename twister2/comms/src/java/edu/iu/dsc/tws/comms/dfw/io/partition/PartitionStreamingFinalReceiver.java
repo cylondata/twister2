@@ -11,42 +11,91 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.partition;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
 
-public class PartitionStreamingFinalReceiver extends BasePartitionStreamingFinalReceiver
-    implements MessageReceiver {
+public class PartitionStreamingFinalReceiver extends TargetFinalReceiver {
   // the receiver
   private SingularReceiver receiver;
+
+  /**
+   * Keep the list of tuples for each target
+   */
+  private Map<Integer, Queue<Object>> readyToSend = new HashMap<>();
 
   public PartitionStreamingFinalReceiver(SingularReceiver receiver) {
     this.receiver = receiver;
   }
 
-  @Override
   public void init(Config cfg, DataFlowOperation operation,
                    Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, operation, expectedIds);
     this.receiver.init(cfg, expectedIds.keySet());
   }
 
-  @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    return super.onMessage(source, path, target, flags, object);
+  /**
+   * Swap the messages to the ready queue
+   * @param dest the target
+   * @param dests message queue to switch to ready
+   */
+  protected void merge(int dest, Queue<Object> dests) {
+    if (!readyToSend.containsKey(dest)) {
+      readyToSend.put(dest, new LinkedBlockingQueue<>(dests));
+    } else {
+      Queue<Object> ready = readyToSend.get(dest);
+      ready.addAll(dests);
+    }
+    dests.clear();
   }
 
   @Override
-  public boolean progress() {
-    return super.progress();
+  protected boolean isAllEmpty() {
+    boolean b = super.isAllEmpty();
+    for (Map.Entry<Integer, Queue<Object>> e : readyToSend.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
+      }
+    }
+    return b;
   }
 
   @Override
-  public boolean receive(int target, Object message) {
-    return receiver.receive(target, message);
+  protected boolean sendToTarget(int source, int target) {
+    Queue<Object> values = readyToSend.get(target);
+
+    if (values == null || values.isEmpty()) {
+      return false;
+    }
+
+    // if we send this list successfully
+    Object val = values.peek();
+
+    if (val == null) {
+      return false;
+    }
+
+    while (val != null) {
+      if (receiver.receive(target, val)) {
+        values.poll();
+        val = values.peek();
+      } else {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  @Override
+  protected boolean isFilledToSend(int target) {
+    return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
   }
 }

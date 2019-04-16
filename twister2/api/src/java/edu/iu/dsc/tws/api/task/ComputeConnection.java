@@ -810,7 +810,8 @@ public class ComputeConnection {
   }
 
   private boolean isPrimitiveType(DataType dataType) {
-    return dataType == DataType.INTEGER || dataType == DataType.DOUBLE || dataType == DataType.LONG
-        || dataType == DataType.BYTE || dataType == DataType.SHORT;
+    return dataType == DataType.INTEGER_ARRAY
+        || dataType == DataType.DOUBLE_ARRAY || dataType == DataType.LONG_ARRAY
+        || dataType == DataType.BYTE_ARRAY || dataType == DataType.SHORT_ARRAY;
   }
 }

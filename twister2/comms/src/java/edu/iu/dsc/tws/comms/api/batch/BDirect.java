@@ -17,14 +17,14 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowDirect;
+import edu.iu.dsc.tws.comms.dfw.OneToOne;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectBatchFinalReceiver;
 
 public class BDirect {
   /**
    * The actual operation
    */
-  private DataFlowDirect direct;
+  private OneToOne direct;
 
   /**
    * Construct a Batch AllReduce operation
@@ -51,7 +51,7 @@ public class BDirect {
     int firstSource = sources.iterator().next();
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
-    direct = new DataFlowDirect(comm.getChannel(), sources, targets,
+    direct = new OneToOne(comm.getChannel(), sources, targets,
         new DirectBatchFinalReceiver(rcvr), comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 

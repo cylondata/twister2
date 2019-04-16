@@ -21,8 +21,8 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.RingPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNRing;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceStreamingFinalReceiver;
@@ -73,14 +73,14 @@ public class SKeyedReduce {
 
     if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
         CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
-      this.keyedReduce = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
+      this.keyedReduce = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, targets,
           new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
           new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,
           keyType, keyType, comm.nextEdge());
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
-      this.keyedReduce = new RingPartition(comm.getConfig(), comm.getChannel(),
+      this.keyedReduce = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
           new KReduceBatchPartialReceiver(0, fnc),
           dataType, dataType, keyType, keyType, comm.nextEdge());

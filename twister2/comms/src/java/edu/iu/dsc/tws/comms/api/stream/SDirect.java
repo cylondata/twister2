@@ -17,14 +17,14 @@ import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowDirect;
+import edu.iu.dsc.tws.comms.dfw.OneToOne;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectStreamingFinalReceiver;
 
 public class SDirect {
   /**
    * The actual operation
    */
-  private DataFlowDirect direct;
+  private OneToOne direct;
 
   /**
    * Construct a Streaming partition operation
@@ -39,7 +39,7 @@ public class SDirect {
   public SDirect(Communicator comm, TaskPlan plan,
                  List<Integer> sources, List<Integer> targets, MessageType dataType,
                  SingularReceiver rcvr) {
-    direct = new DataFlowDirect(comm.getChannel(), sources, targets,
+    direct = new OneToOne(comm.getChannel(), sources, targets,
         new DirectStreamingFinalReceiver(rcvr), comm.getConfig(),
         dataType, plan, comm.nextEdge());
   }
