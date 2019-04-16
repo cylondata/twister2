@@ -84,6 +84,7 @@ public abstract class SourceReceiver implements MessageReceiver {
       for (int task : e.getValue()) {
         messagesPerTask.put(task, new ArrayBlockingQueue<>(sendPendingMax));
       }
+      syncReceived.put(e.getKey(), new HashSet<>());
       messages.put(e.getKey(), messagesPerTask);
       isSyncSent.put(e.getKey(), false);
       sourcesOfTarget.put(e.getKey(), e.getValue().size());
@@ -93,7 +94,7 @@ public abstract class SourceReceiver implements MessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    Set<Integer> syncsPerTarget = syncReceived.computeIfAbsent(target, t -> new HashSet<>());
+    Set<Integer> syncsPerTarget = syncReceived.get(target);
 
     if ((flags & MessageFlags.END) == MessageFlags.END) {
       syncsPerTarget.add(source);
@@ -218,7 +219,7 @@ public abstract class SourceReceiver implements MessageReceiver {
     }
     isSyncSent.put(target, false);
 
-    syncReceived.clear();
+    syncReceived.forEach((k, v) -> v.clear());
   }
 
   /**

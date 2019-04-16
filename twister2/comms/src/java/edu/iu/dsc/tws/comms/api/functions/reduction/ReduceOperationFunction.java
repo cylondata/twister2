@@ -44,7 +44,7 @@ public class ReduceOperationFunction implements ReduceFunction {
   public Object reduce(Object data1, Object data2) {
     Object result = null;
     if (this.operation == Op.SUM) { // Start SUM
-      if (this.messageType == MessageTypes.INTEGER) {
+      if (this.messageType == MessageTypes.INTEGER_ARRAY) {
         if (data1 instanceof int[] && data2 instanceof int[]) {
           int[] i1 = (int[]) data1;
           int[] i2 = (int[]) data2;
@@ -57,7 +57,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "int", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.DOUBLE) {
+      } else if (this.messageType == MessageTypes.DOUBLE_ARRAY) {
         if (data1 instanceof double[] && data2 instanceof double[]) {
           double[] i1 = (double[]) data1;
           double[] i2 = (double[]) data2;
@@ -70,7 +70,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "double", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.SHORT) {
+      } else if (this.messageType == MessageTypes.SHORT_ARRAY) {
         if (data1 instanceof short[] && data2 instanceof short[]) {
           short[] i1 = (short[]) data1;
           short[] i2 = (short[]) data2;
@@ -83,7 +83,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "short", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.BYTE) {
+      } else if (this.messageType == MessageTypes.BYTE_ARRAY) {
         if (data1 instanceof byte[] && data2 instanceof byte[]) {
           byte[] i1 = (byte[]) data1;
           byte[] i2 = (byte[]) data2;
@@ -96,7 +96,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "byte", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.LONG) {
+      } else if (this.messageType == MessageTypes.LONG_ARRAY) {
         if (data1 instanceof long[] && data2 instanceof long[]) {
           long[] i1 = (long[]) data1;
           long[] i2 = (long[]) data2;
@@ -112,7 +112,7 @@ public class ReduceOperationFunction implements ReduceFunction {
       }
     }
     if (this.operation == Op.PRODUCT) { // Start PRODUCT
-      if (this.messageType == MessageTypes.INTEGER) {
+      if (this.messageType == MessageTypes.INTEGER_ARRAY) {
         if (data1 instanceof int[] && data2 instanceof int[]) {
           int[] i1 = (int[]) data1;
           int[] i2 = (int[]) data2;
@@ -125,7 +125,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "int", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.DOUBLE) {
+      } else if (this.messageType == MessageTypes.DOUBLE_ARRAY) {
         if (data1 instanceof double[] && data2 instanceof double[]) {
           double[] i1 = (double[]) data1;
           double[] i2 = (double[]) data2;
@@ -138,7 +138,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "double", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.SHORT) {
+      } else if (this.messageType == MessageTypes.SHORT_ARRAY) {
         if (data1 instanceof short[] && data2 instanceof short[]) {
           short[] i1 = (short[]) data1;
           short[] i2 = (short[]) data2;
@@ -151,7 +151,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "short", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.BYTE) {
+      } else if (this.messageType == MessageTypes.BYTE_ARRAY) {
         if (data1 instanceof byte[] && data2 instanceof byte[]) {
           byte[] i1 = (byte[]) data1;
           byte[] i2 = (byte[]) data2;
@@ -164,7 +164,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "byte", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.LONG) {
+      } else if (this.messageType == MessageTypes.LONG_ARRAY) {
         if (data1 instanceof long[] && data2 instanceof long[]) {
           long[] i1 = (long[]) data1;
           long[] i2 = (long[]) data2;
@@ -180,7 +180,7 @@ public class ReduceOperationFunction implements ReduceFunction {
       }
     } // END PRODUCT
     if (this.operation == Op.DIVISION) { // Start DIVISION
-      if (this.messageType == MessageTypes.INTEGER) {
+      if (this.messageType == MessageTypes.INTEGER_ARRAY) {
         if (data1 instanceof int[] && data2 instanceof int[]) {
           int[] i1 = (int[]) data1;
           int[] i2 = (int[]) data2;
@@ -193,7 +193,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "int", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.DOUBLE) {
+      } else if (this.messageType == MessageTypes.DOUBLE_ARRAY) {
         if (data1 instanceof double[] && data2 instanceof double[]) {
           double[] i1 = (double[]) data1;
           double[] i2 = (double[]) data2;
@@ -206,7 +206,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "double", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.SHORT) {
+      } else if (this.messageType == MessageTypes.SHORT_ARRAY) {
         if (data1 instanceof short[] && data2 instanceof short[]) {
           short[] i1 = (short[]) data1;
           short[] i2 = (short[]) data2;
@@ -219,7 +219,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "short", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.BYTE) {
+      } else if (this.messageType == MessageTypes.BYTE_ARRAY) {
         if (data1 instanceof byte[] && data2 instanceof byte[]) {
           byte[] i1 = (byte[]) data1;
           byte[] i2 = (byte[]) data2;
@@ -232,7 +232,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "byte", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.LONG) {
+      } else if (this.messageType == MessageTypes.LONG_ARRAY) {
         if (data1 instanceof long[] && data2 instanceof long[]) {
           long[] i1 = (long[]) data1;
           long[] i2 = (long[]) data2;
@@ -249,7 +249,7 @@ public class ReduceOperationFunction implements ReduceFunction {
     } // END DIVISION
 
     if (this.operation == Op.MAX) { // Start MAX
-      if (this.messageType == MessageTypes.INTEGER) {
+      if (this.messageType == MessageTypes.INTEGER_ARRAY) {
         if (data1 instanceof int[] && data2 instanceof int[]) {
           int[] i1 = (int[]) data1;
           int[] i2 = (int[]) data2;
@@ -262,7 +262,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "int", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.DOUBLE) {
+      } else if (this.messageType == MessageTypes.DOUBLE_ARRAY) {
         if (data1 instanceof double[] && data2 instanceof double[]) {
           double[] i1 = (double[]) data1;
           double[] i2 = (double[]) data2;
@@ -275,7 +275,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "double", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.SHORT) {
+      } else if (this.messageType == MessageTypes.SHORT_ARRAY) {
         if (data1 instanceof short[] && data2 instanceof short[]) {
           short[] i1 = (short[]) data1;
           short[] i2 = (short[]) data2;
@@ -288,7 +288,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "short", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.BYTE) {
+      } else if (this.messageType == MessageTypes.BYTE_ARRAY) {
         if (data1 instanceof byte[] && data2 instanceof byte[]) {
           byte[] i1 = (byte[]) data1;
           byte[] i2 = (byte[]) data2;
@@ -301,7 +301,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "byte", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.LONG) {
+      } else if (this.messageType == MessageTypes.LONG_ARRAY) {
         if (data1 instanceof long[] && data2 instanceof long[]) {
           long[] i1 = (long[]) data1;
           long[] i2 = (long[]) data2;
@@ -318,7 +318,7 @@ public class ReduceOperationFunction implements ReduceFunction {
     } // END MAX
 
     if (this.operation == Op.MIN) { // Start MIN
-      if (this.messageType == MessageTypes.INTEGER) {
+      if (this.messageType == MessageTypes.INTEGER_ARRAY) {
         if (data1 instanceof int[] && data2 instanceof int[]) {
           int[] i1 = (int[]) data1;
           int[] i2 = (int[]) data2;
@@ -331,7 +331,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "int", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.DOUBLE) {
+      } else if (this.messageType == MessageTypes.DOUBLE_ARRAY) {
         if (data1 instanceof double[] && data2 instanceof double[]) {
           double[] i1 = (double[]) data1;
           double[] i2 = (double[]) data2;
@@ -344,7 +344,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "double", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.SHORT) {
+      } else if (this.messageType == MessageTypes.SHORT_ARRAY) {
         if (data1 instanceof short[] && data2 instanceof short[]) {
           short[] i1 = (short[]) data1;
           short[] i2 = (short[]) data2;
@@ -357,7 +357,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "short", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.BYTE) {
+      } else if (this.messageType == MessageTypes.BYTE_ARRAY) {
         if (data1 instanceof byte[] && data2 instanceof byte[]) {
           byte[] i1 = (byte[]) data1;
           byte[] i2 = (byte[]) data2;
@@ -370,7 +370,7 @@ public class ReduceOperationFunction implements ReduceFunction {
           throw new RuntimeException(String.format("Message should be a %s array, got %s and %s",
               "byte", data1.getClass(), data2.getClass()));
         }
-      } else if (this.messageType == MessageTypes.LONG) {
+      } else if (this.messageType == MessageTypes.LONG_ARRAY) {
         if (data1 instanceof long[] && data2 instanceof long[]) {
           long[] i1 = (long[]) data1;
           long[] i2 = (long[]) data2;
