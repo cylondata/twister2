@@ -23,10 +23,9 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * Un sorted merger
@@ -104,7 +103,7 @@ public class FSKeyedMerger implements Shuffle {
   /**
    * The kryo serializer
    */
-  private KryoMemorySerializer kryoSerializer;
+  private KryoSerializer kryoSerializer;
 
   private enum FSStatus {
     WRITING,
@@ -122,7 +121,7 @@ public class FSKeyedMerger implements Shuffle {
     this.operationName = opName;
     this.keyType = kType;
     this.dataType = dType;
-    this.kryoSerializer = new KryoMemorySerializer();
+    this.kryoSerializer = new KryoSerializer();
   }
 
   /**
@@ -158,7 +157,7 @@ public class FSKeyedMerger implements Shuffle {
   private void deserializeObjects() {
     for (int i = 0; i < recordsInMemory.size(); i++) {
       Tuple kv = recordsInMemory.get(i);
-      Object o = DataDeserializer.deserialize(dataType, kryoSerializer, (byte[]) kv.getValue());
+      Object o = dataType.getDataPacker().unpackFromByteArray((byte[]) kv.getValue());
       objectsInMemory.add(new Tuple(kv.getKey(), o));
     }
   }

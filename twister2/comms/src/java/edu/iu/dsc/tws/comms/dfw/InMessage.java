@@ -18,7 +18,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
+import edu.iu.dsc.tws.comms.dfw.io.ObjectBuilderImpl;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 public class InMessage {
@@ -70,27 +72,12 @@ public class InMessage {
   /**
    * If a keyed message, the key being used
    */
-  private MessageType keyType = MessageType.INTEGER;
+  private MessageType keyType = MessageTypes.INTEGER;
 
   /**
    * The deserialized data
    */
   private Object deserializedData;
-
-  /**
-   * Deserialized key
-   */
-  private Object deserializedKey;
-
-  /**
-   * The object that is being built
-   */
-  private Object deserializingObject;
-
-  /**
-   * The key that is being built
-   */
-  private Object deserializingKey;
 
   /**
    * Number of buffers added
@@ -127,11 +114,6 @@ public class InMessage {
   private int unPkBuffers = 0;
 
   /**
-   * The current index of unpack
-   */
-  private int unPkCurrentIndex = 0;
-
-  /**
    * Weather we are reading the key
    */
   private boolean readingKey = true;
@@ -151,6 +133,13 @@ public class InMessage {
    * The worker id
    */
   private int workerId;
+
+  /**
+   * This will be passed to packers to build objects for this message
+   * todo check if this class can be simplified due to dataBuilder.
+   */
+  private ObjectBuilderImpl dataBuilder = new ObjectBuilderImpl();
+  private ObjectBuilderImpl keyBuilder = new ObjectBuilderImpl();
 
   public InMessage(int originatingId, MessageType messageType,
                    ChannelMessageReleaseCallback releaseListener,
@@ -204,6 +193,7 @@ public class InMessage {
 
   /**
    * Add a buffer and calculate weather we have seen all the buffers for an object
+   *
    * @param buffer buffer
    * @return true if all the buffers for a message is received
    */
@@ -288,25 +278,26 @@ public class InMessage {
 
   @SuppressWarnings("unchecked")
   public void addCurrentKeyedObject() {
+    Object key = keyBuilder.getFinalObject();
+    Object value = dataBuilder.getFinalObject();
     if (header.getNumberTuples() == -1) {
-      deserializedData = new Tuple(deserializedKey, deserializingObject, keyType, dataType);
+      deserializedData = new Tuple(key, value, keyType, dataType);
     } else {
-      ((List<Object>) deserializedData).add(new Tuple(deserializedKey, deserializingObject,
+      ((List<Object>) deserializedData).add(new Tuple(key, value,
           keyType, dataType));
     }
     unPkNumberObjects++;
-    deserializingObject = null;
   }
 
-  @SuppressWarnings("unchecked")
+
   public void addCurrentObject() {
+    Object value = dataBuilder.getFinalObject();
     if (header.getNumberTuples() == -1) {
-      deserializedData = deserializingObject;
+      deserializedData = value;
     } else {
-      ((List<Object>) deserializedData).add(deserializingObject);
+      ((List<Object>) deserializedData).add(value);
     }
     unPkNumberObjects++;
-    deserializingObject = null;
   }
 
   public void addBuiltMessage(ChannelMessage channelMessage) {
@@ -341,22 +332,6 @@ public class InMessage {
     return deserializedData;
   }
 
-  public Object getDeserializingObject() {
-    return deserializingObject;
-  }
-
-  public void setDeserializingObject(Object deserializingObject) {
-    this.deserializingObject = deserializingObject;
-  }
-
-  public Object getDeserializingKey() {
-    return deserializingKey;
-  }
-
-  public void setDeserializingKey(Object deserializingKey) {
-    this.deserializingKey = deserializingKey;
-  }
-
   public int getUnPkCurrentObjectLength() {
     return unPkCurrentObjectLength;
   }
@@ -385,26 +360,6 @@ public class InMessage {
     unPkBuffers++;
   }
 
-  public int getUnPkCurrentBytes() {
-    return unPkCurrentIndex;
-  }
-
-  public int addUnPkCurrentBytes(int bytes) {
-    unPkCurrentIndex = unPkCurrentIndex + bytes;
-    return unPkCurrentIndex;
-  }
-
-  public void setUnPkCurrentBytes(int unPkCurrentBytes) {
-    this.unPkCurrentIndex = unPkCurrentBytes;
-  }
-
-  public void resetUnPk() {
-    unPkCurrentObjectLength = -1;
-    unPkCurrentKeyLength = -1;
-    unPkCurrentIndex = 0;
-    deserializingObject = null;
-  }
-
   public boolean isKeyed() {
     return keyed;
   }
@@ -417,10 +372,11 @@ public class InMessage {
     this.readingKey = readingKey;
   }
 
-  public void resetUnPkKey() {
-    unPkCurrentIndex = 0;
-    deserializedKey = deserializingKey;
-    deserializingKey = null;
-    readingKey = false;
+  public ObjectBuilderImpl getDataBuilder() {
+    return dataBuilder;
+  }
+
+  public ObjectBuilderImpl getKeyBuilder() {
+    return keyBuilder;
   }
 }

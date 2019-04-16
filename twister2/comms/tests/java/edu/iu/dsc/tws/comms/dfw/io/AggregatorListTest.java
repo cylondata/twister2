@@ -17,7 +17,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 
 public class AggregatorListTest extends BaseSerializeTest {
@@ -29,10 +29,10 @@ public class AggregatorListTest extends BaseSerializeTest {
     for (int i = 0; i < 4; i++) {
       data.add("I " + i);
     }
-    Tuple tuple = new Tuple(1, data, MessageType.INTEGER, MessageType.OBJECT);
+    Tuple tuple = new Tuple(1, data, MessageTypes.INTEGER, MessageTypes.OBJECT);
 
-    InMessage inMessage = keyedSingleValueCase(numBuffers, size, MessageType.OBJECT,
-        MessageType.INTEGER, tuple);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, MessageTypes.OBJECT,
+        MessageTypes.INTEGER, tuple);
     Tuple result = (Tuple) inMessage.getDeserializedData();
     Assert.assertEquals((int) result.getKey(), 1);
     List<Object> resultList = (List<Object>) tuple.getValue();
@@ -50,13 +50,13 @@ public class AggregatorListTest extends BaseSerializeTest {
       for (int i = 0; i < 4; i++) {
         data.add("I " + i);
       }
-      Tuple tuple = new Tuple(1, data, MessageType.INTEGER, MessageType.OBJECT);
+      Tuple tuple = new Tuple(1, data, MessageTypes.INTEGER, MessageTypes.OBJECT);
       tuples.add(tuple);
     }
 
     try {
-      InMessage inMessage = keyedListValueCase(numBuffers, size, tuples, MessageType.OBJECT,
-          MessageType.INTEGER);
+      InMessage inMessage = keyedListValueCase(numBuffers, size, tuples, MessageTypes.OBJECT,
+          MessageTypes.INTEGER);
       Assert.fail();
     } catch (ClassCastException e) {
       Assert.assertTrue(true);
@@ -68,13 +68,13 @@ public class AggregatorListTest extends BaseSerializeTest {
       for (int i = 0; i < 4; i++) {
         data.add("I " + i);
       }
-      Tuple tuple = new Tuple(1, data, MessageType.INTEGER, MessageType.OBJECT);
+      Tuple tuple = new Tuple(1, data, MessageTypes.INTEGER, MessageTypes.OBJECT);
       aTuples.add(tuple);
     }
 
     try {
-      InMessage inMessage = keyedListValueCase(numBuffers, size, aTuples, MessageType.OBJECT,
-          MessageType.INTEGER);
+      InMessage inMessage = keyedListValueCase(numBuffers, size, aTuples, MessageTypes.OBJECT,
+          MessageTypes.INTEGER);
       Assert.assertTrue(true);
     } catch (ClassCastException e) {
       Assert.fail();

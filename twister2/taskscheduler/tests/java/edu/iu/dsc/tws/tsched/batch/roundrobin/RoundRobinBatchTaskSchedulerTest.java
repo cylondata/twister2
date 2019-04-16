@@ -126,10 +126,10 @@ public class RoundRobinBatchTaskSchedulerTest {
     ComputeConnection c3 = builder.addSink("merge", testSink2, 16);
     ComputeConnection c4 = builder.addSink("final", testSink3, 16);
 
-    c1.partition("source", "partition-edge1", DataType.INTEGER);
-    c2.partition("source", "partition-edge2", DataType.INTEGER);
-    c3.partition("sink2", "partition-edge3", DataType.INTEGER);
-    c4.partition("merge", "partition-edge4", DataType.INTEGER);
+    c1.partition("source", "partition-edge1", DataType.INTEGER_ARRAY);
+    c2.partition("source", "partition-edge2", DataType.INTEGER_ARRAY);
+    c3.partition("sink2", "partition-edge3", DataType.INTEGER_ARRAY);
+    c4.partition("merge", "partition-edge4", DataType.INTEGER_ARRAY);
 
     builder.setMode(OperationMode.BATCH);
     return builder.build();

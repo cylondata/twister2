@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BPartition;
 import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
@@ -61,7 +61,8 @@ public class BPartitionExample extends BenchWorker {
 
     // create the communication
     partition = new BPartition(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector(), false);
+        MessageTypes.INTEGER_ARRAY, new PartitionReceiver(),
+        new LoadBalanceSelector(), false);
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
       int lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
