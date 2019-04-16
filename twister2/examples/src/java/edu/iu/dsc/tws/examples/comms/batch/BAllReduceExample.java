@@ -58,8 +58,9 @@ public class BAllReduceExample extends BenchWorker {
     }
     // create the communication
     reduce = new BAllReduce(communicator, taskPlan, sources, targets,
-        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER), new FinalSingularReceiver(),
-        MessageTypes.INTEGER);
+        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
+        new FinalSingularReceiver(),
+        MessageTypes.INTEGER_ARRAY);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
