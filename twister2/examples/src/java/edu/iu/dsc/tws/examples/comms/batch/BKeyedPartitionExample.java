@@ -68,7 +68,7 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
 
     // create the communication
     partition = new BKeyedPartition(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
-        MessageTypes.INTEGER, new PartitionReceiver(), new SimpleKeyBasedSelector());
+        MessageTypes.INTEGER_ARRAY, new PartitionReceiver(), new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);

@@ -61,7 +61,8 @@ public class BPartitionExample extends BenchWorker {
 
     // create the communication
     partition = new BPartition(communicator, taskPlan, sources, targets,
-        MessageTypes.INTEGER, new PartitionReceiver(), new LoadBalanceSelector(), false);
+        MessageTypes.INTEGER_ARRAY, new PartitionReceiver(),
+        new LoadBalanceSelector(), false);
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
       int lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
