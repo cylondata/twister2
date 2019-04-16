@@ -95,18 +95,18 @@ public abstract class SourceReceiver implements MessageReceiver {
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     Set<Integer> syncsPerTarget = syncReceived.computeIfAbsent(target, t -> new HashSet<>());
 
-    // if we have a sync from this source we cannot accept more data
-    // until we finish this sync
-    if (syncsPerTarget.contains(source)) {
-      return false;
-    }
-
     if ((flags & MessageFlags.END) == MessageFlags.END) {
       syncsPerTarget.add(source);
       if (allSyncsPresent(target)) {
         targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
       }
       return true;
+    }
+
+    // if we have a sync from this source we cannot accept more data
+    // until we finish this sync
+    if (syncsPerTarget.contains(source)) {
+      return false;
     }
 
     Queue<Object> msgQueue = messages.get(target).get(source);
