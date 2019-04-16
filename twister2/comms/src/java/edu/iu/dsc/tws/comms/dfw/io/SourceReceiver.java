@@ -12,9 +12,11 @@
 package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
@@ -57,7 +59,8 @@ public abstract class SourceReceiver implements MessageReceiver {
   /**
    * Keep weather we have received a sync from a source
    */
-  protected Map<Integer, Map<Integer, Boolean>> syncReceived = new HashMap<>();
+  protected Map<Integer, Set<Integer>> syncReceived = new HashMap<>();
+  protected Map<Integer, Integer> sourcesOfTarget = new HashMap<>();
 
   /**
    * Weather sync messages are forwarded from the partial receivers
@@ -77,35 +80,33 @@ public abstract class SourceReceiver implements MessageReceiver {
 
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
-      Map<Integer, Boolean> finishedPerTask = new HashMap<>();
 
       for (int task : e.getValue()) {
         messagesPerTask.put(task, new ArrayBlockingQueue<>(sendPendingMax));
-        finishedPerTask.put(task, false);
       }
       messages.put(e.getKey(), messagesPerTask);
-      syncReceived.put(e.getKey(), finishedPerTask);
       isSyncSent.put(e.getKey(), false);
+      sourcesOfTarget.put(e.getKey(), e.getValue().size());
       targetStates.put(e.getKey(), ReceiverState.RECEIVING);
     }
   }
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    Map<Integer, Boolean> syncsPerTarget = syncReceived.get(target);
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
-      syncsPerTarget.put(source, true);
-      if (allSyncsPresent(syncsPerTarget)) {
-        targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
-      }
-      return true;
-    }
+    Set<Integer> syncsPerTarget = syncReceived.computeIfAbsent(target, t -> new HashSet<>());
 
     // if we have a sync from this source we cannot accept more data
     // until we finish this sync
-    if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
-        || targetStates.get(target) == ReceiverState.SYNCED) {
+    if (syncsPerTarget.contains(source)) {
       return false;
+    }
+
+    if ((flags & MessageFlags.END) == MessageFlags.END) {
+      syncsPerTarget.add(source);
+      if (allSyncsPresent(target)) {
+        targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
+      }
+      return true;
     }
 
     Queue<Object> msgQueue = messages.get(target).get(source);
@@ -118,8 +119,8 @@ public abstract class SourceReceiver implements MessageReceiver {
 
       msgQueue.add(object);
       if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
-        syncsPerTarget.put(source, true);
-        if (allSyncsPresent(syncsPerTarget)) {
+        syncsPerTarget.add(source);
+        if (allSyncsPresent(target)) {
           targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
         }
       }
@@ -133,7 +134,7 @@ public abstract class SourceReceiver implements MessageReceiver {
     for (int target : messages.keySet()) {
       // now check weather we have the messages for this source
       Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
-      Map<Integer, Boolean> finishedForTarget = syncReceived.get(target);
+      Set<Integer> finishedForTarget = syncReceived.get(target);
       boolean canProgress = true;
 
       while (canProgress) {
@@ -150,7 +151,7 @@ public abstract class SourceReceiver implements MessageReceiver {
           }
 
           // we need to check weather there is a sync for all the sources
-          if (!finishedForTarget.get(sourceQueues.getKey())) {
+          if (!finishedForTarget.contains(sourceQueues.getKey())) {
             allSyncsPresent = false;
           }
         }
@@ -190,6 +191,7 @@ public abstract class SourceReceiver implements MessageReceiver {
 
   /**
    * Check weather all the other information is flushed
+   *
    * @param target target
    * @return true if there is nothing to process
    */
@@ -197,6 +199,7 @@ public abstract class SourceReceiver implements MessageReceiver {
 
   /**
    * Handle the sync
+   *
    * @param needsFurtherProgress the current value of need progress
    * @param target target
    * @return the needFurtherProgress
@@ -215,14 +218,12 @@ public abstract class SourceReceiver implements MessageReceiver {
     }
     isSyncSent.put(target, false);
 
-    Map<Integer, Boolean> syncs = syncReceived.get(target);
-    for (Integer source : syncs.keySet()) {
-      syncs.put(source, false);
-    }
+    syncReceived.clear();
   }
 
   /**
    * Send the values to a target
+   *
    * @param target the target
    * @return true if all the values are sent successfully
    */
@@ -230,6 +231,7 @@ public abstract class SourceReceiver implements MessageReceiver {
 
   /**
    * Aggregate values from sources for a target, assumes every source has a value
+   *
    * @param target target
    * @param sync true if all the syncs are present
    * @return true if there are no more elements to aggregate
@@ -245,6 +247,7 @@ public abstract class SourceReceiver implements MessageReceiver {
 
   /**
    * Check weather there is nothing left in the queues
+   *
    * @param messagePerTarget the queues for the target
    * @return true if no values left
    */
@@ -260,23 +263,17 @@ public abstract class SourceReceiver implements MessageReceiver {
 
   /**
    * Checks weather all syncs are present
-   * @param syncs the syncs map
+   *
    * @return true if all syncs are present
    */
-  protected boolean allSyncsPresent(Map<Integer, Boolean> syncs) {
-    for (Boolean sync : syncs.values()) {
-      if (!sync) {
-        return false;
-      }
-    }
-    return true;
+  protected boolean allSyncsPresent(int target) {
+    return sourcesOfTarget.get(target) == syncReceived.get(target).size();
   }
 
   @Override
   public void onFinish(int source) {
     for (Integer target : syncReceived.keySet()) {
-      Map<Integer, Boolean> finishedMessages = syncReceived.get(target);
-      finishedMessages.put(source, true);
+      syncReceived.get(target).add(source);
     }
   }
 }
