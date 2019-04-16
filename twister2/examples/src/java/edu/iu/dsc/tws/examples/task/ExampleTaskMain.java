@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.examples.task.batch.BTReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STBroadCastExample;
+import edu.iu.dsc.tws.examples.task.streaming.STWindowExample;
 import edu.iu.dsc.tws.examples.task.streaming.STGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STKeyedGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STKeyedReduceExample;
@@ -169,6 +170,9 @@ public class ExampleTaskMain {
       }
     } else {
       switch (operation) {
+        case "direct":
+          submitJob(config, workers, jobConfig, STWindowExample.class.getName());
+          break;
         case "reduce":
           submitJob(config, workers, jobConfig, STReduceExample.class.getName());
           break;
