@@ -65,7 +65,7 @@ public class BDirectExample extends BenchWorker {
 
     // create the communication
     direct = new BDirect(communicator, taskPlan, sources, targets,
-        new DirectReceiver(), MessageTypes.INTEGER);
+        new DirectReceiver(), MessageTypes.INTEGER_ARRAY);
 
 
     resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
