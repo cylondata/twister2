@@ -63,6 +63,12 @@ public class BcastBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
+  protected void addSyncMessageBarrier(int source, int target, byte[] barrier) {
+    targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
+    barriers.put(target, barrier);
+  }
+
+  @Override
   protected void addMessage(Queue<Object> msgQueue, Object value) {
     msgQueue.add(value);
   }

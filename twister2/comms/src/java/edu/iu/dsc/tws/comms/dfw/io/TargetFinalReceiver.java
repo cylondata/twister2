@@ -36,6 +36,11 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   protected Map<Integer, ReceiverState> targetStates = new HashMap<>();
 
   /**
+   * The barriers for each target
+   */
+  protected Map<Integer, byte[]> barriers = new HashMap<>();
+
+  /**
    * State is cleared
    */
   protected boolean stateCleared = false;
@@ -69,6 +74,20 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   }
 
   @Override
+  protected void addSyncMessageBarrier(int source, int target, byte[] barrier) {
+    Set<Integer> sources = syncReceived.get(target);
+    sources.add(source);
+    for (int t : thisDestinations) {
+      Set<Integer> syncSources = syncReceived.get(t);
+      if (syncSources.equals(this.thisSources)) {
+        targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
+      }
+    }
+    syncState = SyncState.BARRIER_SYNC;
+    barriers.put(target, barrier);
+  }
+
+  @Override
   protected boolean canAcceptMessage(int source, int target) {
     if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
         || targetStates.get(target) == ReceiverState.SYNCED) {
@@ -88,7 +107,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
       }
 
       if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED) {
-        onSyncEvent(target);
+        onSyncEvent(target, barriers.get(target));
         targetStates.put(target, ReceiverState.SYNCED);
       }
     }

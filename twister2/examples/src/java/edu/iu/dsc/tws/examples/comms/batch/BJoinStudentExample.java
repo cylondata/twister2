@@ -91,7 +91,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
    * @param task task id
    * @param key the key of the message
    * @param data the data for this message
-   * @param flag flag that holds indicators such as END
+   * @param flag flag that holds indicators such as SYNC_EMPTY
    * @param tag Specifies which partition of the join this message belongs to
    * @return true, this method will wait till the message is accepted by the communication layer
    */
@@ -179,7 +179,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
       // Each task will only send out data for students who have a student id of (task id + 1)
       // This is done for demonstration purposes to make sure no two tasks send the same data points
       // Which would result in duplicate entries in the join results
-      int flag = MessageFlags.LAST;
+      int flag = MessageFlags.SYNC_MESSAGE;
       for (int i = 0; i < keysStudent.length; i++) {
         if (keysStudent[i] == task + 1) {
           sendMessages(task, new Integer(keysStudent[i]), names[i], flag, 0);

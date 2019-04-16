@@ -365,7 +365,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   private boolean handleFinish() {
     for (int src : pendingFinishSources) {
       if (!finishedSources.contains(src)) {
-        if (send(src, new byte[1], MessageFlags.END, 0)) {
+        if (send(src, new byte[1], MessageFlags.SYNC_EMPTY, 0)) {
           finishedSources.add(src);
         } else {
           // no point in going further

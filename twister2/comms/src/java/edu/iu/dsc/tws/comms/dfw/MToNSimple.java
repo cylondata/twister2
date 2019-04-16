@@ -380,7 +380,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
   public void finish(int source) {
     for (int dest : destinations) {
       // first we need to call finish on the partial receivers
-      while (!send(source, new byte[0], MessageFlags.END, dest)) {
+      while (!send(source, new byte[0], MessageFlags.SYNC_EMPTY, dest)) {
         // lets progress until finish
         progress();
       }

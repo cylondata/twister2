@@ -69,7 +69,7 @@ public class TeraSort extends TaskWorker {
   private static final String EDGE = "edge";
 
   private static final String TIMING_START = "START";
-  private static final String TIMING_END = "END";
+  private static final String TIMING_END = "SYNC_EMPTY";
 
   @Override
   public void execute() {
