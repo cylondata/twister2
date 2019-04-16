@@ -59,7 +59,7 @@ public class SDirectExample extends BenchWorker {
 
     // create the communication
     direct = new SDirect(communicator, taskPlan, sources, targets,
-        MessageTypes.INTEGER, new PartitionReceiver());
+        MessageTypes.INTEGER_ARRAY, new PartitionReceiver());
 
     Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 1);

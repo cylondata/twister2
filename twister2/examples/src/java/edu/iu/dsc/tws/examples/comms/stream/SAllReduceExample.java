@@ -60,8 +60,8 @@ public class SAllReduceExample extends BenchWorker {
       targets.add(i);
     }
     // create the communication
-    reduce = new SAllReduce(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
-        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER),
+    reduce = new SAllReduce(communicator, taskPlan, sources, targets, MessageTypes.INTEGER_ARRAY,
+        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver());
 
 

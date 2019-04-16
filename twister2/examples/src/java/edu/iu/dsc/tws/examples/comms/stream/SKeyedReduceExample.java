@@ -59,8 +59,8 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
     }
 
     keyedReduce = new SKeyedReduce(communicator, taskPlan, sources, targets,
-        MessageTypes.OBJECT, MessageTypes.OBJECT,
-        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER),
+        MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
+        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver(jobParameters.getIterations()), new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,

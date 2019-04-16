@@ -59,7 +59,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
 
     // create the communication
     partition = new SKeyedPartition(communicator, taskPlan, sources, targets,
-        MessageTypes.INTEGER, MessageTypes.INTEGER,
+        MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
         new PartitionReceiver(), new HashingSelector());
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,

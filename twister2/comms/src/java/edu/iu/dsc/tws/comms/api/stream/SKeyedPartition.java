@@ -48,8 +48,8 @@ public class SKeyedPartition {
    * @param dataType data type
    */
   public SKeyedPartition(Communicator comm, TaskPlan plan,
-                         Set<Integer> sources, Set<Integer> targets, MessageType dataType,
-                         MessageType keyType, SingularReceiver rcvr,
+                         Set<Integer> sources, Set<Integer> targets,
+                         MessageType keyType, MessageType dataType, SingularReceiver rcvr,
                          DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
     this.partition = new MToNSimple(comm.getChannel(), sources, targets,
@@ -82,6 +82,7 @@ public class SKeyedPartition {
 
   /**
    * Indicate the end of the communication
+   *
    * @param src the source that is ending
    */
   public void finish(int src) {
@@ -99,6 +100,7 @@ public class SKeyedPartition {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
