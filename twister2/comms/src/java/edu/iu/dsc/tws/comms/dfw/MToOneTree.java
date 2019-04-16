@@ -383,7 +383,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-    while (!send(source, new byte[0], MessageFlags.END)) {
+    while (!send(source, new byte[0], MessageFlags.SYNC_EMPTY)) {
       // lets progress until finish
       progress();
     }

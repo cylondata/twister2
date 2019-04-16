@@ -43,6 +43,11 @@ public class TargetPartialReceiver extends TargetReceiver {
   protected Map<Integer, List<Object>> readyToSend = new HashMap<>();
 
   /**
+   * The barriers for each source
+   */
+  protected Map<Integer, byte[]> barriers = new HashMap<>();
+
+  /**
    * State is cleared
    */
   protected boolean stateCleared = false;
@@ -112,6 +117,13 @@ public class TargetPartialReceiver extends TargetReceiver {
   }
 
   @Override
+  protected void addSyncMessageBarrier(int source, int target, byte[] barrier) {
+    sourceStates.put(source, ReceiverState.ALL_SYNCS_RECEIVED);
+    syncState = SyncState.BARRIER_SYNC;
+    barriers.put(source, barrier);
+  }
+
+  @Override
   protected boolean canAcceptMessage(int source, int target) {
     if (sourceStates.get(source) == ReceiverState.ALL_SYNCS_RECEIVED
         || sourceStates.get(target) == ReceiverState.SYNCED) {
@@ -146,7 +158,18 @@ public class TargetPartialReceiver extends TargetReceiver {
         Set<Integer> finishedDestPerSource = syncSent.get(source);
         for (int dest : thisDestinations) {
           if (!finishedDestPerSource.contains(dest)) {
-            if (operation.sendPartial(source, new Byte[1], MessageFlags.END, dest)) {
+
+            byte[] message;
+            int flags;
+            if (syncState == SyncState.SYNC) {
+              flags = MessageFlags.SYNC_EMPTY;
+              message = new byte[1];
+            } else {
+              flags = MessageFlags.SYNC_BARRIER;
+              message = barriers.get(source);
+            }
+
+            if (operation.sendPartial(source, message, flags, dest)) {
               finishedDestPerSource.add(dest);
 
               if (finishedDestPerSource.size() == thisDestinations.size()) {

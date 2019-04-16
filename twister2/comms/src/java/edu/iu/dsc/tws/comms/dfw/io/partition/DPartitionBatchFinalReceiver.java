@@ -160,7 +160,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       throw new RuntimeException("Un-expected target id: " + target);
     }
 
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
+    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
       Set<Integer> finished = finishedSources.get(target);
       if (finished.contains(source)) {
         LOG.log(Level.WARNING,

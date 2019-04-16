@@ -16,8 +16,8 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
+import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 
 public class AllGatherStreamingFinalReceiver extends GatherStreamingPartialReceiver {
@@ -39,11 +39,7 @@ public class AllGatherStreamingFinalReceiver extends GatherStreamingPartialRecei
 
   @Override
   protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
-    if (broadcast.send(target, new byte[0], MessageFlags.END)) {
-      isSyncSent.put(target, true);
-    } else {
-      return true;
-    }
-    return needsFurtherProgress;
+    return DFWIOUtils.sendFinalSyncForward(needsFurtherProgress, target, syncState,
+        barriers, broadcast, isSyncSent);
   }
 }

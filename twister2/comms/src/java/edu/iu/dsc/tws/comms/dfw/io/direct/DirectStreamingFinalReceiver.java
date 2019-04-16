@@ -50,6 +50,14 @@ public class DirectStreamingFinalReceiver extends TargetFinalReceiver {
     targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
   }
 
+  @Override
+  protected void addSyncMessageBarrier(int source, int target, byte[] barrier) {
+    Set<Integer> sources = syncReceived.get(target);
+    sources.add(source);
+    targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
+    barriers.put(target, barrier);
+  }
+
   /**
    * Swap the messages to the ready queue
    * @param dest the target

@@ -87,6 +87,11 @@ public abstract class TargetReceiver implements MessageReceiver {
    */
   protected Set<Integer> thisDestinations;
 
+  /**
+   * The sync state
+   */
+  protected SyncState syncState = SyncState.SYNC;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     workerId = op.getTaskPlan().getThisExecutor();
@@ -104,8 +109,11 @@ public abstract class TargetReceiver implements MessageReceiver {
         representSourceSet = true;
       }
 
-      if ((flags & MessageFlags.END) == MessageFlags.END) {
+      if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
         addSyncMessage(source, target);
+        return true;
+      }  else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+        addSyncMessageBarrier(source, target, (byte[]) object);
         return true;
       }
 
@@ -126,7 +134,7 @@ public abstract class TargetReceiver implements MessageReceiver {
         merge(target, msgQueue);
       }
 
-      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
+      if ((flags & MessageFlags.SYNC_MESSAGE) == MessageFlags.SYNC_MESSAGE) {
         addSyncMessage(source, target);
       }
 
@@ -150,6 +158,14 @@ public abstract class TargetReceiver implements MessageReceiver {
    * @param target target
    */
   protected abstract void addSyncMessage(int source, int target);
+
+  /**
+   * Add a sync message
+   * @param source source
+   * @param target target
+   * @param barrier the barrier message
+   */
+  protected abstract void addSyncMessageBarrier(int source, int target, byte[] barrier);
 
   /**
    * Check weather we can accept a message

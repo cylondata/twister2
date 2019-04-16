@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce;
 
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 
 public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
 
@@ -29,11 +29,7 @@ public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {
 
   @Override
   protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
-    if (operation.sendPartial(target, new byte[0], MessageFlags.END, destination)) {
-      isSyncSent.put(target, true);
-    } else {
-      return true;
-    }
-    return needsFurtherProgress;
+    return DFWIOUtils.sendSyncForward(needsFurtherProgress, target, syncState,
+        barriers, operation, isSyncSent);
   }
 }
