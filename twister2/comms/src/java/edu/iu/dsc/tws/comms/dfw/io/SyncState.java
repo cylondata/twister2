@@ -9,15 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.api;
+package edu.iu.dsc.tws.comms.dfw.io;
 
-public final class MessageFlags {
-  private MessageFlags() {
-  }
-
-  public static final int SYNC_MESSAGE = 1 << 30;
-  public static final int ORIGIN_SENDER = 1 << 28;
-  public static final int ORIGIN_PARTIAL = 1 << 27;
-  public static final int SYNC_EMPTY = 1 << 26;
-  public static final int SYNC_BARRIER = 1 << 25;
+public enum SyncState {
+  SYNC,
+  BARRIER_SYNC
 }

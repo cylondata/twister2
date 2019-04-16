@@ -40,7 +40,7 @@ public class ReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
 
   @Override
   protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
-    onSyncEvent(target);
+    onSyncEvent(target, barriers.get(target));
     return needsFurtherProgress;
   }
 }

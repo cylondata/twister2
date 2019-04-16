@@ -60,6 +60,10 @@ public abstract class SourceReceiver implements MessageReceiver {
    * Keep weather we have received a sync from a source
    */
   protected Map<Integer, Set<Integer>> syncReceived = new HashMap<>();
+
+  /**
+   * Number of sources per target
+   */
   protected Map<Integer, Integer> sourcesOfTarget = new HashMap<>();
 
   /**
@@ -71,6 +75,16 @@ public abstract class SourceReceiver implements MessageReceiver {
    * Keep state about the targets
    */
   protected Map<Integer, ReceiverState> targetStates = new HashMap<>();
+
+  /**
+   * The barriers for each target
+   */
+  protected Map<Integer, byte[]> barriers = new HashMap<>();
+
+  /**
+   * The sync state
+   */
+  protected SyncState syncState = SyncState.SYNC;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -96,11 +110,22 @@ public abstract class SourceReceiver implements MessageReceiver {
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
     Set<Integer> syncsPerTarget = syncReceived.get(target);
 
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
+    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
+      if (syncState == SyncState.BARRIER_SYNC) {
+        throw new RuntimeException("We are receiving barriers syncs and received a normal sycn");
+      }
       syncsPerTarget.add(source);
       if (allSyncsPresent(target)) {
         targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
       }
+      return true;
+    } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+      syncsPerTarget.add(source);
+      if (allSyncsPresent(target)) {
+        targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
+      }
+      syncState = SyncState.BARRIER_SYNC;
+      barriers.put(target, (byte[]) object);
       return true;
     }
 
@@ -119,7 +144,7 @@ public abstract class SourceReceiver implements MessageReceiver {
       }
 
       msgQueue.add(object);
-      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
+      if ((flags & MessageFlags.SYNC_MESSAGE) == MessageFlags.SYNC_MESSAGE) {
         syncsPerTarget.add(source);
         if (allSyncsPresent(target)) {
           targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
@@ -179,7 +204,7 @@ public abstract class SourceReceiver implements MessageReceiver {
           if (!needsFurtherProgress) {
             targetStates.put(target, ReceiverState.SYNCED);
             // at this point we call the sync event
-            onSyncEvent(target);
+            onSyncEvent(target, barriers.get(target));
             clearTarget(target);
           }
         }
@@ -218,7 +243,7 @@ public abstract class SourceReceiver implements MessageReceiver {
       mEntry.getValue().clear();
     }
     isSyncSent.put(target, false);
-
+    syncState = SyncState.SYNC;
     syncReceived.forEach((k, v) -> v.clear());
   }
 

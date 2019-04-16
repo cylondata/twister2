@@ -79,6 +79,12 @@ public class BcastStreamingFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
+  protected void addSyncMessageBarrier(int source, int target, byte[] barrier) {
+    targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
+    barriers.put(target, barrier);
+  }
+
+  @Override
   protected boolean sendToTarget(int source, int target) {
     Queue<Object> values = readyToSend.get(target);
 

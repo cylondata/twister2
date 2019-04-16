@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.gather;
 
-import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 
 public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
   public GatherBatchPartialReceiver(int target) {
@@ -19,13 +19,8 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
 
   @Override
   protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
-    if (operation.sendPartial(target, new byte[0], MessageFlags.END, destination)) {
-      LOG.info(String.format("Sent sync forward %d", target));
-      isSyncSent.put(target, true);
-    } else {
-      return true;
-    }
-    return needsFurtherProgress;
+    return DFWIOUtils.sendSyncForward(needsFurtherProgress, target, syncState,
+        barriers, operation, isSyncSent);
   }
 
   @Override

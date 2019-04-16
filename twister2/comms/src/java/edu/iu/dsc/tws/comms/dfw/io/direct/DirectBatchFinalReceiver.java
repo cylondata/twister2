@@ -48,6 +48,14 @@ public class DirectBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
+  protected void addSyncMessageBarrier(int source, int target, byte[] barrier) {
+    Set<Integer> sources = syncReceived.get(target);
+    sources.add(source);
+    targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
+    barriers.put(target, barrier);
+  }
+
+  @Override
   protected void merge(int dest, Queue<Object> dests) {
     if (!readyToSend.containsKey(dest)) {
       readyToSend.put(dest, new AggregatedObjects<>(dests));

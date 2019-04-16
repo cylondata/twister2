@@ -266,7 +266,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     for (int source : pendingFinishSources) {
       if (!finishedSources.contains(source)) {
         int dest = sourcesToDestinations.get(source);
-        if (send(source, new byte[1], MessageFlags.END, dest)) {
+        if (send(source, new byte[1], MessageFlags.SYNC_EMPTY, dest)) {
           finishedSources.add(source);
         } else {
           // no point in going further

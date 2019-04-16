@@ -12,9 +12,11 @@
 package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.nio.ByteBuffer;
+import java.util.Map;
 import java.util.UUID;
 
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
@@ -77,6 +79,50 @@ public final class DFWIOUtils {
     byteBuffer.putInt(noOfMessages);
     // lets set the size for 16 for now
     buffer.setSize(HEADER_SIZE);
+  }
+
+  public static boolean sendSyncForward(boolean needsFurtherProgress, int target,
+                                        SyncState syncState, Map<Integer, byte[]> barriers,
+                                        DataFlowOperation operation,
+                                        Map<Integer, Boolean> isSyncSent) {
+    byte[] message;
+    int flags;
+    if (syncState == SyncState.SYNC) {
+      flags = MessageFlags.SYNC_EMPTY;
+      message = new byte[1];
+    } else {
+      flags = MessageFlags.SYNC_BARRIER;
+      message = barriers.get(target);
+    }
+
+    if (operation.sendPartial(target, message, flags)) {
+      isSyncSent.put(target, true);
+    } else {
+      return true;
+    }
+    return needsFurtherProgress;
+  }
+
+  public static boolean sendFinalSyncForward(boolean needsFurtherProgress, int target,
+                                        SyncState syncState, Map<Integer, byte[]> barriers,
+                                        DataFlowOperation operation,
+                                        Map<Integer, Boolean> isSyncSent) {
+    byte[] message;
+    int flags;
+    if (syncState == SyncState.SYNC) {
+      flags = MessageFlags.SYNC_EMPTY;
+      message = new byte[1];
+    } else {
+      flags = MessageFlags.SYNC_BARRIER;
+      message = barriers.get(target);
+    }
+
+    if (operation.send(target, message, flags)) {
+      isSyncSent.put(target, true);
+    } else {
+      return true;
+    }
+    return needsFurtherProgress;
   }
 }
 

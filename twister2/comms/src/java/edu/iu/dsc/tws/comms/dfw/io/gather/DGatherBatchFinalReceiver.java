@@ -115,7 +115,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
     boolean canAdd = true;
     Queue<Object> m = messages.get(target).get(source);
     Map<Integer, Boolean> finishedMessages = finished.get(target);
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
+    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
       finishedMessages.put(source, true);
       return true;
     }
@@ -123,7 +123,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
       canAdd = false;
     } else {
       m.add(object);
-      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
+      if ((flags & MessageFlags.SYNC_MESSAGE) == MessageFlags.SYNC_MESSAGE) {
         finishedMessages.put(source, true);
       }
     }

@@ -84,7 +84,7 @@ public abstract class BaseSerializer implements MessageSerializer {
           DFWIOUtils.buildHeader(buffer, sendMessage, ((List) data).size());
           buildHeader(sendMessage, channelMessage, ((List) data).size());
         } else {
-          if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
+          if ((sendMessage.getFlags() & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
             sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
             // we set the number of messages to 0, only header will be sent
             DFWIOUtils.buildHeader(buffer, sendMessage, 0);

@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.allgather;
 
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
+import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.gather.BaseGatherBatchReceiver;
 
 public class AllGatherBatchFinalReceiver extends BaseGatherBatchReceiver {
@@ -24,12 +24,8 @@ public class AllGatherBatchFinalReceiver extends BaseGatherBatchReceiver {
 
   @Override
   protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
-    if (gatherReceiver.send(target, new byte[0], MessageFlags.END)) {
-      isSyncSent.put(target, true);
-    } else {
-      return true;
-    }
-    return needsFurtherProgress;
+    return DFWIOUtils.sendFinalSyncForward(needsFurtherProgress, target, syncState,
+        barriers, gatherReceiver, isSyncSent);
   }
 
   @Override

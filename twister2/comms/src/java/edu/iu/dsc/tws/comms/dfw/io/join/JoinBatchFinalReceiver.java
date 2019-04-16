@@ -155,7 +155,7 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
 
     try {
       Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(target);
-      if ((flags & MessageFlags.END) == MessageFlags.END) {
+      if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
         if (onFinishedSrcsTarget.contains(source)) {
           LOG.log(Level.WARNING,
               String.format("%d Duplicate finish from source id %d", this.thisWorker, source));

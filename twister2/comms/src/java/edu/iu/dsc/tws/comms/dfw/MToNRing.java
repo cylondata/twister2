@@ -348,7 +348,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean send(int source, Object message, int flags, int target) {
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
+    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
       swapLock.lock();
       try {
         for (Map.Entry<Integer, List<Object>> e : merged.entrySet()) {
@@ -359,7 +359,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       }
 
       onFinishedSources.add(source);
-    } else if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
+    } else if ((flags & MessageFlags.SYNC_MESSAGE) == MessageFlags.SYNC_MESSAGE) {
       onFinishedSources.add(source);
     }
 
@@ -375,7 +375,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
   public boolean sendPartial(int source, Object message, int flags, int target) {
     swapLock.lock();
     try {
-      if ((flags & MessageFlags.END) == MessageFlags.END) {
+      if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
         onFinishedSources.add(source);
         return true;
       }
@@ -440,7 +440,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
           for (int dest : targets) {
             if (!finishedDestPerSource.contains(dest)) {
               if (delegate.sendMessage(source, new byte[1], dest,
-                  MessageFlags.END, targetRoutes.get(dest))) {
+                  MessageFlags.SYNC_EMPTY, targetRoutes.get(dest))) {
                 finishedDestPerSource.add(dest);
               } else {
                 // no point in going further
@@ -574,7 +574,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
     Set<Integer> targetsOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(taskPlan, targets);
     for (int dest : targetsOfThisWorker) {
       // first we need to call finish on the partial receivers
-      while (!send(source, new int[0], MessageFlags.END, dest)) {
+      while (!send(source, new int[0], MessageFlags.SYNC_EMPTY, dest)) {
         // lets progress until finish
         progress();
       }
