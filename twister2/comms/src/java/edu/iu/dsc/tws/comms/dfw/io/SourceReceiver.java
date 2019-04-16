@@ -83,8 +83,8 @@ public abstract class SourceReceiver implements MessageReceiver {
 
       for (int task : e.getValue()) {
         messagesPerTask.put(task, new ArrayBlockingQueue<>(sendPendingMax));
-        syncReceived.put(task, new HashSet<>());
       }
+      syncReceived.put(e.getKey(), new HashSet<>());
       messages.put(e.getKey(), messagesPerTask);
       isSyncSent.put(e.getKey(), false);
       sourcesOfTarget.put(e.getKey(), e.getValue().size());
@@ -219,7 +219,7 @@ public abstract class SourceReceiver implements MessageReceiver {
     }
     isSyncSent.put(target, false);
 
-    syncReceived.clear();
+    syncReceived.forEach((k, v) -> v.clear());
   }
 
   /**

@@ -63,7 +63,7 @@ public class BAllGatherExample extends BenchWorker {
     }
     // create the communication
     gather = new BAllGather(communicator, taskPlan, sources, targets, new FinalSingularReceiver(),
-        MessageTypes.INTEGER);
+        MessageTypes.INTEGER_ARRAY);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
