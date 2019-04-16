@@ -59,7 +59,7 @@ public class BBroadcastExample extends BenchWorker {
 
     // create the communication
     bcast = new BBroadcast(communicator, taskPlan, source, targets,
-        new BCastReceiver(), MessageTypes.INTEGER);
+        new BCastReceiver(), MessageTypes.INTEGER_ARRAY);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
