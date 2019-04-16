@@ -34,8 +34,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -87,7 +87,7 @@ public final class JobUtils {
     StringBuilder classPathBuilder = new StringBuilder();
 //    LOG.log(Level.INFO, "Job type: " + job.getJobFormat().getType());
 //    if (job.getJobFormat().getType() == JobAPI.JobFormatType.SHUFFLE) {
-      // Bundled jar
+    // Bundled jar
     classPathBuilder.append(
         Paths.get(wd, job.getJobName(), job.getJobFormat().getJobFile()).toString());
 //    }
@@ -122,7 +122,7 @@ public final class JobUtils {
 
   /**
    * [Deprecated Function]
-   * **/
+   **/
  /* public static Config overrideConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
     JobAPI.Config conf = job.getConfig();
@@ -131,7 +131,6 @@ public final class JobUtils {
     }
     return builder.build();
   }*/
-
   public static Config overrideConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
     JobAPI.Config conf = job.getConfig();
@@ -157,9 +156,6 @@ public final class JobUtils {
 
   /**
    * write the values from Job object to config object
-   * @param job
-   * @param config
-   * @return
    */
   public static Config updateConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
@@ -174,12 +170,9 @@ public final class JobUtils {
   /**
    * return the ComputeResource with the given index
    * if not found, return null
-   * @param job
-   * @param index
-   * @return
    */
   public static JobAPI.ComputeResource getComputeResource(JobAPI.Job job, int index) {
-    for (JobAPI.ComputeResource computeResource: job.getComputeResourceList()) {
+    for (JobAPI.ComputeResource computeResource : job.getComputeResourceList()) {
       if (computeResource.getIndex() == index) {
         return computeResource;
       }
@@ -193,7 +186,7 @@ public final class JobUtils {
         + "[numberOfWorkers=" + job.getNumberOfWorkers() + "]"
         + "\n[workerClass=" + job.getWorkerClassName() + "]";
 
-    for (JobAPI.ComputeResource cr: job.getComputeResourceList()) {
+    for (JobAPI.ComputeResource cr : job.getComputeResourceList()) {
       jobStr += "\n" + ComputeResourceUtils.toString(cr);
     }
 

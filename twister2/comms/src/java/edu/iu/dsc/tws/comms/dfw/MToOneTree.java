@@ -28,6 +28,7 @@ import com.google.common.collect.Table;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -35,14 +36,13 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
@@ -283,10 +283,10 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       if (isKeyed) {
-        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(), workerId,
+        serializerMap.put(s, new KeyedSerializer(new KryoSerializer(), workerId,
             keyType, dataType));
       } else {
-        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), workerId, dataType));
+        serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(), workerId, dataType));
       }
     }
 
@@ -304,10 +304,10 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
-        deSerializerMap.put(e, new UnifiedKeyDeSerializer(new KryoSerializer(),
+        deSerializerMap.put(e, new KeyedDeSerializer(new KryoSerializer(),
             workerId, keyType, dataType));
       } else {
-        deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(), workerId, dataType));
+        deSerializerMap.put(e, new AKeyedDeserializer(workerId, dataType));
       }
     }
 
@@ -383,7 +383,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-    while (!send(source, new byte[0], MessageFlags.END)) {
+    while (!send(source, new byte[0], MessageFlags.SYNC_EMPTY)) {
       // lets progress until finish
       progress();
     }

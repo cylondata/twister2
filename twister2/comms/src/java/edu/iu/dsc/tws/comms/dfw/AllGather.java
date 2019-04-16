@@ -11,10 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,11 +20,14 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.allgather.AllGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.allgather.AllGatherStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.allgather.BcastGatheStreamingReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.allgather.BcastGatherBatchReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 
@@ -82,8 +81,14 @@ public class AllGather implements DataFlowOperation {
   public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
     this.executor = instancePlan.getThisExecutor();
     this.dataType = type;
+    MessageReceiver finalRcvr;
+    if (streaming) {
+      finalRcvr = new BcastGatheStreamingReceiver(finalReceiver);
+    } else {
+      finalRcvr = new BcastGatherBatchReceiver(finalReceiver);
+    }
     broadcast = new TreeBroadcast(channel, middleTask,
-        destinations, new BCastReceiver(finalReceiver, streaming), MessageType.INTEGER, type);
+        destinations, finalRcvr, MessageTypes.INTEGER, type);
     broadcast.init(config, type, instancePlan, broadCastEdge);
 
     MessageReceiver partialReceiver;
@@ -98,7 +103,7 @@ public class AllGather implements DataFlowOperation {
 
     gather = new MToOneTree(channel, sources, middleTask,
         finalRecvr, partialReceiver, 0, 0, true,
-        MessageType.INTEGER, type);
+        MessageTypes.INTEGER, type);
     gather.init(config, type, instancePlan, gatherEdge);
   }
 
@@ -109,7 +114,7 @@ public class AllGather implements DataFlowOperation {
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    Tuple tuple = new Tuple(source, message, MessageType.INTEGER, dataType);
+    Tuple tuple = new Tuple(source, message, MessageTypes.INTEGER, dataType);
     return gather.send(source, tuple, flags);
   }
 
@@ -169,53 +174,5 @@ public class AllGather implements DataFlowOperation {
   @Override
   public String getUniqueId() {
     return String.valueOf(gatherEdge);
-  }
-
-  @SuppressWarnings("unchecked")
-  private static class BCastReceiver implements MessageReceiver {
-    private BulkReceiver bulkReceiver;
-
-    private Map<Integer, Boolean> finished = new HashMap<>();
-
-    private boolean strm;
-
-    BCastReceiver(BulkReceiver reduceRcvr, boolean stm) {
-      this.bulkReceiver = reduceRcvr;
-      this.strm = stm;
-    }
-
-    @Override
-    public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-      this.bulkReceiver.init(cfg, expectedIds.keySet());
-      for (int i : expectedIds.keySet()) {
-        finished.put(i, false);
-      }
-    }
-
-    @Override
-    public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      if (object instanceof List) {
-        boolean rcvd = bulkReceiver.receive(target, (Iterator<Object>) ((List) object).iterator());
-        if (rcvd) {
-          finished.put(target, true);
-        }
-        return rcvd;
-      }
-      return false;
-    }
-
-    @Override
-    public boolean progress() {
-      if (strm) {
-        return false;
-      } else {
-        for (Boolean b : finished.values()) {
-          if (!b) {
-            return true;
-          }
-        }
-        return false;
-      }
-    }
   }
 }

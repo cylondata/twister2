@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.dfw.io.allreduce;
 
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
+import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingReceiver;
 
 public class AllReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
@@ -27,5 +28,11 @@ public class AllReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
   @Override
   public boolean handleMessage(int source, Object message, int flags, int dest) {
     return bcast.send(source, message, 0);
+  }
+
+  @Override
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    return DFWIOUtils.sendFinalSyncForward(needsFurtherProgress, target, syncState,
+        barriers, bcast, isSyncSent);
   }
 }

@@ -126,7 +126,7 @@ public class RoundRobinTaskSchedulerTest {
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", ts, parallel);
     ComputeConnection c = builder.addSink("sink", testSink, 1);
-    c.reduce("source", "edge", Op.SUM, DataType.INTEGER);
+    c.reduce("source", "edge", Op.SUM, DataType.INTEGER_ARRAY);
     builder.setMode(OperationMode.STREAMING);
     return builder.build();
   }

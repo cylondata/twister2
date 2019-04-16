@@ -25,7 +25,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BJoin;
 import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
@@ -70,8 +70,8 @@ public class BJoinStudentExample extends KeyedBenchWorker {
     }
 
     // create the join communication
-    join = new BJoin(communicator, taskPlan, sources, targets, MessageType.INTEGER,
-        MessageType.OBJECT, new JoinReceiver(), new SimpleKeyBasedSelector(), false);
+    join = new BJoin(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
+        MessageTypes.OBJECT, new JoinReceiver(), new SimpleKeyBasedSelector(), false);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -91,7 +91,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
    * @param task task id
    * @param key the key of the message
    * @param data the data for this message
-   * @param flag flag that holds indicators such as END
+   * @param flag flag that holds indicators such as SYNC_EMPTY
    * @param tag Specifies which partition of the join this message belongs to
    * @return true, this method will wait till the message is accepted by the communication layer
    */
@@ -179,7 +179,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
       // Each task will only send out data for students who have a student id of (task id + 1)
       // This is done for demonstration purposes to make sure no two tasks send the same data points
       // Which would result in duplicate entries in the join results
-      int flag = MessageFlags.LAST;
+      int flag = MessageFlags.SYNC_MESSAGE;
       for (int i = 0; i < keysStudent.length; i++) {
         if (keysStudent[i] == task + 1) {
           sendMessages(task, new Integer(keysStudent[i]), names[i], flag, 0);

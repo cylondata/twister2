@@ -25,9 +25,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class FSKeyedMergerTest {
@@ -50,7 +50,7 @@ public class FSKeyedMergerTest {
   @Before
   public void before() throws Exception {
     fsMerger = new FSKeyedMerger(1000, 100, "/tmp",
-        "fskeyedmerger", MessageType.INTEGER, MessageType.OBJECT);
+        "fskeyedmerger", MessageTypes.INTEGER, MessageTypes.OBJECT);
     random = new Random();
     serializer = new KryoSerializer();
   }

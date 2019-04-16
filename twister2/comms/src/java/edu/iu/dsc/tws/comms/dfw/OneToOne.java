@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -33,12 +34,11 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.DirectRouter;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 /**
@@ -189,12 +189,12 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
           DataFlowContext.sendPendingMax(config)));
       pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
-      serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(),
+      serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(),
           taskPlan.getThisExecutor(), type));
     }
 
     for (int tar : targets) {
-      MessageDeSerializer messageDeSerializer = new UnifiedDeserializer(new KryoSerializer(),
+      MessageDeSerializer messageDeSerializer = new AKeyedDeserializer(
           taskPlan.getThisExecutor(), type);
       deSerializerMap.put(tar, messageDeSerializer);
     }
@@ -266,7 +266,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     for (int source : pendingFinishSources) {
       if (!finishedSources.contains(source)) {
         int dest = sourcesToDestinations.get(source);
-        if (send(source, new byte[1], MessageFlags.END, dest)) {
+        if (send(source, new byte[1], MessageFlags.SYNC_EMPTY, dest)) {
           finishedSources.add(source);
         } else {
           // no point in going further

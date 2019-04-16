@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -35,18 +36,18 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class MToNRing implements DataFlowOperation, ChannelReceiver {
+
   private static final Logger LOG = Logger.getLogger(MToNRing.class.getName());
 
   /**
@@ -172,7 +173,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
   /**
    * Sources of this worker
    */
-  private Set<Integer> thisWorkerSources = new HashSet<>();
+  private Set<Integer> thisWorkerSources;
 
   /**
    * Create a ring partition communication
@@ -273,10 +274,10 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(cfg)));
       if (isKeyed) {
-        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(), thisWorker,
+        serializerMap.put(s, new KeyedSerializer(new KryoSerializer(), thisWorker,
             keyType, dataType));
       } else {
-        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), thisWorker, dataType));
+        serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(), thisWorker, dataType));
       }
     }
 
@@ -290,11 +291,10 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
-        deSerializerMap.put(ex, new UnifiedKeyDeSerializer(new KryoSerializer(),
+        deSerializerMap.put(ex, new KeyedDeSerializer(new KryoSerializer(),
             thisWorker, keyType, dataType));
       } else {
-        deSerializerMap.put(ex, new UnifiedDeserializer(
-            new KryoSerializer(), thisWorker, dataType));
+        deSerializerMap.put(ex, new AKeyedDeserializer(thisWorker, dataType));
       }
     }
     // create the delegate
@@ -348,7 +348,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean send(int source, Object message, int flags, int target) {
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
+    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
       swapLock.lock();
       try {
         for (Map.Entry<Integer, List<Object>> e : merged.entrySet()) {
@@ -359,7 +359,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       }
 
       onFinishedSources.add(source);
-    } else if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
+    } else if ((flags & MessageFlags.SYNC_MESSAGE) == MessageFlags.SYNC_MESSAGE) {
       onFinishedSources.add(source);
     }
 
@@ -375,7 +375,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
   public boolean sendPartial(int source, Object message, int flags, int target) {
     swapLock.lock();
     try {
-      if ((flags & MessageFlags.END) == MessageFlags.END) {
+      if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
         onFinishedSources.add(source);
         return true;
       }
@@ -440,7 +440,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
           for (int dest : targets) {
             if (!finishedDestPerSource.contains(dest)) {
               if (delegate.sendMessage(source, new byte[1], dest,
-                  MessageFlags.END, targetRoutes.get(dest))) {
+                  MessageFlags.SYNC_EMPTY, targetRoutes.get(dest))) {
                 finishedDestPerSource.add(dest);
               } else {
                 // no point in going further
@@ -574,7 +574,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
     Set<Integer> targetsOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(taskPlan, targets);
     for (int dest : targetsOfThisWorker) {
       // first we need to call finish on the partial receivers
-      while (!send(source, new int[0], MessageFlags.END, dest)) {
+      while (!send(source, new int[0], MessageFlags.SYNC_EMPTY, dest)) {
         // lets progress until finish
         progress();
       }

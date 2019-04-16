@@ -51,8 +51,9 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BKeyedPartition(newComm, taskPlan, srcs, dests,
+        Utils.dataTypeToMessageType(edge.getKeyType()),
         Utils.dataTypeToMessageType(edge.getDataType()),
-        Utils.dataTypeToMessageType(edge.getKeyType()), new PartitionReceiver(), destSelector);
+        new PartitionReceiver(), destSelector);
     communicationEdge = e.generate(edge.getName());
   }
 

@@ -24,11 +24,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -36,14 +36,13 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeyDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedKeySerializer;
-import edu.iu.dsc.tws.comms.dfw.io.UnifiedSerializer;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
@@ -208,10 +207,6 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
   /**
    * Initialize
-   * @param cfg
-   * @param t
-   * @param tPlan
-   * @param ed
    */
   public void init(Config cfg, MessageType t, TaskPlan tPlan, int ed) {
     this.config = cfg;
@@ -248,9 +243,9 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       if (keyType == null) {
-        serializerMap.put(s, new UnifiedSerializer(new KryoSerializer(), executor, type));
+        serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(), executor, type));
       } else {
-        serializerMap.put(s, new UnifiedKeySerializer(new KryoSerializer(),
+        serializerMap.put(s, new KeyedSerializer(new KryoSerializer(),
             executor, keyType, type));
       }
     }
@@ -269,10 +264,9 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
       if (keyType == null) {
-        deSerializerMap.put(e, new UnifiedDeserializer(new KryoSerializer(),
-            executor, type));
+        deSerializerMap.put(e, new AKeyedDeserializer(executor, type));
       } else {
-        deSerializerMap.put(e, new UnifiedKeyDeSerializer(new KryoSerializer(),
+        deSerializerMap.put(e, new KeyedDeSerializer(new KryoSerializer(),
             executor, keyType, type));
       }
     }
@@ -371,7 +365,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   private boolean handleFinish() {
     for (int src : pendingFinishSources) {
       if (!finishedSources.contains(src)) {
-        if (send(src, new byte[1], MessageFlags.END, 0)) {
+        if (send(src, new byte[1], MessageFlags.SYNC_EMPTY, 0)) {
           finishedSources.add(src);
         } else {
           // no point in going further
