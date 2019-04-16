@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.keyed.KPartitionStreamingFinalReceiver;
@@ -30,7 +30,7 @@ public class SKeyedPartition {
   /**
    * The actual operation
    */
-  private DataFlowPartition partition;
+  private MToNSimple partition;
 
   /**
    * Destination selector
@@ -52,7 +52,7 @@ public class SKeyedPartition {
                          MessageType keyType, SingularReceiver rcvr,
                          DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
-    this.partition = new DataFlowPartition(comm.getChannel(), sources, targets,
+    this.partition = new MToNSimple(comm.getChannel(), sources, targets,
         new KPartitionStreamingFinalReceiver(rcvr), new PartitionStreamingPartialReceiver(),
         dataType, keyType);
 

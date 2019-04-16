@@ -45,8 +45,8 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
  * A direct data flow operation sends peer to peer messages, the messages are between one source
  * and another task
  */
-public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
-  private static final Logger LOG = Logger.getLogger(DataFlowDirect.class.getName());
+public class OneToOne implements DataFlowOperation, ChannelReceiver {
+  private static final Logger LOG = Logger.getLogger(OneToOne.class.getName());
 
   /**
    * The sources of the operation
@@ -127,10 +127,10 @@ public class DataFlowDirect implements DataFlowOperation, ChannelReceiver {
   private Map<Integer, Integer> sourcesToDestinations = new HashMap<>();
 
 
-  public DataFlowDirect(TWSChannel channel,
-                        List<Integer> src, List<Integer> target,
-                        MessageReceiver finalRcvr, Config cfg, MessageType t,
-                        TaskPlan plan, int edge) {
+  public OneToOne(TWSChannel channel,
+                  List<Integer> src, List<Integer> target,
+                  MessageReceiver finalRcvr, Config cfg, MessageType t,
+                  TaskPlan plan, int edge) {
     this.sources = src;
     this.targets = target;
     this.finalReceiver = finalRcvr;

@@ -19,14 +19,14 @@ import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 
 public class BKeyedPartition {
-  private DataFlowPartition partition;
+  private MToNSimple partition;
 
   private DestinationSelector destinationSelector;
 
@@ -35,7 +35,7 @@ public class BKeyedPartition {
                          MessageType dataType, MessageType keyType,
                          BulkReceiver rcvr, DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
-    this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
+    this.partition = new MToNSimple(comm.getChannel(), sources, destinations,
         new PartitionBatchFinalReceiver(rcvr),
         new PartitionPartialReceiver(), dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
@@ -49,7 +49,7 @@ public class BKeyedPartition {
     this.destinationSelector = destSelector;
     String shuffleDir = comm.getPersistentDirectory();
     int e = comm.nextEdge();
-    this.partition = new DataFlowPartition(comm.getConfig(), comm.getChannel(), plan,
+    this.partition = new MToNSimple(comm.getConfig(), comm.getChannel(), plan,
         sources, destinations,
         new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
         new PartitionPartialReceiver(), dataType, MessageType.BYTE, keyType,

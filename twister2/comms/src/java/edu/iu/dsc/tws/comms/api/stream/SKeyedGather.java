@@ -21,8 +21,8 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.RingPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNRing;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherStreamingPartialReceiver;
@@ -72,14 +72,14 @@ public class SKeyedGather {
 
     if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
         CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
-      this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
+      this.keyedGather = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, targets,
           new KGatherStreamingFinalReceiver(rcvr, 100),
           new KGatherStreamingPartialReceiver(0, 100, 1), dataType, dataType,
           keyType, keyType, comm.nextEdge());
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
-      this.keyedGather = new RingPartition(comm.getConfig(), comm.getChannel(),
+      this.keyedGather = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, new KGatherStreamingFinalReceiver(rcvr, 100),
           new KGatherStreamingPartialReceiver(0, 100, 1),
           dataType, dataType, keyType, keyType, comm.nextEdge());

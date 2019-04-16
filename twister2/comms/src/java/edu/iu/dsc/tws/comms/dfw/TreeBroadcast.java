@@ -46,8 +46,8 @@ import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
-  private static final Logger LOG = Logger.getLogger(DataFlowBroadcast.class.getName());
+public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
+  private static final Logger LOG = Logger.getLogger(TreeBroadcast.class.getName());
 
   private int source;
 
@@ -99,9 +99,9 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
    */
   private MessageType keyType;
 
-  public DataFlowBroadcast(TWSChannel channel, int src, Set<Integer> dests,
-                           MessageReceiver finalRcvr, MessageType keyType,
-                           MessageType dataType) {
+  public TreeBroadcast(TWSChannel channel, int src, Set<Integer> dests,
+                       MessageReceiver finalRcvr, MessageType keyType,
+                       MessageType dataType) {
     this.source = src;
     this.destinations = dests;
     this.finalReceiver = finalRcvr;
@@ -117,8 +117,8 @@ public class DataFlowBroadcast implements DataFlowOperation, ChannelReceiver {
     this.finishedSources = new HashSet<>();
   }
 
-  public DataFlowBroadcast(TWSChannel channel, int src, Set<Integer> dests,
-                           MessageReceiver finalRcvr) {
+  public TreeBroadcast(TWSChannel channel, int src, Set<Integer> dests,
+                       MessageReceiver finalRcvr) {
     this.source = src;
     this.destinations = dests;
     this.finalReceiver = finalRcvr;
