@@ -16,6 +16,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -39,6 +40,7 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -75,6 +77,8 @@ public class TeraSort extends TaskWorker {
 
   private static BenchmarkResultsRecorder resultsRecorder;
 
+  private static volatile AtomicInteger tasksCount = new AtomicInteger();
+
   @Override
   public void execute() {
     resultsRecorder = new BenchmarkResultsRecorder(config, workerId == 0);
@@ -88,14 +92,20 @@ public class TeraSort extends TaskWorker {
     Receiver receiver = new Receiver();
     tgb.addSink(TASK_RECV, receiver, config.getIntegerValue(ARG_TASKS_SINKS, 4))
         .keyedGather(TASK_SOURCE, EDGE,
-            DataType.BYTE, DataType.BYTE, true,
+            DataType.BYTE_ARRAY, DataType.BYTE_ARRAY, true,
             ByteArrayComparator.getInstance());
 
 
     DataFlowTaskGraph dataFlowTaskGraph = tgb.build();
     ExecutionPlan executionPlan = taskExecutor.plan(dataFlowTaskGraph);
-    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
+    IExecution iExecution = taskExecutor.iExecute(dataFlowTaskGraph, executionPlan);
+    iExecution.progress();
+    while (tasksCount.get() > 0) {
+      iExecution.progress();
+    }
     LOG.info("Stopping execution...");
+    iExecution.stop();
+    iExecution.close();
   }
 
   /**
@@ -132,6 +142,7 @@ public class TeraSort extends TaskWorker {
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
+      tasksCount.incrementAndGet();
       int lowestTaskIndex = ctx.getTasksByName(TASK_SOURCE).stream()
           .map(TaskInstancePlan::getTaskIndex)
           .min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -158,6 +169,7 @@ public class TeraSort extends TaskWorker {
         previousKey = nextTuple.getKey();
       }
       LOG.info(String.format("Received %d tuples. Ordered : %b", tupleCount, allOrdered));
+      tasksCount.decrementAndGet();
       return true;
     }
   }
@@ -175,6 +187,7 @@ public class TeraSort extends TaskWorker {
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
+      tasksCount.incrementAndGet();
       int valueSize = cfg.getIntegerValue(ARG_VALUE_SIZE, 90);
       this.keySize = cfg.getIntegerValue(ARG_KEY_SIZE, 10);
 
@@ -195,7 +208,8 @@ public class TeraSort extends TaskWorker {
           .min(Comparator.comparingInt(o -> (Integer) o)).get();
 
       if (ctx.taskIndex() == lowestTaskIndex) {
-        LOG.info(String.format("Each source will send %d bytes of data", this.toSend));
+        LOG.info(String.format("Each source will send %d "
+            + "messages of size %d bytes", this.toSend, totalSize));
       }
 
       timingCondition = ctx.getWorkerId() == 0 && ctx.taskIndex() == lowestTaskIndex;
@@ -215,6 +229,7 @@ public class TeraSort extends TaskWorker {
       if (sent == toSend) {
         context.end(EDGE);
         LOG.info("Done Sending");
+        tasksCount.decrementAndGet();
       }
     }
   }
