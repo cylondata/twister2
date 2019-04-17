@@ -227,6 +227,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
     Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
+
     for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
       for (Vertex vertex : taskVertexSet) {
         if (aTaskEntrySet.getKey().equals(vertex.getName())) {
@@ -239,8 +240,8 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
           for (int i = 0; i < totalTaskInstances; i++) {
             containerIndex = Integer.parseInt(Collections.min(calList).getNodeName().trim());
             if (maxContainerTaskObjectSize < instancesPerContainer) {
-              dataAwareAllocationMap.get(containerIndex).add(new InstanceId(vertex.getName(),
-                  globalTaskIndex, i));
+              dataAwareAllocationMap.get(containerIndex).add(
+                  new InstanceId(vertex.getName(), globalTaskIndex, i));
               ++maxContainerTaskObjectSize;
             }
           }

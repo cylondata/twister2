@@ -46,17 +46,26 @@ public class TaskInstanceId {
 
     TaskInstanceId that = (TaskInstanceId) o;
 
-    return taskId == that.taskId
-        && taskIndex == that.taskIndex
-        && taskName.equals(that.taskName);
+//    return taskId == that.taskId
+//        && taskIndex == that.taskIndex
+//        && taskName.equals(that.taskName);
 
     /*return taskId == that.taskId && taskIndex == that.taskIndex
         && (taskName != null ? taskName.equals(that.taskName) : that.taskName == null);*/
+
+    if (taskId != that.taskId) {
+      return false;
+    }
+    if (taskIndex != that.taskIndex) {
+      return false;
+    }
+    return taskName != null ? taskName.equals(that.taskName) : that.taskName == null;
   }
 
   @Override
   public int hashCode() {
-    int result = taskName.hashCode();
+    //int result = taskName.hashCode();
+    int result = taskName != null ? taskName.hashCode() : 0;
     result = 31 * result + taskId;
     result = 31 * result + taskIndex;
     return result;

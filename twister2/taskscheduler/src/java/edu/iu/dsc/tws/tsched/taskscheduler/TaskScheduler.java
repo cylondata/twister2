@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
+import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -100,7 +101,6 @@ public class TaskScheduler implements ITaskScheduler {
   }
 
   private TaskSchedulePlan generateTaskSchedulePlan(String className) {
-
     Class<?> taskSchedulerClass;
     Method method;
     TaskSchedulePlan taskSchedulePlan;
@@ -115,7 +115,7 @@ public class TaskScheduler implements ITaskScheduler {
       taskSchedulePlan = (TaskSchedulePlan) method.invoke(newInstance, dataFlowTaskGraph,
           workerPlan);
     } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException
-        | InstantiationException | ClassNotFoundException e) {
+        | InstantiationException | ClassNotFoundException | TaskSchedulerException e) {
       throw new RuntimeException("Task Schedule Plan Not Able to Create:" + e.getMessage());
     }
 
@@ -127,9 +127,9 @@ public class TaskScheduler implements ITaskScheduler {
         ContainerPlan containerPlan = entry.getValue();
         Set<TaskInstancePlan> containerPlanTaskInstances
             = containerPlan.getTaskInstances();
-        LOG.info("Task Details for Container Id:" + integer);
+        LOG.fine("Task Details for Container Id:" + integer);
         for (TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.info("Task Id:" + ip.getTaskId()
+          LOG.fine("Task Id:" + ip.getTaskId()
               + "\tTask Index" + ip.getTaskIndex()
               + "\tTask Name:" + ip.getTaskName());
         }

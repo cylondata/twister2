@@ -178,33 +178,69 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
    * vertex set. Then, it will allocate the instances into the number of containers allocated for
    * the task in a round robin fashion.
    */
-  private static Map<Integer, List<InstanceId>> roundRobinSchedulingAlgorithm(
+//  private static Map<Integer, List<InstanceId>> roundRobinSchedulingAlgorithm(
+//      Set<Vertex> taskVertexSet, int numberOfContainers) throws ScheduleException {
+//
+//    TaskAttributes taskAttributes = new TaskAttributes();
+//    Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();
+//
+//    for (int i = 0; i < numberOfContainers; i++) {
+//      roundrobinAllocation.put(i, new ArrayList<>());
+//    }
+//
+//    TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
+//    orderedTaskSet.addAll(taskVertexSet);
+//
+//    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+//    int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
+//    if (numberOfContainers <= totalTaskInstances) {
+//      int globalTaskIndex = 0;
+//      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+//        String task = e.getKey();
+//        int numberOfInstances = e.getValue();
+//        int containerIndex;
+//        for (int i = 0; i < numberOfInstances; i++) {
+//          containerIndex = i % numberOfContainers;
+//          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
+//        }
+//        globalTaskIndex++;
+//      }
+//    }
+//    return roundrobinAllocation;
+//  }
+  private Map<Integer, List<InstanceId>> roundRobinSchedulingAlgorithm(
       Set<Vertex> taskVertexSet, int numberOfContainers) throws ScheduleException {
 
     TaskAttributes taskAttributes = new TaskAttributes();
     Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();
-
-    for (int i = 0; i < numberOfContainers; i++) {
-      roundrobinAllocation.put(i, new ArrayList<>());
+    int instancesPerContainer = TaskSchedulerContext.defaultTaskInstancesPerContainer(this.config);
+    int containerCapacity = instancesPerContainer * numberOfContainers;
+    int totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
+    LOG.info("Container Capacity:" + containerCapacity + "\t " + totalTask + "taskinstances");
+    if (containerCapacity >= totalTask) {
+      for (int i = 0; i < numberOfContainers; i++) {
+        roundrobinAllocation.put(i, new ArrayList<>());
+      }
+    } else {
+      throw new ScheduleException("Container Capacity " + containerCapacity + " is lesser than"
+          + "required " + totalTask + " task instances");
     }
-
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
     orderedTaskSet.addAll(taskVertexSet);
-
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
-    int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
-    if (numberOfContainers <= totalTaskInstances) {
-      int globalTaskIndex = 0;
-      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-        String task = e.getKey();
-        int numberOfInstances = e.getValue();
-        int containerIndex;
-        for (int i = 0; i < numberOfInstances; i++) {
-          containerIndex = i % numberOfContainers;
-          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
+    int taskIndex = 0;
+    int containerIndex = 0;
+    for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+      String task = e.getKey();
+      int numberOfInstances = e.getValue();
+      for (int i = 0; i < numberOfInstances; i++) {
+        roundrobinAllocation.get(containerIndex).add(new InstanceId(task, taskIndex, i));
+        ++containerIndex;
+        if (containerIndex >= roundrobinAllocation.size()) {
+          containerIndex = 0;
         }
-        globalTaskIndex++;
       }
+      taskIndex++;
     }
     return roundrobinAllocation;
   }
