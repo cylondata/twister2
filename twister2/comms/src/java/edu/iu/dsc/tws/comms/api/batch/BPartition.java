@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api.batch;
 
+import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -21,8 +22,8 @@ import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.RingPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNRing;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
@@ -50,32 +51,32 @@ public class BPartition {
    * @param targets target tasks
    * @param rcvr receiver
    * @param dataType data type
-   * @param  destSelector destination selector
+   * @param destSelector destination selector
    */
   public BPartition(Communicator comm, TaskPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     BulkReceiver rcvr,
                     DestinationSelector destSelector, boolean shuffle) {
     this.destinationSelector = destSelector;
-    String shuffleDir = comm.getPersistentDirectory();
+    List<String> shuffleDirs = comm.getPersistentDirectories();
 
     MessageReceiver finalRcvr;
     if (shuffle) {
       finalRcvr = new DPartitionBatchFinalReceiver(
-          rcvr, false, shuffleDir, null);
+          rcvr, false, shuffleDirs, null);
     } else {
       finalRcvr = new PartitionBatchFinalReceiver(rcvr);
     }
 
     if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
-      DataFlowPartition p = new DataFlowPartition(comm.getChannel(), sources, targets,
+      MToNSimple p = new MToNSimple(comm.getChannel(), sources, targets,
           finalRcvr, new PartitionPartialReceiver(), dataType);
       p.init(comm.getConfig(), dataType, plan, comm.nextEdge());
       this.partition = p;
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
-      this.partition = new RingPartition(comm.getConfig(), comm.getChannel(),
+      this.partition = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, finalRcvr, new PartitionPartialReceiver(),
           dataType, dataType, null, null, comm.nextEdge());
     }
@@ -102,6 +103,7 @@ public class BPartition {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -110,6 +112,7 @@ public class BPartition {
 
   /**
    * Indicate the end of the communication
+   *
    * @param source the source that is ending
    */
   public void finish(int source) {

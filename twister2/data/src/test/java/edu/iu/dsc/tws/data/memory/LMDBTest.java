@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 import com.google.common.primitives.Ints;
 

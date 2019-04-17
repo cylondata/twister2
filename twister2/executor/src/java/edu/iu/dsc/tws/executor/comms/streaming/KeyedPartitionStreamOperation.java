@@ -62,7 +62,7 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
 
     this.edgeGenerator = e;
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new SKeyedPartition(newComm, taskPlan, sources, dests, dataType, keyType,
+    op = new SKeyedPartition(newComm, taskPlan, sources, dests, keyType, dataType,
         new PartitionRecvrImpl(), destSelector);
   }
 

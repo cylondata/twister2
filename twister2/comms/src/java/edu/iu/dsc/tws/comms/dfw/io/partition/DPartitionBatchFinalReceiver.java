@@ -22,20 +22,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 /**
  * A receiver that goes to disk
@@ -108,15 +107,15 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * The directory in which we will be saving the shuffle objects
    */
-  private String shuffleDirectory;
+  private List<String> shuffleDirectories;
 
   public DPartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
-                                      String shuffleDir, Comparator<Object> com) {
+                                      List<String> shuffleDirs, Comparator<Object> com) {
     this.bulkReceiver = receiver;
     this.sorted = srt;
     this.kryoSerializer = new KryoSerializer();
     this.comparator = com;
-    this.shuffleDirectory = shuffleDir;
+    this.shuffleDirectories = shuffleDirs;
   }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -130,7 +129,8 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     targets = new HashSet<>(expectedIds.keySet());
 
     for (Integer target : expectedIds.keySet()) {
-
+      String shuffleDirectory = this.shuffleDirectories.get(
+          target % this.shuffleDirectories.size());
       Shuffle sortedMerger;
       if (partition.getKeyType() == null) {
         sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
@@ -161,7 +161,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       throw new RuntimeException("Un-expected target id: " + target);
     }
 
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
+    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
       Set<Integer> finished = finishedSources.get(target);
       if (finished.contains(source)) {
         LOG.log(Level.WARNING,
@@ -181,8 +181,9 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       for (Tuple kc : tuples) {
         Object data = kc.getValue();
         byte[] d;
-        if (partition.getReceiveDataType() != MessageType.BYTE || !(data instanceof byte[])) {
-          d = DataSerializer.serialize(data, kryoSerializer);
+        if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY
+            || !(data instanceof byte[])) {
+          d = partition.getDataType().getDataPacker().packToByteArray(data);
         } else {
           d = (byte[]) data;
         }
@@ -195,8 +196,8 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       List<Object> contents = (List<Object>) object;
       for (Object kc : contents) {
         byte[] d;
-        if (partition.getReceiveDataType() != MessageType.BYTE) {
-          d = DataSerializer.serialize(kc, kryoSerializer);
+        if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY) {
+          d = partition.getDataType().getDataPacker().packToByteArray(kc);
         } else {
           d = (byte[]) kc;
         }

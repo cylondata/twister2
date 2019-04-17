@@ -30,6 +30,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.api.DataType;
 
 public final class Utils {
@@ -39,19 +40,31 @@ public final class Utils {
   public static MessageType dataTypeToMessageType(DataType type) {
     switch (type) {
       case OBJECT:
-        return MessageType.OBJECT;
+        return MessageTypes.OBJECT;
       case BYTE:
-        return MessageType.BYTE;
+        return MessageTypes.BYTE;
+      case BYTE_ARRAY:
+        return MessageTypes.BYTE_ARRAY;
       case INTEGER:
-        return MessageType.INTEGER;
+        return MessageTypes.INTEGER;
+      case INTEGER_ARRAY:
+        return MessageTypes.INTEGER_ARRAY;
       case DOUBLE:
-        return MessageType.DOUBLE;
+        return MessageTypes.DOUBLE;
+      case DOUBLE_ARRAY:
+        return MessageTypes.DOUBLE_ARRAY;
       case CHAR:
-        return MessageType.CHAR;
+        return MessageTypes.CHAR;
+      case CHAR_ARRAY:
+        return MessageTypes.CHAR_ARRAY;
       case LONG:
-        return MessageType.LONG;
+        return MessageTypes.LONG;
+      case LONG_ARRAY:
+        return MessageTypes.LONG_ARRAY;
       case SHORT:
-        return MessageType.SHORT;
+        return MessageTypes.SHORT;
+      case SHORT_ARRAY:
+        return MessageTypes.SHORT_ARRAY;
       default:
         throw new RuntimeException("Un-expected type");
     }

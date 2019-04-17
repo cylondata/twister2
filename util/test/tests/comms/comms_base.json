@@ -26,8 +26,7 @@
           32,
           64,
           128,
-          256,
-          512
+          256
         ]
       }
     },
@@ -36,8 +35,10 @@
       "name": "Data Size",
       "optional": false,
       "values": {
-        "type": "fixed",
-        "value": 1024
+        "type": "steps",
+        "from": 256,
+        "to": 8192,
+        "step": 256
       }
     },
     {
@@ -47,6 +48,14 @@
       "values": {
         "type": "fixed",
         "value": 10000
+      }
+    },
+    {
+      "id": "stream",
+      "name": "Stream",
+      "optional": false,
+      "values": {
+        "type": "none"
       }
     }
   ]
