@@ -93,7 +93,8 @@ public class KeyedSerializer extends BaseSerializer {
 
     if (state.getPart() == SerializeState.Part.HEADER) {
       // first we need to copy the data size to buffer
-      if (buildSubMessageHeader(targetBuffer, state.getCurrentHeaderLength())) {
+      if (buildSubMessageHeader(targetBuffer, state.getCurrentHeaderLength(),
+          state.getActive().getTotalToCopy())) {
         // now set the size of the buffer
         targetBuffer.setSize(byteBuffer.position());
         return false;
@@ -143,12 +144,18 @@ public class KeyedSerializer extends BaseSerializer {
    * sub message. The structure of the sub message header is |length + (key length)|. The key length
    * is added for keyed messages
    */
-  private boolean buildSubMessageHeader(DataBuffer buffer, int length) {
+  private boolean buildSubMessageHeader(DataBuffer buffer, int length, int keyLength) {
     ByteBuffer byteBuffer = buffer.getByteBuffer();
-    if (byteBuffer.remaining() < NORMAL_SUB_MESSAGE_HEADER_SIZE) {
+    int requiredSpace = keyPacker.isHeaderRequired()
+        ? MAX_SUB_MESSAGE_HEADER_SPACE : NORMAL_SUB_MESSAGE_HEADER_SIZE;
+    if (byteBuffer.remaining() < requiredSpace) {
       return true;
     }
-    byteBuffer.putInt(length);
+    int keyLengthSize = keyPacker.isHeaderRequired() ? Integer.BYTES : 0;
+    byteBuffer.putInt(length + keyLengthSize);
+    if (keyPacker.isHeaderRequired()) {
+      byteBuffer.putInt(keyLength);
+    }
     return false;
   }
 }

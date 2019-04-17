@@ -53,6 +53,10 @@ public class SerializeState extends PackerStore {
       this.totalToCopy = totalToCopy;
     }
 
+    public int getTotalToCopy() {
+      return totalToCopy;
+    }
+
     public int leftToCopy() {
       return this.totalToCopy - this.bytesCopied;
     }
@@ -107,6 +111,13 @@ public class SerializeState extends PackerStore {
 
   StoredData getActive() {
     return this.active;
+  }
+
+  StoredData getInactive() {
+    if (this.storedData1 == this.active) {
+      return storedData2;
+    }
+    return storedData1;
   }
 
   // the state of each part
