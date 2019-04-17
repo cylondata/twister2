@@ -11,9 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.constant;
 
-public enum Window {
-  TUMBLING,
-  SLIDING,
-  SESSION,
-  GLOBAL
+public enum WindowBuffer {
+  Count,
+  Duration
 }

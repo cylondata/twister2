@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.examples.task.batch.BTReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STBroadCastExample;
-import edu.iu.dsc.tws.examples.task.streaming.STWindowExample;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowExample;
 import edu.iu.dsc.tws.examples.task.streaming.STGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STKeyedGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STKeyedReduceExample;
@@ -65,6 +65,7 @@ public class ExampleTaskMain {
     options.addOption(Constants.ARGS_ITR, true, "Iteration");
     options.addOption(Utils.createOption(Constants.ARGS_OPERATION, true, "Operation", true));
     options.addOption(Constants.ARGS_STREAM, false, "Stream");
+    options.addOption(Constants.ARGS_WINDOW, false, "Window");
     options.addOption(Utils.createOption(Constants.ARGS_TASK_STAGES, true,
         "Number of parallel instances of tasks", true));
     options.addOption(Utils.createOption(Constants.ARGS_GAP, true, "Gap", false));
@@ -83,6 +84,7 @@ public class ExampleTaskMain {
     int itr = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_ITR));
     String operation = cmd.getOptionValue(Constants.ARGS_OPERATION);
     boolean stream = cmd.hasOption(Constants.ARGS_STREAM);
+    boolean window = cmd.hasOption(Constants.ARGS_WINDOW);
     boolean verify = cmd.hasOption(Constants.ARGS_VERIFY);
 
     String threads = "true";
@@ -136,6 +138,7 @@ public class ExampleTaskMain {
     jobConfig.put(Constants.ARGS_INIT_ITERATIONS, intItr);
     jobConfig.put(Constants.ARGS_VERIFY, verify);
     jobConfig.put(Constants.ARGS_STREAM, stream);
+    jobConfig.put(Constants.ARGS_WINDOW, window);
 
     // build the job
     if (!stream) {

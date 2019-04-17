@@ -21,31 +21,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.compute;
+package edu.iu.dsc.tws.task.api.window;
 
-import java.util.List;
-import java.util.logging.Logger;
+import edu.iu.dsc.tws.task.api.BaseNode;
+import edu.iu.dsc.tws.task.api.ISource;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
+public abstract class BaseWindowSource extends BaseNode implements ISource {
 
-public abstract class WindowedCompute<T> extends AbstractSingleWindowDataCompute<T> {
-
-  private static final Logger LOG = Logger.getLogger(WindowedCompute.class.getName());
-
-
-  public abstract List<IMessage<T>> window(List<IMessage<T>> content);
-
-
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    super.prepare(cfg, ctx);
-  }
-
-  @Override
-  public boolean execute(List<IMessage<T>> content) {
-    window(content);
-    return true;
-  }
 }

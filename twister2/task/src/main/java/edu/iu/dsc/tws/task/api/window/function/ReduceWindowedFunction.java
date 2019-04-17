@@ -9,11 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.constant;
+package edu.iu.dsc.tws.task.api.window.function;
 
-public enum Window {
-  TUMBLING,
-  SLIDING,
-  SESSION,
-  GLOBAL
+public interface ReduceWindowedFunction<T> extends IWindowFunction<T> {
+
+  T reduce(T t0, T t1);
 }

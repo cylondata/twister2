@@ -9,11 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.constant;
+package edu.iu.dsc.tws.task.api.window;
 
-public enum Window {
-  TUMBLING,
-  SLIDING,
-  SESSION,
-  GLOBAL
+import edu.iu.dsc.tws.task.api.BaseNode;
+
+public abstract class BaseWindowCompute<T> extends BaseNode implements IWindowCompute<T> {
 }

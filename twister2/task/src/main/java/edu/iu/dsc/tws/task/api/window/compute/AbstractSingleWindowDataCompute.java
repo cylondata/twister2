@@ -23,29 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.compute;
 
-import java.util.List;
-import java.util.logging.Logger;
+import edu.iu.dsc.tws.task.api.window.BaseWindowCompute;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
-
-public abstract class WindowedCompute<T> extends AbstractSingleWindowDataCompute<T> {
-
-  private static final Logger LOG = Logger.getLogger(WindowedCompute.class.getName());
-
-
-  public abstract List<IMessage<T>> window(List<IMessage<T>> content);
-
-
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    super.prepare(cfg, ctx);
-  }
-
-  @Override
-  public boolean execute(List<IMessage<T>> content) {
-    window(content);
-    return true;
-  }
+public abstract class AbstractSingleWindowDataCompute<T> extends BaseWindowCompute<T> {
 }
