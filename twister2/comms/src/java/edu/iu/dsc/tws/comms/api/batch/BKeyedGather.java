@@ -78,7 +78,7 @@ public class BKeyedGather {
     } else {
       receiveDataType = MessageTypes.BYTE_ARRAY;
       finalReceiver = new DPartitionBatchFinalReceiver(
-          rcvr, true, comm.getPersistentDirectory(), comparator);
+          rcvr, true, comm.getPersistentDirectories(), comparator);
     }
 
     if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
