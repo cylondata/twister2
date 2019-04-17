@@ -60,7 +60,7 @@ public abstract class JoinedKeyedBenchWorker extends KeyedBenchWorker {
         key = 100 + task;
         int flag = 0;
         if (i == jobParameters.getIterations() - 1) {
-          flag = MessageFlags.LAST;
+          flag = MessageFlags.SYNC_MESSAGE;
         }
         sendMessages(task, key, dataLeft, flag, 0);
         sendMessages(task, key, dataRight, flag, 1);

@@ -72,7 +72,7 @@ public class KGatherBatchPartialReceiver extends KeyedReceiver {
     if (sendList.isEmpty()) {
       while (!targetSendQueue.isEmpty()) {
         if (sourcesFinished && targetSendQueue.size() == 1) {
-          flags = MessageFlags.LAST;
+          flags = MessageFlags.SYNC_MESSAGE;
         }
         sendList.add(targetSendQueue.poll());
       }

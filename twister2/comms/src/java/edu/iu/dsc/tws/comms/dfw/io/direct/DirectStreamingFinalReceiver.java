@@ -15,58 +15,104 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
+import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
+import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
 
-public class DirectStreamingFinalReceiver implements MessageReceiver {
-  // messages before we have seen a barrier
-  private Map<Integer, Queue<Object>> messages = new HashMap<>();
-
+public class DirectStreamingFinalReceiver extends TargetFinalReceiver {
   // the receiver
   private SingularReceiver receiver;
+
+  /**
+   * Keep the list of tuples for each target
+   */
+  private Map<Integer, Queue<Object>> readyToSend = new HashMap<>();
 
   public DirectStreamingFinalReceiver(SingularReceiver receiver) {
     this.receiver = receiver;
   }
 
-  @Override
   public void init(Config cfg, DataFlowOperation operation,
                    Map<Integer, List<Integer>> expectedIds) {
-    int sendPendingMax = DataFlowContext.sendPendingMax(cfg);
-    for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
-      messages.put(e.getKey(), new ArrayBlockingQueue<>(sendPendingMax));
-    }
+    super.init(cfg, operation, expectedIds);
     this.receiver.init(cfg, expectedIds.keySet());
   }
 
   @Override
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    return messages.get(target).offer(object);
+  protected void addSyncMessage(int source, int target) {
+    Set<Integer> sources = syncReceived.get(target);
+    sources.add(source);
+    targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
   @Override
-  public boolean progress() {
-    boolean needsFurtherProgress = false;
-    // we always send messages from before barrier map
-    for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
-      Integer target = e.getKey();
-      Queue<Object> inComingMessages = e.getValue();
-      Object msg = inComingMessages.peek();
-      if (msg != null) {
-        boolean offer = receiver.receive(target, msg);
-        if (offer) {
-          inComingMessages.poll();
-        } else {
-          needsFurtherProgress = true;
-        }
+  protected void addSyncMessageBarrier(int source, int target, byte[] barrier) {
+    Set<Integer> sources = syncReceived.get(target);
+    sources.add(source);
+    targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
+    barriers.put(target, barrier);
+  }
+
+  /**
+   * Swap the messages to the ready queue
+   * @param dest the target
+   * @param dests message queue to switch to ready
+   */
+  protected void merge(int dest, Queue<Object> dests) {
+    if (!readyToSend.containsKey(dest)) {
+      readyToSend.put(dest, new LinkedBlockingQueue<>(dests));
+    } else {
+      Queue<Object> ready = readyToSend.get(dest);
+      ready.addAll(dests);
+    }
+    dests.clear();
+  }
+
+  @Override
+  protected boolean isAllEmpty() {
+    boolean b = super.isAllEmpty();
+    for (Map.Entry<Integer, Queue<Object>> e : readyToSend.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
       }
     }
-    return needsFurtherProgress;
+    return b;
+  }
+
+  @Override
+  protected boolean sendToTarget(int source, int target) {
+    Queue<Object> values = readyToSend.get(target);
+
+    if (values == null || values.isEmpty()) {
+      return false;
+    }
+
+    // if we send this list successfully
+    Object val = values.peek();
+
+    if (val == null) {
+      return false;
+    }
+
+    while (val != null) {
+      if (receiver.receive(target, val)) {
+        values.poll();
+        val = values.peek();
+      } else {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  @Override
+  protected boolean isFilledToSend(int target) {
+    return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
   }
 }

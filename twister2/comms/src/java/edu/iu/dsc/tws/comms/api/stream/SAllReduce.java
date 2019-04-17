@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowAllReduce;
+import edu.iu.dsc.tws.comms.dfw.AllReduce;
 
 /**
  * Streaming ALLReduce Operation
@@ -27,7 +27,7 @@ public class SAllReduce {
   /**
    * The actual operation
    */
-  private DataFlowAllReduce reduce;
+  private AllReduce reduce;
 
   /**
    * Construct a Streaming AllReduce operation
@@ -54,7 +54,7 @@ public class SAllReduce {
     int firstSource = sources.iterator().next();
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
-    reduce = new DataFlowAllReduce(comm.getChannel(), sources, targets, middleTask, fnc,
+    reduce = new AllReduce(comm.getChannel(), sources, targets, middleTask, fnc,
         rcvr, comm.nextEdge(), comm.nextEdge(), true);
     reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }

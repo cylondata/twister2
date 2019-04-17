@@ -84,17 +84,17 @@ public final class TSetUtils {
 
   public static DataType getDataType(Class type) {
     if (type == int[].class) {
-      return DataType.INTEGER;
+      return DataType.INTEGER_ARRAY;
     } else if (type == double[].class) {
-      return DataType.DOUBLE;
+      return DataType.DOUBLE_ARRAY;
     } else if (type == short[].class) {
-      return DataType.SHORT;
+      return DataType.SHORT_ARRAY;
     } else if (type == byte[].class) {
-      return DataType.BYTE;
+      return DataType.BYTE_ARRAY;
     } else if (type == long[].class) {
-      return DataType.LONG;
+      return DataType.LONG_ARRAY;
     } else if (type == char[].class) {
-      return DataType.CHAR;
+      return DataType.CHAR_ARRAY;
     } else {
       return DataType.OBJECT;
     }
@@ -102,17 +102,17 @@ public final class TSetUtils {
 
   public static DataType getKeyType(Class type) {
     if (type == Integer.class) {
-      return DataType.INTEGER;
+      return DataType.INTEGER_ARRAY;
     } else if (type == Double.class) {
-      return DataType.DOUBLE;
+      return DataType.DOUBLE_ARRAY;
     } else if (type == Short.class) {
-      return DataType.SHORT;
+      return DataType.SHORT_ARRAY;
     } else if (type == Byte.class) {
-      return DataType.BYTE;
+      return DataType.BYTE_ARRAY;
     } else if (type == Long.class) {
-      return DataType.LONG;
+      return DataType.LONG_ARRAY;
     } else if (type == Character.class) {
-      return DataType.CHAR;
+      return DataType.CHAR_ARRAY;
     } else {
       return DataType.OBJECT;
     }

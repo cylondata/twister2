@@ -38,6 +38,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
@@ -80,7 +81,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   /**
    * The key type
    */
-  private MessageType keyType = MessageType.BYTE;
+  private MessageType keyType = MessageTypes.BYTE;
   /**
    * Receive data type
    */
@@ -289,7 +290,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    * @return true if the message is accepted
    */
   protected boolean sendMessagePartial(int source, Object message, int target,
-                                    int flags, RoutingParameters routingParameters) {
+                                       int flags, RoutingParameters routingParameters) {
     // for partial sends we use minus value to find the correct queue
     ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);

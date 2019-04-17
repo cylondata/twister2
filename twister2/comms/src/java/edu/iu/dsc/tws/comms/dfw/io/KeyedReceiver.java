@@ -62,7 +62,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
 
   /**
    * Map that keeps track of which sources have sent an finished signal. The finish signal may
-   * either be a END message or a LAST message in the message flags.
+   * either be a SYNC_EMPTY message or a SYNC_MESSAGE message in the message flags.
    * Structure - <target, <source, true/false>>
    */
   protected Map<Integer, Map<Integer, Boolean>> finishedSources = new ConcurrentHashMap<>();
@@ -142,7 +142,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
 
     Map<Integer, Boolean> finishedMessages = finishedSources.get(target);
 
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
+    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
       finishedMessages.put(src, true);
       if (!isFinalBatchReceiver && isSourcesFinished(target)) {
         return moveMessagesToSendQueue(target, messages.get(target));
@@ -163,10 +163,10 @@ public abstract class KeyedReceiver implements MessageReceiver {
     added = offerMessage(target, object);
 
     if (added) {
-      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
+      if ((flags & MessageFlags.SYNC_MESSAGE) == MessageFlags.SYNC_MESSAGE) {
         finishedMessages.put(representSource, true);
-        //TODO: the finish of the move may not happen for LAST flags since the method to move
-        //TODO: may return false
+        //TODO: the finish of the move may not happen for SYNC_MESSAGE flags since the
+        //TODO: method to move may return false
         if (!isFinalBatchReceiver && isSourcesFinished(target)) {
           moveMessagesToSendQueue(target, messages.get(target));
         }
@@ -368,7 +368,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
     boolean isSent = true;
     if (!isEmptySent.get(target)) {
       if (dataFlowOperation.isDelegateComplete() && dataFlowOperation.sendPartial(target,
-          new byte[0], MessageFlags.END, destination)) {
+          new byte[0], MessageFlags.SYNC_EMPTY, destination)) {
         isEmptySent.put(target, true);
       } else {
         isSent = false;
@@ -437,7 +437,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
     boolean needsProgress = needsFurtherProgress;
     for (int i : thisSources) {
       if (dataFlowOperation.sendPartial(i, new byte[0],
-          MessageFlags.END, target)) {
+          MessageFlags.SYNC_EMPTY, target)) {
         isEmptySent.put(target, true);
       } else {
         needsProgress = true;
@@ -479,7 +479,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
     Object current;
     while (canProgress && (current = targetSendQueue.peek()) != null) {
       if (sourcesFinished && targetSendQueue.size() == 1) {
-        flags = MessageFlags.LAST;
+        flags = MessageFlags.SYNC_MESSAGE;
       }
 
       if (dataFlowOperation.sendPartial(representSource, current, flags, target)) {

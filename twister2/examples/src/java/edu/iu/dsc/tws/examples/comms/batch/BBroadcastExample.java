@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BBroadcast;
 import edu.iu.dsc.tws.examples.Utils;
@@ -59,7 +59,7 @@ public class BBroadcastExample extends BenchWorker {
 
     // create the communication
     bcast = new BBroadcast(communicator, taskPlan, source, targets,
-        new BCastReceiver(), MessageType.INTEGER);
+        new BCastReceiver(), MessageTypes.INTEGER_ARRAY);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);

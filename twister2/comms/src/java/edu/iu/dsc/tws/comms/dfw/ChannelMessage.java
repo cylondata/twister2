@@ -16,6 +16,7 @@ import java.util.List;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 
 public class ChannelMessage {
   /**
@@ -82,7 +83,7 @@ public class ChannelMessage {
   /**
    * If a keyed message, the key being used
    */
-  private MessageType keyType = MessageType.INTEGER;
+  private MessageType keyType = MessageTypes.INTEGER;
 
   /**
    * Number of bytes in the header
