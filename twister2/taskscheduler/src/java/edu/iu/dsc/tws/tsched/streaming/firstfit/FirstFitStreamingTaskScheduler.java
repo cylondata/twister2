@@ -186,9 +186,8 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
     orderedTaskSet.addAll(this.taskVertexSet);
     Map<String, Double> taskRamMap = taskAttributes.getTaskRamMap(this.taskVertexSet);
     for (String taskName : taskNameSet) {
-      Resource resource = TaskScheduleUtils.getResourceRequirement(
-          taskName, taskRamMap, this.defaultResourceValue,
-          this.maxContainerResourceValue, this.paddingPercentage);
+      Resource resource = TaskScheduleUtils.getResourceRequirement(taskName, taskRamMap,
+          this.defaultResourceValue, this.maxContainerResourceValue, this.paddingPercentage);
       ramRequirements.add(new RequiredRam(taskName, resource.getRam()));
     }
     ramRequirements.sort(Collections.reverseOrder());
@@ -203,7 +202,6 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
                                           String taskName) throws TaskSchedulerException {
     if (this.numContainers == 0) {
       taskSchedulePlanBuilder.updateNumContainers(++numContainers);
-      LOG.info("%%%%%% Number Of Containers:(if)%%" + numContainers + "\t" + taskName);
     }
     try {
       //taskSchedulePlanBuilder.addInstance(taskName);
@@ -211,7 +209,6 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
     } catch (TaskSchedulerException e) {
       taskSchedulePlanBuilder.updateNumContainers(++numContainers);
       taskSchedulePlanBuilder.addInstance(numContainers, taskName);
-      LOG.info("%%%%%% Number Of Containers:%%%%%%%%%%%%" + numContainers + "\t" + taskName);
     }
   }
 }
