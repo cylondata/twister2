@@ -285,7 +285,8 @@ public class TaskSchedulePlanBuilder {
   }
 
   private Set<ContainerPlan> buildContainerPlans(Map<Integer, Container> containerValue,
-                                                 Map<String, Double> taskramMap, Resource instdefaultresourcevalue) {
+                                                 Map<String, Double> taskramMap,
+                                                 Resource instdefaultresourcevalue) {
 
     Set<ContainerPlan> containerPlans = new LinkedHashSet<>();
     try {
