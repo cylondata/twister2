@@ -58,7 +58,7 @@ public class BGather {
     if (!shuffle) {
       finalRcvr = new GatherBatchFinalReceiver(rcvr);
     } else {
-      finalRcvr = new DGatherBatchFinalReceiver(rcvr, comm.getPersistentDirectory());
+      finalRcvr = new DGatherBatchFinalReceiver(rcvr, comm.getPersistentDirectory(target));
     }
     this.dataType = dataType;
     this.gather = new MToOneTree(comm.getChannel(), sources, target,

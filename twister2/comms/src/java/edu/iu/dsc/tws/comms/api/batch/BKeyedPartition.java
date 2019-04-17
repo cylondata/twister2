@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.api.batch;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -48,11 +49,11 @@ public class BKeyedPartition {
                          MessageType dataType, MessageType keyType, BulkReceiver rcvr,
                          DestinationSelector destSelector, Comparator<Object> comparator) {
     this.destinationSelector = destSelector;
-    String shuffleDir = comm.getPersistentDirectory();
+    List<String> shuffleDirs = comm.getPersistentDirectories();
     int e = comm.nextEdge();
     this.partition = new MToNSimple(comm.getConfig(), comm.getChannel(), plan,
         sources, destinations,
-        new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
+        new DPartitionBatchFinalReceiver(rcvr, true, shuffleDirs, comparator),
         new PartitionPartialReceiver(), dataType, MessageTypes.BYTE_ARRAY, keyType,
         keyType, e);
     this.partition.init(comm.getConfig(), dataType, plan, e);
