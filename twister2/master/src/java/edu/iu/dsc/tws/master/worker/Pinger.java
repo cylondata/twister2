@@ -33,6 +33,8 @@ public class Pinger implements MessageHandler {
 
   private RequestID requestID = null;
 
+  private boolean pendingResponse;
+
   public Pinger(int workerID, RRClient rrClient, long interval) {
     this.workerID = workerID;
     this.rrClient = rrClient;
@@ -54,7 +56,16 @@ public class Pinger implements MessageHandler {
   }
 
   public void sendPingMessage() {
-
+    if (pendingResponse) {
+      long timeSinceLast = System.currentTimeMillis() - lastPingTime;
+      if (timeSinceLast > interval * 3) {
+        LOG.warning(String.format("%d has been waiting %d milliseconds for a ping response "
+                + "form JobMaster. Worker has already skipped %d ping requests "
+                + "since the last successful ping.",
+            workerID, timeSinceLast, timeSinceLast / interval));
+      }
+      return;
+    }
     lastPingTime = System.currentTimeMillis();
 
     JobMasterAPI.Ping ping = JobMasterAPI.Ping.newBuilder()
@@ -64,6 +75,7 @@ public class Pinger implements MessageHandler {
         .build();
 
     requestID = rrClient.sendRequest(ping);
+    this.pendingResponse = true;
 
     if (requestID == null) {
       LOG.severe("When sending Ping message, the requestID returned null.");
@@ -75,6 +87,7 @@ public class Pinger implements MessageHandler {
   @Override
   public void onMessage(RequestID id, int workerId, Message message) {
     if (message instanceof JobMasterAPI.Ping) {
+      this.pendingResponse = false;
       LOG.fine("Ping Response message received from the master: \n" + message);
 
       if (!requestID.equals(id)) {
