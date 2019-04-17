@@ -98,4 +98,9 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
   public void close() {
     op.close();
   }
+
+  @Override
+  public void refresh() {
+    op.refresh();
+  }
 }

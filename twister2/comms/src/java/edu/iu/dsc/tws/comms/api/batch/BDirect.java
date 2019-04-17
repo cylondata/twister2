@@ -96,4 +96,11 @@ public class BDirect {
     // deregister from the channel
     direct.close();
   }
+
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    direct.clean();
+  }
 }

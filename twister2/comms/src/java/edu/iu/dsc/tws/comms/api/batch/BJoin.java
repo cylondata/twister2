@@ -155,6 +155,14 @@ public class BJoin {
     partitionRight.close();
   }
 
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    partitionLeft.clean();
+    partitionRight.clean();
+  }
+
   private class IntegerComparator implements Comparator<Object> {
     @Override
     public int compare(Object o1, Object o2) {

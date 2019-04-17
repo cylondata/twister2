@@ -200,4 +200,17 @@ public class TargetPartialReceiver extends TargetReceiver {
 
     return allSynced;
   }
+
+  @Override
+  public void clean() {
+    for (int t : thisDestinations) {
+      clearTarget(t);
+    }
+
+    for (int source : thisSources) {
+      sourceStates.put(source, ReceiverState.RECEIVING);
+    }
+    barriers.clear();
+    stateCleared = false;
+  }
 }

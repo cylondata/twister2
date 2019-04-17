@@ -128,4 +128,11 @@ public class BPartition {
   public void close() {
     partition.close();
   }
+
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    partition.clean();
+  }
 }

@@ -82,4 +82,11 @@ public class BKeyedPartition {
     // deregister from the channel
     partition.close();
   }
+
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    partition.clean();
+  }
 }
