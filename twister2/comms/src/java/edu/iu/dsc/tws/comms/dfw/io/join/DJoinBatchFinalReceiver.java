@@ -120,7 +120,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
   /**
    * The directory in which we will be saving the shuffle objects
    */
-  private String shuffleDirectory;
+  private List<String> shuffleDirectories;
 
   /**
    * Weather everyone finished
@@ -128,11 +128,11 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
   private Set<Integer> targets = new HashSet<>();
 
   public DJoinBatchFinalReceiver(BulkReceiver bulkReceiver,
-                                 String shuffleDir, Comparator<Object> com) {
+                                 List<String> shuffleDirs, Comparator<Object> com) {
     this.receiver = bulkReceiver;
     this.kryoSerializer = new KryoSerializer();
     this.comparator = com;
-    this.shuffleDirectory = shuffleDir;
+    this.shuffleDirectories = shuffleDirs;
   }
 
   @Override
@@ -153,6 +153,8 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
 
       // lists to keep track of messages for destinations
       for (int target : expectedIds.keySet()) {
+        String shuffleDirectory = this.shuffleDirectories.get(
+            target % this.shuffleDirectories.size());
         Shuffle sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
             shuffleDirectory, DFWIOUtils.getOperationName(target, operationLeft),
             operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target);

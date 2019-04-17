@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api.batch;
 
+import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -50,19 +51,19 @@ public class BPartition {
    * @param targets target tasks
    * @param rcvr receiver
    * @param dataType data type
-   * @param  destSelector destination selector
+   * @param destSelector destination selector
    */
   public BPartition(Communicator comm, TaskPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     BulkReceiver rcvr,
                     DestinationSelector destSelector, boolean shuffle) {
     this.destinationSelector = destSelector;
-    String shuffleDir = comm.getPersistentDirectory();
+    List<String> shuffleDirs = comm.getPersistentDirectories();
 
     MessageReceiver finalRcvr;
     if (shuffle) {
       finalRcvr = new DPartitionBatchFinalReceiver(
-          rcvr, false, shuffleDir, null);
+          rcvr, false, shuffleDirs, null);
     } else {
       finalRcvr = new PartitionBatchFinalReceiver(rcvr);
     }
@@ -102,6 +103,7 @@ public class BPartition {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -110,6 +112,7 @@ public class BPartition {
 
   /**
    * Indicate the end of the communication
+   *
    * @param source the source that is ending
    */
   public void finish(int source) {

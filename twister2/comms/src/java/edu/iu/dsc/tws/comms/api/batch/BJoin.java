@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.comms.api.batch;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -63,12 +64,12 @@ public class BJoin {
                MessageType dataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle) {
     this.destinationSelector = destSelector;
-    String shuffleDir = comm.getPersistentDirectory();
+    List<String> shuffleDirs = comm.getPersistentDirectories();
 
     MessageReceiver finalRcvr;
     if (shuffle) {
       finalRcvr = new DJoinBatchFinalReceiver(
-          rcvr, shuffleDir, new IntegerComparator());
+          rcvr, shuffleDirs, new IntegerComparator());
     } else {
       finalRcvr = new JoinBatchFinalReceiver(rcvr);
     }

@@ -78,8 +78,7 @@ public final class FileLoader {
    * @return maximum size of the tuple written to this file
    */
   public static long saveKeyValues(List<Tuple> records, List<Integer> sizes,
-                                   long size, String outFileName, MessageType keyType,
-                                   KryoSerializer serializer) {
+                                   long size, String outFileName, MessageType keyType) {
     try {
       long maxRecord = Long.MIN_VALUE; //max size of a tuple saved to this file
 
