@@ -91,6 +91,9 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
     //To get the vertex set from the taskgraph
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
 
+    /*LOG.info("task name:" + taskVertexSet.iterator().next().getName() + "constraints:"
+        + taskVertexSet.iterator().next().getConfig().get("twister2.task.placement"));*/
+
     //Allocate the task instances into the logical containers.
     Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
         roundRobinSchedulingAlgorithm(taskVertexSet, workerPlan.getNumberOfWorkers());
@@ -213,8 +216,10 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
 
     TaskAttributes taskAttributes = new TaskAttributes();
     Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();
-    int instancesPerContainer = TaskSchedulerContext.defaultTaskInstancesPerContainer(this.config);
-    int containerCapacity = instancesPerContainer * numberOfContainers;
+    //int instancesPerWorker = TaskSchedulerContext.defaultTaskInstancesPerContainer(this.config);
+    int instancesPerWorker = taskAttributes.getInstancesPerWorker(taskVertexSet);
+    LOG.info("instances per worker:" + instancesPerWorker);
+    int containerCapacity = instancesPerWorker * numberOfContainers;
     int totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
     LOG.info("Container Capacity:" + containerCapacity + "\t " + totalTask + "taskinstances");
     if (containerCapacity >= totalTask) {

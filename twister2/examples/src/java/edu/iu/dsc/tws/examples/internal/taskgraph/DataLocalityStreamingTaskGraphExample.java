@@ -54,8 +54,8 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
     /* First Graph to partition and read the partitioned data points **/
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
-    DataLocalitySinkTask dataObjectSink = new DataLocalitySinkTask(
-        Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
+    DataLocalitySinkTask dataObjectSink = new DataLocalitySinkTask(Context.TWISTER2_DIRECT_EDGE,
+        dsize, parallelismValue, dimension);
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
@@ -63,10 +63,18 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
     ComputeConnection datapointComputeConnection = taskGraphBuilder.addSink(
         "datapointsink", dataObjectSink, parallelismValue);
 
+    taskGraphBuilder.addConstraints("datapointsource",
+        Context.TWISTER2_TASK_INSTANCES_PER_WORKER, "2");
+    taskGraphBuilder.addConstraints("datapointsource",
+        Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
+
+    taskGraphBuilder.addConstraints("datapointsink",
+        Context.TWISTER2_TASK_INSTANCES_PER_WORKER, "2");
+    taskGraphBuilder.addConstraints("datapointsink",
+        Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
+
     //Creating the communication edges between the tasks for the second task graph
-    //datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
-    //    DataType.OBJECT);
-    datapointComputeConnection.partition("datapointsource", Context.TWISTER2_DIRECT_EDGE,
+    datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
         DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 

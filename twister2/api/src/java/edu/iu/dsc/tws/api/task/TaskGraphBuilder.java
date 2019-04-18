@@ -47,6 +47,11 @@ public final class TaskGraphBuilder {
   private List<SourceConnection> sourceConnections = new ArrayList<>();
 
   /**
+   * Source connections
+   */
+  private List<TaskGraphConstraints> taskGraphConstraints = new ArrayList<>();
+
+  /**
    * Default parallelism read from a configuration parameter
    */
   private int defaultParallelism;
@@ -185,6 +190,38 @@ public final class TaskGraphBuilder {
   }
 
   /**
+   * Newly Added Methods for supporting the constraints
+   **/
+  public SourceConnection addSource(String name, ISource source, int parallel,
+                                    String constraints, Object value) {
+    Vertex vertex = new Vertex(name, source, parallel);
+    vertex.addConstraints(constraints, value);
+    nodes.put(name, vertex);
+    return createSourceConnection(name);
+  }
+
+  public ComputeConnection addSink(String name, ISink sink, int parallel,
+                                   String constraints, Object value) {
+    Vertex vertex = new Vertex(name, sink, parallel);
+    vertex.addConstraints(constraints, value);
+    nodes.put(name, vertex);
+    return createComputeConnection(name);
+  }
+
+  public TaskGraphConstraints addConstraints(String name, String constraints, String value) {
+    Vertex vertex = nodes.get(name);
+    vertex.addConstraints(constraints, value);
+    nodes.put(name, vertex);
+    return createTaskGraphConstraints(name);
+  }
+
+  private TaskGraphConstraints createTaskGraphConstraints(String taskName) {
+    TaskGraphConstraints pc = new TaskGraphConstraints(taskName);
+    taskGraphConstraints.add(pc);
+    return pc;
+  }
+
+  /**
    * Get the operation mode
    *
    * @return the operation mode
@@ -206,6 +243,10 @@ public final class TaskGraphBuilder {
     }
 
     for (SourceConnection c : sourceConnections) {
+      c.build(graph);
+    }
+
+    for (TaskGraphConstraints c : taskGraphConstraints) {
       c.build(graph);
     }
 

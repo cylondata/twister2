@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 
@@ -122,15 +123,39 @@ public class TaskAttributes {
       Config config = task.getConfig();
       String taskName = task.getName();
       int parallelTaskCount;
-      if (task.getParallelism() >= 1) {
-        parallelTaskCount = task.getParallelism();
+      if (config.get(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM) != null) {
+        if (task.getParallelism() >= 1) {
+          parallelTaskCount = task.getParallelism();
+        } else {
+          parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
+        }
       } else {
-        parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
+        parallelTaskCount = Integer.valueOf(
+            String.valueOf(config.get(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)));
       }
       parallelTaskMap.put(taskName, parallelTaskCount);
     }
     return parallelTaskMap;
   }
+
+
+  public int getInstancesPerWorker(Set<Vertex> iTaskSet) {
+    int parallelTaskCount = 0;
+    for (Vertex task : iTaskSet) {
+      Config config = task.getConfig();
+      LOG.info("task name:" + task.getName() + "\t"
+          + config.get(Context.TWISTER2_TASK_INSTANCES_PER_WORKER) + "\t"
+          + config.get(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM));
+      Integer count = Integer.valueOf(
+          String.valueOf(config.get(Context.TWISTER2_TASK_INSTANCES_PER_WORKER)));
+      if (count > parallelTaskCount) {
+        parallelTaskCount = count;
+      }
+    }
+    return parallelTaskCount;
+  }
+
+
 
   /**
    * This method is to generate the parallel task map for the task vertex. If the user specifies the
