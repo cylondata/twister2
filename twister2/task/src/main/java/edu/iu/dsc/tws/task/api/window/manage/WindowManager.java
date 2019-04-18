@@ -13,12 +13,15 @@ package edu.iu.dsc.tws.task.api.window.manage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.Window;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 
 public class WindowManager<T> implements IManager<T> {
+
+  private static final Logger LOG = Logger.getLogger(WindowManager.class.getName());
 
   private static final long serialVersionUID = -15452808832480739L;
 
@@ -46,7 +49,7 @@ public class WindowManager<T> implements IManager<T> {
 
     if (this.windowingPolicy.getWindow().equals(Window.TUMBLING)) {
       if (this.windowingPolicy.getCount().value > 0) {
-        windowedObjects = new ArrayList<T>(this.windowingPolicy.getCount().value);
+        this.windowedObjects = new ArrayList<T>(this.windowingPolicy.getCount().value);
       }
       //TODO : implement the timing based one
     }
@@ -75,14 +78,13 @@ public class WindowManager<T> implements IManager<T> {
   public boolean execute(T message) {
 
     boolean status = false;
-    while (progress(this.windowedObjects) && message != null) {
+    if (progress(this.windowedObjects)) {
       if (this.windowingPolicy.getWindow().equals(Window.TUMBLING)) {
         windowCountSize = this.windowingPolicy.getCount().value;
         windowDurationSize = this.windowingPolicy.getDuration();
         if (windowCountSize > 0 && this.windowedObjects.size() < windowCountSize) {
           this.windowedObjects.add(message);
           status = true;
-          this.windowingCompleted = false;
         }
         //TODO : implement the duration logic
       }
@@ -105,6 +107,7 @@ public class WindowManager<T> implements IManager<T> {
 
   @Override
   public void clearWindow() {
+    this.windowingCompleted = false;
     this.windowedObjects.clear();
   }
 
@@ -114,11 +117,8 @@ public class WindowManager<T> implements IManager<T> {
     if (this.windowingPolicy.getWindow().equals(Window.TUMBLING)) {
       windowCountSize = this.windowingPolicy.getCount().value;
       windowDurationSize = this.windowingPolicy.getDuration();
-      if (this.windowedObjects.size() == windowCountSize && windowCountSize > 0) {
+      if (window.size() == windowCountSize && windowCountSize > 0) {
         progress = false;
-        this.windowingCompleted = true;
-      } if(this.windowedObjects.size() == 0) {
-        this.windowingCompleted = false;
       }
       // TODO : implement duration logic
     }
@@ -140,6 +140,28 @@ public class WindowManager<T> implements IManager<T> {
 
   @Override
   public boolean isDone() {
+    if (this.windowingPolicy.getWindow().equals(Window.TUMBLING)) {
+      windowCountSize = this.windowingPolicy.getCount().value;
+      windowDurationSize = this.windowingPolicy.getDuration();
+      if (this.windowedObjects.size() == windowCountSize && windowCountSize > 0) {
+        this.windowingCompleted = true;
+      } else {
+        this.windowingCompleted = false;
+      }
+      // TODO : implement duration logic
+    }
+
+    if (this.windowingPolicy.getWindow().equals(Window.SLIDING)) {
+      // TODO : implement the logic
+    }
+
+    if (this.windowingPolicy.getWindow().equals(Window.SESSION)) {
+      // TODO : implement the logic
+    }
+
+    if (this.windowingPolicy.getWindow().equals(Window.GLOBAL)) {
+      // TODO : implement the logic
+    }
     return this.windowingCompleted;
   }
 }
