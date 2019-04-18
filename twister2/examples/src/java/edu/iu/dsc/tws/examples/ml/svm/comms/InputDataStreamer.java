@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BDirect;
 import edu.iu.dsc.tws.examples.Utils;
@@ -50,7 +50,7 @@ public class InputDataStreamer extends CommsWorker {
     }
 
     direct = new BDirect(communicator, taskPlan, sources, targets,
-        new DirectReceiver(), MessageType.DOUBLE);
+        new DirectReceiver(), MessageTypes.DOUBLE);
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,

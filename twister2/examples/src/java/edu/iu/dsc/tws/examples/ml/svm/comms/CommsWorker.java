@@ -163,7 +163,7 @@ public abstract class CommsWorker implements IWorker {
     public void run() {
       LOG.info(() -> "Starting map worker: " + workerId + " task: " + task);
       for (int i = 0; i < inputDataArray.length; i++) {
-        int flag = (i == inputDataArray.length - 1) ? MessageFlags.LAST : 0;
+        int flag = (i == inputDataArray.length - 1) ? MessageFlags.SYNC_MESSAGE : 0;
         sendMessages(task, inputDataArray[i], flag);
       }
       LOG.info(() -> String.format("%d Done sending", workerId));

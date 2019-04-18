@@ -117,7 +117,8 @@ public class WindowManager<T> implements IManager<T> {
       if (this.windowedObjects.size() == windowCountSize && windowCountSize > 0) {
         progress = false;
         this.windowingCompleted = true;
-      } if(this.windowedObjects.size() == 0) {
+      }
+      if (this.windowedObjects.size() == 0) {
         this.windowingCompleted = false;
       }
       // TODO : implement duration logic

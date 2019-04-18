@@ -20,7 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
@@ -48,8 +48,8 @@ public class SVMCommsReducer extends CommsWorker {
     }
     int target = noOfSourceTasks;
     reduce = new BReduce(communicator, taskPlan, sources, target,
-        new ReduceOperationFunction(Op.SUM, MessageType.DOUBLE), new FinalSingularReceiver(),
-        MessageType.DOUBLE);
+        new ReduceOperationFunction(Op.SUM, MessageTypes.DOUBLE), new FinalSingularReceiver(),
+        MessageTypes.DOUBLE);
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         taskStages, 0);
     for (int t : tasksOfExecutor) {
