@@ -17,8 +17,9 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
+import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.DGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchFinalReceiver;
@@ -31,7 +32,7 @@ public class BGather {
   /**
    * The actual operation
    */
-  private DataFlowGather gather;
+  private MToOneTree gather;
 
   /**
    * The data type
@@ -57,13 +58,12 @@ public class BGather {
     if (!shuffle) {
       finalRcvr = new GatherBatchFinalReceiver(rcvr);
     } else {
-      finalRcvr = new DGatherBatchFinalReceiver(rcvr, comm.getPersistentDirectory());
+      finalRcvr = new DGatherBatchFinalReceiver(rcvr, comm.getPersistentDirectory(target));
     }
     this.dataType = dataType;
-    this.gather = new DataFlowGather(comm.getChannel(), sources, target,
+    this.gather = new MToOneTree(comm.getChannel(), sources, target,
         finalRcvr, new GatherBatchPartialReceiver(target),
-        0, 0, comm.getConfig(), plan, true, dataType, dataType,
-        MessageType.INTEGER, comm.nextEdge());
+        0, 0, true, MessageTypes.INTEGER, dataType);
     this.gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
 
@@ -76,12 +76,13 @@ public class BGather {
    * @return true if the message is accepted
    */
   public boolean gather(int source, Object message, int flags) {
-    Tuple tuple = new Tuple(source, message, MessageType.INTEGER, dataType);
+    Tuple tuple = new Tuple(source, message, MessageTypes.INTEGER, dataType);
     return gather.send(source, tuple, flags);
   }
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -90,6 +91,7 @@ public class BGather {
 
   /**
    * Indicate the end of the communication
+   *
    * @param source the source that is ending
    */
   public void finish(int source) {

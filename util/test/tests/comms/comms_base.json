@@ -13,7 +13,7 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 500
+        "value": 50000
       }
     },
     {
@@ -21,8 +21,13 @@
       "name": "Workers",
       "optional": false,
       "values": {
-        "type": "fixed",
-        "value": 4
+        "type": "array",
+        "array": [
+          32,
+          64,
+          128,
+          256
+        ]
       }
     },
     {
@@ -31,9 +36,9 @@
       "optional": false,
       "values": {
         "type": "steps",
-        "from": 128,
+        "from": 256,
         "to": 8192,
-        "step": 128
+        "step": 256
       }
     },
     {
@@ -42,7 +47,7 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 10
+        "value": 10000
       }
     },
     {

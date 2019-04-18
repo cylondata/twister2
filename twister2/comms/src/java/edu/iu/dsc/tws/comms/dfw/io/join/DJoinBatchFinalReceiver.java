@@ -41,19 +41,17 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public class DJoinBatchFinalReceiver implements MessageReceiver {
 
@@ -122,7 +120,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
   /**
    * The directory in which we will be saving the shuffle objects
    */
-  private String shuffleDirectory;
+  private List<String> shuffleDirectories;
 
   /**
    * Weather everyone finished
@@ -130,11 +128,11 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
   private Set<Integer> targets = new HashSet<>();
 
   public DJoinBatchFinalReceiver(BulkReceiver bulkReceiver,
-                                 String shuffleDir, Comparator<Object> com) {
+                                 List<String> shuffleDirs, Comparator<Object> com) {
     this.receiver = bulkReceiver;
     this.kryoSerializer = new KryoSerializer();
     this.comparator = com;
-    this.shuffleDirectory = shuffleDir;
+    this.shuffleDirectories = shuffleDirs;
   }
 
   @Override
@@ -150,11 +148,13 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
       executor = op.getTaskPlan().getThisExecutor();
       thisWorker = op.getTaskPlan().getThisExecutor();
       this.operationLeft = op;
-      this.sources = ((DataFlowPartition) op).getSources();
+      this.sources = op.getSources();
       this.targets = new HashSet<>(expectedIds.keySet());
 
       // lists to keep track of messages for destinations
       for (int target : expectedIds.keySet()) {
+        String shuffleDirectory = this.shuffleDirectories.get(
+            target % this.shuffleDirectories.size());
         Shuffle sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
             shuffleDirectory, DFWIOUtils.getOperationName(target, operationLeft),
             operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target);
@@ -207,7 +207,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
     }
 
     Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(target);
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
+    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
       if (onFinishedSrcsTarget.contains(source)) {
         LOG.log(Level.WARNING,
             String.format("%d Duplicate finish from source id %d", this.thisWorker, source));
@@ -221,7 +221,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
     List<Tuple> tuples = (List<Tuple>) object;
     for (Tuple kc : tuples) {
       Object data = kc.getValue();
-      byte[] d = DataSerializer.serialize(data, kryoSerializer);
+      byte[] d = operationLeft.getDataType().getDataPacker().packToByteArray(data);
 
       sortedMerger.add(kc.getKey(), d, d.length);
     }

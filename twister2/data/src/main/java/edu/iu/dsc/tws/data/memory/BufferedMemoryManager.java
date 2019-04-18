@@ -32,10 +32,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * Inserts into the memory store in batches. Only one instance per executor.
@@ -288,7 +288,8 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean delete(int opID, long key) {
-    deleteFromBMM(opID, new String(Longs.toByteArray(key),java.nio.charset.StandardCharsets.UTF_8));
+    deleteFromBMM(opID, new String(Longs.packToByteArray(key),
+    java.nio.charset.StandardCharsets.UTF_8));
     return memoryManager.delete(opID, key);
   }*/
 
@@ -443,7 +444,8 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean flush(int opID, long key) {
-    return flush(opID, new String(Longs.toByteArray(key), java.nio.charset.StandardCharsets.UTF_8));
+    return flush(opID, new String(Longs.packToByteArray(key),
+    java.nio.charset.StandardCharsets.UTF_8));
   }*/
 
   /**
@@ -534,7 +536,8 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public boolean close(int opID, long key) {
-    return close(opID, new String(Longs.toByteArray(key), java.nio.charset.StandardCharsets.UTF_8));
+    return close(opID, new String(Longs.packToByteArray(key),
+    java.nio.charset.StandardCharsets.UTF_8));
   }*/
 
   /**
@@ -554,14 +557,14 @@ public class BufferedMemoryManager extends AbstractMemoryManager {
 
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType keyType, DataMessageType valueType,
-                                      KryoMemorySerializer deSerializer, ByteOrder order) {
+                                      KryoSerializer deSerializer, ByteOrder order) {
     flushAll(opID);
     return memoryManager.getIterator(opID, keyType, valueType, deSerializer, order);
   }
 
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType valueType,
-                                      KryoMemorySerializer deSerializer, ByteOrder order) {
+                                      KryoSerializer deSerializer, ByteOrder order) {
     flushAll(opID);
     return memoryManager.getIterator(opID, valueType, deSerializer, order);
   }

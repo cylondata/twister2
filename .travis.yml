@@ -19,14 +19,7 @@ before_install:
   - sudo apt-get install  python-dev python-pip
 
 script:
-  - echo "*****************************************"
   - echo "PATH CHECK:vb"
-  - echo $OMPI_312
-  - ls $PWD/build
-  - mpirun -version
-  - echo "*****************************************"
-  - mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_312/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.1.2
-  - echo "END OF INSTALL"
   - bazel version
   - echo " BAZEL BUILD START"
   - bazel build --config=ubuntu twister2/...

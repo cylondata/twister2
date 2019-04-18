@@ -15,8 +15,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * base interface for memory managers. Memory managers are responsible of keeping data in memoory
@@ -61,7 +61,7 @@ public interface MemoryManager {
    */
   /*boolean put(int opID, byte[] key, ByteBuffer value);
 
-  */
+   */
 
   /**
    * Stores the give key value pair in the memory manager
@@ -81,7 +81,7 @@ public interface MemoryManager {
    */
   /*boolean put(int opID, byte[] key, byte[] value);
 
-  *//**
+   *//**
    * Stores the give key value pair in the memory manager
    *//*
   boolean put(int opID, long key, byte[] value);
@@ -100,7 +100,7 @@ public interface MemoryManager {
    */
   /*ByteBuffer get(int opID, byte[] key);
 
-  */
+   */
 
   /**
    * Get the corresponding value as ByteBuffer for the given key from the store
@@ -148,7 +148,7 @@ public interface MemoryManager {
    */
   /*boolean containsKey(int opID, byte[] key);
 
-  */
+   */
 
   /**
    * checks if the given key is in the memory manager
@@ -238,9 +238,9 @@ public interface MemoryManager {
   /*<T extends Serializable> boolean close(int opID, T key);*/
 
   Iterator<Object> getIterator(int opID, DataMessageType keyType, DataMessageType valueType,
-                               KryoMemorySerializer deSerializer, ByteOrder order);
+                               KryoSerializer deSerializer, ByteOrder order);
 
   Iterator<Object> getIterator(int opID, DataMessageType valueType,
-                               KryoMemorySerializer deSerializer, ByteOrder order);
+                               KryoSerializer deSerializer, ByteOrder order);
 
 }

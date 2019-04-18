@@ -61,4 +61,32 @@ public class DataBuffer {
   public ByteBuffer getByteBuffer() {
     return byteBuffer;
   }
+
+  /**
+   * Copies a part of the ByteBuffer to the given byte array
+   *
+   * @param bufferLocation starting position of byteBuffer
+   * @param value byte array to copy data
+   * @param startIndex initial index of the byte array
+   * @param byteLength no of bytes top copy
+   * @return amount of bytes read
+   */
+  public int copyPartToByteArray(int bufferLocation,
+                                 byte[] value,
+                                 int startIndex,
+                                 int byteLength) {
+    int bytesRead = 0;
+    int currentBufferLocation = bufferLocation;
+    for (int i = startIndex; i < byteLength; i++) {
+      int remaining = size - currentBufferLocation;
+      if (remaining >= 1) {
+        value[i] = byteBuffer.get(currentBufferLocation);
+        bytesRead += 1;
+        currentBufferLocation += 1;
+      } else {
+        break;
+      }
+    }
+    return bytesRead;
+  }
 }

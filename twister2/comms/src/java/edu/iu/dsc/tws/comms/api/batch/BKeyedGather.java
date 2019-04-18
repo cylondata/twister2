@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.comms.api.batch;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.CommunicationContext;
@@ -23,13 +22,11 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowMultiGather;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.RingPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNRing;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.gather.GatherMultiBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
@@ -79,41 +76,24 @@ public class BKeyedGather {
     if (!useDisk) {
       finalReceiver = new KGatherBatchFinalReceiver(rcvr, 100);
     } else {
-      receiveDataType = MessageType.BYTE;
+      receiveDataType = MessageTypes.BYTE_ARRAY;
       finalReceiver = new DPartitionBatchFinalReceiver(
-          rcvr, true, comm.getPersistentDirectory(), comparator);
+          rcvr, true, comm.getPersistentDirectories(), comparator);
     }
 
-    if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_GATHER.equals(
-        CommunicationContext.batchKeyedGatherOp(comm.getConfig()))) {
-      LOG.warning(() -> String.format(
-          "Deprecated Keyed Gather operation %s used. Consider using %s",
-          CommunicationContext.TWISTER2_KEYED_GATHER_OP_GATHER,
-          CommunicationContext.TWISTER2_KEYED_GATHER_OP_PARTITION
-      ));
-      Set<Integer> edges = destinations.stream()
-          .map(d -> comm.nextEdge()).collect(Collectors.toSet());
-
-      this.keyedGather = new DataFlowMultiGather(comm.getConfig(), comm.getChannel(),
+    if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
+        CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
+      this.keyedGather = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations,
-          new GatherMultiBatchFinalReceiver(rcvr, useDisk, false, comm.getPersistentDirectory(),
-              null), new GatherMultiBatchPartialReceiver(),
-          edges, kType, dType);
-    } else if (CommunicationContext.TWISTER2_KEYED_GATHER_OP_PARTITION.equals(
-        CommunicationContext.batchKeyedGatherOp(comm.getConfig()))) {
-      if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
-          CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
-        this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
-            plan, sources, destinations,
-            finalReceiver, partialReceiver, dataType, receiveDataType,
-            keyType, keyType, comm.nextEdge());
-      } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
-          CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
-        this.keyedGather = new RingPartition(comm.getConfig(), comm.getChannel(),
-            plan, sources, destinations, finalReceiver, partialReceiver,
-            dataType, receiveDataType, keyType, keyType, comm.nextEdge());
-      }
+          finalReceiver, partialReceiver, dataType, receiveDataType,
+          keyType, keyType, comm.nextEdge());
+    } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
+        CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
+      this.keyedGather = new MToNRing(comm.getConfig(), comm.getChannel(),
+          plan, sources, destinations, finalReceiver, partialReceiver,
+          dataType, receiveDataType, keyType, keyType, comm.nextEdge());
     }
+
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, destinations);
   }

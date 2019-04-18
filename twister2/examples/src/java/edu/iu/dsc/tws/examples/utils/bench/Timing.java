@@ -110,9 +110,9 @@ public final class Timing {
         flagA, flagB, totalDiffs.toString(), timingUnitMap.get(flagA).getLabel()));
     System.out.println(String.format("Taking average for %d events", flagALongs.size()));
 
-    return totalDiffs.divide(
-        BigDecimal.valueOf(flagALongs.size())
-    ).doubleValue();
+    double average = totalDiffs.divide(BigDecimal.valueOf(flagALongs.size())).doubleValue();
+    System.out.println(String.format("Average time [%s - %s] = %f", flagA, flagB, average));
+    return average;
   }
 
   public static List<Long> diffs(String flagA, String flagB, boolean accept) {

@@ -30,10 +30,7 @@ public class IterableFlatMapTSet<I, O> extends BatchBaseTSet<O> {
 
   public IterableFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<I> parent,
                              IterableFlatMapFunction<I, O> mapFunc) {
-    super(cfg, tSetEnv);
-    this.parent = parent;
-    this.mapFn = mapFunc;
-    this.parallel = 1;
+    this(cfg, tSetEnv, parent, mapFunc, 1);
   }
 
   public IterableFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<I> parent,
@@ -42,6 +39,7 @@ public class IterableFlatMapTSet<I, O> extends BatchBaseTSet<O> {
     this.parent = parent;
     this.mapFn = mapFunc;
     this.parallel = parallelism;
+    this.name = "iflatmap-" + parent.getName();
   }
 
   public <O1> IterableMapTSet<O, O1> map(IterableMapFunction<O, O1> mFn) {

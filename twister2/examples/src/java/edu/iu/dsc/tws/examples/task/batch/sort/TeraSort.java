@@ -16,6 +16,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -33,9 +34,13 @@ import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -46,33 +51,37 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_BYTES_IN_MEMORY;
 import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_RECORDS_IN_MEMORY;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_BENCHMARK_METADATA;
 
 public class TeraSort extends TaskWorker {
 
   private static final Logger LOG = Logger.getLogger(TeraSort.class.getName());
 
   private static final String ARG_SIZE = "size";
-  private static final String ARG_KEY_RANGE = "keyRange";
+  private static final String ARG_KEY_SIZE = "keySize";
   private static final String ARG_VALUE_SIZE = "valueSize";
 
-  private static final String ARG_RESOURCE_CPU = "instanceCpus";
+  private static final String ARG_RESOURCE_CPU = "instanceCPUs";
   private static final String ARG_RESOURCE_MEMORY = "instanceMemory";
   private static final String ARG_RESOURCE_INSTANCES = "instances";
 
   private static final String ARG_TASKS_SOURCES = "sources";
+  private static final String ARG_TASKS_SINKS = "sinks";
 
-  private static final String ARG_TUNE_MAX_BYTES_IN_MEMORY = "memoryBytes";
-  private static final String ARG_TUNE_MAX_RECORDS_IN_MEMORY = "memoryRecords";
+  private static final String ARG_TUNE_MAX_BYTES_IN_MEMORY = "memoryBytesLimit";
+  private static final String ARG_TUNE_MAX_RECORDS_IN_MEMORY = "memoryRecordsLimit";
 
   private static final String TASK_SOURCE = "int-source";
   private static final String TASK_RECV = "int-recv";
   private static final String EDGE = "edge";
 
-  private static final String TIMING_START = "START";
-  private static final String TIMING_END = "END";
+  private static BenchmarkResultsRecorder resultsRecorder;
+
+  private static volatile AtomicInteger tasksCount = new AtomicInteger();
 
   @Override
   public void execute() {
+    resultsRecorder = new BenchmarkResultsRecorder(config, workerId == 0);
     Timing.setDefaultTimingUnit(TimingUnit.MILLI_SECONDS);
     TaskGraphBuilder tgb = TaskGraphBuilder.newBuilder(config);
     tgb.setMode(OperationMode.BATCH);
@@ -81,24 +90,59 @@ public class TeraSort extends TaskWorker {
     tgb.addSource(TASK_SOURCE, integerSource, config.getIntegerValue(ARG_TASKS_SOURCES, 4));
 
     Receiver receiver = new Receiver();
-    tgb.addSink(TASK_RECV, receiver, 1)
+    tgb.addSink(TASK_RECV, receiver, config.getIntegerValue(ARG_TASKS_SINKS, 4))
         .keyedGather(TASK_SOURCE, EDGE,
-            DataType.INTEGER, DataType.BYTE, true,
-            Comparator.comparingInt(o -> (Integer) o));
+            DataType.BYTE_ARRAY, DataType.BYTE_ARRAY, true,
+            ByteArrayComparator.getInstance());
+
 
     DataFlowTaskGraph dataFlowTaskGraph = tgb.build();
     ExecutionPlan executionPlan = taskExecutor.plan(dataFlowTaskGraph);
-    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
+    IExecution iExecution = taskExecutor.iExecute(dataFlowTaskGraph, executionPlan);
+    iExecution.progress();
+    while (tasksCount.get() > 0) {
+      iExecution.progress();
+    }
     LOG.info("Stopping execution...");
+    iExecution.stop();
+    iExecution.close();
   }
 
-  public static class Receiver extends KeyedGatherCompute<Integer, byte[]> implements ISink {
+  /**
+   * Extracted from hbase source code
+   */
+  public static final class ByteArrayComparator implements Comparator<byte[]> {
+
+    private static final ByteArrayComparator INSTANCE = new ByteArrayComparator();
+
+    private ByteArrayComparator() {
+    }
+
+    public static ByteArrayComparator getInstance() {
+      return INSTANCE;
+    }
+
+    @Override
+    public int compare(byte[] left, byte[] right) {
+      for (int i = 0, j = 0; i < left.length && j < right.length; i++, j++) {
+        int a = left[i] & 0xff;
+        int b = right[j] & 0xff;
+        if (a != b) {
+          return a - b;
+        }
+      }
+      return left.length - right.length;
+    }
+  }
+
+  public static class Receiver extends KeyedGatherCompute<byte[], byte[]> implements ISink {
 
     private boolean timingCondition = false;
 
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
+      tasksCount.incrementAndGet();
       int lowestTaskIndex = ctx.getTasksByName(TASK_SOURCE).stream()
           .map(TaskInstancePlan::getTaskIndex)
           .min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -106,16 +150,18 @@ public class TeraSort extends TaskWorker {
     }
 
     @Override
-    public boolean keyedGather(Iterator<Tuple<Integer, byte[]>> content) {
-      Timing.mark(TIMING_END, this.timingCondition);
-      Timing.averageDiff(TIMING_START, TIMING_END, this.timingCondition);
+    public boolean keyedGather(Iterator<Tuple<byte[], byte[]>> content) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
 
-      Integer previousKey = Integer.MIN_VALUE;
+      byte[] previousKey = null;
       boolean allOrdered = true;
       long tupleCount = 0;
       while (content.hasNext()) {
-        Tuple<Integer, byte[]> nextTuple = content.next();
-        if (previousKey > nextTuple.getKey()) {
+        Tuple<byte[], byte[]> nextTuple = content.next();
+        if (previousKey != null
+            && ByteArrayComparator.INSTANCE.compare(previousKey, nextTuple.getKey()) > 0) {
           LOG.info("Unordered tuple found");
           allOrdered = false;
         }
@@ -123,6 +169,7 @@ public class TeraSort extends TaskWorker {
         previousKey = nextTuple.getKey();
       }
       LOG.info(String.format("Received %d tuples. Ordered : %b", tupleCount, allOrdered));
+      tasksCount.decrementAndGet();
       return true;
     }
   }
@@ -133,27 +180,37 @@ public class TeraSort extends TaskWorker {
     private long sent;
     private byte[] value;
     private Random random;
-    private int range;
+    private int keySize;
 
     private boolean timingCondition = false;
 
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
-      int valueSize = cfg.getIntegerValue(ARG_VALUE_SIZE, 100);
-      int totalSize = valueSize + Integer.BYTES;
+      tasksCount.incrementAndGet();
+      int valueSize = cfg.getIntegerValue(ARG_VALUE_SIZE, 90);
+      this.keySize = cfg.getIntegerValue(ARG_KEY_SIZE, 10);
+
+      int noOfSources = cfg.getIntegerValue(ARG_TASKS_SOURCES, 4);
+
+      int totalSize = valueSize + keySize;
       this.toSend = cfg.getLongValue(
           ARG_SIZE, 1
-      ) * 1024 * 1024 * 1024 / totalSize;
+      ) * 1024 * 1024 * 1024 / totalSize / noOfSources;
+
       this.value = new byte[valueSize];
       Arrays.fill(this.value, (byte) 1);
       this.random = new Random();
-      this.range = cfg.getIntegerValue(ARG_KEY_RANGE, 1000);
 
       //time only in the worker0's lowest task
       int lowestTaskIndex = ctx.getTasksByName(TASK_SOURCE).stream()
           .map(TaskInstancePlan::getTaskIndex)
           .min(Comparator.comparingInt(o -> (Integer) o)).get();
+
+      if (ctx.taskIndex() == lowestTaskIndex) {
+        LOG.info(String.format("Each source will send %d "
+            + "messages of size %d bytes", this.toSend, totalSize));
+      }
 
       timingCondition = ctx.getWorkerId() == 0 && ctx.taskIndex() == lowestTaskIndex;
     }
@@ -162,15 +219,17 @@ public class TeraSort extends TaskWorker {
     public void execute() {
       if (sent == 0) {
         LOG.info(String.format("Sending %d messages", this.toSend));
-        Timing.mark(TIMING_START, this.timingCondition);
+        Timing.mark(BenchmarkConstants.TIMING_ALL_SEND, this.timingCondition);
       }
-
-      context.write(EDGE, this.random.nextInt(this.range), this.value);
+      byte[] randomKey = new byte[this.keySize];
+      this.random.nextBytes(randomKey);
+      context.write(EDGE, randomKey, this.value);
       sent++;
 
       if (sent == toSend) {
         context.end(EDGE);
         LOG.info("Done Sending");
+        tasksCount.decrementAndGet();
       }
     }
   }
@@ -191,9 +250,8 @@ public class TeraSort extends TaskWorker {
     options.addOption(createOption(ARG_SIZE, true, "Data Size in GigaBytes. "
             + "A source will generate this much of data. Including size of both key and value.",
         true));
-    options.addOption(createOption(ARG_KEY_RANGE, true,
-        "Range of integer keys. Specify the upped bound for keys. "
-            + "0 will always be the lowe bound", true));
+    options.addOption(createOption(ARG_KEY_SIZE, true,
+        "Size of the key in bytes of a single Tuple", true));
     options.addOption(createOption(ARG_VALUE_SIZE, true,
         "Size of the value in bytes of a single Tuple", true));
 
@@ -205,9 +263,11 @@ public class TeraSort extends TaskWorker {
     options.addOption(createOption(ARG_RESOURCE_INSTANCES, true,
         "No. of instances", true));
 
-    //tasks
+    //tasks and sources counts
     options.addOption(createOption(ARG_TASKS_SOURCES, true,
         "No of source tasks", true));
+    options.addOption(createOption(ARG_TASKS_SINKS, true,
+        "No of sink tasks", true));
 
     //optional configurations (tune performance)
     options.addOption(createOption(
@@ -219,15 +279,22 @@ public class TeraSort extends TaskWorker {
         false
     ));
 
+    options.addOption(createOption(
+        ARG_BENCHMARK_METADATA, true,
+        "Auto generated argument by benchmark suite",
+        false
+    ));
+
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
 
     jobConfig.put(ARG_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_SIZE)));
     jobConfig.put(ARG_VALUE_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_VALUE_SIZE)));
-    jobConfig.put(ARG_KEY_RANGE, Integer.valueOf(cmd.getOptionValue(ARG_KEY_RANGE)));
+    jobConfig.put(ARG_KEY_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_KEY_SIZE)));
 
     jobConfig.put(ARG_TASKS_SOURCES, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SOURCES)));
+    jobConfig.put(ARG_TASKS_SINKS, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SINKS)));
 
     if (cmd.hasOption(ARG_TUNE_MAX_BYTES_IN_MEMORY)) {
       jobConfig.put(SHUFFLE_MAX_BYTES_IN_MEMORY,
@@ -239,11 +306,20 @@ public class TeraSort extends TaskWorker {
           Integer.valueOf(cmd.getOptionValue(ARG_TUNE_MAX_RECORDS_IN_MEMORY)));
     }
 
+    if (cmd.hasOption(ARG_BENCHMARK_METADATA)) {
+      jobConfig.put(ARG_BENCHMARK_METADATA,
+          cmd.getOptionValue(ARG_BENCHMARK_METADATA));
+    }
+
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
         .setJobName(TeraSort.class.getName())
         .setWorkerClass(TeraSort.class.getName())
-        .addComputeResource(1, 512, 4)
+        .addComputeResource(
+            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
+            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_MEMORY)),
+            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES))
+        )
         .setConfig(jobConfig)
         .build();
     Twister2Submitter.submitJob(twister2Job, config);

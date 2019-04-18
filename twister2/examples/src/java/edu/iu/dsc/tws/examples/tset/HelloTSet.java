@@ -16,6 +16,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
@@ -39,6 +45,7 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
   @Override
   public void execute(TwisterBatchContext tc) {
     LOG.info("Strating Hello TSet Example");
+    int para = config.getIntegerValue("para", 4);
     BatchSourceTSet<int[]> source = tc.createSource(new Source<int[]>() {
 
       @Override
@@ -50,7 +57,7 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
 
       @Override
       public boolean hasNext() {
-        return count < 4;
+        return count < para;
       }
 
       @Override
@@ -58,7 +65,7 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
         count++;
         return new int[]{1, 1, 1};
       }
-    }, 4).setName("Source");
+    }, para).setName("Source");
 
     PartitionTLink<int[]> partitioned = source.
         partition(new LoadBalancePartitioner<>());
@@ -71,7 +78,7 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
             return new int[0];
           }
         },
-            4);
+            para);
 
     ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];
@@ -90,12 +97,20 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
 
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws ParseException {
     // first load the configurations from command line and config files
+    Options options = new Options();
+    options.addOption("para", true, "Workers");
+    CommandLineParser commandLineParser = new DefaultParser();
+    CommandLine cmd = commandLineParser.parse(options, args);
+
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
+    int para = Integer.parseInt(cmd.getOptionValue("para"));
     // build JobConfig
+
     JobConfig jobConfig = new JobConfig();
-    submitJob(config, 4, jobConfig, HelloTSet.class.getName());
+    jobConfig.put("para", Integer.toString(para));
+    submitJob(config, para, jobConfig, HelloTSet.class.getName());
   }
 
   private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {

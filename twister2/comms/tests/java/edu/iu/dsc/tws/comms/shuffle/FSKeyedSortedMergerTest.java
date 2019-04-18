@@ -25,9 +25,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class FSKeyedSortedMergerTest {
@@ -48,7 +48,7 @@ public class FSKeyedSortedMergerTest {
   @Before
   public void before() throws Exception {
     fsMerger = new FSKeyedSortedMerger2(1000, 100, "/tmp",
-        "fskeyedsortedmerger", MessageType.INTEGER, MessageType.OBJECT,
+        "fskeyedsortedmerger", MessageTypes.INTEGER, MessageTypes.OBJECT,
         Comparator.comparingInt(i -> (Integer) i), 0);
     serializer = new KryoSerializer();
   }

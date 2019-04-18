@@ -39,7 +39,7 @@ public class STGatherExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    DataType dataType = DataType.INTEGER;
+    DataType dataType = DataType.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
     ISink r = new GatherSinkTask();
