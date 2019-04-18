@@ -29,6 +29,7 @@ public final class Constants {
   public static final String ARGS_OUTPUT_DIRECTORY = "output";
   public static final String ARGS_OUTSTANDING = "outstanding";
   public static final String ARGS_STREAM = "stream";
+  public static final String ARGS_WINDOW = "window";
   public static final String ARGS_THREADS = "threads";
   public static final String ARGS_PRINT_INTERVAL = "pi";
   public static final String ARGS_DATA_TYPE = "type";

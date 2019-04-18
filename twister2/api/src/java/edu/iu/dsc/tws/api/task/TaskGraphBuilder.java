@@ -21,9 +21,11 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
+import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.task.graph.WindowMode;
 
 /**
  * This is the entry point for creating a task graph by the user.
@@ -57,6 +59,19 @@ public final class TaskGraphBuilder {
   private OperationMode mode = OperationMode.STREAMING;
 
   /**
+   * Adding the window mode NONE or ALL
+   */
+  private WindowMode windowMode = WindowMode.NONE;
+
+
+  /**
+   * Windowing Policy
+   */
+  private WindowingPolicy windowingPolicy = null;
+
+
+
+  /**
    * Create an instance of the task builder.
    *
    * @param cfg configuration
@@ -77,6 +92,24 @@ public final class TaskGraphBuilder {
    */
   public void setMode(OperationMode mode) {
     this.mode = mode;
+  }
+
+  /**
+   * Setting the windowing mode NONE or ALL
+   * Default it is set to NONE
+   * @param windowMode
+   */
+  public void setWindowMode(WindowMode windowMode) {
+    this.windowMode = windowMode;
+  }
+
+
+  /**
+   * setting the Windowing policy
+   * @param windowingPolicy
+   */
+  public void setWindowingPolicy(WindowingPolicy windowingPolicy) {
+    this.windowingPolicy = windowingPolicy;
   }
 
   /**
@@ -193,9 +226,29 @@ public final class TaskGraphBuilder {
     return mode;
   }
 
+  /**
+   * Returning the windowMode
+   * @return
+   */
+  public WindowMode getWindowMode() {
+    return windowMode;
+  }
+
+
+  /**
+   * Returning the windowing policy
+   * @return
+   */
+
+  public WindowingPolicy getWindowingPolicy() {
+    return windowingPolicy;
+  }
+
   public DataFlowTaskGraph build() {
     DataFlowTaskGraph graph = new DataFlowTaskGraph();
     graph.setOperationMode(mode);
+    graph.setWindowMode(windowMode);
+    graph.setWindowingPolicy(windowingPolicy);
 
     for (Map.Entry<String, Vertex> e : nodes.entrySet()) {
       graph.addTaskVertex(e.getKey(), e.getValue());
