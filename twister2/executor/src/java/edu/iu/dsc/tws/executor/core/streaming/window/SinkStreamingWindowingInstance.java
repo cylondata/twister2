@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
+import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
@@ -100,6 +101,8 @@ public class SinkStreamingWindowingInstance implements INodeInstance, IWindowIns
 
   private List<IMessage<?>> messageList = new ArrayList<>(windowSize);
 
+  private WindowManager<IMessage<?>> windowManager;
+
 
   public SinkStreamingWindowingInstance(IWindowCompute streamingWindowTask,
                                         BlockingQueue<IMessage> streamingInQueue, Config config,
@@ -119,29 +122,21 @@ public class SinkStreamingWindowingInstance implements INodeInstance, IWindowIns
     this.inEdges = inEdges;
     this.taskSchedulePlan = taskSchedulePlan;
     this.windowingPolicy = winPolicy;
+    this.windowManager = new WindowManager<>(this.windowingPolicy);
   }
 
   @Override
   public boolean execute() {
-    this.windowSize = this.windowingPolicy.getCount().value;
 
     while (!streamingInQueue.isEmpty()) {
       IMessage m = streamingInQueue.poll();
-      if (m != null && messageList.size() < this.windowSize) {
-        messageList.add(m);
+
+      this.windowManager.execute(m);
+
+      if (this.windowManager.isDone()) {
+        streamingWindowTask.execute(this.windowManager.getWindow());
+        this.windowManager.clearWindow();
       }
-
-      if (messageList.size() == this.windowSize) {
-        policyApplied = true;
-      }
-
-      if (policyApplied) {
-        streamingWindowTask.execute(messageList);
-        messageList.clear();
-        policyApplied = false;
-      }
-
-
     }
 
     for (Map.Entry<String, IParallelOperation> e : streamingInParOps.entrySet()) {

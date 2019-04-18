@@ -11,5 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.manage;
 
-public interface IManager {
+import java.io.Serializable;
+import java.util.List;
+
+import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
+
+public interface IManager<T> extends Serializable {
+
+  WindowingPolicy initializeWindowingPolicy();
+
+  List<T> getWindow();
+
+  boolean execute(T message);
+
+  void clearWindow();
+
+  boolean progress(List<T> window);
+
+  boolean isDone();
+
 }
