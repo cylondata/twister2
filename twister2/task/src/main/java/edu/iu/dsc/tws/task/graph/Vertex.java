@@ -121,4 +121,8 @@ public class Vertex {
   public void addConfiguration(String key, Object val) {
     this.config.put(key, val);
   }
+
+  public void addConstraints(String key, Object val) {
+    this.config.put(key, val);
+  }
 }
