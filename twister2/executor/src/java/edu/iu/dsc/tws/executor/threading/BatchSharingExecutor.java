@@ -103,6 +103,8 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       op.reset();
     }
 
+    // clear the finished instances
+    finishedInstances.clear();
     cleanUpCalled = true;
   }
 
