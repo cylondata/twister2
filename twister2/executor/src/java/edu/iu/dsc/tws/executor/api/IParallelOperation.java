@@ -67,6 +67,6 @@ public interface IParallelOperation {
   /**
    * Refresh the operation to start from beginning
    */
-  default void refresh() {
+  default void reset() {
   }
 }

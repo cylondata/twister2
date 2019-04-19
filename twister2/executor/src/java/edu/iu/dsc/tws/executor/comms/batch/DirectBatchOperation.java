@@ -86,7 +86,7 @@ public class DirectBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void refresh() {
+  public void reset() {
     op.refresh();
   }
 }

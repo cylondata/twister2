@@ -122,7 +122,7 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void refresh() {
+  public void reset() {
     op.refresh();
   }
 }

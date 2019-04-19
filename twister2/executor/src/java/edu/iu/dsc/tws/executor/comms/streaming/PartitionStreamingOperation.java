@@ -160,7 +160,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void refresh() {
+  public void reset() {
     op.refresh();
   }
 }

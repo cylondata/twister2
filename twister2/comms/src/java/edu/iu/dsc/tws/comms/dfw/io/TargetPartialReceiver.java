@@ -211,9 +211,14 @@ public class TargetPartialReceiver extends TargetReceiver {
       clearTarget(t);
     }
 
+    for (Map.Entry<Integer, Set<Integer>> e : syncSent.entrySet()) {
+      e.getValue().clear();
+    }
+
     for (int source : thisSources) {
       sourceStates.put(source, ReceiverState.RECEIVING);
     }
+    syncState = SyncState.SYNC;
     barriers.clear();
     stateCleared = false;
   }

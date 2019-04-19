@@ -85,7 +85,7 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void refresh() {
+  public void reset() {
     op.refresh();
   }
 }
