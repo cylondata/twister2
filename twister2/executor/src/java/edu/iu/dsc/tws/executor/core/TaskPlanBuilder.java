@@ -82,17 +82,23 @@ public final class TaskPlanBuilder {
       containerList.add(workerInfo);
     }
 
+    Map<String, Set<Integer>> nodeToTasks = new HashMap<>();
+
     int i = 0;
     // we take each container as an executor
     for (Map.Entry<String, List<JobMasterAPI.WorkerInfo>> entry : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
       for (JobMasterAPI.WorkerInfo workerInfo : entry.getValue()) {
         executorsOfGroup.add(workerInfo.getWorkerID());
+        Set<Integer> tasksInNode = nodeToTasks.computeIfAbsent(
+            workerInfo.getNodeInfo().getNodeIP(),
+            k -> new HashSet<>());
+        tasksInNode.addAll(containersToTasks.get(workerInfo.getWorkerID()));
       }
       groupsToTasks.put(i, executorsOfGroup);
       i++;
     }
 
-    return new TaskPlan(containersToTasks, groupsToTasks, workerID);
+    return new TaskPlan(containersToTasks, groupsToTasks, nodeToTasks, workerID);
   }
 }

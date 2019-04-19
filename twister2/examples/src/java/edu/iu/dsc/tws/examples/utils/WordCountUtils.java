@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ public final class WordCountUtils {
   /**
    * Let assume we have 2 tasks per container and one additional for first container,
    * which will be the destination
+   *
    * @return task plan
    */
   public static TaskPlan createWordCountPlan(Config cfg,
@@ -86,6 +88,7 @@ public final class WordCountUtils {
         workerID, groupsToExeuctors));
     // now lets create the task plan of this, we assume we have map tasks in all the processes
     // and reduce task in 0th process
-    return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
+    return new TaskPlan(executorToGraphNodes, groupsToExeuctors,
+        Collections.emptyMap(), thisExecutor);
   }
 }

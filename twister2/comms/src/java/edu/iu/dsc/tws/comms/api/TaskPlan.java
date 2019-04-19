@@ -26,8 +26,11 @@ package edu.iu.dsc.tws.comms.api;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Information about the instances in which the communication happens.
@@ -55,6 +58,7 @@ public class TaskPlan {
    */
   private Map<Integer, Set<Integer>> groupsToExecutor = new HashMap<>();
 
+  private Map<String, Set<Integer>> nodeToTasks;
   /**
    * The process under which we are running
    */
@@ -63,8 +67,10 @@ public class TaskPlan {
 
   public TaskPlan(Map<Integer, Set<Integer>> executorToChannels,
                   Map<Integer, Set<Integer>> groupsToExecutor,
+                  Map<String, Set<Integer>> nodeToTasks,
                   int thisExecutor) {
     this.executorToChannels = executorToChannels;
+    this.nodeToTasks = nodeToTasks;
     this.thisExecutor = thisExecutor;
     this.groupsToExecutor = groupsToExecutor;
 
@@ -129,6 +135,22 @@ public class TaskPlan {
 
   public Set<Integer> getTasksOfThisExecutor() {
     return executorToChannels.get(thisExecutor);
+  }
+
+  public Map<String, Set<Integer>> getNodeToTasks() {
+    return nodeToTasks;
+  }
+
+  public int getIndexOfTaskInNode(int task) {
+    Optional<Set<Integer>> tasksInThisNode = this.getNodeToTasks().values()
+        .stream().filter(tasks -> tasks.contains(task)).findFirst();
+    if (tasksInThisNode.isPresent()) {
+      List<Integer> sortedTargets = tasksInThisNode.get().stream().sorted()
+          .collect(Collectors.toList());
+      return sortedTargets.indexOf(task);
+    } else {
+      throw new RuntimeException("Couldn't find task in any node");
+    }
   }
 
   @Override
