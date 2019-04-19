@@ -18,6 +18,7 @@ import java.util.concurrent.BlockingQueue;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ISync;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
@@ -25,7 +26,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class SinkBatchInstance implements INodeInstance {
+public class SinkBatchInstance implements INodeInstance, ISync {
   /**
    * The actual batchTask executing
    */
@@ -143,6 +144,11 @@ public class SinkBatchInstance implements INodeInstance {
 
     // we only need the execution done for now
     return !state.isSet(InstanceState.EXECUTION_DONE);
+  }
+
+  public boolean sync(byte[] value) {
+    state.addState(InstanceState.SYNCED);
+    return true;
   }
 
   @Override

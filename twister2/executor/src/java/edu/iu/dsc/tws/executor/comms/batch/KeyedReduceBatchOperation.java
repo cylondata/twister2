@@ -119,6 +119,11 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
       }
       return true;
     }
+
+    @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(message);
+    }
   }
 
   @Override

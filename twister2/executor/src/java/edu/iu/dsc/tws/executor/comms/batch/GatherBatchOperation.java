@@ -83,9 +83,14 @@ public class GatherBatchOperation extends AbstractParallelOperation {
     @Override
     public boolean receive(int target, Iterator<Object> it) {
       // add the object to the map
-      TaskMessage msg = new TaskMessage(it,
+      TaskMessage msg = new TaskMessage<>(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
+    }
+
+    @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(message);
     }
   }
 

@@ -43,4 +43,9 @@ public class ReduceBatchFinalReceiver extends BaseReduceBatchFinalReceiver {
     onSyncEvent(target, barriers.get(target));
     return false;
   }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    singularReceiver.sync(target, value);
+  }
 }

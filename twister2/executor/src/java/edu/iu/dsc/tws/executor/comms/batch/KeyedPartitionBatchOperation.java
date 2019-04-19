@@ -85,6 +85,11 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
     }
+
+    @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(message);
+    }
   }
 
   @Override

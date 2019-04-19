@@ -101,6 +101,11 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
         throw new RuntimeException("Un-expected message for target: " + target);
       }
     }
+
+    @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(message);
+    }
   }
 
   @Override

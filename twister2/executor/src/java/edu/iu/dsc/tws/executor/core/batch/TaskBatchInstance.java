@@ -19,6 +19,7 @@ import java.util.concurrent.BlockingQueue;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ISync;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
@@ -33,7 +34,7 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 /**
  * The class represents the instance of the executing task
  */
-public class TaskBatchInstance implements INodeInstance {
+public class TaskBatchInstance implements INodeInstance, ISync {
   /**
    * The actual task executing
    */
@@ -224,6 +225,11 @@ public class TaskBatchInstance implements INodeInstance {
       state.addState(InstanceState.SENDING_DONE);
     }
     return !state.isSet(InstanceState.SENDING_DONE);
+  }
+
+  public boolean sync(byte[] value) {
+    state.addState(InstanceState.SYNCED);
+    return true;
   }
 
   /**

@@ -18,6 +18,7 @@ import java.util.concurrent.BlockingQueue;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ISync;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
@@ -29,7 +30,7 @@ import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class SourceBatchInstance implements INodeInstance {
+public class SourceBatchInstance implements INodeInstance, ISync {
 
   /**
    * The actual task executing
@@ -110,6 +111,10 @@ public class SourceBatchInstance implements INodeInstance {
    * The high water mark for messages
    */
   private int highWaterMark;
+
+  /**
+   * The task schedule
+   */
   private TaskSchedulePlan taskSchedule;
 
   public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue,
@@ -202,6 +207,11 @@ public class SourceBatchInstance implements INodeInstance {
     }
 
     return !state.isEqual(InstanceState.FINISH);
+  }
+
+  public boolean sync(byte[] value) {
+    state.addState(InstanceState.SYNCED);
+    return true;
   }
 
   @Override

@@ -88,4 +88,9 @@ public class DirectBatchFinalReceiver extends TargetFinalReceiver {
     return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
         && messages.get(target).isEmpty();
   }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    receiver.sync(target, value);
+  }
 }

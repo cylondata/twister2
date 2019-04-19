@@ -47,6 +47,13 @@ public interface IParallelOperation {
   void register(int targetTask, BlockingQueue<IMessage> queue);
 
   /**
+   * Register a callback to notify when a sync happens
+   * @param targetTask the target
+   * @param sync sync
+   */
+  void registerSync(int targetTask, ISync sync);
+
+  /**
    * Progress the parallel operation
    */
   boolean progress();
