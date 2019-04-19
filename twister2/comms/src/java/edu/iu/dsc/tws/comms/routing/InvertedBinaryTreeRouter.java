@@ -35,6 +35,7 @@ public class InvertedBinaryTreeRouter {
   private boolean mainTaskLast;
   private Map<Integer, Integer> destinationIdentifiers;
   private int executor;
+  private Set<Integer> receiveSources = new HashSet<>();
 
   /**
    * Initialize the data structure
@@ -90,6 +91,7 @@ public class InvertedBinaryTreeRouter {
         }
         List<Integer> recv = new ArrayList<>(search.getAllChildrenIds());
         receiveTasks.put(t, new ArrayList<>(recv));
+        receiveSources.addAll(recv);
 
         // this task is connected to others and they send the message to this task
         List<Integer> directChildren = search.getDirectChildren();
@@ -118,6 +120,10 @@ public class InvertedBinaryTreeRouter {
 
   public Set<Integer> receivingExecutors() {
     return receiveExecutors;
+  }
+
+  public Set<Integer> getReceiveSources() {
+    return receiveSources;
   }
 
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {

@@ -27,9 +27,9 @@ public final class DFWIOUtils {
     throw new UnsupportedOperationException();
   }
 
-  public static String getOperationName(int target, DataFlowOperation op) {
+  public static String getOperationName(int target, DataFlowOperation op, int refresh) {
     String uid = op.getUniqueId();
-    return "partition-" + uid + "-" + target + "-" + UUID.randomUUID().toString();
+    return "partition-" + uid + "-" + target + "-" + UUID.randomUUID().toString() + "-" + refresh;
   }
 
   /**

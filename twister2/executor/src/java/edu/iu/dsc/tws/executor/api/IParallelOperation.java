@@ -63,4 +63,10 @@ public interface IParallelOperation {
    */
   default void close() {
   }
+
+  /**
+   * Refresh the operation to start from beginning
+   */
+  default void reset() {
+  }
 }
