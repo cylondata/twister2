@@ -13,7 +13,9 @@ package edu.iu.dsc.tws.executor.core.batch;
 
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -131,8 +133,15 @@ public class TaskBatchInstance implements INodeInstance, ISync {
    */
   private int highWaterMark;
 
+  /**
+   * The task schedule
+   */
   private TaskSchedulePlan taskSchedule;
 
+  /**
+   * Keep track of syncs received
+   */
+  private Set<String> syncReceived = new HashSet<>();
 
   public TaskBatchInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                            BlockingQueue<IMessage> outQueue, Config config, String tName,
@@ -227,8 +236,12 @@ public class TaskBatchInstance implements INodeInstance, ISync {
     return !state.isSet(InstanceState.SENDING_DONE);
   }
 
-  public boolean sync(byte[] value) {
-    state.addState(InstanceState.SYNCED);
+  public boolean sync(String edge, byte[] value) {
+    syncReceived.add(edge);
+    if (syncReceived.equals(inParOps.keySet())) {
+//      state.addState(InstanceState.SYNCED);
+      syncReceived.clear();
+    }
     return true;
   }
 

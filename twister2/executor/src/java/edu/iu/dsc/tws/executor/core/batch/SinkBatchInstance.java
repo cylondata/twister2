@@ -12,7 +12,9 @@
 package edu.iu.dsc.tws.executor.core.batch;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -94,6 +96,11 @@ public class SinkBatchInstance implements INodeInstance, ISync {
    */
   private TaskSchedulePlan taskSchedule;
 
+  /**
+   * Keep track of syncs received
+   */
+  private Set<String> syncReceived = new HashSet<>();
+
   public SinkBatchInstance(ICompute batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
                            String tName, int tId, int tIndex, int parallel, int wId,
                            Map<String, Object> cfgs, Map<String, String> inEdges,
@@ -146,8 +153,12 @@ public class SinkBatchInstance implements INodeInstance, ISync {
     return !state.isSet(InstanceState.EXECUTION_DONE);
   }
 
-  public boolean sync(byte[] value) {
-    state.addState(InstanceState.SYNCED);
+  public boolean sync(String edge, byte[] value) {
+    syncReceived.add(edge);
+    if (syncReceived.equals(batchInParOps.keySet())) {
+//      state.addState(InstanceState.SYNCED);
+      syncReceived.clear();
+    }
     return true;
   }
 

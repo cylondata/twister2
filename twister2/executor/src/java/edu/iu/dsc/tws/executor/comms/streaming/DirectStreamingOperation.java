@@ -34,7 +34,7 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
   public DirectStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                   Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                                   Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
     this.edgeGenerator = e;
 
     if (srcs.size() == 0) {

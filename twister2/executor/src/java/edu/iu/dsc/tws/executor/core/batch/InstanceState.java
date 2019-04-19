@@ -27,7 +27,7 @@ public class InstanceState {
 
   // finish value
   public static final int FINISH =
-      EXECUTING | EXECUTION_DONE | SENDING_DONE | OUT_COMPLETE | SYNCED;
+      EXECUTING | EXECUTION_DONE | SENDING_DONE | OUT_COMPLETE;
 
   public static final int SINK_FINISH = EXECUTION_DONE | SYNCED;
 

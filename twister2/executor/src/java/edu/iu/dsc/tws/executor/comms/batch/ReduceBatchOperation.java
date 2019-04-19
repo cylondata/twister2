@@ -36,7 +36,7 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
   public ReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                               Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                               Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
     this.edgeGenerator = e;
 
     if (dests.size() > 1) {
@@ -95,7 +95,7 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(message);
+      return syncs.get(target).sync(edge, message);
     }
   }
 

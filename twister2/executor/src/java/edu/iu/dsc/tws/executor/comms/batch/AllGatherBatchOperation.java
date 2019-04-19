@@ -34,7 +34,7 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
   public AllGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                      Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
                                      Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
 
     if (sources.size() == 0) {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
@@ -87,7 +87,7 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(message);
+      return syncs.get(target).sync(edge, message);
     }
   }
 

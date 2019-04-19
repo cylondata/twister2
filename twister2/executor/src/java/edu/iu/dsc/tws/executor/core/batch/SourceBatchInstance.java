@@ -209,8 +209,8 @@ public class SourceBatchInstance implements INodeInstance, ISync {
     return !state.isEqual(InstanceState.FINISH);
   }
 
-  public boolean sync(byte[] value) {
-    state.addState(InstanceState.SYNCED);
+  public boolean sync(String edge, byte[] value) {
+//    state.addState(InstanceState.SYNCED);
     return true;
   }
 

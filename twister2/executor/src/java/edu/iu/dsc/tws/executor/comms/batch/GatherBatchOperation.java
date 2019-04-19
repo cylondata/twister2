@@ -34,7 +34,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
   public GatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                               Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                               Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
     this.edgeGenerator = e;
     communicationEdge = e.generate(edge.getName());
 
@@ -90,7 +90,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(message);
+      return syncs.get(target).sync(edge, message);
     }
   }
 

@@ -47,7 +47,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
   public KeyedReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                    Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                                    Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
     this.selector = edge.getSelector();
     this.edgeGenerator = e;
 
@@ -122,7 +122,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(message);
+      return syncs.get(target).sync(edge, message);
     }
   }
 

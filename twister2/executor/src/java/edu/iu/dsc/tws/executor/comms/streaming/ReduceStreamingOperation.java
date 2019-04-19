@@ -46,7 +46,7 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
                                   TaskPlan tPlan, IFunction fnc,
                                   Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                                   Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
     this.function = fnc;
     this.edgeGenerator = e;
 

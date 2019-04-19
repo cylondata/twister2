@@ -37,7 +37,7 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
   public PartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                  Set<Integer> sources, Set<Integer> targets,
                                  EdgeGenerator e, Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
     DataType dataType = edge.getDataType();
     String edgeName = edge.getName();
     boolean shuffle = false;
@@ -78,7 +78,7 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(message);
+      return syncs.get(target).sync(edge, message);
     }
   }
 

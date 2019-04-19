@@ -12,5 +12,5 @@
 package edu.iu.dsc.tws.executor.api;
 
 public interface ISync {
-  boolean sync(byte[] value);
+  boolean sync(String edge, byte[] value);
 }

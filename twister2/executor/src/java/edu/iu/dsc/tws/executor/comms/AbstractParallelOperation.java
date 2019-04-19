@@ -40,10 +40,14 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
 
   protected int communicationEdge;
 
-  public AbstractParallelOperation(Config config, Communicator network, TaskPlan tPlan) {
+  protected String edge;
+
+  public AbstractParallelOperation(Config config, Communicator network,
+                                   TaskPlan tPlan, String edge) {
     this.config = config;
     this.taskPlan = tPlan;
     this.channel = network;
+    this.edge = edge;
   }
 
   public void registerSync(int targetTask, ISync sink) {
