@@ -154,7 +154,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
       // lists to keep track of messages for destinations
       for (int target : expectedIds.keySet()) {
         String shuffleDirectory = this.shuffleDirectories.get(
-            target % this.shuffleDirectories.size());
+            (op.getTaskPlan().getIndexOfTaskInNode(target)) % this.shuffleDirectories.size());
         Shuffle sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
             shuffleDirectory, DFWIOUtils.getOperationName(target, operationLeft),
             operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target);

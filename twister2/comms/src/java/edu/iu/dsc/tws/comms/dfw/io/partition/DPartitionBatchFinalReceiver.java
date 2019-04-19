@@ -128,9 +128,10 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     keyed = partition.getKeyType() != null;
     targets = new HashSet<>(expectedIds.keySet());
 
+    //using target id doesn't work here since target id depends on the mapping algorithm
     for (Integer target : expectedIds.keySet()) {
       String shuffleDirectory = this.shuffleDirectories.get(
-          target % this.shuffleDirectories.size());
+          op.getTaskPlan().getIndexOfTaskInNode(target) % this.shuffleDirectories.size());
       Shuffle sortedMerger;
       if (partition.getKeyType() == null) {
         sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
