@@ -127,6 +127,8 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
    */
   private Set<Integer> targets = new HashSet<>();
 
+  private int refresh = 0;
+
   public DJoinBatchFinalReceiver(BulkReceiver bulkReceiver,
                                  List<String> shuffleDirs, Comparator<Object> com) {
     this.receiver = bulkReceiver;
@@ -156,7 +158,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
         String shuffleDirectory = this.shuffleDirectories.get(
             (op.getTaskPlan().getIndexOfTaskInNode(target)) % this.shuffleDirectories.size());
         Shuffle sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
-            shuffleDirectory, DFWIOUtils.getOperationName(target, operationLeft),
+            shuffleDirectory, DFWIOUtils.getOperationName(target, operationLeft, refresh),
             operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target);
 
         sortedMergers.put(target, sortedMerger);
@@ -294,5 +296,10 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
       List<Object> value = messageMap.remove(key);
       return new ImmutablePair(key, value);
     }
+  }
+
+  @Override
+  public void clean() {
+    refresh++;
   }
 }

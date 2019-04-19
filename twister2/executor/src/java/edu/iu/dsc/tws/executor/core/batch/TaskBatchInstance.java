@@ -177,7 +177,7 @@ public class TaskBatchInstance implements INodeInstance {
       while (!inQueue.isEmpty() && outQueue.size() < lowWaterMark) {
         IMessage m = inQueue.poll();
         task.execute(m);
-        state.set(InstanceState.EXECUTING);
+        state.addState(InstanceState.EXECUTING);
       }
 
       // for compute we don't have to have the context done as when the inputs finish and execution
@@ -186,7 +186,7 @@ public class TaskBatchInstance implements INodeInstance {
       boolean needsFurther = communicationProgress(inParOps);
       // if we no longer needs to progress comm and input is empty
       if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty()) {
-        state.set(InstanceState.EXECUTION_DONE);
+        state.addState(InstanceState.EXECUTION_DONE);
       }
     }
 
@@ -214,14 +214,14 @@ public class TaskBatchInstance implements INodeInstance {
       for (IParallelOperation op : outParOps.values()) {
         op.finish(taskId);
       }
-      state.set(InstanceState.OUT_COMPLETE);
+      state.addState(InstanceState.OUT_COMPLETE);
     }
 
     // lets progress the communication
     boolean needsFurther = communicationProgress(outParOps);
     // after we have put everything to communication and no progress is required, lets finish
     if (state.isSet(InstanceState.OUT_COMPLETE) && !needsFurther) {
-      state.set(InstanceState.SENDING_DONE);
+      state.addState(InstanceState.SENDING_DONE);
     }
     return !state.isSet(InstanceState.SENDING_DONE);
   }
@@ -256,6 +256,14 @@ public class TaskBatchInstance implements INodeInstance {
     if (task instanceof Closable) {
       ((Closable) task).close();
     }
+  }
+
+  @Override
+  public void reset() {
+    if (task instanceof Closable) {
+      ((Closable) task).refresh();
+    }
+    state = new InstanceState(InstanceState.INIT);
   }
 
   public BlockingQueue<IMessage> getInQueue() {

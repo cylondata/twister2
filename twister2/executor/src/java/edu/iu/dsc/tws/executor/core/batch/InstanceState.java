@@ -32,7 +32,7 @@ public class InstanceState {
     this.value = val;
   }
 
-  public void set(int state) {
+  public void addState(int state) {
     this.value = this.value | state;
   }
 

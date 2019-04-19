@@ -295,7 +295,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     if (receiveExecutorsSize == 0) {
       receiveExecutorsSize = 1;
     }
-    Set<Integer> execs = router.receivingExecutors();
+    Set<Integer> execs = router.getReceiveSources();
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       Queue<Pair<Object, InMessage>> pendingReceiveMessages =

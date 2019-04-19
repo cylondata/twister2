@@ -75,4 +75,11 @@ public class SBroadCast {
   public void close() {
     bCast.close();
   }
+
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    bCast.clean();
+  }
 }

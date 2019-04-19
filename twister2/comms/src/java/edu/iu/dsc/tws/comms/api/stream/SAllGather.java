@@ -97,4 +97,11 @@ public class SAllGather {
     // deregister from the channel
     gather.close();
   }
+
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    gather.clean();
+  }
 }

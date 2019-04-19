@@ -183,17 +183,22 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
     thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sourceSet);
+    Set<Integer> thisTargets = TaskPlanUtils.getTasksOfThisWorker(taskPlan, new HashSet<>(targets));
     for (int s : thisSources) {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
-          DataFlowContext.sendPendingMax(config)));
-      pendingReceiveDeSerializations.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
       serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(),
           taskPlan.getThisExecutor(), type));
     }
 
-    for (int tar : targets) {
+    for (int tar : thisTargets) {
+      pendingReceiveDeSerializations.put(sources.get(targets.indexOf(tar)),
+          new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(config)));
+
+      pendingReceiveMessagesPerSource.put(sources.get(targets.indexOf(tar)),
+          new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(config)));
+
       MessageDeSerializer messageDeSerializer = new AKeyedDeserializer(
           taskPlan.getThisExecutor(), type);
       deSerializerMap.put(tar, messageDeSerializer);

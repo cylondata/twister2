@@ -29,9 +29,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -138,7 +135,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   /**
    * Non grouped current messages, workerId, source, inMessage
    */
-  private Table<Integer, Integer, InMessage> currentMessages = HashBasedTable.create();
+  private Map<Integer, InMessage> currentMessages = new HashMap<>();
 
   /**
    * These are the workers from which we receive messages
@@ -328,24 +325,24 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
     // we have the source of the message at 0th position as an integer
     int source = byteBuffer.getInt(0);
-    InMessage currentMessage = currentMessages.get(id, source);
+    InMessage currentMessage = currentMessages.get(source);
     if (currentMessage == null) {
-      MessageHeader header = messageDeSerializer.get(id).buildHeader(buffer, e);
+      MessageHeader header = messageDeSerializer.get(source).buildHeader(buffer, e);
 
       currentMessage = new InMessage(id, receiveDataType, this, header);
       if (isKeyed) {
         currentMessage.setKeyType(receiveKeyType);
       }
-      currentMessages.put(id, source, currentMessage);
+      currentMessages.put(source, currentMessage);
       // we add the message immediately to the deserialization as we can deserialize partially
-      Queue<InMessage> deserializeQueue = pendingReceiveDeSerializations.get(id);
+      Queue<InMessage> deserializeQueue = pendingReceiveDeSerializations.get(source);
       if (!deserializeQueue.offer(currentMessage)) {
         throw new RuntimeException(executor + " We should have enough space: "
             + deserializeQueue.size());
       }
     }
     if (currentMessage.addBufferAndCalculate(buffer)) {
-      currentMessages.remove(id, source);
+      currentMessages.remove(source);
     }
   }
 
@@ -567,12 +564,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
     if (currentMessage.getReceivedState() == InMessage.ReceivedState.INIT
         || currentMessage.getReceivedState() == InMessage.ReceivedState.BUILDING) {
-      int id = currentMessage.getOriginatingId();
       Object object = DataFlowContext.EMPTY_OBJECT;
 
       if (currentMessage.getReceivedState() == InMessage.ReceivedState.INIT) {
         Queue<Pair<Object, InMessage>> pendingReceiveMessages =
-            pendingReceiveMessagesPerSource.get(id);
+            pendingReceiveMessagesPerSource.get(currentMessage.getHeader().getSourceId());
         if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
           throw new RuntimeException(executor + " We should have enough space: "
               + pendingReceiveMessages.size());

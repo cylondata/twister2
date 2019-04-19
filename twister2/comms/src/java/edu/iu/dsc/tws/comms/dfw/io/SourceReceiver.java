@@ -302,4 +302,12 @@ public abstract class SourceReceiver implements MessageReceiver {
       syncReceived.get(target).add(source);
     }
   }
+
+  @Override
+  public void clean() {
+    for (int target : messages.keySet()) {
+      clearTarget(target);
+      targetStates.put(target, ReceiverState.RECEIVING);
+    }
+  }
 }
