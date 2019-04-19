@@ -53,10 +53,24 @@ public class Vertex {
    */
   private int parallelism = 1;
 
+  public void setConfig(Map<String, Object> config) {
+    this.config = config;
+  }
+
   /**
    * Config value for the task vertex
    */
   private Map<String, Object> config;
+
+  public Map<String, Object> getConstraints() {
+    return constraints;
+  }
+
+  public void setConstraints(Map<String, Object> constraints) {
+    this.constraints = constraints;
+  }
+
+  private Map<String, Object> constraints;
 
   public Vertex() {
   }
@@ -65,6 +79,7 @@ public class Vertex {
     this.name = n;
     this.task = t;
     config = new HashMap<>();
+    constraints = new HashMap<>();
   }
 
   public Vertex(String name, INode task, int parallelism) {
@@ -72,6 +87,7 @@ public class Vertex {
     this.task = task;
     this.parallelism = parallelism;
     config = new HashMap<>();
+    constraints = new HashMap<>();
   }
 
   public int getRam() {
@@ -123,6 +139,7 @@ public class Vertex {
   }
 
   public void addConstraints(String key, Object val) {
-    this.config.put(key, val);
+    this.constraints.put(key, val);
   }
 }
+

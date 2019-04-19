@@ -23,6 +23,7 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.Resource;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
@@ -214,38 +215,41 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
   private Map<Integer, List<InstanceId>> roundRobinSchedulingAlgorithm(
       Set<Vertex> taskVertexSet, int numberOfContainers) throws ScheduleException {
 
-    TaskAttributes taskAttributes = new TaskAttributes();
     Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();
-    //int instancesPerWorker = TaskSchedulerContext.defaultTaskInstancesPerContainer(this.config);
-    int instancesPerWorker = taskAttributes.getInstancesPerWorker(taskVertexSet);
-    LOG.info("instances per worker:" + instancesPerWorker);
-    int containerCapacity = instancesPerWorker * numberOfContainers;
-    int totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
-    LOG.info("Container Capacity:" + containerCapacity + "\t " + totalTask + "taskinstances");
-    if (containerCapacity >= totalTask) {
-      for (int i = 0; i < numberOfContainers; i++) {
-        roundrobinAllocation.put(i, new ArrayList<>());
-      }
-    } else {
-      throw new ScheduleException("Container Capacity " + containerCapacity + " is lesser than"
-          + "required " + totalTask + " task instances");
+    for (int i = 0; i < numberOfContainers; i++) {
+      roundrobinAllocation.put(i, new ArrayList<>());
     }
+
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
     orderedTaskSet.addAll(taskVertexSet);
-    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
-    int taskIndex = 0;
-    int containerIndex = 0;
-    for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-      String task = e.getKey();
-      int numberOfInstances = e.getValue();
-      for (int i = 0; i < numberOfInstances; i++) {
-        roundrobinAllocation.get(containerIndex).add(new InstanceId(task, taskIndex, i));
-        ++containerIndex;
-        if (containerIndex >= roundrobinAllocation.size()) {
-          containerIndex = 0;
+
+    TaskAttributes taskAttributes = new TaskAttributes();
+    int globalTaskIndex = 0;
+
+    for (Vertex vertex : taskVertexSet) {
+      int totalTaskInstances;
+      totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
+      if (vertex.getConstraints().containsKey(Context.TWISTER2_TASK_INSTANCES_PER_WORKER)) {
+        int instancesPerWorker = taskAttributes.getInstancesPerWorker(vertex);
+        int maxContainerTaskObjectSize = 0;
+        int containerIndex;
+        for (int i = 0; i < totalTaskInstances; i++) {
+          containerIndex = i % numberOfContainers;
+          if (maxContainerTaskObjectSize < instancesPerWorker) {
+            roundrobinAllocation.get(containerIndex).add(
+                new InstanceId(vertex.getName(), globalTaskIndex, i));
+            ++maxContainerTaskObjectSize;
+          }
+        }
+      } else {
+        String task = vertex.getName();
+        int containerIndex;
+        for (int i = 0; i < totalTaskInstances; i++) {
+          containerIndex = i % numberOfContainers;
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
         }
       }
-      taskIndex++;
+      globalTaskIndex++;
     }
     return roundrobinAllocation;
   }
