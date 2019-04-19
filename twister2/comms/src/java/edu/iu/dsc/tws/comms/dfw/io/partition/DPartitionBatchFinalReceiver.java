@@ -148,7 +148,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   private void initMergers() {
     for (Integer target : expIds.keySet()) {
       String shuffleDirectory = this.shuffleDirectories.get(
-          target % this.shuffleDirectories.size());
+          partition.getTaskPlan().getIndexOfTaskInNode(target) % this.shuffleDirectories.size());
       Shuffle sortedMerger;
       if (partition.getKeyType() == null) {
         sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
