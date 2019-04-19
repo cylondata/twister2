@@ -19,4 +19,10 @@ public interface Closable {
    * Close method for cleaning up the resources
    */
   void close();
+
+  /**
+   * Refresh the task
+   */
+  default void refresh() {
+  }
 }

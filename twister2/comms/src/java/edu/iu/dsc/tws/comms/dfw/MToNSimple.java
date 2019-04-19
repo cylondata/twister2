@@ -283,8 +283,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
     if (receiveExecutorsSize == 0) {
       receiveExecutorsSize = 1;
     }
-    Set<Integer> execs = router.receivingExecutors();
-    for (int ex : execs) {
+    for (int ex : sources) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));

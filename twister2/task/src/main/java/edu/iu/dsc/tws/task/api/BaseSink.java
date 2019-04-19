@@ -14,5 +14,12 @@ package edu.iu.dsc.tws.task.api;
 /**
  * A {@link BaseCompute} which would be a terminal node of the graph({@link ISink})
  */
-public abstract class BaseSink<T> extends BaseCompute<T> implements ISink {
+public abstract class BaseSink<T> extends BaseCompute<T> implements ISink, Closable {
+  @Override
+  public void close() {
+  }
+
+  @Override
+  public void refresh() {
+  }
 }

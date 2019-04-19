@@ -34,6 +34,7 @@ public class BinaryTreeRouter {
   private int mainTask;
   private boolean mainTaskLast;
   private Map<Integer, Integer> destinationIdentifiers;
+  private Set<Integer> receiveSources = new HashSet<>();
 
   /**
    * Initialize the data structure
@@ -91,6 +92,7 @@ public class BinaryTreeRouter {
         if (!recv.isEmpty()) {
           receiveTasks.put(t, new ArrayList<>(recv));
         }
+        receiveSources.addAll(recv);
 
         // this task is connected to others and they dont send messages to anyone
         List<Integer> directChildren = search.getDirectChildren();
@@ -116,17 +118,10 @@ public class BinaryTreeRouter {
         LOG.fine(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
       }
     }
+  }
 
-//    LOG.info(String.format("%d send internal tasks: %s",
-//        plan.getThisExecutor(), sendInternalTasks));
-//    LOG.info(String.format("%d send external tasks: %s",
-//        plan.getThisExecutor(), sendExternalTasks));
-//    LOG.info(String.format("%d send externalPartial tasks: %s", plan.getThisExecutor(),
-//        sendExternalTasksPartial));
-//    LOG.info(String.format("%d receive executor: %s",
-//        plan.getThisExecutor(), receiveExecutors));
-//    LOG.info(String.format("%d receive tasks: %s",
-//        plan.getThisExecutor(), receiveTasks));
+  public Set<Integer> getReceiveSources() {
+    return receiveSources;
   }
 
   public Set<Integer> receivingExecutors() {

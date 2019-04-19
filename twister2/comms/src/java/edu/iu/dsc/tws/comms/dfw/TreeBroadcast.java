@@ -255,18 +255,18 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     if (receiveExecutorsSize == 0) {
       receiveExecutorsSize = 1;
     }
-    Set<Integer> execs = router.receivingExecutors();
+    Set<Integer> execs = router.getReceiveSources();
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       Queue<Pair<Object, InMessage>> pendingReceiveMessages =
           new ArrayBlockingQueue<>(
               capacity);
-      pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
-      pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
+      pendingReceiveMessagesPerSource.put(source, pendingReceiveMessages);
+      pendingReceiveDeSerializations.put(source, new ArrayBlockingQueue<>(capacity));
       if (keyType == null) {
-        deSerializerMap.put(e, new AKeyedDeserializer(executor, type));
+        deSerializerMap.put(source, new AKeyedDeserializer(executor, type));
       } else {
-        deSerializerMap.put(e, new KeyedDeSerializer(new KryoSerializer(),
+        deSerializerMap.put(source, new KeyedDeSerializer(new KryoSerializer(),
             executor, keyType, type));
       }
     }

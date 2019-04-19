@@ -98,6 +98,13 @@ public class SGather {
   }
 
   /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    gather.clean();
+  }
+
+  /**
    * Indicate the end of the communication
    *
    * @param src the source that is ending
