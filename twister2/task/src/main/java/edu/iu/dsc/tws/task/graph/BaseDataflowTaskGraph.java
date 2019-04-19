@@ -15,20 +15,23 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 /**
  * It is the base class for the dataflow task graph which implements the IDataflowTaskGraph
  * interface. This is the main interface for the directed dataflow task graph which consists of
- * methods to add the task vertices, task edges, create the directed edges, finds out the inward and
- * outward task edges, incoming and outgoing task edges.
+ * methods to add the task vertices, task edges, create the directed edges, finds out the inward
+ * and outward task edges, incoming and outgoing task edges.
  */
 public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   private LinkedHashSet<TV> vertices;
   private Set<DirectedEdge<TV, TE>> directedEdges;
 
+  private Map constraints;
   private Comparator<TV> vertexComparator;
   private Comparator<TE> edgeComparator;
 
@@ -42,6 +45,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     this.directedEdges = new HashSet<>();
     this.vertexComparator = comparator;
     this.edgeComparator = eComparator;
+    this.constraints = new LinkedHashMap<>();
   }
 
   /**
@@ -57,6 +61,21 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
       this.vertices.add(taskVertex);
       return true;
     }
+  }
+
+  public boolean addTaskConstraints(TV taskVertex, Map<String, Object> taskConstraints) {
+    if (this.vertices.contains(taskVertex)) {
+      this.constraints.put(taskVertex, taskConstraints);
+    }
+    return true;
+  }
+
+  public Map<String, String> getTaskConstraints(TV taskVertex) {
+    Map<String, String> tconstraints = null;
+    if (this.constraints.containsKey(taskVertex)) {
+      tconstraints = (Map<String, String>) this.constraints.get(taskVertex);
+    }
+    return tconstraints;
   }
 
   /**
@@ -457,4 +476,21 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
    */
   public void build() {
   }
+
+  /*public boolean addConstraints(String taskVertex, Map<String, Object> taskConstraints) {
+    if (taskVertex == null) {
+      throw new NullPointerException();
+    } else if (this.containsTaskConstraints(taskConstraints)) {
+      return false;
+    } else {
+      this.constraints.add(taskConstraints);
+      return true;
+    }
+  }
+
+  //@Override
+  public boolean containsTaskConstraints(Map<String, Object> taskConstraints) {
+    return constraints.contains(taskConstraints);
+  }
+*/
 }

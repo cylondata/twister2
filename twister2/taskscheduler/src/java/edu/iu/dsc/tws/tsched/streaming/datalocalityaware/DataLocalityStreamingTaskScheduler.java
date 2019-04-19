@@ -176,9 +176,9 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
         ContainerPlan containerPlan = entry.getValue();
         Set<TaskInstancePlan> containerPlanTaskInstances
             = containerPlan.getTaskInstances();
-        LOG.fine("Task Details for Container Id:" + integer);
+        LOG.info("Task Details for Container Id:" + integer);
         for (TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.fine("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+          LOG.info("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
               + "\tTask Name:" + ip.getTaskName());
         }
       }

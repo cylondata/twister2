@@ -235,7 +235,9 @@ public final class TaskGraphBuilder {
     graph.setOperationMode(mode);
 
     for (Map.Entry<String, Vertex> e : nodes.entrySet()) {
+      LOG.info("key:" + e.getKey() + "\t" + e.getValue().getConstraints());
       graph.addTaskVertex(e.getKey(), e.getValue());
+      graph.addTaskConstraints(e.getKey(), e.getValue().getConstraints());
     }
 
     for (ComputeConnection c : computeConnections) {
@@ -249,7 +251,6 @@ public final class TaskGraphBuilder {
     for (TaskGraphConstraints c : taskGraphConstraints) {
       c.build(graph);
     }
-
     return graph;
   }
 }

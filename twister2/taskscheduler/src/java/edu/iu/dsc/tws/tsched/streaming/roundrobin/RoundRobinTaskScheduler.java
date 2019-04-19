@@ -229,16 +229,16 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
     for (Vertex vertex : taskVertexSet) {
       int totalTaskInstances;
       totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
-      if (vertex.getConstraints().containsKey(Context.TWISTER2_TASK_INSTANCES_PER_WORKER)) {
+      if (vertex.getConstraints().containsKey(Context.TWISTER2_TASK_CONSTRAINTS)) {
         int instancesPerWorker = taskAttributes.getInstancesPerWorker(vertex);
-        int maxContainerTaskObjectSize = 0;
+        int maxTaskInstancesPerContainer = 0;
         int containerIndex;
         for (int i = 0; i < totalTaskInstances; i++) {
           containerIndex = i % numberOfContainers;
-          if (maxContainerTaskObjectSize < instancesPerWorker) {
+          if (maxTaskInstancesPerContainer < instancesPerWorker) {
             roundrobinAllocation.get(containerIndex).add(
                 new InstanceId(vertex.getName(), globalTaskIndex, i));
-            ++maxContainerTaskObjectSize;
+            ++maxTaskInstancesPerContainer;
           }
         }
       } else {

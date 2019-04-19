@@ -16,12 +16,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * This class extends the base data flow task graph which is mainly responsible for building the
  * task graph for the task vertex and the task edge.
  */
 public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
+
+  private static final Logger LOG = Logger.getLogger(DataFlowTaskGraph.class.getName());
+
   private Map<String, Vertex> taskMap = new HashMap<>();
 
   private OperationMode operationMode = OperationMode.STREAMING;
@@ -57,6 +61,24 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
       taskMap.put(name, taskVertex);
     }
     return true;
+  }
+
+
+  public boolean addTaskConstraints(String taskName, Map<String, Object> taskConstraints) {
+    if (taskMap.containsKey(taskName)) {
+      Vertex vertex = taskMap.get(taskName);
+      addTaskConstraints(vertex, taskConstraints);
+    }
+    return true;
+  }
+
+  public Map<String, String> getTaskConstraints(String taskName) {
+    Vertex vertex = taskMap.get(taskName);
+    Map<String, String> constraintsMap = new HashMap<>();
+    if (vertex != null) {
+      constraintsMap = getTaskConstraints(vertex);
+    }
+    return constraintsMap;
   }
 
   /**

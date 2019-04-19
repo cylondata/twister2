@@ -105,6 +105,8 @@ public class Context {
   public static final String TWISTER2_TASK_INSTANCE_ODD_PARALLELISM
       = "twister2.task.instance.odd.parallelism";
 
+  public static final String TWISTER2_TASK_CONSTRAINTS = "twister2.task.constraints";
+
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
     substitutions.put("HOME", HOME);

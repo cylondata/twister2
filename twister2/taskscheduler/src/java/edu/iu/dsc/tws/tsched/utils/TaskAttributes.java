@@ -124,7 +124,7 @@ public class TaskAttributes {
       Map<String, Object> constraints = task.getConstraints();
       String taskName = task.getName();
       int parallelTaskCount;
-      if (constraints.get(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM) != null) {
+      if (!task.getConstraints().containsKey(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
         if (task.getParallelism() >= 1) {
           parallelTaskCount = task.getParallelism();
         } else {

@@ -66,10 +66,6 @@ public class Vertex {
     return constraints;
   }
 
-  public void setConstraints(Map<String, Object> constraints) {
-    this.constraints = constraints;
-  }
-
   private Map<String, Object> constraints;
 
   public Vertex() {
