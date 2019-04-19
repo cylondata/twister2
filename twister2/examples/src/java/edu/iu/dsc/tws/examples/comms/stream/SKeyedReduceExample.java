@@ -84,8 +84,8 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    keyedReduce.progress();
+  protected boolean progressCommunication() {
+    return keyedReduce.progress();
   }
 
   @Override
