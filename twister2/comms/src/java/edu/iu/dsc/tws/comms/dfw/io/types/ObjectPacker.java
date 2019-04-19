@@ -23,10 +23,11 @@ public final class ObjectPacker implements DataPacker<Object, byte[]> {
 
   private static volatile ObjectPacker instance;
 
-  private KryoSerializer serializer;
+  // Creating a thread local since Kryo is stateful
+  private ThreadLocal<KryoSerializer> serializer;
 
   private ObjectPacker() {
-    serializer = new KryoSerializer();
+    serializer = ThreadLocal.withInitial(() -> new KryoSerializer());
   }
 
   public static DataPacker<Object, byte[]> getInstance() {
@@ -39,7 +40,7 @@ public final class ObjectPacker implements DataPacker<Object, byte[]> {
   @Override
   public int determineLength(Object data, PackerStore store) {
     if (store.retrieve() == null) {
-      byte[] serialize = serializer.serialize(data);
+      byte[] serialize = serializer.get().serialize(data);
       store.store(serialize);
     }
     return store.retrieve().length;
@@ -65,7 +66,7 @@ public final class ObjectPacker implements DataPacker<Object, byte[]> {
     // at the end we switch to the actual object
     int totalBytesRead = startIndex + value;
     if (totalBytesRead == totalObjectLength) {
-      Object kryoValue = serializer.deserialize(objectVal);
+      Object kryoValue = serializer.get().deserialize(objectVal);
       objectBuilder.setFinalObject(kryoValue);
     }
     return value;
@@ -73,7 +74,7 @@ public final class ObjectPacker implements DataPacker<Object, byte[]> {
 
   @Override
   public byte[] packToByteArray(Object data) {
-    return this.serializer.serialize(data);
+    return this.serializer.get().serialize(data);
   }
 
   @Override
@@ -108,7 +109,7 @@ public final class ObjectPacker implements DataPacker<Object, byte[]> {
     for (int i = 0; i < byteLength; i++) {
       bytes[i] = byteBuffer.get(bufferOffset + i);
     }
-    return this.serializer.deserialize(bytes);
+    return this.serializer.get().deserialize(bytes);
   }
 
   @Override
