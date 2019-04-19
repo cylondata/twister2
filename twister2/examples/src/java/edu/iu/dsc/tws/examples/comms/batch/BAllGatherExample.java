@@ -105,8 +105,8 @@ public class BAllGatherExample extends BenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    gather.progress();
+  protected boolean progressCommunication() {
+    return gather.progress();
   }
 
   @Override
