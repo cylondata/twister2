@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.graph.WindowMode;
 
 public abstract class BenchWindowTaskWorker extends TaskWorker {
 
@@ -61,11 +60,7 @@ public abstract class BenchWindowTaskWorker extends TaskWorker {
     } else {
       taskGraphBuilder.setMode(OperationMode.BATCH);
     }
-    if (jobParameters.isWindow()) {
-      taskGraphBuilder.setWindowMode(WindowMode.ALL);
-    } else {
-      taskGraphBuilder.setWindowMode(WindowMode.NONE);
-    }
+
 
     inputDataArray = DataGenerator.generateIntData(jobParameters.getSize());
 

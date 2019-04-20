@@ -37,12 +37,8 @@ import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.graph.WindowMode;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_SEND;
-
-
-
 
 
 public abstract class BenchTaskWorker extends TaskWorker {
@@ -90,17 +86,10 @@ public abstract class BenchTaskWorker extends TaskWorker {
       taskGraphBuilder.setMode(OperationMode.BATCH);
     }
 
-    if (jobParameters.isWindow()) {
-      taskGraphBuilder.setWindowMode(WindowMode.ALL);
-    } else {
-      taskGraphBuilder.setWindowMode(WindowMode.NONE);
-    }
-
     inputDataArray = DataGenerator.generateIntData(jobParameters.getSize());
 
     buildTaskGraph();
     dataFlowTaskGraph = taskGraphBuilder.build();
-    dataFlowTaskGraph.setWindowingPolicy(windowingPolicy);
     executionPlan = taskExecutor.plan(dataFlowTaskGraph);
     IExecution execution = taskExecutor.iExecute(dataFlowTaskGraph, executionPlan);
 
