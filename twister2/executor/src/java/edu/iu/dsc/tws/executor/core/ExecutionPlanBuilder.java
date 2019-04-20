@@ -35,18 +35,22 @@ import edu.iu.dsc.tws.executor.core.batch.TaskBatchInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SinkStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SourceStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.TaskStreamingInstance;
+import edu.iu.dsc.tws.executor.core.streaming.window.SinkStreamingWindowingInstance;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
+import edu.iu.dsc.tws.task.api.IWindowedSink;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
+import edu.iu.dsc.tws.task.api.window.IWindowCompute;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.task.graph.WindowMode;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
@@ -77,6 +81,9 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   private Table<String, Integer, SourceStreamingInstance> streamingSourceInstances
       = HashBasedTable.create();
   private Table<String, Integer, SinkStreamingInstance> streamingSinkInstances
+      = HashBasedTable.create();
+
+  private Table<String, Integer, SinkStreamingWindowingInstance> streamingSinkWindowingInstances
       = HashBasedTable.create();
 
 
@@ -126,7 +133,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       }
 
       INode node = v.getTask();
-      if (node instanceof ICompute || node instanceof ISource) {
+      if (node instanceof ICompute || node instanceof ISource || node instanceof IWindowCompute) {
         // lets get the communication
         Set<Edge> edges = taskGraph.outEdges(v);
         // now lets create the communication object
@@ -146,7 +153,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         }
       }
 
-      if (node instanceof ICompute || node instanceof ISink) {
+      if (node instanceof ICompute || node instanceof ISink || node instanceof IWindowedSink
+          || node instanceof IWindowCompute) {
         // lets get the parent tasks
         Set<Edge> parentEdges = taskGraph.inEdges(v);
         for (Edge e : parentEdges) {
@@ -167,7 +175,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
       // lets create the instance
       INodeInstance iNodeInstance = createInstances(cfg, ip, v, taskGraph.getOperationMode(),
-          inEdges, outEdges, taskSchedule);
+          taskGraph.getWindowMode(), inEdges, outEdges,
+          taskSchedule);
       // add to execution
       execution.addNodes(v.getName(), taskIdGenerator.generateGlobalTaskId(
           v.getName(), ip.getTaskId(), ip.getTaskIndex()), iNodeInstance);
@@ -187,6 +196,10 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
       // set the parallel operation to the instance
       //let's separate the execution instance generation based on the Operation Mode
+      // support to windows need to decide the type of instance that has to be initialized
+      // so along with the operation mode, the windowing mode must be tested
+
+
       if (operationMode == OperationMode.STREAMING) {
         for (Integer i : sourcesOfThisWorker) {
           if (streamingTaskInstances.contains(c.getSourceTask(), i)) {
@@ -213,6 +226,11 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
                 = streamingSinkInstances.get(c.getTargetTask(), i);
             streamingSinkInstance.registerInParallelOperation(c.getEdge().getName(), op);
             op.register(i, streamingSinkInstance.getstreamingInQueue());
+          } else if (streamingSinkWindowingInstances.contains(c.getTargetTask(), i)) {
+            SinkStreamingWindowingInstance sinkStreamingWindowingInstance
+                = streamingSinkWindowingInstances.get(c.getTargetTask(), i);
+            sinkStreamingWindowingInstance.registerInParallelOperation(c.getEdge().getName(), op);
+            op.register(i, sinkStreamingWindowingInstance.getstreamingInQueue());
           } else {
             throw new RuntimeException("Not found: " + c.getTargetTask());
           }
@@ -271,6 +289,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
    */
   private INodeInstance createInstances(Config cfg, TaskInstancePlan ip,
                                         Vertex vertex, OperationMode operationMode,
+                                        WindowMode windowMode,
                                         Map<String, String> inEdges,
                                         Map<String, String> outEdges,
                                         TaskSchedulePlan taskSchedule) {
@@ -328,11 +347,31 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           streamingTaskInstances.put(vertex.getName(), taskId, v);
           return v;
         }
+      } else if (newInstance instanceof IWindowCompute) {
+        if (newInstance instanceof IWindowedSink) {
+          SinkStreamingWindowingInstance v =
+              new SinkStreamingWindowingInstance((IWindowCompute) newInstance,
+                  new LinkedBlockingQueue<>(), cfg, vertex.getName(),
+                  taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
+                  vertex.getConfig().toMap(), inEdges, taskSchedule, vertex.getWindowingPolicy());
+          streamingSinkWindowingInstances.put(vertex.getName(), taskId, v);
+          return v;
+        } else {
+          TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
+              new LinkedBlockingQueue<>(),
+              new LinkedBlockingQueue<>(), cfg,
+              vertex.getName(), taskId, ip.getTaskIndex(),
+              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
+              outEdges, taskSchedule);
+          streamingTaskInstances.put(vertex.getName(), taskId, v);
+          return v;
+        }
       } else if (newInstance instanceof ISource) {
         SourceStreamingInstance v = new SourceStreamingInstance((ISource) newInstance,
             new LinkedBlockingQueue<>(), cfg,
             vertex.getName(), taskId, ip.getTaskIndex(),
-            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges, taskSchedule);
+            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges,
+            taskSchedule);
         streamingSourceInstances.put(vertex.getName(), taskId, v);
         return v;
       } else {

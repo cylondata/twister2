@@ -16,6 +16,7 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.INode;
+import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 
 /**
  * Users develop ITask object and when it is added to the graph we need additional information
@@ -58,6 +59,12 @@ public class Vertex {
    */
   private Map<String, Object> config;
 
+
+  /**
+   * Adding the WindowingPolicy
+   */
+  private WindowingPolicy windowingPolicy;
+
   public Vertex() {
   }
 
@@ -67,11 +74,35 @@ public class Vertex {
     config = new HashMap<>();
   }
 
+  public Vertex(String n, INode t, WindowingPolicy win) {
+    this.name = n;
+    this.task = t;
+    config = new HashMap<>();
+    this.windowingPolicy = win;
+  }
+
   public Vertex(String name, INode task, int parallelism) {
     this.name = name;
     this.task = task;
     this.parallelism = parallelism;
     config = new HashMap<>();
+  }
+
+  public Vertex(String name, INode task, int parallelism, WindowingPolicy win) {
+    this.name = name;
+    this.task = task;
+    this.parallelism = parallelism;
+    config = new HashMap<>();
+    this.windowingPolicy = win;
+  }
+
+
+  public WindowingPolicy getWindowingPolicy() {
+    return windowingPolicy;
+  }
+
+  public void setWindowingPolicy(WindowingPolicy windowingPolicy) {
+    this.windowingPolicy = windowingPolicy;
   }
 
   public int getRam() {
