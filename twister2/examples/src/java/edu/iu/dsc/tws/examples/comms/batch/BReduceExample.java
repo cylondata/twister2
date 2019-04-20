@@ -87,8 +87,8 @@ public class BReduceExample extends BenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    reduce.progress();
+  protected boolean progressCommunication() {
+    return reduce.progress();
   }
 
   @Override

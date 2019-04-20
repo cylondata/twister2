@@ -176,6 +176,16 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
   private Set<Integer> thisWorkerSources;
 
   /**
+   * Keep trck of receive data type for later return
+   */
+  private MessageType receiveDataType;
+
+  /**
+   * Keep track of receive key type for later return
+   */
+  private MessageType receiveKeyType;
+
+  /**
    * Create a ring partition communication
    *
    * @param cfg configuration
@@ -286,7 +296,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
     if (receiveExecutorsSize == 0) {
       receiveExecutorsSize = 1;
     }
-    for (int ex : receiveWorkers) {
+    for (int ex : sources) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
@@ -579,5 +589,15 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
         progress();
       }
     }
+  }
+
+  @Override
+  public MessageType getReceiveKeyType() {
+    return receiveKeyType;
+  }
+
+  @Override
+  public MessageType getReceiveDataType() {
+    return receiveDataType;
   }
 }

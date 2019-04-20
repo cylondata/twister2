@@ -84,4 +84,9 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
   public void close() {
     op.close();
   }
+
+  @Override
+  public void reset() {
+    op.refresh();
+  }
 }

@@ -59,7 +59,7 @@ public class Communicator {
     if (persDirs == null) {
       this.persistentDirectories = CommunicationContext.persistentDirectory(config);
       if (this.persistentDirectories.size() > 0) {
-        LOG.info("The persistence operations will be load balanced between : "
+        LOG.log(Level.FINE, "The persistence operations will be load balanced between : "
             + this.persistentDirectories);
       }
     } else {

@@ -124,4 +124,20 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
 
     return allSynced;
   }
+
+  @Override
+  public void clean() {
+    for (int taraget : targetStates.keySet()) {
+      clearTarget(taraget);
+
+      targetStates.put(taraget, ReceiverState.RECEIVING);
+    }
+
+    for (Map.Entry<Integer, Set<Integer>> e : syncReceived.entrySet()) {
+      e.getValue().clear();
+    }
+
+    barriers.clear();
+    stateCleared = false;
+  }
 }

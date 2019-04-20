@@ -88,8 +88,8 @@ public class SDirectExample extends BenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    direct.progress();
+  protected boolean progressCommunication() {
+    return direct.progress();
   }
 
   @Override

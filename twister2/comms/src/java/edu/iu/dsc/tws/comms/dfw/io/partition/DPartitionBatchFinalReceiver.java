@@ -22,7 +22,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -72,17 +71,10 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
    */
   private boolean keyed;
 
-  private KryoSerializer kryoSerializer;
-
   /**
    * The worker id
    */
   private int thisWorker = 0;
-
-  /**
-   * Keep track of totals for debug purposes
-   */
-  private Map<Integer, Integer> totalReceives = new HashMap<>();
 
   /**
    * Finished workers per target (target -> finished workers)
@@ -109,53 +101,78 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
    */
   private List<String> shuffleDirectories;
 
+  /**
+   * Keep a refresh count to make the directories when refreshed
+   */
+  private int refresh = 0;
+
+  /**
+   * The expected ids
+   */
+  private Map<Integer, List<Integer>> expIds;
+
+  /**
+   * The max amount of bytes
+   */
+  private int maxBytesInMemory;
+
+  /**
+   * The max amount of records
+   */
+  private int maxRecordsInMemory;
+
   public DPartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
                                       List<String> shuffleDirs, Comparator<Object> com) {
     this.bulkReceiver = receiver;
     this.sorted = srt;
-    this.kryoSerializer = new KryoSerializer();
     this.comparator = com;
     this.shuffleDirectories = shuffleDirs;
   }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    int maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
-    int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
-
+    maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
+    maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
+    expIds = expectedIds;
     thisWorker = op.getTaskPlan().getThisExecutor();
     finishedSources = new HashMap<>();
     partition = op;
     keyed = partition.getKeyType() != null;
     targets = new HashSet<>(expectedIds.keySet());
+    initMergers();
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
+  }
 
-    for (Integer target : expectedIds.keySet()) {
+  /**
+   * Initialize the mergers, this happens after each refresh
+   */
+  private void initMergers() {
+    for (Integer target : expIds.keySet()) {
       String shuffleDirectory = this.shuffleDirectories.get(
-          target % this.shuffleDirectories.size());
+          partition.getTaskPlan().getIndexOfTaskInNode(target) % this.shuffleDirectories.size());
       Shuffle sortedMerger;
       if (partition.getKeyType() == null) {
         sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
-            DFWIOUtils.getOperationName(target, partition), partition.getDataType());
+            DFWIOUtils.getOperationName(target, partition, refresh), partition.getDataType());
       } else {
         if (sorted) {
           sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
-              shuffleDirectory, DFWIOUtils.getOperationName(target, partition),
+              shuffleDirectory, DFWIOUtils.getOperationName(target, partition, refresh),
               partition.getKeyType(), partition.getDataType(), comparator, target);
         } else {
           sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
-              DFWIOUtils.getOperationName(target, partition), partition.getKeyType(),
+              DFWIOUtils.getOperationName(target, partition, refresh), partition.getKeyType(),
               partition.getDataType());
         }
       }
       sortedMergers.put(target, sortedMerger);
-      totalReceives.put(target, 0);
       finishedSources.put(target, new HashSet<>());
     }
-    this.bulkReceiver.init(cfg, expectedIds.keySet());
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
+  public synchronized boolean onMessage(int source, int path,
+                                        int target, int flags, Object object) {
     Shuffle sortedMerger = sortedMergers.get(target);
     if (sortedMerger == null) {
       throw new RuntimeException("Un-expected target id: " + target);
@@ -165,7 +182,8 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       Set<Integer> finished = finishedSources.get(target);
       if (finished.contains(source)) {
         LOG.log(Level.WARNING,
-            String.format("%d Duplicate finish from source id %d", this.thisWorker, source));
+            String.format("%d Duplicate finish from source id %d -> %d",
+                this.thisWorker, source, target));
       } else {
         finished.add(source);
       }
@@ -189,9 +207,6 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
         }
         sortedMerger.add(kc.getKey(), d, d.length);
       }
-      int total = totalReceives.get(target);
-      total += tuples.size();
-      totalReceives.put(target, total);
     } else {
       List<Object> contents = (List<Object>) object;
       for (Object kc : contents) {
@@ -203,15 +218,12 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
         }
         sortedMerger.add(d, d.length);
       }
-      int total = totalReceives.get(target);
-      total += contents.size();
-      totalReceives.put(target, total);
     }
     return true;
   }
 
   @Override
-  public boolean progress() {
+  public synchronized boolean progress() {
     for (Shuffle sorts : sortedMergers.values()) {
       sorts.run();
     }
@@ -243,5 +255,17 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     for (Shuffle s : sortedMergers.values()) {
       s.clean();
     }
+  }
+
+  @Override
+  public void clean() {
+    for (Shuffle s : sortedMergers.values()) {
+      s.clean();
+    }
+    finishedTargetsCompleted.clear();
+    finishedTargets.clear();
+    finishedSources.forEach((k, v) -> v.clear());
+    refresh++;
+    initMergers();
   }
 }

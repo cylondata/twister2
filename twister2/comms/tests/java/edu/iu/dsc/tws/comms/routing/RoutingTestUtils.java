@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.routing;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -50,6 +51,6 @@ public final class RoutingTestUtils {
       e.add(i);
       groups.put(i, e);
     }
-    return new TaskPlan(execs, groups, thisExec);
+    return new TaskPlan(execs, groups, Collections.emptyMap(), thisExec);
   }
 }
