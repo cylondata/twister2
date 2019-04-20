@@ -13,51 +13,109 @@ package edu.iu.dsc.tws.comms.dfw.io.types;
 
 import java.nio.ByteBuffer;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataPacker;
+import edu.iu.dsc.tws.comms.api.ObjectBuilder;
+import edu.iu.dsc.tws.comms.api.PackerStore;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.InMessage;
-import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
-public class ObjectPacker implements DataPacker {
-  private KryoSerializer serializer;
+public final class ObjectPacker implements DataPacker<Object, byte[]> {
 
-  public ObjectPacker() {
-    serializer = new KryoSerializer();
+  private static volatile ObjectPacker instance;
+
+  // Creating a thread local since Kryo is stateful
+  private ThreadLocal<KryoSerializer> serializer;
+
+  private ObjectPacker() {
+    serializer = ThreadLocal.withInitial(() -> new KryoSerializer());
   }
 
-  @Override
-  public int packData(Object data, SerializeState state) {
-    if (state.getData() == null) {
-      byte[] serialize = serializer.serialize(data);
-      state.setData(serialize);
+  public static DataPacker<Object, byte[]> getInstance() {
+    if (instance == null) {
+      instance = new ObjectPacker();
     }
-    return state.getData().length;
+    return instance;
   }
 
   @Override
-  public boolean writeDataToBuffer(Object data,
-                                   ByteBuffer targetBuffer, SerializeState state) {
-    return DataSerializer.copyDataBytes(targetBuffer, state);
-  }
-
-  public Object initializeUnPackDataObject(int length) {
-    return new byte[length];
+  public int determineLength(Object data, PackerStore store) {
+    if (store.retrieve() == null) {
+      byte[] serialize = serializer.get().serialize(data);
+      store.store(serialize);
+    }
+    return store.retrieve().length;
   }
 
   @Override
-  public int readDataFromBuffer(InMessage currentMessage, int currentLocation,
-                                DataBuffer buffer, int currentObjectLength) {
-    int startIndex = currentMessage.getUnPkCurrentBytes();
-    byte[] objectVal = (byte[]) currentMessage.getDeserializingObject();
-    int value = PartialDataDeserializer.deserializeByte(buffer, currentObjectLength,
-        objectVal, startIndex, currentLocation);
+  public void writeDataToBuffer(Object data, PackerStore packerStore,
+                                int alreadyCopied, int leftToCopy, int spaceLeft,
+                                ByteBuffer targetBuffer) {
+    byte[] datBytes = packerStore.retrieve();
+    targetBuffer.put(datBytes, alreadyCopied, Math.min(leftToCopy, spaceLeft));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public int readDataFromBuffer(ObjectBuilder objectBuilder,
+                                int currentBufferLocation, DataBuffer dataBuffer) {
+    int totalObjectLength = objectBuilder.getTotalSize();
+    int startIndex = objectBuilder.getCompletedSize();
+    byte[] objectVal = (byte[]) objectBuilder.getPartialDataHolder();
+    int value = dataBuffer.copyPartToByteArray(currentBufferLocation, objectVal,
+        startIndex, totalObjectLength);
     // at the end we switch to the actual object
     int totalBytesRead = startIndex + value;
-    if (totalBytesRead == currentObjectLength) {
-      Object kryoValue = serializer.deserialize(objectVal);
-      currentMessage.setDeserializingObject(kryoValue);
+    if (totalBytesRead == totalObjectLength) {
+      Object kryoValue = serializer.get().deserialize(objectVal);
+      objectBuilder.setFinalObject(kryoValue);
     }
     return value;
+  }
+
+  @Override
+  public byte[] packToByteArray(Object data) {
+    return this.serializer.get().serialize(data);
+  }
+
+  @Override
+  public ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, Object data) {
+    return byteBuffer.put(this.packToByteArray(data));
+  }
+
+  @Override
+  public ByteBuffer packToByteBuffer(ByteBuffer byteBuffer, int offset, Object data) {
+    byte[] packedData = this.packToByteArray(data);
+    for (int i = 0; i < packedData.length; i++) {
+      byteBuffer.put(offset + i, packedData[i]);
+    }
+    return byteBuffer;
+  }
+
+  @Override
+  public byte[] wrapperForByteLength(int byteLength) {
+    return new byte[byteLength];
+  }
+
+  @Override
+  public boolean isHeaderRequired() {
+    return true;
+  }
+
+  @Override
+  public Object unpackFromBuffer(ByteBuffer byteBuffer, int bufferOffset, int byteLength) {
+    byte[] bytes = new byte[byteLength];
+    // intentionally not using byteBuffer.get(byte[]). The contract of this method is not to update
+    // buffer position
+    for (int i = 0; i < byteLength; i++) {
+      bytes[i] = byteBuffer.get(bufferOffset + i);
+    }
+    return this.serializer.get().deserialize(bytes);
+  }
+
+  @Override
+  public Object unpackFromBuffer(ByteBuffer byteBuffer, int byteLength) {
+    byte[] bytes = new byte[byteLength];
+    byteBuffer.get(bytes, 0, byteLength);
+    return null;
   }
 }

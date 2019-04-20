@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowAllReduce;
+import edu.iu.dsc.tws.comms.dfw.AllReduce;
 
 /**
  * Batch ALLReduce Operation
@@ -27,7 +27,7 @@ public class BAllReduce {
   /**
    * The actual operation
    */
-  private DataFlowAllReduce reduce;
+  private AllReduce reduce;
 
   /**
    * Construct a Batch AllReduce operation
@@ -54,7 +54,7 @@ public class BAllReduce {
     int firstSource = sources.iterator().next();
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
-    reduce = new DataFlowAllReduce(comm.getChannel(), sources, targets, middleTask, fnc,
+    reduce = new AllReduce(comm.getChannel(), sources, targets, middleTask, fnc,
         rcvr, comm.nextEdge(), comm.nextEdge(), false);
     reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
@@ -99,5 +99,12 @@ public class BAllReduce {
   public void close() {
     // deregister from the channel
     reduce.close();
+  }
+
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    reduce.clean();
   }
 }

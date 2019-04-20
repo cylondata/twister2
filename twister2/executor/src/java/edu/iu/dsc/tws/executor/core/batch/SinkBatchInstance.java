@@ -112,6 +112,9 @@ public class SinkBatchInstance implements INodeInstance {
 
   public void reset() {
     state = new InstanceState(InstanceState.INIT);
+    if (batchTask instanceof Closable) {
+      ((Closable) batchTask).refresh();
+    }
   }
 
   public void prepare(Config cfg) {
@@ -126,7 +129,7 @@ public class SinkBatchInstance implements INodeInstance {
       while (!batchInQueue.isEmpty()) {
         IMessage m = batchInQueue.poll();
         batchTask.execute(m);
-        state.set(InstanceState.EXECUTING);
+        state.addState(InstanceState.EXECUTING);
       }
 
       // lets progress the communication
@@ -134,7 +137,7 @@ public class SinkBatchInstance implements INodeInstance {
 
       // we don't have incoming and our inqueue in empty
       if (state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty() && !needsFurther) {
-        state.set(InstanceState.EXECUTION_DONE);
+        state.addState(InstanceState.EXECUTION_DONE);
       }
     }
 

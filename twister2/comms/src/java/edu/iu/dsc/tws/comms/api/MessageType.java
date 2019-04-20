@@ -11,84 +11,37 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-public enum MessageType {
-  INTEGER(true),
-  CHAR(true),
-  BYTE,
-  MULTI_FIXED_BYTE(false, true),
-  STRING,
-  LONG(true),
-  DOUBLE(true),
-  OBJECT,
-  EMPTY,
-  SHORT(true),
-  CUSTOM;
+import java.util.Comparator;
 
-  private boolean isMultiMessageType;
-  private boolean isPrimitive;
-  private DataPacker dataPacker;
-  private KeyPacker keyPacker;
-
-  MessageType() {
-    this(false, false);
-  }
-
-  MessageType(boolean isPrimitive) {
-    this(isPrimitive, false);
-  }
-
-
-  MessageType(boolean isPrimitive, boolean isMultiMessageType) {
-    this.isPrimitive = isPrimitive;
-    this.isMultiMessageType = isMultiMessageType;
-  }
+public interface MessageType<T, W> {
 
   /**
-   * Checks if the given message type is of a primitive type
-   * if the type is primitive then we do not need to add data length to the data buffers
+   * All primitive data types should return true, including the boxed types of primitives
+   *
+   * @return true if this type is primitive, false otherwise
    */
-  public boolean isPrimitive() {
-    return isPrimitive;
-  }
+  boolean isPrimitive();
 
   /**
-   * checks if the type is a multi message, not to be confused with the aggregated multi-messages
-   * that are passed through the network when optimized communications such as reduce are performed
-   * this refers to the original type of the message
+   * For arrays this method should return the size of an element in bytes
+   *
+   * @return the size of an unit.
    */
-  public boolean isMultiMessageType() {
-    return this.isMultiMessageType;
+  int getUnitSizeInBytes();
+
+  int getDataSizeInBytes(T data);
+
+  Class<T> getClazz();
+
+  DataPacker<T, W> getDataPacker();
+
+  boolean isArray();
+
+  default T cast(Object data) {
+    return this.getClazz().cast(data);
   }
 
-  /**
-   * Specify a custom data packer
-   * @return a custom data packer
-   */
-  public DataPacker getDataPacker() {
-    return dataPacker;
-  }
-
-  /**
-   * Set the custom data packer
-   * @param customPacker set the custom packer
-   */
-  public void setCustomPacker(DataPacker customPacker) {
-    this.dataPacker = customPacker;
-  }
-
-  /**
-   * Get the key packer associated with this type
-   * @return the key packer
-   */
-  public KeyPacker getKeyPacker() {
-    return keyPacker;
-  }
-
-  /**
-   * Set the key packer associated with this type
-   * @param keyPacker key packer
-   */
-  public void setKeyPacker(KeyPacker keyPacker) {
-    this.keyPacker = keyPacker;
+  default Comparator<T> getDefaultComparator() {
+    throw new RuntimeException("Comparator is not defined for this type");
   }
 }

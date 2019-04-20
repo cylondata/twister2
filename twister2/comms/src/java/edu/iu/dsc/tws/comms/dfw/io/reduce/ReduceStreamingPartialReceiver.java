@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.dfw.io.reduce;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 
 public class ReduceStreamingPartialReceiver extends ReduceStreamingReceiver {
   private static final Logger LOG = Logger.getLogger(
@@ -27,5 +28,11 @@ public class ReduceStreamingPartialReceiver extends ReduceStreamingReceiver {
   @Override
   public boolean handleMessage(int source, Object message, int flags, int dest) {
     return this.operation.sendPartial(source, message, flags, dest);
+  }
+
+  @Override
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    return DFWIOUtils.sendSyncForward(needsFurtherProgress, target, syncState,
+        barriers, operation, isSyncSent);
   }
 }

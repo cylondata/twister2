@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
@@ -103,7 +103,7 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
       executor = op.getTaskPlan().getThisExecutor();
       thisWorker = op.getTaskPlan().getThisExecutor();
       this.operationLeft = op;
-      this.sources = ((DataFlowPartition) op).getSources();
+      this.sources = ((MToNSimple) op).getSources();
 
       // lists to keep track of messages for destinations
       for (int target : expectedIds.keySet()) {
@@ -155,7 +155,7 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
 
     try {
       Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(target);
-      if ((flags & MessageFlags.END) == MessageFlags.END) {
+      if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
         if (onFinishedSrcsTarget.contains(source)) {
           LOG.log(Level.WARNING,
               String.format("%d Duplicate finish from source id %d", this.thisWorker, source));

@@ -18,11 +18,11 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.utils.Heap;
 import edu.iu.dsc.tws.comms.utils.HeapNode;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * File based sorter of records, we assume we can read maxbytes from all the files in the disk
@@ -49,7 +49,7 @@ public class FSSorter {
 
   private MessageType dataType;
 
-  private KryoMemorySerializer deserializer = new KryoMemorySerializer();
+  private KryoSerializer deserializer = new KryoSerializer();
 
   private class FilePart {
     private Triple<List<Tuple>, Long, Long> keyValues;

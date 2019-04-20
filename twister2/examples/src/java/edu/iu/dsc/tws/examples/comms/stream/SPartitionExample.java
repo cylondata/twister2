@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
@@ -57,7 +57,7 @@ public class SPartitionExample extends BenchWorker {
 
     // create the communication
     partition = new SPartition(communicator, taskPlan, sources, targets,
-        MessageType.INTEGER, new PartitionReceiver(), new LoadBalanceSelector());
+        MessageTypes.INTEGER_ARRAY, new PartitionReceiver(), new LoadBalanceSelector());
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
         (ints, args) -> ints, IntArrayComparator.getInstance());
@@ -73,8 +73,8 @@ public class SPartitionExample extends BenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    partition.progress();
+  protected boolean progressCommunication() {
+    return partition.progress();
   }
 
   @Override

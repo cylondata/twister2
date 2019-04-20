@@ -22,9 +22,10 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
-import edu.iu.dsc.tws.comms.dfw.RingPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNRing;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
@@ -75,20 +76,20 @@ public class BKeyedGather {
     if (!useDisk) {
       finalReceiver = new KGatherBatchFinalReceiver(rcvr, 100);
     } else {
-      receiveDataType = MessageType.BYTE;
+      receiveDataType = MessageTypes.BYTE_ARRAY;
       finalReceiver = new DPartitionBatchFinalReceiver(
-          rcvr, true, comm.getPersistentDirectory(), comparator);
+          rcvr, true, comm.getPersistentDirectories(), comparator);
     }
 
     if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
-      this.keyedGather = new DataFlowPartition(comm.getConfig(), comm.getChannel(),
+      this.keyedGather = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations,
           finalReceiver, partialReceiver, dataType, receiveDataType,
           keyType, keyType, comm.nextEdge());
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
-      this.keyedGather = new RingPartition(comm.getConfig(), comm.getChannel(),
+      this.keyedGather = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations, finalReceiver, partialReceiver,
           dataType, receiveDataType, keyType, keyType, comm.nextEdge());
     }
@@ -118,5 +119,12 @@ public class BKeyedGather {
   public void close() {
     // deregister from the channel
     keyedGather.close();
+  }
+
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    keyedGather.clean();
   }
 }

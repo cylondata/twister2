@@ -18,7 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
@@ -59,8 +59,8 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
     }
 
     keyedReduce = new SKeyedReduce(communicator, taskPlan, sources, targets,
-        MessageType.OBJECT, MessageType.OBJECT,
-        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
+        MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
+        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver(jobParameters.getIterations()), new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -84,8 +84,8 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    keyedReduce.progress();
+  protected boolean progressCommunication() {
+    return keyedReduce.progress();
   }
 
   @Override

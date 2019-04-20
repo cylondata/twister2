@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,36 +45,43 @@ public class Communicator {
    */
   private TaskIdGenerator idGenerator;
 
-  /**
-   * The directory to use for persisting any operations
-   */
-  private String persistentDirectory;
+  private List<String> persistentDirectories;
+  private int currentDirectoryIndex = 0;
 
   public Communicator(Config cfg, TWSChannel ch) {
-    this(cfg, ch, null);
+    this(cfg, ch, (List<String>) null);
   }
 
-  public Communicator(Config config, TWSChannel ch, String persDir) {
+  public Communicator(Config config, TWSChannel ch, List<String> persDirs) {
     this.channel = ch;
     this.config = config;
     // first lets try to retrieve through a config
-    if (persDir == null) {
-      this.persistentDirectory = CommunicationContext.persistentDirectory(config);
+    if (persDirs == null) {
+      this.persistentDirectories = CommunicationContext.persistentDirectory(config);
+      if (this.persistentDirectories.size() > 0) {
+        LOG.log(Level.FINE, "The persistence operations will be load balanced between : "
+            + this.persistentDirectories);
+      }
     } else {
-      this.persistentDirectory = persDir;
+      this.persistentDirectories = persDirs;
     }
-    LOG.log(Level.FINE, String.format("Using the persistent directory %s", persistentDirectory));
+    LOG.log(Level.FINE, String.format("Using the persistent directories %s",
+        persistentDirectories));
     this.edgeGenerator = new EdgeGenerator(0);
     this.idGenerator = new TaskIdGenerator(100000000);
   }
 
+  public Communicator(Config config, TWSChannel ch, String persDir) {
+    this(config, ch, persDir != null ? Collections.singletonList(persDir) : null);
+  }
+
   protected Communicator(Config config, TWSChannel channel, EdgeGenerator edgeGenerator,
-                         TaskIdGenerator idGenerator, String persistentDirectory) {
+                         TaskIdGenerator idGenerator, List<String> persistentDirectories) {
     this.channel = channel;
     this.config = config;
     this.edgeGenerator = edgeGenerator;
     this.idGenerator = idGenerator;
-    this.persistentDirectory = persistentDirectory;
+    this.persistentDirectories = persistentDirectories;
   }
 
   public TWSChannel getChannel() {
@@ -91,8 +100,13 @@ public class Communicator {
     return idGenerator.nextId();
   }
 
-  public String getPersistentDirectory() {
-    return persistentDirectory;
+  public String getPersistentDirectory(int requesterId) {
+    int dirIndex = this.persistentDirectories.size() % requesterId;
+    return this.persistentDirectories.get(dirIndex);
+  }
+
+  public List<String> getPersistentDirectories() {
+    return persistentDirectories;
   }
 
   /**
@@ -111,6 +125,6 @@ public class Communicator {
   public Communicator newWithConfig(Map<String, Object> newConfig) {
     return new Communicator(
         Config.newBuilder().putAll(config).putAll(newConfig).build(), channel,
-        edgeGenerator, idGenerator, persistentDirectory);
+        edgeGenerator, idGenerator, persistentDirectories);
   }
 }

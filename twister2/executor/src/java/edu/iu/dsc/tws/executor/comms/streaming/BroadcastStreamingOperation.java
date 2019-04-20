@@ -81,4 +81,9 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
   public void close() {
     op.close();
   }
+
+  @Override
+  public void reset() {
+    op.refresh();
+  }
 }

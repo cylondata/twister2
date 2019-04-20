@@ -12,6 +12,9 @@
 package edu.iu.dsc.tws.comms.api;
 
 import java.nio.ByteOrder;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
@@ -24,7 +27,7 @@ public class CommunicationContext extends Context {
   public static final String COMMUNICATION_TYPE = "network.type";
   public static final String MPI_COMMUNICATION_TYPE = "mpi";
   public static final String TCP_COMMUNICATION_TYPE = "tcp";
-  public static final String PERSISTENT_DIRECTORY = "network.ops.persistent.dir";
+  public static final String PERSISTENT_DIRECTORIES = "network.ops.persistent.dirs";
   public static final String PERSISTENT_DIRECTORY_DEFAULT_VALUE = "${TWISTER2_HOME}/persistent/";
 
   public static final String TWISTER2_STREAM_KEYED_REDUCE_OP = "twister2.stream.keyed.reduce.op";
@@ -56,9 +59,11 @@ public class CommunicationContext extends Context {
     return cfg.getStringValue(COMMUNICATION_TYPE, MPI_COMMUNICATION_TYPE);
   }
 
-  public static String persistentDirectory(Config cfg) {
-    return TokenSub.substitute(cfg, cfg.getStringValue(PERSISTENT_DIRECTORY,
-        PERSISTENT_DIRECTORY_DEFAULT_VALUE), Context.substitutions);
+  public static List<String> persistentDirectory(Config cfg) {
+    return cfg.getListValue(PERSISTENT_DIRECTORIES,
+        Collections.singletonList(PERSISTENT_DIRECTORY_DEFAULT_VALUE))
+        .stream().map(dir -> TokenSub.substitute(cfg, dir, Context.substitutions))
+        .collect(Collectors.toList());
   }
 
   public static String streamKeyedReduceOp(Config cfg) {

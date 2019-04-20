@@ -37,15 +37,13 @@ import org.lmdbjava.EnvFlags;
 import org.lmdbjava.KeyRange;
 import org.lmdbjava.Txn;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.memory.AbstractMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManagerContext;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.data.utils.MemoryDeserializer;
-
-
 import static org.lmdbjava.DbiFlags.MDB_CREATE;
 import static org.lmdbjava.Env.create;
 import static org.lmdbjava.EnvFlags.MDB_NOSYNC;
@@ -800,7 +798,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType keyType,
                                       DataMessageType valueType,
-                                      KryoMemorySerializer deSerializer, ByteOrder order) {
+                                      KryoSerializer deSerializer, ByteOrder order) {
     if (!dbMap.containsKey(opID)) {
       LOG.info("The given operation does not have a corresponding store specified");
       return null;
@@ -862,7 +860,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
    */
   @Override
   public Iterator<Object> getIterator(int opID, DataMessageType valueType,
-                                      KryoMemorySerializer deSerializer, ByteOrder order) {
+                                      KryoSerializer deSerializer, ByteOrder order) {
     if (!dbMap.containsKey(opID)) {
       LOG.info("The given operation does not have a corresponding store specified");
       return null;

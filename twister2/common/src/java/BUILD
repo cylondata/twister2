@@ -6,6 +6,7 @@ common_deps_files = [
     "@org_yaml_snakeyaml//jar",
     "@com_google_protobuf_protobuf_java//jar",
     "@com_google_guava_guava//jar",
+    "@com_esotericsoftware_kryo//jar",
     "//twister2/proto:proto-java",
 ]
 

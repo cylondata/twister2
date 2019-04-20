@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.comms.api.batch;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -21,7 +22,7 @@ import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver;
@@ -35,12 +36,12 @@ public class BJoin {
   /**
    * Left partition of the join
    */
-  private DataFlowPartition partitionLeft;
+  private MToNSimple partitionLeft;
 
   /**
    * Right partition of the join
    */
-  private DataFlowPartition partitionRight;
+  private MToNSimple partitionRight;
 
   /**
    * Destination selector
@@ -63,22 +64,22 @@ public class BJoin {
                MessageType dataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle) {
     this.destinationSelector = destSelector;
-    String shuffleDir = comm.getPersistentDirectory();
+    List<String> shuffleDirs = comm.getPersistentDirectories();
 
     MessageReceiver finalRcvr;
     if (shuffle) {
       finalRcvr = new DJoinBatchFinalReceiver(
-          rcvr, shuffleDir, new IntegerComparator());
+          rcvr, shuffleDirs, new IntegerComparator());
     } else {
       finalRcvr = new JoinBatchFinalReceiver(rcvr);
     }
 
 
-    this.partitionLeft = new DataFlowPartition(comm.getChannel(), sources, targets,
+    this.partitionLeft = new MToNSimple(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(0, finalRcvr), new PartitionPartialReceiver(),
         dataType, keyType);
 
-    this.partitionRight = new DataFlowPartition(comm.getChannel(), sources, targets,
+    this.partitionRight = new MToNSimple(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
         dataType, keyType);
 
@@ -153,6 +154,14 @@ public class BJoin {
   public void close() {
     partitionLeft.close();
     partitionRight.close();
+  }
+
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    partitionLeft.clean();
+    partitionRight.clean();
   }
 
   private class IntegerComparator implements Comparator<Object> {
