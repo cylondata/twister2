@@ -59,10 +59,10 @@ public class STWindowExample extends BenchTaskWorker {
     BaseWindowSource g = new SourceWindowTask(edge);
     ISink d = new DirectReceiveTask();
 
-    ISink dw = new DirectWindowedReceivingTask();
+    IWindowedSink dw = new DirectWindowedReceivingTask(windowingPolicy);
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism, windowingPolicy);
     computeConnection.direct(SOURCE, edge, DataType.INTEGER);
 
     return taskGraphBuilder;
@@ -79,6 +79,7 @@ public class STWindowExample extends BenchTaskWorker {
 
     private int count = 0;
 
+
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
@@ -93,6 +94,12 @@ public class STWindowExample extends BenchTaskWorker {
 
   protected static class DirectWindowedReceivingTask extends WindowedCompute<int[]>
       implements IWindowedSink, ReduceWindowedFunction<int[]> {
+
+    private WindowingPolicy windowingPolicy;
+
+    public DirectWindowedReceivingTask(WindowingPolicy windowingPolicy) {
+      this.windowingPolicy = windowingPolicy;
+    }
 
     @Override
     public List<IMessage<int[]>> window(List<IMessage<int[]>> content) {

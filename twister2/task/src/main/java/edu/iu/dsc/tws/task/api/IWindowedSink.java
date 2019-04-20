@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-public interface IWindowedSink extends ISink {
+public interface IWindowedSink extends INode {
 
 
 

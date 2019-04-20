@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -103,6 +104,8 @@ public class SinkStreamingWindowingInstance implements INodeInstance, IWindowIns
 
   private WindowManager<IMessage<?>> windowManager;
 
+  private ReentrantLock lock = new ReentrantLock();
+
 
   public SinkStreamingWindowingInstance(IWindowCompute streamingWindowTask,
                                         BlockingQueue<IMessage> streamingInQueue, Config config,
@@ -123,6 +126,8 @@ public class SinkStreamingWindowingInstance implements INodeInstance, IWindowIns
     this.taskSchedulePlan = taskSchedulePlan;
     this.windowingPolicy = winPolicy;
     this.windowManager = new WindowManager<>(this.windowingPolicy);
+    this.windowSize = this.windowingPolicy.getCount().value;
+    this.messageList = new ArrayList<>(this.windowSize);
   }
 
   @Override
@@ -130,12 +135,16 @@ public class SinkStreamingWindowingInstance implements INodeInstance, IWindowIns
 
     while (!streamingInQueue.isEmpty()) {
       IMessage m = streamingInQueue.poll();
-
-      this.windowManager.execute(m);
+      if (m != null) {
+        this.windowManager.execute(m);
+      }
 
       if (this.windowManager.isDone()) {
+        LOG.info(String.format("Windowing Completed : %d", this.windowManager.getWindow().size()));
         streamingWindowTask.execute(this.windowManager.getWindow());
         this.windowManager.clearWindow();
+      } else {
+        LOG.info(String.format("Window Manager : %d", this.windowManager.getWindow().size()));
       }
     }
 

@@ -42,10 +42,10 @@ import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
+import edu.iu.dsc.tws.task.api.IWindowedSink;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
-import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -153,7 +153,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         }
       }
 
-      if (node instanceof ICompute || node instanceof ISink || node instanceof IWindowCompute) {
+      if (node instanceof ICompute || node instanceof ISink || node instanceof IWindowedSink
+          || node instanceof IWindowCompute) {
         // lets get the parent tasks
         Set<Edge> parentEdges = taskGraph.inEdges(v);
         for (Edge e : parentEdges) {
@@ -174,7 +175,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
       // lets create the instance
       INodeInstance iNodeInstance = createInstances(cfg, ip, v, taskGraph.getOperationMode(),
-          taskGraph.getWindowMode(), taskGraph.getWindowingPolicy(), inEdges, outEdges,
+          taskGraph.getWindowMode(), inEdges, outEdges,
           taskSchedule);
       // add to execution
       execution.addNodes(v.getName(), taskIdGenerator.generateGlobalTaskId(
@@ -187,8 +188,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
       // lets create the communication
       OperationMode operationMode = taskGraph.getOperationMode();
-      WindowMode windowMode = taskGraph.getWindowMode();
-      WindowingPolicy windowingPolicy = taskGraph.getWindowingPolicy();
       IParallelOperation op = opFactory.build(c.getEdge(), c.getSourceTasks(), c.getTargetTasks(),
           operationMode);
       // now lets check the sources and targets that are in this executor
@@ -201,8 +200,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       // so along with the operation mode, the windowing mode must be tested
 
 
-      if (operationMode == OperationMode.STREAMING && windowMode == WindowMode.NONE) {
-        LOG.info("WindowMode : " + windowMode.toString());
+      if (operationMode == OperationMode.STREAMING) {
         for (Integer i : sourcesOfThisWorker) {
           if (streamingTaskInstances.contains(c.getSourceTask(), i)) {
             TaskStreamingInstance taskStreamingInstance
@@ -228,51 +226,16 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
                 = streamingSinkInstances.get(c.getTargetTask(), i);
             streamingSinkInstance.registerInParallelOperation(c.getEdge().getName(), op);
             op.register(i, streamingSinkInstance.getstreamingInQueue());
+          } else if (streamingSinkWindowingInstances.contains(c.getTargetTask(), i)) {
+            SinkStreamingWindowingInstance sinkStreamingWindowingInstance
+                = streamingSinkWindowingInstances.get(c.getTargetTask(), i);
+            sinkStreamingWindowingInstance.registerInParallelOperation(c.getEdge().getName(), op);
+            op.register(i, sinkStreamingWindowingInstance.getstreamingInQueue());
           } else {
             throw new RuntimeException("Not found: " + c.getTargetTask());
           }
         }
         execution.addOps(op);
-      }
-
-
-      if (operationMode == OperationMode.STREAMING && windowMode == WindowMode.ALL) {
-        LOG.info("WindowMode : " + windowMode.toString());
-        if (windowingPolicy == null) {
-          throw new NullPointerException("Windowing Policy Not defined!");
-        } else {
-          for (Integer i : sourcesOfThisWorker) {
-            if (streamingTaskInstances.contains(c.getSourceTask(), i)) {
-              TaskStreamingInstance taskStreamingInstance
-                  = streamingTaskInstances.get(c.getSourceTask(), i);
-              taskStreamingInstance.registerOutParallelOperation(c.getEdge().getName(), op);
-            } else if (streamingSourceInstances.contains(c.getSourceTask(), i)) {
-              SourceStreamingInstance sourceStreamingInstance
-                  = streamingSourceInstances.get(c.getSourceTask(), i);
-              sourceStreamingInstance.registerOutParallelOperation(c.getEdge().getName(), op);
-            } else {
-              throw new RuntimeException("Not found: " + c.getSourceTask());
-            }
-          }
-
-          for (Integer i : targetsOfThisWorker) {
-            if (streamingTaskInstances.contains(c.getTargetTask(), i)) {
-              TaskStreamingInstance taskStreamingInstance
-                  = streamingTaskInstances.get(c.getTargetTask(), i);
-              op.register(i, taskStreamingInstance.getInQueue());
-              taskStreamingInstance.registerInParallelOperation(c.getEdge().getName(), op);
-            } else if (streamingSinkWindowingInstances.contains(c.getTargetTask(), i)) {
-              SinkStreamingWindowingInstance sinkStreamingWindowingInstance
-                  = streamingSinkWindowingInstances.get(c.getTargetTask(), i);
-              sinkStreamingWindowingInstance.registerInParallelOperation(c.getEdge().getName(), op);
-              op.register(i, sinkStreamingWindowingInstance.getstreamingInQueue());
-            } else {
-              throw new RuntimeException("Not found: " + c.getTargetTask());
-            }
-          }
-          execution.addOps(op);
-        }
-
       }
 
       if (operationMode == OperationMode.BATCH) {
@@ -304,7 +267,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         }
         execution.addOps(op);
       }
-
     }
     return execution;
   }
@@ -326,7 +288,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   private INodeInstance createInstances(Config cfg, TaskInstancePlan ip,
                                         Vertex vertex, OperationMode operationMode,
                                         WindowMode windowMode,
-                                        WindowingPolicy windowingPolicy,
                                         Map<String, String> inEdges,
                                         Map<String, String> outEdges,
                                         TaskSchedulePlan taskSchedule) {
@@ -366,70 +327,53 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         throw new RuntimeException("Un-known type");
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {
-
-      if (windowMode.equals(WindowMode.NONE)) {
-        if (newInstance instanceof ICompute) {
-          if (newInstance instanceof ISink) {
-            SinkStreamingInstance v = new SinkStreamingInstance((ICompute) newInstance,
-                new LinkedBlockingQueue<>(), cfg, vertex.getName(),
-                taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
-                vertex.getConfig().toMap(), inEdges, taskSchedule);
-            streamingSinkInstances.put(vertex.getName(), taskId, v);
-            return v;
-          } else {
-            TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
-                new LinkedBlockingQueue<>(),
-                new LinkedBlockingQueue<>(), cfg,
-                vertex.getName(), taskId, ip.getTaskIndex(),
-                vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
-                outEdges, taskSchedule);
-            streamingTaskInstances.put(vertex.getName(), taskId, v);
-            return v;
-          }
-        } else if (newInstance instanceof ISource) {
-          SourceStreamingInstance v = new SourceStreamingInstance((ISource) newInstance,
-              new LinkedBlockingQueue<>(), cfg,
-              vertex.getName(), taskId, ip.getTaskIndex(),
-              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges,
-              taskSchedule);
-          streamingSourceInstances.put(vertex.getName(), taskId, v);
+      if (newInstance instanceof ICompute) {
+        if (newInstance instanceof ISink) {
+          SinkStreamingInstance v = new SinkStreamingInstance((ICompute) newInstance,
+              new LinkedBlockingQueue<>(), cfg, vertex.getName(),
+              taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
+              vertex.getConfig().toMap(), inEdges, taskSchedule);
+          streamingSinkInstances.put(vertex.getName(), taskId, v);
           return v;
         } else {
-          throw new RuntimeException("Un-known type");
-        }
-      } else if (windowMode.equals(WindowMode.ALL)) {
-        if (newInstance instanceof IWindowCompute) {
-          if (newInstance instanceof ISink) {
-            SinkStreamingWindowingInstance v =
-                new SinkStreamingWindowingInstance((IWindowCompute) newInstance,
-                    new LinkedBlockingQueue<>(), cfg, vertex.getName(),
-                    taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
-                    vertex.getConfig().toMap(), inEdges, taskSchedule, windowingPolicy);
-            streamingSinkWindowingInstances.put(vertex.getName(), taskId, v);
-            return v;
-          } else {
-            TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
-                new LinkedBlockingQueue<>(),
-                new LinkedBlockingQueue<>(), cfg,
-                vertex.getName(), taskId, ip.getTaskIndex(),
-                vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
-                outEdges, taskSchedule);
-            streamingTaskInstances.put(vertex.getName(), taskId, v);
-            return v;
-          }
-        } else if (newInstance instanceof ISource) {
-          SourceStreamingInstance v = new SourceStreamingInstance((ISource) newInstance,
+          TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
+              new LinkedBlockingQueue<>(),
               new LinkedBlockingQueue<>(), cfg,
               vertex.getName(), taskId, ip.getTaskIndex(),
-              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges,
-              taskSchedule);
-          streamingSourceInstances.put(vertex.getName(), taskId, v);
+              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
+              outEdges, taskSchedule);
+          streamingTaskInstances.put(vertex.getName(), taskId, v);
+          return v;
+        }
+      } else if (newInstance instanceof IWindowCompute) {
+        if (newInstance instanceof IWindowedSink) {
+          SinkStreamingWindowingInstance v =
+              new SinkStreamingWindowingInstance((IWindowCompute) newInstance,
+                  new LinkedBlockingQueue<>(), cfg, vertex.getName(),
+                  taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
+                  vertex.getConfig().toMap(), inEdges, taskSchedule, vertex.getWindowingPolicy());
+          streamingSinkWindowingInstances.put(vertex.getName(), taskId, v);
           return v;
         } else {
-          throw new RuntimeException("Un-known type");
+          TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
+              new LinkedBlockingQueue<>(),
+              new LinkedBlockingQueue<>(), cfg,
+              vertex.getName(), taskId, ip.getTaskIndex(),
+              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
+              outEdges, taskSchedule);
+          streamingTaskInstances.put(vertex.getName(), taskId, v);
+          return v;
         }
+      } else if (newInstance instanceof ISource) {
+        SourceStreamingInstance v = new SourceStreamingInstance((ISource) newInstance,
+            new LinkedBlockingQueue<>(), cfg,
+            vertex.getName(), taskId, ip.getTaskIndex(),
+            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges,
+            taskSchedule);
+        streamingSourceInstances.put(vertex.getName(), taskId, v);
+        return v;
       } else {
-        throw new RuntimeException("Unknown WindowType");
+        throw new RuntimeException("Un-known type");
       }
     } else {
       // GRAPH Structures must be implemented here

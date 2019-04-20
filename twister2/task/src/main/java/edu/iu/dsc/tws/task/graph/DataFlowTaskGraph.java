@@ -17,8 +17,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
-
 /**
  * This class extends the base data flow task graph which is mainly responsible for building the
  * task graph for the task vertex and the task edge.
@@ -29,8 +27,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   private OperationMode operationMode = OperationMode.STREAMING;
 
   private WindowMode windowMode = WindowMode.NONE;
-
-  private WindowingPolicy windowingPolicy = null;
 
   public DataFlowTaskGraph() {
     super(new VertexComparator(), new EdgeComparator());
@@ -187,21 +183,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     return windowMode;
   }
 
-  /**
-   * returns the defined windowing policy
-   * @return
-   */
-  public WindowingPolicy getWindowingPolicy() {
-    return windowingPolicy;
-  }
-
-  /**
-   * Setting windowing policy needed to govern the properties
-   * @param windowingPolicy
-   */
-  public void setWindowingPolicy(WindowingPolicy windowingPolicy) {
-    this.windowingPolicy = windowingPolicy;
-  }
 
   private static class VertexComparator implements Comparator<Vertex> {
 
