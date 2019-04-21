@@ -11,26 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.api;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-
 public interface IExecutor {
   /**
    * Execute the specific plan
-   * @param cfg configuration
    * @param plan execution plan
-   * @param channel the communication channel
    * @return true if accepted
    */
-  boolean execute(Config cfg, ExecutionPlan plan, TWSChannel channel);
+  boolean execute(ExecutionPlan plan);
 
   /**
    * Asynchronously execute a plan, One need to call progress on the execution object returned to
    * continue the execution
-   * @param cfg configuration
    * @param plan execution plan
-   * @param channel the communication channel
    * @return an execution or null if not accepted
    */
-  IExecution iExecute(Config cfg, ExecutionPlan plan, TWSChannel channel);
+  IExecution iExecute(ExecutionPlan plan);
+
+  /**
+   * Terminate the executor
+   */
+  void close();
 }

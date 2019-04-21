@@ -14,10 +14,15 @@ package edu.iu.dsc.tws.executor.threading;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.TWSChannel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
@@ -34,14 +39,17 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
   private boolean cleanUpCalled = false;
 
-  public BatchSharingExecutor(int workerId) {
+  private CountDownLatch doneSignal;
+
+  public BatchSharingExecutor(Config cfg, int workerId, TWSChannel channel) {
+    super(cfg, channel);
     this.workerId = workerId;
   }
 
   /**
    * Execution Method for Batch Tasks
    */
-  public boolean runExecution() {
+  public boolean runExecution(ExecutionPlan executionPlan) {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     if (nodes.size() == 0) {
@@ -57,13 +65,15 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       channel.progress();
     }
 
-    cleanUp(nodes);
+    cleanUp(executionPlan, nodes);
     return true;
   }
 
   private void scheduleExecution(Map<Integer, INodeInstance> nodes) {
     // initialize finished
     // initFinishedInstances();
+    BlockingQueue<INodeInstance> tasks;
+
     tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
     tasks.addAll(nodes.values());
 
@@ -75,21 +85,19 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       node.prepare(config);
     }
 
+    doneSignal = new CountDownLatch(curTaskSize);
     for (int i = 0; i < curTaskSize; i++) {
-      workers[i] = new BatchWorker();
-      Thread t = new Thread(workers[i], "Executor-" + i);
-      threads.add(t);
-      t.start();
+      workers[i] = new BatchWorker(tasks);
+      threads.submit(workers[i]);
     }
   }
 
-  private void cleanUp(Map<Integer, INodeInstance> nodes) {
+  private void cleanUp(ExecutionPlan executionPlan, Map<Integer, INodeInstance> nodes) {
     // lets wait for thread to finish
-    for (Thread t : threads) {
-      try {
-        t.join();
-      } catch (InterruptedException ignore) {
-      }
+    try {
+      doneSignal.await();
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Interrupted", e);
     }
 
     // clean up the instances
@@ -109,7 +117,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   }
 
   @Override
-  public IExecution runIExecution() {
+  public IExecution runIExecution(ExecutionPlan executionPlan) {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     if (nodes.size() == 0) {
@@ -119,10 +127,16 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
 
     scheduleExecution(nodes);
-    return new BatchExecution(nodes);
+    return new BatchExecution(executionPlan, nodes);
   }
 
   protected class BatchWorker implements Runnable {
+    private BlockingQueue<INodeInstance> tasks;
+
+    public BatchWorker(BlockingQueue<INodeInstance> tasks) {
+      this.tasks = tasks;
+    }
+
     @Override
     public void run() {
       while (notStopped) {
@@ -144,14 +158,18 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
           throw new RuntimeException("Error occurred in execution of task", t);
         }
       }
+      doneSignal.countDown();
     }
   }
 
   private class BatchExecution implements IExecution {
     private Map<Integer, INodeInstance> nodeMap;
 
-    BatchExecution(Map<Integer, INodeInstance> nodeMap) {
+    private ExecutionPlan executionPlan;
+
+    BatchExecution(ExecutionPlan executionPlan, Map<Integer, INodeInstance> nodeMap) {
       this.nodeMap = nodeMap;
+      this.executionPlan = executionPlan;
     }
 
     @Override
@@ -161,7 +179,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
         channel.progress();
       }
 
-      cleanUp(nodeMap);
+      cleanUp(executionPlan, nodeMap);
       return true;
     }
 
@@ -182,7 +200,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       }
 
       if (!cleanUpCalled) {
-        cleanUp(nodeMap);
+        cleanUp(executionPlan, nodeMap);
         cleanUpCalled = true;
       } else {
         throw new RuntimeException("Close is called on a already closed execution");

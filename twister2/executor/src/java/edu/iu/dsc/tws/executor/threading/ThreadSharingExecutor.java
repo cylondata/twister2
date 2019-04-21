@@ -11,9 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -21,7 +20,6 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.IExecutor;
-import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 
@@ -33,55 +31,55 @@ public abstract class ThreadSharingExecutor implements  IExecutor {
 
   protected int numThreads;
 
-  protected BlockingQueue<INodeInstance> tasks;
-
-  protected List<Thread> threads = new ArrayList<>();
-
-  protected ExecutionPlan executionPlan;
+  protected ExecutorService threads;
 
   protected TWSChannel channel;
 
   protected Config config;
 
-  public boolean execute(Config cfg, ExecutionPlan plan, TWSChannel ch) {
-    this.numThreads = ExecutorContext.threadsPerContainer(cfg);
+  public ThreadSharingExecutor(Config config, TWSChannel ch) {
+    this.config = config;
     this.channel = ch;
-    this.executionPlan = plan;
-
-    // lets create the runtime object
-    ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(cfg), plan, ch);
-    // updated config
-    this.config = Config.newBuilder().putAll(cfg).
-        put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
-
-    // go through the instances
-    return runExecution();
+    this.numThreads = ExecutorContext.threadsPerContainer(config);
+    this.threads = Executors.newFixedThreadPool(numThreads);
   }
 
-  public IExecution iExecute(Config cfg, ExecutionPlan plan, TWSChannel ch) {
-    this.numThreads = ExecutorContext.threadsPerContainer(cfg);
-    this.channel = ch;
-    this.executionPlan = plan;
-
+  public boolean execute(ExecutionPlan plan) {
     // lets create the runtime object
-    ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(cfg), plan, ch);
+    ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
     // updated config
-    this.config = Config.newBuilder().putAll(cfg).
+    this.config = Config.newBuilder().putAll(config).
         put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
 
     // go through the instances
-    return runIExecution();
+    return runExecution(plan);
+  }
+
+  public IExecution iExecute(ExecutionPlan plan) {
+    // lets create the runtime object
+    ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
+    // updated config
+    this.config = Config.newBuilder().putAll(config).
+        put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
+
+    // go through the instances
+    return runIExecution(plan);
   }
 
   /**
    * Specific implementation needs to implement this method
    * @return weather we executed successfully
    */
-  public abstract boolean runExecution();
+  public abstract boolean runExecution(ExecutionPlan plan);
 
   /**
    * Specific implementation needs to implement this method
    * @return weather we executed successfully
    */
-  public abstract IExecution runIExecution();
+  public abstract IExecution runIExecution(ExecutionPlan plan);
+
+  @Override
+  public void close() {
+    threads.shutdown();
+  }
 }

@@ -153,8 +153,8 @@ public class HDFSTaskExample implements IWorker {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
         workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, workerID, plan, network);
-    executor.execute();
+    Executor executor = new Executor(config, workerID, network);
+    executor.execute(plan);
   }
 
   public WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {

@@ -113,9 +113,9 @@ public class TaskExecutor {
   public void execute(Config taskConfig, DataFlowTaskGraph graph, ExecutionPlan plan) {
     Config newCfg = Config.newBuilder().putAll(config).putAll(taskConfig).build();
 
-    Executor executor = new Executor(newCfg, workerID, plan, communicator.getChannel(),
+    Executor executor = new Executor(newCfg, workerID, communicator.getChannel(),
         graph.getOperationMode());
-    executor.execute();
+    executor.execute(plan);
   }
 
   /**
@@ -127,9 +127,9 @@ public class TaskExecutor {
    * @param plan the execution plan
    */
   public void execute(DataFlowTaskGraph graph, ExecutionPlan plan) {
-    Executor executor = new Executor(config, workerID, plan, communicator.getChannel(),
+    Executor executor = new Executor(config, workerID, communicator.getChannel(),
         graph.getOperationMode());
-    executor.execute();
+    executor.execute(plan);
   }
 
   /**
@@ -141,9 +141,9 @@ public class TaskExecutor {
    * @param plan the execution plan
    */
   public IExecution iExecute(DataFlowTaskGraph graph, ExecutionPlan plan) {
-    Executor executor = new Executor(config, workerID, plan, communicator.getChannel(),
+    Executor executor = new Executor(config, workerID, communicator.getChannel(),
         graph.getOperationMode());
-    return executor.iExecute();
+    return executor.iExecute(plan);
   }
 
   /**

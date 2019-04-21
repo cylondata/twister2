@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
@@ -101,6 +102,8 @@ public class SinkBatchInstance implements INodeInstance, ISync {
    */
   private Set<String> syncReceived = new HashSet<>();
 
+  private static final Logger LOG = Logger.getLogger(SinkBatchInstance.class.getName());
+
   public SinkBatchInstance(ICompute batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
                            String tName, int tId, int tIndex, int parallel, int wId,
                            Map<String, Object> cfgs, Map<String, String> inEdges,
@@ -144,19 +147,20 @@ public class SinkBatchInstance implements INodeInstance, ISync {
       boolean needsFurther = communicationProgress();
 
       // we don't have incoming and our inqueue in empty
-      if (state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty() && !needsFurther) {
+      if (state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty()) {
         state.addState(InstanceState.EXECUTION_DONE);
       }
     }
 
     // we only need the execution done for now
-    return !state.isSet(InstanceState.EXECUTION_DONE);
+    return !state.isSet(InstanceState.EXECUTION_DONE | InstanceState.SYNCED);
   }
 
   public boolean sync(String edge, byte[] value) {
     syncReceived.add(edge);
     if (syncReceived.equals(batchInParOps.keySet())) {
-//      state.addState(InstanceState.SYNCED);
+      LOG.info("SYNCED");
+      state.addState(InstanceState.SYNCED);
       syncReceived.clear();
     }
     return true;
