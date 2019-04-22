@@ -159,7 +159,6 @@ public class TaskAttributes {
     } else {
       instancesPerWorker = TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
     }
-    LOG.info("number of instances per worker:" + instancesPerWorker);
     return instancesPerWorker;
   }
 

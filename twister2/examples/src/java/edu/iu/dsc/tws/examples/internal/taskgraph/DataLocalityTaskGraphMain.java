@@ -97,7 +97,7 @@ public class DataLocalityTaskGraphMain {
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("DataLocality-Job");
-    jobBuilder.setWorkerClass(DataLocalityStreamingExample.class.getName());
+    jobBuilder.setWorkerClass(DataLocalityStreamingTaskGraphExample.class.getName());
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);
 

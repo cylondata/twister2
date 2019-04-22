@@ -11,18 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.taskgraph;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -51,31 +57,84 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
     workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);
 
-    /* First Graph to partition and read the partitioned data points **/
-    DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_PARTITION_EDGE,
-        dataDirectory);
-    DataLocalitySinkTask dataObjectSink = new DataLocalitySinkTask(Context.TWISTER2_PARTITION_EDGE,
-        dsize, parallelismValue, dimension);
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    GeneratorTask dataObjectSource = new GeneratorTask();
+    ReceivingTask dataObjectSink = new ReceivingTask();
 
+    //Adding the user-defined constraints to the graph
+    Map<String, String> taskgraphConstraintsMap = new HashMap<>();
+    taskgraphConstraintsMap.put(Context.TWISTER2_TASK_CONSTRAINTS, "true");
+    taskgraphConstraintsMap.put(Context.TWISTER2_TASK_INSTANCES_PER_WORKER, "4");
+    //taskgraphConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
+
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
-    taskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
-    ComputeConnection datapointComputeConnection = taskGraphBuilder.addSink(
-        "datapointsink", dataObjectSink, parallelismValue);
+    taskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue,
+        taskgraphConstraintsMap);
+    ComputeConnection computeConnection = taskGraphBuilder.addSink("datapointsink", dataObjectSink,
+        parallelismValue, taskgraphConstraintsMap);
 
     //Creating the communication edges between the tasks for the second task graph
     //datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
     //    DataType.OBJECT);
-    datapointComputeConnection.partition("datapointsource", Context.TWISTER2_PARTITION_EDGE,
-        DataType.OBJECT);
+    computeConnection.partition("datapointsource", "partition-edge", DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 
     //Build the first taskgraph
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
-    //LOG.info("Task Graph Constraints:" + taskGraph.getTaskConstraints("datasource"));
+    LOG.info("%%% Graph Constraints:%%%" + taskGraph.getGraphConstraints("datapointsource"));
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan = taskExecutor.plan(taskGraph);
     //Actual execution for the first taskgraph
     taskExecutor.execute(taskGraph, executionPlan);
+  }
+
+  private static class GeneratorTask extends BaseSource {
+
+    private static final long serialVersionUID = -254264903510284748L;
+    private int count = 0;
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+      this.context = ctx;
+      this.config = cfg;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void execute() {
+      boolean wrote = context.write("partition-edge", "Hello");
+      if (wrote) {
+        count++;
+        if (count % 100 == 0) {
+          LOG.info(String.format("%d %d Message sent count : %d", context.getWorkerId(),
+              context.taskId(), count));
+        }
+      }
+    }
+  }
+
+  private static class ReceivingTask extends BaseSink {
+
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+      this.context = ctx;
+      this.config = cfg;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean execute(IMessage message) {
+      if (message.getContent() instanceof String) {
+        count += ((String) message.getContent()).length();
+      }
+      LOG.info(String.format("%d %d Message Received count: %d", context.getWorkerId(),
+          context.taskId(), count));
+      return true;
+    }
   }
 }
