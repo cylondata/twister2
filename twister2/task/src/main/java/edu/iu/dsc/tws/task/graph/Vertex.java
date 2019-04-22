@@ -53,6 +53,27 @@ public class Vertex {
    */
   private int parallelism = 1;
 
+  private GraphConstraints graphConstraints;
+
+  private Map<String, String> graphConstraintsMap;
+
+  public GraphConstraints getGraphConstraints() {
+    return graphConstraints;
+  }
+
+  public void setGraphConstraints(GraphConstraints graphConstraints) {
+    this.graphConstraints = graphConstraints;
+  }
+
+
+  public Map<String, String> getGraphConstraintsMap() {
+    return graphConstraintsMap;
+  }
+
+  public void setGraphConstraintsMap(Map<String, String> graphConstraintsMap) {
+    this.graphConstraintsMap = graphConstraintsMap;
+  }
+
   public void setConfig(Map<String, Object> config) {
     this.config = config;
   }
@@ -62,12 +83,6 @@ public class Vertex {
    */
   private Map<String, Object> config;
 
-  public Map<String, Object> getConstraints() {
-    return constraints;
-  }
-
-  private Map<String, Object> constraints;
-
   public Vertex() {
   }
 
@@ -75,7 +90,6 @@ public class Vertex {
     this.name = n;
     this.task = t;
     config = new HashMap<>();
-    constraints = new HashMap<>();
   }
 
   public Vertex(String name, INode task, int parallelism) {
@@ -83,7 +97,22 @@ public class Vertex {
     this.task = task;
     this.parallelism = parallelism;
     config = new HashMap<>();
-    constraints = new HashMap<>();
+  }
+
+  public Vertex(String name, INode task, int parallelism, GraphConstraints graphconstraints) {
+    this.name = name;
+    this.task = task;
+    this.parallelism = parallelism;
+    config = new HashMap<>();
+    this.graphConstraints = graphconstraints;
+  }
+
+  public Vertex(String name, INode task, int parallelism, Map<String, String> graphconstraintsMap) {
+    this.name = name;
+    this.task = task;
+    this.parallelism = parallelism;
+    config = new HashMap<>();
+    setGraphConstraintsMap(graphconstraintsMap);
   }
 
   public int getRam() {
@@ -134,8 +163,5 @@ public class Vertex {
     this.config.put(key, val);
   }
 
-  public void addConstraints(String key, Object val) {
-    this.constraints.put(key, val);
-  }
 }
 

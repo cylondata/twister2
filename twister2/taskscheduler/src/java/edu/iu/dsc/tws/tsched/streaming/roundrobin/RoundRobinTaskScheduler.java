@@ -229,7 +229,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
     for (Vertex vertex : taskVertexSet) {
       int totalTaskInstances;
       totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
-      if (vertex.getConstraints().containsKey(Context.TWISTER2_TASK_CONSTRAINTS)) {
+      if (vertex.getGraphConstraintsMap().containsKey(Context.TWISTER2_TASK_CONSTRAINTS)) {
         int instancesPerWorker = taskAttributes.getInstancesPerWorker(vertex);
         int maxTaskInstancesPerContainer = 0;
         int containerIndex;

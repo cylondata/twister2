@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.taskgraph;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,6 +20,7 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
@@ -56,20 +59,26 @@ public class DataLocalityStreamingExample extends TaskWorker {
     GeneratorTask dataObjectSource = new GeneratorTask();
     ReceivingTask dataObjectSink = new ReceivingTask();
 
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    Map<String, String> taskgraphConstraintsMap = new HashMap<>();
 
+    taskgraphConstraintsMap.put(Context.TWISTER2_TASK_CONSTRAINTS, "true");
+    taskgraphConstraintsMap.put(Context.TWISTER2_TASK_INSTANCES_PER_WORKER, "2");
+    taskgraphConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "2");
+
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
-    taskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
-    ComputeConnection computeConnection = taskGraphBuilder.addSink(
-        "datapointsink", dataObjectSink, parallelismValue);
+    taskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue,
+        taskgraphConstraintsMap);
+    ComputeConnection computeConnection = taskGraphBuilder.addSink("datapointsink", dataObjectSink,
+        parallelismValue, taskgraphConstraintsMap);
 
     //Creating the communication edges between the tasks for the second task graph
-    computeConnection.partition("datapointsource", "partition-edge",
-        DataType.OBJECT);
+    computeConnection.partition("datapointsource", "partition-edge", DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 
     //Build the first taskgraph
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+    LOG.info("%%% Graph Constraints:%%%" + taskGraph.getGraphConstraints("datapointsource"));
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan = taskExecutor.plan(taskGraph);
     //Actual execution for the first taskgraph

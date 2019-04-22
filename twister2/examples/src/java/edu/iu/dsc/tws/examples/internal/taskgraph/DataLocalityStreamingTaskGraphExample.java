@@ -52,9 +52,9 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
         centroidDirectory);
 
     /* First Graph to partition and read the partitioned data points **/
-    DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
+    DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_PARTITION_EDGE,
         dataDirectory);
-    DataLocalitySinkTask dataObjectSink = new DataLocalitySinkTask(Context.TWISTER2_DIRECT_EDGE,
+    DataLocalitySinkTask dataObjectSink = new DataLocalitySinkTask(Context.TWISTER2_PARTITION_EDGE,
         dsize, parallelismValue, dimension);
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
@@ -63,26 +63,19 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
     ComputeConnection datapointComputeConnection = taskGraphBuilder.addSink(
         "datapointsink", dataObjectSink, parallelismValue);
 
-    taskGraphBuilder.addConstraints("datapointsource",
-        Context.TWISTER2_TASK_INSTANCES_PER_WORKER, "2");
-    taskGraphBuilder.addConstraints("datapointsource",
-        Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
-
-    taskGraphBuilder.addConstraints("datapointsink",
-        Context.TWISTER2_TASK_INSTANCES_PER_WORKER, "2");
-    taskGraphBuilder.addConstraints("datapointsink",
-        Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
-
     //Creating the communication edges between the tasks for the second task graph
-    datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
+    //datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
+    //    DataType.OBJECT);
+    datapointComputeConnection.partition("datapointsource", Context.TWISTER2_PARTITION_EDGE,
         DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 
     //Build the first taskgraph
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+    //LOG.info("Task Graph Constraints:" + taskGraph.getTaskConstraints("datasource"));
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan = taskExecutor.plan(taskGraph);
     //Actual execution for the first taskgraph
-    //taskExecutor.execute(taskGraph, executionPlan);
+    taskExecutor.execute(taskGraph, executionPlan);
   }
 }

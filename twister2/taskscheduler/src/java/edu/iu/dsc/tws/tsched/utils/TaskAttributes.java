@@ -121,18 +121,19 @@ public class TaskAttributes {
     Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
     for (Vertex task : iTaskSet) {
       Config config = task.getConfig();
-      Map<String, Object> constraints = task.getConstraints();
+      Map<String, String> constraints = task.getGraphConstraintsMap();
       String taskName = task.getName();
       int parallelTaskCount;
-      if (!task.getConstraints().containsKey(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
+      if (!task.getGraphConstraintsMap().containsKey(
+          Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
         if (task.getParallelism() >= 1) {
           parallelTaskCount = task.getParallelism();
         } else {
           parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
         }
       } else {
-        parallelTaskCount = Integer.valueOf(
-            String.valueOf(constraints.get(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)));
+        parallelTaskCount = Integer.valueOf(String.valueOf(constraints.get(
+            Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)));
       }
       parallelTaskMap.put(taskName, parallelTaskCount);
     }
@@ -140,10 +141,12 @@ public class TaskAttributes {
   }
 
 
-  public int getInstancesPerWorker(Vertex vertex) {
+  public int getInstancesPerWorker(Vertex taskVertex) {
     int instancesPerWorker;
-    if (vertex.getConstraints().containsKey(Context.TWISTER2_TASK_INSTANCES_PER_WORKER)) {
-      instancesPerWorker = Integer.valueOf(String.valueOf(vertex.getConstraints().get(
+    Map<String, String> constraints = taskVertex.getGraphConstraintsMap();
+    if (taskVertex.getGraphConstraintsMap().containsKey(
+        Context.TWISTER2_TASK_INSTANCES_PER_WORKER)) {
+      instancesPerWorker = Integer.valueOf(String.valueOf(constraints.get(
           Context.TWISTER2_TASK_INSTANCES_PER_WORKER)));
     } else {
       instancesPerWorker = Integer.valueOf(String.valueOf(
@@ -162,9 +165,10 @@ public class TaskAttributes {
     Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
     Config config = taskVertex.getConfig();
     String taskName = taskVertex.getName();
-    Map<String, Object> constraints = taskVertex.getConstraints();
+    Map<String, String> constraints = taskVertex.getGraphConstraintsMap();
     int parallelTaskCount;
-    if (!taskVertex.getConstraints().containsKey(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
+    if (!taskVertex.getGraphConstraintsMap().containsKey(
+        Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
       if (taskVertex.getParallelism() >= 1) {
         parallelTaskCount = taskVertex.getParallelism();
       } else {

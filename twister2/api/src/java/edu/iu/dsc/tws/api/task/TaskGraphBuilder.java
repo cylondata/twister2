@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.graph.GraphConstraints;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
@@ -45,11 +46,6 @@ public final class TaskGraphBuilder {
    * Source connections
    */
   private List<SourceConnection> sourceConnections = new ArrayList<>();
-
-  /**
-   * Source connections
-   */
-  private List<TaskGraphConstraints> taskGraphConstraints = new ArrayList<>();
 
   /**
    * Default parallelism read from a configuration parameter
@@ -190,38 +186,6 @@ public final class TaskGraphBuilder {
   }
 
   /**
-   * Newly Added Methods for supporting the constraints
-   **/
-  public SourceConnection addSource(String name, ISource source, int parallel,
-                                    String constraints, Object value) {
-    Vertex vertex = new Vertex(name, source, parallel);
-    vertex.addConstraints(constraints, value);
-    nodes.put(name, vertex);
-    return createSourceConnection(name);
-  }
-
-  public ComputeConnection addSink(String name, ISink sink, int parallel,
-                                   String constraints, Object value) {
-    Vertex vertex = new Vertex(name, sink, parallel);
-    vertex.addConstraints(constraints, value);
-    nodes.put(name, vertex);
-    return createComputeConnection(name);
-  }
-
-  public TaskGraphConstraints addConstraints(String name, String constraints, String value) {
-    Vertex vertex = nodes.get(name);
-    vertex.addConstraints(constraints, value);
-    nodes.put(name, vertex);
-    return createTaskGraphConstraints(name);
-  }
-
-  private TaskGraphConstraints createTaskGraphConstraints(String taskName) {
-    TaskGraphConstraints pc = new TaskGraphConstraints(taskName);
-    taskGraphConstraints.add(pc);
-    return pc;
-  }
-
-  /**
    * Get the operation mode
    *
    * @return the operation mode
@@ -230,14 +194,62 @@ public final class TaskGraphBuilder {
     return mode;
   }
 
+  //Adding the constraints
+  public SourceConnection addSource(String name, ISource source, int parallel,
+                                    GraphConstraints taskConstraints) {
+    Vertex vertex = new Vertex(name, source, parallel, taskConstraints);
+    nodes.put(name, vertex);
+    return createSourceConnection(name);
+  }
+
+  public ComputeConnection addSink(String name, ISink sink, int parallel,
+                                   GraphConstraints taskConstraints) {
+    Vertex vertex = new Vertex(name, sink, parallel, taskConstraints);
+    nodes.put(name, vertex);
+    return createComputeConnection(name);
+  }
+
+
+  public ComputeConnection addCompute(String name, ICompute compute, int parallel,
+                                      GraphConstraints taskConstraints) {
+    Vertex vertex = new Vertex(name, compute, parallel, taskConstraints);
+    nodes.put(name, vertex);
+    return createComputeConnection(name);
+  }
+
+
+  public SourceConnection addSource(String name, ISource source, int parallel,
+                                    Map<String, String> taskConstraints) {
+    Vertex vertex = new Vertex(name, source, parallel, taskConstraints);
+    nodes.put(name, vertex);
+    return createSourceConnection(name);
+  }
+
+  public ComputeConnection addSink(String name, ISink sink, int parallel,
+                                   Map<String, String> taskConstraints) {
+    Vertex vertex = new Vertex(name, sink, parallel, taskConstraints);
+    nodes.put(name, vertex);
+    return createComputeConnection(name);
+  }
+
+  public ComputeConnection addCompute(String name, ICompute compute, int parallel,
+                                      Map<String, String> taskConstraints) {
+    Vertex vertex = new Vertex(name, compute, parallel, taskConstraints);
+    nodes.put(name, vertex);
+    return createComputeConnection(name);
+  }
+
+
   public DataFlowTaskGraph build() {
     DataFlowTaskGraph graph = new DataFlowTaskGraph();
     graph.setOperationMode(mode);
 
     for (Map.Entry<String, Vertex> e : nodes.entrySet()) {
-      LOG.info("key:" + e.getKey() + "\t" + e.getValue().getConstraints());
       graph.addTaskVertex(e.getKey(), e.getValue());
-      graph.addTaskConstraints(e.getKey(), e.getValue().getConstraints());
+
+      if (e.getValue().getGraphConstraintsMap() != null) {
+        graph.addGraphConstraints(e.getKey(), e.getValue().getGraphConstraintsMap());
+      }
     }
 
     for (ComputeConnection c : computeConnections) {
@@ -245,10 +257,6 @@ public final class TaskGraphBuilder {
     }
 
     for (SourceConnection c : sourceConnections) {
-      c.build(graph);
-    }
-
-    for (TaskGraphConstraints c : taskGraphConstraints) {
       c.build(graph);
     }
     return graph;
